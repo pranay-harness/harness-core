@@ -15,6 +15,7 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -61,6 +62,7 @@ public class LicenseServiceImpl implements LicenseService {
   @Inject private ExecutorService executorService;
   @Inject private LicenseProvider licenseProvider;
   @Inject private EmailNotificationService emailNotificationService;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   @Override
   public void checkForLicenseExpiry() {
@@ -229,7 +231,8 @@ public class LicenseServiceImpl implements LicenseService {
     return calendar.getTimeInMillis();
   }
 
-  private byte[] getEncryptedLicenseInfoForUpdate(LicenseInfo currentLicenseInfo, LicenseInfo newLicenseInfo) {
+  private byte[] getEncryptedLicenseInfoForUpdate(
+      String accountId, LicenseInfo currentLicenseInfo, LicenseInfo newLicenseInfo) {
     if (newLicenseInfo == null) {
       throw new WingsException("Invalid / Null license info for update", USER);
     }
@@ -263,6 +266,9 @@ public class LicenseServiceImpl implements LicenseService {
         } else if (AccountType.PAID.equals(newLicenseInfo.getAccountType())) {
           resetExpiryTime = LicenseUtil.getDefaultPaidExpiryTime();
         }
+
+        eventPublishHelper.publishAccountTypeChangeEvent(
+            accountId, currentLicenseInfo.getAccountType(), newLicenseInfo.getAccountType());
       }
       currentLicenseInfo.setAccountType(newLicenseInfo.getAccountType());
     }
@@ -319,7 +325,8 @@ public class LicenseServiceImpl implements LicenseService {
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
 
-    byte[] encryptedLicenseInfo = getEncryptedLicenseInfoForUpdate(accountInDB.getLicenseInfo(), licenseInfo);
+    byte[] encryptedLicenseInfo =
+        getEncryptedLicenseInfoForUpdate(accountId, accountInDB.getLicenseInfo(), licenseInfo);
 
     updateOperations.set("encryptedLicenseInfo", encryptedLicenseInfo);
 

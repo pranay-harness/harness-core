@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
@@ -48,12 +49,14 @@ public class WhitelistServiceImpl implements WhitelistService {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private CacheHelper cacheHelper;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   @Override
   public Whitelist save(Whitelist whitelist) {
     validate(whitelist);
     Whitelist savedWhitelist = wingsPersistence.saveAndGet(Whitelist.class, whitelist);
     evictWhitelistConfigCache(whitelist.getAccountId());
+    eventPublishHelper.publishSetupIPWhitelistingEvent(savedWhitelist.getAccountId(), savedWhitelist.getUuid());
     return savedWhitelist;
   }
 

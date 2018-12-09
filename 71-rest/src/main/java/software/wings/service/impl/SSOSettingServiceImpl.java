@@ -14,6 +14,7 @@ import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.scheduler.PersistentScheduler;
 import org.hibernate.validator.constraints.NotBlank;
@@ -53,6 +54,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private NotificationService notificationService;
   @Inject private DelegateService delegateService;
   @Inject private AccountService accountService;
+  @Inject private EventPublishHelper eventPublishHelper;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
@@ -72,15 +74,19 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Override
   public SamlSettings saveSamlSettings(SamlSettings settings) {
     SamlSettings queriedSettings = getSamlSettingsByAccountId(settings.getAccountId());
+    SamlSettings savedSettings;
     if (queriedSettings != null) {
       queriedSettings.setUrl(settings.getUrl());
       queriedSettings.setMetaDataFile(settings.getMetaDataFile());
       queriedSettings.setDisplayName(settings.getDisplayName());
       queriedSettings.setOrigin(settings.getOrigin());
-      return wingsPersistence.saveAndGet(SamlSettings.class, queriedSettings);
+      savedSettings = wingsPersistence.saveAndGet(SamlSettings.class, queriedSettings);
     } else {
-      return wingsPersistence.saveAndGet(SamlSettings.class, settings);
+      savedSettings = wingsPersistence.saveAndGet(SamlSettings.class, settings);
+      eventPublishHelper.publishSSOEvent(settings.getAccountId());
     }
+
+    return savedSettings;
   }
 
   @Override
@@ -110,6 +116,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     settings.encryptFields(secretManager);
     LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, settings);
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
+    eventPublishHelper.publishSSOEvent(settings.getAccountId());
     return savedSettings;
   }
 

@@ -17,6 +17,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.queue.Queue;
@@ -64,6 +65,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private BarrierService barrierService;
   @Inject private StateExecutionService stateExecutionService;
   @Inject private ExecutionInterruptManager executionInterruptManager;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   /**
    * Instantiates a new workflow execution update.
@@ -157,6 +159,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     }
     if (ExecutionStatus.isFinalStatus(status)) {
       alertService.deploymentCompleted(appId, context.getWorkflowExecutionId());
+      eventPublishHelper.handleDeploymentCompleted(context.getWorkflowExecutionId(), appId);
     }
   }
 

@@ -827,6 +827,10 @@ public interface Constants {
    */
   String DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME = "Non-Production Support";
   /**
+   * The constant DEFAULT_READ_ONLY_USER_GROUP_NAME.
+   */
+  String DEFAULT_READ_ONLY_USER_GROUP_NAME = "ReadOnlyUserGroup";
+  /**
    * The constant DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION.
    */
   String DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION =
@@ -919,7 +923,8 @@ public interface Constants {
 
   int DEFAULT_PAID_LICENSE_UNITS = 100;
 
-  long MONTH = 30 * 24 * 60 * 60 * 1000L;
+  long DAY = 24 * 60 * 60 * 1000L;
+  long MONTH = 30 * DAY;
   long WEEK = 7 * 24 * 60 * 60 * 1000L;
 
   String EMAIL_SUBJECT_ACCOUNT_EXPIRED = "Harness License Expired!";
@@ -929,4 +934,6 @@ public interface Constants {
   String EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE = "Customer License is about to Expire";
 
   Integer REFERENCED_ENTITIES_TO_SHOW = 10;
+  String EMAIL_ID = "EMAIL_ID";
+  String ACCOUNT_ID = "ACCOUNT_ID";
 }

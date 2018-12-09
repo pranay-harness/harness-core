@@ -64,6 +64,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
@@ -84,6 +85,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
+import software.wings.beans.EntityType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Role;
 import software.wings.beans.User;
@@ -170,6 +172,7 @@ public class UserServiceImpl implements UserService {
   @Inject private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   @Inject private SSOSettingService ssoSettingService;
   @Inject private SamlClientService samlClientService;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -198,6 +201,7 @@ public class UserServiceImpl implements UserService {
 
     User savedUser = registerNewUser(user, account);
     executorService.execute(() -> sendVerificationEmail(savedUser));
+    eventPublishHelper.publishUserInviteFromAccountEvent(account.getUuid(), savedUser.getEmail());
     return savedUser;
   }
 
@@ -316,7 +320,7 @@ public class UserServiceImpl implements UserService {
       user.setPasswordHash(hashed);
       user.setPasswordChangedAt(System.currentTimeMillis());
       user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
-      return save(user);
+      return save(user, account.getUuid());
     } else {
       Map<String, Object> map = new HashMap<>();
       map.put("name", user.getName());
@@ -511,7 +515,7 @@ public class UserServiceImpl implements UserService {
                  .withAppId(GLOBAL_APP_ID)
                  .withEmailVerified(emailVerified)
                  .build();
-      user = save(user);
+      user = save(user, accountId);
       // Invitation email should sent only in case of USER_PASSWORD authentication mechanism. Because only in that case
       // we need user to set the password.
       if (currentAuthenticationMechanism.equals(AuthenticationMechanism.USER_PASSWORD)) {
@@ -540,6 +544,8 @@ public class UserServiceImpl implements UserService {
       userGroups = pageResponse.getResponse();
       addUserToUserGroups(accountId, user, userGroups, sendNotification);
     }
+
+    eventPublishHelper.publishUserInviteFromAccountEvent(accountId, userInvite.getEmail());
     return wingsPersistence.getWithAppId(UserInvite.class, userInvite.getAppId(), inviteId);
   }
 
@@ -761,6 +767,8 @@ public class UserServiceImpl implements UserService {
     wingsPersistence.updateField(UserInvite.class, existingInvite.getUuid(), "completed", true);
     wingsPersistence.updateField(UserInvite.class, existingInvite.getUuid(), "agreement", userInvite.isAgreement());
     existingInvite.setCompleted(true);
+
+    eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), existingUser);
     return existingInvite;
   }
 
@@ -816,10 +824,11 @@ public class UserServiceImpl implements UserService {
     user.getAccounts().add(account);
     user.setUserGroups(accountAdminGroups);
 
-    save(user);
+    save(user, accountId);
 
     addUserToUserGroups(accountId, user, accountAdminGroups, false);
 
+    eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
     return userInvite;
   }
 
@@ -944,6 +953,7 @@ public class UserServiceImpl implements UserService {
       throw new WingsException(GENERAL_ERROR, USER)
           .addParam("message", "Exception occurred while enforcing Two factor authentication for users");
     }
+
     return true;
   }
 
@@ -979,9 +989,10 @@ public class UserServiceImpl implements UserService {
     return BCrypt.checkpw(new String(password), hash);
   }
 
-  private User save(User user) {
+  private User save(User user, String accountId) {
     user = wingsPersistence.saveAndGet(User.class, user);
     evictUserFromCache(user.getUuid());
+    eventPublishHelper.publishSetupRbacEvent(accountId, user.getUuid(), EntityType.USER);
     return user;
   }
 
@@ -1016,6 +1027,14 @@ public class UserServiceImpl implements UserService {
       updateOperations.set("totpSecretKey", user.getTotpSecretKey());
     } else {
       updateOperations.unset("totpSecretKey");
+    }
+
+    if (user.getMarketoLeadId() > 0) {
+      updateOperations.set("marketoLeadId", user.getMarketoLeadId());
+    }
+
+    if (isNotEmpty(user.getReportedMarketoCampaigns())) {
+      updateOperations.set("reportedMarketoCampaigns", user.getReportedMarketoCampaigns());
     }
 
     wingsPersistence.update(user, updateOperations);
@@ -1177,10 +1196,12 @@ public class UserServiceImpl implements UserService {
       return;
     }
 
-    Set<String> excludeAccounts = user.getAccounts().stream().map(Account::getUuid).collect(Collectors.toSet());
-    List<Account> accountList =
-        harnessUserGroupService.listAllowedSupportAccountsForUser(user.getUuid(), excludeAccounts);
-    user.setSupportAccounts(accountList);
+    if (harnessUserGroupService.isHarnessSupportUser(user.getUuid())) {
+      Set<String> excludeAccounts = user.getAccounts().stream().map(Account::getUuid).collect(Collectors.toSet());
+      List<Account> accountList =
+          harnessUserGroupService.listAllowedSupportAccountsForUser(user.getUuid(), excludeAccounts);
+      user.setSupportAccounts(accountList);
+    }
   }
 
   /* (non-Javadoc)
@@ -1518,5 +1539,12 @@ public class UserServiceImpl implements UserService {
     }
     logger.warn("User [] has no accounts associated,", user.getEmail());
     return false;
+  }
+
+  @Override
+  public List<User> getUsersOfAccount(String accountId) {
+    PageRequest<User> pageRequest = aPageRequest().addFilter("accounts", Operator.IN, accountId).build();
+    PageResponse<User> pageResponse = wingsPersistence.query(User.class, pageRequest);
+    return pageResponse.getResponse();
   }
 }

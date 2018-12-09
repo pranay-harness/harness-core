@@ -249,6 +249,9 @@ public interface WingsTestConstants {
 
   String INTEGRATION_TEST_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
 
+  String CV_CONFIG_ID = "CV_CONFIG_ID";
+  String WHITELIST_ID = "WHITELIST_ID";
+
   static StaticLimitCheckerWithDecrement mockChecker() {
     return new StaticLimitCheckerWithDecrement() {
       @Override

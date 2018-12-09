@@ -1,7 +1,14 @@
 package io.harness.event.model;
 
-public interface Event {
-  EventType getEventType();
+import lombok.Builder;
+import lombok.Data;
 
-  EventData getData();
+/**
+ * @author rktummala
+ */
+@Data
+@Builder
+public class Event {
+  private EventData eventData;
+  private EventType eventType;
 }

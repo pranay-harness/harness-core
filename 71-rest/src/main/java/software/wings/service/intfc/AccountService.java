@@ -31,6 +31,8 @@ public interface AccountService {
 
   Account get(String accountId);
 
+  Account getFromCache(String accountId);
+
   String getAccountStatus(String accountId);
 
   void delete(String accountId);

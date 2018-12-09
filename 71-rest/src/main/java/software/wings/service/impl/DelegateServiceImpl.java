@@ -74,6 +74,7 @@ import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -209,6 +210,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private SecretManager secretManager;
   @Inject private ExpressionEvaluator evaluator;
   @Inject private FileService fileService;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -819,7 +821,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     File gzipDockerDelegateFile = File.createTempFile(DELEGATE_DIR, ".tar.gz");
     compressGzipFile(dockerDelegateFile, gzipDockerDelegateFile);
-
     return gzipDockerDelegateFile;
   }
 
@@ -886,6 +887,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
     assignDelegateService.clearConnectionResults(delegate.getAccountId());
+    eventPublishHelper.publishInstalledDelegateEvent(delegate.getAccountId(), delegate.getUuid());
     return savedDelegate;
   }
 

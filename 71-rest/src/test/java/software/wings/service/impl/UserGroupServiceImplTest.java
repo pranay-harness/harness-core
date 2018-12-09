@@ -90,16 +90,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                           .withAccountName(ACCOUNT_NAME)
                           .withCompanyName(COMPANY_NAME)
                           .build();
-  private User userWithAccount = anUser()
-                                     .withUuid(generateUuid())
-                                     .withAppId(APP_ID)
-                                     .withEmail(USER_EMAIL)
-                                     .withName(USER_NAME)
-                                     .withPassword(PASSWORD)
-                                     .withAccountName(ACCOUNT_NAME)
-                                     .withCompanyName(COMPANY_NAME)
-                                     .withAccounts(Lists.newArrayList(account))
-                                     .build();
 
   @Inject private WingsPersistence wingsPersistence;
   //  @InjectMocks @Inject private AccountService accountService = spy(AccountServiceImpl.class);

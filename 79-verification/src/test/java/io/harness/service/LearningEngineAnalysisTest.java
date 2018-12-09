@@ -29,7 +29,6 @@ import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
-import software.wings.resources.CVConfigurationResource;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.LicenseUtil;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -37,6 +36,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -52,7 +52,7 @@ import java.util.concurrent.TimeUnit;
 public class LearningEngineAnalysisTest extends VerificationBaseTest {
   @Inject private LearningEngineService learningEngineService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private CVConfigurationResource cvConfigurationResource;
+  @Inject private CVConfigurationService cvConfigurationService;
   @Inject private ContinuousVerificationService continuousVerificationService;
 
   private String accountId;
@@ -284,8 +284,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     cvServiceConfiguration.setEnabled24x7(true);
     cvServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
     String cvConfigId =
-        cvConfigurationResource.saveCVConfiguration(accountId, appId, StateType.NEW_RELIC, cvServiceConfiguration)
-            .getResource();
+        cvConfigurationService.saveConfiguration(accountId, appId, StateType.NEW_RELIC, cvServiceConfiguration);
 
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
 

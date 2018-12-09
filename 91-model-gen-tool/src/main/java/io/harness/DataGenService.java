@@ -365,7 +365,8 @@ public class DataGenService {
     addUser(rbac1UserName, rbac1Email, rbac1Password, account);
     addUser(rbac2UserName, rbac2Email, rbac2Password, account);
     addUserToUserGroup(adminUser, accountId, Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
-    UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(accountId, readOnlyUser, "ReadOnlyUserGroup");
+    UserGroup readOnlyUserGroup =
+        authHandler.buildReadOnlyUserGroup(accountId, readOnlyUser, Constants.DEFAULT_READ_ONLY_USER_GROUP_NAME);
     readOnlyUserGroup = wingsPersistence.saveAndGet(UserGroup.class, readOnlyUserGroup);
 
     addUserToUserGroup(readOnlyUser, readOnlyUserGroup);

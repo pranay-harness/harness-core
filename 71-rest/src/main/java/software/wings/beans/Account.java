@@ -203,16 +203,6 @@ public class Account extends Base {
     this.emailSentToSales = emailSentToSales;
   }
 
-  @JsonIgnore
-  public EmbeddedUser getCreatedBy() {
-    return super.getCreatedBy();
-  }
-
-  @JsonIgnore
-  public EmbeddedUser getLastUpdatedBy() {
-    return super.getLastUpdatedBy();
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {

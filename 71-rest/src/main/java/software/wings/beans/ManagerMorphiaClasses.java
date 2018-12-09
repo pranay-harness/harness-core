@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.event.model.QueableEvent;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
@@ -159,5 +160,5 @@ public class ManagerMorphiaClasses {
       Principal.class, PrometheusCVServiceConfiguration.class, EncryptedData.class,
       NewRelicCVServiceConfiguration.class, ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class,
       YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, GitSyncWebhook.class, ExecutionEvent.class,
-      ManifestFile.class, MongoGcsFileIdMapping.class);
+      ManifestFile.class, MongoGcsFileIdMapping.class, QueableEvent.class);
 }

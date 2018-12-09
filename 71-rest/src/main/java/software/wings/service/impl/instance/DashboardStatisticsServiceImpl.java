@@ -195,25 +195,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return totalCount.get();
   }
 
-  private List<EntitySummaryStats> getServiceSummaryStats(
-      String entityIdColumn, String entityNameColumn, String groupByEntityType, Query<Instance> query) {
-    List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
-    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
-        .createAggregation(Instance.class)
-        .match(query)
-        .group(Group.id(grouping(entityIdColumn)), grouping("count", accumulator("$sum", 1)),
-            grouping(entityNameColumn, grouping("$first", entityNameColumn)))
-        .project(projection("_id").suppress(), projection("entityId", "_id." + entityIdColumn),
-            projection("entityName", entityNameColumn), projection("count"))
-        .sort(ascending("_id." + entityIdColumn))
-        .aggregate(FlatEntitySummaryStats.class)
-        .forEachRemaining(flatEntitySummaryStats -> {
-          EntitySummaryStats entitySummaryStats = getEntitySummaryStats(flatEntitySummaryStats, groupByEntityType);
-          entitySummaryStatsList.add(entitySummaryStats);
-        });
-    return entitySummaryStatsList;
-  }
-
   private List<EntitySummaryStats> getEnvironmentTypeSummaryStats(Query<Instance> query) {
     List<EntitySummaryStats> entitySummaryStatsList = Lists.newArrayList();
     wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
@@ -287,7 +268,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         throw new WingsException("Unsupported groupBy entity type:" + groupByEntityType);
       }
 
-      entitySummaryStatsList = getServiceSummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
+      entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
       instanceSummaryMap.put(groupByEntityType, entitySummaryStatsList);
     }
 

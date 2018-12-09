@@ -54,6 +54,8 @@ import de.javakaffee.kryoserializers.guava.TreeMultimapSerializer;
 import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
 import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
+import io.harness.event.EventsModule;
+import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
 import io.harness.mongo.MongoConfig;
@@ -304,6 +306,11 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
             org.quartz.simpl.RAMJobStore.class.getCanonicalName());
       }
     }
+
+    MarketoConfig marketoConfig =
+        MarketoConfig.builder().clientId("client_id").clientSecret("client_secret_id").enabled(false).build();
+
+    configuration.setMarketoConfig(marketoConfig);
     return configuration;
   }
 
@@ -331,6 +338,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     modules.add(new ExecutorModule(executorService));
     modules.add(new WingsTestModule());
     modules.add(new TemplateModule());
+    modules.add(new EventsModule((MainConfiguration) configuration));
     return modules;
   }
 

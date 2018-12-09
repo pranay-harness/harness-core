@@ -1,15 +1,9 @@
 package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static org.junit.Assert.assertNull;
 
-import com.google.inject.Inject;
-
-import org.junit.Test;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.verification.CVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.util.Collections;
@@ -18,17 +12,7 @@ import java.util.Collections;
  * Created by Pranjal on 11/16/2018
  */
 public class CVConfigurationServiceIntegrationTest extends BaseIntegrationTest {
-  @Inject private CVConfigurationService cvConfigurationService;
-
   private NewRelicCVServiceConfiguration newRelicCVServiceConfiguration;
-
-  @Test
-  public void test_deleteStaleConfigs() {
-    String id = createTestCVConfiguration();
-    cvConfigurationService.deleteStaleConfigs();
-
-    assertNull(wingsPersistence.get(CVConfiguration.class, id));
-  }
 
   private String createTestCVConfiguration() {
     createNewRelicConfig();
