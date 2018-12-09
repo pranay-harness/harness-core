@@ -6,6 +6,8 @@ import static software.wings.sm.StateType.PHASE;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.Sort;
@@ -113,6 +115,11 @@ public class StateExecutionServiceImpl implements StateExecutionService {
       throw new InvalidRequestException("Phase Name [" + phaseName + " is missing from workflow execution]");
     }
     return executionDataList;
+  }
+
+  @Override
+  public PageResponse<StateExecutionInstance> list(PageRequest<StateExecutionInstance> pageRequest) {
+    return wingsPersistence.query(StateExecutionInstance.class, pageRequest);
   }
 
   @Override

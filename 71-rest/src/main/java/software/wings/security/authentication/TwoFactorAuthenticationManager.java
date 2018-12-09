@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ public class TwoFactorAuthenticationManager {
   @Inject private UserService userService;
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   public TwoFactorAuthHandler getTwoFactorAuthHandler(TwoFactorAuthenticationMechanism mechanism) {
     switch (mechanism) {
@@ -111,7 +113,13 @@ public class TwoFactorAuthenticationManager {
         // Enable 2FA for all users if admin enforced
         if (settings.isAdminOverrideTwoFactorEnabled()) {
           logger.info("Enabling 2FA for all users in the account who have 2FA disabled ={}", accountId);
-          return userService.overrideTwoFactorforAccount(accountId, user, settings.isAdminOverrideTwoFactorEnabled());
+          boolean success =
+              userService.overrideTwoFactorforAccount(accountId, user, settings.isAdminOverrideTwoFactorEnabled());
+          if (success) {
+            eventPublishHelper.publishSetup2FAEvent(accountId);
+          }
+
+          return success;
         }
       }
     } catch (Exception ex) {

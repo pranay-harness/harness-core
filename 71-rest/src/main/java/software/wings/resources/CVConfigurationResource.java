@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.swagger.annotations.Api;
 import retrofit2.http.Body;
 import software.wings.beans.RestResponse;
@@ -35,6 +36,7 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SETTING)
 public class CVConfigurationResource {
   @Inject CVConfigurationService cvConfigurationService;
+  @Inject EventPublishHelper eventPublishHelper;
 
   @GET
   @Path("{serviceConfigurationId}")
@@ -52,7 +54,9 @@ public class CVConfigurationResource {
   public RestResponse<String> saveCVConfiguration(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("appId") @Valid final String appId, @QueryParam("stateType") StateType stateType,
       @Body Object params) {
-    return new RestResponse<>(cvConfigurationService.saveConfiguration(accountId, appId, stateType, params));
+    String cvConfigId = cvConfigurationService.saveConfiguration(accountId, appId, stateType, params);
+    eventPublishHelper.publishSetupCV247Event(accountId, cvConfigId);
+    return new RestResponse<>(cvConfigId);
   }
 
   @GET

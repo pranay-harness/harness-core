@@ -1363,6 +1363,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       savedWorkflowExecution = wingsPersistence.getWithAppId(
           WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
     }
+
     return savedWorkflowExecution;
   }
 
@@ -1626,6 +1627,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             exception);
       }
     }
+
     return executionInterrupt;
   }
 

@@ -41,6 +41,7 @@ import migrations.all.InfraProvisionerFilteringTypeMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
 import migrations.all.LicenseDataMigration;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
+import migrations.all.MarketoLeadDataMigration;
 import migrations.all.MetricAnalysisRecordGroupNameMigration;
 import migrations.all.MetricDataRecordGroupNameMigration;
 import migrations.all.MetricMLAnalysisRecordGroupNameMigration;
@@ -165,6 +166,7 @@ public class MigrationList {
         .add(Pair.of(211, LicenseDataMigration.class))
         .add(Pair.of(212, DuplicateGlobalAccountMigration.class))
         .add(Pair.of(213, OverrideDefaultLimits.class))
+        .add(Pair.of(214, MarketoLeadDataMigration.class))
         .build();
   }
 }

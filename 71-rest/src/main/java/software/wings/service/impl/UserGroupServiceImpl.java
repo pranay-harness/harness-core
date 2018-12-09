@@ -19,6 +19,7 @@ import com.google.inject.name.Named;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +27,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
+import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOSettings;
@@ -64,6 +66,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private AuthService authService;
   @Inject private SSOSettingService ssoSettingService;
   @Inject private AlertService alertService;
+  @Inject private EventPublishHelper eventPublishHelper;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
@@ -75,6 +78,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     Validator.notNullCheck("account", account);
     loadUsers(savedUserGroup, account);
     evictUserPermissionInfoCacheForUserGroup(savedUserGroup);
+    eventPublishHelper.publishSetupRbacEvent(userGroup.getAccountId(), savedUserGroup.getUuid(), EntityType.USER_GROUP);
     return savedUserGroup;
   }
 

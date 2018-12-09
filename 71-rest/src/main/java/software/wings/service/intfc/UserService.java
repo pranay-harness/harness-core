@@ -384,4 +384,6 @@ public interface UserService {
   List<String> fetchUserEmailAddressesFromUserIds(List<String> userIds);
 
   boolean isUserVerified(User user);
+
+  List<User> getUsersOfAccount(@NotEmpty String accountId);
 }

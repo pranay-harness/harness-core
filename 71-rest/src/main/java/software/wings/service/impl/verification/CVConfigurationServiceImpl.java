@@ -5,6 +5,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -177,6 +179,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Override
   public <T extends CVConfiguration> List<T> listConfigurations(String accountId) {
     return (List<T>) wingsPersistence.createQuery(CVConfiguration.class).filter("accountId", accountId).asList();
+  }
+
+  @Override
+  public List<CVConfiguration> listConfigurations(String accountId, PageRequest<CVConfiguration> pageRequest) {
+    pageRequest.addFilter("accountId", Operator.EQ, accountId);
+    return wingsPersistence.query(CVConfiguration.class, pageRequest).getResponse();
   }
 
   private UpdateOperations<CVConfiguration> getUpdateOperations(StateType stateType, CVConfiguration cvConfiguration) {

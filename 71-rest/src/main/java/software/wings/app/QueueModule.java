@@ -3,6 +3,7 @@ package software.wings.app;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 
+import io.harness.event.model.QueableEvent;
 import io.harness.mongo.MongoQueue;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueListener;
@@ -17,6 +18,7 @@ import software.wings.service.impl.DelayEvent;
 import software.wings.service.impl.DelayEventListener;
 import software.wings.service.impl.ExecutionEvent;
 import software.wings.service.impl.ExecutionEventListener;
+import software.wings.service.impl.event.GenericEventListener;
 import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.waitnotify.NotifyEventListener;
@@ -33,6 +35,7 @@ public class QueueModule extends AbstractModule {
     bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {}).toInstance(new MongoQueue<>(KmsTransitionEvent.class, 30));
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {}).toInstance(new MongoQueue<>(ExecutionEvent.class, 30, true));
     bind(new TypeLiteral<Queue<DelayEvent>>() {}).toInstance(new MongoQueue<>(DelayEvent.class, 5, true));
+    bind(new TypeLiteral<Queue<QueableEvent>>() {}).toInstance(new MongoQueue<>(QueableEvent.class, 60, true));
 
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<QueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
@@ -41,5 +44,6 @@ public class QueueModule extends AbstractModule {
     bind(new TypeLiteral<QueueListener<DeploymentEvent>>() {}).to(DeploymentEventListener.class);
     bind(new TypeLiteral<QueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
     bind(new TypeLiteral<QueueListener<DelayEvent>>() {}).to(DelayEventListener.class);
+    bind(new TypeLiteral<QueueListener<QueableEvent>>() {}).to(GenericEventListener.class);
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.service.intfc.verification;
 
+import io.harness.beans.PageRequest;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
@@ -18,6 +19,9 @@ public interface CVConfigurationService {
       String accountId, String appId, StateType stateType, Object params, String serviceConfigurationId);
   boolean deleteConfiguration(String accountId, String appId, String serviceConfigurationId);
   <T extends CVConfiguration> List<T> listConfigurations(String accountId);
+
+  List<CVConfiguration> listConfigurations(String accountId, PageRequest<CVConfiguration> pageRequest);
+
   void fillInServiceAndConnectorNames(CVConfiguration cvConfiguration);
   void deleteStaleConfigs();
 }

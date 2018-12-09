@@ -36,6 +36,8 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.event.EventsModule;
+import io.harness.event.listener.EventListener;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.lock.AcquiredLock;
@@ -97,6 +99,7 @@ import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
+import software.wings.service.impl.event.GenericEventListener;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
@@ -233,6 +236,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new ExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new MetricRegistryModule(metricRegistry));
+    modules.add(new EventsModule(configuration));
 
     Injector injector = Guice.createInjector(modules);
 
@@ -400,14 +404,24 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerQueueListeners(Injector injector) {
-    logger.info("Initializing queuelisteners...");
+    logger.info("Initializing queue listeners...");
     Reflections reflections = new Reflections("software.wings");
 
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     Set<Class<? extends QueueListener>> queueListeners = reflections.getSubTypesOf(QueueListener.class);
     for (Class<? extends QueueListener> queueListener : queueListeners) {
-      logger.info("Registering queue listener for queue {}", injector.getInstance(queueListener).getQueue().name());
-      queueListenerController.register(injector.getInstance(queueListener), 5);
+      QueueListener listener;
+
+      if (GenericEventListener.class.getSimpleName().equals(queueListener.getSimpleName())) {
+        EventListener genericEventListener =
+            injector.getInstance(Key.get(EventListener.class, Names.named("GenericEventListener")));
+        listener = (QueueListener) genericEventListener;
+      } else {
+        listener = injector.getInstance(queueListener);
+      }
+
+      logger.info("Registering queue listener for queue {}", listener.getQueue().name());
+      queueListenerController.register(listener, 5);
     }
   }
 

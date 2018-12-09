@@ -20,6 +20,7 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.scheduler.SchedulerConfig;
 import lombok.Data;
@@ -69,6 +70,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("executionLogStorageMode") private DataStorageMode executionLogsStorageMode;
   @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
   @JsonProperty("clusterName") private String clusterName;
+  @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

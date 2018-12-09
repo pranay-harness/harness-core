@@ -13,6 +13,7 @@ import com.hazelcast.core.HazelcastInstance;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
+import io.harness.event.EventsModule;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.maintenance.MaintenanceController;
@@ -119,6 +120,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new QueueModule());
     modules.add(new ExecutorModule());
     modules.add(new TemplateModule());
+    modules.add(new EventsModule(configuration));
 
     Injector injector = Guice.createInjector(modules);
 

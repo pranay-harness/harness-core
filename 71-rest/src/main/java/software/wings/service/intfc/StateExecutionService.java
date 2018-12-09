@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import software.wings.api.PhaseElement;
 import software.wings.beans.ServiceInstance;
 import software.wings.sm.StateExecutionData;
@@ -17,6 +19,8 @@ public interface StateExecutionService {
 
   List<StateExecutionData> fetchPhaseExecutionData(
       String appId, String executionUuid, String phaseName, CurrentPhase currentPhase);
+
+  PageResponse<StateExecutionInstance> list(PageRequest<StateExecutionInstance> pageRequest);
 
   List<ServiceInstance> getHostExclusionList(StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement);
 

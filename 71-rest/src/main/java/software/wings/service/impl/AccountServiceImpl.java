@@ -204,6 +204,11 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public Account getFromCache(String accountId) {
+    return dbCache.get(Account.class, accountId);
+  }
+
+  @Override
   public String getAccountStatus(String accountId) {
     LicenseInfo licenseInfo = dbCache.get(Account.class, accountId).getLicenseInfo();
 

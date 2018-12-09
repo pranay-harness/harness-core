@@ -21,7 +21,9 @@ import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.security.auth.Subject;
 
 /**
@@ -77,6 +79,8 @@ public class User extends Base implements Principal {
   private boolean twoFactorAuthenticationEnabled;
   private TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism;
   @JsonIgnore private String totpSecretKey;
+  @JsonIgnore private long marketoLeadId;
+  @JsonIgnore private Set<String> reportedMarketoCampaigns = new HashSet<>();
 
   /**
    * Return partial user object without sensitive information.
@@ -399,6 +403,26 @@ public class User extends Base implements Principal {
 
   public void setUserGroups(List<UserGroup> userGroups) {
     this.userGroups = userGroups;
+  }
+
+  @JsonIgnore
+  public long getMarketoLeadId() {
+    return marketoLeadId;
+  }
+
+  @JsonIgnore
+  public void setMarketoLeadId(long marketoLeadId) {
+    this.marketoLeadId = marketoLeadId;
+  }
+
+  @JsonIgnore
+  public Set<String> getReportedMarketoCampaigns() {
+    return reportedMarketoCampaigns;
+  }
+
+  @JsonIgnore
+  public void setReportedMarketoCampaigns(Set<String> reportedMarketoCampaigns) {
+    this.reportedMarketoCampaigns = reportedMarketoCampaigns;
   }
 
   @Override

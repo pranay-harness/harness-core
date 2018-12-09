@@ -85,6 +85,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -264,6 +265,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
   @Inject private HostService hostService;
   @Inject private YamlPushService yamlPushService;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -713,6 +715,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String accountId = appService.getAccountIdByAppId(workflow.getAppId());
     yamlPushService.pushYamlChangeSet(accountId, null, newWorkflow, Type.CREATE, workflow.isSyncFromGit(), false);
 
+    eventPublishHelper.publishWorkflowCreatedEvent(newWorkflow.getUuid(), accountId);
     return newWorkflow;
   }
 

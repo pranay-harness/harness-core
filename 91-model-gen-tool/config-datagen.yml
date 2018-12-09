@@ -27,6 +27,12 @@ xxxxxxxx
         key: 9a3e6eac4dcdbdc41a93ca99100537df
         programName: manager-saas-accesslogs
 
+marketoConfig:
+  enabled: false
+  url:  "marketo_url_place_holder"
+  clientId: "marketo_client_id"
+  clientSecret: "marketo_client_secret"
+
 smtp:
   type: SMTP
   host: host_placeholder

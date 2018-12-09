@@ -4,6 +4,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -74,6 +75,13 @@ public class VerificationConstants {
   public static List<StateType> getLogAnalysisStates() {
     return Arrays.asList(StateType.ELK, StateType.SUMO, StateType.LOGZ, StateType.SPLUNK, StateType.SPLUNKV2,
         StateType.CLOUD_WATCH, StateType.BUG_SNAG);
+  }
+
+  public static List<StateType> getAnalysisStates() {
+    List<StateType> analysisStates = new ArrayList<>();
+    analysisStates.addAll(getMetricAnalysisStates());
+    analysisStates.addAll(getLogAnalysisStates());
+    return analysisStates;
   }
 
   public static String getNewRelicMetricsYamlUrl() {

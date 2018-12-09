@@ -158,5 +158,7 @@ public enum EntityType {
 
   ACCOUNT,
 
-  APPLICATION_MANIFEST
+  APPLICATION_MANIFEST,
+
+  USER_GROUP
 }
