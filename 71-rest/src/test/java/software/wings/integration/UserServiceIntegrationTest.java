@@ -38,6 +38,7 @@ import software.wings.common.Constants;
 import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.UserService;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
@@ -55,6 +56,7 @@ import javax.ws.rs.core.GenericType;
 public class UserServiceIntegrationTest extends BaseIntegrationTest {
   private final String validEmail = "raghu" + System.currentTimeMillis() + "@wings.software";
   @Inject private AccountService accountService;
+  @Inject private UserService userService;
 
   @Before
   public void setUp() throws Exception {
@@ -161,6 +163,14 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertNotNull(savedUser);
     assertTrue(savedUser.isEmailVerified());
     assertEquals(1, savedUser.getAccounts().size());
+
+    // Delete the user just created as a cleanup
+    userService.delete(savedUser.getAccounts().get(0).getUuid(), savedUser.getUuid());
+
+    // Verify user is deleted
+    assertNull(userService.getUserByEmail(email));
+    // Verify user invite is deleted
+    assertNull(wingsPersistence.createQuery(UserInvite.class).filter("email", email).get());
   }
 
   @Test
@@ -189,6 +199,14 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertEquals(1, savedUser.getAccounts().size());
     assertEquals(accountName, savedUser.getAccounts().get(0).getAccountName());
     assertEquals(companyName, savedUser.getAccounts().get(0).getCompanyName());
+
+    // Delete the user just created as a cleanup
+    userService.delete(savedUser.getAccounts().get(0).getUuid(), savedUser.getUuid());
+
+    // Verify user is deleted
+    assertNull(userService.getUserByEmail(email));
+    // Verify user invite is deleted
+    assertNull(wingsPersistence.createQuery(UserInvite.class).filter("email", email).get());
   }
 
   @Test

@@ -15,6 +15,7 @@ import migrations.all.AuthTokenTtlMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.DanglingAppEnvReferenceRemovalMigration;
+import migrations.all.DanglingUserInviteCleanupMigration;
 import migrations.all.DeleteLETaskDelCronMigration;
 import migrations.all.DeleteNewRelicMetricNameCronMigration;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
@@ -167,6 +168,7 @@ public class MigrationList {
         .add(Pair.of(212, DuplicateGlobalAccountMigration.class))
         .add(Pair.of(213, OverrideDefaultLimits.class))
         .add(Pair.of(214, MarketoLeadDataMigration.class))
+        .add(Pair.of(215, DanglingUserInviteCleanupMigration.class))
         .build();
   }
 }
