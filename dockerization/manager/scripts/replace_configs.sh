@@ -112,6 +112,22 @@ if [[ -v "SMTP_PASSWORD" ]]; then
     sed -i "s|smtp_password_placeholder|${SMTP_PASSWORD}|" /opt/harness/config.yml
 fi
 
+if [[ -v "MARKETO_ENABLED" ]]; then
+    sed -i "s|enabled: false #marketoConfigEnable|enabled: ${MARKETO_ENABLED}|" /opt/harness/config.yml
+fi
+
+if [[ -v "MARKETO_URL" ]]; then
+    sed -i "s|marketo_url_place_holder|${MARKETO_URL}|" /opt/harness/config.yml
+fi
+
+if [[ -v "MARKETO_CLIENT_ID" ]]; then
+    sed -i "s|marketo_client_id|${MARKETO_CLIENT_ID}|" /opt/harness/config.yml
+fi
+
+if [[ -v "MARKETO_CLIENT_SECRET" ]]; then
+    sed -i "s|marketo_client_secret|${MARKETO_CLIENT_SECRET}|" /opt/harness/config.yml
+fi
+
 if [[ -v "DELEGATE_DOCKER_IMAGE" ]]; then
     sed -i "s|delegateDockerImage:.*|delegateDockerImage: ${DELEGATE_DOCKER_IMAGE}|" /opt/harness/config.yml
 fi
