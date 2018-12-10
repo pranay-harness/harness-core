@@ -16,7 +16,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +47,7 @@ public class LogAnalysisManagerJob implements Job {
   @Transient @Inject private VerificationManagerClient managerClient;
 
   @Override
-  public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+  public void execute(JobExecutionContext jobExecutionContext) {
     try {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
