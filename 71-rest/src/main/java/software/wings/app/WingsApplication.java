@@ -405,10 +405,11 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerQueueListeners(Injector injector) {
     logger.info("Initializing queue listeners...");
-    Reflections reflections = new Reflections("software.wings");
+    Reflections reflections = new Reflections("software.wings", "io.harness");
 
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     Set<Class<? extends QueueListener>> queueListeners = reflections.getSubTypesOf(QueueListener.class);
+
     for (Class<? extends QueueListener> queueListener : queueListeners) {
       QueueListener listener;
 

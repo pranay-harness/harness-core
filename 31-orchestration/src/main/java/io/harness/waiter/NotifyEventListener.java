@@ -1,4 +1,4 @@
-package software.wings.waitnotify;
+package io.harness.waiter;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -19,12 +19,6 @@ import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.QueueListener;
-import io.harness.waiter.NotifyCallback;
-import io.harness.waiter.NotifyEvent;
-import io.harness.waiter.NotifyResponse;
-import io.harness.waiter.WaitInstance;
-import io.harness.waiter.WaitInstanceError;
-import io.harness.waiter.WaitQueue;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -38,9 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by peeyushaggarwal on 4/13/16.
- */
 @Singleton
 public final class NotifyEventListener extends QueueListener<NotifyEvent> {
   private static final Logger logger = LoggerFactory.getLogger(NotifyEventListener.class);
