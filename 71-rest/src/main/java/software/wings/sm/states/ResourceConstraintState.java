@@ -107,8 +107,7 @@ public class ResourceConstraintState extends State {
   @Override
   @SchemaIgnore
   public List<String> getPatternsForRequiredContextElementType() {
-    // TODO: support for different repeaters
-    return null;
+    return asList(resourceUnit);
   }
 
   @Override
