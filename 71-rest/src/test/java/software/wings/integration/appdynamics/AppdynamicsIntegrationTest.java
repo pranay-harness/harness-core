@@ -8,7 +8,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -29,6 +28,7 @@ import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HostElement;
@@ -37,9 +37,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
-import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
@@ -67,7 +65,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
   @Inject private ScmSecret scmSecret;
-  @Inject private EncryptionService encryptionService;
+  @Mock private EncryptionService encryptionService;
   private String appdynamicsSettingId;
 
   @Before
@@ -221,8 +219,6 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                               .withDisplayName(generateUuid())
                               .build());
 
-    AppdynamicsDelegateService delegateService = new AppdynamicsDelegateServiceImpl();
-    setInternalState(delegateService, "encryptionService", encryptionService);
     AppDynamicsConfig appDynamicsConfig =
         (AppDynamicsConfig) wingsPersistence.get(SettingAttribute.class, appdynamicsSettingId).getValue();
     // get all applications
@@ -248,8 +244,11 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
           continue;
         }
         assertTrue(tier.getId() > 0);
-        Set<AppdynamicsNode> nodes = delegateService.getNodes(appDynamicsConfig, application.getId(), tier.getId(),
-            secretManager.getEncryptionDetails(appDynamicsConfig, null, null), ThirdPartyApiCallLog.builder().build());
+        assertTrue(application.getId() > 0);
+        logger.info(application.toString());
+        Set<AppdynamicsNode> nodes = appdynamicsDelegateService.getNodes(appDynamicsConfig, application.getId(),
+            tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null),
+            apiCallLogWithDummyStateExecution(accountId));
 
         for (AppdynamicsNode node : new TreeSet<>(nodes).descendingSet()) {
           AppdynamicsSetupTestNodeData testNodeData =
