@@ -39,7 +39,7 @@ public class InfrastructureMappingBlueprint {
   @NotBlank private String serviceId;
   @NotNull private DeploymentType deploymentType;
   @NotNull private CloudProviderType cloudProviderType;
-  @NotNull private NodeFilteringType nodeFilteringType;
+  private NodeFilteringType nodeFilteringType;
   @NotNull @NotEmpty private List<NameValuePair> properties;
 
   private static Map<Pair<DeploymentType, CloudProviderType>, InfrastructureMappingType> infrastructureMappingTypeMap =
