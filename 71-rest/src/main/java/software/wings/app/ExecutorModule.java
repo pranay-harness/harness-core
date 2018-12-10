@@ -6,9 +6,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import io.harness.manage.ManagedExecutorService;
+import io.harness.manage.ManagedScheduledExecutorService;
 import software.wings.common.thread.ThreadPool;
-import software.wings.utils.ManagedExecutorService;
-import software.wings.utils.ManagedScheduledExecutorService;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;

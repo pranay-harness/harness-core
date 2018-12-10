@@ -1,4 +1,4 @@
-package software.wings.utils;
+package io.harness.manage;
 
 import io.dropwizard.lifecycle.Managed;
 
@@ -11,9 +11,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/**
- * Created by peeyushaggarwal on 4/18/16.
- */
 public class ManagedExecutorService implements ExecutorService, Managed {
   private ExecutorService executorService;
 
