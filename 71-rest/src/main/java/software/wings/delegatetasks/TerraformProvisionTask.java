@@ -112,6 +112,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
+    saveExecutionLog(parameters, "Branch: " + gitConfig.getBranch() + "\nPath: " + parameters.getScriptPath(),
+        CommandExecutionStatus.RUNNING);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
 
     try {
