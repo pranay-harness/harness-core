@@ -11,9 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-/**
- * Created by peeyushaggarwal on 4/14/16.
- */
 @Singleton
 public class QueueListenerController implements Managed {
   private ExecutorService executorService = Executors.newCachedThreadPool();

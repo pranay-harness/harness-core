@@ -30,6 +30,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.waiter.NotifyEventListener;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -54,7 +55,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachineTest.StateAsync;
 import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.states.ForkState;
-import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;
