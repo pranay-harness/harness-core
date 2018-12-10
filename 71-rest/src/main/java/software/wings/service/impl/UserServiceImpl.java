@@ -604,6 +604,14 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  private void removeRelatedUserInvite(String accountId, String email) {
+    UserInvite userInvite =
+        wingsPersistence.createQuery(UserInvite.class).filter("email", email).filter("accountId", accountId).get();
+    if (userInvite != null) {
+      wingsPersistence.delete(userInvite);
+    }
+  }
+
   private List<UserGroup> getUserGroupsOfUser(String accountId, String userId, boolean loadUsers) {
     PageRequest<UserGroup> pageRequest =
         aPageRequest().addFilter("accountId", EQ, accountId).addFilter("memberIds", EQ, userId).build();
@@ -1123,6 +1131,9 @@ public class UserServiceImpl implements UserService {
     if (user.getAccounts() == null) {
       return;
     }
+
+    // HAR-7189: If user removed, the corresponding user invite using the same email address should be removed.
+    removeRelatedUserInvite(accountId, user.getEmail());
 
     for (Account account : user.getAccounts()) {
       if (account.getUuid().equals(accountId)) {
