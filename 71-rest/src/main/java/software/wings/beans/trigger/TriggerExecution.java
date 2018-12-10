@@ -3,6 +3,7 @@ package software.wings.beans.trigger;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -22,6 +23,7 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Entity(value = "triggerExecutions")
 @Indexes(@Index(options = @IndexOptions(name = "search"), fields = { @Field("triggerId")
                                                                      , @Field("status") }))

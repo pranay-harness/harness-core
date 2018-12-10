@@ -365,14 +365,14 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
     encryptionService.decrypt(artifactoryConfig, encryptionDetails);
     String authHeader = null;
-    if (artifactoryConfig.getUsername() != null) {
+    if (artifactoryConfig.hasCredentials()) {
       String pair = artifactoryConfig.getUsername() + ":" + new String(artifactoryConfig.getPassword());
       authHeader = "Basic " + encodeBase64(pair);
     }
     String command;
     switch (this.getScriptType()) {
       case BASH:
-        if (artifactoryConfig.getUsername() == null) {
+        if (!artifactoryConfig.hasCredentials()) {
           command = "curl --progress-bar -X GET \""
               + getArtifactoryUrl(artifactoryConfig, metadata.get(Constants.ARTIFACT_PATH)) + "\" -o \""
               + getCommandPath() + "/" + artifactFileName + "\"";
@@ -383,7 +383,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         }
         break;
       case POWERSHELL:
-        if (artifactoryConfig.getUsername() == null) {
+        if (!artifactoryConfig.hasCredentials()) {
           command =
               "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n Invoke-WebRequest -Uri \""
               + getArtifactoryUrl(artifactoryConfig, metadata.get(Constants.ARTIFACT_PATH)) + "\" -OutFile \""

@@ -17,4 +17,31 @@ public class DockerConfigTest extends WingsBaseTest {
     config = new DockerConfig(urlWithoutSlash.concat("/"), "vasya", "pupkin".toCharArray(), "account", "encrypted");
     assertThat(config.getDockerRegistryUrl()).endsWith("/");
   }
+
+  @Test
+  public void shouldDefaultUserNameEmpty() {
+    // Normal Config
+    DockerConfig dockerConfig = new DockerConfig();
+    assertThat(dockerConfig.getUsername()).isNotNull().isEqualTo("");
+    // Builder default
+    DockerConfig dockerConfig1 = DockerConfig.builder().dockerRegistryUrl("some registry url").build();
+    assertThat(dockerConfig1.getUsername()).isNotNull().isEqualTo("");
+  }
+
+  @Test
+  public void shouldDockerHasCredentials() {
+    DockerConfig dockerConfig = DockerConfig.builder()
+                                    .dockerRegistryUrl("some registry url")
+                                    .username("some username")
+                                    .password("some password".toCharArray())
+                                    .build();
+    assertThat(dockerConfig.hasCredentials()).isTrue();
+  }
+
+  @Test
+  public void shouldDockerHasNoCredentials() {
+    DockerConfig dockerConfig = new DockerConfig();
+    assertThat(dockerConfig.getUsername()).isNotNull().isEqualTo("");
+    assertThat(dockerConfig.hasCredentials()).isFalse();
+  }
 }

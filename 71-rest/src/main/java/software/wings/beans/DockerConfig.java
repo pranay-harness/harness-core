@@ -21,6 +21,8 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
+import java.util.Objects;
+
 /**
  * Created by anubhaw on 1/5/17.
  */
@@ -63,6 +65,11 @@ public class DockerConfig extends SettingValue implements EncryptableSetting, Ar
   // override the setter for URL to enforce that we always put / (slash) at the end
   public void setDockerRegistryUrl(String dockerRegistryUrl) {
     this.dockerRegistryUrl = dockerRegistryUrl.endsWith("/") ? dockerRegistryUrl : dockerRegistryUrl.concat("/");
+  }
+
+  // NOTE: Do not remove this. As UI expects this field should be there
+  public String getUsername() {
+    return Objects.isNull(username) ? "" : username;
   }
 
   @Override

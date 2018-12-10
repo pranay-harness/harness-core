@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
+import io.harness.exception.WingsException;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -27,6 +28,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.integration.UserResourceRestClient;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -66,7 +68,12 @@ public class EnvResourceRestClient {
   }
 
   public Environment getEnvByName(Client client, String userToken, String appId, String name) {
-    WebTarget target = client.target(API_BASE + "/environments/?appId=" + appId + "&name=" + URLEncoder.encode(name));
+    WebTarget target = null;
+    try {
+      target = client.target(API_BASE + "/environments/?appId=" + appId + "&name=" + URLEncoder.encode(name, "UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      throw new WingsException(e);
+    }
 
     RestResponse<PageResponse<Environment>> response =
         userResourceRestClient.getRequestBuilderWithAuthHeader(userToken, target)

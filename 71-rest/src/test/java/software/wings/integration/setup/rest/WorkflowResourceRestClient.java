@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
+import io.harness.exception.WingsException;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -33,6 +34,7 @@ import software.wings.beans.WorkflowType;
 import software.wings.integration.UserResourceRestClient;
 import software.wings.sm.StateType;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +48,6 @@ import javax.ws.rs.core.GenericType;
 public class WorkflowResourceRestClient {
   @Inject private UserResourceRestClient userResourceRestClient;
   @Inject private AppResourceRestClient appResourceRestClient;
-  @Inject private ServiceResourceRestClient serviceResourceRestClient;
   @Inject private EnvResourceRestClient envResourceRestClient;
 
   private ConcurrentHashMap<String, Workflow> cachedEntity = new ConcurrentHashMap<>();
@@ -90,7 +91,12 @@ public class WorkflowResourceRestClient {
   }
 
   public Workflow getWorkflowByName(Client client, String userToken, String appId, String name) {
-    WebTarget target = client.target(API_BASE + "/workflows/?appId=" + appId + "&name=" + URLEncoder.encode(name));
+    WebTarget target = null;
+    try {
+      target = client.target(API_BASE + "/workflows/?appId=" + appId + "&name=" + URLEncoder.encode(name, "UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      throw new WingsException(e);
+    }
 
     RestResponse<PageResponse<Workflow>> response =
         userResourceRestClient.getRequestBuilderWithAuthHeader(userToken, target)

@@ -16,11 +16,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
+import io.harness.exception.WingsException;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.integration.UserResourceRestClient;
 import software.wings.utils.ArtifactType;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
@@ -61,7 +63,12 @@ public class ServiceResourceRestClient {
   }
 
   public Service getServiceByName(Client client, String userToken, String appId, String name) {
-    WebTarget target = client.target(API_BASE + "/services/?appId=" + appId + "&name=" + URLEncoder.encode(name));
+    WebTarget target = null;
+    try {
+      target = client.target(API_BASE + "/services/?appId=" + appId + "&name=" + URLEncoder.encode(name, "UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      new WingsException(e);
+    }
 
     RestResponse<PageResponse<Service>> response =
         userResourceRestClient.getRequestBuilderWithAuthHeader(userToken, target)

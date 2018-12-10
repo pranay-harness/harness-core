@@ -29,6 +29,7 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
@@ -759,6 +760,7 @@ public class DataGenService {
                           .withNotes("System created.")
                           .withVersion("7.0.78")
                           .build();
+      systemCatalog.setAccountId(GLOBAL_ACCOUNT_ID);
       systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT7, PLATFORMS, fileSize);
     } else {
       // call update --> Support the update

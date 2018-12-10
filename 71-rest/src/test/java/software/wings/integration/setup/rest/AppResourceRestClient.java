@@ -13,12 +13,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.integration.UserResourceRestClient;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.client.Client;
@@ -49,7 +51,13 @@ public class AppResourceRestClient {
   }
 
   public Application getAppByName(Client client, String userToken, String accountId, String appName) {
-    WebTarget target = client.target(API_BASE + "/apps?accountId=" + accountId + "&name=" + URLEncoder.encode(appName));
+    WebTarget target = null;
+    try {
+      target =
+          client.target(API_BASE + "/apps?accountId=" + accountId + "&name=" + URLEncoder.encode(appName, "UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      throw new WingsException(e);
+    }
     RestResponse<PageResponse<Application>> response =
         userResourceRestClient.getRequestBuilderWithAuthHeader(userToken, target)
             .get(new GenericType<RestResponse<PageResponse<Application>>>() {});
