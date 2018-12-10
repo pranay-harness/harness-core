@@ -12,6 +12,8 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.time.Timestamp;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -170,7 +172,16 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
                                          .type(FieldType.URL)
                                          .build());
         apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        final Response<Object> response = request.execute();
+        Response<Object> response;
+        try {
+          response = request.execute();
+        } catch (Exception e) {
+          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+          apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+          delegateLogService.save(getAccountId(), apiCallLog);
+          throw new WingsException(
+              "Unsuccessful response while fetching data from provider. Error message: " + e.getMessage());
+        }
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
         if (response.isSuccessful()) {
           apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
