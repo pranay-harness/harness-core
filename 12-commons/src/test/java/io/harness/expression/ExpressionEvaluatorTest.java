@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
+import io.harness.exception.FunctorException;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Value;
@@ -282,5 +283,12 @@ public class ExpressionEvaluatorTest extends CategoryTest {
             .build();
     assertThat(expressionEvaluator.substitute("${WINDOWS_RUNTIME_PATH}", context))
         .isEqualTo("%USERPROFILE%\\${app.name}\\${service.name}\\${env.name}\\runtime");
+  }
+
+  @Test(expected = FunctorException.class)
+  public void testThrowExceptionFunctor() {
+    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+    expressionEvaluator.addFunctor("thrower", new ExceptionThrowFunctor());
+    expressionEvaluator.substitute("${thrower.throwException()}", new HashMap<>());
   }
 }

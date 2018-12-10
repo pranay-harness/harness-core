@@ -298,7 +298,9 @@ public enum ErrorCode {
 
   EVENT_PUBLISH_FAILED("Event published failed"),
 
-  JIRA_ERROR;
+  JIRA_ERROR,
+
+  EXPRESSION_EVALUATION_FAILED;
 
   private Status status = BAD_REQUEST;
   private String description;

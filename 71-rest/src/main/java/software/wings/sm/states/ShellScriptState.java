@@ -233,6 +233,10 @@ public class ShellScriptState extends State {
         ? null
         : workflowStandardParams.getEnv().getUuid();
 
+    String appId = workflowStandardParams == null ? null : workflowStandardParams.getAppId();
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
+    String serviceTemplateId = infrastructureMapping == null ? null : infrastructureMapping.getServiceTemplateId();
+
     Map<String, String> serviceVariables = context.getServiceVariables();
     Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
@@ -330,7 +334,7 @@ public class ShellScriptState extends State {
                                               .safeDisplayServiceVariables(safeDisplayServiceVariables)
                                               .workingDirectory(commandPath)
                                               .scriptType(scriptType)
-                                              .script(context.renderExpression(scriptString))
+                                              .script(scriptString)
                                               .executeOnDelegate(executeOnDelegate)
                                               .outputVars(outputVars)
                                               .hostConnectionAttributes(hostConnectionAttributes)
@@ -339,13 +343,14 @@ public class ShellScriptState extends State {
                                               .build()})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)
+            .withServiceTemplateId(serviceTemplateId)
             .build();
 
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
     }
 
-    String delegateTaskId = delegateService.queueTask(delegateTask);
+    String delegateTaskId = scheduleDelegateTask(context, delegateTask);
     return anExecutionResponse()
         .withAsync(true)
         .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())

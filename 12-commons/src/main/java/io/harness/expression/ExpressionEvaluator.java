@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 
 import io.harness.data.algorithm.IdentifierName;
+import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.WingsException;
 import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.jexl3.JexlBuilder;
@@ -138,13 +139,12 @@ public class ExpressionEvaluator {
         return result;
       }
       if (result.length() > limit) {
-        throw new WingsException(INVALID_ARGUMENT)
-            .addParam("args", "Interpretation grows exponentially for: " + expression);
+        throw new CriticalExpressionEvaluationException("Exponentially growing interpretation", expression);
       }
     }
 
-    throw new WingsException(INVALID_ARGUMENT)
-        .addParam("args", "Infinite loop or too deep indirection in property interpretation for: " + expression);
+    throw new CriticalExpressionEvaluationException(
+        "Infinite loop or too deep indirection in property interpretation", expression);
   }
 
   public static void isValidVariableName(String name) {

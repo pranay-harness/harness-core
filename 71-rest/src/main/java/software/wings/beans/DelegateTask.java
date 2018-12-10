@@ -58,6 +58,7 @@ public class DelegateTask extends Base {
   private byte[] serializedNotifyResponseData;
   private String preAssignedDelegateId;
   private Set<String> alreadyTriedDelegates = new HashSet<>();
+  private String serviceTemplateId;
 
   @Transient private transient ResponseData notifyResponse;
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
@@ -258,6 +259,14 @@ public class DelegateTask extends Base {
     this.alreadyTriedDelegates = alreadyTriedDelegates;
   }
 
+  public void setServiceTemplateId(String serviceTemplateId) {
+    this.serviceTemplateId = serviceTemplateId;
+  }
+
+  public String getServiceTemplateId() {
+    return this.serviceTemplateId;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -443,6 +452,7 @@ public class DelegateTask extends Base {
     private long lastUpdatedAt;
     private ResponseData notifyResponse;
     private String preAssignedDelegateId;
+    private String serviceTemplateId;
 
     private Builder() {}
 
@@ -551,6 +561,11 @@ public class DelegateTask extends Base {
       return this;
     }
 
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
     public Builder but() {
       return aDelegateTask()
           .withVersion(version)
@@ -572,7 +587,8 @@ public class DelegateTask extends Base {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withNotifyResponse(notifyResponse)
-          .withPreAssignedDelegateId(preAssignedDelegateId);
+          .withPreAssignedDelegateId(preAssignedDelegateId)
+          .withServiceTemplateId(serviceTemplateId);
     }
 
     public DelegateTask build() {
@@ -597,6 +613,7 @@ public class DelegateTask extends Base {
       delegateTask.setLastUpdatedAt(lastUpdatedAt);
       delegateTask.setNotifyResponse(notifyResponse);
       delegateTask.setPreAssignedDelegateId(preAssignedDelegateId);
+      delegateTask.setServiceTemplateId(serviceTemplateId);
       return delegateTask;
     }
   }

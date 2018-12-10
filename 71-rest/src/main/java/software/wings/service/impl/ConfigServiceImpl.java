@@ -551,4 +551,15 @@ public class ConfigServiceImpl implements ConfigService {
   public void pruneByHost(String appId, String hostId) {
     deleteByEntityId(appId, hostId);
   }
+
+  @Override
+  public ConfigFile getConfigFileForEntityByRelativeFilePath(
+      String appId, String templateId, String entityId, String envId, String relativeFilePath) {
+    return wingsPersistence.createQuery(ConfigFile.class)
+        .filter(ConfigFile.APP_ID_KEY, appId)
+        .filter(ConfigFile.TEMPLATE_ID_KEY, templateId)
+        .filter(ConfigFile.ENTITY_ID_KEY, entityId)
+        .filter(ConfigFile.RELATIVE_FILE_PATH_KEY, relativeFilePath)
+        .get();
+  }
 }

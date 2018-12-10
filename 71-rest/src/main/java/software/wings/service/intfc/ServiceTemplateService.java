@@ -171,4 +171,15 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
    * @return the boolean
    */
   boolean exist(String appId, String templateId);
+
+  /**
+   * Computed config file by relative path
+   * @param appId
+   * @param envId
+   * @param templateId
+   * @param relativeFilePath
+   * @return
+   */
+  ConfigFile computedConfigFileByRelativeFilePath(
+      String appId, String envId, String templateId, String relativeFilePath);
 }

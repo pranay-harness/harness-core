@@ -2,6 +2,7 @@ package io.harness.expression;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.exception.FunctorException;
 import lombok.Builder;
 import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlException;
@@ -27,6 +28,9 @@ public class EvaluateVariableResolver extends StrLookup {
       }
       value = expressionEvaluator.evaluate(variable, context);
     } catch (JexlException exception) {
+      if (exception.getCause() instanceof FunctorException) {
+        throw(FunctorException) exception.getCause();
+      }
       value = "${" + variable + "}";
     }
 

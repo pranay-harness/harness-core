@@ -522,4 +522,27 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     });
   }
+
+  @Override
+  public ConfigFile computedConfigFileByRelativeFilePath(
+      String appId, String envId, String templateId, String relativeFilePath) {
+    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, OBTAIN_VALUE);
+    if (serviceTemplate == null) {
+      return null;
+    }
+
+    /* override order(left to right): Service -> Env: All Services -> Env: Service Template */
+
+    ConfigFile serviceConfigFile = configService.getConfigFileForEntityByRelativeFilePath(
+        appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId(), envId, relativeFilePath);
+    ConfigFile allServiceConfigFile = configService.getConfigFileForEntityByRelativeFilePath(
+        appId, DEFAULT_TEMPLATE_ID, envId, envId, relativeFilePath);
+    ConfigFile templateConfigFile = configService.getConfigFileForEntityByRelativeFilePath(
+        appId, templateId, serviceTemplate.getUuid(), envId, relativeFilePath);
+    List<ConfigFile> configFiles =
+        overrideConfigFiles(overrideConfigFiles(serviceConfigFile != null ? asList(serviceConfigFile) : asList(),
+                                allServiceConfigFile != null ? asList(allServiceConfigFile) : asList()),
+            templateConfigFile != null ? asList(templateConfigFile) : asList());
+    return configFiles.isEmpty() ? null : configFiles.get(0);
+  }
 }

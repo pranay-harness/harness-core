@@ -45,9 +45,7 @@ public class ReflectionUtils {
     return declaredFields;
   }
 
-  interface Functor {
-    Object update(Object o);
-  }
+  public interface Functor { String update(String o); }
 
   public static void updateFieldValues(Object o, Predicate<Field> predicate, Functor functor) {
     Class<?> c = o.getClass();
@@ -57,7 +55,7 @@ public class ReflectionUtils {
           boolean isAccessible = f.isAccessible();
           f.setAccessible(true);
           try {
-            Object value = functor.update(f.get(o));
+            String value = functor.update((String) f.get(o));
             f.set(o, value);
             f.setAccessible(isAccessible);
           } catch (IllegalAccessException e) {
