@@ -1,11 +1,18 @@
 package software.wings.sm;
 
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.expression.ExpressionReflectionUtils;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.EntityType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
+import software.wings.service.intfc.DelegateService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +60,8 @@ public abstract class State {
   public void setTemplateUuid(String templateUuid) {
     this.templateUuid = templateUuid;
   }
+
+  @Inject @Transient private transient DelegateService delegateService;
 
   public State() {}
   /**
@@ -294,5 +303,12 @@ public abstract class State {
 
   public void setTemplateVariables(List<Variable> templateVariables) {
     this.templateVariables = templateVariables;
+  }
+
+  protected String scheduleDelegateTask(ExecutionContext context, DelegateTask task) {
+    if (task.getParameters().length == 1 && task.getParameters()[0] instanceof TaskParameters) {
+      ExpressionReflectionUtils.applyExpression(task.getParameters()[0], value -> context.renderExpression(value));
+    }
+    return delegateService.queueTask(task);
   }
 }

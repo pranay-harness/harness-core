@@ -177,4 +177,16 @@ public interface ConfigService extends OwnedByService, OwnedByHost {
    * @param entityId the entity id
    */
   void deleteByEntityId(String appId, String entityId);
+
+  /**
+   * Gets the config file for entity by relative file path.
+   * @param appId
+   * @param templateId
+   * @param entityId
+   * @param envId
+   * @param relativeFilePath
+   * @return
+   */
+  ConfigFile getConfigFileForEntityByRelativeFilePath(
+      String appId, String templateId, String entityId, String envId, String relativeFilePath);
 }

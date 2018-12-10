@@ -2,6 +2,8 @@ package software.wings.beans.delegation;
 
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
+import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Setter;
 import lombok.Value;
@@ -25,7 +27,7 @@ import java.util.Map;
 
 @Value
 @Builder
-public class ShellScriptParameters {
+public class ShellScriptParameters implements TaskParameters {
   public static final String CommandUnit = "Execute";
 
   @Setter private String accountId;
@@ -43,7 +45,7 @@ public class ShellScriptParameters {
   private final Map<String, String> environment;
   private final String workingDirectory;
   private final ScriptType scriptType;
-  private final String script;
+  @Expression private final String script;
   private final boolean executeOnDelegate;
   private final String outputVars;
   private final HostConnectionAttributes hostConnectionAttributes;

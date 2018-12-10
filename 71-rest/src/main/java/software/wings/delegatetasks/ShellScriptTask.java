@@ -51,12 +51,12 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
 
   @Override
   public CommandExecutionResult run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
+    return run((ShellScriptParameters) parameters);
   }
 
   @Override
   public CommandExecutionResult run(Object[] parameters) {
-    return run((ShellScriptParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   private CommandExecutionResult run(ShellScriptParameters parameters) {

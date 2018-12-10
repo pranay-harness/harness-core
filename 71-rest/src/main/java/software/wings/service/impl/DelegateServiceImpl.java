@@ -73,11 +73,15 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.persistence.ReadPref;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.ErrorNotifyResponseData;
@@ -124,6 +128,7 @@ import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
+import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.EventEmitter.Channel;
@@ -131,6 +136,7 @@ import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -139,6 +145,7 @@ import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.BoundedInputStream;
@@ -211,6 +218,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private ExpressionEvaluator evaluator;
   @Inject private FileService fileService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private ConfigService configService;
+  @Inject private ServiceTemplateService serviceTemplateService;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -1332,6 +1341,19 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).filter(ID_KEY, taskId).get();
 
     if (delegateTask != null) {
+      try {
+        executeManagerPreExecutionHook(delegateTask);
+      } catch (FunctorException | CriticalExpressionEvaluationException exception) {
+        Query<DelegateTask> taskQuery =
+            wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).filter(ID_KEY, taskId);
+        DelegateTaskResponse response =
+            DelegateTaskResponse.builder()
+                .response(ErrorNotifyResponseData.builder().errorMessage(exception.getMessage()).build())
+                .responseCode(ResponseCode.FAILED)
+                .accountId(accountId)
+                .build();
+        handleResponse(taskId, delegateId, delegateTask, taskQuery, response, ERROR);
+      }
       if (delegateTask.getDelegateId() == null && delegateTask.getStatus() == QUEUED) {
         logger.info("Found unassigned delegate task: {}", delegateTask.getUuid());
         return delegateTask;
@@ -1347,6 +1369,37 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return null;
   }
 
+  private void handleResponse(String taskId, String delegateId, DelegateTask delegateTask,
+      Query<DelegateTask> taskQuery, DelegateTaskResponse response, DelegateTask.Status error) {
+    if (delegateTask.isAsync()) {
+      String waitId = delegateTask.getWaitId();
+      if (waitId != null) {
+        applyDelegateInfoToDelegateTaskResponse(delegateId, response);
+        waitNotifyEngine.notify(waitId, response.getResponse());
+      } else {
+        logger.error("Async task {} has no wait ID", taskId);
+      }
+      wingsPersistence.delete(taskQuery);
+    } else {
+      wingsPersistence.update(taskQuery,
+          wingsPersistence.createUpdateOperations(DelegateTask.class)
+              .set("serializedNotifyResponseData", KryoUtils.asBytes(response.getResponse()))
+              .set("status", error));
+    }
+  }
+
+  private void executeManagerPreExecutionHook(DelegateTask delegateTask) {
+    if (delegateTask != null) {
+      final ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
+          new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
+              delegateTask.getEnvId(), delegateTask.getServiceTemplateId());
+      if (delegateTask.getParameters().length == 1 && delegateTask.getParameters()[0] instanceof TaskParameters) {
+        ExpressionReflectionUtils.applyExpression(delegateTask.getParameters()[0],
+            value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
+      }
+    }
+  }
+
   private DelegateTask assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
@@ -1358,7 +1411,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                     .filter("status", QUEUED)
                                     .field("delegateId")
                                     .doesNotExist()
-                                    .filter(ID_KEY, taskId);
+                                    .filter(ID_KEY, taskId)
+                                    .project("parameters", false);
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                           .set("delegateId", delegateId)
                                                           .set("status", STARTED);
@@ -1366,20 +1420,23 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         wingsPersistence.getDatastore(DelegateTask.class, ReadPref.NORMAL).findAndModify(query, updateOperations);
     // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in case
     // client is retrying the request
-    if (task == null) {
-      task = wingsPersistence.createQuery(DelegateTask.class)
-                 .filter("accountId", delegateTask.getAccountId())
-                 .filter("status", STARTED)
-                 .filter("delegateId", delegateId)
-                 .filter(ID_KEY, taskId)
-                 .get();
-      if (task != null) {
-        logger.info("Returning previously assigned task {} to delegate {}", taskId, delegateId);
-      } else {
-        logger.info("Task {} no longer available for delegate {}", taskId, delegateId);
-      }
-    } else {
+    if (task != null) {
       logger.info("Task {} assigned to delegate {}", taskId, delegateId);
+      task.setParameters(delegateTask.getParameters());
+      return task;
+    }
+    task = wingsPersistence.createQuery(DelegateTask.class)
+               .filter("accountId", delegateTask.getAccountId())
+               .filter("status", STARTED)
+               .filter("delegateId", delegateId)
+               .filter(ID_KEY, taskId)
+               .project("parameters", false)
+               .get();
+    if (task != null) {
+      task.setParameters(delegateTask.getParameters());
+      logger.info("Returning previously assigned task {} to delegate {}", taskId, delegateId);
+    } else {
+      logger.info("Task {} no longer available for delegate {}", taskId, delegateId);
     }
     return task;
   }
@@ -1406,6 +1463,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     DelegateTask delegateTask = taskQuery.get();
 
     if (delegateTask != null) {
+      executeManagerPreExecutionHook(delegateTask);
       if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
         logger.warn("Version mismatch for task {} in account {}. [managerVersion {}, taskVersion {}]",
             delegateTask.getUuid(), delegateTask.getAccountId(), getVersion(), delegateTask.getVersion());
@@ -1441,21 +1499,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         }
       }
 
-      if (delegateTask.isAsync()) {
-        String waitId = delegateTask.getWaitId();
-        if (waitId != null) {
-          applyDelegateInfoToDelegateTaskResponse(delegateId, response);
-          waitNotifyEngine.notify(waitId, response.getResponse());
-        } else {
-          logger.error("Async task {} has no wait ID", taskId);
-        }
-        wingsPersistence.delete(taskQuery);
-      } else {
-        wingsPersistence.update(taskQuery,
-            wingsPersistence.createUpdateOperations(DelegateTask.class)
-                .set("serializedNotifyResponseData", KryoUtils.asBytes(response.getResponse()))
-                .set("status", FINISHED));
-      }
+      handleResponse(taskId, delegateId, delegateTask, taskQuery, response, FINISHED);
       assignDelegateService.refreshWhitelist(delegateTask, delegateId);
     } else {
       logger.warn("No delegate task found: {}", taskId);
