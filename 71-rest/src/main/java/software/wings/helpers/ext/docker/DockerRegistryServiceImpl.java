@@ -187,7 +187,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     if (dockerConfig.hasCredentials()) {
       if (isEmpty(dockerConfig.getPassword()) && isEmpty(dockerConfig.getEncryptedPassword())) {
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-            .addParam("message", "Password is required field along with Username");
+            .addParam("message", "Password is a required field along with Username");
       }
       try {
         DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);

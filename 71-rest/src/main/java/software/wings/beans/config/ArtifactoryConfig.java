@@ -1,5 +1,7 @@
 package software.wings.beans.config;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -17,6 +19,8 @@ import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
+
+import java.util.Objects;
 
 /**
  * Created by sgurubelli on 6/20/17.
@@ -52,6 +56,11 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
     this.encryptedPassword = encryptedPassword;
   }
 
+  // NOTE: Do not remove this. As UI expects this field should be there..Lombok Default is not working
+  public String getUsername() {
+    return Objects.isNull(username) ? "" : username;
+  }
+
   @Override
   public String fetchUserName() {
     return username;
@@ -60,6 +69,11 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
   @Override
   public String fetchRegistryUrl() {
     return artifactoryUrl;
+  }
+
+  @SchemaIgnore
+  public boolean hasCredentials() {
+    return isNotEmpty(username);
   }
 
   @Data

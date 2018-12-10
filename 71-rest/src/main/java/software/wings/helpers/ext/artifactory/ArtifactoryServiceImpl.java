@@ -486,11 +486,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     logger.info("Validating artifact path {} for repository {} and repositoryType {}", artifactPath, repositoryName,
         repositoryType);
     if (isBlank(artifactPath)) {
-      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", "Artifact Pattern  can not be empty");
+      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", "Artifact Pattern can not be empty");
     }
-    List<BuildDetails> filePaths = null;
-
-    filePaths = getFilePaths(artifactoryConfig, encryptionDetails, repositoryName, artifactPath, repositoryType, 1);
+    List<BuildDetails> filePaths =
+        getFilePaths(artifactoryConfig, encryptionDetails, repositoryName, artifactPath, repositoryType, 1);
 
     if (isEmpty(filePaths)) {
       prepareAndThrowException("No artifact files matching with the artifact path [" + artifactPath + "]", USER, null);
@@ -546,17 +545,18 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     ArtifactoryClientBuilder builder = ArtifactoryClientBuilder.create();
     try {
       builder.setUrl(getBaseUrl(artifactoryConfig));
-      if (isBlank(artifactoryConfig.getUsername())) {
-        logger.info("Username is not set for artifactory config {} . Will use anonymous access.",
-            artifactoryConfig.getArtifactoryUrl());
-      } else if (artifactoryConfig.getPassword() == null || isBlank(new String(artifactoryConfig.getPassword()))) {
-        logger.info("Username is set. However no password set for artifactory config {}",
-            artifactoryConfig.getArtifactoryUrl());
-        builder.setUsername(artifactoryConfig.getUsername());
-      } else {
+      if (artifactoryConfig.hasCredentials()) {
+        if (isEmpty(artifactoryConfig.getPassword())) {
+          throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
+              .addParam("message", "Password is a required field along with Username");
+        }
         builder.setUsername(artifactoryConfig.getUsername());
         builder.setPassword(new String(artifactoryConfig.getPassword()));
+      } else {
+        logger.info("Username is not set for artifactory config {} . Will use anonymous access.",
+            artifactoryConfig.getArtifactoryUrl());
       }
+
       HttpHost httpProxyHost = Http.getHttpProxyHost(artifactoryConfig.getArtifactoryUrl());
       if (httpProxyHost != null) {
         builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), Http.getProxyScheme(),

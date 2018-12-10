@@ -29,9 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by sgurubelli on 9/29/17.
- */
 public class ArtifactoryServiceTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -46,6 +43,8 @@ public class ArtifactoryServiceTest {
 
   private ArtifactoryConfig artifactoryConfig =
       ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
+
+  private ArtifactoryConfig artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
 
   @Before
   public void setUp() {
@@ -156,7 +155,22 @@ public class ArtifactoryServiceTest {
 
   @Test
   public void shouldValidateArtifactPath() {
-    artifactoryService.validateArtifactPath(artifactoryConfig, null, "harness-rpm", "todolist*", "generic");
+    assertThat(artifactoryService.validateArtifactPath(artifactoryConfig, null, "harness-rpm", "todolist*", "generic"))
+        .isTrue();
+  }
+
+  @Test
+  public void shouldValidateArtifactPathAnonymous() {
+    assertThat(artifactoryService.validateArtifactPath(
+                   artifactoryConfigAnonymous, null, "harness-rpm", "todolist*", "generic"))
+        .isTrue();
+  }
+
+  @Test(expected = WingsException.class)
+  public void shouldValidateArtifactPathPassWordEmpty() {
+    ArtifactoryConfig artifactoryConfigNoPassword =
+        ArtifactoryConfig.builder().artifactoryUrl("some url").username("some username").build();
+    artifactoryService.validateArtifactPath(artifactoryConfigNoPassword, null, "harness-rpm", "todolist*", "generic");
   }
 
   @Test(expected = WingsException.class)
