@@ -49,8 +49,8 @@ executionLogStorageMode: MONGO
 fileStorageMode: MONGO
 
 marketoConfig:
-  enabled: false
-  url:  "marketo_url_place_holder"
+  enabled: false #marketoConfigEnable
+  url: "marketo_url_place_holder"
   clientId: "marketo_client_id"
   clientSecret: "marketo_client_secret"
 
