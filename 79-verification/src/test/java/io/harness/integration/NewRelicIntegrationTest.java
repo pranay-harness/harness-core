@@ -683,8 +683,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
-        jobExecutionContext, delegateTaskId)
+    new MetricAnalysisGenerator(
+        timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
         .run();
 
     List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -815,8 +815,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
-        jobExecutionContext, delegateTaskId)
+    new MetricAnalysisGenerator(
+        timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
         .run();
 
     List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -950,8 +950,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
-        jobExecutionContext, delegateTaskId)
+    new MetricAnalysisGenerator(
+        timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
         .run();
 
     List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -1109,8 +1109,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
-        jobExecutionContext, delegateTaskId)
+    new MetricAnalysisGenerator(
+        timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
         .run();
 
     // TODO I know....
@@ -1333,8 +1333,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
-        jobExecutionContext, delegateTaskId)
+    new MetricAnalysisGenerator(
+        timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
         .run();
 
     // TODO I know....

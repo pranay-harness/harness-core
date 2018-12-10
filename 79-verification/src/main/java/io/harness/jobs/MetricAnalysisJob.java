@@ -19,7 +19,6 @@ import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,14 +79,14 @@ public class MetricAnalysisJob implements Job {
   }
 
   @Override
-  public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+  public void execute(JobExecutionContext jobExecutionContext) {
     try {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClientHelper, context,
-          jobExecutionContext, delegateTaskId)
+      new MetricAnalysisGenerator(
+          timeSeriesAnalysisService, learningEngineService, managerClientHelper, context, jobExecutionContext)
           .run();
       logger.info("Triggering scheduled job with params {} and delegateTaskId {}", params, delegateTaskId);
     } catch (Exception ex) {
@@ -103,7 +102,6 @@ public class MetricAnalysisJob implements Job {
   public static class MetricAnalysisGenerator implements Runnable {
     public static final int COMPARATIVE_ANALYSIS_DURATION = 30;
     private final JobExecutionContext jobExecutionContext;
-    private final String delegateTaskId;
     private final Map<String, String> testNodes;
     private final Map<String, String> controlNodes;
     private final TimeSeriesAnalysisService analysisService;
@@ -114,13 +112,12 @@ public class MetricAnalysisJob implements Job {
 
     public MetricAnalysisGenerator(TimeSeriesAnalysisService service, LearningEngineService learningEngineService,
         VerificationManagerClientHelper managerClientHelper, AnalysisContext context,
-        JobExecutionContext jobExecutionContext, String delegateTaskId) {
+        JobExecutionContext jobExecutionContext) {
       this.analysisService = service;
       this.learningEngineService = learningEngineService;
       this.managerClientHelper = managerClientHelper;
       this.context = context;
       this.jobExecutionContext = jobExecutionContext;
-      this.delegateTaskId = delegateTaskId;
       this.testNodes = context.getTestNodes();
       this.controlNodes = context.getControlNodes();
 
