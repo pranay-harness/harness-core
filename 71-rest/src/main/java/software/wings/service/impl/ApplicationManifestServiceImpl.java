@@ -2,30 +2,53 @@ package software.wings.service.impl;
 
 import static io.harness.exception.WingsException.USER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.appmanifest.ManifestFile.APP_MANIFEST_FILE_NAME;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
+import static software.wings.delegatetasks.k8s.Utils.manifestFilesFromGitFetchFilesResult;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.waiter.ErrorNotifyResponseData;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.Event.Type;
+import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
+import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
+import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.sm.states.k8s.K8sStateHelper;
+import software.wings.yaml.directory.DirectoryNode;
+import software.wings.yaml.directory.DirectoryPath;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -37,6 +60,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private YamlPushService yamlPushService;
+  @Inject private DelegateService delegateService;
+  @Inject private SettingsService settingsService;
+  @Inject private SecretManager secretManager;
+  @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private K8sStateHelper k8sStateHelper;
 
   @Override
   public ApplicationManifest create(ApplicationManifest applicationManifest) {
@@ -218,5 +246,52 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         throw new InvalidRequestException("Git file config should be null for store type local", USER);
       }
     }
+  }
+
+  public DirectoryNode getManifestFilesFromGit(String appId, String appManifestId) {
+    Application app = appService.get(appId);
+    ApplicationManifest appManifest = getById(appId, appManifestId);
+
+    GitFetchFilesTaskParams fetchFilesTaskParams = k8sStateHelper.createGitFetchFilesTaskParams(app, appManifest);
+
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(app.getAccountId())
+                                    .withAppId(app.getUuid())
+                                    .withAsync(false)
+                                    .withTaskType(TaskType.GIT_FETCH_FILES_TASK)
+                                    .withParameters(new Object[] {fetchFilesTaskParams})
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(60))
+                                    .build();
+
+    ResponseData notifyResponseData;
+    try {
+      notifyResponseData = delegateService.executeTask(delegateTask);
+    } catch (InterruptedException ex) {
+      throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
+    }
+
+    if (notifyResponseData instanceof ErrorNotifyResponseData) {
+      throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+    } else if ((notifyResponseData instanceof RemoteMethodReturnValueData)
+        && (((RemoteMethodReturnValueData) notifyResponseData).getException() instanceof InvalidRequestException)) {
+      throw(InvalidRequestException)((RemoteMethodReturnValueData) notifyResponseData).getException();
+    } else if (!(notifyResponseData instanceof GitCommandExecutionResponse)) {
+      throw new WingsException(ErrorCode.GENERAL_ERROR)
+          .addParam("message", "Unknown Response from delegate")
+          .addContext(ResponseData.class, notifyResponseData);
+    }
+
+    GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) notifyResponseData;
+    if (!executionResponse.getGitCommandStatus().equals(GitCommandStatus.SUCCESS)) {
+      throw new InvalidRequestException(executionResponse.getErrorMessage());
+    }
+
+    List<ManifestFile> manifestFiles =
+        manifestFilesFromGitFetchFilesResult((GitFetchFilesResult) executionResponse.getGitCommandResult(),
+            fetchFilesTaskParams.getGitFileConfig().getFilePath());
+
+    Service service = serviceResourceService.get(appId, appManifest.getServiceId());
+    return yamlDirectoryService.generateManifestFileFolderNode(
+        app.getAccountId(), service, manifestFiles, new DirectoryPath(MANIFEST_FILE_FOLDER));
   }
 }

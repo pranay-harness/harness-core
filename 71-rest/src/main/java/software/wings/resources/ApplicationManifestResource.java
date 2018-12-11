@@ -16,6 +16,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.yaml.directory.DirectoryNode;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -126,5 +127,14 @@ public class ApplicationManifestResource {
       @PathParam("appManifestId") String appManifestId, @PathParam("manifestFileId") String manifestFileId) {
     applicationManifestService.deleteManifestFileById(appId, manifestFileId);
     return new RestResponse();
+  }
+
+  @GET
+  @Path("{appManifestId}/manifest-files-from-git/")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DirectoryNode> getManifestFilesFromGit(@QueryParam("appId") String appId,
+      @QueryParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId) {
+    return new RestResponse<>(applicationManifestService.getManifestFilesFromGit(appId, appManifestId));
   }
 }

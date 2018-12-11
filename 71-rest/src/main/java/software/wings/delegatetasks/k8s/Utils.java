@@ -414,17 +414,7 @@ public class Utils {
         gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
         asList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch());
 
-    List<ManifestFile> manifestFiles = new ArrayList<>();
-    if (isNotEmpty(gitFetchFilesResult.getFiles())) {
-      List<GitFile> files = gitFetchFilesResult.getFiles();
-
-      for (GitFile gitFile : files) {
-        String filePath = getRelativePath(gitFile, gitFileConfig.getFilePath());
-        manifestFiles.add(ManifestFile.builder().fileName(filePath).fileContent(gitFile.getFileContent()).build());
-      }
-    }
-
-    return manifestFiles;
+    return manifestFilesFromGitFetchFilesResult(gitFetchFilesResult, gitFileConfig.getFilePath());
   }
 
   public static List<ManifestFile> fetchManifestFiles(K8sDelegateManifestConfig delegateManifestConfig,
@@ -433,6 +423,9 @@ public class Utils {
       return delegateManifestConfig.getManifestFiles();
     }
 
+    if (isBlank(delegateManifestConfig.getGitFileConfig().getFilePath())) {
+      delegateManifestConfig.getGitFileConfig().setFilePath(StringUtils.EMPTY);
+    }
     String filePath = delegateManifestConfig.getGitFileConfig().getFilePath();
     executionLogCallback.saveExecutionLog("\nFetching manifest files at path: " + (isBlank(filePath) ? "." : filePath));
 
@@ -470,5 +463,21 @@ public class Utils {
     }
 
     return filePath.endsWith("/") ? filePath : filePath + "/";
+  }
+
+  public static List<ManifestFile> manifestFilesFromGitFetchFilesResult(
+      GitFetchFilesResult gitFetchFilesResult, String prefixPath) {
+    List<ManifestFile> manifestFiles = new ArrayList<>();
+
+    if (isNotEmpty(gitFetchFilesResult.getFiles())) {
+      List<GitFile> files = gitFetchFilesResult.getFiles();
+
+      for (GitFile gitFile : files) {
+        String filePath = getRelativePath(gitFile, prefixPath);
+        manifestFiles.add(ManifestFile.builder().fileName(filePath).fileContent(gitFile.getFileContent()).build());
+      }
+    }
+
+    return manifestFiles;
   }
 }

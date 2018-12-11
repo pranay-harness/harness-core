@@ -930,34 +930,40 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private FolderNode generateManifestFileFolderNode(
       String accountId, Service service, ApplicationManifest applicationManifest, DirectoryPath manifestFilePath) {
     if (applicationManifest != null) {
-      FolderNode manifestFileFolder = new FolderNode(accountId, MANIFEST_FILE_FOLDER, ManifestFile.class,
-          manifestFilePath, service.getAppId(), yamlGitSyncService);
       List<ManifestFile> manifestFiles =
           applicationManifestService.getManifestFiles(service.getAppId(), service.getUuid());
-
-      List<YamlManifestFileNode> manifestFilesDirectUnderFiles = new ArrayList<>();
-      Map<String, YamlManifestFileNode> map = new HashMap<>();
-
-      processManifestFiles(manifestFiles, map, manifestFilesDirectUnderFiles);
-
-      manifestFilesDirectUnderFiles.forEach(yamlManifestFileNode -> {
-        manifestFileFolder.addChild(new ServiceLevelYamlNode(accountId, yamlManifestFileNode.getUuId(),
-            service.getAppId(), service.getUuid(), yamlManifestFileNode.getName(), ManifestFile.class,
-            manifestFilePath.clone().add(yamlManifestFileNode.getName()), yamlGitSyncService,
-            Type.APPLICATION_MANIFEST_FILE));
-      });
-
-      if (isNotEmpty(map)) {
-        for (Map.Entry<String, YamlManifestFileNode> entry : map.entrySet()) {
-          addYamlDirectoryNode(
-              accountId, service.getAppId(), service.getUuid(), manifestFileFolder, entry.getValue(), manifestFilePath);
-        }
-      }
-
-      return manifestFileFolder;
+      return generateManifestFileFolderNode(accountId, service, manifestFiles, manifestFilePath);
     }
 
     return null;
+  }
+
+  @Override
+  public FolderNode generateManifestFileFolderNode(
+      String accountId, Service service, List<ManifestFile> manifestFiles, DirectoryPath manifestFilePath) {
+    FolderNode manifestFileFolder = new FolderNode(
+        accountId, MANIFEST_FILE_FOLDER, ManifestFile.class, manifestFilePath, service.getAppId(), yamlGitSyncService);
+
+    List<YamlManifestFileNode> manifestFilesDirectUnderFiles = new ArrayList<>();
+    Map<String, YamlManifestFileNode> map = new HashMap<>();
+
+    processManifestFiles(manifestFiles, map, manifestFilesDirectUnderFiles);
+
+    manifestFilesDirectUnderFiles.forEach(yamlManifestFileNode -> {
+      manifestFileFolder.addChild(new ServiceLevelYamlNode(accountId, yamlManifestFileNode.getUuId(),
+          service.getAppId(), service.getUuid(), yamlManifestFileNode.getName(), ManifestFile.class,
+          manifestFilePath.clone().add(yamlManifestFileNode.getName()), yamlGitSyncService,
+          Type.APPLICATION_MANIFEST_FILE));
+    });
+
+    if (isNotEmpty(map)) {
+      for (Map.Entry<String, YamlManifestFileNode> entry : map.entrySet()) {
+        addYamlDirectoryNode(
+            accountId, service.getAppId(), service.getUuid(), manifestFileFolder, entry.getValue(), manifestFilePath);
+      }
+    }
+
+    return manifestFileFolder;
   }
 
   private FolderNode generateManifestFileFoldeNodeForServiceView(String accountId, Service service) {

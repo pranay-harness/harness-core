@@ -114,20 +114,11 @@ public class K8sStateHelper {
       ExecutionContext context, ApplicationManifest applicationManifest, String activityId, String commandName) {
     Application app = appService.get(context.getAppId());
 
-    GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
-    GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
+    GitFetchFilesTaskParams fetchFilesTaskParams = createGitFetchFilesTaskParams(app, applicationManifest);
 
-    gitFileConfig.setFilePath(getValuesYamlGitFilePath(gitFileConfig.getFilePath()));
-    GitFetchFilesTaskParams fetchFilesTaskParams =
-        GitFetchFilesTaskParams.builder()
-            .accountId(app.getAccountId())
-            .appId(app.getUuid())
-            .activityId(activityId)
-            .isFinalState(false)
-            .gitConfig(gitConfig)
-            .gitFileConfig(gitFileConfig)
-            .encryptedDataDetails(secretManager.getEncryptionDetails(gitConfig, app.getUuid(), null))
-            .build();
+    fetchFilesTaskParams.setActivityId(activityId);
+    fetchFilesTaskParams.getGitFileConfig().setFilePath(
+        getValuesYamlGitFilePath(applicationManifest.getGitFileConfig().getFilePath()));
 
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(app.getAccountId())
@@ -148,6 +139,22 @@ public class K8sStateHelper {
         .withStateExecutionData(K8sSetupExecutionData.builder().activityId(activityId).commandName(commandName).build())
         .withDelegateTaskId(delegateTaskId)
         .addContextElement(K8sContextElement.builder().currentTaskType(TaskType.GIT_COMMAND).build())
+        .build();
+  }
+
+  public GitFetchFilesTaskParams createGitFetchFilesTaskParams(
+      Application app, ApplicationManifest applicationManifest) {
+    GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
+    gitFileConfig.setFilePath(normalizeFilePath(gitFileConfig.getFilePath()));
+    GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
+
+    return GitFetchFilesTaskParams.builder()
+        .accountId(app.getAccountId())
+        .appId(app.getUuid())
+        .isFinalState(false)
+        .gitConfig(gitConfig)
+        .gitFileConfig(gitFileConfig)
+        .encryptedDataDetails(secretManager.getEncryptionDetails(gitConfig, app.getUuid(), null))
         .build();
   }
 

@@ -128,4 +128,7 @@ public interface YamlDirectoryService {
       @NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String serviceId);
 
   String getRootPathByApplicationManifest(Service service);
+
+  FolderNode generateManifestFileFolderNode(
+      String accountId, Service service, List<ManifestFile> manifestFiles, DirectoryPath manifestFilePath);
 }
