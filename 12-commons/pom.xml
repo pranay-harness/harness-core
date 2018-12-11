@@ -7,7 +7,6 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>12-commons</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <dependencies>
         <dependency>
             <groupId>com.auth0</groupId>

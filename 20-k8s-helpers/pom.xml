@@ -7,7 +7,6 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>20-k8s-helpers</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <dependencies>
         <dependency>
             <groupId>com.esotericsoftware.yamlbeans</groupId>

@@ -5,6 +5,7 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.rule.FunctionalTestRule;
+import io.harness.rule.LifecycleRule;
 import io.restassured.RestAssured;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -15,7 +16,8 @@ import javax.ws.rs.core.GenericType;
 
 public abstract class AbstractFunctionalTest implements FunctionalTests {
   protected static String bearerToken;
-  @Rule public FunctionalTestRule rule = new FunctionalTestRule();
+  @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
+  @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
 
   @BeforeClass
   public static void setup() {

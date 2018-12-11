@@ -7,7 +7,6 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>76-functional-test</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <properties>
         <excludedTestGroups>FunctionalTests.class</excludedTestGroups>
     </properties>
