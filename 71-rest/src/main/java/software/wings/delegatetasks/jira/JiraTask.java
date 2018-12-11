@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.jira;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.api.JiraExecutionData.JiraApprovalActionType.CREATE_WEBHOOK;
+import static software.wings.api.JiraExecutionData.JiraApprovalActionType.DELETE_WEBHOOK;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 
@@ -20,15 +22,18 @@ import net.rcarz.jiraclient.Resource;
 import net.rcarz.jiraclient.RestException;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.JiraExecutionData;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.jira.JiraTaskParameters;
+import software.wings.beans.jira.JiraWebhookParameters;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -38,12 +43,20 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class JiraTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
+  @Inject private MainConfiguration mainConfiguration;
+
+  private static final String WEBHOOK_CREATION_URL = "/rest/webhooks/1.0/webhook/";
+  private static final String JIRA_APPROVAL_API_PATH = "api/ticketing/jira-approval/";
 
   private static final Logger logger = LoggerFactory.getLogger(JiraTask.class);
 
@@ -55,6 +68,11 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   @Override
   public ResponseData run(TaskParameters parameters) {
     throw new NotImplementedException("not implemented");
+  }
+
+  @Override
+  public ResponseData run(Object[] parameters) {
+    return run((JiraTaskParameters) parameters[0]);
   }
 
   public ResponseData run(JiraTaskParameters parameters) {
@@ -69,6 +87,15 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       case CREATE_TICKET:
         return createTicket(parameters);
+
+      case APPROVE_TICKET:
+        return createWebhook(parameters);
+
+      case CREATE_AND_APPROVE_TICKET:
+        return createTicketAndWebhook(parameters);
+
+      case DELETE_WEBHOOK:
+        return deleteWebhook(parameters);
 
       case GET_PROJECTS:
         return getProjects(parameters);
@@ -245,8 +272,134 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return new JiraClient(jiraConfig.getBaseUrl(), creds);
   }
 
-  @Override
-  public ResponseData run(Object[] parameters) {
-    return run((JiraTaskParameters) parameters[0]);
+  private ResponseData createTicketAndWebhook(JiraTaskParameters parameters) {
+    JiraExecutionData jiraExecutionData = (JiraExecutionData) createTicket(parameters);
+    if (jiraExecutionData.getExecutionStatus().equals(ExecutionStatus.FAILED)) {
+      return jiraExecutionData;
+    }
+    parameters.setIssueId(jiraExecutionData.getIssueId());
+    return createWebhook(parameters);
+  }
+
+  private ResponseData deleteWebhook(JiraTaskParameters parameters) {
+    JiraConfig jiraConfig = parameters.getJiraConfig();
+    encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
+    JiraClient jira = getJiraClient(parameters);
+
+    CommandExecutionStatus commandExecutionStatus;
+    try {
+      jira.getRestClient().delete(new URI(parameters.getWebhookUrl()));
+    } catch (IOException | URISyntaxException | RestException e) {
+      logger.error("Unable to delete a new JIRA webhook", e);
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
+      saveExecutionLog(
+          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
+
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMessage("Unable to delete the JIRA webhook " + parameters.getIssueId())
+          .jiraApprovalActionType(DELETE_WEBHOOK)
+          .build();
+    }
+    commandExecutionStatus = CommandExecutionStatus.SUCCESS;
+    saveExecutionLog(
+        parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
+
+    return JiraExecutionData.builder()
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .jiraApprovalActionType(DELETE_WEBHOOK)
+        .errorMessage("Deleted Webhook After the approval: " + parameters.getWebhookUrl())
+        .build();
+  }
+
+  private ResponseData createWebhook(JiraTaskParameters parameters) {
+    JiraConfig jiraConfig = parameters.getJiraConfig();
+    encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
+    JiraClient jira = getJiraClient(parameters);
+    CommandExecutionStatus commandExecutionStatus;
+    Issue issue;
+    try {
+      issue = jira.getIssue(parameters.getIssueId());
+    } catch (JiraException e) {
+      String error = "Not creating webhook as unable to fetch Jira for id: " + parameters.getIssueId();
+      logger.error(error, e);
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
+      saveExecutionLog(
+          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
+
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.FAILED)
+          .activityId(parameters.getActivityId())
+          .approvalId(parameters.getApprovalId())
+          .jiraApprovalActionType(CREATE_WEBHOOK)
+          .errorMessage(error)
+          .build();
+    }
+
+    List<String> events = new ArrayList<>();
+    events.add("jira:issue_updated");
+
+    Map<String, String> filters = new HashMap<>();
+    filters.put("issue-related-events-section", "issue = " + parameters.getIssueId());
+    String token = parameters.getJiraToken();
+
+    // Todo: Replace hardcoded url after checking the Url from config
+
+    String url = getBaseUrl() + JIRA_APPROVAL_API_PATH + token;
+
+    JiraWebhookParameters jiraWebhookParameters = JiraWebhookParameters.builder()
+                                                      .name("webhook for issue = " + issue.getKey())
+                                                      .events(events)
+                                                      .filters(filters)
+                                                      .excludeBody(false)
+                                                      .jqlFilter(filters)
+                                                      .excludeIssueDetails(false)
+                                                      .url(url)
+                                                      .build();
+
+    JSONObject json = JSONObject.fromObject(jiraWebhookParameters);
+
+    String webhookUrl;
+    try {
+      JSON resp = jira.getRestClient().post(new URI(jiraConfig.getBaseUrl() + WEBHOOK_CREATION_URL), json);
+      JSONObject object = JSONObject.fromObject(resp);
+      webhookUrl = object.getString("self");
+    } catch (RestException | IOException | URISyntaxException e) {
+      String error = "Unable to create a new JIRA webhook for " + getIssueUrl(jiraConfig, issue);
+      logger.error(error, e);
+
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
+      saveExecutionLog(
+          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
+
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.FAILED)
+          .activityId(parameters.getActivityId())
+          .approvalId(parameters.getApprovalId())
+          .jiraApprovalActionType(CREATE_WEBHOOK)
+          .errorMessage(error)
+          .build();
+    }
+
+    commandExecutionStatus = CommandExecutionStatus.SUCCESS;
+    saveExecutionLog(
+        parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
+
+    return JiraExecutionData.builder()
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .webhookUrl(webhookUrl)
+        .errorMessage("Waiting for Approval on ticket: " + getIssueUrl(jiraConfig, issue))
+        .approvalId(parameters.getApprovalId())
+        .activityId(parameters.getActivityId())
+        .jiraApprovalActionType(CREATE_WEBHOOK)
+        .build();
+  }
+
+  private String getBaseUrl() {
+    String baseUrl = mainConfiguration.getPortal().getUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
+    return baseUrl;
   }
 }

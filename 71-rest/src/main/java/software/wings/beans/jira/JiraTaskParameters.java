@@ -1,7 +1,7 @@
 package software.wings.beans.jira;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import net.rcarz.jiraclient.Priority;
 import software.wings.beans.JiraConfig;
 import software.wings.delegatetasks.jira.JiraAction;
@@ -9,7 +9,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
-@Value
+@Data
 @Builder
 public class JiraTaskParameters {
   private JiraConfig jiraConfig;
@@ -30,4 +30,8 @@ public class JiraTaskParameters {
   private String accountId;
   private String appId;
   private String activityId;
+  private String approvalId;
+
+  private String webhookUrl;
+  private String jiraToken;
 }

@@ -6,6 +6,7 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.PersistentEntity;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.api.JiraExecutionData;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.BuildExecutionSummary;
@@ -120,6 +121,9 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   boolean approveOrRejectExecution(String appId, List<String> userGroupIds, ApprovalDetails approvalDetails);
 
   ApprovalStateExecutionData fetchApprovalStateExecutionDataFromWorkflowExecution(
+      String appId, String workflowExecutionId, String stateExecutionId, ApprovalDetails approvalDetails);
+
+  JiraExecutionData fetchJiraExecutionDataFromWorkflowExecution(
       String appId, String workflowExecutionId, String stateExecutionId, ApprovalDetails approvalDetails);
 
   List<Artifact> getArtifactsCollected(String appId, String executionUuid);

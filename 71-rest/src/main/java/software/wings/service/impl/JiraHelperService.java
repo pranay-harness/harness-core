@@ -2,8 +2,11 @@ package software.wings.service.impl;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
+import com.auth0.jwt.interfaces.Claim;
 import io.harness.exception.InvalidRequestException;
 import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.JiraClient;
@@ -19,19 +22,29 @@ import software.wings.beans.TaskType;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
  * All Jira apis should be accessed via this object.
  */
+@Singleton
 public class JiraHelperService {
   private static final Logger logger = LoggerFactory.getLogger(GcpHelperService.class);
   private static final String WORKFLOW_EXECUTION_ID = "workflow";
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DelegateServiceImpl delegateService;
   @Inject @Transient private transient SecretManager secretManager;
+
+  public static final String APP_ID_KEY = "app_id";
+  public static final String WORKFLOW_EXECUTION_ID_KEY = "workflow_execution_id";
+  public static final String APPROVAL_FIELD_KEY = "approval_field";
+  public static final String APPROVAL_VALUE_KEY = "approval_value";
+  public static final String APPROVAL_ID_KEY = "approval_id";
+  @Inject private software.wings.security.SecretManager secretManagerForToken;
 
   /**
    * Validate credential.
@@ -96,5 +109,17 @@ public class JiraHelperService {
 
     JiraExecutionData jiraExecutionData = delegateService.executeTask(delegateTask);
     return jiraExecutionData.getFields();
+  }
+
+  public String createJiraToken(
+      String appId, String workflowExecutionId, String approvalId, String approvalField, String approvalValue) {
+    return secretManagerForToken.generateJWTToken(
+        ImmutableMap.of(APP_ID_KEY, appId, WORKFLOW_EXECUTION_ID_KEY, workflowExecutionId, APPROVAL_FIELD_KEY,
+            approvalField, APPROVAL_VALUE_KEY, approvalValue, APPROVAL_ID_KEY, approvalId),
+        JWT_CATEGORY.JIRA_SERVICE_SECRET);
+  }
+
+  public Map<String, Claim> validateJiraToken(String token) {
+    return secretManagerForToken.verifyJWTToken(token, JWT_CATEGORY.JIRA_SERVICE_SECRET);
   }
 }
