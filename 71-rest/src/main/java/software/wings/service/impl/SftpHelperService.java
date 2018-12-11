@@ -116,8 +116,31 @@ public class SftpHelperService {
   }
 
   public boolean isConnectibleSFTPServer(String sftpUrl) {
+    String hostKeyVerifier = "";
     try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
-      ssh.loadKnownHosts();
+      try {
+        ssh.loadKnownHosts();
+        ssh.connect(getSFTPConnectionHost(sftpUrl));
+        return true;
+      } catch (TransportException e) {
+        if (e.getDisconnectReason() == DisconnectReason.HOST_KEY_NOT_VERIFIABLE) {
+          String msg = e.getMessage();
+          String[] split = msg.split("`");
+          hostKeyVerifier = split[3];
+        }
+      }
+    } catch (IOException e) {
+      logger.error("SFTP server {} could not be reached. Exception Message {}", sftpUrl, e.getMessage());
+    }
+
+    if (isEmpty(hostKeyVerifier)) {
+      logger.error("SFTP server {} host key could not be verified.", sftpUrl);
+      return false;
+    }
+
+    // Try connecting again with host key verifier
+    try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
+      ssh.addHostKeyVerifier(hostKeyVerifier);
       ssh.connect(getSFTPConnectionHost(sftpUrl));
       return true;
     } catch (IOException e) {
