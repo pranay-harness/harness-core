@@ -1,5 +1,6 @@
 package software.wings.api;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;
@@ -13,6 +14,10 @@ import java.util.Map;
 @Data
 @Builder
 public class JiraExecutionData extends StateExecutionData implements ResponseData {
+  private EmbeddedUser approvedBy;
+  private Long approvedOn;
+  private String approvalId;
+
   private String activityId;
   private ExecutionStatus executionStatus;
   private String errorMessage;
@@ -20,6 +25,10 @@ public class JiraExecutionData extends StateExecutionData implements ResponseDat
   private String issueId;
   private JSONArray projects;
   private JSONArray fields;
+  private String webhookUrl;
+  private JiraApprovalActionType jiraApprovalActionType;
+
+  public enum JiraApprovalActionType { CREATE_WEBHOOK, WAIT_JIRA_APPROVAL, DELETE_WEBHOOK }
 
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();

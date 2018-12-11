@@ -9,7 +9,6 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
-import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
@@ -59,17 +58,17 @@ public class JiraCreateUpdate extends State {
   @Inject @Transient private transient SecretManager secretManager;
   @Inject @Transient private SweepingOutputService sweepingOutputService;
 
-  @Attributes(title = "Request Type") @Getter @Setter @NotNull private JiraAction jiraAction;
-  @Attributes(title = "JIRA Connector") @Getter @Setter @NotNull String jiraConnectorId;
-  @Attributes(title = "Project") @Getter @Setter @NotNull private String project;
-  @Attributes(title = "Issue Type") @Getter @Setter private String issueType;
-  @Attributes(title = "Priority") @Getter @Setter private String priority;
-  @Attributes(title = "Labels") @Getter @Setter private String labels;
-  @Attributes(title = "Summary") @Getter @Setter private String summary;
-  @Attributes(title = "Description") @Getter @Setter private String description;
-  @Attributes(title = "Status") @Getter @Setter private String status;
-  @Attributes(title = "Comment") @Getter @Setter private String comment;
-  @Attributes(title = "Issue") @Getter @Setter private String issueId;
+  @Getter @Setter @NotNull private JiraAction jiraAction;
+  @Getter @Setter @NotNull String jiraConnectorId;
+  @Getter @Setter @NotNull private String project;
+  @Getter @Setter private String issueType;
+  @Getter @Setter private String priority;
+  @Getter @Setter private String labels;
+  @Getter @Setter private String summary;
+  @Getter @Setter private String description;
+  @Getter @Setter private String status;
+  @Getter @Setter private String comment;
+  @Getter @Setter private String issueId;
 
   public JiraCreateUpdate(String name) {
     super(name, StateType.JIRA_CREATE_UPDATE.getName());

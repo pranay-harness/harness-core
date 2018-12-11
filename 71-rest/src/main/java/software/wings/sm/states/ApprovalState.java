@@ -1,42 +1,27 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.ABORTED;
-import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
-import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
-import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.Application;
-import software.wings.beans.NotificationGroup;
-import software.wings.beans.NotificationRule;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
-import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.EmailNotificationService;
@@ -46,21 +31,16 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class ApprovalState extends State {
+public class ApprovalState extends AbstractApprovalState {
   @Getter @Setter private String groupName;
   @Getter @Setter private List<String> userGroups = new ArrayList<>();
   @Getter @Setter private boolean disable;
@@ -79,9 +59,6 @@ public class ApprovalState extends State {
     super(name, StateType.APPROVAL.name());
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
-   */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String approvalId = generateUuid();
@@ -159,197 +136,13 @@ public class ApprovalState extends State {
         .build();
   }
 
-  /**
-   * Handle abort event.
-   *
-   * @param context the context
-   */
   @Override
   public void handleAbortEvent(ExecutionContext context) {
-    if (context == null || context.getStateExecutionData() == null) {
-      return;
-    }
-
+    NotificationMessageType notificationMessageType = handleAbortEventAbstract(context);
     Application app = ((ExecutionContextImpl) context).getApp();
-    Integer timeout = getTimeoutMillis();
-    Long startTimeMillis = context.getStateExecutionData().getStartTs();
-    Long currentTimeMillis = System.currentTimeMillis();
-
-    String errorMsg = "";
-    String approvalType = "";
-    if (((ExecutionContextImpl) context).getStateExecutionInstance() != null
-        && ((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType() != null) {
-      approvalType = notificationMessageResolver.getApprovalType(
-          ((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType());
-    }
-
-    if (currentTimeMillis >= (timeout + startTimeMillis)) {
-      if (approvalType != null && approvalType.equalsIgnoreCase("PIPELINE")) {
-        errorMsg = "Pipeline was not approved within " + Misc.getDurationString(getTimeoutMillis());
-      } else if (approvalType != null && approvalType.equalsIgnoreCase("ORCHESTRATION")) {
-        errorMsg = "Workflow was not approved within " + Misc.getDurationString(getTimeoutMillis());
-      } else {
-        errorMsg = "Approval not approved within " + Misc.getDurationString(getTimeoutMillis());
-      }
-      Map<String, String> placeholderValues = getPlaceholderValues(context, errorMsg);
-      sendApprovalNotification(app.getAccountId(), APPROVAL_EXPIRED_NOTIFICATION, placeholderValues);
-      sendEmailToUserGroupMembers(userGroups, app.getAccountId(), APPROVAL_EXPIRED_NOTIFICATION, placeholderValues);
-    } else {
-      if (approvalType != null && approvalType.equalsIgnoreCase("PIPELINE")) {
-        errorMsg = "Pipeline was aborted";
-      } else if (approvalType != null && approvalType.equalsIgnoreCase("ORCHESTRATION")) {
-        errorMsg = "Workflow was aborted";
-      } else {
-        errorMsg = "Workflow or Pipeline was aborted";
-      }
-
-      User user = UserThreadLocal.get();
-      String userName = (user != null && user.getName() != null) ? user.getName() : "System";
-      Map<String, String> placeholderValues = getPlaceholderValues(context, userName, ABORTED);
-      sendApprovalNotification(app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
-      sendEmailToUserGroupMembers(
-          userGroups, app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
-    }
-
-    context.getStateExecutionData().setErrorMsg(errorMsg);
-  }
-
-  @Override
-  public Integer getTimeoutMillis() {
-    if (super.getTimeoutMillis() == null) {
-      return DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
-    }
-    return super.getTimeoutMillis();
-  }
-
-  private void sendApprovalNotification(
-      String accountId, NotificationMessageType notificationMessageType, Map<String, String> placeHolderValues) {
-    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
-    NotificationRule notificationRule = aNotificationRule().withNotificationGroups(notificationGroups).build();
-
-    notificationService.sendNotificationAsync(anInformationNotification()
-                                                  .withAppId(GLOBAL_APP_ID)
-                                                  .withAccountId(accountId)
-                                                  .withNotificationTemplateId(notificationMessageType.name())
-                                                  .withNotificationTemplateVariables(placeHolderValues)
-                                                  .build(),
-        singletonList(notificationRule));
-  }
-
-  private static String getStatusMessage(ExecutionStatus status) {
-    switch (status) {
-      case SUCCESS:
-        return "approved";
-      case ABORTED:
-        return "aborted";
-      case REJECTED:
-        return "rejected";
-      case EXPIRED:
-        return "expired";
-      case PAUSED:
-        return "paused";
-      default:
-        unhandled(status);
-        return "failed";
-    }
-  }
-
-  protected Map<String, String> getPlaceholderValues(
-      ExecutionContext context, String userName, ExecutionStatus status) {
-    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
-        ((ExecutionContextImpl) context).getApp().getUuid(), context.getWorkflowExecutionId());
-
-    String statusMsg = getStatusMessage(status);
-    long startTs = (status == PAUSED) ? workflowExecution.getCreatedAt() : context.getStateExecutionData().getStartTs();
-    if (status == PAUSED) {
-      userName = workflowExecution.getTriggeredBy().getName();
-    }
-
-    return notificationMessageResolver.getPlaceholderValues(
-        context, userName, startTs, System.currentTimeMillis(), "", statusMsg, "", status, ApprovalNeeded);
-  }
-
-  private Map<String, String> getPlaceholderValues(ExecutionContext context, String timeout) {
-    return notificationMessageResolver.getPlaceholderValues(
-        context, "", 0, 0, timeout, "", "", EXPIRED, ApprovalNeeded);
-  }
-
-  private void sendEmailToUserGroupMembers(List<String> userGroups, String accountId,
-      NotificationMessageType notificationMessageType, Map<String, String> placeHolderValues) {
-    List<String> userEmailAddress = getUserGroupMemberEmailAddresses(accountId, userGroups);
-    if (isEmpty(userEmailAddress)) {
-      return;
-    }
-
-    List<String> excludeEmailAddress = getNotificationGroupMemberEmailAddresses(accountId);
-    userEmailAddress.removeAll(excludeEmailAddress);
-    if (isEmpty(userEmailAddress)) {
-      return;
-    }
-
-    EmailData emailData =
-        notificationDispatcherService.obtainEmailData(notificationMessageType.toString(), placeHolderValues);
-    if (isEmpty(emailData.getBody()) || isEmpty(emailData.getSubject())) {
-      return;
-    }
-
-    emailData.setSystem(true);
-    emailData.setCc(Collections.emptyList());
-    emailData.setTo(userEmailAddress);
-    emailNotificationService.sendAsync(emailData);
-  }
-
-  private List<String> getNotificationGroupMemberEmailAddresses(String accountId) {
-    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
-    return notificationSetupService.getUserEmailAddressFromNotificationGroups(accountId, notificationGroups);
-  }
-
-  private List<String> getUserGroupMemberEmailAddresses(String accountId, List<String> userGroups) {
-    if (isEmpty(userGroups)) {
-      return asList();
-    }
-
-    List<String> userGroupMembers = userGroupService.fetchUserGroupsMemberIds(accountId, userGroups);
-    if (isEmpty(userGroupMembers)) {
-      return asList();
-    }
-
-    return userService.fetchUserEmailAddressesFromUserIds(userGroupMembers);
-  }
-
-  private void populateApprovalAlert(ApprovalNeededAlert approvalNeededAlert, ExecutionContext context) {
-    if (((ExecutionContextImpl) context).getStateExecutionInstance() != null
-        && ((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType() != null) {
-      approvalNeededAlert.setWorkflowType(
-          ((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType());
-    }
-
-    if (((ExecutionContextImpl) context).getEnv() != null) {
-      approvalNeededAlert.setEnvId(((ExecutionContextImpl) context).getEnv().getUuid());
-    }
-
-    if (approvalNeededAlert.getWorkflowType() == null) {
-      throw new InvalidRequestException("Workflow type cannot be null");
-    }
-
-    WorkflowType workflowType = approvalNeededAlert.getWorkflowType();
-    switch (workflowType) {
-      case PIPELINE: {
-        approvalNeededAlert.setPipelineExecutionId(context.getWorkflowExecutionId());
-        break;
-      }
-      case ORCHESTRATION: {
-        approvalNeededAlert.setWorkflowExecutionId(context.getWorkflowExecutionId());
-        WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-
-        if (workflowStandardParams != null && workflowStandardParams.getWorkflowElement() != null) {
-          approvalNeededAlert.setPipelineExecutionId(
-              workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid());
-        }
-        break;
-      }
-      default:
-        unhandled(workflowType);
-    }
+    User user = UserThreadLocal.get();
+    String userName = (user != null && user.getName() != null) ? user.getName() : "System";
+    Map<String, String> placeholderValues = getPlaceholderValues(context, userName, ABORTED);
+    sendEmailToUserGroupMembers(userGroups, app.getAccountId(), notificationMessageType, placeholderValues);
   }
 }

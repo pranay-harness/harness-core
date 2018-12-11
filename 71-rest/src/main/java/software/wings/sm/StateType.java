@@ -120,6 +120,7 @@ import software.wings.sm.states.HelmDeployState;
 import software.wings.sm.states.HelmRollbackState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
+import software.wings.sm.states.JiraApprovalState;
 import software.wings.sm.states.KubernetesDeploy;
 import software.wings.sm.states.KubernetesDeployRollback;
 import software.wings.sm.states.KubernetesSetup;
@@ -535,7 +536,12 @@ public enum StateType implements StateTypeDescriptor {
   JIRA_CREATE_UPDATE(JiraCreateUpdate.class, COLLABORATION, 0, "JIRA",
       asList(PRE_DEPLOYMENT, POST_DEPLOYMENT, START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE,
           DISABLE_SERVICE, CONTAINER_SETUP, CONTAINER_DEPLOY, WRAP_UP),
-      ORCHESTRATION_STENCILS);
+      ORCHESTRATION_STENCILS),
+
+  JIRA_APPROVAL(JiraApprovalState.class, COLLABORATION, 1, "JIRA_APPROVAL",
+      asList(PRE_DEPLOYMENT, POST_DEPLOYMENT, START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE,
+          DISABLE_SERVICE, CONTAINER_SETUP, CONTAINER_DEPLOY, WRAP_UP),
+      PIPELINE_STENCILS, ORCHESTRATION_STENCILS, COMMON);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
