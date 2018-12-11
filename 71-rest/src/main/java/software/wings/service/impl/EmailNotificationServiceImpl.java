@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
+import io.harness.waiter.WaitNotifyEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -28,7 +29,6 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.EmailHelperUtil;
 import software.wings.utils.EmailUtil;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
 import java.util.List;

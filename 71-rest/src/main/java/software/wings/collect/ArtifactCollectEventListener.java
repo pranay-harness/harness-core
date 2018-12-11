@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.queue.QueueListener;
+import io.harness.waiter.WaitNotifyEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -43,7 +44,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 /**
  * Created by peeyushaggarwal on 5/11/16.

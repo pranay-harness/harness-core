@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.version.VersionInfoManager;
+import io.harness.waiter.WaitNotifyEngine;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mockito.Mock;
@@ -42,7 +43,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.HashMap;
 import java.util.Map;

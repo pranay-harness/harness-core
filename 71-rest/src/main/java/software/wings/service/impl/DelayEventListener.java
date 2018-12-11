@@ -3,9 +3,9 @@ package software.wings.service.impl;
 import com.google.inject.Inject;
 
 import io.harness.queue.QueueListener;
+import io.harness.waiter.WaitNotifyEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 public class DelayEventListener extends QueueListener<DelayEvent> {
   private static final Logger logger = LoggerFactory.getLogger(DelayEventListener.class);

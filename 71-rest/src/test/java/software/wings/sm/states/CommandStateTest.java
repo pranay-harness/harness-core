@@ -69,6 +69,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.waiter.ErrorNotifyResponseData;
+import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -117,7 +118,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.Collections;

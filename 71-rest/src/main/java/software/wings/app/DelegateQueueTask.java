@@ -20,6 +20,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.ErrorNotifyResponseData;
+import io.harness.waiter.WaitNotifyEngine;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
@@ -32,7 +33,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AssignDelegateService;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.time.Clock;
 import java.util.List;

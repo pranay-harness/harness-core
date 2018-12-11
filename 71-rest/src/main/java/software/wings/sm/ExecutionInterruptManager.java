@@ -51,6 +51,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.ReadPref;
+import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +60,6 @@ import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.List;
 import java.util.Map;

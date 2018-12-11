@@ -14,6 +14,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -45,7 +46,6 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 

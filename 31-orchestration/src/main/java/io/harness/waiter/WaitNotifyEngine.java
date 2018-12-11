@@ -1,4 +1,4 @@
-package software.wings.waitnotify;
+package io.harness.waiter;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -18,12 +18,6 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
-import io.harness.waiter.ErrorNotifyResponseData;
-import io.harness.waiter.NotifyCallback;
-import io.harness.waiter.NotifyEvent;
-import io.harness.waiter.NotifyResponse;
-import io.harness.waiter.WaitInstance;
-import io.harness.waiter.WaitQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +28,6 @@ import java.util.List;
 /**
  * WaitNotifyEngine allows tasks to register in waitQueue and get notified via callback.
  * No entry in the waitQueue found for the correlationIds:
- *
- * @author Rishi
  */
 @Singleton
 public class WaitNotifyEngine {

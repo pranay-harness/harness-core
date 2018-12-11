@@ -28,6 +28,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -93,7 +94,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
 import java.util.HashMap;

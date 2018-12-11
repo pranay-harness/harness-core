@@ -33,6 +33,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -52,7 +53,6 @@ import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ResourceConstraintStatusData;
 import software.wings.sm.states.ResourceConstraintState.HoldingScope;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.HashMap;

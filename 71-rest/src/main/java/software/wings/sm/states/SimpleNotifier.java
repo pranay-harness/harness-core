@@ -5,7 +5,7 @@
 package software.wings.sm.states;
 
 import io.harness.delegate.task.protocol.ResponseData;
-import software.wings.waitnotify.WaitNotifyEngine;
+import io.harness.waiter.WaitNotifyEngine;
 
 /**
  * The type Simple notifier.

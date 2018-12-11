@@ -24,6 +24,7 @@ import io.harness.distribution.barrier.ForcerId;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HKeyIterator;
+import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
 import lombok.Value;
 import org.slf4j.Logger;
@@ -39,7 +40,6 @@ import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.BarrierStatusData;
 import software.wings.sm.StateExecutionInstance;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.List;
