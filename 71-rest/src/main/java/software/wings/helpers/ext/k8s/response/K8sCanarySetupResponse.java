@@ -7,12 +7,12 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class K8sCanarySetupResponse extends K8sTaskResponse {
-  int releaseNumber;
-  int currentReplicas;
+  Integer releaseNumber;
+  Integer currentInstances;
 
   @Builder
-  public K8sCanarySetupResponse(int releaseNumber, int currentReplicas) {
+  public K8sCanarySetupResponse(Integer releaseNumber, Integer currentInstances) {
     this.releaseNumber = releaseNumber;
-    this.currentReplicas = currentReplicas;
+    this.currentInstances = currentInstances;
   }
 }

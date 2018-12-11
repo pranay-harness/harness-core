@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 
 public class ManifestHelper {
   public static final String values_filename = "values.yaml";
+  public static final String currentReleaseExpression = "${kubernetes.currentRelease.name}";
+  public static final String previousReleaseExpression = "${kubernetes.previousRelease.name}";
 
   private static KubernetesResource getKubernetesResourceFromSpec(String spec) {
     Map map = null;

@@ -54,7 +54,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
@@ -83,21 +82,13 @@ public class K8sCanarySetup extends State {
     super(name, K8S_CANARY_SETUP.name());
   }
 
-  @Getter @Setter @Attributes(title = "Target Instance Count") private String targetInstanceCount;
-
-  @Attributes(title = "Timeout (ms)")
-  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
-  @Override
-  public Integer getTimeoutMillis() {
-    return super.getTimeoutMillis();
-  }
-
-  private static final int defaultReplicaCount = 2;
+  @Getter @Setter @Attributes(title = "Instance Count") private String defaultInstanceCount;
+  @Getter @Setter @Attributes(title = "Prefer Existing Instance Count") private boolean preferExistingInstanceCount;
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      parseInt(context.renderExpression(this.targetInstanceCount)); // validating input.
+      parseInt(context.renderExpression(this.defaultInstanceCount)); // validating input.
 
       ApplicationManifest applicationManifest = k8sStateHelper.getApplicationManifest(context);
 
@@ -237,14 +228,9 @@ public class K8sCanarySetup extends State {
 
     K8sCanarySetupResponse k8sCanarySetupResponse = (K8sCanarySetupResponse) executionResponse.getK8sTaskResponse();
 
-    int targetInstances = 0;
-    if (isNotBlank(this.targetInstanceCount)) {
-      targetInstances = parseInt(context.renderExpression(this.targetInstanceCount));
-    }
-
-    if (targetInstances == 0) {
-      targetInstances = k8sCanarySetupResponse.getCurrentReplicas() > 0 ? k8sCanarySetupResponse.getCurrentReplicas()
-                                                                        : defaultReplicaCount;
+    Integer targetInstances = parseInt(context.renderExpression(this.defaultInstanceCount));
+    if (preferExistingInstanceCount && k8sCanarySetupResponse.getCurrentInstances() != null) {
+      targetInstances = k8sCanarySetupResponse.getCurrentInstances();
     }
 
     K8sContextElement k8sContextElement = K8sContextElement.builder()

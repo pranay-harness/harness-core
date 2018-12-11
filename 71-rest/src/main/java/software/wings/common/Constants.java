@@ -220,6 +220,8 @@ public interface Constants {
 
   String DEPLOY = "Deploy";
 
+  String SCALE = "Scale";
+
   String VERIFY = "Verify";
 
   String PCF_SETUP = "App Setup";

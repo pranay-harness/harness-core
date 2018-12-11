@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.k8s.manifest.ManifestHelper.currentReleaseExpression;
+import static io.harness.k8s.manifest.ManifestHelper.previousReleaseExpression;
 import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdFromKindName;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -120,9 +122,9 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
           return false;
         } else {
           releaseHistory = ReleaseHistory.createFromData(releaseHistoryData);
-          if (k8sScaleTaskParameters.getResource().contains("{kubernetes.currentRelease.name}")) {
+          if (k8sScaleTaskParameters.getResource().contains(currentReleaseExpression)) {
             release = releaseHistory.getLatestRelease();
-          } else if (k8sScaleTaskParameters.getResource().contains("{kubernetes.previousRelease.name}")) {
+          } else if (k8sScaleTaskParameters.getResource().contains(previousReleaseExpression)) {
             release = releaseHistory.getPreviousRollbackEligibleRelease(releaseHistory.getLatestRelease().getNumber());
             if (release == null) {
               executionLogCallback.saveExecutionLog("\nNo previous release found. Skipping scale.", INFO, SUCCESS);

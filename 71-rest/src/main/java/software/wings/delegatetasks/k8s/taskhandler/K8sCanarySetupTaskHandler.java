@@ -16,6 +16,7 @@ import static software.wings.delegatetasks.k8s.Utils.cleanup;
 import static software.wings.delegatetasks.k8s.Utils.describe;
 import static software.wings.delegatetasks.k8s.Utils.doStatusCheck;
 import static software.wings.delegatetasks.k8s.Utils.fetchManifestFiles;
+import static software.wings.delegatetasks.k8s.Utils.getCurrentReplicas;
 import static software.wings.delegatetasks.k8s.Utils.getLatestRevision;
 import static software.wings.delegatetasks.k8s.Utils.getResourcesInTableFormat;
 import static software.wings.delegatetasks.k8s.Utils.readManifests;
@@ -70,7 +71,7 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
   private Release release;
   private KubernetesResource managedWorkload;
   private List<KubernetesResource> resources;
-  private int currentReplicas;
+  private Integer currentInstances;
 
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
@@ -125,7 +126,7 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
         k8sCanarySetupTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     K8sCanarySetupResponse k8sCanarySetupResponse =
-        K8sCanarySetupResponse.builder().releaseNumber(release.getNumber()).currentReplicas(currentReplicas).build();
+        K8sCanarySetupResponse.builder().releaseNumber(release.getNumber()).currentInstances(currentInstances).build();
     k8sCanarySetupResponse.setActivityId(k8sCanarySetupTaskParameters.getActivityId());
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -205,6 +206,14 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
 
       cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 
+      if (releaseHistory.getLastSuccessfulRelease() != null
+          && releaseHistory.getLastSuccessfulRelease().getManagedWorkload() != null) {
+        currentInstances = getCurrentReplicas(
+            client, releaseHistory.getLastSuccessfulRelease().getManagedWorkload(), k8sDelegateTaskParams);
+        if (currentInstances != null) {
+          executionLogCallback.saveExecutionLog("\nCurrent instance count is " + currentInstances);
+        }
+      }
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return false;

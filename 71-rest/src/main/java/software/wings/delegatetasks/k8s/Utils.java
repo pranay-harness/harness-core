@@ -12,7 +12,6 @@ import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 
 import io.harness.exception.KubernetesYamlException;
-import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.DeleteCommand;
@@ -294,7 +293,7 @@ public class Utils {
     return "";
   }
 
-  public static int getCurrentReplicas(
+  public static Integer getCurrentReplicas(
       Kubectl client, KubernetesResourceId resourceId, K8sDelegateTaskParams k8SDelegateTaskParams) throws Exception {
     GetCommand getCommand = client.get()
                                 .resources(resourceId.kindNameRef())
@@ -315,9 +314,9 @@ public class Utils {
           getCommand.execute(k8SDelegateTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream);
 
       if (result.getExitValue() == 0) {
-        return Integer.parseInt(result.outputString());
+        return Integer.valueOf(result.outputString());
       } else {
-        throw new WingsException("Failed to get current replicas. error: " + result.outputString());
+        return null;
       }
     }
   }

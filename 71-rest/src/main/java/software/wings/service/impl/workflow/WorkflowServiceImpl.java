@@ -12,6 +12,8 @@ import static io.harness.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.govern.Switch.noop;
+import static io.harness.k8s.manifest.ManifestHelper.currentReleaseExpression;
+import static io.harness.k8s.manifest.ManifestHelper.previousReleaseExpression;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -61,8 +63,11 @@ import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import static software.wings.sm.StateType.HTTP;
+import static software.wings.sm.StateType.K8S_CANARY_ROLLBACK;
+import static software.wings.sm.StateType.K8S_CANARY_SETUP;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
+import static software.wings.sm.StateType.K8S_SCALE;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.sm.StateType.PCF_RESIZE;
@@ -212,8 +217,8 @@ import javax.validation.executable.ValidateOnExecution;
 public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceImpl.class);
 
-  private static final List<String> kubernetesArtifactNeededStateTypes =
-      Arrays.asList(KUBERNETES_SETUP.name(), KUBERNETES_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name());
+  private static final List<String> kubernetesArtifactNeededStateTypes = Arrays.asList(
+      KUBERNETES_SETUP.name(), KUBERNETES_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name(), K8S_CANARY_SETUP.name());
 
   private static final List<String> ecsArtifactNeededStateTypes =
       Arrays.asList(ECS_SERVICE_DEPLOY.name(), ECS_SERVICE_SETUP.name(), ECS_DAEMON_SERVICE_SETUP.name());
@@ -567,6 +572,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
       addK8sBasicWorkflowPhase(workflow);
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
+      addK8sCanaryWorkflowPhase(workflow);
     } else {
       throw new InvalidRequestException("DeploymentType not supported.");
     }
@@ -597,16 +604,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
     ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases().add(workflowPhase);
 
-    WorkflowPhase rollbackPhase = aWorkflowPhase()
-                                      .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-                                      .withRollback(true)
-                                      .withServiceId(workflowPhase.getServiceId())
-                                      .withComputeProviderId(workflowPhase.getComputeProviderId())
-                                      .withInfraMappingName(workflowPhase.getInfraMappingName())
-                                      .withPhaseNameForRollback(workflowPhase.getName())
-                                      .withDeploymentType(workflowPhase.getDeploymentType())
-                                      .withInfraMappingId(workflowPhase.getInfraMappingId())
-                                      .build();
+    WorkflowPhase rollbackPhase = createRollbackPhase(workflowPhase);
 
     rollbackPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
                                    .addStep(aGraphNode()
@@ -631,6 +629,137 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
         .getRollbackWorkflowPhaseIdMap()
         .put(workflowPhase.getUuid(), rollbackPhase);
+  }
+
+  private WorkflowPhase createRollbackPhase(WorkflowPhase workflowPhase) {
+    return aWorkflowPhase()
+        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .withRollback(true)
+        .withServiceId(workflowPhase.getServiceId())
+        .withComputeProviderId(workflowPhase.getComputeProviderId())
+        .withInfraMappingName(workflowPhase.getInfraMappingName())
+        .withPhaseNameForRollback(workflowPhase.getName())
+        .withDeploymentType(workflowPhase.getDeploymentType())
+        .withInfraMappingId(workflowPhase.getInfraMappingId())
+        .build();
+  }
+
+  private void addK8sCanaryWorkflowPhase(Workflow workflow) {
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    WorkflowPhase workflowPhase = aWorkflowPhase()
+                                      .withInfraMappingId(workflow.getInfraMappingId())
+                                      .withServiceId(workflow.getServiceId())
+                                      .build();
+    workflowServiceHelper.setCloudProvider(workflow.getAppId(), workflowPhase);
+
+    addK8sCanaryWorkflowPhaseSteps(workflowPhase);
+
+    workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
+    ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases().add(workflowPhase);
+
+    WorkflowPhase rollbackPhase = createRollbackPhase(workflowPhase);
+
+    addK8sCanaryRollbackWorkflowPhaseSteps(rollbackPhase);
+
+    workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackPhase);
+    ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
+        .getRollbackWorkflowPhaseIdMap()
+        .put(workflowPhase.getUuid(), rollbackPhase);
+  }
+
+  private void addK8sCanaryWorkflowPhaseSteps(WorkflowPhase workflowPhase) {
+    Map<String, Object> defaultSetupProperties = new HashMap<>();
+    defaultSetupProperties.put("defaultInstanceCount", "2");
+    defaultSetupProperties.put("preferExistingInstanceCount", true);
+
+    workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SETUP)
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(K8S_CANARY_SETUP.name())
+                                                .withName(Constants.K8S_CANARY_SETUP)
+                                                .withProperties(defaultSetupProperties)
+                                                .build())
+                                   .build());
+
+    Map<String, Object> defaultScaleUpNew1Properties = new HashMap<>();
+    defaultScaleUpNew1Properties.put("resource", currentReleaseExpression);
+    defaultScaleUpNew1Properties.put("instances", "50");
+    defaultScaleUpNew1Properties.put("instanceUnitType", "PERCENTAGE");
+    defaultScaleUpNew1Properties.put("skipSteadyStateCheck", false);
+
+    Map<String, Object> defaultScaleDownOld1Properties = new HashMap<>();
+    defaultScaleDownOld1Properties.put("resource", previousReleaseExpression);
+    defaultScaleDownOld1Properties.put("instances", "50");
+    defaultScaleDownOld1Properties.put("instanceUnitType", "PERCENTAGE");
+    defaultScaleDownOld1Properties.put("skipSteadyStateCheck", false);
+
+    workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SCALE + " 1")
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(K8S_SCALE.name())
+                                                .withName("Scale Up New")
+                                                .withProperties(defaultScaleUpNew1Properties)
+                                                .build())
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(K8S_SCALE.name())
+                                                .withName("Scale Down Old")
+                                                .withProperties(defaultScaleDownOld1Properties)
+                                                .build())
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.VERIFY).build());
+
+    Map<String, Object> defaultScaleUpNew2Properties = new HashMap<>();
+    defaultScaleUpNew2Properties.put("resource", currentReleaseExpression);
+    defaultScaleUpNew2Properties.put("instances", "100");
+    defaultScaleUpNew2Properties.put("instanceUnitType", "PERCENTAGE");
+    defaultScaleUpNew2Properties.put("skipSteadyStateCheck", false);
+
+    Map<String, Object> defaultScaleDownOld2Properties = new HashMap<>();
+    defaultScaleDownOld2Properties.put("resource", previousReleaseExpression);
+    defaultScaleDownOld2Properties.put("instances", "0");
+    defaultScaleDownOld2Properties.put("instanceUnitType", "PERCENTAGE");
+    defaultScaleDownOld2Properties.put("skipSteadyStateCheck", false);
+
+    workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SCALE + " 2")
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(K8S_SCALE.name())
+                                                .withName("Scale Up New")
+                                                .withProperties(defaultScaleUpNew2Properties)
+                                                .build())
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(K8S_SCALE.name())
+                                                .withName("Scale Down Old")
+                                                .withProperties(defaultScaleDownOld2Properties)
+                                                .build())
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP).build());
+  }
+
+  private void addK8sCanaryRollbackWorkflowPhaseSteps(WorkflowPhase rollbackPhase) {
+    rollbackPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SETUP)
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(K8S_CANARY_ROLLBACK.name())
+                                                .withName(Constants.K8S_CANARY_ROLLBACK)
+                                                .withRollback(true)
+                                                .build())
+                                   .withPhaseStepNameForRollback(Constants.SETUP)
+                                   .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                   .withRollback(true)
+                                   .build());
+
+    rollbackPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.VERIFY)
+                                   .withPhaseStepNameForRollback(Constants.DEPLOY)
+                                   .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                   .withRollback(true)
+                                   .build());
+
+    rollbackPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP).withRollback(true).build());
   }
 
   /**
@@ -1298,17 +1427,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)
         || orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      boolean serviceRepeat = canaryOrchestrationWorkflow.serviceRepeat(workflowPhase);
 
-      generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat,
-          orchestrationWorkflow.getOrchestrationWorkflowType());
-      workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
-      canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
+      if (isK8sService(workflow.getAppId(), workflowPhase.getServiceId())) {
+        addK8sCanaryWorkflowPhaseSteps(workflowPhase);
+        workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
+        canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
-      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(
-          workflow.getAppId(), workflowPhase, !serviceRepeat, orchestrationWorkflow.getOrchestrationWorkflowType());
-      workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
-      canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
+        WorkflowPhase rollbackWorkflowPhase = createRollbackPhase(workflowPhase);
+        addK8sCanaryRollbackWorkflowPhaseSteps(rollbackWorkflowPhase);
+        workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
+        canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
+      } else {
+        boolean serviceRepeat = canaryOrchestrationWorkflow.serviceRepeat(workflowPhase);
+
+        generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat,
+            orchestrationWorkflow.getOrchestrationWorkflowType());
+        workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
+        canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
+
+        WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(
+            workflow.getAppId(), workflowPhase, !serviceRepeat, orchestrationWorkflow.getOrchestrationWorkflowType());
+        workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
+        canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
+      }
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
         || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)
         || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
