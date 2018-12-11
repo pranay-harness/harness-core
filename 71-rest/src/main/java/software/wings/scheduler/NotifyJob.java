@@ -5,9 +5,9 @@ import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusDat
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.waiter.WaitNotifyEngine;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 /**
  * Created by rishi on 3/31/17.

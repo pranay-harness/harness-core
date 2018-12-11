@@ -93,6 +93,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.PersistentEntity;
 import io.harness.queue.Queue;
+import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -212,7 +213,6 @@ import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.MapperUtils;
 import software.wings.utils.Validator;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.ObjectStreamClass;
 import java.util.ArrayList;

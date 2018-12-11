@@ -12,6 +12,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.waiter.WaitNotifyEngine;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.utils.Validator;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.EnumSet;
 import java.util.List;

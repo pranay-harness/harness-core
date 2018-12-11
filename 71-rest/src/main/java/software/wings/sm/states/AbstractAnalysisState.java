@@ -28,6 +28,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import software.wings.api.DeploymentType;
@@ -89,7 +90,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;

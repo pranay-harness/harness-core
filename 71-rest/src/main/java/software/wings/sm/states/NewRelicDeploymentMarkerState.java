@@ -13,6 +13,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.WingsException;
+import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

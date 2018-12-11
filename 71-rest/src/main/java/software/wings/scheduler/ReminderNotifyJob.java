@@ -2,10 +2,10 @@ package software.wings.scheduler;
 
 import com.google.inject.Inject;
 
+import io.harness.waiter.WaitNotifyEngine;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import software.wings.common.Constants;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -21,6 +21,7 @@ import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.NotifyResponse;
 import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitInstance;
+import io.harness.waiter.WaitNotifyEngine;
 import io.harness.waiter.WaitQueue;
 import org.junit.Before;
 import org.junit.Test;

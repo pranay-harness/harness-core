@@ -5,6 +5,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.waiter.WaitNotifyEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
@@ -20,7 +21,6 @@ import software.wings.service.impl.bugsnag.BugsnagDelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.List;
 import java.util.Set;
