@@ -49,13 +49,13 @@ public class JiraSettingResource {
    * @return the rest response
    */
   @GET
-  @Path("{connectorId}/fields")
+  @Path("{connectorId}/field_options")
   @Timed
   @ExceptionMetered
   public RestResponse getFields(@QueryParam("appId") String appId, @QueryParam("accountId") @NotEmpty String accountId,
-      @PathParam("connectorId") String connectorId) {
+      @PathParam("connectorId") String connectorId, @QueryParam("projectId") String projectId) {
     SettingAttribute jiraSettingAttribute = settingService.get(connectorId);
     return new RestResponse<>(
-        jiraHelperService.getFields((JiraConfig) jiraSettingAttribute.getValue(), accountId, appId));
+        jiraHelperService.getFieldOptions((JiraConfig) jiraSettingAttribute.getValue(), projectId, accountId, appId));
   }
 }

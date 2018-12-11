@@ -16,6 +16,7 @@ import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.Field;
 import net.rcarz.jiraclient.Issue;
 import net.rcarz.jiraclient.Issue.FluentUpdate;
+import net.rcarz.jiraclient.Issue.SearchResult;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
 import net.rcarz.jiraclient.Resource;
@@ -100,8 +101,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       case GET_PROJECTS:
         return getProjects(parameters);
 
-      case GET_FIELDS:
-        return getFields(parameters);
+      case GET_FIELDS_OPTIONS:
+        return getFieldsAndOptions(parameters);
 
       default:
         break;
@@ -110,23 +111,28 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return null;
   }
 
-  private ResponseData getFields(JiraTaskParameters parameters) {
+  private ResponseData getFieldsAndOptions(JiraTaskParameters parameters) {
     JiraClient jiraClient = getJiraClient(parameters);
 
+    SearchResult issues = null;
     URI uri = null;
     JSONArray fieldsArray = null;
     try {
-      uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "field");
+      issues = jiraClient.searchIssues("project = " + parameters.getProject(), 1);
+      Issue issue = issues.issues.get(0);
+
+      uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/" + issue.getKey() + "/editmeta");
       JSON response = jiraClient.getRestClient().get(uri);
       fieldsArray = JSONArray.fromObject(response);
-    } catch (URISyntaxException | IOException | RestException e) {
+
+      return JiraExecutionData.builder().fields(fieldsArray).build();
+    } catch (URISyntaxException | IOException | RestException | JiraException e) {
       String errorMessage = "Failed to fetch fields from JIRA server.";
       logger.error(errorMessage);
 
+      // TODO(swagat): Add execution status to JiraExecutionData
       return JiraExecutionData.builder().errorMessage(errorMessage).build();
     }
-
-    return JiraExecutionData.builder().fields(fieldsArray).build();
   }
 
   private ResponseData getProjects(JiraTaskParameters parameters) {

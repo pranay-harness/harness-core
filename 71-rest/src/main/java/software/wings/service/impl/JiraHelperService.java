@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.auth0.jwt.interfaces.Claim;
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.JiraClient;
@@ -90,7 +91,7 @@ public class JiraHelperService {
     return jiraExecutionData.getProjects();
   }
 
-  public Object getFields(JiraConfig jiraConfig, String accountId, String appId) {
+  public Object getFieldOptions(JiraConfig jiraConfig, String projectId, String accountId, String appId) {
     DelegateTask delegateTask =
         aDelegateTask()
             .withTaskType(TaskType.JIRA)
@@ -99,15 +100,18 @@ public class JiraHelperService {
             .withParameters(new Object[] {
                 JiraTaskParameters.builder()
                     .accountId(accountId)
-                    .jiraAction(JiraAction.GET_FIELDS)
+                    .jiraAction(JiraAction.GET_FIELDS_OPTIONS)
                     .jiraConfig(jiraConfig)
+                    .project(projectId)
                     .encryptionDetails(secretManager.getEncryptionDetails(jiraConfig, appId, WORKFLOW_EXECUTION_ID))
                     .build()})
             .withTimeout(TimeUnit.SECONDS.toMillis(30))
             .withAsync(false)
             .build();
 
-    JiraExecutionData jiraExecutionData = delegateService.executeTask(delegateTask);
+    ResponseData responseData = delegateService.executeTask(delegateTask);
+
+    JiraExecutionData jiraExecutionData = (JiraExecutionData) responseData;
     return jiraExecutionData.getFields();
   }
 
