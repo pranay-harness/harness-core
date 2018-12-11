@@ -1,7 +1,6 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
-import static java.lang.Integer.parseInt;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -101,7 +100,7 @@ public class K8sScale extends State {
       Integer maxInstances = null;
       K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
       if (k8sContextElement != null) {
-        maxInstances = Integer.valueOf(k8sContextElement.getTargetInstances());
+        maxInstances = k8sContextElement.getTargetInstances();
       }
 
       Activity activity = createActivity(context);
@@ -117,7 +116,7 @@ public class K8sScale extends State {
               .k8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping))
               .workflowExecutionId(context.getWorkflowExecutionId())
               .resource(this.resource)
-              .instances(parseInt(context.renderExpression(this.instances)))
+              .instances(Integer.valueOf(context.renderExpression(this.instances)))
               .instanceUnitType(this.instanceUnitType)
               .maxInstances(maxInstances)
               .skipSteadyStateCheck(this.skipSteadyStateCheck)

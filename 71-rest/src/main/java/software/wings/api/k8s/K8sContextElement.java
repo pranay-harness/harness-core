@@ -13,8 +13,8 @@ import java.util.Map;
 @Builder
 public class K8sContextElement implements ContextElement {
   String releaseName;
-  int releaseNumber;
-  int targetInstances;
+  Integer releaseNumber;
+  Integer targetInstances;
   TaskType currentTaskType;
 
   @Override
