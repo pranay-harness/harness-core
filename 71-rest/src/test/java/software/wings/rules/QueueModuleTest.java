@@ -7,8 +7,6 @@ import io.harness.event.model.QueableEvent;
 import io.harness.mongo.MongoQueue;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueListener;
-import io.harness.waiter.NotifyEvent;
-import io.harness.waiter.NotifyEventListener;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.InstanceChangeEvent;
 import software.wings.api.KmsTransitionEvent;
@@ -28,7 +26,6 @@ public class QueueModuleTest extends AbstractModule {
   protected void configure() {
     bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueue<>(EmailData.class));
     bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueue<>(CollectEvent.class));
-    bind(new TypeLiteral<Queue<NotifyEvent>>() {}).toInstance(new MongoQueue<>(NotifyEvent.class, 5, false));
     bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {}).toInstance(new MongoQueue<>(KmsTransitionEvent.class, 30));
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {}).toInstance(new MongoQueue<>(ExecutionEvent.class, 30, false));
     bind(new TypeLiteral<Queue<DeploymentEvent>>() {}).toInstance(new MongoQueue<>(DeploymentEvent.class, 60, false));
@@ -38,7 +35,6 @@ public class QueueModuleTest extends AbstractModule {
 
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<QueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
-    bind(new TypeLiteral<QueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
     bind(new TypeLiteral<QueueListener<KmsTransitionEvent>>() {}).to(KmsTransitionEventListener.class);
     bind(new TypeLiteral<QueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
     bind(new TypeLiteral<QueueListener<DelayEvent>>() {}).to(DelayEventListener.class);

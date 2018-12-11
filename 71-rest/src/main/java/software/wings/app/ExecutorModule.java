@@ -46,12 +46,6 @@ public class ExecutorModule extends AbstractModule {
         .annotatedWith(Names.named("waitStateResumer"))
         .toInstance(new ManagedScheduledExecutorService("WaitStateResumer"));
     bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("timer"))
-        .toInstance(new ManagedScheduledExecutorService("Timer"));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("notifier"))
-        .toInstance(new ManagedScheduledExecutorService("Notifier"));
-    bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("notifyResponseCleaner"))
         .toInstance(new ManagedScheduledExecutorService("NotifyResponseCleaner"));
     bind(ScheduledExecutorService.class)

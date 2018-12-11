@@ -2,7 +2,6 @@ package io.harness.rule;
 
 import com.google.inject.Module;
 
-import io.harness.factory.ClosingFactory;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -12,7 +11,7 @@ import java.util.List;
 
 public class CommonsMethodRule implements MethodRule, InjectorRuleMixin {
   @Override
-  public List<Module> modules(ClosingFactory closingFactory) {
+  public List<Module> modules() {
     return new ArrayList<>();
   }
 

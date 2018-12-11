@@ -70,7 +70,7 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>20-persistence-test</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

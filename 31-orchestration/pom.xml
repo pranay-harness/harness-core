@@ -7,7 +7,6 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>31-orchestration</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -58,6 +57,18 @@
             <groupId>software.wings</groupId>
             <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>11-commons-test</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>20-persistence-test</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>

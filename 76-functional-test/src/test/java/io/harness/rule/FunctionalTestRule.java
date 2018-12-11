@@ -29,7 +29,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.ExecutorModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
-import software.wings.app.QueueModule;
+import software.wings.app.ManagerQueueModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
@@ -45,6 +45,12 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
   private static final Logger logger = LoggerFactory.getLogger(FunctionalTestRule.class);
 
   private int port;
+  ClosingFactory closingFactory;
+
+  public FunctionalTestRule(ClosingFactory closingFactory) {
+    this.closingFactory = closingFactory;
+  }
+
   protected AdvancedDatastore datastore;
   private ExecutorService executorService = new CurrentThreadExecutor();
 
@@ -53,7 +59,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
   String VERIFICATION_PATH = "VERIFICATION_PATH";
 
   @Override
-  public List<Module> modules(ClosingFactory closingFactory) {
+  public List<Module> modules() {
     List<Module> modules = new ArrayList<>();
     MongoClient mongoClient;
     String dbName = System.getProperty("dbName", "harness");
@@ -85,7 +91,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     Configuration configuration = getConfiguration(dbName);
 
     modules = getRequiredModules(configuration, distributedLockSvc);
-    modules.add(new QueueModule());
+    modules.add(new ManagerQueueModule());
 
     return modules;
   }

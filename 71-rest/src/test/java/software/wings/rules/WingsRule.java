@@ -2,6 +2,7 @@ package software.wings.rules;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.maintenance.MaintenanceController.forceMaintenance;
+import static io.harness.queue.QueueModule.EXECUTOR_NAME;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -88,7 +89,7 @@ import software.wings.app.CacheModule;
 import software.wings.app.ExecutorModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
-import software.wings.app.QueueModule;
+import software.wings.app.ManagerQueueModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsApplication;
 import software.wings.app.WingsModule;
@@ -281,7 +282,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     if (fakeMongo) {
       modules.add(new QueueModuleTest());
     } else {
-      modules.add(new QueueModule());
+      modules.add(new ManagerQueueModule());
     }
   }
 
@@ -425,7 +426,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
     try {
       log().info("Stopping timer...");
-      ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer")))).stop();
+      ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, EXECUTOR_NAME))).stop();
       log().info("Stopped timer...");
     } catch (Exception ex) {
       logger.error("", ex);

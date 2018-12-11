@@ -7,10 +7,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-
     <artifactId>11-commons-test</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>

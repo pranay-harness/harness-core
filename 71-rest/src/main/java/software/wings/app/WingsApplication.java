@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.queue.QueueModule.EXECUTOR_NAME;
 import static java.time.Duration.ofSeconds;
 import static software.wings.common.Constants.USER_CACHE;
 
@@ -232,7 +233,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new YamlModule());
-    modules.add(new QueueModule());
+    modules.add(new ManagerQueueModule());
     modules.add(new ExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new MetricRegistryModule(metricRegistry));
@@ -397,7 +398,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
     environment.lifecycle().manage(injector.getInstance(ConfigurationController.class));
     environment.lifecycle().manage(
-        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer"))));
+        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, EXECUTOR_NAME)));
     environment.lifecycle().manage(
         (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier"))));
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));

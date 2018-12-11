@@ -31,7 +31,7 @@ import software.wings.app.DeployMode;
 import software.wings.app.ExecutorModule;
 import software.wings.app.GuiceObjectFactory;
 import software.wings.app.MainConfiguration;
-import software.wings.app.QueueModule;
+import software.wings.app.ManagerQueueModule;
 import software.wings.app.StreamModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
@@ -117,7 +117,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new YamlModule());
-    modules.add(new QueueModule());
+    modules.add(new ManagerQueueModule());
     modules.add(new ExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule(configuration));
