@@ -65,7 +65,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
 
   private MainConfiguration configuration;
-  private Storage storage = StorageOptions.getDefaultInstance().getService();
+  private volatile Storage storage;
 
   @Inject
   public GoogleCloudFileServiceImpl(MainConfiguration configuration) {
@@ -97,7 +97,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
                             .setMetadata(metadata)
                             .build();
     try {
-      storage.create(blobInfo, IOUtils.toByteArray(in));
+      getStorage().create(blobInfo, IOUtils.toByteArray(in));
       return generateFileId(blobId);
     } catch (IOException e) {
       throw new WingsException(ErrorCode.SAVE_FILE_INTO_GCP_STORAGE_FAILED, e);
@@ -127,7 +127,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
                             .build();
     final String fileId;
     try {
-      storage.create(blobInfo, IOUtils.toByteArray(uploadedInputStream));
+      getStorage().create(blobInfo, IOUtils.toByteArray(uploadedInputStream));
       fileId = generateFileId(blobId);
     } catch (IOException e) {
       throw new WingsException(ErrorCode.SAVE_FILE_INTO_GCP_STORAGE_FAILED);
@@ -144,14 +144,14 @@ public class GoogleCloudFileServiceImpl implements FileService {
   public void deleteFile(String fileId, FileBucket fileBucket) {
     logger.info("Deleting file {}", fileId);
     BlobId blobId = getBlobIdFromFileId(fileId, fileBucket);
-    storage.delete(blobId);
+    getStorage().delete(blobId);
     logger.info("Deleted file {}", fileId);
   }
 
   @Override
   public File download(String fileId, File file, FileBucket fileBucket) {
     BlobId blobId = getBlobIdFromFileId(fileId, fileBucket);
-    Blob blob = storage.get(blobId);
+    Blob blob = getStorage().get(blobId);
     if (blob == null) {
       throw new WingsException(
           " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
@@ -164,7 +164,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
   @Override
   public void downloadToStream(String fileId, OutputStream op, FileBucket fileBucket) {
     BlobId blobId = getBlobIdFromFileId(fileId, fileBucket);
-    Blob blob = storage.get(blobId);
+    Blob blob = getStorage().get(blobId);
     if (blob == null) {
       throw new WingsException(
           " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
@@ -181,7 +181,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
   @Override
   public InputStream openDownloadStream(String fileId, FileBucket fileBucket) {
     BlobId blobId = getBlobIdFromFileId(fileId, fileBucket);
-    Blob blob = storage.get(blobId);
+    Blob blob = getStorage().get(blobId);
     if (blob == null) {
       throw new WingsException(
           " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
@@ -195,7 +195,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
   public FileMetadata getFileMetadata(String fileId, FileBucket fileBucket) {
     GoogleCloudFileIdComponent component = parseGoogleCloudFileId(fileId);
     BlobId blobId = BlobId.of(getBucketName(fileBucket), component.filePath);
-    Blob blob = storage.get(blobId);
+    Blob blob = getStorage().get(blobId);
     if (blob == null) {
       throw new WingsException(
           " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
@@ -255,7 +255,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
     }
 
     BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setMetadata(metadata).build();
-    storage.update(blobInfo);
+    getStorage().update(blobInfo);
 
     return true;
   }
@@ -298,7 +298,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
     BlobId blobId = BlobId.of(getBucketName(fileBucket), filename);
     BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setMetadata(stringMap).build();
     try {
-      storage.create(blobInfo, IOUtils.toByteArray(in));
+      getStorage().create(blobInfo, IOUtils.toByteArray(in));
       return generateFileId(blobId);
     } catch (IOException e) {
       throw new WingsException(ErrorCode.SAVE_FILE_INTO_GCP_STORAGE_FAILED, e);
@@ -342,7 +342,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
    */
   private void createFileBucketsInGCS() {
     String clusterName = configuration.getClusterName();
-    Page<Bucket> buckets = storage.list(BucketListOption.pageSize(500), BucketListOption.prefix(clusterName));
+    Page<Bucket> buckets = getStorage().list(BucketListOption.pageSize(500), BucketListOption.prefix(clusterName));
     Set<String> bucketNames = new HashSet<>();
     for (Bucket bucket : buckets.iterateAll()) {
       bucketNames.add(bucket.getName());
@@ -355,7 +355,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
         logger.info("Bucket with name '{}' exists in Google Cloud Storage already.", bucketName);
       } else {
         try {
-          storage.create(
+          getStorage().create(
               BucketInfo.newBuilder(bucketName).setStorageClass(StorageClass.NEARLINE).setLocation("us").build());
           logger.info("Bucket with name '{}' created in Google Cloud Storage.", bucketName);
         } catch (Exception e) {
@@ -368,5 +368,18 @@ public class GoogleCloudFileServiceImpl implements FileService {
 
   private String getBucketName(FileBucket fileBucket) {
     return configuration.getClusterName() + "-" + fileBucket.representationName();
+  }
+
+  private Storage getStorage() {
+    Storage result = storage;
+    if (result == null) {
+      synchronized (GoogleCloudFileServiceImpl.class) {
+        result = storage;
+        if (result == null) {
+          storage = result = StorageOptions.getDefaultInstance().getService();
+        }
+      }
+    }
+    return result;
   }
 }

@@ -145,7 +145,7 @@ public class MongoFileServiceImpl implements FileService {
         getOrCreateGridFSBucket(fileBucket.representationName()).find(Filters.eq("_id", new ObjectId(fileId)));
     GridFSFile gridFSFile = gridFSFiles.first();
     if (gridFSFile != null) {
-      Document metadata = gridFSFile.getMetadata();
+      Document metadata = gridFSFile.getExtraElements();
       if (metadata == null) {
         fileMetadata = FileMetadata.builder()
                            .fileName(gridFSFile.getFilename())
@@ -155,16 +155,16 @@ public class MongoFileServiceImpl implements FileService {
                            .checksum(gridFSFile.getMD5())
                            .build();
       } else {
-        fileMetadata = FileMetadata.builder()
-                           .fileName(gridFSFile.getFilename())
-                           .fileUuid(fileId)
-                           .fileLength(gridFSFile.getLength())
-                           .checksumType(ChecksumType.MD5)
-                           .checksum(gridFSFile.getMD5())
-                           .mimeType(metadata.getString("contentType"))
-                           .metadata(gridFSFile.getMetadata().entrySet().stream().collect(
-                               Collectors.toMap(Entry::getKey, Entry::getValue)))
-                           .build();
+        fileMetadata =
+            FileMetadata.builder()
+                .fileName(gridFSFile.getFilename())
+                .fileUuid(fileId)
+                .fileLength(gridFSFile.getLength())
+                .checksumType(ChecksumType.MD5)
+                .checksum(gridFSFile.getMD5())
+                .mimeType(metadata.getString("contentType"))
+                .metadata(metadata.entrySet().stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue)))
+                .build();
       }
     }
 
