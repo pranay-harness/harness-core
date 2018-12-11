@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
@@ -63,9 +64,10 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
       }
       executionLogCallback.saveExecutionLog("\nFetching " + gitFileConfig.getFilePath());
 
-      GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(taskParams.getGitConfig(),
-          gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
-          asList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch());
+      String filePath = isBlank(gitFileConfig.getFilePath()) ? "" : gitFileConfig.getFilePath();
+      GitFetchFilesResult gitFetchFilesResult =
+          gitService.fetchFilesByPath(taskParams.getGitConfig(), gitFileConfig.getConnectorId(),
+              gitFileConfig.getCommitId(), gitFileConfig.getBranch(), asList(filePath), gitFileConfig.isUseBranch());
       executionLogCallback.saveExecutionLog("Successfully fetched " + gitFileConfig.getFilePath());
 
       if (taskParams.isFinalState()) {
