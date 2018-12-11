@@ -17,8 +17,8 @@ import static software.wings.common.TemplateConstants.JBOSS_WAR_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.JBOSS_WAR_START_PATH;
 import static software.wings.common.TemplateConstants.JBOSS_WAR_STOP_PATH;
 import static software.wings.common.TemplateConstants.POWER_SHELL_COMMANDS;
-import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_APP_INSTALL_PATH;
-import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_INSTALL_PATH;
+import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_APP_V2_INSTALL_PATH;
+import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_V2_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_START_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_STOP_PATH;
@@ -249,13 +249,13 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     templateService.loadDefaultTemplates(TemplateType.HTTP, accountId, accountName);
     templateService.loadDefaultTemplates(
         asList(TOMCAT_WAR_STOP_PATH, TOMCAT_WAR_START_PATH, TOMCAT_WAR_INSTALL_PATH, JBOSS_WAR_STOP_PATH,
-            JBOSS_WAR_START_PATH, JBOSS_WAR_INSTALL_PATH, GENERIC_JSON_PATH, POWER_SHELL_IIS_WEBSITE_INSTALL_PATH,
-            POWER_SHELL_IIS_APP_INSTALL_PATH),
+            JBOSS_WAR_START_PATH, JBOSS_WAR_INSTALL_PATH, GENERIC_JSON_PATH, POWER_SHELL_IIS_WEBSITE_V2_INSTALL_PATH,
+            POWER_SHELL_IIS_APP_V2_INSTALL_PATH),
         accountId, accountName);
     templateGalleryService.copyHarnessTemplateFromGalleryToAccount(POWER_SHELL_COMMANDS, TemplateType.SSH,
-        "Install IIS Application", POWER_SHELL_IIS_APP_INSTALL_PATH, accountId, accountName);
+        "Install IIS Application", POWER_SHELL_IIS_APP_V2_INSTALL_PATH, accountId, accountName);
     templateGalleryService.copyHarnessTemplateFromGalleryToAccount(POWER_SHELL_COMMANDS, TemplateType.SSH,
-        "Install IIS Website", POWER_SHELL_IIS_WEBSITE_INSTALL_PATH, accountId, accountName);
+        "Install IIS Website", POWER_SHELL_IIS_WEBSITE_V2_INSTALL_PATH, accountId, accountName);
     logger.info("Copying default templates for account {} success", accountName);
   }
   private List<String> getKeywords(TemplateGallery templateGallery) {
