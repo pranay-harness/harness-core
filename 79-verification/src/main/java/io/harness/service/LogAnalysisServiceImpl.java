@@ -273,7 +273,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public List<LogMLFeedbackRecord> getMLFeedback(
       String appId, String serviceId, String workflowId, String workflowExecutionId) {
     Query<LogMLFeedbackRecord> query = wingsPersistence.createQuery(LogMLFeedbackRecord.class).filter("appId", appId);
-    query.or(query.criteria("serviceId").equal(serviceId), query.criteria("workflowId").equal(workflowId),
+    query.or(query.criteria("serviceId").equal(serviceId),
+        query.and(query.criteria("serviceId").equal(serviceId), query.criteria("workflowId").equal(workflowId)),
         query.criteria("workflowExecutionId").equal(workflowExecutionId));
 
     return query.asList();
