@@ -18,7 +18,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.sm.StateType;
 
 @Singleton
-public class PipelineSeedDataProvider {
+public class PipelineSampleDataProvider {
   @Inject private PipelineService pipelineService;
   @Inject private UserGroupService userGroupService;
 
@@ -41,7 +41,7 @@ public class PipelineSeedDataProvider {
             .pipelineStageElements(
                 asList(PipelineStageElement.builder()
                            .type(StateType.ENV_STATE.name())
-                           .name(SeedDataProviderConstants.KUBE_QA_ENVIRONMENT)
+                           .name(SampleDataProviderConstants.KUBE_QA_ENVIRONMENT)
                            .properties(ImmutableMap.of("workflowId", workflow.getUuid(), "envId", qaEnvId))
                            .workflowVariables(ImmutableMap.of(envName, qaEnvId, serviceInfraName, qaInframappingId))
                            .build()))
@@ -63,14 +63,14 @@ public class PipelineSeedDataProvider {
             .pipelineStageElements(
                 asList(PipelineStageElement.builder()
                            .type(StateType.ENV_STATE.name())
-                           .name(SeedDataProviderConstants.KUBE_PROD_ENVIRONMENT)
+                           .name(SampleDataProviderConstants.KUBE_PROD_ENVIRONMENT)
                            .properties(ImmutableMap.of("workflowId", workflow.getUuid(), "envId", prodEnvId))
                            .workflowVariables(ImmutableMap.of(envName, prodEnvId, serviceInfraName, profInframappingId))
                            .build()))
             .build();
 
     Pipeline pipeline = Pipeline.builder()
-                            .name(SeedDataProviderConstants.KUBE_PIPELINE_NAME)
+                            .name(SampleDataProviderConstants.KUBE_PIPELINE_NAME)
                             .appId(appId)
                             .pipelineStages(asList(qaStage, approvalStage, prodStage))
                             .build();

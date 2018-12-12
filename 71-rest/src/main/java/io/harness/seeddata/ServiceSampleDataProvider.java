@@ -1,7 +1,7 @@
 package io.harness.seeddata;
 
-import static io.harness.seeddata.SeedDataProviderConstants.KUBERNETES_SERVICE_DESC;
-import static io.harness.seeddata.SeedDataProviderConstants.KUBERNETES_SERVICE_NAME;
+import static io.harness.seeddata.SampleDataProviderConstants.KUBERNETES_SERVICE_DESC;
+import static io.harness.seeddata.SampleDataProviderConstants.KUBERNETES_SERVICE_NAME;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
@@ -17,7 +17,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 
 @Singleton
-public class ServiceSeedDataProvider {
+public class ServiceSampleDataProvider {
   @Inject private ServiceResourceService serviceResourceService;
 
   public Service createKubeService(String appId) {

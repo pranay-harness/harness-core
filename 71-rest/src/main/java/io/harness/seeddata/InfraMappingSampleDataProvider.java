@@ -1,7 +1,7 @@
 package io.harness.seeddata;
 
-import static io.harness.seeddata.SeedDataProviderConstants.KUBERNETES_SERVICE_INFRA_NAME;
-import static io.harness.seeddata.SeedDataProviderConstants.KUBERNETES_SERVICE_INFRA_NAME_SPACE;
+import static io.harness.seeddata.SampleDataProviderConstants.KUBERNETES_SERVICE_INFRA_NAME;
+import static io.harness.seeddata.SampleDataProviderConstants.KUBERNETES_SERVICE_INFRA_NAME_SPACE;
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 
 import com.google.inject.Inject;
@@ -18,7 +18,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
 @Singleton
-public class InfraMappingSeedDataProvider {
+public class InfraMappingSampleDataProvider {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceTemplateService serviceTemplateService;
 

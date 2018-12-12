@@ -1,7 +1,7 @@
 package io.harness.seeddata;
 
-import static io.harness.seeddata.SeedDataProviderConstants.KUBERNETES_APP_DESC;
-import static io.harness.seeddata.SeedDataProviderConstants.KUBERNETES_APP_NAME;
+import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP;
+import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP_DESC;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -10,13 +10,13 @@ import software.wings.beans.Application;
 import software.wings.service.intfc.AppService;
 
 @Singleton
-public class ApplicationSeedDataProvider {
+public class ApplicationSampleDataProvider {
   @Inject private AppService appService;
 
   public Application createKubernetesApp(String accountId) {
     Application application = Application.Builder.anApplication()
-                                  .withName(KUBERNETES_APP_NAME)
-                                  .withDescription(KUBERNETES_APP_DESC)
+                                  .withName(HARNESS_SAMPLE_APP)
+                                  .withDescription(HARNESS_SAMPLE_APP_DESC)
                                   .withAccountId(accountId)
                                   .build();
 
