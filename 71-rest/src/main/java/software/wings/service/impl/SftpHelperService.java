@@ -47,9 +47,10 @@ public class SftpHelperService {
     encryptionService.decrypt(sftpConfig, encryptionDetails);
     List<String> artifactPaths = new ArrayList<>();
 
+    String hostKeyVerifier = "";
+    boolean connectionEstablished = false;
     // Create a SSH client and try to make a connection
     try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
-      boolean connectionEstablished = false;
       try {
         ssh.loadKnownHosts();
         ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
@@ -58,20 +59,21 @@ public class SftpHelperService {
         if (e.getDisconnectReason() == DisconnectReason.HOST_KEY_NOT_VERIFIABLE) {
           String msg = e.getMessage();
           String[] split = msg.split("`");
-          String vc = split[3];
-          ssh.addHostKeyVerifier(vc);
-        } else {
-          logger.error(
-              "SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
+          hostKeyVerifier = split[3];
         }
       } catch (IOException e) {
         logger.error(
             "SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
       }
+    } catch (Exception e) {
+      logger.error("SFTP server {} could not be reached. Exception Message {}. Retrying with host key.",
+          sftpConfig.getSftpUrl(), e.getMessage());
+    }
 
-      // Host can be reached and host key is verified.
-      // Check if connection is established
+    try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
+      // Host can be reached and host key is verified. Check if connection is established
       if (!connectionEstablished) {
+        ssh.addHostKeyVerifier(hostKeyVerifier);
         ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
       }
 
@@ -154,9 +156,33 @@ public class SftpHelperService {
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     encryptionService.decrypt(sftpConfig, encryptionDetails);
 
+    String hostKeyVerifier = "";
+    boolean connectionEstablished = false;
     try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
-      ssh.loadKnownHosts();
-      ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
+      try {
+        ssh.loadKnownHosts();
+        ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
+        connectionEstablished = true;
+      } catch (TransportException e) {
+        if (e.getDisconnectReason() == DisconnectReason.HOST_KEY_NOT_VERIFIABLE) {
+          String msg = e.getMessage();
+          String[] split = msg.split("`");
+          hostKeyVerifier = split[3];
+        }
+      }
+    } catch (IOException e) {
+      logger.error(
+          "SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
+    } finally {
+      logger.info("Closing SSH connection for SFTP URL :{}", sftpConfig.getSftpUrl());
+    }
+
+    try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
+      // Host can be reached and host key is verified. Check if connection is established
+      if (!connectionEstablished) {
+        ssh.addHostKeyVerifier(hostKeyVerifier);
+        ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
+      }
       ssh.authPassword(sftpConfig.getUsername(), sftpConfig.getPassword());
       final SFTPClient sftp = ssh.newSFTPClient();
 
