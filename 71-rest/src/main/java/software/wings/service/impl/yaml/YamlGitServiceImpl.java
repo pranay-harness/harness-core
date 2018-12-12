@@ -642,8 +642,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                .filter(BRANCH_NAME_KEY, branchName)
                                                .asList();
       if (isEmpty(yamlGitConfigs)) {
-        logger.error(
-            GIT_YAML_LOG_PREFIX + "Could not obtain valid git configuration for webhook token " + webhookToken);
+        logger.warn(GIT_YAML_LOG_PREFIX + "Could not obtain valid git configuration for webhook token " + webhookToken);
         return;
       }
 
