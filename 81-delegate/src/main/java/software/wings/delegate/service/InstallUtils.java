@@ -70,7 +70,7 @@ public class InstallUtils {
 
       logger.info("download Url is {}", downloadUrl);
 
-      String script = "curl -LO " + downloadUrl + "\n"
+      String script = "curl $PROXY_CURL_OPTIONS -LO " + downloadUrl + "\n"
           + "chmod +x ./kubectl\n"
           + "./kubectl version --short --client\n";
 
@@ -127,7 +127,7 @@ public class InstallUtils {
 
       logger.info("download Url is {}", downloadUrl);
 
-      String script = "curl -LO " + downloadUrl + "\n"
+      String script = "curl $PROXY_CURL_OPTIONS -LO " + downloadUrl + "\n"
           + "chmod +x ./go-template\n"
           + "./go-template help\n";
 

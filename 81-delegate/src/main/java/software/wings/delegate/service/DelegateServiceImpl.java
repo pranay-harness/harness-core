@@ -167,17 +167,19 @@ public class DelegateServiceImpl implements DelegateService {
 
   private static final String PROXY_SETUP = "if [ -e proxy.config ]; then\n"
       + "  source ./proxy.config\n"
-      + "  PROXY_CURL=\"\"\n"
+      + "  PROXY_CURL_OPTIONS=\"\"\n"
       + "  if [[ $PROXY_HOST != \"\" ]]\n"
       + "  then\n"
       + "    echo \"Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT\"\n"
       + "    if [[ $PROXY_USER != \"\" ]]\n"
       + "    then\n"
       + "      echo \"using proxy auth config\"\n"
-      + "      PROXY_CURL=\"-x \"$PROXY_SCHEME\"://\"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT\n"
+      + "      PROXY_CURL_OPTIONS=\"-x \"$PROXY_SCHEME\"://\"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT\n"
+      + "      export http_proxy=$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT\n"
+      + "      export https_proxy=$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT\n"
       + "    else\n"
       + "      echo \"no proxy auth mentioned\"\n"
-      + "      PROXY_CURL=\"-x \"$PROXY_SCHEME\"://\"$PROXY_HOST:$PROXY_PORT\n"
+      + "      PROXY_CURL_OPTIONS=\"-x \"$PROXY_SCHEME\"://\"$PROXY_HOST:$PROXY_PORT\n"
       + "      export http_proxy=$PROXY_HOST:$PROXY_PORT\n"
       + "      export https_proxy=$PROXY_HOST:$PROXY_PORT\n"
       + "    fi\n"
@@ -268,6 +270,8 @@ public class DelegateServiceImpl implements DelegateService {
       accountId = delegateConfiguration.getAccountId();
       startTime = clock.millis();
 
+      applyProxyConfigurations();
+
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
                                 .version(getVersion())
@@ -290,23 +294,6 @@ public class DelegateServiceImpl implements DelegateService {
 
       installKubectl(delegateConfiguration, PROXY_SETUP);
       installGoTemplateTool(delegateConfiguration, PROXY_SETUP);
-
-      String proxyHost = System.getProperty("https.proxyHost");
-
-      if (isNotBlank(proxyHost)) {
-        String proxyScheme = System.getProperty("proxyScheme");
-        String proxyPort = System.getProperty("https.proxyPort");
-        logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
-        httpProxyHost = new HttpHost(proxyHost, Integer.parseInt(proxyPort), proxyScheme);
-        String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
-        if (isNotBlank(nonProxyHostsString)) {
-          String[] suffixes = nonProxyHostsString.split("\\|");
-          List<String> nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
-          logger.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
-        }
-      } else {
-        logger.info("No proxy settings. Configure in proxy.config if needed");
-      }
 
       long start = clock.millis();
       String description = "description here".equals(delegateConfiguration.getDescription())
@@ -439,6 +426,25 @@ public class DelegateServiceImpl implements DelegateService {
       logger.error("Exception while starting/running delegate", e);
     } catch (RuntimeException | IOException | NoSuchAlgorithmException | KeyManagementException e) {
       logger.error("Exception while starting/running delegate", e);
+    }
+  }
+
+  protected void applyProxyConfigurations() {
+    String proxyHost = System.getProperty("https.proxyHost");
+
+    if (isNotBlank(proxyHost)) {
+      String proxyScheme = System.getProperty("proxyScheme");
+      String proxyPort = System.getProperty("https.proxyPort");
+      logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
+      httpProxyHost = new HttpHost(proxyHost, Integer.parseInt(proxyPort), proxyScheme);
+      String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
+      if (isNotBlank(nonProxyHostsString)) {
+        String[] suffixes = nonProxyHostsString.split("\\|");
+        List<String> nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
+        logger.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
+      }
+    } else {
+      logger.info("No proxy settings. Configure in proxy.config if needed");
     }
   }
 
