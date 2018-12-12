@@ -6,9 +6,10 @@ import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -26,7 +27,9 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -43,8 +46,10 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Role;
+import software.wings.beans.Service;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
@@ -75,6 +80,8 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -216,30 +223,48 @@ public class AppServiceImpl implements AppService {
     PermissionAttribute envPermissionAttribute = new PermissionAttribute(PermissionType.ENV, Action.READ);
     authHandler.setEntityIdFilterIfUserAction(asList(envPermissionAttribute), appIdList);
 
-    applicationList.forEach(application -> {
-      // We cannot assume that the application always have accountId and applicationId
-      // Adding null checks to take care of that
-      if (isNotEmpty(application.getAccountId()) && isNotEmpty(application.getUuid())) {
-        YamlGitConfig yamlGitConfig =
-            yamlGitService.get(application.getAccountId(), application.getUuid(), EntityType.APPLICATION);
-        application.setYamlGitConfig(yamlGitConfig);
-      }
-    });
+    String accountId;
+    String[] appIdArray = appIdList.toArray(new String[0]);
+    if (isNotEmpty(applicationList)) {
+      accountId = applicationList.get(0).getAccountId();
+      PageRequest<YamlGitConfig> yamlPageRequest = PageRequestBuilder.aPageRequest()
+                                                       .addFilter("accountId", Operator.EQ, accountId)
+                                                       .addFilter("entityId", Operator.IN, appIdArray)
+                                                       .addFilter("entityType", Operator.EQ, EntityType.APPLICATION)
+                                                       .build();
 
-    if (details) {
-      applicationList.forEach(application -> {
-        try {
-          application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
-        } catch (Exception e) {
-          logger.error(format("Failed to fetch environments for app %s", application), e);
-        }
-        try {
-          application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
-        } catch (Exception e) {
-          logger.error(format("Failed to fetch services for app %s", application), e);
-        }
-      });
+      List<YamlGitConfig> yamlGitConfigList =
+          wingsPersistence.getAllEntities(yamlPageRequest, () -> yamlGitService.list(yamlPageRequest));
+      Map<String, YamlGitConfig> yamlGitConfigMap =
+          yamlGitConfigList.stream().collect(Collectors.toMap(config -> config.getEntityId(), config -> config));
+
+      Map<String, List<Environment>> appIdEnvMap;
+      Map<String, List<Service>> appIdServiceMap;
+
+      if (details) {
+        PageRequest<Environment> envPageRequest =
+            PageRequestBuilder.aPageRequest().addFilter("appId", Operator.IN, appIdArray).build();
+        List<Environment> envList =
+            wingsPersistence.getAllEntities(envPageRequest, () -> environmentService.list(envPageRequest, false));
+        appIdEnvMap = envList.stream().collect(groupingBy(Environment::getAppId));
+
+        PageRequest<Service> servicePageRequest =
+            PageRequestBuilder.aPageRequest().addFilter("appId", Operator.IN, appIdArray).build();
+        List<Service> serviceList = wingsPersistence.getAllEntities(
+            servicePageRequest, () -> serviceResourceService.list(servicePageRequest, false, false));
+        appIdServiceMap = serviceList.stream().collect(groupingBy(Service::getAppId));
+
+        applicationList.forEach(app -> {
+          app.setYamlGitConfig(yamlGitConfigMap.get(app.getUuid()));
+          app.setEnvironments(appIdEnvMap.getOrDefault(app.getUuid(), emptyList()));
+          app.setServices(appIdServiceMap.getOrDefault(app.getUuid(), emptyList()));
+        });
+
+      } else {
+        applicationList.forEach(app -> { app.setYamlGitConfig(yamlGitConfigMap.get(app.getUuid())); });
+      }
     }
+
     return response;
   }
 

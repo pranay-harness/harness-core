@@ -1,5 +1,7 @@
 package software.wings.service.intfc.yaml;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -38,6 +40,13 @@ public interface YamlGitService {
    * @return the rest response
    */
   YamlGitConfig get(@NotEmpty String accountId, @NotEmpty String entityId, @Valid EntityType entityType);
+
+  /**
+   *
+   * @param req
+   * @return
+   */
+  PageResponse<YamlGitConfig> list(PageRequest<YamlGitConfig> req);
 
   /**
    * Creates a new yaml git sync info by object type and entitytId (uuid)

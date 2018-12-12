@@ -27,7 +27,6 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
-import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_DESCRIPTION;
@@ -40,11 +39,9 @@ import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
-import static software.wings.utils.WingsTestConstants.TARGET_SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
@@ -220,11 +217,11 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(notificationService).sendNotificationAsync(any(Notification.class));
   }
 
-  /**
-   * Should clone environment.
-   */
-  @Test
-  public void shouldCloneEnvironment() {
+  private void shouldCloneEnvironment(boolean differentApp) {
+    if (differentApp) {
+      when(appService.get(APP_ID)).thenReturn(application);
+    }
+
     Environment environment =
         anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
     Environment clonedEnvironment = environment.cloneInternal();
@@ -271,62 +268,16 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    * Should clone environment.
    */
   @Test
+  public void shouldCloneEnvironment() {
+    shouldCloneEnvironment(false);
+  }
+
+  /**
+   * Should clone environment.
+   */
+  @Test
   public void shouldCloneEnvironmentAcrossApp() {
-    when(appService.get(APP_ID)).thenReturn(application);
-    Environment environment =
-        anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
-    Environment clonedEnvironment = environment.cloneInternal();
-    when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
-    when(wingsPersistence.saveAndGet(any(), any(Environment.class))).thenReturn(clonedEnvironment);
-
-    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", SearchFilter.Operator.EQ, environment.getAppId());
-    pageRequest.addFilter("envId", EQ, environment.getUuid());
-
-    PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
-                                                                      .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
-                                                                      .withComputeProviderSettingId(SETTING_ID)
-                                                                      .withAppId(APP_ID)
-                                                                      .withEnvId(ENV_ID)
-                                                                      .withServiceTemplateId(TEMPLATE_ID)
-                                                                      .build();
-
-    ServiceTemplate serviceTemplate = aServiceTemplate()
-                                          .withUuid(TEMPLATE_ID)
-                                          .withDescription(TEMPLATE_DESCRIPTION)
-                                          .withServiceId(SERVICE_ID)
-                                          .withEnvId(Base.GLOBAL_ENV_ID)
-                                          .withInfrastructureMappings(asList(physicalInfrastructureMapping))
-                                          .build();
-
-    ServiceTemplate clonedServiceTemplate = serviceTemplate.cloneInternal();
-    PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
-    when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(pageResponse);
-    when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(clonedServiceTemplate);
-    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED))
-        .thenReturn(serviceTemplate);
-
-    when(serviceResourceService.get(APP_ID, SERVICE_ID))
-        .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(WAR).build());
-    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
-        .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(WAR).build());
-    when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID))
-        .thenReturn(Service.builder().uuid(TARGET_SERVICE_ID).artifactType(WAR).build());
-    when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID, false))
-        .thenReturn(Service.builder().uuid(TARGET_SERVICE_ID).artifactType(WAR).build());
-
-    CloneMetadata cloneMetadata = CloneMetadata.builder()
-                                      .environment(environment)
-                                      .serviceMapping(ImmutableMap.of(SERVICE_ID, TARGET_SERVICE_ID))
-                                      .targetAppId(TARGET_APP_ID)
-                                      .build();
-
-    environmentService.cloneEnvironment(APP_ID, ENV_ID, cloneMetadata);
-    verify(wingsPersistence).getWithAppId(Environment.class, APP_ID, ENV_ID);
-    verify(wingsPersistence).saveAndGet(any(), any(Environment.class));
-    verify(serviceTemplateService).list(pageRequest, false, OBTAIN_VALUE);
-    verify(serviceTemplateService).save(any(ServiceTemplate.class));
-    verify(serviceTemplateService).get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
+    shouldCloneEnvironment(true);
   }
 
   /**

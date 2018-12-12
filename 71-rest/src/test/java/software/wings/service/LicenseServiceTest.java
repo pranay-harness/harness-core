@@ -20,7 +20,6 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.common.Constants;
-import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.LicenseUtil;
 import software.wings.service.intfc.AccountService;
@@ -31,10 +30,8 @@ import java.util.Calendar;
  * Created by peeyushaggarwal on 10/11/16.
  */
 public class LicenseServiceTest extends WingsBaseTest {
-  @InjectMocks @Inject private LicenseService licenseService;
   @InjectMocks @Inject private AccountService accountService;
-
-  @Inject private WingsPersistence wingsPersistence;
+  @InjectMocks @Inject private LicenseService licenseService;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -42,22 +39,6 @@ public class LicenseServiceTest extends WingsBaseTest {
   public void setup() {
     setInternalState(licenseService, "accountService", accountService);
     setInternalState(accountService, "licenseService", licenseService);
-  }
-
-  @Test
-  public void shouldSaveAccount() {
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
-    licenseInfo.setAccountType(AccountType.PAID);
-    licenseInfo.setLicenseUnits(100);
-    licenseInfo.setExpireAfterDays(1);
-    Account account = accountService.save(anAccount()
-                                              .withCompanyName(HARNESS_NAME)
-                                              .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
-                                              .withLicenseInfo(licenseInfo)
-                                              .build());
-    assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
   }
 
   @Test

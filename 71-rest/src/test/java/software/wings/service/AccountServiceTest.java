@@ -49,7 +49,6 @@ import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
-import software.wings.service.impl.LicenseUtil;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -115,53 +114,6 @@ public class AccountServiceTest extends WingsBaseTest {
     thrown.expectMessage("Invalid / Null license info");
     accountService.save(
         anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
-  }
-
-  @Test
-  public void shouldSaveAccountWithSpecificTypeAndExpiryTime() {
-    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.TRIAL);
-    licenseInfo.setExpiryTime(expiryTime);
-    Account account = accountService.save(anAccount()
-                                              .withCompanyName(HARNESS_NAME)
-                                              .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
-                                              .withLicenseInfo(licenseInfo)
-                                              .build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNotNull();
-    assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-  }
-
-  @Test
-  public void shouldUpdateTrialAccountWithDefaultValues() {
-    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.TRIAL);
-    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
-    licenseInfo.setExpiryTime(expiryTime);
-
-    Account account = accountService.save(anAccount()
-                                              .withCompanyName(HARNESS_NAME)
-                                              .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
-                                              .withLicenseInfo(licenseInfo)
-                                              .build());
-    Account accountFromDB = accountService.get(account.getUuid());
-
-    long newExpiryTime = System.currentTimeMillis() + 400000;
-    LicenseInfo updatedLicenseInfo = new LicenseInfo();
-    updatedLicenseInfo.setExpiryTime(newExpiryTime);
-
-    licenseService.updateAccountLicense(accountFromDB.getUuid(), updatedLicenseInfo, null);
-    accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNotNull();
-    assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(newExpiryTime);
   }
 
   @Test

@@ -29,7 +29,6 @@ import static software.wings.security.UserRequestContext.EntityInfo;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -61,6 +60,7 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupBuilder;
+import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AccountPermissionSummary.AccountPermissionSummaryBuilder;
@@ -119,6 +119,7 @@ public class AuthHandler {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private UserGroupService userGroupService;
   @Inject private AuthService authService;
+  @Inject private WingsPersistence wingsPersistence;
 
   public UserPermissionInfo getUserPermissionInfo(String accountId, List<UserGroup> userGroups) {
     UserPermissionInfoBuilder userPermissionInfoBuilder = UserPermissionInfo.builder().accountId(accountId);
@@ -465,33 +466,6 @@ public class AuthHandler {
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
-  <T extends Base> List<T> getAllEntities(PageRequest<T> pageRequest, Callable<PageResponse<T>> callable) {
-    List<T> result = Lists.newArrayList();
-    long currentPageSize;
-    long total = 0;
-    long countSoFar = 0;
-
-    try {
-      do {
-        pageRequest.setOffset(Long.toString(countSoFar));
-        PageResponse<T> pageResponse = callable.call();
-        total = pageResponse.getTotal();
-        List<T> listFromResponse = pageResponse.getResponse();
-        if (isEmpty(listFromResponse)) {
-          break;
-        }
-        currentPageSize = listFromResponse.size();
-        countSoFar += currentPageSize;
-        result.addAll(listFromResponse);
-      } while (countSoFar < total);
-
-    } catch (Exception e) {
-      logger.error("Error while retrieving the entities for auth mgmt");
-      throw new WingsException(e);
-    }
-    return result;
-  }
-
   private Map<String, List<Base>> getAppIdWorkflowMap(Set<String> appIds) {
     if (isEmpty(appIds)) {
       return new HashMap<>();
@@ -607,6 +581,10 @@ public class AuthHandler {
     List<Environment> envList = getAllEntities(pageRequest, () -> environmentService.list(pageRequest, false));
 
     return getEnvIdsByFilter(envList, envFilter);
+  }
+
+  public <T extends Base> List<T> getAllEntities(PageRequest<T> pageRequest, Callable<PageResponse<T>> callable) {
+    return wingsPersistence.getAllEntities(pageRequest, callable);
   }
 
   public void setEntityIdFilterIfUserAction(

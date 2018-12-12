@@ -11,8 +11,10 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Base;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 /**
  * The Interface WingsPersistence.
@@ -137,6 +139,8 @@ public interface WingsPersistence extends HPersistence {
    * @return             the page response
    */
   <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks);
+
+  <T extends Base> List<T> getAllEntities(PageRequest<T> pageRequest, Callable<PageResponse<T>> callable);
 
   /**
    * Creates a query and runs the authFilter to it.
