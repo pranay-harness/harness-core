@@ -238,19 +238,24 @@ public class MarketoHandler implements EventHandler {
       throws IOException {
     long marketoLeadId = user.getMarketoLeadId();
     if (marketoLeadId == 0L) {
-      marketoLeadId = marketoHelper.registerLead(accountId, user, accessToken, retrofit);
-      user = updateUser(user, marketoLeadId);
-      // Sleeping for 10 secs as a work around for marketo issue.
-      // Marketo can't process trigger campaign with a lead just created.
-      try {
-        Thread.sleep(10000);
-      } catch (InterruptedException ex) {
-        logger.warn("Exception while waiting 10 seconds for marketo to catchup");
-      }
+      reportLead(accountId, user, accessToken);
     }
     // Getting the latest copy since we had a sleep of 10 seconds.
     user = userService.getUserFromCacheOrDB(user.getUuid());
     reportCampaignEvent(accountId, event.getEventType(), accessToken, user);
+  }
+
+  private long reportLead(String accountId, User user, String accessToken) throws IOException {
+    long marketoLeadId = marketoHelper.registerLead(accountId, user, accessToken, retrofit);
+    updateUser(user, marketoLeadId);
+    // Sleeping for 10 secs as a work around for marketo issue.
+    // Marketo can't process trigger campaign with a lead just created.
+    try {
+      Thread.sleep(10000);
+    } catch (InterruptedException ex) {
+      logger.warn("Exception while waiting 10 seconds for marketo to catchup");
+    }
+    return marketoLeadId;
   }
 
   private User updateUser(User user, EventType eventType) {
@@ -326,8 +331,14 @@ public class MarketoHandler implements EventHandler {
     long marketoLeadId = user.getMarketoLeadId();
     String email = user.getEmail();
     if (marketoLeadId == 0L) {
-      logger.error("Invalid lead id reported for user {}", email);
-      return;
+      marketoLeadId = reportLead(accountId, user, accessToken);
+      if (marketoLeadId == 0L) {
+        logger.error("Invalid lead id reported for user {}", email);
+        return;
+      }
+
+      // Getting the latest copy since we had a sleep of 10 seconds.
+      user = userService.getUserFromCacheOrDB(user.getUuid());
     }
 
     boolean reported =

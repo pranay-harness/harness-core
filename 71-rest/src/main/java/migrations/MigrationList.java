@@ -169,6 +169,7 @@ public class MigrationList {
         .add(Pair.of(213, OverrideDefaultLimits.class))
         .add(Pair.of(214, MarketoLeadDataMigration.class))
         .add(Pair.of(215, DanglingUserInviteCleanupMigration.class))
+        .add(Pair.of(216, MarketoLeadDataMigration.class))
         .build();
   }
 }
