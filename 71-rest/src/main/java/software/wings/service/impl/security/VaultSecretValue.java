@@ -6,8 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 /**
- * Created by rsingh on 11/3/17.
+ * This is a request DTO class to accommodate the the request data format for Vault services backed by the v2
+ * secret engine such as version 0.11.
+ *
+ * @author mark.lu on 10/11/18
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
@@ -15,5 +20,5 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class VaultSecretValue {
-  private String value;
+  private Map<String, String> data;
 }

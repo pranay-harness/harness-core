@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -28,7 +29,7 @@ import javax.ws.rs.core.GenericType;
  * Created by rsingh on 9/21/18.
  */
 public class VaultIntegrationTest extends BaseIntegrationTest {
-  private static final String VAULT_BASE_PATH = "foo/bar";
+  private static final String VAULT_BASE_PATH = "/foo/bar";
 
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
@@ -247,12 +248,35 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  public void test_CreateSecretText_withInvalidPathReference_shouldFail() {
+    String vaultConfigId = createVaultConfig(vaultConfig);
+    VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
+    assertNotNull(savedVaultConfig);
+
+    String secretName = "MySecret";
+    String secretName2 = "AbsolutePathSecret";
+    String pathPrefix = isEmpty(savedVaultConfig.getBasePath()) ? "/harness" : savedVaultConfig.getBasePath();
+    String absoluteSecretPathWithNoPound = pathPrefix + "/SECRET_TEXT/" + secretName + "/FooSecret";
+
+    try {
+      testCreateSecretText(savedVaultConfig, secretName, secretName2, absoluteSecretPathWithNoPound);
+      fail("Saved with secret path doesn't contain # should fail");
+    } catch (Exception e) {
+      // Exception is expected.
+    }
+  }
+
+  @Test
   public void test_CreateSecretText_WithValidPath_shouldSucceed() {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
     assertNotNull(savedVaultConfig);
 
-    testCreateSecretText(savedVaultConfig);
+    String secretName = "FooSecret";
+    String secretName2 = "AbsolutePathSecret";
+    String pathPrefix = isEmpty(savedVaultConfig.getBasePath()) ? "/harness" : savedVaultConfig.getBasePath();
+    String absoluteSecretPath = pathPrefix + "/SECRET_TEXT/" + secretName + "#value";
+    testCreateSecretText(savedVaultConfig, secretName, secretName2, absoluteSecretPath);
   }
 
   @Test
@@ -261,22 +285,28 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
     assertNotNull(savedVaultConfig);
 
-    testCreateSecretText(savedVaultConfig);
+    String secretName = "FooSecret";
+    String secretName2 = "AbsolutePathSecret";
+    String pathPrefix = isEmpty(savedVaultConfig.getBasePath()) ? "/harness" : savedVaultConfig.getBasePath();
+    String absoluteSecretPath = pathPrefix + "/SECRET_TEXT/" + secretName + "#value";
+    testCreateSecretText(savedVaultConfig, secretName, secretName2, absoluteSecretPath);
   }
 
-  private void testCreateSecretText(VaultConfig savedVaultConfig) {
+  private void testCreateSecretText(
+      VaultConfig savedVaultConfig, String secretName, String secretName2, String absoluteSecretPath) {
     String secretValue = "MySecretValue";
     String secretUuid1 = null;
     String secretUuid2 = null;
     try {
       // This will create one secret at path 'harness/SECRET_TEXT/FooSecret".
-      secretUuid1 = createSecretText("FooSecret", secretValue, null);
+      secretUuid1 = createSecretText(secretName, secretValue, null);
       verifySecretValue(secretUuid1, secretValue, savedVaultConfig);
-      // Second secret will refer the first secret by relative path, as the default root is "/harness".
-      secretUuid2 = createSecretText("BarSecret", null, "SECRET_TEXT/FooSecret");
+
+      // Second secret will refer the first secret by absolute path of format "/foo/bar/FooSecret#value'.
+      String pathPrefix = isEmpty(savedVaultConfig.getBasePath()) ? "/harness" : savedVaultConfig.getBasePath();
+      secretUuid2 = createSecretText(secretName2, null, absoluteSecretPath);
       verifySecretValue(secretUuid2, secretValue, savedVaultConfig);
-    } catch (Exception e) {
-      // Exception is expected here.
+
     } finally {
       if (secretUuid1 != null) {
         deleteSecretText(secretUuid1);
@@ -302,7 +332,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     return encryptedDataId;
   }
 
-  private boolean updateSecretText(String uuid, String name, String value, String path) {
+  private void updateSecretText(String uuid, String name, String value, String path) {
     WebTarget target = client.target(API_BASE + "/secrets/update-secret?accountId=" + accountId + "&uuid=" + uuid);
     SecretText secretText = SecretText.builder().name(name).value(value).path(path).build();
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).post(
@@ -311,11 +341,9 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertEquals(0, restResponse.getResponseMessages().size());
     Boolean updated = restResponse.getResource();
     assertTrue(updated);
-
-    return updated;
   }
 
-  private boolean deleteSecretText(String uuid) {
+  private void deleteSecretText(String uuid) {
     WebTarget target = client.target(API_BASE + "/secrets/delete-secret?accountId=" + accountId + "&uuid=" + uuid);
     RestResponse<Boolean> restResponse =
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
@@ -323,8 +351,6 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertEquals(0, restResponse.getResponseMessages().size());
     Boolean deleted = restResponse.getResource();
     assertTrue(deleted);
-
-    return deleted;
   }
 
   private String createVaultConfig(VaultConfig vaultConfig) {

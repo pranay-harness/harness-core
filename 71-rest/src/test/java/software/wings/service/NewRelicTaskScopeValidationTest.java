@@ -2,9 +2,6 @@ package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -34,7 +31,6 @@ import software.wings.helpers.ext.vault.VaultRestClientFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.net.SocketException;
 import java.util.List;
@@ -65,28 +61,9 @@ public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
   @Test
   public void validationVaultReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
-    when(vaultRestClient.writeSecret(
-             anyString(), anyString(), anyString(), any(SettingVariableTypes.class), any(String.class)))
-        .thenReturn(true);
+    when(vaultRestClient.writeSecret(anyString(), anyString(), anyString())).thenReturn(true);
 
-    NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
-        DelegateTask.Builder.aDelegateTask()
-            .withParameters(new Object[] {NewRelicConfig.builder()
-                                              .newRelicUrl(newRelicUrl)
-                                              .accountId(generateUuid())
-                                              .apiKey(generateUuid().toCharArray())
-                                              .build(),
-                NewRelicDataCollectionInfo.builder()
-                    .encryptedDataDetails(
-                        Lists.newArrayList(EncryptedDataDetail.builder().encryptionConfig(vaultConfig).build()))
-                    .build()})
-            .build(),
-        null);
-    List<DelegateConnectionResult> validate = newRelicValidation.validate();
-    assertEquals(1, validate.size());
-    DelegateConnectionResult delegateConnectionResult = validate.get(0);
-    assertEquals(newRelicUrl, delegateConnectionResult.getCriteria());
-    assertTrue(delegateConnectionResult.isValidated());
+    validate(true);
   }
 
   @Test
@@ -95,24 +72,7 @@ public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
     Call<Void> restCall = Mockito.mock(Call.class);
     doThrow(new SocketException("can't reach to vault")).when(restCall).execute();
 
-    NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
-        DelegateTask.Builder.aDelegateTask()
-            .withParameters(new Object[] {NewRelicConfig.builder()
-                                              .newRelicUrl(newRelicUrl)
-                                              .accountId(generateUuid())
-                                              .apiKey(generateUuid().toCharArray())
-                                              .build(),
-                NewRelicDataCollectionInfo.builder()
-                    .encryptedDataDetails(
-                        Lists.newArrayList(EncryptedDataDetail.builder().encryptionConfig(vaultConfig).build()))
-                    .build()})
-            .build(),
-        null);
-    List<DelegateConnectionResult> validate = newRelicValidation.validate();
-    assertEquals(1, validate.size());
-    DelegateConnectionResult delegateConnectionResult = validate.get(0);
-    assertEquals(newRelicUrl, delegateConnectionResult.getCriteria());
-    assertFalse(delegateConnectionResult.isValidated());
+    validate(false);
   }
 
   @Test
@@ -121,6 +81,10 @@ public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
     Call<Void> restCall = Mockito.mock(Call.class);
     when(restCall.execute()).thenReturn(Response.success(null));
 
+    validate(false);
+  }
+
+  private void validate(boolean shouldBeValidated) {
     NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
         DelegateTask.Builder.aDelegateTask()
             .withParameters(new Object[] {NewRelicConfig.builder()
@@ -138,6 +102,6 @@ public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
     assertEquals(1, validate.size());
     DelegateConnectionResult delegateConnectionResult = validate.get(0);
     assertEquals(newRelicUrl, delegateConnectionResult.getCriteria());
-    assertFalse(delegateConnectionResult.isValidated());
+    assertEquals(shouldBeValidated, delegateConnectionResult.isValidated());
   }
 }

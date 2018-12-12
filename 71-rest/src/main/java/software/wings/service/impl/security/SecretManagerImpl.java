@@ -688,8 +688,15 @@ public class SecretManagerImpl implements SecretManager {
     String auditMessage;
     String encryptedDataId;
 
-    if (isNotEmpty(path) && encryptionType != EncryptionType.VAULT) {
-      throw new WingsException("Secret path can be specified only if the secret manager is of VAULT type!");
+    if (isNotEmpty(path)) {
+      if (encryptionType != EncryptionType.VAULT) {
+        throw new WingsException("Secret path can be specified only if the secret manager is of VAULT type!");
+      }
+      // Path should always have a "#" in and a key name after the #.
+      if (path.indexOf('#') < 0) {
+        throw new WingsException(
+            "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.");
+      }
     }
 
     char[] secretValue = isEmpty(value) ? null : value.toCharArray();
