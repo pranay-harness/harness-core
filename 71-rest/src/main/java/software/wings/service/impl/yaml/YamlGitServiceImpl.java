@@ -160,6 +160,11 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
+  public PageResponse<YamlGitConfig> list(PageRequest<YamlGitConfig> req) {
+    return wingsPersistence.query(YamlGitConfig.class, req);
+  }
+
+  @Override
   public YamlGitConfig save(YamlGitConfig ygs) {
     return save(ygs, true);
   }

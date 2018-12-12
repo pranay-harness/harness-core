@@ -13,6 +13,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.utils.WingsReflectionUtils.isSetByYaml;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -68,6 +69,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 /**
  * The Class WingsMongoPersistence.
@@ -589,6 +591,33 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
         save(encryptedData);
       }
     }
+  }
+
+  @Override
+  public <T extends Base> List<T> getAllEntities(PageRequest<T> pageRequest, Callable<PageResponse<T>> callable) {
+    List<T> result = Lists.newArrayList();
+    long currentPageSize;
+    long total;
+    long countSoFar = 0;
+
+    try {
+      do {
+        pageRequest.setOffset(Long.toString(countSoFar));
+        PageResponse<T> pageResponse = callable.call();
+        total = pageResponse.getTotal();
+        List<T> listFromResponse = pageResponse.getResponse();
+        if (isEmpty(listFromResponse)) {
+          break;
+        }
+        currentPageSize = listFromResponse.size();
+        countSoFar += currentPageSize;
+        result.addAll(listFromResponse);
+      } while (countSoFar < total);
+
+    } catch (Exception e) {
+      throw new WingsException(e);
+    }
+    return result;
   }
 
   private void deleteEncryptionReference(EncryptableSetting object, Set<String> fieldNames, String parentId) {
