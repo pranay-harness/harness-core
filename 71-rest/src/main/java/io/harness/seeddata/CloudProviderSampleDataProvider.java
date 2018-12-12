@@ -1,6 +1,6 @@
 package io.harness.seeddata;
 
-import static io.harness.seeddata.SeedDataProviderConstants.KUBE_CLUSTER_NAME;
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_CLOUD_PROVIDER_NAME;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
 
@@ -13,20 +13,21 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.service.intfc.SettingsService;
 
 @Singleton
-public class CloudProviderSeedDataProvider {
+public class CloudProviderSampleDataProvider {
   @Inject private SettingsService settingsService;
 
   public SettingAttribute createKubernetesClusterConfig(String accountId) {
     SettingAttribute kubeCluster =
         aSettingAttribute()
             .withCategory(Category.CLOUD_PROVIDER)
-            .withName(KUBE_CLUSTER_NAME)
+            .withName(K8S_CLOUD_PROVIDER_NAME)
             .withAccountId(accountId)
             .withValue(KubernetesClusterConfig.builder()
                            .accountId(accountId)
                            .useKubernetesDelegate(true)
                            .skipValidation(true)
-                           .delegateName(KUBE_CLUSTER_NAME) // Cluster name should match with the delegate name
+                           .delegateName(SampleDataProviderConstants
+                                             .K8S_DELEGATE_NAME) // Cluster name should match with the delegate name
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();

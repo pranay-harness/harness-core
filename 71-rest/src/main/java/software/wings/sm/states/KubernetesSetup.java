@@ -62,6 +62,11 @@ public class KubernetesSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in
   // wingsui/src/containers/WorkflowEditor/custom/ServiceSetup/KubernetesSetup/KubernetesSetup.js
 
+  public static final String PORT_KEY = "port";
+  public static final String PROTOCOL_KEY = "protocol";
+  public static final String TARGET_PORT_KEY = "targetPort";
+  public static final String SERVICE_TYPE_KEY = "serviceType";
+
   @Transient private static final Logger logger = LoggerFactory.getLogger(KubernetesSetup.class);
 
   @Transient @Inject private transient ConfigService configService;

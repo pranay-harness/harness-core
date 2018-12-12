@@ -1,7 +1,7 @@
 package io.harness.seeddata;
 
-import static io.harness.seeddata.SeedDataProviderConstants.KUBE_PROD_ENVIRONMENT;
-import static io.harness.seeddata.SeedDataProviderConstants.KUBE_QA_ENVIRONMENT;
+import static io.harness.seeddata.SampleDataProviderConstants.KUBE_PROD_ENVIRONMENT;
+import static io.harness.seeddata.SampleDataProviderConstants.KUBE_QA_ENVIRONMENT;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
@@ -13,7 +13,7 @@ import software.wings.beans.Environment;
 import software.wings.service.intfc.EnvironmentService;
 
 @Singleton
-public class EnvironmentSeedDataProvider {
+public class EnvironmentSampleDataProvider {
   @Inject private EnvironmentService environmentService;
 
   public Environment createQAEnvironment(String appId) {

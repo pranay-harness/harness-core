@@ -81,7 +81,7 @@ import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.persistence.ReadPref;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import io.harness.seeddata.SeedDataProviderService;
+import io.harness.seeddata.SampleDataProviderService;
 import org.junit.rules.TemporaryFolder;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
@@ -223,7 +223,7 @@ public class DataGenService {
   @Inject private ConfigService configService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private SeedDataProviderService seedDataProviderService;
+  @Inject private SampleDataProviderService sampleDataProviderService;
 
   protected String accountId = "INVALID_ID";
   protected String userToken = "INVALID_TOKEN";
@@ -257,8 +257,6 @@ public class DataGenService {
 
     createTestApplication(account);
 
-    // TODO: Remove once the create kubernetes app on acccount creation
-    seedDataProviderService.createKubernetesApp(account);
     // createSeedEntries();
     loadAppStackCatalogs();
   }

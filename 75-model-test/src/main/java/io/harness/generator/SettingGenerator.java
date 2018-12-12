@@ -200,7 +200,7 @@ public class SettingGenerator {
             .withAccountId(account.getUuid())
             .withValue(JenkinsConfig.builder()
                            .accountId(account.getUuid())
-                           .jenkinsUrl("https://jenkins.wings.software")
+                           .jenkinsUrl("https://jenkinsint.harness.io")
                            .username("wingsbuild")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
                            .authMechanism(Constants.USERNAME_PASSWORD_FIELD)

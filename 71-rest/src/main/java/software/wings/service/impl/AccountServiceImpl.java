@@ -37,7 +37,7 @@ import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.scheduler.PersistentScheduler;
-import io.harness.seeddata.SeedDataProviderService;
+import io.harness.seeddata.SampleDataProviderService;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -131,7 +131,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject protected AuthService authService;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject protected CacheHelper cacheHelper;
-  @Inject private SeedDataProviderService seedDataProviderService;
+  @Inject private SampleDataProviderService sampleDataProviderService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -159,9 +159,10 @@ public class AccountServiceImpl implements AccountService {
     createSystemAppContainers(account);
     authHandler.createDefaultUserGroups(account, null);
 
-    //    seedDataProviderService.createKubernetesApp(account);
     executorService.submit(
         () -> templateGalleryService.copyHarnessTemplatesToAccountV2(account.getUuid(), account.getAccountName()));
+
+    sampleDataProviderService.createHarnessSampleApp(account);
   }
 
   List<Role> createDefaultRoles(Account account) {
