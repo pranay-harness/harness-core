@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.marketo.MarketoRestClient;
 import io.harness.event.model.marketo.Error;
 import io.harness.event.model.marketo.Lead;
@@ -38,7 +37,6 @@ public class MarketoHelper {
 
   @Inject private UserService userService;
   @Inject private AccountService accountService;
-  @Inject MarketoConfig marketoConfig;
 
   public long registerLead(String accountId, User user, String accessToken, Retrofit retrofit) throws IOException {
     Validator.notNullCheck("User is null while registering the lead", user);
@@ -60,10 +58,6 @@ public class MarketoHelper {
         Lead.builder().action("createOrUpdate").lookupField("email").input(Arrays.asList(input.build())).build();
 
     long marketoLeadId = 0L;
-    if (accessToken == null) {
-      accessToken = getAccessToken(marketoConfig.getClientId(), marketoConfig.getClientSecret(), retrofit);
-    }
-
     retrofit2.Response<Response> response =
         retrofit.create(MarketoRestClient.class).createLead(accessToken, lead).execute();
     if (!response.isSuccessful()) {

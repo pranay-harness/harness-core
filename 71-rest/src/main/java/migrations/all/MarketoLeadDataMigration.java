@@ -53,6 +53,15 @@ public class MarketoLeadDataMigration implements Migration {
                             .build();
 
     logger.info("MarketoMigration - Start - registering all users of trial accounts as leads");
+
+    String accessToken;
+    try {
+      accessToken =
+          marketoHelper.getAccessToken(marketoConfig.getClientId(), marketoConfig.getClientSecret(), retrofit);
+    } catch (IOException e) {
+      logger.error("MarketoMigration - Error while getting the access token", e);
+      return;
+    }
     Query<Account> accountsQuery = wingsPersistence.createQuery(Account.class, excludeAuthority);
     try (HIterator<Account> records = new HIterator<>(accountsQuery.fetch())) {
       while (records.hasNext()) {
@@ -86,7 +95,7 @@ public class MarketoLeadDataMigration implements Migration {
           List<User> usersOfAccount = userService.getUsersOfAccount(accountId);
           usersOfAccount.stream().filter(user -> user.getMarketoLeadId() == 0L).forEach(user -> {
             try {
-              marketoHelper.registerLead(accountId, user, null, retrofit);
+              marketoHelper.registerLead(accountId, user, accessToken, retrofit);
             } catch (IOException e) {
               logger.error("MarketoMigration - Error while registering lead for user {} in account: {}", user.getUuid(),
                   accountId, e);
