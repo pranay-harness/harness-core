@@ -279,11 +279,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
   }
 
   protected void addQueueModules(List<Module> modules) {
-    if (fakeMongo) {
-      modules.add(new QueueModuleTest());
-    } else {
-      modules.add(new ManagerQueueModule());
-    }
+    modules.add(new ManagerQueueModule());
   }
 
   protected Configuration getConfiguration(List<Annotation> annotations, String dbName) {

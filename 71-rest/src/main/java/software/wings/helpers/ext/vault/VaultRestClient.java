@@ -1,19 +1,19 @@
 package software.wings.helpers.ext.vault;
 
-import software.wings.settings.SettingValue.SettingVariableTypes;
-
 import java.io.IOException;
 
 /**
+ * The absolute path format is (it has to started with a '/'):
+ *  /foo/bar/SampleSecret#MyKeyName
+ *
  * Created by rsingh on 11/3/17.
  */
 public interface VaultRestClient {
-  boolean writeSecret(String authToken, String basePath, String keyName, SettingVariableTypes settingType, String value)
-      throws IOException;
+  boolean writeSecret(String authToken, String fullPath, String value) throws IOException;
 
-  boolean deleteSecret(String authToken, String basePath, String path) throws IOException;
+  boolean deleteSecret(String authToken, String fullPath) throws IOException;
 
-  String readSecret(String authToken, String basePath, String keyName) throws IOException;
+  String readSecret(String authToken, String fullPath) throws IOException;
 
   boolean renewToken(String authToken) throws IOException;
 }

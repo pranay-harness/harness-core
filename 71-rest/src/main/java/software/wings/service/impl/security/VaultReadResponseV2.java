@@ -14,5 +14,5 @@ import lombok.Data;
 @Data
 @Builder
 public class VaultReadResponseV2 {
-  private VaultSecretValueV2 data;
+  private VaultSecretValue data;
 }

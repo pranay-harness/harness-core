@@ -8,8 +8,7 @@ import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import software.wings.service.impl.security.VaultReadResponseV2;
-import software.wings.service.impl.security.VaultSecretValueV2;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.service.impl.security.VaultSecretValue;
 
 /**
  * It appears that the latest Vault (v0.11) was switched to use the v2 key/value secret engine by default. The endpoint
@@ -27,18 +26,15 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 public interface VaultRestClientV2 {
   String BASE_VAULT_URL = "v1/secret/data/";
 
-  @POST(BASE_VAULT_URL + "{basePath}/{variableType}/{keyName}")
-  Call<Void> writeSecret(@Header("X-Vault-Token") String header, @Path("basePath") String basePath,
-      @Path("keyName") String keyName, @Path("variableType") SettingVariableTypes settingType,
-      @Body VaultSecretValueV2 value);
+  @POST(BASE_VAULT_URL + "{path}")
+  Call<Void> writeSecret(
+      @Header("X-Vault-Token") String header, @Path("path") String fullPath, @Body VaultSecretValue value);
 
-  @DELETE(BASE_VAULT_URL + "{basePath}/{path}")
-  Call<Void> deleteSecret(
-      @Header("X-Vault-Token") String header, @Path("basePath") String basePath, @Path("path") String path);
+  @DELETE(BASE_VAULT_URL + "{path}")
+  Call<Void> deleteSecret(@Header("X-Vault-Token") String header, @Path("path") String fullPath);
 
-  @GET(BASE_VAULT_URL + "{basePath}/{path}")
-  Call<VaultReadResponseV2> readSecret(
-      @Header("X-Vault-Token") String header, @Path("basePath") String basePath, @Path("path") String keyName);
+  @GET(BASE_VAULT_URL + "{path}")
+  Call<VaultReadResponseV2> readSecret(@Header("X-Vault-Token") String header, @Path("path") String fullPath);
 
   @POST("v1/auth/token/renew-self") Call<Object> renewToken(@Header("X-Vault-Token") String header);
 }

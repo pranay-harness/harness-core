@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
+import static software.wings.helpers.ext.vault.VaultRestClientFactory.getFullPath;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -224,15 +225,14 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   @Override
   public boolean deleteVaultSecret(String path, VaultConfig vaultConfig) {
-    boolean success = false;
     try {
-      success = VaultRestClientFactory.create(vaultConfig)
-                    .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(), path);
+      String fullPath = getFullPath(vaultConfig.getBasePath(), path);
+      return VaultRestClientFactory.create(vaultConfig)
+          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath);
     } catch (IOException e) {
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
           .addParam("reason", "Deletion of secret failed");
     }
-    return success;
   }
 
   @Override
@@ -351,12 +351,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
     // With existing encrypted value. Need to delete it first and rewrite with new value.
     logger.info("deleting vault secret {} for {}", keyUrl, encryptedData);
-    VaultRestClientFactory.create(vaultConfig)
-        .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(), keyUrl);
+    String fullPath = getFullPath(vaultConfig.getBasePath(), keyUrl);
+    VaultRestClientFactory.create(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath);
 
     boolean isSuccessful = VaultRestClientFactory.create(vaultConfig)
-                               .writeSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(), name,
-                                   settingType, value);
+                               .writeSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath, value);
 
     if (isSuccessful) {
       logger.info("saving vault secret {} for {}", keyUrl, encryptedData);
@@ -371,15 +370,17 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   private char[] decryptInternal(EncryptedData data, VaultConfig vaultConfig) throws Exception {
-    logger.info("reading secret {} from vault {}", data.getEncryptionKey(), vaultConfig.getVaultUrl());
-    String keyName = isEmpty(data.getPath()) ? data.getEncryptionKey() : data.getPath();
-    String value = VaultRestClientFactory.create(vaultConfig)
-                       .readSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(), keyName);
+    String fullPath =
+        isEmpty(data.getPath()) ? getFullPath(vaultConfig.getBasePath(), data.getEncryptionKey()) : data.getPath();
+    logger.info("reading secret {} from vault {}", fullPath, vaultConfig.getVaultUrl());
+
+    String value =
+        VaultRestClientFactory.create(vaultConfig).readSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath);
 
     if (EmptyPredicate.isNotEmpty(value)) {
       return value.toCharArray();
     } else {
-      String errorMsg = "Secret key path '" + keyName + "' is invalid.";
+      String errorMsg = "Secret key path '" + fullPath + "' is invalid.";
       logger.error(errorMsg);
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
     }
