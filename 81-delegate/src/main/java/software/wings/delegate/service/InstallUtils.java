@@ -34,7 +34,7 @@ public class InstallUtils {
     return goTemplateToolPath;
   }
 
-  static void installKubectl(DelegateConfiguration configuration, String proxySetupScript) {
+  static void installKubectl(DelegateConfiguration configuration) {
     try {
       if (StringUtils.isNotEmpty(configuration.getKubectlPath())) {
         kubectlPath = configuration.getKubectlPath();
@@ -70,14 +70,14 @@ public class InstallUtils {
 
       logger.info("download Url is {}", downloadUrl);
 
-      String script = "curl $PROXY_CURL_OPTIONS -LO " + downloadUrl + "\n"
+      String script = "curl $PROXY_CURL -LO " + downloadUrl + "\n"
           + "chmod +x ./kubectl\n"
           + "./kubectl version --short --client\n";
 
       ProcessExecutor processExecutor = new ProcessExecutor()
                                             .timeout(10, TimeUnit.MINUTES)
                                             .directory(new File(kubectlDirectory))
-                                            .command("/bin/bash", "-c", proxySetupScript + script)
+                                            .command("/bin/bash", "-c", script)
                                             .readOutput(true);
       ProcessResult result = processExecutor.execute();
 
@@ -103,7 +103,7 @@ public class InstallUtils {
         + "/amd64/kubectl";
   }
 
-  static void installGoTemplateTool(DelegateConfiguration configuration, String proxySetupScript) {
+  static void installGoTemplateTool(DelegateConfiguration configuration) {
     try {
       if (isWindows()) {
         logger.info("Skipping go-template install on Windows");
@@ -127,14 +127,14 @@ public class InstallUtils {
 
       logger.info("download Url is {}", downloadUrl);
 
-      String script = "curl $PROXY_CURL_OPTIONS -LO " + downloadUrl + "\n"
+      String script = "curl $PROXY_CURL -LO " + downloadUrl + "\n"
           + "chmod +x ./go-template\n"
           + "./go-template help\n";
 
       ProcessExecutor processExecutor = new ProcessExecutor()
                                             .timeout(10, TimeUnit.MINUTES)
                                             .directory(new File(goTemplateClientDirectory))
-                                            .command("/bin/bash", "-c", proxySetupScript + script)
+                                            .command("/bin/bash", "-c", script)
                                             .readOutput(true);
       ProcessResult result = processExecutor.execute();
 

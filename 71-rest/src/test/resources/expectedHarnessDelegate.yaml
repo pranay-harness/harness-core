@@ -81,6 +81,10 @@ spec:
           value: ""
         - name: NO_PROXY
           value: ""
+        - name: PROXY_USER
+          value: ""
+        - name: PROXY_PASSWORD
+          value: ""
         - name: POLL_FOR_TASKS
           value: "false"
         - name: HELM_DESIRED_VERSION

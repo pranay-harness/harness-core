@@ -165,34 +165,6 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
 
-  private static final String PROXY_SETUP = "if [ -e proxy.config ]; then\n"
-      + "  source ./proxy.config\n"
-      + "  PROXY_CURL_OPTIONS=\"\"\n"
-      + "  if [[ $PROXY_HOST != \"\" ]]\n"
-      + "  then\n"
-      + "    echo \"Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT\"\n"
-      + "    if [[ $PROXY_USER != \"\" ]]\n"
-      + "    then\n"
-      + "      echo \"using proxy auth config\"\n"
-      + "      PROXY_CURL_OPTIONS=\"-x \"$PROXY_SCHEME\"://\"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT\n"
-      + "      export http_proxy=$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT\n"
-      + "      export https_proxy=$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT\n"
-      + "    else\n"
-      + "      echo \"no proxy auth mentioned\"\n"
-      + "      PROXY_CURL_OPTIONS=\"-x \"$PROXY_SCHEME\"://\"$PROXY_HOST:$PROXY_PORT\n"
-      + "      export http_proxy=$PROXY_HOST:$PROXY_PORT\n"
-      + "      export https_proxy=$PROXY_HOST:$PROXY_PORT\n"
-      + "    fi\n"
-      + "  fi\n"
-      + "\n"
-      + "  if [[ $NO_PROXY != \"\" ]]\n"
-      + "  then\n"
-      + "    echo \"No proxy for domain suffixes $NO_PROXY\"\n"
-      + "    export no_proxy=$NO_PROXY\n"
-      + "  fi\n"
-      + "fi\n"
-      + "\n";
-
   private static String hostName;
 
   @Inject private DelegateConfiguration delegateConfiguration;
@@ -292,8 +264,8 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Delegate process started");
       }
 
-      installKubectl(delegateConfiguration, PROXY_SETUP);
-      installGoTemplateTool(delegateConfiguration, PROXY_SETUP);
+      installKubectl(delegateConfiguration);
+      installGoTemplateTool(delegateConfiguration);
 
       long start = clock.millis();
       String description = "description here".equals(delegateConfiguration.getDescription())
@@ -655,7 +627,7 @@ public class DelegateServiceImpl implements DelegateService {
 
           logger.info("Updating delegate profile to [{} : {}], last update {} ...", profile.getProfileId(),
               profile.getName(), profile.getProfileLastUpdatedAt());
-          String script = PROXY_SETUP + profile.getScriptContent();
+          String script = profile.getScriptContent();
 
           Logger scriptLogger = LoggerFactory.getLogger("delegate-profile-" + profile.getProfileId());
           scriptLogger.info("Executing profile script: {}", profile.getName());

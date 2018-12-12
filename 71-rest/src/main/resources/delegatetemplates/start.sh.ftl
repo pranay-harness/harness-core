@@ -4,6 +4,8 @@ if [ ! -e proxy.config ]; then
   echo "PROXY_HOST=" > proxy.config
   echo "PROXY_PORT=" >> proxy.config
   echo "PROXY_SCHEME=" >> proxy.config
+  echo "PROXY_USER=" >> proxy.config
+  echo "PROXY_PASSWORD=" >> proxy.config
 fi
 test "$(tail -c 1 proxy.config)" && `echo "" >> proxy.config`
 if ! `grep NO_PROXY proxy.config > /dev/null`; then
@@ -11,16 +13,15 @@ if ! `grep NO_PROXY proxy.config > /dev/null`; then
 fi
 
 source proxy.config
-PROXY_CURL=""
 if [[ $PROXY_HOST != "" ]]
 then
   echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
   if [[ $PROXY_USER != "" ]]
   then
-    PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
+    export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
     PROXY_SYS_PROPS="-Dhttp.proxyUser=$PROXY_USER -Dhttp.proxyPassword=$PROXY_PASSWORD -Dhttps.proxyUser=$PROXY_USER -Dhttps.proxyPassword=$PROXY_PASSWORD "
   else
-    PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_HOST:$PROXY_PORT
+    export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_HOST:$PROXY_PORT
     export http_proxy=$PROXY_HOST:$PROXY_PORT
     export https_proxy=$PROXY_HOST:$PROXY_PORT
   fi
