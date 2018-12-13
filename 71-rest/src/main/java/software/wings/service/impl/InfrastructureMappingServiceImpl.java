@@ -451,7 +451,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         keyValuePairs.put("subnetIds", lambdaInfraStructureMapping.getSubnetIds());
         keyValuePairs.put("securityGroupIds", lambdaInfraStructureMapping.getSecurityGroupIds());
       }
-      keyValuePairs.put("role", lambdaInfraStructureMapping.getRole());
+      if (lambdaInfraStructureMapping.getRole() != null) {
+        keyValuePairs.put("role", lambdaInfraStructureMapping.getRole());
+      } else {
+        fieldsToRemove.add("role");
+      }
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       validateInfraMapping(infrastructureMapping, fromYaml);
       keyValuePairs.put("loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
