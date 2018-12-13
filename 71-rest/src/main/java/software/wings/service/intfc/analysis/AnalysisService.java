@@ -30,7 +30,7 @@ public interface AnalysisService {
       @NotNull SettingAttribute settingAttribute, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails);
 
   boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String appId,
-      String workflowId, String workflowExecutionId, String serviceId);
+      String workflowId, String workflowExecutionId, String serviceId, String query);
 
   /**
    * Method to return Sample data for given configurations.
@@ -54,7 +54,7 @@ public interface AnalysisService {
   boolean isStateValid(String appId, String stateExecutionID);
 
   String getLastSuccessfulWorkflowExecutionIdWithLogs(
-      StateType stateType, String appId, String serviceId, String workflowId);
+      StateType stateType, String appId, String serviceId, String workflowId, String query);
 
   boolean saveFeedback(LogMLFeedback feedback, StateType stateType);
 

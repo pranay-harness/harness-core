@@ -309,30 +309,40 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String appId,
-      String workflowId, String workflowExecutionId, String serviceId) {
+      String workflowId, String workflowExecutionId, String serviceId, String query) {
     if (comparisonStrategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
       return true;
     }
-    return getLastSuccessfulWorkflowExecutionIdWithLogs(stateType, appId, serviceId, workflowId) != null;
+    return getLastSuccessfulWorkflowExecutionIdWithLogs(stateType, appId, serviceId, workflowId, query) != null;
   }
 
   @Override
   public String getLastSuccessfulWorkflowExecutionIdWithLogs(
-      StateType stateType, String appId, String serviceId, String workflowId) {
+      StateType stateType, String appId, String serviceId, String workflowId, String query) {
     // TODO should we limit the number of executions to search in ??
-    List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId);
+    List<String> successfulExecutions = new ArrayList<>();
+    List<ContinuousVerificationExecutionMetaData> cvList =
+        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
+            .filter("appId", appId)
+            .filter("stateType", stateType)
+            .filter("workflowId", workflowId)
+            .filter("executionStatus", ExecutionStatus.SUCCESS)
+            .order("-workflowStartTs")
+            .asList();
+    cvList.forEach(cvMetadata -> successfulExecutions.add(cvMetadata.getWorkflowExecutionId()));
     for (String successfulExecution : successfulExecutions) {
       if (wingsPersistence.createQuery(LogDataRecord.class)
               .filter("appId", appId)
-              .filter("stateType", stateType)
-              .filter("workflowId", workflowId)
               .filter("workflowExecutionId", successfulExecution)
-              .filter("serviceId", serviceId)
               .filter("clusterLevel", ClusterLevel.L2)
+              .filter("query", query)
               .count(new CountOptions().limit(1))
           > 0) {
         return successfulExecution;
       }
+    }
+    if (isNotEmpty(successfulExecutions)) {
+      return cvList.get(0).getWorkflowExecutionId();
     }
     logger.warn("Could not get a successful workflow to find control nodes");
     return null;

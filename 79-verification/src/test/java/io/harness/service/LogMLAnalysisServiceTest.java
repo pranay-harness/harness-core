@@ -400,7 +400,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Test
   public void testIsBaseLineCreatedWithCurrentStrategy() throws Exception {
     assertTrue(analysisService.isBaselineCreated(
-        AnalysisComparisonStrategy.COMPARE_WITH_CURRENT, null, null, null, null, null));
+        AnalysisComparisonStrategy.COMPARE_WITH_CURRENT, null, null, null, null, null, null));
   }
 
   @Test
@@ -419,7 +419,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     stateMachine.setUuid(workflowExecution.getStateMachineId());
     wingsPersistence.save(stateMachine);
     assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
-        appId, workflowId, workflowExecutionId, serviceId));
+        appId, workflowId, workflowExecutionId, serviceId, null));
   }
 
   @Test
@@ -456,7 +456,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     setInternalState(workflowExecutionService, "wingsPersistence", wingsPersistence);
     setInternalState(managerAnalysisService, "workflowExecutionService", workflowExecutionService);
     assertFalse(managerAnalysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
-        StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId));
+        StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, query));
   }
 
   @Test
@@ -502,7 +502,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements));
 
     assertTrue(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
-        appId, workflowId, workflowExecutionId, serviceId));
+        appId, workflowId, workflowExecutionId, serviceId, query));
   }
 
   @Test
