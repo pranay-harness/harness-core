@@ -1,6 +1,8 @@
 Hi ${(name!"there")?capitalize},
 
-Welcome to the free trial of Harness Platform! Click below to accept invitation.
+You are about to transform your Continuous Delivery with the help of Harness. Just verify your email address, and then create your trial account.
+
+Thanks for checking out Harness!
 
 ${url!}
 
