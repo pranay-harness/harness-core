@@ -53,8 +53,8 @@ public class SweepingOutput extends Base {
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   @Builder
-  SweepingOutput(String appId, String pipelineExecutionId, String workflowExecutionId, String phaseExecutionId,
-      String name, byte[] output) {
+  SweepingOutput(String uuid, String appId, String pipelineExecutionId, String workflowExecutionId,
+      String phaseExecutionId, String name, byte[] output) {
     setAppId(appId);
     this.pipelineExecutionId = pipelineExecutionId;
     this.workflowExecutionId = workflowExecutionId;

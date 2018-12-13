@@ -93,6 +93,13 @@ public interface HPersistence {
   DBCollection getCollection(Class cls, ReadPref readPref);
 
   /**
+   * Gets the collection.
+   *
+   * @param cls            the class of the collection that indexes should be ensured
+   */
+  void ensureIndex(Class cls);
+
+  /**
    * Close.
    */
   void close();

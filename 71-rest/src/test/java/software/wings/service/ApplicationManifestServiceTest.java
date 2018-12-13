@@ -1,6 +1,5 @@
 package software.wings.service;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -13,16 +12,11 @@ import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.mongo.IndexManagement;
-import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
-import io.harness.persistence.ReadPref;
 import io.harness.rule.RealMongo;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Morphia;
 import software.wings.WingsBaseTest;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -32,9 +26,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlPushService;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
@@ -133,7 +124,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   public void testDuplicateManifestFileNames() {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
 
-    ensureIndex();
+    wingsPersistence.ensureIndex(ManifestFile.class);
     applicationManifestService.create(applicationManifest);
 
     ManifestFile manifestFileWithSameName =
@@ -143,17 +134,5 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     ManifestFile savedmManifestFile = applicationManifestService.createManifestFile(manifestFile, SERVICE_ID);
     assertNotNull(savedmManifestFile);
     applicationManifestService.createManifestFile(manifestFileWithSameName, SERVICE_ID);
-  }
-
-  private void ensureIndex() {
-    AdvancedDatastore ds = wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
-
-    Set<Class> classSet = new HashSet<>();
-    classSet.add(ManifestFile.class);
-    morphia.map(classSet);
-
-    IndexManagement.ensureIndex(ds, morphia);
   }
 }

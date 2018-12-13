@@ -31,6 +31,7 @@ import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.InsertOptions;
+import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -105,6 +106,19 @@ public class MongoPersistence implements HPersistence {
   public DBCollection getCollection(Class cls, ReadPref readPref) {
     final AdvancedDatastore datastore = getDatastore(cls, readPref);
     return datastore.getDB().getCollection(datastore.getCollection(cls).getName());
+  }
+
+  @Override
+  public void ensureIndex(Class cls) {
+    AdvancedDatastore datastore = getDatastore(cls, ReadPref.NORMAL);
+    Morphia morphia = new Morphia();
+    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+
+    Set<Class> classSet = new HashSet<>();
+    classSet.add(cls);
+    morphia.map(classSet);
+
+    IndexManagement.ensureIndex(datastore, morphia);
   }
 
   @Override

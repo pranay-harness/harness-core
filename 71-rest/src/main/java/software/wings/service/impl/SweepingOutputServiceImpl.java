@@ -1,10 +1,13 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
+import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -26,7 +29,12 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
 
   @Override
   public SweepingOutput save(SweepingOutput sweepingOutput) {
-    return wingsPersistence.saveAndGet(SweepingOutput.class, sweepingOutput);
+    try {
+      return wingsPersistence.saveAndGet(SweepingOutput.class, sweepingOutput);
+    } catch (DuplicateKeyException exception) {
+      throw new InvalidRequestException(
+          format("Output with name %s, already saved in the context", sweepingOutput.getName()), exception);
+    }
   }
 
   @Override
