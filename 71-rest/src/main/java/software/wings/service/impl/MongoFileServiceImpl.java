@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
+import com.mongodb.MongoGridFSException;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.GridFSFindIterable;
@@ -258,9 +259,18 @@ public class MongoFileServiceImpl implements FileService {
    */
   @Override
   public void deleteFile(String fileId, FileBucket fileBucket) {
-    logger.info("Deleting file {}", fileId);
-    getOrCreateGridFSBucket(fileBucket.representationName()).delete(new ObjectId(fileId));
-    logger.info("Deleted file {}", fileId);
+    logger.info("Deleting file {} from bucket {}", fileId, fileBucket);
+    try {
+      getOrCreateGridFSBucket(fileBucket.representationName()).delete(new ObjectId(fileId));
+      logger.info("Deleted file {} from bucket {}", fileId, fileBucket);
+    } catch (MongoGridFSException e) {
+      // HAR-7371: This is a workaround for another bug HAR-7336 which deleted files in GridFS by mistake.
+      if (e.getMessage().contains("No file found with the id")) {
+        logger.warn("File {} no longer exist in bucket {}. Skipped.", fileId, fileBucket);
+      } else {
+        throw e;
+      }
+    }
   }
 
   @Override
