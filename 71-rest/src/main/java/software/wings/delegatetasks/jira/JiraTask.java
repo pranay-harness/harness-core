@@ -16,7 +16,6 @@ import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.Field;
 import net.rcarz.jiraclient.Issue;
 import net.rcarz.jiraclient.Issue.FluentUpdate;
-import net.rcarz.jiraclient.Issue.SearchResult;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
 import net.rcarz.jiraclient.Resource;
@@ -104,6 +103,9 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       case GET_FIELDS_OPTIONS:
         return getFieldsAndOptions(parameters);
 
+      case GET_STATUSES:
+        return getStatuses(parameters);
+
       default:
         break;
     }
@@ -111,22 +113,37 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return null;
   }
 
+  private ResponseData getStatuses(JiraTaskParameters parameters) {
+    JiraClient jiraClient = getJiraClient(parameters);
+
+    URI uri = null;
+    try {
+      uri = jiraClient.getRestClient().buildURI(
+          Resource.getBaseUri() + "project/" + parameters.getProject() + "/statuses");
+      JSON response = jiraClient.getRestClient().get(uri);
+
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .statuses((JSONArray) response)
+          .build();
+    } catch (URISyntaxException | RestException | IOException e) {
+      String errorMessage = "Failed to fetch statuses from JIRA server.";
+      logger.error(errorMessage);
+      return JiraExecutionData.builder().errorMessage(errorMessage).build();
+    }
+  }
+
   private ResponseData getFieldsAndOptions(JiraTaskParameters parameters) {
     JiraClient jiraClient = getJiraClient(parameters);
 
-    SearchResult issues = null;
-    URI uri = null;
-    JSONArray fieldsArray = null;
+    URI uri;
     try {
-      issues = jiraClient.searchIssues("project = " + parameters.getProject(), 1);
-      Issue issue = issues.issues.get(0);
-
-      uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/" + issue.getKey() + "/editmeta");
+      String issueKey = parameters.getProject() + "-1";
+      uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/" + issueKey + "/editmeta");
       JSON response = jiraClient.getRestClient().get(uri);
-      fieldsArray = JSONArray.fromObject(response);
 
-      return JiraExecutionData.builder().fields(fieldsArray).build();
-    } catch (URISyntaxException | IOException | RestException | JiraException e) {
+      return JiraExecutionData.builder().fields((JSONObject) response).build();
+    } catch (URISyntaxException | IOException | RestException e) {
       String errorMessage = "Failed to fetch fields from JIRA server.";
       logger.error(errorMessage);
 
