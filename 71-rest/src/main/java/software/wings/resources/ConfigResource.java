@@ -202,10 +202,15 @@ public class ConfigResource {
   @ExceptionMetered
   public Response downloadConfig(@QueryParam("appId") String appId, @PathParam("configId") String configId,
       @QueryParam("version") Integer version) {
-    File configFile = configService.download(appId, configId, version);
-    ResponseBuilder response = Response.ok(configFile, "application/x-unknown");
-    response.header("Content-Disposition", "attachment; filename=" + configFile.getName());
-    return response.build();
+    ConfigFile configFile = configService.get(appId, configId);
+    if (configFile.isEncrypted()) {
+      return Response.noContent().build();
+    } else {
+      File file = configService.download(appId, configId, version);
+      ResponseBuilder response = Response.ok(file, "application/x-unknown");
+      response.header("Content-Disposition", "attachment; filename=" + configFile.getName());
+      return response.build();
+    }
   }
 
   /**
