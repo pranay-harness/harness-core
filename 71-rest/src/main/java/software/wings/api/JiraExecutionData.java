@@ -6,6 +6,7 @@ import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.sm.StateExecutionData;
 
@@ -24,7 +25,8 @@ public class JiraExecutionData extends StateExecutionData implements ResponseDat
   private JiraAction jiraAction;
   private String issueId;
   private JSONArray projects;
-  private JSONArray fields;
+  private JSONObject fields;
+  private JSONArray statuses;
   private String webhookUrl;
   private JiraApprovalActionType jiraApprovalActionType;
 

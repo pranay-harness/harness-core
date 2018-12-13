@@ -5,9 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.JiraConfig;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.SettingsService;
 
@@ -36,9 +34,7 @@ public class JiraSettingResource {
   @ExceptionMetered
   public RestResponse getProjects(@QueryParam("appId") String appId,
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("connectorId") String connectorId) {
-    SettingAttribute jiraSettingAttribute = settingService.get(connectorId);
-    return new RestResponse<>(
-        jiraHelperService.getProjects((JiraConfig) jiraSettingAttribute.getValue(), accountId, appId));
+    return new RestResponse<>(jiraHelperService.getProjects(connectorId, accountId, appId));
   }
 
   /**
@@ -53,9 +49,23 @@ public class JiraSettingResource {
   @Timed
   @ExceptionMetered
   public RestResponse getFields(@QueryParam("appId") String appId, @QueryParam("accountId") @NotEmpty String accountId,
-      @PathParam("connectorId") String connectorId, @QueryParam("projectId") String projectId) {
-    SettingAttribute jiraSettingAttribute = settingService.get(connectorId);
-    return new RestResponse<>(
-        jiraHelperService.getFieldOptions((JiraConfig) jiraSettingAttribute.getValue(), projectId, accountId, appId));
+      @PathParam("connectorId") String connectorId, @QueryParam("project") String project) {
+    return new RestResponse<>(jiraHelperService.getFieldOptions(connectorId, project, accountId, appId));
+  }
+
+  /**
+   * List.
+   *
+   * @param accountId the account id
+   * @param connectorId   the request
+   * @return the rest response
+   */
+  @GET
+  @Path("{connectorId}/statuses")
+  @Timed
+  @ExceptionMetered
+  public RestResponse getGeneric(@QueryParam("appId") String appId, @QueryParam("accountId") @NotEmpty String accountId,
+      @PathParam("connectorId") String connectorId, @QueryParam("project") String project) {
+    return new RestResponse<>(jiraHelperService.getStatuses(connectorId, project, accountId, appId));
   }
 }

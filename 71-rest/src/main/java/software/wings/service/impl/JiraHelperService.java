@@ -22,12 +22,11 @@ import software.wings.beans.JiraConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.jira.JiraAction;
-import software.wings.dl.WingsPersistence;
 import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * All Jira apis should be accessed via this object.
@@ -36,9 +35,10 @@ import java.util.concurrent.TimeUnit;
 public class JiraHelperService {
   private static final Logger logger = LoggerFactory.getLogger(GcpHelperService.class);
   private static final String WORKFLOW_EXECUTION_ID = "workflow";
-  @Inject private WingsPersistence wingsPersistence;
+  private static final long JIRA_DELEGATE_TIMEOUT_MILLIS = 30 * 1000;
   @Inject private DelegateServiceImpl delegateService;
   @Inject @Transient private transient SecretManager secretManager;
+  @Inject SettingsService settingService;
 
   public static final String APP_ID_KEY = "app_id";
   public static final String WORKFLOW_EXECUTION_ID_KEY = "workflow_execution_id";
@@ -70,48 +70,31 @@ public class JiraHelperService {
     return words[0] + " " + words[1];
   }
 
-  public JSONArray getProjects(JiraConfig jiraConfig, String accountId, String appId) {
-    DelegateTask delegateTask =
-        aDelegateTask()
-            .withTaskType(TaskType.JIRA)
-            .withAccountId(accountId)
-            .withAppId(appId)
-            .withParameters(new Object[] {
-                JiraTaskParameters.builder()
-                    .accountId(accountId)
-                    .jiraAction(JiraAction.GET_PROJECTS)
-                    .jiraConfig(jiraConfig)
-                    .encryptionDetails(secretManager.getEncryptionDetails(jiraConfig, appId, WORKFLOW_EXECUTION_ID))
-                    .build()})
-            .withTimeout(TimeUnit.SECONDS.toMillis(30))
-            .withAsync(false)
-            .build();
+  public JSONArray getProjects(String connectorId, String accountId, String appId) {
+    JiraTaskParameters jiraTaskParameters =
+        JiraTaskParameters.builder().accountId(accountId).jiraAction(JiraAction.GET_PROJECTS).build();
 
-    JiraExecutionData jiraExecutionData = delegateService.executeTask(delegateTask);
+    JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
     return jiraExecutionData.getProjects();
   }
 
-  public Object getFieldOptions(JiraConfig jiraConfig, String projectId, String accountId, String appId) {
-    DelegateTask delegateTask =
-        aDelegateTask()
-            .withTaskType(TaskType.JIRA)
-            .withAccountId(accountId)
-            .withAppId(appId)
-            .withParameters(new Object[] {
-                JiraTaskParameters.builder()
-                    .accountId(accountId)
-                    .jiraAction(JiraAction.GET_FIELDS_OPTIONS)
-                    .jiraConfig(jiraConfig)
-                    .project(projectId)
-                    .encryptionDetails(secretManager.getEncryptionDetails(jiraConfig, appId, WORKFLOW_EXECUTION_ID))
-                    .build()})
-            .withTimeout(TimeUnit.SECONDS.toMillis(30))
-            .withAsync(false)
-            .build();
+  /**
+   * Fetch list of fields and list of value options for each field.
+   *
+   * @param connectorId
+   * @param project
+   * @param accountId
+   * @param appId
+   * @return
+   */
+  public Object getFieldOptions(String connectorId, String project, String accountId, String appId) {
+    JiraTaskParameters jiraTaskParameters = JiraTaskParameters.builder()
+                                                .accountId(accountId)
+                                                .jiraAction(JiraAction.GET_FIELDS_OPTIONS)
+                                                .project(project)
+                                                .build();
 
-    ResponseData responseData = delegateService.executeTask(delegateTask);
-
-    JiraExecutionData jiraExecutionData = (JiraExecutionData) responseData;
+    JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
     return jiraExecutionData.getFields();
   }
 
@@ -125,5 +108,38 @@ public class JiraHelperService {
 
   public Map<String, Claim> validateJiraToken(String token) {
     return secretManagerForToken.verifyJWTToken(token, JWT_CATEGORY.JIRA_SERVICE_SECRET);
+  }
+
+  public Object getStatuses(String connectorId, String project, String accountId, String appId) {
+    JiraTaskParameters jiraTaskParameters =
+        JiraTaskParameters.builder().accountId(accountId).jiraAction(JiraAction.GET_STATUSES).project(project).build();
+
+    JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
+    return jiraExecutionData.getStatuses();
+  }
+
+  private JiraExecutionData runTask(
+      String accountId, String appId, String connectorId, JiraTaskParameters jiraTaskParameters) {
+    JiraConfig jiraConfig = (JiraConfig) settingService.get(connectorId).getValue();
+    jiraTaskParameters.setJiraConfig(jiraConfig);
+    jiraTaskParameters.setEncryptionDetails(
+        secretManager.getEncryptionDetails(jiraConfig, appId, WORKFLOW_EXECUTION_ID));
+
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withTaskType(TaskType.JIRA)
+                                    .withAccountId(accountId)
+                                    .withAppId(appId)
+                                    .withParameters(new Object[] {jiraTaskParameters})
+                                    .withTimeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
+                                    .withAsync(false)
+                                    .build();
+
+    ResponseData responseData = delegateService.executeTask(delegateTask);
+
+    if (responseData instanceof JiraExecutionData) {
+      return (JiraExecutionData) responseData;
+    } else {
+      return JiraExecutionData.builder().errorMessage("Delegate task failed with an exception").build();
+    }
   }
 }
