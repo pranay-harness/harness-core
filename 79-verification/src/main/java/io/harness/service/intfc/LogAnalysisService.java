@@ -46,13 +46,13 @@ public interface LogAnalysisService {
   boolean reQueueExperimentalTask(String appId, String stateExecutionId);
 
   boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String appId,
-      String workflowId, String workflowExecutionId, String serviceId);
+      String workflowId, String workflowExecutionId, String serviceId, String query);
 
   void deleteClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
       Set<String> host, int logCollectionMinute, ClusterLevel... clusterLevels);
 
   String getLastSuccessfulWorkflowExecutionIdWithLogs(
-      StateType stateType, String appId, String serviceId, String workflowId);
+      StateType stateType, String appId, String serviceId, String workflowId, String query);
 
   boolean saveFeedback(LogMLFeedback feedback, StateType stateType);
 

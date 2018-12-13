@@ -47,9 +47,11 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogClusterContext;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -93,6 +95,7 @@ import javax.ws.rs.core.Response;
 /**
  * Created by rsingh on 8/17/17.
  */
+@SuppressWarnings("ALL")
 public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   private static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
   private Set<String> hosts = new HashSet<>();
@@ -548,8 +551,17 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
         serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    final String lastWorkflowExecutionId =
-        analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(StateType.SPLUNKV2, appId, serviceId, workflowId);
+    ContinuousVerificationExecutionMetaData metaData = ContinuousVerificationExecutionMetaData.builder()
+                                                           .stateType(StateType.SPLUNKV2)
+                                                           .workflowId(workflowId)
+                                                           .workflowExecutionId(workFlowExecutionId)
+                                                           .executionStatus(ExecutionStatus.SUCCESS)
+                                                           .applicationId(appId)
+                                                           .workflowStartTs(System.currentTimeMillis())
+                                                           .build();
+    wingsPersistence.save(metaData);
+    final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+        StateType.SPLUNKV2, appId, serviceId, workflowId, query);
 
     AnalysisContext analysisContext = AnalysisContext.builder()
                                           .accountId(accountId)
@@ -590,8 +602,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         logMLAnalysisSummary.getAnalysisSummaryMessage());
   }
 
-  @Test
-  public void testButNoControlData() throws IOException, InterruptedException {
+  private String setupNoControlTest(String query, String host) {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
     stateExecutionInstance.setAppId(appId);
@@ -611,8 +622,6 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     List<LogElement> logElements = new ArrayList<>();
 
-    final String query = UUID.randomUUID().toString();
-    final String host = UUID.randomUUID().toString();
     final int logCollectionMinute = 0;
     LogElement splunkHeartBeatElement = new LogElement();
     splunkHeartBeatElement.setQuery(query);
@@ -661,13 +670,21 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     splunkHeartBeatElement.setTimeStamp(0);
     splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
 
-    LogElement logElement = new LogElement(query, "0", host, 0, 0, "Hello World", logCollectionMinute);
+    LogElement logElement = new LogElement(query, "0", host, 0, 1, "Hello World", logCollectionMinute);
     logElements.add(logElement);
 
     logElements.add(splunkHeartBeatElement);
 
     analysisService.saveLogData(StateType.SUMO, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
         serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    return workFlowExecutionId;
+  }
+
+  @Test
+  public void testButNoControlDataFirstExecution() throws IOException, InterruptedException {
+    final String query = UUID.randomUUID().toString();
+    final String host = UUID.randomUUID().toString();
+    setupNoControlTest(query, host);
 
     AnalysisContext analysisContext = AnalysisContext.builder()
                                           .accountId(accountId)
@@ -676,6 +693,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
                                           .workflowExecutionId(workflowExecutionId)
                                           .stateExecutionId(stateExecutionId)
                                           .serviceId(serviceId)
+                                          .prevWorkflowExecutionId(null)
                                           .controlNodes(Collections.singletonMap(host, DEFAULT_GROUP_NAME))
                                           .testNodes(Collections.singletonMap(host, DEFAULT_GROUP_NAME))
                                           .query(query)
@@ -696,14 +714,13 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
-        managerClient, managerClientHelper)
+        managerClient, managerClientHelper, wingsPersistence)
         .run();
-    Thread.sleep(TimeUnit.SECONDS.toMillis(30));
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
     assertEquals("No baseline data for the given query was found.", logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord =
-        analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, logCollectionMinute);
+        analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, 0);
     assertFalse(logAnalysisRecord.isBaseLineCreated());
     assertEquals(1, logAnalysisRecord.getControl_clusters().size());
     assertTrue(isEmpty(logAnalysisRecord.getTest_clusters()));
@@ -728,6 +745,68 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         analysisSummary.getTestClusters().get(0).getLogMLFeedbackType());
 
     assertTrue(restResponse.getResource());
+  }
+
+  @Test
+  public void testNoControlNotFirstExecution() throws Exception {
+    final String query = UUID.randomUUID().toString();
+    final String host = UUID.randomUUID().toString();
+    String workFlowExecutionId = setupNoControlTest(query, host);
+
+    ContinuousVerificationExecutionMetaData metaData = ContinuousVerificationExecutionMetaData.builder()
+                                                           .stateType(StateType.SUMO)
+                                                           .workflowId(workflowId)
+                                                           .workflowExecutionId(workFlowExecutionId)
+                                                           .executionStatus(ExecutionStatus.SUCCESS)
+                                                           .applicationId(appId)
+                                                           .workflowStartTs(System.currentTimeMillis())
+                                                           .build();
+    wingsPersistence.save(metaData);
+
+    AnalysisContext analysisContext =
+        AnalysisContext.builder()
+            .accountId(accountId)
+            .appId(appId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .stateExecutionId(stateExecutionId)
+            .serviceId(serviceId)
+            .prevWorkflowExecutionId(analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+                StateType.SUMO, appId, serviceId, workflowId, query))
+            .controlNodes(Collections.singletonMap(host, DEFAULT_GROUP_NAME))
+            .testNodes(Collections.singletonMap(host, DEFAULT_GROUP_NAME))
+            .query(query)
+            .isSSL(true)
+            .appPort(9090)
+            .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+            .timeDuration(1)
+            .stateType(StateType.SUMO)
+            .correlationId(UUID.randomUUID().toString())
+            .build();
+    JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
+    JobDataMap jobDataMap = mock(JobDataMap.class);
+    when(jobDataMap.getLong("timestamp")).thenReturn(System.currentTimeMillis());
+    when(jobDataMap.getString("jobParams")).thenReturn(JsonUtils.asJson(analysisContext));
+    when(jobDataMap.getString("delegateTaskId")).thenReturn(UUID.randomUUID().toString());
+    when(jobExecutionContext.getMergedJobDataMap()).thenReturn(jobDataMap);
+    when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
+    when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
+
+    new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
+        managerClient, managerClientHelper, wingsPersistence)
+        .run();
+
+    LogMLAnalysisSummary logMLAnalysisSummary =
+        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
+    //    assertEquals("No baseline data for the given query was found.",
+    //    logMLAnalysisSummary.getAnalysisSummaryMessage());
+    LogMLAnalysisRecord logAnalysisRecord =
+        analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, 0);
+    assertTrue(logAnalysisRecord.isBaseLineCreated());
+    assertTrue(isEmpty(logAnalysisRecord.getControl_clusters()));
+    assertTrue(isEmpty(logAnalysisRecord.getTest_clusters()));
+    assertEquals(1, logAnalysisRecord.getUnknown_clusters().size());
+    assertFalse(isEmpty(logAnalysisRecord.getTest_events()));
   }
 
   @Test
@@ -958,9 +1037,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     for (int i = 0; i < 5; ++i) {
       new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId,
-          learningEngineService, managerClient, managerClientHelper)
+          learningEngineService, managerClient, managerClientHelper, wingsPersistence)
           .run();
-      Thread.sleep(TimeUnit.SECONDS.toMillis(10));
     }
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
@@ -969,8 +1047,6 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     assertEquals(0, logMLAnalysisSummary.getUnknownClusters().size());
     assertEquals(5, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().size());
     assertEquals(5, logMLAnalysisSummary.getTestClusters().get(0).getHostSummary().size());
-    assertEquals(
-        5, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().values().iterator().next().getCount());
     assertEquals(
         5, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().values().iterator().next().getCount());
   }
@@ -1158,12 +1234,19 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     }
   }
 
-  private static class LogAnalysisTestJob extends LogAnalysisTask {
+  private class LogAnalysisTestJob extends LogAnalysisTask {
+    WingsPersistence wingsPersistence;
+    String stateExecutionId;
+    int minute;
+
     LogAnalysisTestJob(LogAnalysisService analysisService, AnalysisContext context,
         JobExecutionContext jobExecutionContext, String delegateTaskId, LearningEngineService learningEngineService,
-        VerificationManagerClient client, VerificationManagerClientHelper managerClient) {
+        VerificationManagerClient client, VerificationManagerClientHelper managerClient,
+        WingsPersistence wingsPersistence) {
       super(
           analysisService, context, jobExecutionContext, delegateTaskId, learningEngineService, client, managerClient);
+      this.wingsPersistence = wingsPersistence;
+      stateExecutionId = context.getStateExecutionId();
     }
 
     @Override
@@ -1171,6 +1254,25 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
       super.preProcess(logAnalysisMinute, query, nodes);
       try {
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        this.minute = logAnalysisMinute;
+      } catch (InterruptedException e) {
+        logger.error("", e);
+      }
+    }
+
+    @Override
+    public void run() {
+      super.run();
+      try {
+        LogDataRecord record = null;
+        while (record == null) {
+          Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+          record = wingsPersistence.createQuery(LogDataRecord.class)
+                       .filter("stateExecutionId", stateExecutionId)
+                       .filter("clusterLevel", "HF")
+                       .filter("logCollectionMinute", minute)
+                       .get();
+        }
       } catch (InterruptedException e) {
         logger.error("", e);
       }
@@ -1269,8 +1371,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     wingsPersistence.save(mlFeedbackRecord);
 
-    final String lastWorkflowExecutionId =
-        analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(StateType.SPLUNKV2, appId, serviceId, workflowId);
+    final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+        StateType.SPLUNKV2, appId, serviceId, workflowId, query);
 
     AnalysisContext analysisContext = AnalysisContext.builder()
                                           .accountId(accountId)
