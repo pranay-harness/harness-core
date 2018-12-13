@@ -173,6 +173,8 @@ public class LdapGroupSyncJob implements Job {
 
   private void syncUserGroupMembers(String accountId, Map<UserGroup, Set<User>> removedGroupMembers,
       Map<LdapUserResponse, Set<UserGroup>> addedGroupMembers) {
+    logger.info("LGSJ: syncUserGroupMembers called for removedGroupMembers: [{}] and addedGroupMember: [{}]",
+        removedGroupMembers, addedGroupMembers);
     removedGroupMembers.forEach((userGroup, users) -> userGroupService.removeMembers(userGroup, users, false));
 
     addedGroupMembers.forEach((member, userGroups) -> {
@@ -215,6 +217,8 @@ public class LdapGroupSyncJob implements Job {
   }
 
   private void syncUserGroups(String accountId, LdapSettings ldapSettings, List<UserGroup> userGroups) {
+    logger.info("LGSJ: Running syncUserGroups for userGroups: [{}] and ldapSettings: [{}]", userGroups, ldapSettings);
+
     Map<UserGroup, Set<User>> removedGroupMembers = new HashMap<>();
     Map<LdapUserResponse, Set<UserGroup>> addedGroupMembers = new HashMap<>();
 
@@ -222,6 +226,7 @@ public class LdapGroupSyncJob implements Job {
 
     for (UserGroup userGroup : userGroups) {
       LdapGroupResponse groupResponse = fetchGroupDetails(ldapSettings, encryptedDataDetail, userGroup);
+      logger.info("LGSJ: fetchGroupDetails response for: [{}] is [{}]", userGroup, groupResponse);
 
       if (!groupResponse.isSelectable()) {
         String message =
@@ -245,7 +250,7 @@ public class LdapGroupSyncJob implements Job {
   private void executeInternal(String accountId, String ssoId) {
     try {
       ssoSettingService.closeSyncFailureAlertIfOpen(accountId, ssoId);
-      logger.info("Executing ldap group sync job for ssoId: {}", ssoId);
+      logger.info("LGSJ: Executing ldap group sync job for ssoId: {}", ssoId);
 
       LdapSettings ldapSettings = ssoSettingService.getLdapSettingsByUuid(ssoId);
       if (ldapSettings == null) {
