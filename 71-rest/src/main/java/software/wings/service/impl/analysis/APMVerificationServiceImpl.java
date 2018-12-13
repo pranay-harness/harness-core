@@ -43,6 +43,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.datadog.DataDogFetchConfig;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
+import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.intfc.DelegateService;
@@ -64,6 +65,7 @@ import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -176,41 +178,29 @@ public class APMVerificationServiceImpl implements APMVerificationService {
   public boolean collect247Data(String cvConfigId, StateType stateType, long startTime, long endTime) {
     String waitId = generateUuid();
     DelegateTask task;
+    CVConfiguration cvConfiguration =
+        wingsPersistence.createQuery(CVConfiguration.class).filter("_id", cvConfigId).get();
     switch (stateType) {
       case APP_DYNAMICS:
-        AppDynamicsCVServiceConfiguration config =
-            (AppDynamicsCVServiceConfiguration) wingsPersistence.createQuery(CVConfiguration.class)
-                .filter("_id", cvConfigId)
-                .get();
-
+        AppDynamicsCVServiceConfiguration config = (AppDynamicsCVServiceConfiguration) cvConfiguration;
         task = createAppDynamicsDelegateTask(config, waitId, startTime, endTime);
         break;
       case NEW_RELIC:
-        NewRelicCVServiceConfiguration nrConfig =
-            (NewRelicCVServiceConfiguration) wingsPersistence.createQuery(CVConfiguration.class)
-                .filter("_id", cvConfigId)
-                .get();
+        NewRelicCVServiceConfiguration nrConfig = (NewRelicCVServiceConfiguration) cvConfiguration;
         task = createNewRelicDelegateTask(nrConfig, waitId, startTime, endTime);
         break;
       case DYNA_TRACE:
         DynaTraceCVServiceConfiguration dynaTraceCVServiceConfiguration =
-            (DynaTraceCVServiceConfiguration) wingsPersistence.createQuery(CVConfiguration.class)
-                .filter("_id", cvConfigId)
-                .get();
+            (DynaTraceCVServiceConfiguration) cvConfiguration;
         task = createDynaTraceDelegateTask(dynaTraceCVServiceConfiguration, waitId, startTime, endTime);
         break;
       case PROMETHEUS:
         PrometheusCVServiceConfiguration prometheusCVServiceConfiguration =
-            (PrometheusCVServiceConfiguration) wingsPersistence.createQuery(CVConfiguration.class)
-                .filter("_id", cvConfigId)
-                .get();
+            (PrometheusCVServiceConfiguration) cvConfiguration;
         task = createPrometheusDelegateTask(prometheusCVServiceConfiguration, waitId, startTime, endTime);
         break;
       case DATA_DOG:
-        DatadogCVServiceConfiguration ddConfig =
-            (DatadogCVServiceConfiguration) wingsPersistence.createQuery(CVConfiguration.class)
-                .filter("_id", cvConfigId)
-                .get();
+        DatadogCVServiceConfiguration ddConfig = (DatadogCVServiceConfiguration) cvConfiguration;
         task = createDatadogDelegateTask(ddConfig, waitId, startTime, endTime);
         break;
       default:
@@ -218,12 +208,28 @@ public class APMVerificationServiceImpl implements APMVerificationService {
         return false;
     }
     waitNotifyEngine.waitForAll(
-        new DataCollectionCallback(null, null, false), waitId); // TODO: is passing nulls here, okay?
+        new DataCollectionCallback(cvConfiguration.getAppId(),
+            getExecutionData(cvConfiguration, waitId, (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime)),
+            false),
+        waitId);
     logger.info("Queuing 24x7 data collection task for {}, cvConfigurationId: {}", stateType, cvConfigId);
     delegateService.queueTask(task);
     return true;
   }
 
+  private MetricAnalysisExecutionData getExecutionData(
+      CVConfiguration cvConfiguration, String waitId, int timeDuration) {
+    return MetricAnalysisExecutionData.builder()
+        .appId(cvConfiguration.getAppId())
+        .workflowExecutionId(null)
+        .stateExecutionInstanceId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid())
+        .serverConfigId(cvConfiguration.getConnectorId())
+        .timeDuration(timeDuration)
+        .canaryNewHostNames(new HashSet<>())
+        .lastExecutionNodes(new HashSet<>())
+        .correlationId(waitId)
+        .build();
+  }
   private DelegateTask createDynaTraceDelegateTask(
       DynaTraceCVServiceConfiguration config, String waitId, long startTime, long endTime) {
     DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingsService.get(config.getConnectorId()).getValue();
