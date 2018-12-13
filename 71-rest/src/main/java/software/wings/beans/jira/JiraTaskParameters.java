@@ -1,5 +1,6 @@
 package software.wings.beans.jira;
 
+import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
 import net.rcarz.jiraclient.Priority;
@@ -34,4 +35,6 @@ public class JiraTaskParameters {
 
   private String webhookUrl;
   private String jiraToken;
+  private Long approvedOn;
+  private EmbeddedUser approvedBy;
 }
