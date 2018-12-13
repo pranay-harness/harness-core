@@ -18,6 +18,7 @@ public class EvaluateVariableResolver extends StrLookup {
   private int varIndex;
   private String prefix;
   private String suffix;
+  private VariableResolverTracker variableResolverTracker;
 
   @Override
   public String lookup(String variable) {
@@ -27,6 +28,9 @@ public class EvaluateVariableResolver extends StrLookup {
         variable = NormalizeVariableResolver.expand(variable, context, objectPrefixes);
       }
       value = expressionEvaluator.evaluate(variable, context);
+      if (variableResolverTracker != null) {
+        variableResolverTracker.observed(variable);
+      }
     } catch (JexlException exception) {
       if (exception.getCause() instanceof FunctorException) {
         throw(FunctorException) exception.getCause();

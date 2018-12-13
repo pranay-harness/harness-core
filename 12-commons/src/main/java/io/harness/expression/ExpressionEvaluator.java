@@ -87,10 +87,19 @@ public class ExpressionEvaluator {
   }
 
   public String substitute(String expression, Map<String, Object> context) {
-    return substitute(expression, context, null);
+    return substitute(expression, context, null, null);
   }
 
   public String substitute(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+    return substitute(expression, context, null, defaultObjectPrefix);
+  }
+
+  public String substitute(String expression, Map<String, Object> context, VariableResolverTracker tracker) {
+    return substitute(expression, context, tracker, null);
+  }
+
+  public String substitute(
+      String expression, Map<String, Object> context, VariableResolverTracker tracker, String defaultObjectPrefix) {
     if (expression == null) {
       return null;
     }
@@ -106,6 +115,7 @@ public class ExpressionEvaluator {
                                                           .expressionEvaluator(this)
                                                           .objectPrefixes(asList(defaultObjectPrefix, "context"))
                                                           .context(jc)
+                                                          .variableResolverTracker(tracker)
                                                           .prefix(prefix)
                                                           .suffix(suffix)
                                                           .build();

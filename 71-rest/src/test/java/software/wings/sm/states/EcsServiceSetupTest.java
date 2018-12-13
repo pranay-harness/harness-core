@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
@@ -270,7 +271,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("evaluator", evaluator);
     on(context).set("variableProcessor", variableProcessor);
-    when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
+    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
   }

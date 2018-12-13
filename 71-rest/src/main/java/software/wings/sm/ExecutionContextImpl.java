@@ -74,8 +74,8 @@ import java.util.stream.Collectors;
  * @author Rishi
  */
 public class ExecutionContextImpl implements DeploymentExecutionContext {
-  private static final Pattern wildCharPattern = Pattern.compile("[+|*|/|\\\\| |&|$|\"|'|.|\\|]");
-  private static final Pattern argsCharPattern = Pattern.compile("[(|)|\"|\']");
+  private static final Pattern wildCharPattern = Pattern.compile("[+*/\\\\ &$\"'.|]");
+  private static final Pattern argsCharPattern = Pattern.compile("[()\"']");
   private static final Logger logger = LoggerFactory.getLogger(ExecutionContextImpl.class);
 
   @Inject @Transient private ManagerExpressionEvaluator evaluator;

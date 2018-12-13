@@ -225,7 +225,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
-    when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
+    when(evaluator.substitute(any(), any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);

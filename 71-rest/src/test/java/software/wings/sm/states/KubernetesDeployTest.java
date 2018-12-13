@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
@@ -236,7 +237,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(portalConfig.getUrl()).thenReturn("http://www.url.com");
     when(artifactService.get(any(), any())).thenReturn(anArtifact().build());
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
-    when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
+    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
   }
