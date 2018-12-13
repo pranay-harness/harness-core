@@ -94,8 +94,10 @@ import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
+import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
@@ -673,6 +675,22 @@ public class CommandStateTest extends WingsBaseTest {
     CommandState.renderCommandString(command, context, commandStateExecutionData, null);
     verify(context, times(1)).renderExpression("${var1}", commandStateExecutionData, null);
     verify(context, times(1)).renderExpression("${var2}", commandStateExecutionData, null);
+  }
+
+  @Test
+  public void shouldRenderTailFilesPatterns() {
+    CommandStateExecutionData commandStateExecutionData =
+        CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
+    ExecCommandUnit execCommandUnit = anExecCommandUnit()
+                                          .withCommandString("echo \"Hello World\"")
+                                          .withTailPatterns(asList(TailFilePatternEntry.Builder.aTailFilePatternEntry()
+                                                                       .withFilePath("${serviceVariable.testfile}")
+                                                                       .withPattern("${serviceVariable.filepattern}")
+                                                                       .build()))
+                                          .build();
+    CommandState.renderTailFilePattern(context, commandStateExecutionData, null, execCommandUnit);
+    verify(context, times(1)).renderExpression("${serviceVariable.testfile}", commandStateExecutionData, null);
+    verify(context, times(1)).renderExpression("${serviceVariable.filepattern}", commandStateExecutionData, null);
   }
 
   @Test
