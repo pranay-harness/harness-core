@@ -157,7 +157,7 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
                       .build())
               .set("createdAt", currentTimeMillis());
       if (isNotEmpty(getAppId())) {
-        logEntityBuilder.set("appId", StringValue.newBuilder(getAppId()).setExcludeFromIndexes(true).build());
+        logEntityBuilder.set("appId", getAppId());
       }
       if (isNotEmpty(getAccountId())) {
         logEntityBuilder.set("accountId", StringValue.newBuilder(getAccountId()).setExcludeFromIndexes(true).build());
