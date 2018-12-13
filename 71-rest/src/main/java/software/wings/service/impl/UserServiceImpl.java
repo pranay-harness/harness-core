@@ -489,6 +489,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserInvite inviteUser(UserInvite userInvite) {
+    logger.info("Called inviteUser for userInvite: [{}]", userInvite);
     String accountId = userInvite.getAccountId();
     Account account = accountService.get(accountId);
     String inviteId = wingsPersistence.save(userInvite);
@@ -505,6 +506,7 @@ public class UserServiceImpl implements UserService {
 
     User user = getUserByEmail(userInvite.getEmail());
     if (user == null) {
+      logger.info("LGSJ: User is null");
       AuthenticationMechanism currentAuthenticationMechanism = account.getAuthenticationMechanism();
       boolean emailVerified = !currentAuthenticationMechanism.equals(AuthenticationMechanism.USER_PASSWORD);
       user = anUser()
@@ -550,6 +552,8 @@ public class UserServiceImpl implements UserService {
   }
 
   private void addUserToUserGroups(String accountId, User user, List<UserGroup> userGroups, boolean sendNotification) {
+    logger.info("addUserToUserGroups called for user: [{}], userGroups: [{}], sendNotification: [{}]", user, userGroups,
+        sendNotification);
     if (isEmpty(userGroups)) {
       return;
     }
@@ -563,14 +567,17 @@ public class UserServiceImpl implements UserService {
         userGroup.setMembers(userGroupMembers);
       }
       if (!userGroupMembers.contains(user)) {
+        logger.info("LGSJ: calling updateMembers for user: [{}] and userGroup: [{}]", user, userGroup);
         userGroupMembers.add(user);
-        userGroupService.updateMembers(userGroup, false);
+        UserGroup updatedUserGroup = userGroupService.updateMembers(userGroup, false);
+        logger.info("LGSJ: After updateMember call for user: [{}], updatedUserGroup is: [{}]", user, updatedUserGroup);
         newUserGroups.add(userGroup.getUuid());
       }
     }
 
     // Sending email only if user was added to some new group
     if (sendNotification && isNotEmpty(newUserGroups)) {
+      logger.info("LGSJ: sendAddedRoleEmail called for user: [{}], newUserGroup: [{}]", user, newUserGroups);
       sendAddedRoleEmail(user, accountService.get(accountId));
     }
   }
