@@ -47,7 +47,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
@@ -86,7 +85,7 @@ public class JiraApprovalState extends AbstractApprovalState {
   @Getter @Setter private String issueId;
 
   public JiraApprovalState(String name) {
-    super(name, StateType.JIRA_APPROVAL.getName());
+    super(name, "JIRA_APPROVAL");
   }
 
   @Override
