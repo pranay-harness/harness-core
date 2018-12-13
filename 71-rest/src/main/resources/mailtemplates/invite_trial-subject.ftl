@@ -1,1 +1,1 @@
-You are invited to start a trial at Harness platform
+You are invited to join Harness.io at Harness Platform
