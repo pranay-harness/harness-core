@@ -266,7 +266,7 @@ public class MongoFileServiceImpl implements FileService {
     } catch (MongoGridFSException e) {
       // HAR-7371: This is a workaround for another bug HAR-7336 which deleted files in GridFS by mistake.
       if (e.getMessage().contains("No file found with the id")) {
-        logger.warn("File {} no longer exist in bucket {}. Skipped.", fileId, fileBucket);
+        logger.info("File {} no longer exist in bucket {}. Skipped.", fileId, fileBucket);
       } else {
         throw e;
       }

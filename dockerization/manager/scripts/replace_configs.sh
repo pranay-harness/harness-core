@@ -136,6 +136,13 @@ if [[ -v "EXECUTION_LOG_DATA_STORE" ]]; then
     sed -i "s|executionLogStorageMode: MONGO|executionLogStorageMode: ${EXECUTION_LOG_DATA_STORE}|" /opt/harness/config.yml
 fi
 
+if [[ -v "FILE_STORAGE" ]]; then
+    sed -i "s|fileStorageMode: MONGO|fileStorageMode: ${FILE_STORAGE}|" /opt/harness/config.yml
+fi
+ if [[ -v "CLUSTER_NAME" ]]; then
+    sed -i "s|clusterName:|clusterName: ${CLUSTER_NAME}|" /opt/harness/config.yml
+fi
+
 if [[ -v "BACKGROUND_SCHEDULER_CLUSTERED" ]]; then
     sed -i "s|clustered: true #backgroundScheduler|clustered: ${BACKGROUND_SCHEDULER_CLUSTERED}|" /opt/harness/config.yml
 fi
