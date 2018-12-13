@@ -82,7 +82,7 @@ public enum StencilCategory {
 
   KUBERNETES("Kubernetes", 3),
 
-  COLLABORATION("Collaboration", 11);
+  COLLABORATION("Collaboration", 4);
 
   private String displayName;
 
