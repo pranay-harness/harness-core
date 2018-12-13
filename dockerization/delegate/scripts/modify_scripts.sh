@@ -68,6 +68,20 @@ else
     sed -i "s|_proxyScheme_||" /opt/harness-delegate/start.sh
 fi
 
+if [[ -v "PROXY_USER" ]]
+then
+    sed -i "s|_proxyUser_|${PROXY_USER}|" /opt/harness-delegate/start.sh
+else
+    sed -i "s|_proxyUser_||" /opt/harness-delegate/start.sh
+fi
+
+if [[ -v "PROXY_PASSWORD" ]]
+then
+    sed -i "s|_proxyPass_|${PROXY_PASSWORD}|" /opt/harness-delegate/start.sh
+else
+    sed -i "s|_proxyPass_||" /opt/harness-delegate/start.sh
+fi
+
 if [[ -v "NO_PROXY" ]]
 then
     sed -i "s|_noProxy_|${NO_PROXY}|" /opt/harness-delegate/start.sh
