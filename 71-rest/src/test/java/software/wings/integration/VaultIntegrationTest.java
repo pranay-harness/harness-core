@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.RestResponse;
 import software.wings.beans.VaultConfig;
+import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -29,7 +30,10 @@ import javax.ws.rs.core.GenericType;
  * Created by rsingh on 9/21/18.
  */
 public class VaultIntegrationTest extends BaseIntegrationTest {
+  private static final String VAULT_URL_1 = "http://127.0.0.1:8200";
+  private static final String VAULT_URL_2 = "http://127.0.0.1:8300";
   private static final String VAULT_BASE_PATH = "/foo/bar";
+  private static final String VAULT_BASE_PATH_2 = "foo2/bar2/ ";
 
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
@@ -38,6 +42,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   private VaultConfig vaultConfig2;
 
   private VaultConfig vaultConfigWithBasePath;
+  private VaultConfig vaultConfigWithBasePath2;
 
   @Before
   public void setUp() {
@@ -48,7 +53,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     vaultConfig = VaultConfig.builder()
                       .accountId(accountId)
                       .name("TestVault")
-                      .vaultUrl("http://127.0.0.1:8200")
+                      .vaultUrl(VAULT_URL_1)
                       .authToken(vaultToken)
                       .isDefault(true)
                       .build();
@@ -56,7 +61,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     vaultConfig2 = VaultConfig.builder()
                        .accountId(accountId)
                        .name("TestVault2")
-                       .vaultUrl("http://127.0.0.1:8300")
+                       .vaultUrl(VAULT_URL_2)
                        .authToken(vaultToken)
                        .isDefault(true)
                        .build();
@@ -64,11 +69,20 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     vaultConfigWithBasePath = VaultConfig.builder()
                                   .accountId(accountId)
                                   .name("TestVaultWithBasePath")
-                                  .vaultUrl("http://127.0.0.1:8200")
+                                  .vaultUrl(VAULT_URL_1)
                                   .authToken(vaultToken)
                                   .basePath(VAULT_BASE_PATH)
                                   .isDefault(true)
                                   .build();
+
+    vaultConfigWithBasePath2 = VaultConfig.builder()
+                                   .accountId(accountId)
+                                   .name("TestVaultWithBasePath")
+                                   .vaultUrl(VAULT_URL_1)
+                                   .authToken(vaultToken)
+                                   .basePath(VAULT_BASE_PATH_2)
+                                   .isDefault(true)
+                                   .build();
   }
 
   @Test
@@ -108,6 +122,25 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       // 3. Delete the vault config
       deleteVaultConfig(vaultConfigId);
     }
+  }
+
+  @Test
+  public void test_updateVaultBasePath_shouldSucceed() {
+    // Create the first default vault config
+    String vaultConfigId = createVaultConfig(vaultConfig);
+
+    VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
+    assertNotNull(savedVaultConfig);
+
+    // Update the vault base path
+    savedVaultConfig.setBasePath(VAULT_BASE_PATH);
+    savedVaultConfig.setAuthToken(Constants.SECRET_MASK);
+    updateVaultConfig(savedVaultConfig);
+
+    savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
+    assertEquals(VAULT_BASE_PATH, savedVaultConfig.getBasePath());
+
+    deleteVaultConfig(vaultConfigId);
   }
 
   @Test
@@ -168,6 +201,16 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   public void test_UpdateSecretTextWithValue_VaultWithBasePath_shouldSucceed() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfigWithBasePath);
+    VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
+    assertNotNull(savedVaultConfig);
+
+    testUpdateSecretText(savedVaultConfig);
+  }
+
+  @Test
+  public void test_UpdateSecretTextWithValue_VaultWithBasePath2_shouldSucceed() {
+    // Create the first default vault config
+    String vaultConfigId = createVaultConfig(vaultConfigWithBasePath2);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
     assertNotNull(savedVaultConfig);
 
@@ -268,20 +311,21 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void test_CreateSecretText_WithValidPath_shouldSucceed() {
-    String vaultConfigId = createVaultConfig(vaultConfig);
-    VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
-
-    String secretName = "FooSecret";
-    String secretName2 = "AbsolutePathSecret";
-    String pathPrefix = isEmpty(savedVaultConfig.getBasePath()) ? "/harness" : savedVaultConfig.getBasePath();
-    String absoluteSecretPath = pathPrefix + "/SECRET_TEXT/" + secretName + "#value";
-    testCreateSecretText(savedVaultConfig, secretName, secretName2, absoluteSecretPath);
+    testCreateSecretText(vaultConfig);
   }
 
   @Test
   public void test_CreateSecretText_vaultWithBasePath_validPath_shouldSucceed() {
-    String vaultConfigId = createVaultConfig(vaultConfigWithBasePath);
+    testCreateSecretText(vaultConfigWithBasePath);
+  }
+
+  @Test
+  public void test_CreateSecretText_vaultWithBasePath2_validPath_shouldSucceed() {
+    testCreateSecretText(vaultConfigWithBasePath2);
+  }
+
+  private void testCreateSecretText(VaultConfig vaultconfig) {
+    String vaultConfigId = createVaultConfig(vaultconfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
     assertNotNull(savedVaultConfig);
 
@@ -303,7 +347,6 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       verifySecretValue(secretUuid1, secretValue, savedVaultConfig);
 
       // Second secret will refer the first secret by absolute path of format "/foo/bar/FooSecret#value'.
-      String pathPrefix = isEmpty(savedVaultConfig.getBasePath()) ? "/harness" : savedVaultConfig.getBasePath();
       secretUuid2 = createSecretText(secretName2, null, absoluteSecretPath);
       verifySecretValue(secretUuid2, secretValue, savedVaultConfig);
 

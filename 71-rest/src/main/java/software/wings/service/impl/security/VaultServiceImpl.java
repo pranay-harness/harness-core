@@ -3,6 +3,7 @@ package software.wings.service.impl.security;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -29,6 +30,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import okhttp3.logging.HttpLoggingInterceptor.Level;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import retrofit2.Response;
@@ -163,6 +165,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
+    // First normalize the base path
+    vaultConfig.setBasePath(normalizeBasePath(vaultConfig.getBasePath()));
+
     VaultConfig savedVaultConfig = null;
     boolean shouldVerify = true;
     if (!isEmpty(vaultConfig.getUuid())) {
@@ -187,6 +192,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       savedVaultConfig.setName(vaultConfig.getName());
       savedVaultConfig.setRenewIntervalHours(vaultConfig.getRenewIntervalHours());
       savedVaultConfig.setDefault(vaultConfig.isDefault());
+      savedVaultConfig.setBasePath(vaultConfig.getBasePath());
       return wingsPersistence.save(savedVaultConfig);
     }
 
@@ -452,5 +458,20 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       }
     }
     return version;
+  }
+
+  /**
+   * Trim the base path's empty spaces and strip the ending '/' character. This is to perform a
+   * very basic path normalization.
+   */
+  private String normalizeBasePath(String vaultBasePath) {
+    String result = vaultBasePath;
+    if (isNotEmpty(result)) {
+      result = result.trim();
+      if (result.endsWith("/")) {
+        result = StringUtils.stripEnd(result, "/");
+      }
+    }
+    return result;
   }
 }
