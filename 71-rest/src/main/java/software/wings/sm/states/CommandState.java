@@ -68,6 +68,7 @@ import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
@@ -466,7 +467,26 @@ public class CommandState extends State {
         execCommandUnit.setCommandString(
             context.renderExpression(execCommandUnit.getCommandString(), commandStateExecutionData, artifact));
       }
+      if (isNotEmpty(execCommandUnit.getTailPatterns())) {
+        renderTailFilePattern(context, commandStateExecutionData, artifact, execCommandUnit);
+      }
     }
+  }
+
+  static void renderTailFilePattern(ExecutionContext context, CommandStateExecutionData commandStateExecutionData,
+      Artifact artifact, ExecCommandUnit execCommandUnit) {
+    List<TailFilePatternEntry> filePatternEntries = execCommandUnit.getTailPatterns();
+    for (TailFilePatternEntry filePatternEntry : filePatternEntries) {
+      if (isNotEmpty(filePatternEntry.getFilePath())) {
+        filePatternEntry.setFilePath(
+            context.renderExpression(filePatternEntry.getFilePath(), commandStateExecutionData, artifact));
+      }
+      if (isNotEmpty(filePatternEntry.getPattern())) {
+        filePatternEntry.setPattern(
+            context.renderExpression(filePatternEntry.getPattern(), commandStateExecutionData, artifact));
+      }
+    }
+    execCommandUnit.setTailPatterns(filePatternEntries);
   }
 
   private List<CommandUnit> getFlattenCommandUnits(String appId, String envId, Service service, String deploymentType) {
