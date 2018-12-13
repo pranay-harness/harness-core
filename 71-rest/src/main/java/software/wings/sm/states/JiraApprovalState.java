@@ -216,8 +216,12 @@ public class JiraApprovalState extends AbstractApprovalState {
                                           .encryptionDetails(secretManager.getEncryptionDetails(
                                               jiraConfig, app.getAppId(), context.getWorkflowExecutionId()))
                                           .activityId(activityId)
+                                          .issueId(jiraExecutionData.getIssueId())
                                           .appId(app.getAppId())
                                           .accountId(app.getAccountId())
+                                          .approvalId(jiraExecutionData.getApprovalId())
+                                          .approvedBy(jiraExecutionData.getApprovedBy())
+                                          .approvedOn(jiraExecutionData.getApprovedOn())
                                           .build();
 
       DelegateTask delegateTask = aDelegateTask()
