@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.READ_FILE_FROM_GCP_STORAGE_FAILED;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.service.impl.FileServiceUtils.FILE_PATH_SEPARATOR;
 import static software.wings.service.impl.FileServiceUtils.GCS_ID_PREFIX;
@@ -26,12 +27,15 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.IOUtils;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.BaseFile;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.FileMetadata;
+import software.wings.beans.GcsFileMetadata;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 import software.wings.utils.BoundedInputStream;
 
@@ -64,11 +68,13 @@ public class GoogleCloudFileServiceImpl implements FileService {
   private static final String METADATA_CHECKSUM = "checksum";
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
 
+  private WingsPersistence wingsPersistence;
   private MainConfiguration configuration;
   private volatile Storage storage;
 
   @Inject
-  public GoogleCloudFileServiceImpl(MainConfiguration configuration) {
+  public GoogleCloudFileServiceImpl(WingsPersistence wingsPersistence, MainConfiguration configuration) {
+    this.wingsPersistence = wingsPersistence;
     this.configuration = configuration;
   }
 
@@ -143,6 +149,9 @@ public class GoogleCloudFileServiceImpl implements FileService {
   @Override
   public void deleteFile(String fileId, FileBucket fileBucket) {
     logger.info("Deleting file {}", fileId);
+    // delete gcs file metadata first.
+    deleteGcsFileMetadataByGcsFileId(fileId);
+
     BlobId blobId = getBlobIdFromFileId(fileId, fileBucket);
     getStorage().delete(blobId);
     logger.info("Deleted file {}", fileId);
@@ -232,13 +241,14 @@ public class GoogleCloudFileServiceImpl implements FileService {
   @Override
   public boolean updateParentEntityIdAndVersion(Class entityClass, String entityId, Integer version, String fileId,
       Map<String, Object> others, FileBucket fileBucket) {
+    // Note that 'entityClass' won't be persisted since it's not used at all.
+    // Update the gcs file metadata with entity class/id/version info.
+    updateGcsFileMetadata(fileId, entityId, version);
+
     GoogleCloudFileIdComponent component = parseGoogleCloudFileId(fileId);
     BlobId blobId = BlobId.of(getBucketName(fileBucket), component.filePath);
 
     Map<String, String> metadata = new HashMap<>();
-    if (entityClass != null) {
-      metadata.put("entityClass", entityClass.getCanonicalName());
-    }
     if (entityId != null) {
       metadata.put("entityId", entityId);
     }
@@ -262,26 +272,17 @@ public class GoogleCloudFileServiceImpl implements FileService {
 
   @Override
   public List<String> getAllFileIds(String entityId, FileBucket fileBucket) {
-    logger.warn(
-        "'getAllFileIds' query using entity id metadata is not supported for google cloud storage based file service! Not able to find all file ids associated with entity {} in file bucket {}",
-        entityId, fileBucket);
-    return null;
+    return getAllFileIdsFromGcsFileMetadata(entityId, fileBucket);
   }
 
   @Override
   public String getLatestFileId(String entityId, FileBucket fileBucket) {
-    logger.warn(
-        "'getLatestFileId' query using entity id metadata is not supported for google cloud storage based file service! Not able to find the latest file id associated with entity {} in file bucket {}",
-        entityId, fileBucket);
-    return null;
+    return getLatestFileIdFromGcsFileMetadata(entityId, fileBucket);
   }
 
   @Override
   public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
-    logger.warn(
-        "'getFileIdByVersion' query using entity id metadata is not supported for google cloud storage based file service! Not able to find the file id associated with entity {} of version {} in file bucket {}",
-        entityId, version, fileBucket);
-    return null;
+    return getFileIdFromGcsFileMetadataByVersion(entityId, version, fileBucket);
   }
 
   @Override
@@ -381,5 +382,55 @@ public class GoogleCloudFileServiceImpl implements FileService {
       }
     }
     return result;
+  }
+
+  private void updateGcsFileMetadata(String gcsFileId, String entityId, Integer version) {
+    GcsFileMetadata gcsFileMetadata =
+        wingsPersistence.createQuery(GcsFileMetadata.class).filter("gcsFileId", gcsFileId).get();
+
+    UpdateOperations<GcsFileMetadata> updateOperations = wingsPersistence.createUpdateOperations(GcsFileMetadata.class);
+    updateOperations.set("entityId", entityId);
+    updateOperations.set("version", version);
+
+    wingsPersistence.update(gcsFileMetadata, updateOperations);
+  }
+
+  private List<String> getAllFileIdsFromGcsFileMetadata(String entityId, FileBucket fileBucket) {
+    List<GcsFileMetadata> gcsFileMetadatas = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
+                                                 .filter("entityId", entityId)
+                                                 .filter("fileBucket", fileBucket)
+                                                 .asList();
+
+    return gcsFileMetadatas.stream()
+        .map(gcsFileMetadata -> gcsFileMetadata.getGcsFileId())
+        .distinct()
+        .collect(Collectors.toList());
+  }
+
+  private String getLatestFileIdFromGcsFileMetadata(String entityId, FileBucket fileBucket) {
+    GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
+                                          .filter("entityId", entityId)
+                                          .filter("fileBucket", fileBucket)
+                                          .order("-createdAt")
+                                          .get();
+
+    return gcsFileMetadata == null ? null : gcsFileMetadata.getGcsFileId();
+  }
+
+  private String getFileIdFromGcsFileMetadataByVersion(String entityId, Integer version, FileBucket fileBucket) {
+    GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
+                                          .filter("entityId", entityId)
+                                          .filter("version", version)
+                                          .filter("fileBucket", fileBucket)
+                                          .get();
+
+    return gcsFileMetadata == null ? null : gcsFileMetadata.getGcsFileId();
+  }
+
+  private void deleteGcsFileMetadataByGcsFileId(String gcsFileId) {
+    GcsFileMetadata mapping = wingsPersistence.createQuery(GcsFileMetadata.class).filter("gcsFileId", gcsFileId).get();
+    if (mapping != null) {
+      wingsPersistence.delete(mapping);
+    }
   }
 }

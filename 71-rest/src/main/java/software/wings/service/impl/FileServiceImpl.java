@@ -12,7 +12,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.BaseFile;
 import software.wings.beans.FeatureName;
 import software.wings.beans.FileMetadata;
-import software.wings.beans.MongoGcsFileIdMapping;
+import software.wings.beans.GcsFileMetadata;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
@@ -69,13 +69,14 @@ public class FileServiceImpl implements FileService {
     if (gcsStorageEnabled) {
       InputStream inputStreamFromMongo = mongoFileService.openDownloadStream(mongoFileId, fileBucket);
       gcsFileId = googleCloudFileService.saveFile(fileMetadata, inputStreamFromMongo, fileBucket);
-      MongoGcsFileIdMapping fileIdMapping = MongoGcsFileIdMapping.builder()
-                                                .accountId(accountId)
-                                                .fileId(mongoFileId)
-                                                .gcsFileId(gcsFileId)
-                                                .fileBucket(fileBucket)
-                                                .build();
-      wingsPersistence.save(fileIdMapping);
+      GcsFileMetadata gcsFileMetadata = GcsFileMetadata.builder()
+                                            .accountId(accountId)
+                                            .fileId(mongoFileId)
+                                            .gcsFileId(gcsFileId)
+                                            .fileName(fileMetadata.getFileName())
+                                            .fileBucket(fileBucket)
+                                            .build();
+      wingsPersistence.save(gcsFileMetadata);
     }
 
     if (isNotEmpty(gcsFileId) && featureFlagService.isEnabled(FeatureName.GCS_STORAGE, accountId)) {
@@ -99,13 +100,13 @@ public class FileServiceImpl implements FileService {
       gcsFileId = fileId;
       mongoFileId = getMongoFileIdByGcsFileId(gcsFileId);
     }
+    boolean updated = mongoFileService.updateParentEntityIdAndVersion(
+        entityClass, entityId, version, mongoFileId, others, fileBucket);
     if (gcsStorageEnabled) {
-      return googleCloudFileService.updateParentEntityIdAndVersion(
+      updated = googleCloudFileService.updateParentEntityIdAndVersion(
           entityClass, entityId, version, gcsFileId, others, fileBucket);
-    } else {
-      return mongoFileService.updateParentEntityIdAndVersion(
-          entityClass, entityId, version, mongoFileId, others, fileBucket);
     }
+    return updated;
   }
 
   @Override
@@ -116,13 +117,14 @@ public class FileServiceImpl implements FileService {
     if (gcsStorageEnabled) {
       InputStream inputStreamFromMongo = mongoFileService.openDownloadStream(mongoFileId, fileBucket);
       gcsFileId = googleCloudFileService.saveFile(baseFile, inputStreamFromMongo, fileBucket);
-      MongoGcsFileIdMapping fileIdMapping = MongoGcsFileIdMapping.builder()
-                                                .accountId(accountId)
-                                                .fileId(mongoFileId)
-                                                .gcsFileId(gcsFileId)
-                                                .fileBucket(fileBucket)
-                                                .build();
-      wingsPersistence.save(fileIdMapping);
+      GcsFileMetadata gcsFileMetadata = GcsFileMetadata.builder()
+                                            .accountId(accountId)
+                                            .fileId(mongoFileId)
+                                            .gcsFileId(gcsFileId)
+                                            .fileName(baseFile.getFileName())
+                                            .fileBucket(fileBucket)
+                                            .build();
+      wingsPersistence.save(gcsFileMetadata);
     }
 
     if (isNotEmpty(gcsFileId) && featureFlagService.isEnabled(FeatureName.GCS_STORAGE, accountId)) {
@@ -146,11 +148,10 @@ public class FileServiceImpl implements FileService {
     }
     if (isNotEmpty(gcsFileId)) {
       googleCloudFileService.deleteFile(gcsFileId, fileBucket);
-      deleteIdMappingByGcsFileid(gcsFileId);
     }
     if (isNotEmpty(mongoFileId)) {
       mongoFileService.deleteFile(mongoFileId, fileBucket);
-      deleteIdMappingByMongoFileid(mongoFileId);
+      deleteGcsFileMetadataByMongoFileId(mongoFileId);
     }
   }
 
@@ -271,28 +272,17 @@ public class FileServiceImpl implements FileService {
   }
 
   private String getGcsFileIdByMongoFileId(String mongoFileId) {
-    MongoGcsFileIdMapping mapping =
-        wingsPersistence.createQuery(MongoGcsFileIdMapping.class).filter("fileId", mongoFileId).get();
+    GcsFileMetadata mapping = wingsPersistence.createQuery(GcsFileMetadata.class).filter("fileId", mongoFileId).get();
     return mapping == null ? null : mapping.getGcsFileId();
   }
 
   private String getMongoFileIdByGcsFileId(String gcsFileId) {
-    MongoGcsFileIdMapping mapping =
-        wingsPersistence.createQuery(MongoGcsFileIdMapping.class).filter("gcsFileId", gcsFileId).get();
+    GcsFileMetadata mapping = wingsPersistence.createQuery(GcsFileMetadata.class).filter("gcsFileId", gcsFileId).get();
     return mapping == null ? null : mapping.getFileId();
   }
 
-  private void deleteIdMappingByMongoFileid(String mongoFileId) {
-    MongoGcsFileIdMapping mapping =
-        wingsPersistence.createQuery(MongoGcsFileIdMapping.class).filter("fileId", mongoFileId).get();
-    if (mapping != null) {
-      wingsPersistence.delete(mapping);
-    }
-  }
-
-  private void deleteIdMappingByGcsFileid(String gcsFileId) {
-    MongoGcsFileIdMapping mapping =
-        wingsPersistence.createQuery(MongoGcsFileIdMapping.class).filter("gcsFileId", gcsFileId).get();
+  private void deleteGcsFileMetadataByMongoFileId(String mongoFileId) {
+    GcsFileMetadata mapping = wingsPersistence.createQuery(GcsFileMetadata.class).filter("fileId", mongoFileId).get();
     if (mapping != null) {
       wingsPersistence.delete(mapping);
     }

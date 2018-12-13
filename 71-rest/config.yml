@@ -47,6 +47,7 @@ serviceScheduler:
 trialRegistrationAllowed: true
 executionLogStorageMode: MONGO
 fileStorageMode: MONGO
+clusterName:
 
 marketoConfig:
   enabled: false #marketoConfigEnable
