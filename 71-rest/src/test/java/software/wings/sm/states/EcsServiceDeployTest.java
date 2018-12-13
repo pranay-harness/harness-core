@@ -7,6 +7,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -214,7 +215,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     when(portalConfig.getUrl()).thenReturn("http://www.url.com");
     when(artifactService.get(any(), any())).thenReturn(anArtifact().build());
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
-    when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
+    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
   }
 

@@ -95,7 +95,7 @@ public class PcfRollbackStateTest extends WingsBaseTest {
     setInternalState(pcfRollbackState, "secretManager", secretManager);
     context = new ExecutionContextImpl(stateExecutionInstance);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
-    when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
+    when(evaluator.substitute(any(), any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
   }
 
   @Test

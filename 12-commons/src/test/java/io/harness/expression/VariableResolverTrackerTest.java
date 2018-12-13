@@ -1,0 +1,32 @@
+package io.harness.expression;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.google.common.collect.ImmutableMap;
+
+import org.junit.Test;
+
+import java.util.Map;
+
+public class VariableResolverTrackerTest {
+  @Test
+  public void testTrackVariables() {
+    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+
+    Map<String, Object> context = ImmutableMap.<String, Object>builder()
+                                      .put("count", "foo")
+                                      .put("direct", "${indirect} ${indirect}")
+                                      .put("indirect", "foo")
+                                      .build();
+
+    VariableResolverTracker tracker = new VariableResolverTracker();
+    expressionEvaluator.substitute("${count} ${dummy} ${direct}", context, tracker);
+
+    assertThat(tracker.getUsage().get("count")).isEqualTo(1);
+    assertThat(tracker.getUsage().get("indirect")).isEqualTo(2);
+    assertThat(tracker.getUsage().get("dummy")).isNull();
+
+    expressionEvaluator.substitute("${count} ${dummy}", context, tracker);
+    assertThat(tracker.getUsage().get("count")).isEqualTo(2);
+  }
+}

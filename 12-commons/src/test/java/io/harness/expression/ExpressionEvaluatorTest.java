@@ -58,7 +58,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
     assertThat(expressionEvaluator.substitute(null, persons)).isNull();
-    assertThat(expressionEvaluator.substitute(null, persons, null)).isNull();
+    assertThat(expressionEvaluator.substitute(null, persons, (String) null)).isNull();
   }
 
   @Test
