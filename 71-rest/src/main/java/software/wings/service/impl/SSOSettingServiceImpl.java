@@ -80,6 +80,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       queriedSettings.setMetaDataFile(settings.getMetaDataFile());
       queriedSettings.setDisplayName(settings.getDisplayName());
       queriedSettings.setOrigin(settings.getOrigin());
+      queriedSettings.setGroupMembershipAttr(settings.getGroupMembershipAttr());
       savedSettings = wingsPersistence.saveAndGet(SamlSettings.class, queriedSettings);
     } else {
       savedSettings = wingsPersistence.saveAndGet(SamlSettings.class, settings);

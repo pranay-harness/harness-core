@@ -15,10 +15,10 @@ import javax.validation.constraints.NotNull;
 // TODO: Refactor this to make it more abstract and common across different SSO providers
 public interface SSOService {
   SSOConfig uploadSamlConfiguration(@NotNull String accountId, @NotNull InputStream inputStream,
-      @NotNull String displayName, String groupMembershipAttr);
+      @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled);
 
-  SSOConfig patchSamlConfiguration(
-      @NotNull String accountId, InputStream inputStream, String displayName, String groupMembershipAttr);
+  SSOConfig updateSamlConfiguration(@NotNull String accountId, InputStream inputStream, String displayName,
+      String groupMembershipAttr, @NotNull Boolean authorizationEnabled);
 
   SSOConfig deleteSamlConfiguration(@NotNull String accountId);
 

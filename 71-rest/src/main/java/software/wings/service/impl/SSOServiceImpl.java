@@ -55,10 +55,11 @@ public class SSOServiceImpl implements SSOService {
   @Inject private SecretManager secretManager;
 
   @Override
-  public SSOConfig uploadSamlConfiguration(
-      String accountId, InputStream inputStream, String displayName, String groupMembershipAttr) {
+  public SSOConfig uploadSamlConfiguration(String accountId, InputStream inputStream, String displayName,
+      String groupMembershipAttr, Boolean authorizationEnabled) {
     try {
       String fileAsString = IOUtils.toString(inputStream, Charset.defaultCharset());
+      groupMembershipAttr = authorizationEnabled ? groupMembershipAttr : null;
       buildAndUploadSamlSettings(accountId, fileAsString, displayName, groupMembershipAttr);
       return getAccountAccessManagementSettings(accountId);
     } catch (SamlException | IOException | URISyntaxException e) {
@@ -67,11 +68,13 @@ public class SSOServiceImpl implements SSOService {
   }
 
   @Override
-  public SSOConfig patchSamlConfiguration(
-      String accountId, InputStream inputStream, String displayName, String groupMembershipAttr) {
+  public SSOConfig updateSamlConfiguration(String accountId, InputStream inputStream, String displayName,
+      String groupMembershipAttr, Boolean authorizationEnabled) {
     try {
       SamlSettings settings = ssoSettingService.getSamlSettingsByAccountId(accountId);
       String fileAsString;
+
+      groupMembershipAttr = authorizationEnabled ? groupMembershipAttr : null;
 
       if (null != inputStream) {
         fileAsString = IOUtils.toString(inputStream, Charset.defaultCharset());
