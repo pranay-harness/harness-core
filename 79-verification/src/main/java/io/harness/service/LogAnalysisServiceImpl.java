@@ -531,7 +531,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                   .lessThanOrEq(logCollectionMinute)
                                                   .order("-logCollectionMinute")
                                                   .get();
-    decompressLogAnalysisRecord(logMLAnalysisRecord);
+    if (logMLAnalysisRecord != null) {
+      decompressLogAnalysisRecord(logMLAnalysisRecord);
+    }
     return logMLAnalysisRecord;
   }
 
