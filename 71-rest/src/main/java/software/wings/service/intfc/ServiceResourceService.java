@@ -450,4 +450,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   Service deleteByYamlGit(String appId, String serviceId, String commandId, boolean syncFromGit);
 
   String fetchServiceName(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  boolean exists(@NotEmpty String appId, @NotEmpty String serviceId);
 }

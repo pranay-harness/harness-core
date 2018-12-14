@@ -323,6 +323,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public List<EnvSummary> obtainEnvironmentSummaries(String appId, List<String> envIds) {
+    if (isEmpty(envIds)) {
+      return new ArrayList<>();
+    }
     List<Environment> environments = wingsPersistence.createQuery(Environment.class)
                                          .project(NAME_KEY, true)
                                          .project(ENVIRONMENT_TYPE_KEY, true)

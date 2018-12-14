@@ -17,6 +17,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
@@ -61,12 +62,15 @@ import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -103,6 +107,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private YamlPushService yamlPushService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -341,13 +346,15 @@ public class PipelineServiceImpl implements PipelineService {
               pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
           OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
           if (orchestrationWorkflow != null) {
-            if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
+            if (BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType())) {
               return new ArrayList<>();
             }
-            Set<EntityType> requiredEntityTypes =
-                workflowService.fetchRequiredEntityTypes(appId, orchestrationWorkflow);
-            if (requiredEntityTypes != null) {
-              entityTypes.addAll(requiredEntityTypes);
+            if (!entityTypes.contains(ARTIFACT)) {
+              Set<EntityType> requiredEntityTypes =
+                  workflowService.fetchRequiredEntityTypes(appId, orchestrationWorkflow);
+              if (requiredEntityTypes != null) {
+                entityTypes.addAll(requiredEntityTypes);
+              }
             }
           }
         }
@@ -357,13 +364,18 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   /**
-   * {@inheritDoc}
+   * Read Pipeline with Services. It filters out the services that does not need artifact
+   * @param appId        the app id
+   * @param pipelineId   the pipeline id
+   * @param withServices the with services
+   * @return
    */
   @Override
   public Pipeline readPipeline(String appId, String pipelineId, boolean withServices) {
     Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("Pipeline does not exist", pipeline, USER);
     if (withServices) {
+      // Note: It filters out the services that does need artifact
       setServicesAndPipelineVariables(pipeline);
     }
     return pipeline;
@@ -434,6 +446,30 @@ public class PipelineServiceImpl implements PipelineService {
     pipeline.setResolvedPipelineVariables(resolvedPipelineVariables);
     pipeline.setEnvIds(envIds);
     return pipeline;
+  }
+
+  private void resolveServicesOfWorkflow(
+      List<Service> services, List<String> serviceIds, Map<String, String> pseWorkflowVariables, Workflow workflow) {
+    if (isEmpty(pseWorkflowVariables)) {
+      if (workflow.getServices() != null) {
+        workflow.getServices().forEach((Service service) -> {
+          if (!serviceIds.contains(service.getUuid())) {
+            services.add(service);
+            serviceIds.add(service.getUuid());
+          }
+        });
+      }
+    } else {
+      List<Service> resolvedServices = workflowService.getResolvedServices(workflow, pseWorkflowVariables);
+      if (resolvedServices != null) {
+        for (Service resolvedService : resolvedServices) {
+          if (!serviceIds.contains(resolvedService.getUuid())) {
+            services.add(resolvedService);
+            serviceIds.add(resolvedService.getUuid());
+          }
+        }
+      }
+    }
   }
 
   @Override
@@ -520,19 +556,22 @@ public class PipelineServiceImpl implements PipelineService {
     if (isEmpty(workflowVariables) || isEmpty(pseWorkflowVaraibles)) {
       return false;
     }
+    boolean atleastOneEntityParameterized = false;
     List<Variable> entityVariables =
         workflowVariables.stream().filter(variable -> variable.getEntityType() != null).collect(toList());
     for (Variable variable : entityVariables) {
       String value = pseWorkflowVaraibles.get(variable.getName());
       if (value != null) {
-        return matchesVariablePattern(value);
+        atleastOneEntityParameterized = matchesVariablePattern(value);
+        if (atleastOneEntityParameterized) {
+          return true;
+        }
       }
     }
     return false;
   }
 
   private void setServicesAndPipelineVariables(Pipeline pipeline) {
-    List<Service> services = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     List<String> envIds = new ArrayList<>();
     List<Variable> pipelineVariables = new ArrayList<>();
@@ -548,7 +587,7 @@ public class PipelineServiceImpl implements PipelineService {
               workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
           Validator.notNullCheck("Workflow does not exist", workflow, USER);
           Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
-          resolveServicesOfWorkflow(services, serviceIds, pse.getWorkflowVariables(), workflow);
+          resolveArtifactNeededServicesOfWorkflow(serviceIds, pse.getWorkflowVariables(), workflow);
           setPipelineVariables(
               workflow.getOrchestrationWorkflow().getUserVariables(), pse.getWorkflowVariables(), pipelineVariables);
           if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
@@ -561,7 +600,7 @@ public class PipelineServiceImpl implements PipelineService {
       }
     }
 
-    pipeline.setServices(services);
+    pipeline.setServices(serviceResourceService.fetchServicesByUuids(pipeline.getAppId(), serviceIds));
     pipeline.setPipelineVariables(reorderPipelineVariables(pipelineVariables));
     pipeline.setEnvIds(envIds);
     pipeline.setTemplatized(templatized);
@@ -617,27 +656,21 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
-  private void resolveServicesOfWorkflow(
-      List<Service> services, List<String> serviceIds, Map<String, String> pseWorkflowVariables, Workflow workflow) {
-    if (isEmpty(pseWorkflowVariables)) {
-      if (workflow.getServices() != null) {
-        workflow.getServices().forEach((Service service) -> {
-          if (!serviceIds.contains(service.getUuid())) {
-            services.add(service);
-            serviceIds.add(service.getUuid());
-          }
-        });
-      }
-    } else {
-      List<Service> resolvedServices = workflowService.getResolvedServices(workflow, pseWorkflowVariables);
-      if (resolvedServices != null) {
-        for (Service resolvedService : resolvedServices) {
-          if (!serviceIds.contains(resolvedService.getUuid())) {
-            services.add(resolvedService);
-            serviceIds.add(resolvedService.getUuid());
-          }
-        }
-      }
+  /**
+   * It fetches the services that needs artifact
+   * @param serviceIds
+   * @param pseWorkflowVariables
+   * @param workflow
+   */
+  private void resolveArtifactNeededServicesOfWorkflow(
+      List<String> serviceIds, Map<String, String> pseWorkflowVariables, Workflow workflow) {
+    DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
+        workflow.getAppId(), workflow, pseWorkflowVariables, Include.ARTIFACT_SERVICE);
+    if (deploymentMetadata != null && deploymentMetadata.getArtifactRequiredServiceIds() != null) {
+      deploymentMetadata.getArtifactRequiredServiceIds()
+          .stream()
+          .filter(serviceId -> !serviceIds.contains(serviceId))
+          .forEach(serviceIds::add);
     }
   }
 

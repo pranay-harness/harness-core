@@ -19,6 +19,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.ownership.OwnedByApplication;
@@ -153,6 +154,9 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   GraphNode readGraphNode(@NotEmpty String appId, @NotEmpty String workflowId, @NotEmpty String nodeId);
 
   List<EntityType> getRequiredEntities(String appId, String workflowId);
+
+  DeploymentMetadata fetchDeploymentMetadata(String appId, Workflow workflow, Map<String, String> workflowVariables,
+      DeploymentMetadata.Include... includeList);
 
   Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow);
 

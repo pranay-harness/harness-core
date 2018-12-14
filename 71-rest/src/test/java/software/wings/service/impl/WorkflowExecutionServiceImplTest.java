@@ -106,6 +106,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
@@ -235,16 +236,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Host applicationHost2 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
-    Service service = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
-    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
-        aServiceTemplate()
-            .withAppId(app.getUuid())
-            .withEnvId(env.getUuid())
-            .withServiceId(service.getUuid())
-            .withName("TEMPLATE_NAME")
-            .withDescription("TEMPLATE_DESCRIPTION")
-            .build());
+    Service service = addService("svc1");
+    ServiceTemplate serviceTemplate = getServiceTemplate(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -363,16 +356,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Host applicationHost2 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
-    Service service = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
-    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
-        aServiceTemplate()
-            .withAppId(app.getUuid())
-            .withEnvId(env.getUuid())
-            .withServiceId(service.getUuid())
-            .withName("TEMPLATE_NAME")
-            .withDescription("TEMPLATE_DESCRIPTION")
-            .build());
+    Service service = addService("svc1");
+    ServiceTemplate serviceTemplate = getServiceTemplate(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -466,10 +451,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Host host2 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host2").build());
 
-    Service service1 = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
-    Service service2 = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc2").appId(app.getUuid()).build());
+    Service service1 = addService("svc1");
+    Service service2 = addService("svc2");
     ServiceTemplate serviceTemplate1 = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -635,8 +618,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   @Ignore
   public void triggerPipeline() throws InterruptedException {
-    Service service = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
+    Service service = addService("svc1");
 
     Pipeline pipeline = constructPipeline(service);
 
@@ -647,14 +629,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Host host = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host").build());
 
-    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
-        aServiceTemplate()
-            .withAppId(app.getUuid())
-            .withEnvId(env.getUuid())
-            .withServiceId(service.getUuid())
-            .withName("TEMPLATE_NAME")
-            .withDescription("TEMPLATE_DESCRIPTION")
-            .build());
+    ServiceTemplate serviceTemplate = getServiceTemplate(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -987,8 +962,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     licenseService.updateAccountLicense(account.getUuid(), licenseInfo, null);
 
     Thread.sleep(10000);
-    Service service = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
+    Service service = addService("svc1");
 
     Pipeline pipeline = constructPipeline(service);
     thrown.expect(WingsException.class);
@@ -1178,10 +1152,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   @Ignore
   public void shouldPauseAllAndResumeAllState() throws InterruptedException {
-    Service service1 = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
-    Service service2 = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc2").appId(app.getUuid()).build());
+    Service service1 = addService("svc1");
+    Service service2 = addService("svc2");
 
     Graph graph = getGraph();
 
@@ -1442,10 +1414,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldAbortAllStates() {
-    Service service1 = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
-    Service service2 = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc2").appId(app.getUuid()).build());
+    Service service1 = addService("svc1");
+    Service service2 = addService("svc2");
 
     Graph graph = getGraph();
 
@@ -1515,16 +1485,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Host applicationHost2 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
-    Service service = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
-    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
-        aServiceTemplate()
-            .withAppId(app.getUuid())
-            .withEnvId(env.getUuid())
-            .withServiceId(service.getUuid())
-            .withName("TEMPLATE_NAME")
-            .withDescription("TEMPLATE_DESCRIPTION")
-            .build());
+    Service service = addService("svc1");
+    ServiceTemplate serviceTemplate = getServiceTemplate(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -1716,16 +1678,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
 
-    Service service = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
-    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
-        aServiceTemplate()
-            .withAppId(app.getUuid())
-            .withEnvId(env.getUuid())
-            .withServiceId(service.getUuid())
-            .withName("TEMPLATE_NAME")
-            .withDescription("TEMPLATE_DESCRIPTION")
-            .build());
+    Service service = addService("svc1");
+    ServiceTemplate serviceTemplate = getServiceTemplate(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -1868,55 +1822,26 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldTriggerCanaryWorkflow() throws InterruptedException {
-    Service service = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
+    Service service = addService("svc1");
 
-    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
-        aServiceTemplate()
-            .withAppId(app.getUuid())
-            .withEnvId(env.getUuid())
-            .withServiceId(service.getUuid())
-            .withName("TEMPLATE_NAME")
-            .withDescription("TEMPLATE_DESCRIPTION")
-            .build());
+    ServiceTemplate serviceTemplate = getServiceTemplate(service);
 
     SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
 
     InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
-                                              .withName("Name4")
-                                              .withAppId(app.getUuid())
-                                              .withEnvId(env.getUuid())
-                                              .withAccountId(app.getAccountId())
-                                              .withHostNames(Lists.newArrayList("host1"))
-                                              .withServiceTemplateId(serviceTemplate.getUuid())
-                                              .withComputeProviderSettingId(computeProvider.getUuid())
-                                              .withComputeProviderType(computeProvider.getValue().getType())
-                                              .withDeploymentType(SSH.name())
-                                              .withHostConnectionAttrs(AccessType.KEY.name())
-                                              .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
-                                              .build());
+        createInfraMappingService(serviceTemplate, computeProvider, "Name4", "host1");
 
     triggerWorkflow(app.getAppId(), env, service, infrastructureMapping);
   }
 
   @Test
   public void shouldTriggerTemplateCanaryWorkflow() throws InterruptedException {
-    Service service = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
+    Service service = addService("svc1");
 
-    Service templateService = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc2").appId(app.getUuid()).build());
+    Service templateService = addService("svc2");
 
-    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
-        aServiceTemplate()
-            .withAppId(app.getUuid())
-            .withEnvId(env.getUuid())
-            .withServiceId(service.getUuid())
-            .withName("TEMPLATE_NAME")
-            .withDescription("TEMPLATE_DESCRIPTION")
-            .build());
+    ServiceTemplate serviceTemplate = getServiceTemplate(service);
 
     SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
@@ -1937,21 +1862,20 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .build());
 
     InfrastructureMapping templateInfraMapping =
-        infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
-                                              .withName("Name3")
-                                              .withAppId(app.getUuid())
-                                              .withEnvId(env.getUuid())
-                                              .withAccountId(app.getAccountId())
-                                              .withHostNames(Lists.newArrayList("host12"))
-                                              .withServiceTemplateId(serviceTemplate.getUuid())
-                                              .withComputeProviderSettingId(computeProvider.getUuid())
-                                              .withComputeProviderType(computeProvider.getValue().getType())
-                                              .withDeploymentType(SSH.name())
-                                              .withHostConnectionAttrs(AccessType.KEY.name())
-                                              .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
-                                              .build());
+        createInfraMappingService(serviceTemplate, computeProvider, "Name3", "host12");
 
     triggerTemplateWorkflow(app.getAppId(), env, service, infrastructureMapping, templateService, templateInfraMapping);
+  }
+
+  private ServiceTemplate getServiceTemplate(Service service) {
+    return wingsPersistence.saveAndGet(ServiceTemplate.class,
+        aServiceTemplate()
+            .withAppId(app.getUuid())
+            .withEnvId(env.getUuid())
+            .withServiceId(service.getUuid())
+            .withName("TEMPLATE_NAME")
+            .withDescription("TEMPLATE_DESCRIPTION")
+            .build());
   }
 
   /**
@@ -2048,6 +1972,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withName(WORKFLOW_NAME)
             .withAppId(appId)
             .withEnvId(env.getUuid())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
             .withOrchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
@@ -2220,6 +2145,52 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     List<Artifact> artifacts =
         workflowExecutionService.obtainLastGoodDeployedArtifacts(workflow.getAppId(), workflow.getUuid());
     assertThat(artifacts).isNotEmpty();
+  }
+
+  @Test
+  public void shouldGetDeploymentMetdata() {
+    String appId = app.getUuid();
+    Service service = addService("svc1");
+
+    ServiceTemplate serviceTemplate = getServiceTemplate(service);
+
+    SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
+        aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
+
+    InfrastructureMapping infrastructureMapping =
+        createInfraMappingService(serviceTemplate, computeProvider, "Name4", "host1");
+
+    Workflow workflow = createWorkflow(appId, env, service, infrastructureMapping);
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setOrchestrationId(workflow.getUuid());
+    executionArgs.setWorkflowType(workflow.getWorkflowType());
+    final DeploymentMetadata deploymentMetadata =
+        workflowExecutionService.fetchDeploymentMetadata(workflow.getAppId(), executionArgs);
+    assertThat(deploymentMetadata).isNotNull();
+    assertThat(deploymentMetadata.getArtifactRequiredServiceIds()).isEmpty();
+  }
+
+  private InfrastructureMapping createInfraMappingService(
+      ServiceTemplate serviceTemplate, SettingAttribute computeProvider, String name4, String host1) {
+    return infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+                                                 .withName(name4)
+                                                 .withAppId(app.getUuid())
+                                                 .withEnvId(env.getUuid())
+                                                 .withAccountId(app.getAccountId())
+                                                 .withHostNames(Lists.newArrayList(host1))
+                                                 .withServiceTemplateId(serviceTemplate.getUuid())
+                                                 .withComputeProviderSettingId(computeProvider.getUuid())
+                                                 .withComputeProviderType(computeProvider.getValue().getType())
+                                                 .withDeploymentType(SSH.name())
+                                                 .withHostConnectionAttrs(AccessType.KEY.name())
+                                                 .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+                                                 .build());
+  }
+
+  private Service addService(String svc1) {
+    return wingsPersistence.saveAndGet(
+        Service.class, Service.builder().uuid(generateUuid()).name(svc1).appId(app.getUuid()).build());
   }
 
   @Test
