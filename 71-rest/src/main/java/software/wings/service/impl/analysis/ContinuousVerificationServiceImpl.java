@@ -2,7 +2,6 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
@@ -856,7 +855,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         metricRecords.addAll(records);
         previousOffSet += response.size();
         dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
-        response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeAuthority);
+        response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
       }
     });
 

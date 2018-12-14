@@ -70,7 +70,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           : TimeUnit.MINUTES.toMillis(maxCVCollectionMinute);
       long endTime = TimeUnit.MINUTES.toMillis(endMinute);
       if (getMetricAnalysisStates().contains(cvConfiguration.getStateType())
-          && endTime - startTime >= TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES)) {
+          && endTime - startTime >= TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3)) {
         logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
             cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endMinute, endMinute);
         verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerAPMDataCollection(
