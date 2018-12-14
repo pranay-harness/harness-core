@@ -92,10 +92,14 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Override
   public boolean deleteSamlSettings(String accountId) {
     SamlSettings samlSettings = getSamlSettingsByAccountId(accountId);
-    if (samlSettings != null) {
-      return wingsPersistence.delete(samlSettings);
+    if (samlSettings == null) {
+      throw new InvalidRequestException("No Saml settings found for this account");
     }
-    return false;
+    if (userGroupService.existsLinkedUserGroup(samlSettings.getUuid())) {
+      throw new InvalidRequestException(
+          "Deleting Saml provider with linked user groups is not allowed. Unlink the user groups first.");
+    }
+    return wingsPersistence.delete(samlSettings);
   }
 
   @Override
