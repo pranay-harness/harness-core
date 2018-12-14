@@ -1,18 +1,26 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.service.intfc.SSOSettingService;
+import software.wings.service.intfc.UserGroupService;
 
 import javax.validation.ConstraintViolationException;
 
 public class SSOSettingServiceTest extends WingsBaseTest {
-  @Inject software.wings.service.intfc.SSOSettingService ssoSettingService;
+  @Mock UserGroupService userGroupService;
+  @Inject @InjectMocks SSOSettingService ssoSettingService;
 
   @Test
   public void testSamlSettingsCRUD() {
@@ -93,7 +101,20 @@ public class SSOSettingServiceTest extends WingsBaseTest {
     assertThat(ssoSettingService.getSamlSettingsByIdpUrl("FakeURL")).isNull();
     assertThat(ssoSettingService.getSamlSettingsByOrigin("FakeOrigin")).isNull();
 
-    assertThat(ssoSettingService.deleteSamlSettings("TestAccountID3")).isFalse();
+    // Deletion would not be allowed because there is no saml setting with account `TestAccountID3`
+    assertThatThrownBy(() -> ssoSettingService.deleteSamlSettings("TestAccountID3"))
+        .isInstanceOf(InvalidRequestException.class);
+
+    // Mocking the userGroupService to return true when existsLinkedUserGroup is checked.
+    when(userGroupService.existsLinkedUserGroup(samlSettings.getUuid())).thenReturn(true);
+
+    // Because there is a linked user group with this SsoId, the deleteSamlSetting should not succeed.
+    assertThatThrownBy(() -> ssoSettingService.deleteSamlSettings("TestAccountID"))
+        .isInstanceOf(InvalidRequestException.class);
+
+    // Mocking the userGroupService to return false when existsLinkedUserGroup is checked.
+    when(userGroupService.existsLinkedUserGroup(samlSettings.getUuid())).thenReturn(false);
+
     assertThat(ssoSettingService.deleteSamlSettings("TestAccountID")).isTrue();
     assertThat(ssoSettingService.getSamlSettingsByAccountId("TestAccountID")).isNull();
     assertThat(ssoSettingService.getSamlSettingsByIdpUrl("TestURL2")).isNull();
