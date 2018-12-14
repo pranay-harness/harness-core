@@ -104,14 +104,15 @@ public class SSOServiceTest extends WingsBaseTest {
     when(SSO_SETTING_SERVICE.getSamlSettingsByAccountId(anyString())).thenReturn(mockSamlSettings);
 
     SSOConfig settings = ssoService.uploadSamlConfiguration(
-        "testAccountID", getClass().getResourceAsStream("/okta-IDP-metadata.xml"), "Okta");
+        "testAccountID", getClass().getResourceAsStream("/okta-IDP-metadata.xml"), "Okta", "group");
     String idpRedirectUrl = ((SamlSettings) settings.getSsoSettings().get(0)).getUrl();
     assertThat(idpRedirectUrl)
         .isEqualTo("https://dev-274703.oktapreview.com/app/harnessiodev274703_testapp_1/exkefa5xlgHhrU1Mc0h7/sso/saml");
     assertThat(settings.getSsoSettings().get(0).getDisplayName()).isEqualTo("Okta");
 
     try {
-      ssoService.uploadSamlConfiguration("testAccountID", getClass().getResourceAsStream("/SamlResponse.txt"), "Okta");
+      ssoService.uploadSamlConfiguration(
+          "testAccountID", getClass().getResourceAsStream("/SamlResponse.txt"), "Okta", "group");
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_SAML_CONFIGURATION.name());

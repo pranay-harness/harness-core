@@ -84,6 +84,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.licensing.LicenseServiceImpl;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ServiceJobScheduler;
+import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
@@ -517,6 +518,8 @@ public class WingsModule extends DependencyModule {
     bind(SumoLogicAnalysisService.class).to(SumoLogicAnalysisServiceImpl.class);
     bind(InstanceStatService.class).to(InstanceStatServiceImpl.class);
     bind(StatsCollector.class).to(StatsCollectorImpl.class);
+
+    bind(SamlUserGroupSync.class);
     bind(SmbService.class).to(SmbServiceImpl.class);
     bind(SmbBuildService.class).to(SmbBuildServiceImpl.class);
     bind(SftpService.class).to(SftpServiceImpl.class);

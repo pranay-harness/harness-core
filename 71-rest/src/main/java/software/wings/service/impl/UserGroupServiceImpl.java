@@ -376,7 +376,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     group.setSsoGroupName(ssoGroupName);
     UserGroup savedGroup = save(group);
 
-    LdapGroupSyncJob.add(jobScheduler, accountId, ssoId);
+    if (ssoType.equals(SSOType.LDAP)) {
+      LdapGroupSyncJob.add(jobScheduler, accountId, ssoId);
+    }
 
     return savedGroup;
   }

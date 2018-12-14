@@ -14,8 +14,11 @@ import javax.validation.constraints.NotNull;
 
 // TODO: Refactor this to make it more abstract and common across different SSO providers
 public interface SSOService {
-  SSOConfig uploadSamlConfiguration(
-      @NotNull String accountId, @NotNull InputStream inputStream, @NotNull String displayName);
+  SSOConfig uploadSamlConfiguration(@NotNull String accountId, @NotNull InputStream inputStream,
+      @NotNull String displayName, String groupMembershipAttr);
+
+  SSOConfig patchSamlConfiguration(
+      @NotNull String accountId, InputStream inputStream, String displayName, String groupMembershipAttr);
 
   SSOConfig deleteSamlConfiguration(@NotNull String accountId);
 

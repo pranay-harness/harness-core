@@ -18,6 +18,7 @@ import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.LdapLinkGroupRequest;
 import software.wings.beans.sso.SSOType;
+import software.wings.beans.sso.SamlLinkGroupRequest;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -295,5 +296,25 @@ public class UserGroupResource {
   public RestResponse<UserGroup> unlinkSsoGroup(@PathParam("userGroupId") String userGroupId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("retainMembers") boolean retainMembers) {
     return getPublicUserGroup(userGroupService.unlinkSsoGroup(accountId, userGroupId, retainMembers));
+  }
+
+  /**
+   * Link to SAML group
+   *
+   * @param userGroupId user group id
+   * @param samlId    saml provider id
+   * @param accountId the account id
+   * @param groupRequest group details
+   * @return the rest response
+   */
+  @PUT
+  @Path("{userGroupId}/link/saml/{samlId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<UserGroup> linkToSamlGroup(@PathParam("userGroupId") String userGroupId,
+      @PathParam("samlId") String samlId, @QueryParam("accountId") @NotEmpty String accountId,
+      @NotNull @Valid SamlLinkGroupRequest groupRequest) {
+    return new RestResponse<>(userGroupService.linkToSsoGroup(accountId, userGroupId, SSOType.SAML, samlId,
+        groupRequest.getSamlGroupName(), groupRequest.getSamlGroupName()));
   }
 }
