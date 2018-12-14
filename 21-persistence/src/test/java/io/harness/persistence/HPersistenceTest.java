@@ -23,7 +23,7 @@ import java.util.stream.IntStream;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-class TestEntity extends PersistentEntity {
+class TestEntity implements PersistentEntity {
   @Id private String uuid;
   private String test;
 }

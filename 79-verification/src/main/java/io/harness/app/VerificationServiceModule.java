@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.security.NoOpSecretManagerImpl;
 import io.harness.service.ContinuousVerificationServiceImpl;
@@ -21,9 +22,13 @@ import io.harness.version.VersionInfoManager;
 import org.apache.commons.io.IOUtils;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
+import software.wings.DataStorageMode;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.GoogleDataStoreServiceImpl;
+import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -77,6 +82,20 @@ public class VerificationServiceModule extends AbstractModule {
                 .setNameFormat("Verification-service-Thread-%d")
                 .setPriority(Thread.NORM_PRIORITY)
                 .build()));
+
+    if (configuration.getDataStorageMode() == null) {
+      configuration.setDataStorageMode(DataStorageMode.MONGO);
+    }
+    switch (configuration.getDataStorageMode()) {
+      case GOOGLE_CLOUD_DATA_STORE:
+        bind(DataStoreService.class).to(GoogleDataStoreServiceImpl.class);
+        break;
+      case MONGO:
+        bind(DataStoreService.class).to(MongoDataStoreServiceImpl.class);
+        break;
+      default:
+        throw new WingsException("Invalid execution log data storage mode: " + configuration.getDataStorageMode());
+    }
 
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(

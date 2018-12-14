@@ -22,7 +22,7 @@ import java.util.Date;
 @Entity(value = "notifyResponses", noClassnameStored = true)
 @Value
 @Builder
-public class NotifyResponse<T extends ResponseData> extends PersistentEntity implements UuidAccess, CreatedAtAccess {
+public class NotifyResponse<T extends ResponseData> implements PersistentEntity, UuidAccess, CreatedAtAccess {
   public static final String STATUS_KEY = "status";
 
   public static final Duration TTL = WaitQueue.TTL.plusDays(7);

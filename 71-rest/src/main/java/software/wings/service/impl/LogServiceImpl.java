@@ -26,8 +26,8 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.LogDataStoreService;
 import software.wings.service.intfc.LogService;
 
 import java.io.File;
@@ -54,7 +54,7 @@ public class LogServiceImpl implements LogService {
   public static final int NUM_OF_LOGS_TO_KEEP = 200;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ActivityService activityService;
-  @Inject private LogDataStoreService logDataStoreService;
+  @Inject private DataStoreService dataStoreService;
   @Inject private AppService appService;
   @Inject private FeatureFlagService featureFlagService;
 
@@ -63,7 +63,7 @@ public class LogServiceImpl implements LogService {
    */
   @Override
   public PageResponse<Log> list(String appId, PageRequest<Log> pageRequest) {
-    return logDataStoreService.listLogs(Log.class, pageRequest);
+    return dataStoreService.list(Log.class, pageRequest);
   }
 
   @Override
@@ -71,8 +71,8 @@ public class LogServiceImpl implements LogService {
     File file = new File(
         Files.createTempDir(), format("ActivityLogs_%s.txt", dateFormatter.format(new Date(currentTimeMillis()))));
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(file), UTF_8)) {
-      List<Log> logList = logDataStoreService
-                              .listLogs(Log.class,
+      List<Log> logList = dataStoreService
+                              .list(Log.class,
                                   aPageRequest()
                                       .addFilter("appId", Operator.EQ, appId)
                                       .addFilter("activityId", Operator.EQ, activityId)
@@ -91,14 +91,14 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public void pruneByActivity(String appId, String activityId) {
-    logDataStoreService.purgeByActivity(appId, activityId);
+    dataStoreService.purgeByActivity(appId, activityId);
   }
 
   @Override
   public void batchedSave(List<Log> logs) {
     if (isNotEmpty(logs)) {
       logs = logs.stream().filter(Objects::nonNull).collect(toList());
-      logDataStoreService.saveLogs(Log.class, logs);
+      dataStoreService.save(Log.class, logs);
 
       // Map of [ActivityId -> [CommandUnitName -> LastLogLineStatus]]
 
@@ -116,7 +116,7 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public boolean batchedSaveCommandUnitLogs(String activityId, String unitName, Log log) {
-    logDataStoreService.saveLogs(Log.class, singletonList(log));
+    dataStoreService.save(Log.class, singletonList(log));
     activityService.updateCommandUnitStatus(log.getAppId(), activityId, unitName, log.getCommandExecutionStatus());
     return true;
   }

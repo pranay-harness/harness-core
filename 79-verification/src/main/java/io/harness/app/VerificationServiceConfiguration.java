@@ -24,6 +24,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.scheduler.SchedulerConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.DataStorageMode;
 
 import java.util.Optional;
 
@@ -47,6 +48,7 @@ public class VerificationServiceConfiguration extends Configuration implements A
   private boolean sslEnabled;
   private String managerUrl;
   @JsonProperty("scheduler") private SchedulerConfig schedulerConfig = new SchedulerConfig();
+  @JsonProperty("dataStorageMode") private DataStorageMode dataStorageMode;
 
   /**
    * Instantiates a new Main configuration.

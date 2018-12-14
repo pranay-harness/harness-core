@@ -17,7 +17,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 import java.util.Set;
 
 @StoreIn(name = "foo")
-class Dummy extends PersistentEntity {}
+class Dummy implements PersistentEntity {}
 
 public class EntityStoreTest extends PersistenceTest {
   @Inject private HPersistence persistence;

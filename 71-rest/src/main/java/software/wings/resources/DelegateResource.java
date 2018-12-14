@@ -44,10 +44,10 @@ import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
-import software.wings.service.intfc.LogDataStoreService;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,18 +83,18 @@ public class DelegateResource {
   private DelegateScopeService delegateScopeService;
   private DownloadTokenService downloadTokenService;
   private MainConfiguration mainConfiguration;
-  private LogDataStoreService logDataStoreService;
+  private DataStoreService dataStoreService;
   private AccountService accountService;
 
   @Inject
   public DelegateResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
-      DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration,
-      LogDataStoreService logDataStoreService, AccountService accountService) {
+      DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration, DataStoreService dataStoreService,
+      AccountService accountService) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
     this.mainConfiguration = mainConfiguration;
-    this.logDataStoreService = logDataStoreService;
+    this.dataStoreService = dataStoreService;
     this.accountService = accountService;
   }
 
@@ -521,6 +521,6 @@ public class DelegateResource {
   @ExceptionMetered
   public void saveApiCallLogs(@PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId,
       List<ThirdPartyApiCallLog> logs) {
-    logDataStoreService.saveLogs(ThirdPartyApiCallLog.class, logs);
+    dataStoreService.save(ThirdPartyApiCallLog.class, logs);
   }
 }

@@ -39,10 +39,10 @@ import software.wings.beans.RestResponse;
 import software.wings.common.Constants;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
-import software.wings.service.intfc.LogDataStoreService;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.File;
@@ -70,7 +70,7 @@ public class DelegateResourceTest {
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
   private static @Mock MainConfiguration mainConfiguration = mock(MainConfiguration.class);
-  private static @Mock LogDataStoreService logDataStoreService = mock(LogDataStoreService.class);
+  private static @Mock DataStoreService dataStoreService = mock(DataStoreService.class);
   private static @Mock AccountService accountService = mock(AccountService.class);
 
   public @Parameter String apiUrl;
@@ -84,7 +84,7 @@ public class DelegateResourceTest {
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .addResource(new DelegateResource(DELEGATE_SERVICE, DELEGATE_SCOPE_SERVICE, DOWNLOAD_TOKEN_SERVICE,
-              mainConfiguration, logDataStoreService, accountService))
+              mainConfiguration, dataStoreService, accountService))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {

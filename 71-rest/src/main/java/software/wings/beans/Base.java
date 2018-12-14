@@ -42,7 +42,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Base
-    extends PersistentEntity implements UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   public static final String APP_ID_KEY = "appId";
   public static final String APP_MANIFEST_ID_KEY = "applicationManifestId";
   public static final String ACCOUNT_ID_KEY = "accountId";

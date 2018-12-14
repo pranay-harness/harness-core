@@ -123,7 +123,7 @@ import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.GcpInfrastructureProvider;
 import software.wings.service.impl.GcrBuildServiceImpl;
 import software.wings.service.impl.GcsBuildServiceImpl;
-import software.wings.service.impl.GoogleLogDataStoreServiceImpl;
+import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.HarnessUserGroupServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
@@ -131,7 +131,7 @@ import software.wings.service.impl.InfrastructureProvisionerServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.MigrationServiceImpl;
-import software.wings.service.impl.MongoLogDataStoreServiceImpl;
+import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.impl.NotificationSetupServiceImpl;
@@ -246,6 +246,7 @@ import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
@@ -268,7 +269,6 @@ import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LearningEngineService;
-import software.wings.service.intfc.LogDataStoreService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.MigrationService;
@@ -605,10 +605,10 @@ public class WingsModule extends DependencyModule {
     }
     switch (configuration.getExecutionLogsStorageMode()) {
       case GOOGLE_CLOUD_DATA_STORE:
-        bind(LogDataStoreService.class).to(GoogleLogDataStoreServiceImpl.class);
+        bind(DataStoreService.class).to(GoogleDataStoreServiceImpl.class);
         break;
       case MONGO:
-        bind(LogDataStoreService.class).to(MongoLogDataStoreServiceImpl.class);
+        bind(DataStoreService.class).to(MongoDataStoreServiceImpl.class);
         break;
       default:
         throw new WingsException(
