@@ -188,6 +188,7 @@ public class MetricAnalysisJob implements Job {
         case CLOUD_WATCH:
         case DATA_DOG:
         case APM_VERIFICATION:
+        case STACK_DRIVER:
           stateValuesToAnalyze = getMetricTypeMap(analysisService.getMetricTemplates(
               context.getAppId(), context.getStateType(), context.getStateExecutionId(), null));
           break;

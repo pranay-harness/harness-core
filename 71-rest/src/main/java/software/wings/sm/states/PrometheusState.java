@@ -104,7 +104,7 @@ public class PrometheusState extends AbstractMetricAnalysisState {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-    Preconditions.checkNotNull(settingAttribute, "No new relic setting with id: " + analysisServerConfigId + " found");
+    Preconditions.checkNotNull(settingAttribute, "No prometheus setting with id: " + analysisServerConfigId + " found");
     TimeSeriesMlAnalysisType analyzedTierAnalysisType = getComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE
         ? PREDICTIVE
         : TimeSeriesMlAnalysisType.COMPARATIVE;

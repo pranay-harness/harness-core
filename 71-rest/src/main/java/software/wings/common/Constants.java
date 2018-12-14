@@ -844,6 +844,8 @@ public interface Constants {
    */
   String STATIC_CLOUD_WATCH_METRIC_URL = "/configs/cloudwatch_metrics.yml";
 
+  String STACK_DRIVER_METRIC = "/configs/stackdriver_metrics.yml";
+
   /**
    * The cloudwatch metric url.
    */

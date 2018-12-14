@@ -3,6 +3,7 @@ package software.wings.delegatetasks;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
+import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -20,6 +21,7 @@ import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -142,6 +144,13 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
       sleep(RETRY_SLEEP);
     } while (++retrySave != RETRIES);
     return false;
+  }
+
+  protected List<NewRelicMetricDataRecord> getAllMetricRecords(
+      TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) {
+    List<NewRelicMetricDataRecord> rv = new ArrayList<>();
+    records.cellSet().forEach(cell -> rv.add(cell.getValue()));
+    return rv;
   }
 
   protected abstract StateType getStateType();

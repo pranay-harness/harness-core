@@ -1,0 +1,93 @@
+package software.wings.delegatetasks.validation;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.Collections.singletonList;
+import static software.wings.common.VerificationConstants.STACKDRIVER_URL;
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.services.monitoring.v3.MonitoringScopes;
+import com.google.inject.Inject;
+
+import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.DelegateTask;
+import software.wings.beans.GcpConfig;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
+import software.wings.service.intfc.security.EncryptionConfig;
+import software.wings.service.intfc.security.EncryptionService;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.function.Consumer;
+
+/**
+ * Created by Pranjal on 11/27/2018
+ */
+public class StackDriverValidation extends AbstractSecretManagerValidation {
+  private static final Logger logger = LoggerFactory.getLogger(StackDriverValidation.class);
+
+  @Inject @Transient private transient EncryptionService encryptionService;
+
+  public StackDriverValidation(
+      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTask, postExecute);
+  }
+
+  @Override
+  public List<DelegateConnectionResult> validate() {
+    if (!isEmpty(getParameters())) {
+      GcpConfig gcpConfig;
+      List<EncryptedDataDetail> encryptionDetails;
+      if (getParameters()[0] instanceof StackDriverDataCollectionInfo) {
+        gcpConfig = ((StackDriverDataCollectionInfo) getParameters()[0]).getGcpConfig();
+        encryptionDetails = ((StackDriverDataCollectionInfo) getParameters()[0]).getEncryptedDataDetails();
+      } else {
+        gcpConfig = (GcpConfig) getParameters()[2];
+        encryptionDetails = (List<EncryptedDataDetail>) getParameters()[3];
+      }
+      try {
+        encryptionService.decrypt(gcpConfig, encryptionDetails);
+      } catch (Exception e) {
+        logger.info("Failed to decrypt " + gcpConfig, e);
+        return singletonList(
+            DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());
+      }
+
+      try {
+        GoogleCredential
+            .fromStream(new ByteArrayInputStream(
+                Charset.forName("UTF-8").encode(CharBuffer.wrap(gcpConfig.getServiceAccountKeyFileContent())).array()))
+            .createScoped(MonitoringScopes.all());
+      } catch (IOException e) {
+        logger.info("Failed to connect " + gcpConfig, e);
+        return singletonList(
+            DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());
+      }
+      boolean validated = true;
+
+      return singletonList(
+          DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(validated).build());
+    }
+    return singletonList(DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());
+  }
+
+  @Override
+  public List<String> getCriteria() {
+    return singletonList(STACKDRIVER_URL);
+  }
+
+  @Override
+  protected EncryptionConfig getEncryptionConfig() {
+    for (Object parmeter : getParameters()) {
+      if (parmeter instanceof StackDriverDataCollectionInfo) {
+        return ((StackDriverDataCollectionInfo) parmeter).getEncryptedDataDetails().get(0).getEncryptionConfig();
+      }
+    }
+    return super.getEncryptionConfig();
+  }
+}

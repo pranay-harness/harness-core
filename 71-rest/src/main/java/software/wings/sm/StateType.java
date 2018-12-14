@@ -139,6 +139,7 @@ import software.wings.sm.states.RollingNodeSelectState;
 import software.wings.sm.states.ShellScriptState;
 import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.SplunkV2State;
+import software.wings.sm.states.StackDriverState;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
@@ -309,6 +310,11 @@ public enum StateType implements StateTypeDescriptor {
    * Bugsnag verification state type.
    */
   BUG_SNAG(BugsnagState.class, VERIFICATIONS, 17, "Bugsnag", asList(), ORCHESTRATION_STENCILS),
+
+  /**
+   * StackDriver state type.
+   */
+  STACK_DRIVER(StackDriverState.class, VERIFICATIONS, 18, "StackDriver", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.

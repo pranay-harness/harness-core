@@ -226,12 +226,5 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
       });
       return metricDataResponses;
     }
-
-    private List<NewRelicMetricDataRecord> getAllMetricRecords(
-        TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) {
-      List<NewRelicMetricDataRecord> rv = new ArrayList<>();
-      records.cellSet().forEach(cell -> rv.add(cell.getValue()));
-      return rv;
-    }
   }
 }

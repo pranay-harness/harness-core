@@ -52,6 +52,7 @@
         <extensions-version>2.4.3</extensions-version>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
+        <google.monitoring.version>v3-rev477-1.25.0</google.monitoring.version>
         <maven.build.timestamp.format>yyMMdd-HHmm</maven.build.timestamp.format>
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
