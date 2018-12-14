@@ -360,8 +360,9 @@ public class GoogleCloudFileServiceImpl implements FileService {
               BucketInfo.newBuilder(bucketName).setStorageClass(StorageClass.NEARLINE).setLocation("us").build());
           logger.info("Bucket with name '{}' created in Google Cloud Storage.", bucketName);
         } catch (Exception e) {
-          logger.warn("Creation of bucket in Google Cloud Storage '{}' failed, the bucket has been created already.",
-              bucketName);
+          logger.warn(
+              "Creation of bucket in Google Cloud Storage '{}' failed with error: '{}', the bucket may have been created already or the current account doesn't have permission to create bucket.",
+              bucketName, e.getMessage());
         }
       }
     }
@@ -389,8 +390,12 @@ public class GoogleCloudFileServiceImpl implements FileService {
         wingsPersistence.createQuery(GcsFileMetadata.class).filter("gcsFileId", gcsFileId).get();
 
     UpdateOperations<GcsFileMetadata> updateOperations = wingsPersistence.createUpdateOperations(GcsFileMetadata.class);
-    updateOperations.set("entityId", entityId);
-    updateOperations.set("version", version);
+    if (entityId != null) {
+      updateOperations.set("entityId", entityId);
+    }
+    if (version != null) {
+      updateOperations.set("version", version);
+    }
 
     wingsPersistence.update(gcsFileMetadata, updateOperations);
   }
