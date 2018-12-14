@@ -3,8 +3,8 @@ package io.harness.dl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.DataGenApplication;
+import io.harness.OrchestrationMorphiaClasses;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
-import io.harness.waiter.WaiterMorphiaClasses;
 import org.junit.Test;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.MappedClass;
@@ -28,7 +28,7 @@ public class MorphiaClassesTest {
     Set<Class> classes = new HashSet();
     classes.addAll(DataGenApplication.morphiaClasses);
 
-    classes.addAll(WaiterMorphiaClasses.classes);
+    classes.addAll(OrchestrationMorphiaClasses.classes);
 
     boolean success = true;
     for (MappedClass cls : morphia.getMapper().getMappedClasses()) {

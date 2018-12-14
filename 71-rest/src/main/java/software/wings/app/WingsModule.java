@@ -7,6 +7,7 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
+import io.harness.OrchestrationModule;
 import io.harness.exception.WingsException;
 import io.harness.govern.DependencyModule;
 import io.harness.limits.LimitCheckerFactory;
@@ -20,7 +21,6 @@ import io.harness.queue.QueueController;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
-import io.harness.waiter.WaiterModule;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.DataStorageMode;
@@ -624,6 +624,6 @@ public class WingsModule extends DependencyModule {
   @Override
   public Set<DependencyModule> dependencies() {
     return ImmutableSet.<DependencyModule>of(
-        TimeModule.getInstance(), VersionModule.getInstance(), WaiterModule.getInstance());
+        TimeModule.getInstance(), VersionModule.getInstance(), OrchestrationModule.getInstance());
   }
 }
