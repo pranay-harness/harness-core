@@ -30,6 +30,7 @@ import software.wings.utils.JsonUtils;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 /**
  * Created by sriram_parthasarathy on 8/23//"17.
@@ -56,7 +57,7 @@ public class LogAnalysisManagerJob implements Job {
       logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
       new LogAnalysisTask(analysisService, context, jobExecutionContext, delegateTaskId, learningEngineService,
           managerClient, managerClientHelper)
-          .run();
+          .call();
       logger.info("Finish log analysis cron " + context.getStateExecutionId());
     } catch (Exception ex) {
       logger.warn("Log analysis cron failed with error", ex);
@@ -69,7 +70,7 @@ public class LogAnalysisManagerJob implements Job {
   }
 
   @AllArgsConstructor
-  public static class LogAnalysisTask implements Runnable {
+  public static class LogAnalysisTask implements Callable<Integer> {
     private static final Logger logger = LoggerFactory.getLogger(LogAnalysisTask.class);
     private LogAnalysisService analysisService;
 
@@ -116,7 +117,7 @@ public class LogAnalysisManagerJob implements Job {
     }
 
     @Override
-    public void run() {
+    public Integer call() {
       boolean completeCron = false;
       boolean error = false;
       String errorMsg = "";
@@ -130,7 +131,7 @@ public class LogAnalysisManagerJob implements Job {
         boolean createExperiment = false;
         if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           logger.warn(" log ml analysis : state is not valid " + context.getStateExecutionId());
-          return;
+          return -1;
         }
 
         if (analysisService.isProcessingComplete(context.getQuery(), context.getAppId(), context.getStateExecutionId(),
@@ -189,6 +190,8 @@ public class LogAnalysisManagerJob implements Job {
               context.getStateExecutionId(), context.getQuery(), "No data found for the given queries.");
         }
 
+        return logAnalysisMinute;
+
       } catch (Exception ex) {
         completeCron = true;
         error = true;
@@ -216,6 +219,8 @@ public class LogAnalysisManagerJob implements Job {
           logger.error("analysis failed", ex);
         }
       }
+
+      return -1;
     }
 
     private void sendStateNotification(AnalysisContext context, boolean error, String errorMsg, int logAnalysisMinute) {

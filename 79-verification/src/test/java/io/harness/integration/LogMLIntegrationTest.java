@@ -590,9 +590,9 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new LogAnalysisTask(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
-        managerClient, managerClientHelper)
-        .run();
+    new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
+        managerClient, managerClientHelper, wingsPersistence)
+        .call();
     Thread.sleep(TimeUnit.SECONDS.toMillis(20));
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -715,7 +715,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
         managerClient, managerClientHelper, wingsPersistence)
-        .run();
+        .call();
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
     assertEquals("No baseline data for the given query was found.", logMLAnalysisSummary.getAnalysisSummaryMessage());
@@ -794,7 +794,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
         managerClient, managerClientHelper, wingsPersistence)
-        .run();
+        .call();
 
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
@@ -906,9 +906,9 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new LogAnalysisTask(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
-        managerClient, managerClientHelper)
-        .run();
+    new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
+        managerClient, managerClientHelper, wingsPersistence)
+        .call();
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertEquals("No data found for the given queries.", logMLAnalysisSummary.getAnalysisSummaryMessage());
@@ -957,8 +957,10 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         splunkHeartBeatElement.setLogCollectionMinute(i);
 
         logElements.add(splunkHeartBeatElement);
-        LogElement logElement = new LogElement(query, "0", "host-" + j, 0, 1, "Hello World " + i, i);
-        logElements.add(logElement);
+        if (i % 2 == 0) {
+          LogElement logElement = new LogElement(query, "0", "host-" + j, 0, 1, "Hello World " + i, i);
+          logElements.add(logElement);
+        }
       }
     }
 
@@ -999,9 +1001,10 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         splunkHeartBeatElement.setTimeStamp(0);
         splunkHeartBeatElement.setLogCollectionMinute(i);
         logElements.add(splunkHeartBeatElement);
-
-        LogElement logElement = new LogElement(query, "0", "host-" + j, 0, 1, "Hello World", i);
-        logElements.add(logElement);
+        if (i % 2 == 0) {
+          LogElement logElement = new LogElement(query, "0", "host-" + j, 0, 1, "Hello World", i);
+          logElements.add(logElement);
+        }
       }
     }
 
@@ -1038,7 +1041,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     for (int i = 0; i < 5; ++i) {
       new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId,
           learningEngineService, managerClient, managerClientHelper, wingsPersistence)
-          .run();
+          .call();
     }
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
@@ -1048,8 +1051,101 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     assertEquals(5, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().size());
     assertEquals(5, logMLAnalysisSummary.getTestClusters().get(0).getHostSummary().size());
     assertEquals(
-        5, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().values().iterator().next().getCount());
+        3, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().values().iterator().next().getCount());
   }
+
+  @Test
+  public void testFetchCorrectLastWorkflowLogsMissingData() {
+    final String query = UUID.randomUUID().toString();
+    String workflow1 = addWorkflowDataForLogs(true, query);
+    String workflow2 = addWorkflowDataForLogs(false, query);
+    final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+        StateType.SPLUNKV2, appId, serviceId, workflowId, query);
+    assertEquals("The baseline workflow should be first one", workflow1, lastWorkflowExecutionId);
+  }
+
+  @Test
+  public void testFetchCorrectLastWorkflowLogs() {
+    final String query = UUID.randomUUID().toString();
+    String workflow1 = addWorkflowDataForLogs(true, query);
+    String workflow2 = addWorkflowDataForLogs(true, query);
+    final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+        StateType.SPLUNKV2, appId, serviceId, workflowId, query);
+    assertEquals("The baseline workflow should be second one", workflow2, lastWorkflowExecutionId);
+  }
+
+  @Test
+  public void testFetchCorrectLastWorkflowLogsFirstWorkflow() {
+    final String query = UUID.randomUUID().toString();
+    final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+        StateType.SPLUNKV2, appId, serviceId, workflowId, query);
+    assertEquals("The baseline workflow should be null", null, lastWorkflowExecutionId);
+  }
+
+  @Test
+  public void testFetchCorrectLastWorkflowLogsNoData() {
+    final String query = UUID.randomUUID().toString();
+    String workflow1 = addWorkflowDataForLogs(false, query);
+    String workflow2 = addWorkflowDataForLogs(false, query);
+    final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+        StateType.SPLUNKV2, appId, serviceId, workflowId, query);
+    assertEquals("The baseline workflow should be workflow2", workflow2, lastWorkflowExecutionId);
+  }
+
+  private String addWorkflowDataForLogs(boolean withLogData, String query) {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    String prevStateExecutionId = UUID.randomUUID().toString();
+    stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setUuid(prevStateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution()
+            .withWorkflowId(workflowId)
+            .withAppId(appId)
+            .withName(workflowId + "-execution-" + 0)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withServiceIds(Lists.newArrayList(serviceId))
+            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .build();
+    String workFlowExecutionId = wingsPersistence.save(workflowExecution);
+
+    List<LogElement> logElements = new ArrayList<>();
+
+    final String host = UUID.randomUUID().toString();
+    final int logCollectionMinute = 0;
+    LogElement splunkHeartBeatElement = new LogElement();
+    splunkHeartBeatElement.setQuery(query);
+    splunkHeartBeatElement.setClusterLabel("-3");
+    splunkHeartBeatElement.setHost(host);
+    splunkHeartBeatElement.setCount(0);
+    splunkHeartBeatElement.setLogMessage("");
+    splunkHeartBeatElement.setTimeStamp(0);
+    splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
+
+    logElements.add(splunkHeartBeatElement);
+
+    if (withLogData) {
+      LogElement logElement = new LogElement(query, "0", host, 0, 0, "Hello World", logCollectionMinute);
+      logElements.add(logElement);
+    }
+
+    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, prevStateExecutionId, workflowId,
+        workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+
+    ContinuousVerificationExecutionMetaData metaData = ContinuousVerificationExecutionMetaData.builder()
+                                                           .stateType(StateType.SPLUNKV2)
+                                                           .workflowId(workflowId)
+                                                           .workflowExecutionId(workFlowExecutionId)
+                                                           .executionStatus(ExecutionStatus.SUCCESS)
+                                                           .applicationId(appId)
+                                                           .workflowStartTs(System.currentTimeMillis())
+                                                           .build();
+    wingsPersistence.save(metaData);
+    return workFlowExecutionId;
+  }
+
   @Test
   public void validateQuery() {
     WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
@@ -1237,7 +1333,6 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   private class LogAnalysisTestJob extends LogAnalysisTask {
     WingsPersistence wingsPersistence;
     String stateExecutionId;
-    int minute;
 
     LogAnalysisTestJob(LogAnalysisService analysisService, AnalysisContext context,
         JobExecutionContext jobExecutionContext, String delegateTaskId, LearningEngineService learningEngineService,
@@ -1254,15 +1349,14 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
       super.preProcess(logAnalysisMinute, query, nodes);
       try {
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
-        this.minute = logAnalysisMinute;
       } catch (InterruptedException e) {
         logger.error("", e);
       }
     }
 
     @Override
-    public void run() {
-      super.run();
+    public Integer call() {
+      Integer lastAnalysisMinute = super.call();
       try {
         LogDataRecord record = null;
         while (record == null) {
@@ -1270,12 +1364,14 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
           record = wingsPersistence.createQuery(LogDataRecord.class)
                        .filter("stateExecutionId", stateExecutionId)
                        .filter("clusterLevel", "HF")
-                       .filter("logCollectionMinute", minute)
+                       .filter("logCollectionMinute", lastAnalysisMinute)
                        .get();
         }
       } catch (InterruptedException e) {
         logger.error("", e);
       }
+
+      return lastAnalysisMinute;
     }
   }
 
@@ -1401,9 +1497,9 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new LogAnalysisTask(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
-        managerClient, managerClientHelper)
-        .run();
+    new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
+        managerClient, managerClientHelper, wingsPersistence)
+        .call();
     Thread.sleep(TimeUnit.SECONDS.toMillis(20));
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SPLUNKV2, 0);
