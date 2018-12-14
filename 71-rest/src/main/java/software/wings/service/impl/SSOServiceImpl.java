@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.inject.Inject;
@@ -10,6 +12,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import org.apache.commons.io.IOUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
@@ -52,10 +55,39 @@ public class SSOServiceImpl implements SSOService {
   @Inject private SecretManager secretManager;
 
   @Override
-  public SSOConfig uploadSamlConfiguration(String accountId, InputStream inputStream, String displayName) {
+  public SSOConfig uploadSamlConfiguration(
+      String accountId, InputStream inputStream, String displayName, String groupMembershipAttr) {
     try {
-      String fileAsString = org.apache.commons.io.IOUtils.toString(inputStream, Charset.defaultCharset());
-      buildAndUploadSamlSettings(accountId, fileAsString, displayName);
+      String fileAsString = IOUtils.toString(inputStream, Charset.defaultCharset());
+      buildAndUploadSamlSettings(accountId, fileAsString, displayName, groupMembershipAttr);
+      return getAccountAccessManagementSettings(accountId);
+    } catch (SamlException | IOException | URISyntaxException e) {
+      throw new WingsException(ErrorCode.INVALID_SAML_CONFIGURATION, e);
+    }
+  }
+
+  @Override
+  public SSOConfig patchSamlConfiguration(
+      String accountId, InputStream inputStream, String displayName, String groupMembershipAttr) {
+    try {
+      SamlSettings settings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+      String fileAsString;
+
+      if (null != inputStream) {
+        fileAsString = IOUtils.toString(inputStream, Charset.defaultCharset());
+      } else {
+        fileAsString = settings.getMetaDataFile();
+      }
+
+      if (isEmpty(displayName)) {
+        displayName = settings.getDisplayName();
+      }
+
+      if (isEmpty(groupMembershipAttr)) {
+        groupMembershipAttr = settings.getGroupMembershipAttr();
+      }
+
+      buildAndUploadSamlSettings(accountId, fileAsString, displayName, groupMembershipAttr);
       return getAccountAccessManagementSettings(accountId);
     } catch (SamlException | IOException | URISyntaxException e) {
       throw new WingsException(ErrorCode.INVALID_SAML_CONFIGURATION, e);
@@ -99,8 +131,8 @@ public class SSOServiceImpl implements SSOService {
     return settings;
   }
 
-  private SamlSettings buildAndUploadSamlSettings(String accountId, String fileAsString, String displayName)
-      throws SamlException, URISyntaxException {
+  private SamlSettings buildAndUploadSamlSettings(String accountId, String fileAsString, String displayName,
+      String groupMembershipAttr) throws SamlException, URISyntaxException {
     SamlClient samlClient = samlClientService.getSamlClient(fileAsString);
     SamlSettings samlSettings = SamlSettings.builder()
                                     .metaDataFile(fileAsString)
@@ -108,6 +140,7 @@ public class SSOServiceImpl implements SSOService {
                                     .accountId(accountId)
                                     .displayName(displayName)
                                     .origin(new URI(samlClient.getIdentityProviderUrl()).getHost())
+                                    .groupMembershipAttr(groupMembershipAttr)
                                     .build();
     return ssoSettingService.saveSamlSettings(samlSettings);
   }
@@ -220,7 +253,7 @@ public class SSOServiceImpl implements SSOService {
   }
 
   private boolean isExistingSetting(@NotNull LdapSettings settings) {
-    if (EmptyPredicate.isNotEmpty(settings.getUuid())) {
+    if (isNotEmpty(settings.getUuid())) {
       if (!ssoSettingService.isLdapSettingsPresent(settings.getUuid())) {
         throw new InvalidRequestException("Invalid Ldap Settings ID.");
       }

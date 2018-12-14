@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -27,6 +28,7 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.security.saml.SamlClientService;
+import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.intfc.SSOSettingService;
 
 import java.io.IOException;
@@ -37,6 +39,7 @@ import java.util.List;
 public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   @Mock AuthenticationUtil authenticationUtil;
   @Mock SSOSettingService ssoSettingService;
+  @Mock SamlUserGroupSync samlUserGroupSync;
   @Inject @InjectMocks @Spy SamlClientService samlClientService;
   @Inject @InjectMocks private SamlBasedAuthHandler authHandler;
 
@@ -59,6 +62,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
                                     .origin("dev-274703.oktapreview.com")
                                     .build();
     when(ssoSettingService.getSamlSettingsByOrigin("dev-274703.oktapreview.com")).thenReturn(samlSettings);
+    when(ssoSettingService.getSamlSettingsByAccountId(anyString())).thenReturn(samlSettings);
   }
 
   @Test
@@ -198,6 +202,34 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
 
     User returnedUser = authHandler.authenticate(azureIdpUrl2, samlResponseString);
+    assertThat(returnedUser).isEqualTo(user);
+  }
+
+  @Test
+  public void testSamlAuthenticationAndGroupExtractionForOktaShouldSucceed() throws IOException, SamlException {
+    User user = new User();
+    Account account = new Account();
+    account.setUuid("AC1");
+    user.setAccounts(Arrays.asList(account));
+
+    String samlResponseString =
+        IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
+    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+    when(authenticationUtil.getUser(anyString())).thenReturn(user);
+    when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(account);
+    SamlResponse samlResponse = mock(SamlResponse.class);
+    when(samlResponse.getNameID()).thenReturn("rushabh@harness.io");
+    SamlClient samlClient = mock(SamlClient.class);
+    final SamlSettings samlSettings = mock(SamlSettings.class);
+    when(samlSettings.getAccountId()).thenReturn("AC1");
+    List<SamlSettings> samlSettingsList = Arrays.asList(samlSettings);
+    doReturn(samlSettingsList.iterator()).when(samlClientService).getSamlSettingsFromOrigin(anyString());
+    doReturn(samlClient).when(samlClientService).getSamlClient(samlSettings);
+    when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
+
+    doNothing().when(samlUserGroupSync).syncUserGroup(any(SamlUserAuthorization.class), anyString(), anyString());
+    doReturn(true).when(samlSettings).isAuthorizationEnabled();
+    User returnedUser = authHandler.authenticate(oktaIdpUrl, samlResponseString);
     assertThat(returnedUser).isEqualTo(user);
   }
 

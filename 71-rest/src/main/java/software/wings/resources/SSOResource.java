@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.dropwizard.jersey.PATCH;
 import io.harness.exception.InvalidRequestException;
 import io.swagger.annotations.Api;
 import lombok.Data;
@@ -67,8 +68,36 @@ public class SSOResource {
   @ExceptionMetered
   public RestResponse<SSOConfig> uploadSamlMetaData(@QueryParam("accountId") String accountId,
       @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName) {
-    return new RestResponse<>(ssoService.uploadSamlConfiguration(accountId, uploadedInputStream, displayName));
+      @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName,
+      @FormDataParam("groupMembershipAttr") String groupMembershipAttr) {
+    return new RestResponse<>(
+        ssoService.uploadSamlConfiguration(accountId, uploadedInputStream, displayName, groupMembershipAttr));
+  }
+
+  @PUT
+  @Path("saml-idp-metadata-upload")
+  @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SSOConfig> editSamlMetaData(@QueryParam("accountId") String accountId,
+      @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName,
+      @FormDataParam("groupMembershipAttr") String groupMembershipAttr) {
+    return new RestResponse<>(
+        ssoService.uploadSamlConfiguration(accountId, uploadedInputStream, displayName, groupMembershipAttr));
+  }
+
+  @PATCH
+  @Path("saml-idp-metadata-upload")
+  @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SSOConfig> patchSamlMetaData(@QueryParam("accountId") String accountId,
+      @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName,
+      @FormDataParam("groupMembershipAttr") String groupMembershipAttr) {
+    return new RestResponse<>(
+        ssoService.patchSamlConfiguration(accountId, uploadedInputStream, displayName, groupMembershipAttr));
   }
 
   @DELETE
