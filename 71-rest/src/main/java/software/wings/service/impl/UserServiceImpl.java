@@ -233,9 +233,10 @@ public class UserServiceImpl implements UserService {
       // such as password, account/company name information.
       sendNewInvitationMail(userInvite, null);
     } else if (userInvite.isCompleted()) {
-      throw new WingsException(GENERAL_ERROR).addParam("message", "User invite for " + email + " has been completed.");
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam("message", "User invite for " + email + " has been completed.");
     } else {
-      throw new WingsException(GENERAL_ERROR)
+      throw new WingsException(GENERAL_ERROR, USER)
           .addParam("message",
               "User invite for " + email + " exists and is pending, "
                   + "please finish the signup process through your verification email.");
