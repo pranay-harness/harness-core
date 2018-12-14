@@ -107,6 +107,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   public void deleteTest() {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
     applicationManifestService.create(applicationManifest);
+    manifestFile.setApplicationManifestId(applicationManifest.getUuid());
 
     ManifestFile savedmManifestFile =
         applicationManifestService.createManifestFile(ApplicationManifestServiceTest.manifestFile, SERVICE_ID);
