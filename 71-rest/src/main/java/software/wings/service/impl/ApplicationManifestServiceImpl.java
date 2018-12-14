@@ -39,8 +39,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.states.k8s.K8sStateHelper;
@@ -61,8 +59,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private YamlPushService yamlPushService;
   @Inject private DelegateService delegateService;
-  @Inject private SettingsService settingsService;
-  @Inject private SecretManager secretManager;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private K8sStateHelper k8sStateHelper;
 
@@ -170,7 +166,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("Service doesn't exist");
     }
 
-    ApplicationManifest applicationManifest = get(manifestFile.getAppId(), serviceId);
+    ApplicationManifest applicationManifest = getById(manifestFile.getAppId(), manifestFile.getApplicationManifestId());
     if (applicationManifest == null) {
       throw new InvalidRequestException("Application Manifest doesn't exist for Service: " + serviceId);
     }
