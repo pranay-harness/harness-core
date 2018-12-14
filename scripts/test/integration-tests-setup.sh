@@ -7,7 +7,7 @@ docker rm $(docker ps -aq) || true
 
 sudo service mongod stop
 sleep 5
-docker run -p 27017:27017 -d --rm mongo:3.6 || true
+docker run -p 27017:27017 -d --rm mongo:3.6.9 || true
 sleep 5
 
 #kill vault
