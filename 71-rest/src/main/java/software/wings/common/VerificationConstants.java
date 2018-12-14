@@ -34,6 +34,8 @@ public class VerificationConstants {
   public static final String VERIFICATION_SERVICE_BASE_URL = "/verification";
   public static final String HEATMAP_SUMMARY = "/heatmap-summary";
   public static final String TIMESERIES = "/timeseries";
+  public static final String STACKDRIVER_URL = "http://monitoring.googleapis.com";
+
   public static final Double HIGH_RISK_CUTOFF = 0.5;
   public static final Double MEDIUM_RISK_CUTOFF = 0.3;
   public static final Double NO_DATA_CUTOFF = 0.0;
@@ -69,7 +71,7 @@ public class VerificationConstants {
 
   public static List<StateType> getMetricAnalysisStates() {
     return Arrays.asList(StateType.APM_VERIFICATION, StateType.APP_DYNAMICS, StateType.DATA_DOG, StateType.DYNA_TRACE,
-        StateType.PROMETHEUS, StateType.NEW_RELIC);
+        StateType.PROMETHEUS, StateType.NEW_RELIC, StateType.STACK_DRIVER);
   }
 
   public static List<StateType> getLogAnalysisStates() {

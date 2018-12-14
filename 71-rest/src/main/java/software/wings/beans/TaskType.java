@@ -28,6 +28,7 @@ import software.wings.delegatetasks.PrometheusDataCollectionTask;
 import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.delegatetasks.ShellScriptTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
+import software.wings.delegatetasks.StackDriverDataCollectionTask;
 import software.wings.delegatetasks.SumoDataCollectionTask;
 import software.wings.delegatetasks.TerraformInputVariablesObtainTask;
 import software.wings.delegatetasks.TerraformProvisionTask;
@@ -93,6 +94,7 @@ import software.wings.delegatetasks.validation.SftpValidation;
 import software.wings.delegatetasks.validation.ShellScriptValidation;
 import software.wings.delegatetasks.validation.SmbValidation;
 import software.wings.delegatetasks.validation.SplunkValidation;
+import software.wings.delegatetasks.validation.StackDriverValidation;
 import software.wings.delegatetasks.validation.SumoValidation;
 import software.wings.delegatetasks.validation.TerraformValidation;
 import software.wings.delegatetasks.validation.TriggerValidation;
@@ -190,6 +192,11 @@ public enum TaskType {
   NEWRELIC_GET_TXNS_WITH_DATA(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_GET_TXNS_WITH_DATA_FOR_NODE(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_POST_DEPLOYMENT_MARKER(TaskGroup.NEWRELIC, NewRelicDeploymentMarkerTask.class, NewRelicValidation.class),
+  STACKDRIVER_COLLECT_METRIC_DATA(
+      TaskGroup.STACKDRIVER, StackDriverDataCollectionTask.class, StackDriverValidation.class),
+  STACKDRIVER_METRIC_DATA_FOR_NODE(TaskGroup.STACKDRIVER, ServiceImplDelegateTask.class, StackDriverValidation.class),
+  STACKDRIVER_COLLECT_24_7_METRIC_DATA(
+      TaskGroup.STACKDRIVER, StackDriverDataCollectionTask.class, StackDriverValidation.class),
   SPLUNK(TaskGroup.SPLUNK, HttpTask.class, SplunkValidation.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
   SPLUNK_GET_HOST_RECORDS(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),

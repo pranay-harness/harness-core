@@ -32,6 +32,17 @@ io.fabric8.kubernetes.client.KubernetesClientException, 2000
 org.json.JSONException, 2001
 com.hazelcast.spi.exception.TargetNotMemberException, 2002
 com.sumologic.client.SumoServerException, 2003
+com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse, 2004
+com.google.api.services.monitoring.v3.model.TimeSeries, 2005
+com.google.api.services.monitoring.v3.model.Point, 2006
+com.google.api.services.monitoring.v3.model.Metric, 2007
+com.google.api.services.monitoring.v3.model.MonitoredResource, 2008
+com.google.api.services.monitoring.v3.model.TimeInterval, 2009
+com.google.api.services.monitoring.v3.model.TypedValue, 2010
+com.google.api.client.util.ArrayMap, 2011
+com.google.api.services.monitoring.v3.model.Distribution, 2012
+com.google.api.services.monitoring.v3.model.BucketOptions, 2013
+com.google.api.services.monitoring.v3.model.Exponential, 2014
 
 software.wings.sm.ExecutionInterruptType, 4000
 software.wings.sm.StateType, 4001
@@ -630,3 +641,6 @@ software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse, 5588
 io.harness.exception.FunctorException, 5589
 io.harness.eraro.Level, 5590
 software.wings.api.JiraExecutionData$JiraApprovalActionType, 5591
+software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData, 5592
+software.wings.service.impl.stackdriver.StackDriverMetric, 5593
+software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo, 5594

@@ -1,0 +1,25 @@
+LOADBALANCER:
+    - metricName: loadbalancing.googleapis.com/https/backend_latencies
+      displayName: Backend Latencies
+      unit: ms
+      kind: ERROR
+      valueType: Distribution
+
+    - metricName: loadbalancing.googleapis.com/https/request_count
+      displayName: Request Count
+      unit: number
+      kind: THROUGHPUT
+      valueType: Int64
+
+VMINSTANCE:
+    - metricName: compute.googleapis.com/instance/cpu/utilization
+      displayName: CPU Utilization
+      unit: ratio
+      kind: VALUE
+      valueType: Double
+
+    - metricName: compute.googleapis.com/instance/disk/write_ops_count
+      displayName: Disk Read Ops
+      unit: number
+      kind: VALUE
+      valueType: Int64

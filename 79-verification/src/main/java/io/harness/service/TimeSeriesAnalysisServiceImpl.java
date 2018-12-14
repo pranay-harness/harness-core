@@ -464,6 +464,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       case PROMETHEUS:
       case CLOUD_WATCH:
       case DATA_DOG:
+      case STACK_DRIVER:
       case APM_VERIFICATION:
         result.put("default", getMetricTemplates(appId, stateType, stateExecutionId, cvConfigId));
         break;
