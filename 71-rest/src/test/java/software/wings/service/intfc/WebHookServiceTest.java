@@ -109,7 +109,7 @@ public class WebHookServiceTest extends WingsBaseTest {
     List<Map<String, String>> artifacts =
         Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
     WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
-    WebHookResponse response = webHookService.execute(token, request);
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getError()).isNotEmpty();
   }
@@ -120,7 +120,7 @@ public class WebHookServiceTest extends WingsBaseTest {
     List<Map<String, String>> artifacts =
         Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
     WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
-    WebHookResponse response = webHookService.execute(token, request);
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
@@ -128,7 +128,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteByEventNoTrigger() {
     String payLoad = "Some payload";
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad, null);
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, null).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getError()).isNotEmpty();
   }
@@ -138,7 +138,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   public void shouldExecuteByEventTriggerInvalidJson() {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
     String payLoad = "Some payload";
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad, null);
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, null).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getError()).isNotEmpty();
   }
@@ -154,7 +154,7 @@ public class WebHookServiceTest extends WingsBaseTest {
 
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
     doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
@@ -237,7 +237,7 @@ public class WebHookServiceTest extends WingsBaseTest {
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
     doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
 
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
@@ -267,7 +267,7 @@ public class WebHookServiceTest extends WingsBaseTest {
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
     doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
 
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
@@ -297,7 +297,7 @@ public class WebHookServiceTest extends WingsBaseTest {
 
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
 
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getError()).isNotEmpty();
   }
@@ -328,7 +328,7 @@ public class WebHookServiceTest extends WingsBaseTest {
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
     doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
 
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getError()).isNotEmpty();
   }
@@ -358,7 +358,7 @@ public class WebHookServiceTest extends WingsBaseTest {
     doReturn("push").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
     doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
 
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
@@ -380,7 +380,7 @@ public class WebHookServiceTest extends WingsBaseTest {
         .triggerExecutionByWebHook(eq(APP_ID), eq(token), anyMap(), anyMap(), any());
 
     WebHookRequest request = WebHookRequest.builder().application(APP_ID).build();
-    WebHookResponse response = webHookService.execute(token, request);
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getRequestId()).isEqualTo(WORKFLOW_EXECUTION_ID);
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());

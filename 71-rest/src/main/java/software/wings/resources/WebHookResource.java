@@ -4,10 +4,8 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.beans.ExecutionStatus;
 import io.swagger.annotations.Api;
 import software.wings.beans.WebHookRequest;
-import software.wings.beans.WebHookResponse;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.WebHookService;
 
@@ -18,6 +16,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
 
 @Api("webhooks")
 @Path("/webhooks")
@@ -30,7 +29,7 @@ public class WebHookResource {
   @Timed
   @ExceptionMetered
   @Path("{webHookToken}")
-  public WebHookResponse execute(@PathParam("webHookToken") String webHookToken, WebHookRequest webHookRequest) {
+  public Response execute(@PathParam("webHookToken") String webHookToken, WebHookRequest webHookRequest) {
     return webHookService.execute(webHookToken, webHookRequest);
   }
 
@@ -45,15 +44,15 @@ public class WebHookResource {
   @Timed
   @ExceptionMetered
   @Path("{webHookToken}")
-  public WebHookResponse ping(@PathParam("webHookToken") String webHookToken, WebHookRequest webHookRequest) {
-    return WebHookResponse.builder().status(ExecutionStatus.SUCCESS.name()).build();
+  public Response ping(@PathParam("webHookToken") String webHookToken, WebHookRequest webHookRequest) {
+    return Response.status(Response.Status.OK).build();
   }
 
   @POST
   @Timed
   @ExceptionMetered
   @Path("{webHookToken}/git")
-  public WebHookResponse executeGit(
+  public Response executeGit(
       @PathParam("webHookToken") String webHookToken, String eventPayload, @Context HttpHeaders httpHeaders) {
     return webHookService.executeByEvent(webHookToken, eventPayload, httpHeaders);
   }
