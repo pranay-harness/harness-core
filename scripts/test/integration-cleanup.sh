@@ -1,9 +1,5 @@
 #!/bin/bash
 
-#stop mongo
-echo "Stop mongod"
-sudo service mongod stop
-
 #kill vault
 pgrep -f "vault"| xargs kill -9 || true
 
