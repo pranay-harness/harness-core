@@ -104,7 +104,6 @@ else
 fi
 
 echo "datagen finished"
-cat datagen.out
 
 # specifying -DfailIfNoTests=false flag b/c we are using surefire on integration dir
 mvn -B test -pl 71-rest -Dtest=software.wings.integration.JenkinsIntegrationTest -DfailIfNoTests=false

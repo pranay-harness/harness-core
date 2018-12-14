@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#stop mongo
+echo "Stop mongod"
+sudo service mongod stop
+
 #kill vault
 pgrep -f "vault"| xargs kill -9 || true
 
@@ -19,5 +23,10 @@ docker ps -a | grep Exited | awk '{print $1}' | xargs docker rm || true
 
 echo "about to call docker kill le_local"
 docker ps | grep learning | awk '{print $1}' | xargs docker kill || true
+
+echo "Stop and remove all other docker containers"
+docker stop $(docker ps -aq) || true
+docker rm $(docker ps -aq) || true
+
 
 
