@@ -19,7 +19,7 @@ import software.wings.common.Constants;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.LogDataStoreService;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.LogService;
 
 import java.io.File;
@@ -44,7 +44,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 public class ActivityResource {
   private ActivityService activityService;
   private LogService logService;
-  private LogDataStoreService logDataStoreService;
+  private DataStoreService dataStoreService;
 
   /**
    * Instantiates a new activity resource.
@@ -53,11 +53,10 @@ public class ActivityResource {
    * @param logService      the log service
    */
   @Inject
-  public ActivityResource(
-      ActivityService activityService, LogService logService, LogDataStoreService logDataStoreService) {
+  public ActivityResource(ActivityService activityService, LogService logService, DataStoreService dataStoreService) {
     this.activityService = activityService;
     this.logService = logService;
-    this.logDataStoreService = logDataStoreService;
+    this.dataStoreService = dataStoreService;
   }
 
   /**
@@ -160,6 +159,6 @@ public class ActivityResource {
       @PathParam("stateExecutionId") String stateExecutionId, @BeanParam PageRequest<ThirdPartyApiCallLog> request) {
     request.addFilter("appId", EQ, appId);
     request.addFilter("stateExecutionId", EQ, stateExecutionId);
-    return new RestResponse<>(logDataStoreService.listLogs(ThirdPartyApiCallLog.class, request));
+    return new RestResponse<>(dataStoreService.list(ThirdPartyApiCallLog.class, request));
   }
 }

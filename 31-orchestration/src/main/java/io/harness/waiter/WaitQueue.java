@@ -4,7 +4,6 @@ import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -22,10 +21,9 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "waitQueues", noClassnameStored = true)
-@EqualsAndHashCode(callSuper = true)
 @Value
 @Builder
-public class WaitQueue extends PersistentEntity implements UuidAccess, CreatedAtAccess {
+public class WaitQueue implements PersistentEntity, UuidAccess, CreatedAtAccess {
   public static final String CORRELATION_ID_KEY = "correlationId";
   public static final String WAIT_INSTANCE_ID_KEY = "waitInstanceId";
 

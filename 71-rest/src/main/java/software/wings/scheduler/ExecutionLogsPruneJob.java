@@ -12,19 +12,19 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.service.intfc.LogDataStoreService;
+import software.wings.service.intfc.DataStoreService;
 
 public class ExecutionLogsPruneJob implements Job {
   private static final String EXECUTION_LOGS_PRUNE_CRON_NAME = "EXECUTION_LOGS_PRUNE_CRON_NAME";
   private static final String EXECUTION_LOGS_PRUNE_CRON_GROUP = "EXECUTION_LOGS_PRUNE_CRON_GROUP";
   private static final Logger logger = LoggerFactory.getLogger(ExecutionLogsPruneJob.class);
 
-  @Inject private LogDataStoreService logDataStoreService;
+  @Inject private DataStoreService dataStoreService;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     logger.info("Running execution logs cleanup Job");
-    logDataStoreService.purgeOlderLogs();
+    dataStoreService.purgeOlderRecords();
   }
 
   public static void addJob(PersistentScheduler jobScheduler) {

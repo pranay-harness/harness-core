@@ -34,3 +34,7 @@ if [[ "${SKIP_LOGS}" == "true" ]]; then
 elif [[ -v "LOGDNA_KEY" ]]; then
     sed -i "s|9a3e6eac4dcdbdc41a93ca99100537df|${LOGDNA_KEY}|" /opt/harness/verification-config.yml
 fi
+
+if [[ -v "DATA_STORE" ]]; then
+    sed -i "s|dataStorageMode: MONGO|dataStorageMode: ${EXECUTION_LOG_DATA_STORE}|" /opt/harness/verification-config.yml
+fi

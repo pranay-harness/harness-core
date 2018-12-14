@@ -22,7 +22,7 @@ import java.util.List;
 @Entity(value = "waitInstances", noClassnameStored = true)
 @Value
 @Builder
-public class WaitInstance extends PersistentEntity implements UuidAccess, CreatedAtAccess {
+public class WaitInstance implements PersistentEntity, UuidAccess, CreatedAtAccess {
   public static final Duration TTL = WaitQueue.TTL.plusDays(7);
 
   @Id private String uuid;

@@ -37,7 +37,7 @@ import software.wings.common.Constants;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.LogDataStoreService;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.LogService;
 import software.wings.utils.ResourceTestRule;
 
@@ -61,7 +61,7 @@ public class ActivityResourceTest {
    */
   public static final LogService LOG_SERVICE = mock(LogService.class);
 
-  public static final LogDataStoreService LOG_DATA_STORE_SERVICE = mock(LogDataStoreService.class);
+  public static final DataStoreService LOG_DATA_STORE_SERVICE = mock(DataStoreService.class);
 
   /**
    * The constant RESOURCES.

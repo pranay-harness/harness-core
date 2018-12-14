@@ -24,7 +24,7 @@ import javax.validation.constraints.NotNull;
 @Indexes(
     @Index(fields = { @Field("key")
                       , @Field("accountId") }, options = @IndexOptions(name = "key_idx", unique = true)))
-public class ConfiguredLimit<T extends Limit> extends PersistentEntity {
+public class ConfiguredLimit<T extends Limit> implements PersistentEntity {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private ObjectId id;
 
   private String accountId;

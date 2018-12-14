@@ -29,6 +29,7 @@ import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElement;
@@ -107,8 +108,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       query = query.field("host").in(host);
     }
     try {
-      wingsPersistence.update(
+      UpdateResults results = wingsPersistence.update(
           query, wingsPersistence.createUpdateOperations(LogDataRecord.class).set("clusterLevel", toLevel));
+      logger.info("for {} bumped records {}", stateExecutionId, results.getUpdatedCount());
     } catch (DuplicateKeyException e) {
       logger.warn(
           "duplicate update operation for state: {}, stateExecutionId: {}, searchQuery: {}, hosts: {}, logCollectionMinute: {}, from: {}, to: {}",
@@ -443,10 +445,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isEmpty(logAnalysisDetails.getControl_events())
         || !isEmpty(logAnalysisDetails.getTest_events())) {
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
-    }
-    if (logger.isDebugEnabled()) {
-      logger.debug("inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getAppId()
-          + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
+      logger.info("inserted ml LogMLAnalysisRecord to persistence layer for stateExecutionInstanceId: {}",
+          mlAnalysisResponse.getStateExecutionId());
     }
     bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getAppId(),
         mlAnalysisResponse.getQuery(), emptySet(), mlAnalysisResponse.getLogCollectionMinute(),

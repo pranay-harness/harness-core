@@ -15,7 +15,7 @@ import java.util.Map;
 @Entity(value = "waitInstanceErrors", noClassnameStored = true)
 @Value
 @Builder
-public class WaitInstanceError extends PersistentEntity {
+public class WaitInstanceError implements PersistentEntity {
   @Id private String waitInstanceId;
   private Map<String, ResponseData> responseMap;
   private String errorStackTrace;

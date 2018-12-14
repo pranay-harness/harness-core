@@ -11,6 +11,7 @@ import com.google.cloud.datastore.EntityQuery.Builder;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
+import com.google.cloud.datastore.StringValue;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.OrderBy;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
@@ -27,41 +28,41 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.LogDataStoreService;
+import software.wings.service.intfc.DataStoreService;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class GoogleLogDataStoreServiceImpl implements LogDataStoreService {
+public class GoogleDataStoreServiceImpl implements DataStoreService {
   private static int PURGE_BATCH_SIZE = 10000;
-  private static final Logger logger = LoggerFactory.getLogger(GoogleLogDataStoreServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(GoogleDataStoreServiceImpl.class);
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
   private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
-  private LogDataStoreService mongoLogDataStoreService;
+  private DataStoreService mongoDataStoreService;
 
   @Inject
-  public GoogleLogDataStoreServiceImpl(WingsPersistence wingsPersistence) {
+  public GoogleDataStoreServiceImpl(WingsPersistence wingsPersistence) {
     String googleCrdentialsPath = System.getenv(GOOGLE_APPLICATION_CREDENTIALS_PATH);
     if (isEmpty(googleCrdentialsPath) || !new File(googleCrdentialsPath).exists()) {
       throw new WingsException("Invalid credentials found at " + googleCrdentialsPath);
     }
-    mongoLogDataStoreService = new MongoLogDataStoreServiceImpl(wingsPersistence);
+    mongoDataStoreService = new MongoDataStoreServiceImpl(wingsPersistence);
   }
 
   @Override
-  public <T extends GoogleDataStoreAware> void saveLogs(Class<T> clazz, List<T> logs) {
-    if (isEmpty(logs)) {
+  public <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records) {
+    if (isEmpty(records)) {
       return;
     }
     List<Entity> logList = new ArrayList<>();
-    logs.forEach(log -> logList.add(log.convertToCloudStorageEntity(datastore)));
+    records.forEach(log -> logList.add(log.convertToCloudStorageEntity(datastore)));
     datastore.put(logList.stream().toArray(Entity[] ::new));
   }
 
   @Override
-  public <T extends GoogleDataStoreAware> PageResponse<T> listLogs(Class<T> clazz, PageRequest<T> pageRequest) {
+  public <T extends GoogleDataStoreAware> PageResponse<T> list(Class<T> clazz, PageRequest<T> pageRequest) {
     QueryResults<Entity> results = readResults(clazz, pageRequest);
     int total = getNumberOfResults(clazz, pageRequest);
     List<T> rv = new ArrayList<>();
@@ -74,7 +75,7 @@ public class GoogleLogDataStoreServiceImpl implements LogDataStoreService {
     }
 
     if (isEmpty(rv)) {
-      return mongoLogDataStoreService.listLogs(clazz, pageRequest);
+      return mongoDataStoreService.list(clazz, pageRequest);
     }
 
     return aPageResponse()
@@ -89,7 +90,7 @@ public class GoogleLogDataStoreServiceImpl implements LogDataStoreService {
 
   @Override
   public void purgeByActivity(String appId, String activityId) {
-    mongoLogDataStoreService.purgeByActivity(appId, activityId);
+    mongoDataStoreService.purgeByActivity(appId, activityId);
     Query<Key> query = Query.newKeyQueryBuilder()
                            .setKind(Log.class.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
                            .setFilter(CompositeFilter.and(
@@ -102,7 +103,7 @@ public class GoogleLogDataStoreServiceImpl implements LogDataStoreService {
   }
 
   @Override
-  public void purgeOlderLogs() {
+  public void purgeOlderRecords() {
     Reflections reflections = new Reflections("software.wings");
     Set<Class<? extends GoogleDataStoreAware>> dataStoreClasses = reflections.getSubTypesOf(GoogleDataStoreAware.class);
     reflections = new Reflections("io.harness");
@@ -218,6 +219,15 @@ public class GoogleLogDataStoreServiceImpl implements LogDataStoreService {
 
   public static byte[] readBlob(Entity entity, String fieldName) {
     return entity.contains(fieldName) ? entity.getBlob(fieldName).toByteArray() : null;
+  }
+
+  public static void addFieldIfNotEmpty(
+      com.google.cloud.datastore.Entity.Builder builder, String key, String value, boolean excludeFromIndex) {
+    if (isEmpty(value)) {
+      return;
+    }
+
+    builder.set(key, StringValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
   }
 
   private List<List<Key>> batchKeysToDelete(List<Key> keys) {

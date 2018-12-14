@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.app.VerificationServiceConfiguration;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.entities.TimeSeriesCumulativeSums;
 import io.harness.exception.WingsException;
@@ -32,6 +33,7 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.DataStorageMode;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -56,6 +58,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
@@ -82,6 +85,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private LearningEngineService learningEngineService;
   @Inject private VerificationManagerClient managerClient;
   @Inject private VerificationManagerClientHelper managerClientHelper;
+  @Inject private DataStoreService dataStoreService;
+  @Inject private VerificationServiceConfiguration verificationServiceConfiguration;
 
   @Override
   public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
@@ -102,7 +107,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     if (logger.isDebugEnabled()) {
       logger.debug("inserting " + metricData.size() + " pieces of new relic metrics data");
     }
-    wingsPersistence.saveIgnoringDuplicateKeys(metricData);
+    try {
+      dataStoreService.save(NewRelicMetricDataRecord.class, metricData);
+    } catch (Exception e) {
+      logger.error("Exception writing data to storage", e);
+    }
+
+    if (verificationServiceConfiguration.getDataStorageMode().equals(DataStorageMode.GOOGLE_CLOUD_DATA_STORE)) {
+      wingsPersistence.saveIgnoringDuplicateKeys(metricData);
+    }
     if (logger.isDebugEnabled()) {
       logger.debug("inserted " + metricData.size() + " NewRelicMetricDataRecord to persistence layer.");
     }
