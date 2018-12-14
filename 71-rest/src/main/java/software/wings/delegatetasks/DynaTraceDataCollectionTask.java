@@ -92,7 +92,6 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
     private final DataCollectionTaskResult taskResult;
     private long collectionStartTime;
     private int dataCollectionMinute;
-    private final long collectionStartMinute;
     private Map<String, Long> hostStartTimeMap;
     private DynaTraceConfig dynaTraceConfig;
     boolean is247Task;
@@ -101,7 +100,6 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
         DynaTraceDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult, boolean is247Task) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.taskResult = taskResult;
-      this.collectionStartMinute = Timestamp.currentMinuteBoundary();
       this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
       hostStartTimeMap = new HashMap<>();
@@ -233,6 +231,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
       final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
       final List<DynaTraceMetricDataResponse> metricDataResponses = new ArrayList<>();
       List<Callable<DynaTraceMetricDataResponse>> callables = new ArrayList<>();
+      long endTimeForCollection = System.currentTimeMillis();
+
       switch (dataCollectionInfo.getAnalysisComparisonStrategy()) {
         case COMPARE_WITH_PREVIOUS:
           for (DynaTraceTimeSeries timeSeries : dataCollectionInfo.getTimeSeriesDefinitions()) {
@@ -284,20 +284,21 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
           }
           break;
         case PREDICTIVE:
-          int periodToCollect;
           long startTimeStamp;
-          if (is247Task) {
-            periodToCollect = dataCollectionInfo.getCollectionTime();
-            startTimeStamp = collectionStartTime;
-          } else {
-            if (dataCollectionMinute == 0) {
-              periodToCollect = PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
-            } else {
-              periodToCollect = DURATION_TO_ASK_MINUTES;
-            }
-            startTimeStamp = collectionStartTime - periodToCollect;
-          }
+          long endTimeStamp;
+          long periodToCollect = is247Task
+              ? dataCollectionInfo.getCollectionTime()
+              : (dataCollectionMinute == 0) ? PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES
+                                            : DURATION_TO_ASK_MINUTES;
+          periodToCollect = TimeUnit.MINUTES.toMillis(periodToCollect);
 
+          if (is247Task) {
+            startTimeStamp = collectionStartTime;
+            endTimeStamp = startTimeStamp + periodToCollect;
+          } else {
+            startTimeStamp = endTimeForCollection - periodToCollect;
+            endTimeStamp = endTimeForCollection;
+          }
           for (DynaTraceTimeSeries timeSeries : dataCollectionInfo.getTimeSeriesDefinitions()) {
             callables.add(() -> {
               DynaTraceMetricDataRequest dataRequest = DynaTraceMetricDataRequest.builder()
@@ -306,7 +307,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                                                            .aggregationType(timeSeries.getAggregationType())
                                                            .percentile(timeSeries.getPercentile())
                                                            .startTimestamp(startTimeStamp)
-                                                           .endTimestamp(collectionStartTime + periodToCollect)
+                                                           .endTimestamp(endTimeStamp)
                                                            .build();
               return dynaTraceDelegateService.fetchMetricData(dynaTraceConfig, dataRequest, encryptionDetails,
                   createApiCallLog(dataCollectionInfo.getStateExecutionId()));
