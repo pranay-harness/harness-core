@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.dropwizard.jersey.PATCH;
 import io.harness.exception.InvalidRequestException;
 import io.swagger.annotations.Api;
 import lombok.Data;
@@ -69,35 +68,28 @@ public class SSOResource {
   public RestResponse<SSOConfig> uploadSamlMetaData(@QueryParam("accountId") String accountId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName,
-      @FormDataParam("groupMembershipAttr") String groupMembershipAttr) {
-    return new RestResponse<>(
-        ssoService.uploadSamlConfiguration(accountId, uploadedInputStream, displayName, groupMembershipAttr));
+      @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
+      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled) {
+    return new RestResponse<>(ssoService.uploadSamlConfiguration(
+        accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled));
   }
 
+  /**
+   * This should have been a patch call ideally but because harness authFilters don't allow Patch calls,
+   * making it a PUT call for now to Unblock SamlAuthorization changes.
+   */
   @PUT
   @Path("saml-idp-metadata-upload")
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  public RestResponse<SSOConfig> editSamlMetaData(@QueryParam("accountId") String accountId,
+  public RestResponse<SSOConfig> updateSamlMetaData(@QueryParam("accountId") String accountId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName,
-      @FormDataParam("groupMembershipAttr") String groupMembershipAttr) {
-    return new RestResponse<>(
-        ssoService.uploadSamlConfiguration(accountId, uploadedInputStream, displayName, groupMembershipAttr));
-  }
-
-  @PATCH
-  @Path("saml-idp-metadata-upload")
-  @Consumes(MULTIPART_FORM_DATA)
-  @Timed
-  @ExceptionMetered
-  public RestResponse<SSOConfig> patchSamlMetaData(@QueryParam("accountId") String accountId,
-      @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName,
-      @FormDataParam("groupMembershipAttr") String groupMembershipAttr) {
-    return new RestResponse<>(
-        ssoService.patchSamlConfiguration(accountId, uploadedInputStream, displayName, groupMembershipAttr));
+      @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
+      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled) {
+    return new RestResponse<>(ssoService.updateSamlConfiguration(
+        accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled));
   }
 
   @DELETE
