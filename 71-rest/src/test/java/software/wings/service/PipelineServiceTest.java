@@ -8,6 +8,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
@@ -78,11 +80,13 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -111,6 +115,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private MorphiaIterator<Pipeline, Pipeline> pipelineIterator;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @Mock Query<Pipeline> pquery;
   @Mock private FieldEnd end;
@@ -129,6 +134,10 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(appService.get(APP_ID)).thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
     when(updateOperations.unset(any())).thenReturn(updateOperations);
+    when(serviceResourceService.fetchServicesByUuids(APP_ID, Arrays.asList(SERVICE_ID)))
+        .thenReturn(Arrays.asList(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build()));
+    when(workflowService.fetchDeploymentMetadata(anyString(), any(Workflow.class), anyMap(), any()))
+        .thenReturn(DeploymentMetadata.builder().artifactRequiredServiceIds(asList(SERVICE_ID)).build());
   }
 
   @Test
@@ -142,7 +151,8 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
     when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
-
+    when(workflowService.fetchDeploymentMetadata(any(), any(Workflow.class), anyMap()))
+        .thenReturn(DeploymentMetadata.builder().build());
     pipelineService.save(pipeline);
 
     verify(wingsPersistence).saveAndGet(eq(Pipeline.class), pipelineArgumentCaptor.capture());

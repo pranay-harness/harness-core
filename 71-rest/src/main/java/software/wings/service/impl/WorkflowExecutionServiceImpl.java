@@ -91,7 +91,6 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.PersistentEntity;
 import io.harness.queue.Queue;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
@@ -160,6 +159,7 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
 import software.wings.common.cache.MongoStore;
@@ -1776,8 +1776,22 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public Map<EntityType, List<PersistentEntity>> fetchRequiredEntityTypes(String appId, ExecutionArgs executionArgs) {
-    throw new UnsupportedOperationException("Not yet supported");
+  public DeploymentMetadata fetchDeploymentMetadata(String appId, ExecutionArgs executionArgs) {
+    Validator.notNullCheck("Workflow type is required", executionArgs.getWorkflowType());
+    if (executionArgs.getWorkflowType() == ORCHESTRATION) {
+      Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
+      DeploymentMetadata deploymentMetadata =
+          workflowService.fetchDeploymentMetadata(appId, workflow, executionArgs.getWorkflowVariables());
+
+      // Set Services
+      deploymentMetadata.setArtifactRequiredServices(
+          serviceResourceService.fetchServicesByUuids(appId, deploymentMetadata.getArtifactRequiredServiceIds()));
+
+      deploymentMetadata.setEnvSummaries(
+          environmentService.obtainEnvironmentSummaries(appId, deploymentMetadata.getEnvIds()));
+      return deploymentMetadata;
+    }
+    return DeploymentMetadata.builder().build();
   }
 
   @Override

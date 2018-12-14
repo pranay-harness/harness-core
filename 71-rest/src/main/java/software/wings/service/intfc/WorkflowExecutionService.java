@@ -3,7 +3,6 @@ package software.wings.service.intfc;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.PersistentEntity;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.JiraExecutionData;
@@ -12,7 +11,6 @@ import software.wings.beans.ApprovalDetails;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -24,6 +22,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
+import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.trigger.Trigger;
 import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.sm.ExecutionInterrupt;
@@ -35,7 +34,6 @@ import software.wings.sm.StateStatusUpdate;
 import software.wings.sm.StateType;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -83,8 +81,7 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs);
 
-  Map<EntityType, List<PersistentEntity>> fetchRequiredEntityTypes(
-      @NotEmpty String appId, @NotNull ExecutionArgs executionArgs);
+  DeploymentMetadata fetchDeploymentMetadata(@NotEmpty String appId, @NotNull ExecutionArgs executionArgs);
 
   CountsByStatuses getBreakdown(String appId, String workflowExecutionId);
 

@@ -31,6 +31,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
+import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.common.Constants;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -285,6 +286,16 @@ public class ExecutionResource {
   public RestResponse<RequiredExecutionArgs> requiredArgs(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowExecutionService.getRequiredExecutionArgs(appId, envId, executionArgs));
+  }
+
+  @POST
+  @Path("deployment-metadata")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
+  public RestResponse<DeploymentMetadata> getDeploymentMetadata(
+      @QueryParam("appId") String appId, ExecutionArgs executionArgs) {
+    return new RestResponse<>(workflowExecutionService.fetchDeploymentMetadata(appId, executionArgs));
   }
 
   /**

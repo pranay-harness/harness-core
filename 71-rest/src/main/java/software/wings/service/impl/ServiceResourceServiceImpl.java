@@ -727,6 +727,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return service.getName();
   }
 
+  @Override
+  public boolean exists(String appId, String serviceId) {
+    return wingsPersistence.createQuery(Service.class)
+               .filter(Service.APP_ID_KEY, appId)
+               .filter(Service.ID_KEY, serviceId)
+               .getKey()
+        != null;
+  }
+
   private Service deleteCommand(String appId, String serviceId, String commandId, boolean syncFromGit) {
     Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("service", service);
