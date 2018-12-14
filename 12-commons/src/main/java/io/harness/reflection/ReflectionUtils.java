@@ -1,9 +1,12 @@
 package io.harness.reflection;
 
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -65,5 +68,52 @@ public class ReflectionUtils {
       }
       c = c.getSuperclass();
     }
+  }
+
+  public static String getAccessorFieldName(String methodName) {
+    if (methodName.startsWith("get") && methodName.length() > 3) {
+      return Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+    } else if (methodName.startsWith("is") && methodName.length() > 2) {
+      return Character.toLowerCase(methodName.charAt(2)) + methodName.substring(3);
+    }
+
+    throw new WingsException("Invalid accessor method name");
+  }
+
+  public static List<Method> getAccessorMethods(Class<?> clazz) {
+    List<Method> methods = new ArrayList<>();
+    while (clazz.getSuperclass() != null) {
+      for (Method m : clazz.getDeclaredMethods()) {
+        if (!Modifier.isPublic(m.getModifiers())) {
+          continue;
+        }
+        boolean shouldBeBoolean = false;
+        String fieldName;
+
+        final String methodName = m.getName();
+        if (methodName.startsWith("get") && methodName.length() > 3) {
+          fieldName = Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+        } else if (methodName.startsWith("is") && methodName.length() > 2) {
+          fieldName = Character.toLowerCase(methodName.charAt(2)) + methodName.substring(3);
+          shouldBeBoolean = true;
+        } else {
+          continue;
+        }
+
+        try {
+          final Field declaredField = clazz.getDeclaredField(fieldName);
+          if (shouldBeBoolean
+              != (declaredField.getType() == boolean.class || declaredField.getType() == Boolean.class)) {
+            continue;
+          }
+        } catch (NoSuchFieldException e) {
+          continue;
+        }
+
+        methods.add(m);
+      }
+      clazz = clazz.getSuperclass();
+    }
+    return methods;
   }
 }

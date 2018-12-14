@@ -762,6 +762,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     UpdateOperations<GitSyncError> failedUpdateOperations =
         wingsPersistence.createUpdateOperations(GitSyncError.class)
+            .setOnInsert("_id", generateUuid())
             .set("accountId", failedChange.getAccountId())
             .set("yamlFilePath", failedChange.getFilePath())
             .set("yamlContent", failedChange.getFileContent())

@@ -286,9 +286,6 @@ public class MongoPersistence implements HPersistence {
     }
 
     onUpdate(query, updateOperations, currentTime);
-
-    updateOperations.setOnInsert("_id", generateUuid());
-
     return getDatastore(query.getEntityClass(), ReadPref.NORMAL).findAndModify(query, updateOperations, UPSERT_OPTIONS);
   }
 

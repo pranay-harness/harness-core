@@ -2,9 +2,9 @@ package io.harness.dl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.OrchestrationMorphiaClasses;
 import io.harness.app.VerificationServiceApplication;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
-import io.harness.waiter.WaiterMorphiaClasses;
 import org.junit.Test;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.MappedClass;
@@ -31,7 +31,7 @@ public class MorphiaClassesTest {
     classes.add(software.wings.integration.common.MongoDBTest.MongoEntity.class);
     classes.add(software.wings.core.queue.QueuableObject.class);
 
-    classes.addAll(WaiterMorphiaClasses.classes);
+    classes.addAll(OrchestrationMorphiaClasses.classes);
 
     boolean success = true;
     for (MappedClass cls : morphia.getMapper().getMappedClasses()) {

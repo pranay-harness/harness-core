@@ -5,6 +5,7 @@ import com.google.inject.Module;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.MongoClient;
+import io.harness.OrchestrationModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
@@ -14,7 +15,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
-import io.harness.waiter.WaiterModule;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -76,7 +76,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     modules.add(new VersionModule());
     modules.add(new TimeModule());
     modules.add(new MongoModule(datastore, datastore, distributedLockSvc));
-    modules.addAll(new WaiterModule().cumulativeDependencies());
+    modules.addAll(new OrchestrationModule().cumulativeDependencies());
     return modules;
   }
 

@@ -37,6 +37,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.OrchestrationMorphiaClasses;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
 import io.harness.exception.WingsException;
@@ -54,7 +55,6 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.waiter.Notifier;
-import io.harness.waiter.WaiterMorphiaClasses;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -139,7 +139,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
                                                       .addAll(ManagerMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
-                                                      .addAll(WaiterMorphiaClasses.classes)
+                                                      .addAll(OrchestrationMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
                                                       .build();
 
