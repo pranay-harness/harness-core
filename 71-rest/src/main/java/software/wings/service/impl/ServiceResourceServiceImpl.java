@@ -251,7 +251,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       savedService = addDefaultCommands(savedService, !createdFromYaml);
     }
 
-    savedService = createDefaultHelmValueYaml(savedService);
+    savedService = createDefaultHelmValueYaml(savedService, createdFromYaml);
     serviceTemplateService.createDefaultTemplatesByService(savedService);
     createDefaultK8sManifests(savedService);
 
@@ -525,16 +525,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .set("description", Optional.ofNullable(service.getDescription()).orElse(""))
             .set("keywords", keywords);
 
-    if (isNotBlank(savedService.getConfigMapYaml())) {
-      updateOperations.set("configMapYaml", savedService.getConfigMapYaml());
-    } else {
-      updateOperations.unset("configMapYaml");
-    }
+    if (fromYaml) {
+      if (isNotBlank(service.getConfigMapYaml())) {
+        updateOperations.set("configMapYaml", service.getConfigMapYaml());
+      } else {
+        updateOperations.unset("configMapYaml");
+      }
 
-    if (isNotBlank(savedService.getHelmValueYaml())) {
-      updateOperations.set("helmValueYaml", savedService.getHelmValueYaml());
-    } else {
-      updateOperations.unset("helmValueYaml");
+      if (isNotBlank(service.getHelmValueYaml())) {
+        updateOperations.set("helmValueYaml", service.getHelmValueYaml());
+      } else {
+        updateOperations.unset("helmValueYaml");
+      }
     }
 
     wingsPersistence.update(savedService, updateOperations);
@@ -546,12 +548,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           service.getAppId(), service.getUuid(), savedService.getName(), service.getName());
     }
 
-    if (!fromYaml) {
-      String accountId = appService.getAccountIdByAppId(service.getAppId());
-      boolean isRename = !savedService.getName().equals(service.getName());
-      yamlPushService.pushYamlChangeSet(
-          accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), isRename);
-    }
+    String accountId = appService.getAccountIdByAppId(service.getAppId());
+    boolean isRename = !savedService.getName().equals(service.getName());
+    yamlPushService.pushYamlChangeSet(
+        accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), isRename);
 
     return updatedService;
   }
@@ -1621,8 +1621,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     wingsPersistence.update(savedService, updateOperations);
+    Service updatedService = get(appId, serviceId, false);
 
-    return get(appId, serviceId, false);
+    String accountId = appService.getAccountIdByAppId(updatedService.getAppId());
+    yamlPushService.pushYamlChangeSet(accountId, updatedService, updatedService, Type.UPDATE, false, false);
+
+    return updatedService;
   }
 
   @Override
@@ -1641,8 +1645,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     wingsPersistence.update(savedService, updateOperations);
+    Service updatedService = get(appId, serviceId, false);
 
-    return get(appId, serviceId, false);
+    String accountId = appService.getAccountIdByAppId(updatedService.getAppId());
+    yamlPushService.pushYamlChangeSet(accountId, updatedService, updatedService, Type.UPDATE, false, false);
+
+    return updatedService;
   }
 
   @Override
@@ -1748,7 +1756,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return wingsPersistence.query(ContainerTask.class, pageRequest).getResponse();
   }
 
-  private Service createDefaultHelmValueYaml(Service service) {
+  private Service createDefaultHelmValueYaml(Service service, boolean createdFromYaml) {
+    if (createdFromYaml) {
+      return service;
+    }
+
     ArtifactType artifactType = service.getArtifactType();
 
     if (artifactType != null && artifactType.equals(ArtifactType.DOCKER)) {
