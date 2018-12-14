@@ -16,7 +16,7 @@ import java.util.Map;
 @Value
 @Builder
 @Entity(value = "stateInspections", noClassnameStored = true)
-public class StateInspection extends PersistentEntity {
+public class StateInspection implements PersistentEntity {
   public static final String STATE_EXECUTION_INSTANCE_ID_KEY = "stateExecutionInstanceId";
   public static final String DATA_KEY = "data";
 
