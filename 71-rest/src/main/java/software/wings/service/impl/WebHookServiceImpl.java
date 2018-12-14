@@ -47,6 +47,8 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @ValidateOnExecution
 public class WebHookServiceImpl implements WebHookService {
@@ -90,39 +92,42 @@ public class WebHookServiceImpl implements WebHookService {
   }
 
   @Override
-  public WebHookResponse execute(String token, WebHookRequest webHookRequest) {
+  public Response execute(String token, WebHookRequest webHookRequest) {
     try {
       if (webHookRequest == null) {
         logger.warn("Payload is mandatory");
-        return WebHookResponse.builder().error("Payload is mandatory").build();
+        WebHookResponse webHookResponse = WebHookResponse.builder().error("Payload is mandatory").build();
+
+        return prepareResponse(webHookResponse, true);
       }
       logger.info("Received the Webhook Request {}  ", String.valueOf(webHookRequest));
       String appId = webHookRequest.getApplication();
       Application app = appService.get(appId);
       if (app == null) {
-        return WebHookResponse.builder().error("Application does not exist").build();
+        WebHookResponse webHookResponse = WebHookResponse.builder().error("Application does not exist").build();
+        return prepareResponse(webHookResponse, true);
       }
 
       Map<String, String> serviceBuildNumbers = new HashMap<>();
-      WebHookResponse webHookResponse = resolveServiceBuildNumbers(appId, webHookRequest, serviceBuildNumbers);
-      if (webHookResponse != null) {
-        return webHookResponse;
+      Response response = resolveServiceBuildNumbers(appId, webHookRequest, serviceBuildNumbers);
+      if (response != null) {
+        return response;
       }
       WorkflowExecution workflowExecution = triggerService.triggerExecutionByWebHook(
           appId, token, serviceBuildNumbers, webHookRequest.getParameters(), null);
 
-      return constructWebhookResponse(appId, app, workflowExecution);
+      return constructSuccessResponse(appId, app, workflowExecution);
     } catch (WingsException ex) {
       ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
-      return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
+      return prepareResponse(WebHookResponse.builder().error(Misc.getMessage(ex)).build(), true);
     } catch (Exception ex) {
       logger.warn(format("Webhook Request call failed"), ex);
-      return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
+      return prepareResponse(WebHookResponse.builder().error(Misc.getMessage(ex)).build(), true);
     }
   }
 
   @Override
-  public WebHookResponse executeByEvent(String token, String webhookEventPayload, HttpHeaders httpHeaders) {
+  public Response executeByEvent(String token, String webhookEventPayload, HttpHeaders httpHeaders) {
     TriggerExecutionBuilder triggerExecutionBuilder = TriggerExecution.builder();
     TriggerExecution triggerExecution = triggerExecutionBuilder.build();
     try {
@@ -130,7 +135,10 @@ public class WebHookServiceImpl implements WebHookService {
       logger.info("Received the webhook event payload headers {}", httpHeaders);
       Trigger trigger = triggerService.getTriggerByWebhookToken(token);
       if (trigger == null) {
-        return WebHookResponse.builder().error("Trigger not associated to the given token").build();
+        WebHookResponse webHookResponse =
+            WebHookResponse.builder().error("Trigger not associated to the given token").build();
+
+        return prepareResponse(webHookResponse, true);
       }
 
       triggerExecution.setAppId(trigger.getAppId());
@@ -152,39 +160,50 @@ public class WebHookServiceImpl implements WebHookService {
         triggerExecution.setMessage(Misc.getMessage(ex));
         triggerExecution.setStatus(Status.REJECTED);
         triggerExecutionService.save(triggerExecution);
-        return WebHookResponse.builder().error(triggerExecution.getMessage()).build();
+        WebHookResponse webHookResponse = WebHookResponse.builder().error(triggerExecution.getMessage()).build();
+
+        return prepareResponse(webHookResponse, true);
       }
 
       logger.info("Trigger execution for the trigger {}", trigger.getUuid());
       WorkflowExecution workflowExecution =
           triggerService.triggerExecutionByWebHook(trigger, resolvedParameters, triggerExecution);
       if (webhookTriggerProcessor.checkFileContentOptionSelected(trigger)) {
-        return WebHookResponse.builder()
-            .message("Request received. Deployment will be triggered if the file content changed")
-            .build();
+        WebHookResponse webHookResponse =
+            WebHookResponse.builder()
+                .message("Request received. Deployment will be triggered if the file content changed")
+                .build();
+
+        return prepareResponse(webHookResponse, false);
       } else {
         logger.info("Execution trigger success. Saving trigger execution");
-        return WebHookResponse.builder()
-            .requestId(workflowExecution.getUuid())
-            .status(workflowExecution.getStatus().name())
-            .build();
+        WebHookResponse webHookResponse = WebHookResponse.builder()
+                                              .requestId(workflowExecution.getUuid())
+                                              .status(workflowExecution.getStatus().name())
+                                              .build();
+
+        return prepareResponse(webHookResponse, false);
       }
     } catch (WingsException ex) {
       ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
       triggerExecution.setStatus(Status.FAILED);
       triggerExecution.setMessage(Misc.getMessage(ex));
       triggerExecutionService.save(triggerExecution);
-      return WebHookResponse.builder().error(triggerExecution.getMessage()).build();
+      WebHookResponse webHookResponse = WebHookResponse.builder().error(triggerExecution.getMessage()).build();
+
+      return prepareResponse(webHookResponse, true);
     } catch (Exception ex) {
       logger.error(format("Webhook Request call failed "), ex);
       triggerExecution.setStatus(Status.FAILED);
       triggerExecution.setMessage(Misc.getMessage(ex));
       triggerExecutionService.save(triggerExecution);
-      return WebHookResponse.builder().error(triggerExecution.getMessage()).build();
+      WebHookResponse webHookResponse = WebHookResponse.builder().error(triggerExecution.getMessage()).build();
+
+      return prepareResponse(webHookResponse, true);
     }
   }
 
-  private WebHookResponse resolveServiceBuildNumbers(
+  private Response resolveServiceBuildNumbers(
       String appId, WebHookRequest webHookRequest, Map<String, String> serviceBuildNumbers) {
     List<Map<String, String>> artifacts = webHookRequest.getArtifacts();
     if (artifacts != null) {
@@ -198,7 +217,8 @@ public class WebHookServiceImpl implements WebHookService {
                   .filter("name", serviceName)
                   .count(new CountOptions().limit(1))
               == 0) {
-            return WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build();
+            return prepareResponse(
+                WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build(), true);
           }
           serviceBuildNumbers.put(serviceName, buildNumber);
         }
@@ -297,13 +317,23 @@ public class WebHookServiceImpl implements WebHookService {
     }
   }
 
-  private WebHookResponse constructWebhookResponse(String appId, Application app, WorkflowExecution workflowExecution) {
-    return WebHookResponse.builder()
-        .requestId(workflowExecution.getUuid())
-        .status(workflowExecution.getStatus().name())
-        .apiUrl(getApiUrl(app.getAccountId(), appId, workflowExecution.getUuid()))
-        .uiUrl(getUiUrl(PIPELINE.equals(workflowExecution.getWorkflowType()), app.getAccountId(), appId,
-            workflowExecution.getEnvId(), workflowExecution.getUuid()))
+  private Response constructSuccessResponse(String appId, Application app, WorkflowExecution workflowExecution) {
+    WebHookResponse webHookResponse =
+        WebHookResponse.builder()
+            .requestId(workflowExecution.getUuid())
+            .status(workflowExecution.getStatus().name())
+            .apiUrl(getApiUrl(app.getAccountId(), appId, workflowExecution.getUuid()))
+            .uiUrl(getUiUrl(PIPELINE.equals(workflowExecution.getWorkflowType()), app.getAccountId(), appId,
+                workflowExecution.getEnvId(), workflowExecution.getUuid()))
+            .build();
+
+    return prepareResponse(webHookResponse, false);
+  }
+
+  private Response prepareResponse(WebHookResponse webhookResponse, boolean errorCase) {
+    return Response.status(errorCase ? Response.Status.INTERNAL_SERVER_ERROR : Response.Status.OK)
+        .entity(webhookResponse)
+        .type(MediaType.APPLICATION_JSON)
         .build();
   }
 }
