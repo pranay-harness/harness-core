@@ -361,7 +361,8 @@ public class GoogleCloudFileServiceImpl implements FileService {
           logger.info("Bucket with name '{}' created in Google Cloud Storage.", bucketName);
         } catch (Exception e) {
           logger.warn(
-              "Creation of bucket in Google Cloud Storage '{}' failed with error: '{}', the bucket may have been created already or the current account doesn't have permission to create bucket.",
+              "Creation of bucket in Google Cloud Storage '{}' failed with error: '{}', the bucket may have been created already "
+                  + "or the current account doesn't have permission to create bucket.",
               bucketName, e.getMessage());
         }
       }
