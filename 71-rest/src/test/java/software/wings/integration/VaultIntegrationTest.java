@@ -34,6 +34,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   private static final String VAULT_URL_2 = "http://127.0.0.1:8300";
   private static final String VAULT_BASE_PATH = "/foo/bar";
   private static final String VAULT_BASE_PATH_2 = "foo2/bar2/ ";
+  private static final String VAULT_BASE_PATH_3 = " /";
 
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
@@ -43,6 +44,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
   private VaultConfig vaultConfigWithBasePath;
   private VaultConfig vaultConfigWithBasePath2;
+  private VaultConfig vaultConfigWithBasePath3;
 
   @Before
   public void setUp() {
@@ -81,6 +83,15 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
                                    .vaultUrl(VAULT_URL_1)
                                    .authToken(vaultToken)
                                    .basePath(VAULT_BASE_PATH_2)
+                                   .isDefault(true)
+                                   .build();
+
+    vaultConfigWithBasePath3 = VaultConfig.builder()
+                                   .accountId(accountId)
+                                   .name("TestVaultWithRootBasePath")
+                                   .vaultUrl(VAULT_URL_1)
+                                   .authToken(vaultToken)
+                                   .basePath(VAULT_BASE_PATH_3)
                                    .isDefault(true)
                                    .build();
   }
@@ -322,6 +333,11 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   @Test
   public void test_CreateSecretText_vaultWithBasePath2_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath2);
+  }
+
+  @Test
+  public void test_CreateSecretText_vaultWithBasePath3_validPath_shouldSucceed() {
+    testCreateSecretText(vaultConfigWithBasePath3);
   }
 
   private void testCreateSecretText(VaultConfig vaultconfig) {

@@ -8,6 +8,7 @@ import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import okhttp3.logging.HttpLoggingInterceptor.Level;
+import org.apache.commons.lang3.StringUtils;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -73,8 +74,13 @@ public class VaultRestClientFactory {
   }
 
   public static String getFullPath(String basePath, String secretName, SettingVariableTypes settingVariableType) {
-    return isEmpty(basePath) ? DEFAULT_BASE_PATH + PATH_SEPARATOR + settingVariableType + PATH_SEPARATOR + secretName
-                             : basePath + PATH_SEPARATOR + settingVariableType + PATH_SEPARATOR + secretName;
+    if (isEmpty(basePath)) {
+      return DEFAULT_BASE_PATH + PATH_SEPARATOR + settingVariableType + PATH_SEPARATOR + secretName;
+    } else {
+      String fullPath = StringUtils.stripStart(basePath, PATH_SEPARATOR);
+      return StringUtils.stripEnd(fullPath, PATH_SEPARATOR) + PATH_SEPARATOR + settingVariableType + PATH_SEPARATOR
+          + secretName;
+    }
   }
 
   /**
@@ -82,13 +88,11 @@ public class VaultRestClientFactory {
    * /foo/bar/MySecret#MyKeyName
    */
   public static String getFullPath(String basePath, String secretPath) {
-    boolean isAbsolutePath = secretPath.startsWith(PATH_SEPARATOR);
-    if (isAbsolutePath) {
-      // Stripping the leading '/' from the absolute path. Base path will be ignored.
-      return secretPath.substring(1);
+    if (isEmpty(basePath)) {
+      return DEFAULT_BASE_PATH + PATH_SEPARATOR + secretPath;
     } else {
-      return isEmpty(basePath) ? DEFAULT_BASE_PATH + PATH_SEPARATOR + secretPath
-                               : basePath + PATH_SEPARATOR + secretPath;
+      String fullPath = StringUtils.stripStart(basePath, PATH_SEPARATOR);
+      return StringUtils.stripEnd(fullPath, PATH_SEPARATOR) + PATH_SEPARATOR + secretPath;
     }
   }
 

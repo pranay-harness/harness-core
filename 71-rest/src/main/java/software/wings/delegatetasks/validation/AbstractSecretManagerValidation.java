@@ -74,7 +74,7 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
             vaultConfig.getBasePath(), VAULT_VAILDATION_URL, SettingVariableTypes.VAULT);
         boolean isSuccessful =
             VaultRestClientFactory.create(vaultConfig)
-                .writeSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath, VAULT_VAILDATION_URL);
+                .writeSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath, Boolean.TRUE.toString());
         return DelegateConnectionResult.builder().criteria(vaultConfig.getVaultUrl()).validated(isSuccessful).build();
       } catch (IOException e) {
         logger.info("Can not reach to vault at {}, reason: {} ", vaultConfig.getVaultUrl(), Misc.getMessage(e), e);
