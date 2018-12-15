@@ -1499,7 +1499,7 @@ public class SecretManagerImpl implements SecretManager {
               .build();
       try {
         vaultService.encrypt(
-            VAULT_VAILDATION_URL, VAULT_VAILDATION_URL, accountId, SettingVariableTypes.VAULT, vaultConfig, null);
+            VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, SettingVariableTypes.VAULT, vaultConfig, null);
         alertService.closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       } catch (Exception e) {
         logger.info("Could not validate vault for account {} and kmsId {}", accountId, vaultConfig.getUuid(), e);
