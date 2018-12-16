@@ -44,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -311,7 +310,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
-    String accountId = appService.getAccountIdByAppId(appId);
     Service service = serviceResourceService.get(appId, serviceId, false);
     // Observed NPE in logs due to invalid service id provided by the ui due to a stale screen.
     if (service == null) {
@@ -344,10 +342,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
               .put(GCS.name(), GCS.name())
               .put(AMAZON_S3.name(), AMAZON_S3.name())
               .put(SMB.name(), SMB.name())
-              .put(AMI.name(), AMI.name());
-      if (featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
-        builder.put(SFTP.name(), SFTP.name());
-      }
+              .put(AMI.name(), AMI.name())
+              .put(SFTP.name(), SFTP.name());
       return builder.build();
     }
 
@@ -360,10 +356,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .put(ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name())
             .put(AMAZON_S3.name(), AMAZON_S3.name())
             .put(SMB.name(), SMB.name())
-            .put(AMI.name(), AMI.name());
-    if (featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
-      builder.put(SFTP.name(), SFTP.name());
-    }
+            .put(AMI.name(), AMI.name())
+            .put(SFTP.name(), SFTP.name());
     return builder.build();
   }
 
