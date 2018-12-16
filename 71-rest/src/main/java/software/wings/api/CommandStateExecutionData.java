@@ -64,6 +64,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
   private boolean downsize;
   private String clusterName;
+  private String loadBalancer;
 
   private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
@@ -119,6 +120,10 @@ public class CommandStateExecutionData extends StateExecutionData {
     putNotNull(data, "hostName", ExecutionDataValue.builder().displayName("Host").value(hostName).build());
     putNotNull(data, "templateName", ExecutionDataValue.builder().displayName("Config").value(templateName).build());
     putNotNull(data, "commandName", ExecutionDataValue.builder().displayName("Command").value(commandName).build());
+    putNotNull(data, "clusterName", ExecutionDataValue.builder().displayName("Cluster").value(clusterName).build());
+    putNotNull(data, "namespace", ExecutionDataValue.builder().displayName("Namespace").value(namespace).build());
+    putNotNull(
+        data, "loadBalancer", ExecutionDataValue.builder().displayName("Load Balancer").value(loadBalancer).build());
 
     return data;
   }
@@ -130,6 +135,12 @@ public class CommandStateExecutionData extends StateExecutionData {
         ExecutionDataValue.builder().displayName("Config").value(templateName).build());
     putNotNull(executionDetails, "commandName",
         ExecutionDataValue.builder().displayName("Command").value(commandName).build());
+    putNotNull(executionDetails, "clusterName",
+        ExecutionDataValue.builder().displayName("Cluster").value(clusterName).build());
+    putNotNull(
+        executionDetails, "namespace", ExecutionDataValue.builder().displayName("Namespace").value(namespace).build());
+    putNotNull(executionDetails, "loadBalancer",
+        ExecutionDataValue.builder().displayName("Load Balancer").value(loadBalancer).build());
     putNotNull(executionDetails, "activityId", ExecutionDataValue.builder().displayName("").value(activityId).build());
     return executionDetails;
   }

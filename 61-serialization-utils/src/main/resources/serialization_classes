@@ -160,7 +160,7 @@ software.wings.api.HttpStateExecutionData, 5103
 software.wings.api.InfraNodeRequest, 5104
 software.wings.api.InstanceElementListParam, 5105
 software.wings.api.JenkinsExecutionData, 5106
-software.wings.api.KubernetesReplicationControllerExecutionData, 5107
+# Retired: 5107
 software.wings.api.PhaseExecutionData, 5108
 software.wings.api.PhaseStepExecutionData, 5109
 software.wings.api.SelectedNodeExecutionData, 5110

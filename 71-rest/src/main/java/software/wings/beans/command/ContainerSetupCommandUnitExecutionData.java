@@ -28,4 +28,5 @@ public class ContainerSetupCommandUnitExecutionData extends CommandExecutionData
   private String ecsTaskDefintion;
   private List<Label> lookupLabels;
   private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
+  private String loadBalancer;
 }

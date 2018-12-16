@@ -49,6 +49,7 @@ public class ContainerServiceElement implements ContextElement {
   private List<AwsAutoScalarConfig> newServiceAutoScalarConfig;
   private String newEcsServiceName;
   private boolean prevAutoscalarsAlreadyRemoved;
+  private String loadBalancer;
 
   @Override
   public ContextElementType getElementType() {

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ClusterElement;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.CommandStateExecutionData.Builder;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.InstanceElementListParam;
@@ -46,6 +47,7 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
+import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
@@ -66,6 +68,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
 
@@ -162,15 +165,8 @@ public abstract class ContainerServiceSetup extends State {
       ContainerSetupParams containerSetupParams = buildContainerSetupParams(context, service.getName(), imageDetails,
           app, env, service, containerInfrastructureMapping, containerTask, clusterName);
 
-      CommandStateExecutionData executionData = aCommandStateExecutionData()
-                                                    .withServiceId(service.getUuid())
-                                                    .withServiceName(service.getName())
-                                                    .withAppId(app.getUuid())
-                                                    .withCommandName(getCommandName())
-                                                    .withContainerSetupParams(containerSetupParams)
-                                                    .withClusterName(clusterName)
-                                                    .withActivityId(activity.getUuid())
-                                                    .build();
+      StateExecutionData executionData =
+          buildStateExecutionData(app, service, clusterName, activity, containerSetupParams);
 
       Map<String, String> serviceVariables = context.getServiceVariables();
       Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
@@ -222,6 +218,22 @@ public abstract class ContainerServiceSetup extends State {
     } catch (Exception e) {
       throw new InvalidRequestException(Misc.getMessage(e), e);
     }
+  }
+
+  private StateExecutionData buildStateExecutionData(Application app, Service service, String clusterName,
+      Activity activity, ContainerSetupParams containerSetupParams) {
+    Builder builder = aCommandStateExecutionData()
+                          .withServiceId(service.getUuid())
+                          .withServiceName(service.getName())
+                          .withAppId(app.getUuid())
+                          .withCommandName(getCommandName())
+                          .withContainerSetupParams(containerSetupParams)
+                          .withClusterName(clusterName)
+                          .withActivityId(activity.getUuid());
+    if (containerSetupParams instanceof KubernetesSetupParams) {
+      builder.withNamespace(((KubernetesSetupParams) containerSetupParams).getNamespace());
+    }
+    return builder.build();
   }
 
   @Override
@@ -280,7 +292,7 @@ public abstract class ContainerServiceSetup extends State {
                                                            .name(setupExecutionData.getContainerServiceName())
                                                            .uniqueIdentifier(setupExecutionData.getEcsTaskDefintion())
                                                            .build()));
-        executionData.setNamespace(containerServiceElement.getNamespace());
+        executionData.setLoadBalancer(containerServiceElement.getLoadBalancer());
         executionData.setPreviousAwsAutoScalarConfigs(setupExecutionData.getPreviousAwsAutoScalarConfigs());
 
         containerServiceElement.setPreviousAwsAutoScalarConfigs(setupExecutionData.getPreviousAwsAutoScalarConfigs());
