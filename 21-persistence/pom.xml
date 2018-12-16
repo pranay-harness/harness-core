@@ -36,10 +36,6 @@
             <artifactId>quartz-mongodb</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.novemberain</groupId>
-            <artifactId>quartz-mongodb</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-lifecycle</artifactId>
         </dependency>

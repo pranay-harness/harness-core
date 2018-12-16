@@ -31,18 +31,22 @@ public interface MongoRuleMixin {
 
   default MongoClient fakeMongoClient(int port, ClosingFactory closingFactory) {
     final MongoServer mongoServer = new MongoServer(new MemoryBackend());
-    closingFactory.addServer(new Closeable() {
-      @Override
-      public void close() throws IOException {
-        mongoServer.shutdownNow();
-      }
-    });
+    if (closingFactory != null) {
+      closingFactory.addServer(new Closeable() {
+        @Override
+        public void close() throws IOException {
+          mongoServer.shutdownNow();
+        }
+      });
+    }
 
     mongoServer.bind("localhost", port);
     InetSocketAddress serverAddress = mongoServer.getLocalAddress();
     MongoClient client = new MongoClient(new ServerAddress(serverAddress));
 
-    closingFactory.addServer(client);
+    if (closingFactory != null) {
+      closingFactory.addServer(client);
+    }
     return client;
   }
 }
