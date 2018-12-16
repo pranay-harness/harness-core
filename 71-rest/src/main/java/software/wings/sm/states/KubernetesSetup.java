@@ -316,7 +316,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
             .lookupLabels(setupExecutionData.getLookupLabels())
             .autoscalerYaml(setupExecutionData.getAutoscalerYaml())
             .activeServiceCounts(setupExecutionData.getActiveServiceCounts())
-            .trafficWeights(setupExecutionData.getTrafficWeights());
+            .trafficWeights(setupExecutionData.getTrafficWeights())
+            .loadBalancer(setupExecutionData.getLoadBalancer());
         int totalActiveServiceCount = Optional.ofNullable(setupExecutionData.getActiveServiceCounts())
                                           .orElse(emptyList())
                                           .stream()

@@ -445,10 +445,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
 
       Service service = setupServiceAndIngress(setupParams, kubernetesConfig, encryptedDataDetails,
-          containerServiceName, executionLogCallback, summaryOutput);
+          containerServiceName, executionLogCallback, summaryOutput, commandExecutionDataBuilder);
 
       setupServiceAndIngressForBlueGreen(setupParams, kubernetesConfig, encryptedDataDetails, containerServiceName,
-          Integer.toString(currentRevision), executionLogCallback, summaryOutput);
+          Integer.toString(currentRevision), executionLogCallback, summaryOutput, commandExecutionDataBuilder);
 
       if (isNotVersioned) {
         listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
@@ -534,7 +534,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private Service setupServiceAndIngress(KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName,
-      ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput) {
+      ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput,
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
     String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
     Map<String, String> labels = getLabels(setupParams);
 
@@ -558,9 +559,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     Map<String, String> selectors = getNewLabelSelectors(setupParams);
 
-    Service service =
-        prepareService(spec, kubernetesConfig, encryptedDataDetails, kubernetesServiceName, setupParams.getNamespace(),
-            false, selectors, labels, setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput);
+    Service service = prepareService(spec, kubernetesConfig, encryptedDataDetails, kubernetesServiceName,
+        setupParams.getNamespace(), false, selectors, labels, setupParams.getServiceSteadyStateTimeout(),
+        executionLogCallback, summaryOutput, commandExecutionDataBuilder);
 
     String ingressYaml = "";
 
@@ -583,7 +584,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private void setupServiceAndIngressForBlueGreen(KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, String revision,
-      ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput) {
+      ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput,
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
     String primaryServiceName = getPrimaryServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
     String stageServiceName = getStageServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
     String ingressName = getBlueGreenIngressName(setupParams.getControllerNamePrefix());
@@ -602,7 +604,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     Service primaryService = prepareService(primaryServiceSpecification, kubernetesConfig, encryptedDataDetails,
         primaryServiceName, setupParams.getNamespace(), true, selectors, labels,
-        setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput);
+        setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput, commandExecutionDataBuilder);
 
     KubernetesServiceSpecification stageServiceSpecification =
         (setupParams.isBlueGreen() && setupParams.getBlueGreenConfig() != null)
@@ -616,7 +618,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     Service stageService = prepareService(stageServiceSpecification, kubernetesConfig, encryptedDataDetails,
         stageServiceName, setupParams.getNamespace(), false, selectors, labels,
-        setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput);
+        setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput, commandExecutionDataBuilder);
 
     boolean useIngress = setupParams.isBlueGreen() && setupParams.getBlueGreenConfig() != null
         && setupParams.getBlueGreenConfig().isUseIngress();
@@ -696,7 +698,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private Service prepareService(KubernetesServiceSpecification serviceSpecification, KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String kubernetesServiceName, String namespace,
       boolean keepExistingSelectors, Map<String, String> labelSelectors, Map<String, String> labels, int timeout,
-      ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput) {
+      ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput,
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
     Service service = null;
     String serviceClusterIP;
     String serviceLoadBalancerEndpoint = null;
@@ -774,7 +777,27 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       summaryOutput.append(format("Cluster IP: %s ", serviceClusterIP));
     }
     if (isNotBlank(serviceLoadBalancerEndpoint)) {
-      summaryOutput.append(format("Load Balancer Endpoint: %s ", serviceLoadBalancerEndpoint));
+      String lbUrlString = "";
+      int precedence = 0;
+      for (ServicePort servicePort : service.getSpec().getPorts()) {
+        int portPrecedence = 2;
+        String lbScheme = "http";
+        String lbPort = "";
+        if (servicePort.getPort() == 443) {
+          lbScheme += 's';
+          portPrecedence = 3;
+        }
+        if (servicePort.getPort() != 80 && servicePort.getPort() != 443) {
+          lbPort = ":" + servicePort.getPort();
+          portPrecedence = 1;
+        }
+        if (portPrecedence > precedence) {
+          precedence = portPrecedence;
+          lbUrlString = lbScheme + "://" + serviceLoadBalancerEndpoint + lbPort + "/";
+        }
+      }
+      summaryOutput.append(format("Load Balancer: %s ", lbUrlString));
+      commandExecutionDataBuilder.loadBalancer(lbUrlString);
     }
     if (isNotBlank(nodePort)) {
       summaryOutput.append(format("Node Port: %s ", nodePort));

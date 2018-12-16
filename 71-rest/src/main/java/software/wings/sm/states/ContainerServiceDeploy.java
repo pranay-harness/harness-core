@@ -135,13 +135,13 @@ public abstract class ContainerServiceDeploy extends State {
               .withAppId(contextData.app.getUuid())
               .withCommandName(getCommandName())
               .withClusterName(contextData.containerElement.getClusterName())
+              .withNamespace(contextData.containerElement.getNamespace())
               .withActivityId(activity.getUuid());
 
       if (isRollback()) {
         logger.info("Executing rollback");
         executionDataBuilder.withNewInstanceData(contextData.rollbackElement.getNewInstanceData());
         executionDataBuilder.withOldInstanceData(contextData.rollbackElement.getOldInstanceData());
-        executionDataBuilder.withNamespace(contextData.rollbackElement.getNamespace());
       }
 
       CommandStateExecutionData executionData = executionDataBuilder.build();
