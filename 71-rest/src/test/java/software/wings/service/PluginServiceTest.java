@@ -39,6 +39,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.SftpConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
@@ -76,7 +77,7 @@ public class PluginServiceTest {
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(29)
+        .hasSize(30)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -302,6 +303,14 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(Artifact))
                 .build(),
             anAccountPlugin()
+                .withSettingClass(SftpConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("SFTP")
+                .withType("SFTP")
+                .withPluginCategories(asList(Artifact))
+                .build(),
+            anAccountPlugin()
                 .withSettingClass(JiraConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
@@ -314,10 +323,10 @@ public class PluginServiceTest {
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(29)
+        .hasSize(30)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
             "JENKINS", "BAMBOO", "SMTP", "SLACK", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB");
+            "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP");
   }
 }

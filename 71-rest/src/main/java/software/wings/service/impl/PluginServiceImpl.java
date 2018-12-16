@@ -33,7 +33,6 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -337,17 +336,15 @@ public class PluginServiceImpl implements PluginService {
                        .withPluginCategories(asList(Artifact))
                        .withUiSchema(readUiSchema("SMB"))
                        .build());
-    if (featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
-      pluginList.add(anAccountPlugin()
-                         .withSettingClass(SftpConfig.class)
-                         .withAccountId(accountId)
-                         .withIsEnabled(true)
-                         .withDisplayName("SFTP")
-                         .withType("SFTP")
-                         .withPluginCategories(asList(Artifact))
-                         .withUiSchema(readUiSchema("SFTP"))
-                         .build());
-    }
+    pluginList.add(anAccountPlugin()
+                       .withSettingClass(SftpConfig.class)
+                       .withAccountId(accountId)
+                       .withIsEnabled(true)
+                       .withDisplayName("SFTP")
+                       .withType("SFTP")
+                       .withPluginCategories(asList(Artifact))
+                       .withUiSchema(readUiSchema("SFTP"))
+                       .build());
 
     boolean jiraEnabled = featureFlagService.isEnabled(JIRA_INTEGRATION, accountId);
     if (jiraEnabled) {
