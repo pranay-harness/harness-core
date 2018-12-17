@@ -23,3 +23,51 @@ VMINSTANCE:
       unit: number
       kind: VALUE
       valueType: Int64
+
+      metricName: compute.googleapis.com/instance/disk/read_bytes_count
+      displayName: Delta count of bytes read from disk.
+      unit: By
+      kind: VALUE
+      valueType: Int64
+
+      metricName: compute.googleapis.com/instance/disk/read_ops_count
+      displayName: Delta count of disk read IO operations.
+      unit: number
+      kind: VALUE
+      valueType: Int64
+
+      metricName: compute.googleapis.com/instance/disk/write_bytes_count
+      displayName: Delta count of bytes written to disk.
+      unit: By
+      kind: VALUE
+      valueType: Int64
+
+      metricName: compute.googleapis.com/instance/disk/write_ops_count
+      displayName: Delta count of disk write IO operations.
+      unit: number
+      kind: VALUE
+      valueType: Int64
+
+      metricName: compute.googleapis.com/instance/network/received_bytes_count
+      displayName: Delta count of bytes received from the network.
+      unit: By
+      kind: VALUE
+      valueType: Int64
+
+      metricName: compute.googleapis.com/instance/network/received_packets_count
+      displayName: Delta count of packets received from the network.
+      unit: number
+      kind: VALUE
+      valueType: Int64
+
+      metricName: compute.googleapis.com/instance/network/sent_bytes_count
+      displayName: Delta count of bytes sent over the network.
+      unit: By
+      kind: VALUE
+      valueType: Int64
+
+      metricName: compute.googleapis.com/instance/network/sent_packets_count
+      displayName: Delta count of packets sent over the network.
+      unit: number
+      kind: VALUE
+      valueType: Int64
