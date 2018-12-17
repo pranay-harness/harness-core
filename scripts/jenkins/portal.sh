@@ -49,18 +49,22 @@ fi
 
 cd ../..
 
+echo "System-Properties: version=1.0.${VERSION} logdnakey=${LOGDNA_KEY}" >> app.mf
+echo "Application-Version: version=1.0.${VERSION}" >> app.mf
 
 mkdir -p dist/delegate
 cd dist/delegate
 cp ../../81-delegate/target/delegate-capsule.jar .
 cd ../..
 cp 81-delegate/target/delegate-capsule.jar delegate-${VERSION}.jar
+jar ufm delegate-${VERSION}.jar app.mf
 
 mkdir -p dist/watcher
 cd dist/watcher
 cp ../../82-watcher/target/watcher-capsule.jar .
 cd ../..
 cp 82-watcher/target/watcher-capsule.jar watcher-${VERSION}.jar
+jar ufm watcher-${VERSION}.jar app.mf
 
 mkdir -p dist/disconnected_on_prem_pov
 cd dist/disconnected_on_prem_pov
@@ -82,3 +86,5 @@ cd dist/test
 cp ../../91-model-gen-tool/target/model-gen-tool-capsule.jar .
 cp ../../91-model-gen-tool/config-datagen.yml .
 cd ../..
+
+rm -rf app.mf
