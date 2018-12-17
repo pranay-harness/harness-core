@@ -1,7 +1,11 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SortOrder.Builder.aSortOrder;
+import static io.harness.beans.SortOrder.OrderType.DESC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Arrays.asList;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
@@ -159,6 +163,9 @@ public class ActivityResource {
       @PathParam("stateExecutionId") String stateExecutionId, @BeanParam PageRequest<ThirdPartyApiCallLog> request) {
     request.addFilter("appId", EQ, appId);
     request.addFilter("stateExecutionId", EQ, stateExecutionId);
+    if (isEmpty(request.getOrders())) {
+      request.setOrders(asList(aSortOrder().withField("createdAt", DESC).build()));
+    }
     return new RestResponse<>(dataStoreService.list(ThirdPartyApiCallLog.class, request));
   }
 }
