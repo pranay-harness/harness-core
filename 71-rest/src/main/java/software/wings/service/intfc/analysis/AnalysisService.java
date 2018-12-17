@@ -6,6 +6,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -72,4 +73,5 @@ public interface AnalysisService {
       String hostName, StateType stateType, boolean formattedQuery);
 
   Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId);
+  List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
 }
