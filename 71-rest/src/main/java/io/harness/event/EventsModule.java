@@ -28,9 +28,11 @@ public class EventsModule extends AbstractModule {
     GenericEventListener eventListener = new GenericEventListener();
     bind(EventListener.class).annotatedWith(Names.named("GenericEventListener")).toInstance(eventListener);
     bind(EventPublisher.class).to(GenericEventPublisher.class);
-    bind(MarketoConfig.class).toInstance(mainConfiguration.getMarketoConfig());
-    bind(EventHandler.class)
-        .annotatedWith(Names.named("MarketoHandler"))
-        .toInstance(new MarketoHandler(mainConfiguration.getMarketoConfig(), eventListener));
+    if (mainConfiguration.getMarketoConfig() != null) {
+      bind(MarketoConfig.class).toInstance(mainConfiguration.getMarketoConfig());
+      bind(EventHandler.class)
+          .annotatedWith(Names.named("MarketoHandler"))
+          .toInstance(new MarketoHandler(mainConfiguration.getMarketoConfig(), eventListener));
+    }
   }
 }

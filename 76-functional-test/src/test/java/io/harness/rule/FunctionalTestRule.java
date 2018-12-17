@@ -3,6 +3,7 @@ package io.harness.rule;
 import static org.mockito.Mockito.mock;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import com.codahale.metrics.MetricRegistry;
@@ -10,12 +11,14 @@ import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import io.dropwizard.Configuration;
+import io.harness.event.EventsModule;
 import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
+import io.harness.persistence.HPersistence;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.junit.rules.MethodRule;
@@ -33,6 +36,7 @@ import software.wings.app.ManagerQueueModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
+import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 
 import java.util.ArrayList;
@@ -131,7 +135,14 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     modules.add(new YamlModule());
     modules.add(new ExecutorModule(executorService));
     modules.add(new TemplateModule());
+    modules.add(new EventsModule((MainConfiguration) configuration));
     return modules;
+  }
+
+  @Override
+  public void initialize(Injector injector) {
+    final HPersistence persistence = injector.getInstance(HPersistence.class);
+    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   @Override
