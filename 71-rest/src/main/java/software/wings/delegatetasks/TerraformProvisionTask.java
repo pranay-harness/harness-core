@@ -127,6 +127,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .build();
     }
     String scriptDirectory = resolveScriptDirectory(gitConfig, parameters.getScriptPath());
+    logger.info("Script Directory: " + scriptDirectory);
 
     String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitConfig);
 
@@ -190,14 +191,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       String joinedCommands;
       switch (parameters.getCommand()) {
         case APPLY:
-          joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory,
+          joinedCommands = Joiner.on(" && ").join(asList("cd \"" + scriptDirectory + "\"",
               "terraform init -input=false -force-copy "
                   + (tfBackendConfigsFile.exists() ? "-backend-config=" + tfBackendConfigsFile.getAbsolutePath() : ""),
               "terraform refresh -input=false", "terraform plan -out=tfplan -input=false",
               "terraform apply -input=false tfplan", "(terraform output --json > " + tfOutputsFile.toString() + ")"));
           break;
         case DESTROY:
-          joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory,
+          joinedCommands = Joiner.on(" && ").join(asList("cd \"" + scriptDirectory + "\"",
               "terraform init -input=false "
                   + (tfBackendConfigsFile.exists() ? "-backend-config=" + tfBackendConfigsFile.getAbsolutePath() : ""),
               "terraform refresh -input=false", "terraform destroy -force"));
@@ -255,8 +256,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                                             .build();
 
       File tfStateFile = getTerraformStateFile(scriptDirectory);
-      try (InputStream initialStream = new FileInputStream(tfStateFile)) {
-        delegateFileManager.upload(delegateFile, initialStream);
+      if (tfStateFile != null) {
+        try (InputStream initialStream = new FileInputStream(tfStateFile)) {
+          delegateFileManager.upload(delegateFile, initialStream);
+        }
       }
 
       List<NameValuePair> variableList = new ArrayList<>();
