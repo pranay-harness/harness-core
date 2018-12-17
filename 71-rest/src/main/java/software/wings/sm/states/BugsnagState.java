@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -67,6 +68,8 @@ public class BugsnagState extends AbstractLogAnalysisState {
 
   @Attributes(required = true, title = "Bugsnag Project") protected String projectId;
 
+  @Attributes(title = "Bugsnag Release Stage") protected String releaseStage;
+
   @Attributes(required = true, title = "Bugsnag Project") protected boolean browserApplication;
 
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
@@ -96,6 +99,14 @@ public class BugsnagState extends AbstractLogAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
+  public String getReleaseStage() {
+    return releaseStage;
+  }
+
+  public void setReleaseStage(String releaseStage) {
+    this.releaseStage = releaseStage;
+  }
+
   @Override
   @SchemaIgnore
   public Logger getLogger() {
@@ -108,7 +119,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
   }
 
   public String getProjectId() {
-    return orgId;
+    return projectId;
   }
 
   public boolean isBrowserApplication() {
@@ -235,6 +246,9 @@ public class BugsnagState extends AbstractLogAnalysisState {
       throw new WingsException("ProjectID is empty in Bugsnag State. Unable to fetch data");
     }
     String eventsUrl = FETCH_EVENTS_URL.replace(":projectId:", projectId);
+    if (isNotEmpty(releaseStage)) {
+      eventsUrl += "&release_stage=" + releaseStage;
+    }
     logDefinition.put(eventsUrl, new HashMap<>());
     Map<String, ResponseMapper> responseMappers = new HashMap<>();
     List<String> pathList = new ArrayList<>();
