@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -9,6 +11,7 @@ import software.wings.beans.WebHookRequest;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.WebHookService;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -49,6 +52,7 @@ public class WebHookResource {
   }
 
   @POST
+  @Consumes(APPLICATION_JSON)
   @Timed
   @ExceptionMetered
   @Path("{webHookToken}/git")
