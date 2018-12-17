@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
@@ -28,6 +29,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
@@ -942,6 +944,34 @@ public class AnalysisServiceImpl implements AnalysisService {
           .addParam("reason", "No node information was captured in the last successful workflow execution");
     }
     return hosts;
+  }
+
+  @Override
+  public List<LogMLExpAnalysisInfo> getExpAnalysisInfoList() {
+    // return max 1000 records.
+    final int limit = 1000;
+    final List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords =
+        wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
+            .project("stateExecutionId", true)
+            .project("appId", true)
+            .project("stateType", true)
+            .project("experiment_name", true)
+            .project("createdAt", true)
+            .asList(new FindOptions().limit(limit));
+
+    List<LogMLExpAnalysisInfo> result = new ArrayList<>();
+    experimentalLogMLAnalysisRecords.forEach(record -> {
+      result.add(LogMLExpAnalysisInfo.builder()
+                     .stateExecutionId(record.getStateExecutionId())
+                     .appId(record.getAppId())
+                     .stateType(record.getStateType())
+                     .createdAt(record.getCreatedAt())
+                     .expName(record.getExperiment_name())
+                     .expName(record.getExperiment_name())
+                     .build());
+    });
+
+    return result;
   }
 
   private boolean deleteIfStale(String query, String appId, String stateExecutionId, StateType type, Set<String> hosts,
