@@ -12,7 +12,6 @@ import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.sm.TransitionType.SUCCESS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.data.structure.UUIDGenerator;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
@@ -36,8 +35,6 @@ public class Graph {
   private Map<String, Graph> subworkflows = new HashMap<>();
 
   @Transient private Optional<GraphNode> originState;
-
-  @Transient @JsonIgnore private int version;
 
   /**
    * Gets graph name.
@@ -119,26 +116,6 @@ public class Graph {
   @JsonIgnore
   public Map<String, GraphNode> getNodesMap() {
     return getNodes().stream().collect(toMap(GraphNode::getId, identity()));
-  }
-
-  /**
-   * Getter for property 'version'.
-   *
-   * @return Value for property 'version'.
-   */
-  @JsonProperty
-  public int getVersion() {
-    return version;
-  }
-
-  /**
-   * Setter for property 'version'.
-   *
-   * @param version Value to set for property 'version'.
-   */
-  @JsonIgnore
-  public void setVersion(int version) {
-    this.version = version;
   }
 
   public Map<String, Graph> getSubworkflows() {
@@ -227,9 +204,6 @@ public class Graph {
 
     Graph graph = (Graph) o;
 
-    if (version != graph.version) {
-      return false;
-    }
     if (graphName != null ? !graphName.equals(graph.graphName) : graph.graphName != null) {
       return false;
     }
@@ -256,7 +230,7 @@ public class Graph {
   public String toString() {
     return "Graph{"
         + "graphName='" + graphName + '\'' + ", nodes=" + nodes + ", links=" + links + ", subworkflows=" + subworkflows
-        + ", originState=" + originState + ", version=" + version + '}';
+        + ", originState=" + originState + '}';
   }
 
   /**
