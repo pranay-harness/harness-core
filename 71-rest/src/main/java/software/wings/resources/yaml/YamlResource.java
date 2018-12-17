@@ -873,6 +873,7 @@ public class YamlResource {
    */
   @POST
   @Path("webhook/{entityToken}")
+  @Consumes(APPLICATION_JSON)
   @Timed
   @ExceptionMetered
   @PublicApi
