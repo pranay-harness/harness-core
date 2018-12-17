@@ -1,7 +1,7 @@
 package io.harness.seeddata;
 
-import static io.harness.seeddata.SampleDataProviderConstants.KUBERNETES_SERVICE_INFRA_NAME;
-import static io.harness.seeddata.SampleDataProviderConstants.KUBERNETES_SERVICE_INFRA_NAME_SPACE;
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_NAME;
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_NAME_SPACE;
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 
 import com.google.inject.Inject;
@@ -36,8 +36,8 @@ public class InfraMappingSampleDataProvider {
             .withComputeProviderSettingId(cloudProviderId)
             .withComputeProviderType(SettingVariableTypes.KUBERNETES_CLUSTER.name())
             .withDeploymentType(DeploymentType.KUBERNETES.name())
-            .withName(KUBERNETES_SERVICE_INFRA_NAME)
-            .withNamespace(KUBERNETES_SERVICE_INFRA_NAME_SPACE)
+            .withName(K8S_SERVICE_INFRA_NAME)
+            .withNamespace(K8S_SERVICE_INFRA_NAME_SPACE)
             .withAutoPopulate(false)
             .withServiceTemplateId(serviceTemplate.getUuid())
             .withEnvId(envId)

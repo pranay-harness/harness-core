@@ -14,16 +14,17 @@ public interface SampleDataProviderConstants {
   String HARNESS_SAMPLE_APP = "Harness Sample App";
   String HARNESS_SAMPLE_APP_DESC = "A sample To-Do List application";
 
-  String KUBERNETES_SERVICE_NAME = "To-Do List K8s";
-  String KUBERNETES_SERVICE_DESC = "Sample To-Do List Docker Image";
+  String K8S_SERVICE_NAME = "To-Do List K8s";
+  String K8S_SERVICE_DESC = "Sample To-Do List Docker Image";
 
-  String KUBERNETES_SERVICE_INFRA_NAME = "To-Do List K8s";
-  String KUBERNETES_SERVICE_INFRA_NAME_SPACE = "default";
+  String K8S_SERVICE_INFRA_NAME = "To-Do List K8s";
+  String K8S_SERVICE_INFRA_NAME_SPACE = "default";
 
-  String KUBE_QA_ENVIRONMENT = "QA";
-  String KUBE_PROD_ENVIRONMENT = "Prod";
+  String K8S_QA_ENVIRONMENT = "QA";
+  String K8S_PROD_ENVIRONMENT = "Prod";
 
-  String KUBE_WORKFLOW_NAME = "To-Do List K8s";
+  String K8S_BASIC_WORKFLOW_NAME = "To-Do List K8s Basic";
+  String K8S_CANARY_WORKFLOW_NAME = "To-Do List K8s Canary";
 
-  String KUBE_PIPELINE_NAME = "K8s Prod Pipeline";
+  String K8S_PIPELINE_NAME = "K8s Prod Pipeline";
 }

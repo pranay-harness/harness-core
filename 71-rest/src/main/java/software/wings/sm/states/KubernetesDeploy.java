@@ -19,6 +19,9 @@ import java.util.stream.Collectors;
  * Created by brett on 3/1/17
  */
 public class KubernetesDeploy extends ContainerServiceDeploy {
+  public static final String INSTANCE_UNIT_TYPE_KEY = "instanceUnitType";
+  public static final String INSTANCE_COUNT_KEY = "instanceCount";
+
   private String instanceCount;
   private String downsizeInstanceCount;
   private String trafficPercent;

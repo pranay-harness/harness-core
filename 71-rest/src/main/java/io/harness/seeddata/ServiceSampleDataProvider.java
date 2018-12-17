@@ -1,7 +1,7 @@
 package io.harness.seeddata;
 
-import static io.harness.seeddata.SampleDataProviderConstants.KUBERNETES_SERVICE_DESC;
-import static io.harness.seeddata.SampleDataProviderConstants.KUBERNETES_SERVICE_NAME;
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_DESC;
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_NAME;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
@@ -24,8 +24,8 @@ public class ServiceSampleDataProvider {
     Service service = serviceResourceService.save(Service.builder()
                                                       .appId(appId)
                                                       .artifactType(ArtifactType.DOCKER)
-                                                      .name(KUBERNETES_SERVICE_NAME)
-                                                      .description(KUBERNETES_SERVICE_DESC)
+                                                      .name(K8S_SERVICE_NAME)
+                                                      .description(K8S_SERVICE_DESC)
                                                       .build());
 
     // Create container task

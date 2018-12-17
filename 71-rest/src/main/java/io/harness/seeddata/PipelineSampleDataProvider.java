@@ -10,9 +10,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RoleType;
-import software.wings.beans.Workflow;
 import software.wings.beans.security.UserGroup;
-import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.sm.StateType;
@@ -22,29 +20,19 @@ public class PipelineSampleDataProvider {
   @Inject private PipelineService pipelineService;
   @Inject private UserGroupService userGroupService;
 
-  public Pipeline createPipeline(String accountId, String appId, Workflow workflow, String qaEnvId,
-      String qaInframappingId, String prodEnvId, String profInframappingId) {
+  public Pipeline createPipeline(
+      String accountId, String appId, String qaWorkflowId, String qaEnvId, String prodWorkflowId, String prodEnvId) {
     UserGroup userGroup = userGroupService.fetchUserGroupByName(accountId, RoleType.ACCOUNT_ADMIN.getDisplayName());
     String userGroupId = userGroup == null ? null : userGroup.getUuid();
-
-    String envName = WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(
-        workflow.getOrchestrationWorkflow().getUserVariables());
-
-    String serviceInfraName =
-        WorkflowServiceTemplateHelper
-            .getServiceInfrastructureWorkflowVariables(workflow.getOrchestrationWorkflow().getUserVariables())
-            .get(0);
 
     PipelineStage qaStage =
         PipelineStage.builder()
             .name("STAGE 1")
-            .pipelineStageElements(
-                asList(PipelineStageElement.builder()
-                           .type(StateType.ENV_STATE.name())
-                           .name(SampleDataProviderConstants.KUBE_QA_ENVIRONMENT)
-                           .properties(ImmutableMap.of("workflowId", workflow.getUuid(), "envId", qaEnvId))
-                           .workflowVariables(ImmutableMap.of(envName, qaEnvId, serviceInfraName, qaInframappingId))
-                           .build()))
+            .pipelineStageElements(asList(PipelineStageElement.builder()
+                                              .type(StateType.ENV_STATE.name())
+                                              .name(SampleDataProviderConstants.K8S_QA_ENVIRONMENT)
+                                              .properties(ImmutableMap.of("workflowId", qaWorkflowId, "envId", qaEnvId))
+                                              .build()))
             .build();
 
     PipelineStage approvalStage =
@@ -57,20 +45,18 @@ public class PipelineSampleDataProvider {
                                               .build()))
             .build();
 
-    PipelineStage prodStage =
-        PipelineStage.builder()
-            .name("STAGE 3")
-            .pipelineStageElements(
-                asList(PipelineStageElement.builder()
-                           .type(StateType.ENV_STATE.name())
-                           .name(SampleDataProviderConstants.KUBE_PROD_ENVIRONMENT)
-                           .properties(ImmutableMap.of("workflowId", workflow.getUuid(), "envId", prodEnvId))
-                           .workflowVariables(ImmutableMap.of(envName, prodEnvId, serviceInfraName, profInframappingId))
-                           .build()))
-            .build();
+    PipelineStage prodStage = PipelineStage.builder()
+                                  .name("STAGE 3")
+                                  .pipelineStageElements(asList(
+                                      PipelineStageElement.builder()
+                                          .type(StateType.ENV_STATE.name())
+                                          .name(SampleDataProviderConstants.K8S_PROD_ENVIRONMENT)
+                                          .properties(ImmutableMap.of("workflowId", prodWorkflowId, "envId", prodEnvId))
+                                          .build()))
+                                  .build();
 
     Pipeline pipeline = Pipeline.builder()
-                            .name(SampleDataProviderConstants.KUBE_PIPELINE_NAME)
+                            .name(SampleDataProviderConstants.K8S_PIPELINE_NAME)
                             .appId(appId)
                             .pipelineStages(asList(qaStage, approvalStage, prodStage))
                             .build();

@@ -84,7 +84,9 @@ import java.util.concurrent.TimeUnit;
 public abstract class ContainerServiceSetup extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(ContainerServiceSetup.class);
 
-  static final String FIXED_INSTANCES = "fixedInstances";
+  public static final String FIXED_INSTANCES = "fixedInstances";
+  public static final String DESIRED_INSTANCE_COUNT_KEY = "desiredInstanceCount";
+
   static final int DEFAULT_MAX = 2;
 
   private String desiredInstanceCount;

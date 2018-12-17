@@ -11,7 +11,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Workflow;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
@@ -67,15 +66,16 @@ public class SampleDataProviderService {
               prodEnv.getUuid(), kubeService.getUuid(), kubernetesClusterConfig.getUuid());
 
       // 8. Create Workflow
-      Workflow workflow = workflowSampleDataProvider.createKubeWorkflow(
+      String basicWorkflowId = workflowSampleDataProvider.createK8sBasicWorkflow(
           kubernetesApp.getUuid(), qaEnv.getUuid(), kubeService.getUuid(), qaInfraMapping.getUuid());
 
-      // 9 Templatize Workflow
-      final Workflow updatedWorkflow = workflowSampleDataProvider.templatizeEnvAndServiceInfra(workflow);
+      // 9 Create Canary Workflow
+      String canaryWorkflowId = workflowSampleDataProvider.createK8sCanaryWorkflow(
+          kubernetesApp.getUuid(), prodEnv.getUuid(), kubeService.getUuid(), prodInfraMapping.getUuid());
 
-      // 9. Create a Pipeline
-      pipelineSampleDataProvider.createPipeline(kubernetesApp.getAccountId(), kubernetesApp.getUuid(), updatedWorkflow,
-          qaEnv.getUuid(), qaInfraMapping.getUuid(), prodEnv.getUuid(), prodInfraMapping.getUuid());
+      // 10. Create a Pipeline
+      pipelineSampleDataProvider.createPipeline(kubernetesApp.getAccountId(), kubernetesApp.getUuid(), basicWorkflowId,
+          qaEnv.getUuid(), canaryWorkflowId, prodEnv.getUuid());
 
     } catch (Exception ex) {
       logger.error("Failed to create Sample Application for the account [" + account.getUuid()
