@@ -618,7 +618,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private List<TimeSeriesMLAnalysisRecord> getAnalysisRecordsInTimeRange(
       String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
     final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeCount)
             .filter("appId", appId)
             .filter("cvConfigId", cvConfiguration.getUuid())
             .field("analysisMinute")
