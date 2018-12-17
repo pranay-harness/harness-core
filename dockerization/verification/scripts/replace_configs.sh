@@ -36,5 +36,5 @@ elif [[ -v "LOGDNA_KEY" ]]; then
 fi
 
 if [[ -v "DATA_STORE" ]]; then
-    sed -i "s|dataStorageMode: MONGO|dataStorageMode: ${EXECUTION_LOG_DATA_STORE}|" /opt/harness/verification-config.yml
+    sed -i "s|dataStorageMode: MONGO|dataStorageMode: ${DATA_STORE}|" /opt/harness/verification-config.yml
 fi
