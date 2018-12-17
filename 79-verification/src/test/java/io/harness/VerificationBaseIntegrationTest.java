@@ -151,7 +151,6 @@ public abstract class VerificationBaseIntegrationTest
                                          .filter("serviceType", ServiceType.LEARNING_ENGINE)
                                          .get()
                                          .getServiceSecret();
-      logger.info("learningServiceSecret: " + learningServiceSecret);
       Algorithm algorithm = Algorithm.HMAC256(learningServiceSecret);
       return JWT.create()
           .withIssuer("Harness Inc")
