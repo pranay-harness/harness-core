@@ -98,14 +98,14 @@ public class WebHookServiceImpl implements WebHookService {
         logger.warn("Payload is mandatory");
         WebHookResponse webHookResponse = WebHookResponse.builder().error("Payload is mandatory").build();
 
-        return prepareResponse(webHookResponse, true);
+        return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
       }
       logger.info("Received the Webhook Request {}  ", String.valueOf(webHookRequest));
       String appId = webHookRequest.getApplication();
       Application app = appService.get(appId);
       if (app == null) {
         WebHookResponse webHookResponse = WebHookResponse.builder().error("Application does not exist").build();
-        return prepareResponse(webHookResponse, true);
+        return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
       }
 
       Map<String, String> serviceBuildNumbers = new HashMap<>();
@@ -119,10 +119,11 @@ public class WebHookServiceImpl implements WebHookService {
       return constructSuccessResponse(appId, app, workflowExecution);
     } catch (WingsException ex) {
       ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
-      return prepareResponse(WebHookResponse.builder().error(Misc.getMessage(ex)).build(), true);
+      return prepareResponse(WebHookResponse.builder().error(Misc.getMessage(ex)).build(), Response.Status.BAD_REQUEST);
     } catch (Exception ex) {
       logger.warn(format("Webhook Request call failed"), ex);
-      return prepareResponse(WebHookResponse.builder().error(Misc.getMessage(ex)).build(), true);
+      return prepareResponse(
+          WebHookResponse.builder().error(Misc.getMessage(ex)).build(), Response.Status.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -138,7 +139,7 @@ public class WebHookServiceImpl implements WebHookService {
         WebHookResponse webHookResponse =
             WebHookResponse.builder().error("Trigger not associated to the given token").build();
 
-        return prepareResponse(webHookResponse, true);
+        return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
       }
 
       triggerExecution.setAppId(trigger.getAppId());
@@ -162,7 +163,7 @@ public class WebHookServiceImpl implements WebHookService {
         triggerExecutionService.save(triggerExecution);
         WebHookResponse webHookResponse = WebHookResponse.builder().error(triggerExecution.getMessage()).build();
 
-        return prepareResponse(webHookResponse, true);
+        return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
       }
 
       logger.info("Trigger execution for the trigger {}", trigger.getUuid());
@@ -174,7 +175,7 @@ public class WebHookServiceImpl implements WebHookService {
                 .message("Request received. Deployment will be triggered if the file content changed")
                 .build();
 
-        return prepareResponse(webHookResponse, false);
+        return prepareResponse(webHookResponse, Response.Status.OK);
       } else {
         logger.info("Execution trigger success. Saving trigger execution");
         WebHookResponse webHookResponse = WebHookResponse.builder()
@@ -182,7 +183,7 @@ public class WebHookServiceImpl implements WebHookService {
                                               .status(workflowExecution.getStatus().name())
                                               .build();
 
-        return prepareResponse(webHookResponse, false);
+        return prepareResponse(webHookResponse, Response.Status.OK);
       }
     } catch (WingsException ex) {
       ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
@@ -191,7 +192,7 @@ public class WebHookServiceImpl implements WebHookService {
       triggerExecutionService.save(triggerExecution);
       WebHookResponse webHookResponse = WebHookResponse.builder().error(triggerExecution.getMessage()).build();
 
-      return prepareResponse(webHookResponse, true);
+      return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
     } catch (Exception ex) {
       logger.error(format("Webhook Request call failed "), ex);
       triggerExecution.setStatus(Status.FAILED);
@@ -199,7 +200,7 @@ public class WebHookServiceImpl implements WebHookService {
       triggerExecutionService.save(triggerExecution);
       WebHookResponse webHookResponse = WebHookResponse.builder().error(triggerExecution.getMessage()).build();
 
-      return prepareResponse(webHookResponse, true);
+      return prepareResponse(webHookResponse, Response.Status.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -218,7 +219,8 @@ public class WebHookServiceImpl implements WebHookService {
                   .count(new CountOptions().limit(1))
               == 0) {
             return prepareResponse(
-                WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build(), true);
+                WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build(),
+                Response.Status.BAD_REQUEST);
           }
           serviceBuildNumbers.put(serviceName, buildNumber);
         }
@@ -327,13 +329,10 @@ public class WebHookServiceImpl implements WebHookService {
                 workflowExecution.getEnvId(), workflowExecution.getUuid()))
             .build();
 
-    return prepareResponse(webHookResponse, false);
+    return prepareResponse(webHookResponse, Response.Status.OK);
   }
 
-  private Response prepareResponse(WebHookResponse webhookResponse, boolean errorCase) {
-    return Response.status(errorCase ? Response.Status.INTERNAL_SERVER_ERROR : Response.Status.OK)
-        .entity(webhookResponse)
-        .type(MediaType.APPLICATION_JSON)
-        .build();
+  private Response prepareResponse(WebHookResponse webhookResponse, Response.Status status) {
+    return Response.status(status).entity(webhookResponse).type(MediaType.APPLICATION_JSON).build();
   }
 }
