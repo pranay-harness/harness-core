@@ -42,9 +42,9 @@ public class PersistentLocker implements Locker {
     DistributedLock lock = distributedLockSvc.create(name, options);
 
     // measure the time before obtaining the lock
-    long start = AcquiredLock.monotonicTimestamp();
+    long start = AcquiredDistributedLock.monotonicTimestamp();
     if (lock.tryLock()) {
-      return AcquiredLock.builder().lock(lock).startTimestamp(start).build();
+      return AcquiredDistributedLock.builder().lock(lock).startTimestamp(start).build();
     }
 
     throw new WingsException(GENERAL_ERROR, NOBODY)
