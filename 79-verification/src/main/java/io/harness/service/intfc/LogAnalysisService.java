@@ -30,7 +30,7 @@ public interface LogAnalysisService {
       ClusterLevel clusterLevel, String delegateTaskId, @Valid List<LogElement> logData);
 
   @ValidationGroups(Create.class)
-  List<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
+  Set<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
       ClusterLevel clusterLevel, StateType stateType);
 
   Boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);

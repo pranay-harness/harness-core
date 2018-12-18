@@ -29,13 +29,13 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 @Builder
 public class TimeSeriesMetricTemplates extends Base {
-  @NotEmpty @Indexed private StateType stateType;
+  @NotEmpty private StateType stateType;
 
   @NotEmpty @Indexed private String stateExecutionId;
 
-  @Indexed private String cvConfigId;
+  private String cvConfigId;
 
-  @Indexed private String accountId;
+  private String accountId;
 
   @NotEmpty private Map<String, TimeSeriesMetricDefinition> metricTemplates;
 }

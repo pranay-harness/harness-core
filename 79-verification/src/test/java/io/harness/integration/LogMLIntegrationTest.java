@@ -1181,7 +1181,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     final String query = "some-query";
     final String appId = "some-application";
     final String serviceId = "some-service";
-    final TreeBasedTable<Integer, Integer, List<LogDataRecord>> addedMessages = TreeBasedTable.create();
+    final TreeBasedTable<Integer, Integer, Set<LogDataRecord>> addedMessages = TreeBasedTable.create();
     final Set<String> hosts = new HashSet<>();
 
     WorkflowExecution workflowExecution =
@@ -1221,7 +1221,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
             wingsPersistence.save(logDataRecord);
 
             if (addedMessages.get(executionNumber, logCollectionMinute) == null) {
-              addedMessages.put(executionNumber, logCollectionMinute, new ArrayList<>());
+              addedMessages.put(executionNumber, logCollectionMinute, new HashSet<>());
             }
 
             addedMessages.get(executionNumber, logCollectionMinute).add(logDataRecord);
@@ -1237,8 +1237,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
           + "&compareCurrent=true&workflowExecutionId=" + workflowExecution.getUuid()
           + "&stateType=" + StateType.SPLUNKV2);
       final LogRequest logRequest = new LogRequest(query, appId, "se2", workflowId, serviceId, hosts, collectionMinute);
-      RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
-          entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
+      RestResponse<Set<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
+          entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<Set<LogDataRecord>>>() {});
       assertEquals(
           "failed for minute " + collectionMinute, addedMessages.get(2, collectionMinute), restResponse.getResource());
     }
@@ -1256,7 +1256,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     final String query = "some-query";
     final String appId = "some-application";
     final String serviceId = "some-service";
-    final TreeBasedTable<Integer, Integer, List<LogDataRecord>> addedMessages = TreeBasedTable.create();
+    final TreeBasedTable<Integer, Integer, Set<LogDataRecord>> addedMessages = TreeBasedTable.create();
 
     WorkflowExecution workflowExecution = aWorkflowExecution()
                                               .withStatus(ExecutionStatus.SUCCESS)
@@ -1306,7 +1306,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
             wingsPersistence.save(logDataRecord);
 
             if (addedMessages.get(executionNumber, logCollectionMinute) == null) {
-              addedMessages.put(executionNumber, logCollectionMinute, new ArrayList<>());
+              addedMessages.put(executionNumber, logCollectionMinute, new HashSet<>());
             }
 
             addedMessages.get(executionNumber, logCollectionMinute).add(logDataRecord);
@@ -1323,8 +1323,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
           + "&stateType=" + StateType.SPLUNKV2);
       final LogRequest logRequest =
           new LogRequest(query, appId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, collectionMinute);
-      RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
-          entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
+      RestResponse<Set<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
+          entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<Set<LogDataRecord>>>() {});
       assertEquals("failed for minute " + collectionMinute, addedMessages.get(numOfExecutions, collectionMinute),
           restResponse.getResource());
     }

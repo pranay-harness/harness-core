@@ -44,12 +44,12 @@ public class LearningEngineAnalysisTask extends Base {
   public static final int RETRIES = 3;
 
   private String workflow_id;
-  private @Indexed String workflow_execution_id;
+  private String workflow_execution_id;
   private @Indexed String state_execution_id;
   private String service_id;
   private String auth_token;
   private int analysis_start_min;
-  private @Indexed int analysis_minute;
+  private int analysis_minute;
   private int smooth_window;
   private int tolerance;
   private int min_rpm;

@@ -40,9 +40,9 @@ import java.util.Map;
 public class LogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
 
-  @NotEmpty @Indexed private StateType stateType;
+  @NotEmpty private StateType stateType;
 
-  @NotEmpty @Indexed private int logCollectionMinute;
+  @NotEmpty private int logCollectionMinute;
 
   private boolean isBaseLineCreated = true;
   private String baseLineExecutionId;

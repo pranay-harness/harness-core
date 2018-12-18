@@ -215,7 +215,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
-  public List<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
+  public Set<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
       ClusterLevel clusterLevel, StateType stateType) {
     Query<LogDataRecord> recordQuery;
     if (compareCurrent) {
@@ -242,7 +242,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                         .filter("logCollectionMinute", logRequest.getLogCollectionMinute());
     }
 
-    List<LogDataRecord> rv = new ArrayList<>();
+    Set<LogDataRecord> rv = new HashSet<>();
     try (HIterator<LogDataRecord> records = new HIterator<>(recordQuery.fetch())) {
       while (records.hasNext()) {
         rv.add(records.next());
