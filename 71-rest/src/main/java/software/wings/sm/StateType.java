@@ -144,6 +144,7 @@ import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
+import software.wings.sm.states.k8s.K8sBlueGreenDeploy;
 import software.wings.sm.states.k8s.K8sCanaryRollback;
 import software.wings.sm.states.k8s.K8sCanarySetup;
 import software.wings.sm.states.k8s.K8sRollingDeploy;
@@ -504,11 +505,11 @@ public enum StateType implements StateTypeDescriptor {
   CLOUD_FORMATION_DELETE_STACK(CloudFormationDeleteStackState.class, PROVISIONERS, DE_PROVISION_CLOUD_FORMATION,
       asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_SWAP_SERVICE_SELECTORS(KubernetesSwapServiceSelectors.class, COMMANDS,
+  KUBERNETES_SWAP_SERVICE_SELECTORS(KubernetesSwapServiceSelectors.class, KUBERNETES,
       Constants.KUBERNETES_SWAP_SERVICE_SELECTORS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
           InfrastructureMappingType.GCP_KUBERNETES),
-      asList(CONTAINER_DEPLOY, ROUTE_UPDATE, WRAP_UP), ORCHESTRATION_STENCILS),
+      asList(CONTAINER_DEPLOY, ROUTE_UPDATE, WRAP_UP, K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   CLOUD_FORMATION_ROLLBACK_STACK(CloudFormationRollbackStackState.class, PROVISIONERS, ROLLBACK_CLOUD_FORMATION,
       singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
@@ -527,6 +528,11 @@ public enum StateType implements StateTypeDescriptor {
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sRollingDeployRollback.class, KUBERNETES, K8S_DEPLOYMENT_ROLLING_ROLLBAK,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
+          InfrastructureMappingType.AZURE_KUBERNETES),
+      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  K8S_BLUE_GREEN_DEPLOY(K8sBlueGreenDeploy.class, KUBERNETES, Constants.K8S_BLUE_GREEN_DEPLOY,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),

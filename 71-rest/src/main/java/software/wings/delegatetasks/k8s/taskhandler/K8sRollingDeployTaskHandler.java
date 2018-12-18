@@ -11,15 +11,6 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
-import static software.wings.delegatetasks.k8s.Utils.applyManifests;
-import static software.wings.delegatetasks.k8s.Utils.cleanup;
-import static software.wings.delegatetasks.k8s.Utils.describe;
-import static software.wings.delegatetasks.k8s.Utils.doStatusCheck;
-import static software.wings.delegatetasks.k8s.Utils.fetchManifestFiles;
-import static software.wings.delegatetasks.k8s.Utils.getLatestRevision;
-import static software.wings.delegatetasks.k8s.Utils.getResourcesInTableFormat;
-import static software.wings.delegatetasks.k8s.Utils.readManifests;
-import static software.wings.delegatetasks.k8s.Utils.renderTemplate;
 
 import com.google.inject.Inject;
 
@@ -41,6 +32,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
+import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
@@ -62,6 +54,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
+  @Inject private transient K8sTaskHelper k8sTaskHelper;
 
   private KubernetesConfig kubernetesConfig;
   private Kubectl client;
@@ -79,7 +72,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
     K8sRollingDeployTaskParameters request = (K8sRollingDeployTaskParameters) k8sTaskParameters;
 
-    List<ManifestFile> manifestFiles = fetchManifestFiles(
+    List<ManifestFile> manifestFiles = k8sTaskHelper.fetchManifestFiles(
         request.getK8sDelegateManifestConfig(), getLogCallBack(request, FetchFiles), gitService, encryptionService);
     if (manifestFiles == null) {
       return getFailureResponse(request.getActivityId());
@@ -96,16 +89,16 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse(request.getActivityId());
     }
 
-    success = applyManifests(client, resources, k8sDelegateTaskParams, getLogCallBack(request, Apply));
+    success = k8sTaskHelper.applyManifests(client, resources, k8sDelegateTaskParams, getLogCallBack(request, Apply));
     if (!success) {
       return getFailureResponse(request.getActivityId());
     }
 
     release.setManagedWorkload(managedWorkload.getResourceId());
     release.setManagedWorkloadRevision(
-        getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
+        k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
 
-    success = doStatusCheck(
+    success = k8sTaskHelper.doStatusCheck(
         client, managedWorkload.getResourceId(), k8sDelegateTaskParams, getLogCallBack(request, WaitForSteadyState));
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
@@ -122,7 +115,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder().releaseNumber(release.getNumber()).build();
-    rollingSetupResponse.setActivityId(request.getActivityId());
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
         .k8sTaskResponse(rollingSetupResponse)
@@ -131,7 +123,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
   private K8sTaskExecutionResponse getFailureResponse(String activityId) {
     K8sRollingDeployResponse rollingSetupResponse = K8sRollingDeployResponse.builder().build();
-    rollingSetupResponse.setActivityId(activityId);
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
         .k8sTaskResponse(rollingSetupResponse)
@@ -158,10 +149,10 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     try {
-      List<ManifestFile> manifestFiles = renderTemplate(
+      List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(
           k8sDelegateTaskParams, request.getK8sDelegateManifestConfig().getManifestFiles(), executionLogCallback);
 
-      resources = readManifests(manifestFiles, executionLogCallback);
+      resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(e.getMessage(), ERROR, CommandExecutionStatus.FAILURE);
       return false;
@@ -183,7 +174,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       markVersionedResources(resources);
 
       executionLogCallback.saveExecutionLog(
-          "Manifests processed. Found following resources: \n" + getResourcesInTableFormat(resources));
+          "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
 
       managedWorkload = getManagedWorkload(resources);
 
@@ -194,7 +185,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       executionLogCallback.saveExecutionLog("\nCurrent release number is: " + release.getNumber());
 
-      cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
+      k8sTaskHelper.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 
       executionLogCallback.saveExecutionLog("\nVersioning resources.");
 
@@ -212,7 +203,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       throws Exception {
     executionLogCallback.saveExecutionLog("Wrapping up..\n");
 
-    describe(client, k8sDelegateTaskParams, executionLogCallback);
+    k8sTaskHelper.describe(client, k8sDelegateTaskParams, executionLogCallback);
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
   }

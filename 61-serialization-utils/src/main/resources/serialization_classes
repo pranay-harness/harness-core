@@ -613,7 +613,7 @@ software.wings.beans.SftpConfig, 5560
 software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse, 5561
 software.wings.api.k8s.K8sExecutionSummary, 5562
 software.wings.api.k8s.K8sContextElement, 5563
-software.wings.api.k8s.K8sSetupExecutionData, 5564
+software.wings.api.k8s.K8sStateExecutionData, 5564
 software.wings.settings.validation.ConnectivityValidationDelegateRequest, 5565
 software.wings.settings.validation.ConnectivityValidationDelegateResponse, 5566
 software.wings.settings.validation.ConnectivityValidationAttributes, 5567
@@ -644,3 +644,6 @@ software.wings.api.JiraExecutionData$JiraApprovalActionType, 5591
 software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData, 5592
 software.wings.service.impl.stackdriver.StackDriverMetric, 5593
 software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo, 5594
+software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters, 5595
+software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse, 5596
+software.wings.api.k8s.K8sElement, 5597

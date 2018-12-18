@@ -1,37 +1,29 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.k8s.manifest.ManifestHelper.currentReleaseExpression;
-import static io.harness.k8s.manifest.ManifestHelper.previousReleaseExpression;
 import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdFromKindName;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Scale;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
-import static software.wings.delegatetasks.k8s.Utils.doStatusCheck;
-import static software.wings.delegatetasks.k8s.Utils.getCurrentReplicas;
-import static software.wings.delegatetasks.k8s.Utils.scale;
 
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.KubernetesResourceId;
-import io.harness.k8s.model.Release;
-import io.harness.k8s.model.ReleaseHistory;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
+import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sScaleTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
@@ -39,18 +31,17 @@ import software.wings.helpers.ext.k8s.response.K8sScaleResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.utils.Misc;
 
-import java.util.Collections;
-
 @NoArgsConstructor
 public class K8sScaleTaskHandler extends K8sTaskHandler {
   private static final Logger logger = LoggerFactory.getLogger(K8sScaleTaskHandler.class);
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private transient K8sTaskHelper k8sTaskHelper;
 
-  private KubernetesConfig kubernetesConfig;
   private Kubectl client;
   private KubernetesResourceId resourceIdToScale;
   private int targetReplicaCount;
+  private K8sScaleResponse k8sScaleResponse;
 
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
@@ -60,43 +51,39 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
 
     K8sScaleTaskParameters k8sScaleTaskParameters = (K8sScaleTaskParameters) k8sTaskParameters;
 
+    k8sScaleResponse = K8sScaleResponse.builder().build();
+
     boolean success = init(k8sScaleTaskParameters, k8sDelegateTaskParams,
         new ExecutionLogCallback(delegateLogService, k8sScaleTaskParameters.getAccountId(),
             k8sScaleTaskParameters.getAppId(), k8sScaleTaskParameters.getActivityId(), Init));
 
     if (!success) {
-      return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+      return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.FAILURE);
     }
 
     if (resourceIdToScale == null) {
-      return K8sTaskExecutionResponse.builder()
-          .commandExecutionStatus(SUCCESS)
-          .k8sTaskResponse(K8sScaleResponse.builder().build())
-          .build();
+      return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.SUCCESS);
     }
 
-    success = scale(client, k8sDelegateTaskParams, resourceIdToScale, targetReplicaCount,
+    success = k8sTaskHelper.scale(client, k8sDelegateTaskParams, resourceIdToScale, targetReplicaCount,
         new ExecutionLogCallback(delegateLogService, k8sScaleTaskParameters.getAccountId(),
             k8sScaleTaskParameters.getAppId(), k8sScaleTaskParameters.getActivityId(), Scale));
 
     if (!success) {
-      return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+      return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.FAILURE);
     }
 
     if (!k8sScaleTaskParameters.isSkipSteadyStateCheck()) {
-      success = doStatusCheck(client, resourceIdToScale, k8sDelegateTaskParams,
+      success = k8sTaskHelper.doStatusCheck(client, resourceIdToScale, k8sDelegateTaskParams,
           new ExecutionLogCallback(delegateLogService, k8sTaskParameters.getAccountId(), k8sTaskParameters.getAppId(),
               k8sTaskParameters.getActivityId(), WaitForSteadyState));
 
       if (!success) {
-        return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+        return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.FAILURE);
       }
     }
 
-    return K8sTaskExecutionResponse.builder()
-        .commandExecutionStatus(SUCCESS)
-        .k8sTaskResponse(K8sScaleResponse.builder().build())
-        .build();
+    return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.SUCCESS);
   }
 
   private boolean init(K8sScaleTaskParameters k8sScaleTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams,
@@ -104,47 +91,20 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
     try {
-      kubernetesConfig =
-          containerDeploymentDelegateHelper.getKubernetesConfig(k8sScaleTaskParameters.getK8sClusterConfig());
-
       client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
-      if (k8sScaleTaskParameters.getResource().startsWith("${kubernetes.")) {
-        ReleaseHistory releaseHistory;
-        Release release;
-
-        String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-            kubernetesConfig, Collections.emptyList(), k8sScaleTaskParameters.getReleaseName());
-
-        if (StringUtils.isEmpty(releaseHistoryData)) {
-          executionLogCallback.saveExecutionLog(
-              "\nNo release history found. Couldn't resolve " + k8sScaleTaskParameters.getResource(), INFO, FAILURE);
-          return false;
-        } else {
-          releaseHistory = ReleaseHistory.createFromData(releaseHistoryData);
-          if (k8sScaleTaskParameters.getResource().contains(currentReleaseExpression)) {
-            release = releaseHistory.getLatestRelease();
-          } else if (k8sScaleTaskParameters.getResource().contains(previousReleaseExpression)) {
-            release = releaseHistory.getPreviousRollbackEligibleRelease(releaseHistory.getLatestRelease().getNumber());
-            if (release == null) {
-              executionLogCallback.saveExecutionLog("\nNo previous release found. Skipping scale.", INFO, SUCCESS);
-              return true;
-            }
-          } else {
-            executionLogCallback.saveExecutionLog(
-                "\nUnknown expression " + k8sScaleTaskParameters.getResource(), INFO, FAILURE);
-            return false;
-          }
-          resourceIdToScale = release.getManagedWorkload().cloneInternal();
-        }
-      } else {
-        resourceIdToScale = createKubernetesResourceIdFromKindName(k8sScaleTaskParameters.getResource());
+      if (StringUtils.isEmpty(k8sScaleTaskParameters.getWorkload())) {
+        executionLogCallback.saveExecutionLog("\nNo Workload found to scale.");
+        executionLogCallback.saveExecutionLog("\nDone.", INFO, SUCCESS);
+        return true;
       }
+
+      resourceIdToScale = createKubernetesResourceIdFromKindName(k8sScaleTaskParameters.getWorkload());
 
       executionLogCallback.saveExecutionLog("\nWorkload to scale is: " + resourceIdToScale.kindNameRef());
 
       executionLogCallback.saveExecutionLog("\nQuerying current replicas");
-      int currentReplicas = getCurrentReplicas(client, resourceIdToScale, k8sDelegateTaskParams);
+      Integer currentReplicas = k8sTaskHelper.getCurrentReplicas(client, resourceIdToScale, k8sDelegateTaskParams);
       executionLogCallback.saveExecutionLog("Current replica count is " + currentReplicas);
 
       switch (k8sScaleTaskParameters.getInstanceUnitType()) {
@@ -153,7 +113,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
           break;
 
         case PERCENTAGE:
-          int maxInstances;
+          Integer maxInstances;
           if (k8sScaleTaskParameters.getMaxInstances().isPresent()) {
             maxInstances = k8sScaleTaskParameters.getMaxInstances().get();
           } else {

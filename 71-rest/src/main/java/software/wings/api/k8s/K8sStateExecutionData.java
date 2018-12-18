@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
+import software.wings.beans.TaskType;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -16,7 +17,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class K8sSetupExecutionData extends StateExecutionData implements ResponseData {
+public class K8sStateExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
   private String releaseName;
   private String namespace;
@@ -24,6 +25,7 @@ public class K8sSetupExecutionData extends StateExecutionData implements Respons
   private Integer releaseNumber;
   private String commandName;
   private Integer targetInstances;
+  private TaskType currentTaskType;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

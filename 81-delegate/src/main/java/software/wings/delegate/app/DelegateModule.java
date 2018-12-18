@@ -37,6 +37,7 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.delegatetasks.MetricDataStoreService;
+import software.wings.delegatetasks.k8s.taskhandler.K8sBlueGreenDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCanaryRollbackTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCanarySetupTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sRollingDeployRollbackTaskHandler;
@@ -401,6 +402,8 @@ public class DelegateModule extends DependencyModule {
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.CANARY_ROLLBACK.name())
         .to(K8sCanaryRollbackTaskHandler.class);
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.SCALE.name()).to(K8sScaleTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.BLUE_GREEN_DEPLOY.name())
+        .to(K8sBlueGreenDeployTaskHandler.class);
   }
 
   @Override

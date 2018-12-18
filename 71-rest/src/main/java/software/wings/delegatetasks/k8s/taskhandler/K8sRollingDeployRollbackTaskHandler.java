@@ -5,8 +5,6 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Rollback;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
-import static software.wings.delegatetasks.k8s.Utils.doStatusCheck;
-import static software.wings.delegatetasks.k8s.Utils.getLatestRevision;
 
 import com.google.inject.Inject;
 
@@ -28,6 +26,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
+import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
@@ -41,6 +40,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
   private static final Logger logger = LoggerFactory.getLogger(K8sRollingDeployRollbackTaskHandler.class);
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private transient K8sTaskHelper k8sTaskHelper;
 
   private KubernetesConfig kubernetesConfig;
   private Kubectl client;
@@ -73,14 +73,14 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
-    doStatusCheck(client, release.getManagedWorkload(), k8sDelegateTaskParams,
+    k8sTaskHelper.doStatusCheck(client, release.getManagedWorkload(), k8sDelegateTaskParams,
         new ExecutionLogCallback(delegateLogService, k8sTaskParameters.getAccountId(), k8sTaskParameters.getAppId(),
             k8sTaskParameters.getActivityId(), WaitForSteadyState));
 
     release.setStatus(Status.Failed);
     // update the revision on the previous release.
     previousRollbackEligibleRelease.setManagedWorkloadRevision(
-        getLatestRevision(client, release.getManagedWorkload(), k8sDelegateTaskParams));
+        k8sTaskHelper.getLatestRevision(client, release.getManagedWorkload(), k8sDelegateTaskParams));
 
     kubernetesContainerService.saveReleaseHistory(
         kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());

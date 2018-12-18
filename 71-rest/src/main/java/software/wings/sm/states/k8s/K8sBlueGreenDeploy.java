@@ -1,20 +1,24 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
+import static software.wings.sm.StateType.K8S_CANARY_SETUP;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.InvalidRequestException;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.k8s.K8sContextElement;
-import software.wings.api.k8s.K8sContextElement.K8sContextElementBuilder;
+import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
-import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
@@ -23,10 +27,10 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
-import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
+import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -44,8 +48,8 @@ import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class K8sRollingDeploy extends State implements K8sStateExecutor {
-  private static final transient Logger logger = LoggerFactory.getLogger(K8sRollingDeploy.class);
+public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
+  private static final transient Logger logger = LoggerFactory.getLogger(K8sBlueGreenDeploy.class);
 
   @Inject private transient ActivityService activityService;
   @Inject private transient SecretManager secretManager;
@@ -58,15 +62,18 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
 
-  public static final String K8S_ROLLING_DEPLOY_COMMAND_NAME = "Rolling Deployment";
+  public static final String K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME = "Blue/Green Deployment";
 
-  public K8sRollingDeploy(String name) {
-    super(name, K8S_DEPLOYMENT_ROLLING.name());
+  public K8sBlueGreenDeploy(String name) {
+    super(name, K8S_CANARY_SETUP.name());
   }
+
+  @Getter @Setter @Attributes(title = "Primary Service Name") private String primaryServiceName;
+  @Getter @Setter @Attributes(title = "Stage Service Name") private String stageServiceName;
 
   @Override
   public String commandName() {
-    return K8S_ROLLING_DEPLOY_COMMAND_NAME;
+    return K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME;
   }
 
   @Override
@@ -75,7 +82,15 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
   }
 
   @Override
-  public void validateParameters(ExecutionContext context) {}
+  public void validateParameters(ExecutionContext context) {
+    if (StringUtils.isEmpty(this.primaryServiceName)) {
+      throw new InvalidRequestException("Primary Service not specified.", USER);
+    }
+
+    if (StringUtils.isEmpty(this.stageServiceName)) {
+      throw new InvalidRequestException("Stage Service not specified.", USER);
+    }
+  }
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -86,15 +101,20 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
     ApplicationManifest applicationManifest = k8sStateHelper.getApplicationManifest(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
+    String renderedPrimaryServiceName = context.renderExpression(this.primaryServiceName);
+    String renderedStageServiceName = context.renderExpression(this.stageServiceName);
+
     K8sTaskParameters k8sTaskParameters =
-        K8sRollingDeployTaskParameters.builder()
+        K8sBlueGreenDeployTaskParameters.builder()
             .activityId(activityId)
             .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
-            .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
-            .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING)
+            .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
+            .k8sTaskType(K8sTaskType.BLUE_GREEN_DEPLOY)
             .timeoutIntervalInMin(10)
             .k8sDelegateManifestConfig(k8sStateHelper.createDelegateManifestConfig(applicationManifest))
             .valuesYamlList(valuesYaml)
+            .primaryServiceName(renderedPrimaryServiceName)
+            .stageServiceName(renderedStageServiceName)
             .build();
 
     return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
@@ -107,24 +127,28 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
 
   @Override
   public ExecutionResponse handleAsyncResponseForK8sTask(ExecutionContext context, Map<String, ResponseData> response) {
-    Application app = appService.get(context.getAppId());
     K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) response.values().iterator().next();
 
     ExecutionStatus executionStatus =
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                              : ExecutionStatus.FAILED;
 
-    K8sRollingDeployResponse k8sRollingDeployResponse =
-        (K8sRollingDeployResponse) executionResponse.getK8sTaskResponse();
+    K8sBlueGreenDeployResponse k8sBlueGreenDeployResponse =
+        (K8sBlueGreenDeployResponse) executionResponse.getK8sTaskResponse();
 
-    K8sContextElementBuilder k8sContextElementBuilder = K8sContextElement.builder();
-    k8sContextElementBuilder.releaseNumber(k8sRollingDeployResponse.getReleaseNumber());
-
-    activityService.updateStatus(k8sStateHelper.getActivityId(context), app.getUuid(), executionStatus);
+    activityService.updateStatus(
+        k8sStateHelper.getActivityId(context), k8sStateHelper.getAppId(context), executionStatus);
 
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
-    stateExecutionData.setReleaseNumber(k8sRollingDeployResponse.getReleaseNumber());
+    stateExecutionData.setReleaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber());
     stateExecutionData.setStatus(executionStatus);
+
+    k8sStateHelper.saveK8sElement(context,
+        K8sElement.builder()
+            .releaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber())
+            .primaryServiceName(context.renderExpression(this.primaryServiceName))
+            .stageServiceName(context.renderExpression(this.stageServiceName))
+            .build());
 
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
@@ -137,18 +161,18 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
 
   @Override
   public List<CommandUnit> commandUnitList(StoreType storeType) {
-    List<CommandUnit> rollingDeployCommandUnits = new ArrayList<>();
+    List<CommandUnit> blueGreenCommandUnits = new ArrayList<>();
 
     if (StoreType.Remote.equals(storeType)) {
-      rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.FetchFiles));
+      blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.FetchFiles));
     }
 
-    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init));
-    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Prepare));
-    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply));
-    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState));
-    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WrapUp));
+    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init));
+    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Prepare));
+    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply));
+    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState));
+    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WrapUp));
 
-    return rollingDeployCommandUnits;
+    return blueGreenCommandUnits;
   }
 }

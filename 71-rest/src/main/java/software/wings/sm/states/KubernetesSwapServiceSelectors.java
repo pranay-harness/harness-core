@@ -181,7 +181,7 @@ public class KubernetesSwapServiceSelectors extends State {
       return KubernetesConvention.getStageServiceName(KubernetesConvention.getKubernetesServiceName(baseServiceName));
     }
 
-    return KubernetesConvention.getKubernetesServiceName(context.renderExpression(serviceNameExpression));
+    return context.renderExpression(serviceNameExpression);
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context) {

@@ -2,11 +2,9 @@ package software.wings.helpers.ext.k8s.response;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class K8sScaleResponse extends K8sTaskResponse {
-  @Builder
+@Builder
+public class K8sScaleResponse implements K8sTaskResponse {
   public K8sScaleResponse() {}
 }

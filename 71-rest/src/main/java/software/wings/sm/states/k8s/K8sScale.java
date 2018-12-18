@@ -1,8 +1,6 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_SCALE;
 
@@ -19,14 +17,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.k8s.K8sContextElement;
-import software.wings.api.k8s.K8sSetupExecutionData;
+import software.wings.api.k8s.K8sElement;
 import software.wings.beans.Activity;
-import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
@@ -49,10 +43,8 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
 
-import java.util.Arrays;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -78,78 +70,38 @@ public class K8sScale extends State {
     super(name, K8S_SCALE.name());
   }
 
-  @Getter @Setter @Attributes(title = "Resource") private String resource;
+  @Getter @Setter @Attributes(title = "Workload") private String workload;
   @Getter @Setter @Attributes(title = "Instances") private String instances;
   @Getter @Setter @Attributes(title = "Instance Unit Type") private InstanceUnitType instanceUnitType;
   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
 
-  @Attributes(title = "Timeout (ms)")
-  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
-  @Override
-  public Integer getTimeoutMillis() {
-    return super.getTimeoutMillis();
-  }
-
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      Application app = appService.get(context.getAppId());
-
       ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
       Integer maxInstances = null;
-      K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
-      if (k8sContextElement != null) {
-        maxInstances = k8sContextElement.getTargetInstances();
+      K8sElement k8sElement = k8sStateHelper.getK8sElement(context);
+      if (k8sElement != null) {
+        maxInstances = k8sElement.getTargetInstances();
       }
 
       Activity activity = createActivity(context);
 
-      K8sTaskParameters commandRequest =
-          K8sScaleTaskParameters.builder()
-              .activityId(activity.getUuid())
-              .appId(app.getUuid())
-              .accountId(app.getAccountId())
-              .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
-              .commandName(K8S_SCALE_COMMAND_NAME)
-              .k8sTaskType(K8sTaskType.SCALE)
-              .k8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping))
-              .workflowExecutionId(context.getWorkflowExecutionId())
-              .resource(this.resource)
-              .instances(Integer.valueOf(context.renderExpression(this.instances)))
-              .instanceUnitType(this.instanceUnitType)
-              .maxInstances(maxInstances)
-              .skipSteadyStateCheck(this.skipSteadyStateCheck)
-              .timeoutIntervalInMin(10)
-              .build();
+      K8sTaskParameters k8sTaskParameters = K8sScaleTaskParameters.builder()
+                                                .activityId(activity.getUuid())
+                                                .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
+                                                .commandName(K8S_SCALE_COMMAND_NAME)
+                                                .k8sTaskType(K8sTaskType.SCALE)
+                                                .workload(context.renderExpression(this.workload))
+                                                .instances(Integer.valueOf(context.renderExpression(this.instances)))
+                                                .instanceUnitType(this.instanceUnitType)
+                                                .maxInstances(maxInstances)
+                                                .skipSteadyStateCheck(this.skipSteadyStateCheck)
+                                                .timeoutIntervalInMin(10)
+                                                .build();
 
-      DelegateTask delegateTask =
-          aDelegateTask()
-              .withAccountId(app.getAccountId())
-              .withAppId(app.getUuid())
-              .withTaskType(TaskType.K8S_COMMAND_TASK)
-              .withWaitId(activity.getUuid())
-              .withTags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(commandRequest))
-              .withParameters(new Object[] {commandRequest})
-              .withEnvId(k8sStateHelper.getEnvironment(context).getUuid())
-              .withTimeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
-              .withInfrastructureMappingId(infraMapping.getUuid())
-              .build();
-
-      String delegateTaskId = delegateService.queueTask(delegateTask);
-
-      return ExecutionResponse.Builder.anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(Arrays.asList(activity.getUuid()))
-          .withStateExecutionData(K8sSetupExecutionData.builder()
-                                      .activityId(activity.getUuid())
-                                      .commandName(K8S_SCALE_COMMAND_NAME)
-                                      .namespace(commandRequest.getK8sClusterConfig().getNamespace())
-                                      .clusterName(commandRequest.getK8sClusterConfig().getClusterName())
-                                      .releaseName(commandRequest.getReleaseName())
-                                      .build())
-          .withDelegateTaskId(delegateTaskId)
-          .build();
+      return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -162,14 +114,13 @@ public class K8sScale extends State {
     try {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       String appId = workflowStandardParams.getAppId();
-      String activityId = response.keySet().iterator().next();
       K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) response.values().iterator().next();
 
       ExecutionStatus executionStatus =
           executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                                : ExecutionStatus.FAILED;
 
-      activityService.updateStatus(activityId, appId, executionStatus);
+      activityService.updateStatus(k8sStateHelper.getActivityId(context), appId, executionStatus);
 
       return anExecutionResponse()
           .withExecutionStatus(executionStatus)

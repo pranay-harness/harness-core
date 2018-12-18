@@ -3,8 +3,6 @@ package software.wings.delegatetasks.k8s.taskhandler;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Rollback;
-import static software.wings.delegatetasks.k8s.Utils.getLatestRevision;
-import static software.wings.delegatetasks.k8s.Utils.scale;
 
 import com.google.inject.Inject;
 
@@ -23,10 +21,12 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
+import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sCanaryRollbackTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -36,11 +36,13 @@ public class K8sCanaryRollbackTaskHandler extends K8sTaskHandler {
   private static final Logger logger = LoggerFactory.getLogger(K8sCanaryRollbackTaskHandler.class);
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private transient K8sTaskHelper k8sTaskHelper;
 
   private KubernetesConfig kubernetesConfig;
   private Kubectl client;
   private ReleaseHistory releaseHistory;
   Release release;
+  private K8sTaskResponse k8sTaskResponse;
 
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
@@ -53,23 +55,22 @@ public class K8sCanaryRollbackTaskHandler extends K8sTaskHandler {
         (K8sCanaryRollbackTaskParameters) k8sTaskParameters;
 
     boolean success = init(k8sCanaryRollbackTaskParameters, k8sDelegateTaskParams,
-        new ExecutionLogCallback(delegateLogService, k8sCanaryRollbackTaskParameters.getAccountId(),
-            k8sCanaryRollbackTaskParameters.getAppId(), k8sCanaryRollbackTaskParameters.getActivityId(), Init));
+        k8sTaskHelper.getExecutionLogCallback(k8sCanaryRollbackTaskParameters, Init));
 
     if (!success) {
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
     success = rollback(k8sCanaryRollbackTaskParameters, k8sDelegateTaskParams,
-        new ExecutionLogCallback(delegateLogService, k8sCanaryRollbackTaskParameters.getAccountId(),
-            k8sCanaryRollbackTaskParameters.getAppId(), k8sCanaryRollbackTaskParameters.getActivityId(), Rollback));
+        k8sTaskHelper.getExecutionLogCallback(k8sCanaryRollbackTaskParameters, Rollback));
 
     if (!success) {
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
     release.setStatus(Status.Failed);
-    release.setManagedWorkloadRevision(getLatestRevision(client, release.getManagedWorkload(), k8sDelegateTaskParams));
+    release.setManagedWorkloadRevision(
+        k8sTaskHelper.getLatestRevision(client, release.getManagedWorkload(), k8sDelegateTaskParams));
 
     kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
         k8sCanaryRollbackTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
@@ -122,10 +123,10 @@ public class K8sCanaryRollbackTaskHandler extends K8sTaskHandler {
 
     executionLogCallback.saveExecutionLog("\nRolling back to release " + previousRollbackEligibleRelease.getNumber());
 
-    scale(
+    k8sTaskHelper.scale(
         client, k8sDelegateTaskParams, releaseHistory.getLatestRelease().getManagedWorkload(), 0, executionLogCallback);
 
-    scale(client, k8sDelegateTaskParams, previousRollbackEligibleRelease.getManagedWorkload(),
+    k8sTaskHelper.scale(client, k8sDelegateTaskParams, previousRollbackEligibleRelease.getManagedWorkload(),
         k8sCanaryRollbackTaskParameters.getTargetReplicas(), executionLogCallback);
 
     return true;

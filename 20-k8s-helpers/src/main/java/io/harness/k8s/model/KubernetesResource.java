@@ -21,6 +21,7 @@ import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretVolumeSource;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
@@ -65,7 +66,7 @@ public class KubernetesResource {
     return this;
   }
 
-  public KubernetesResource setupDeploymentForCanary(int revisionNumber) {
+  public KubernetesResource addRevisionLabelInDeployment(int revisionNumber, boolean isCanary) {
     HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
     Deployment deployment = (Deployment) resource;
 
@@ -88,7 +89,9 @@ public class KubernetesResource {
     deployment.getSpec().getSelector().setMatchLabels(matchLabels);
 
     DeploymentSpec deploymentSpec = deployment.getSpec();
-    deploymentSpec.setReplicas(0);
+    if (isCanary) {
+      deploymentSpec.setReplicas(0);
+    }
 
     PodTemplateSpec podTemplateSpec = deploymentSpec.getTemplate();
     Map<String, String> podLabels = podTemplateSpec.getMetadata().getLabels();
@@ -98,6 +101,30 @@ public class KubernetesResource {
 
     podLabels.put(HarnessLabels.revision, String.valueOf(revisionNumber));
     podTemplateSpec.getMetadata().setLabels(podLabels);
+
+    try {
+      this.spec = KubernetesHelper.toYaml(resource);
+      this.value = readYaml(this.spec).get(0);
+    } catch (IOException e) {
+      // do nothing
+      noop();
+    }
+
+    return this;
+  }
+
+  public KubernetesResource addRevisionSelectorInService(int revisionNumber) {
+    HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
+    Service service = (Service) resource;
+
+    Map<String, String> selectors = service.getSpec().getSelector();
+    if (selectors == null) {
+      selectors = new HashMap<>();
+    }
+
+    selectors.put(HarnessLabels.revision, String.valueOf(revisionNumber));
+
+    service.getSpec().setSelector(selectors);
 
     try {
       this.spec = KubernetesHelper.toYaml(resource);

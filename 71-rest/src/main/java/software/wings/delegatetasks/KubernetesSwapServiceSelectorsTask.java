@@ -116,7 +116,7 @@ public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnable
           LogLevel.INFO);
 
       executionLogCallback.saveExecutionLog(
-          String.format("%nnUpdated Selectors for Service Two : [name:%s]%n%s",
+          String.format("%nUpdated Selectors for Service Two : [name:%s]%n%s",
               serviceTwoUpdated.getMetadata().getName(), toDisplayYaml(serviceTwoUpdated.getSpec().getSelector())),
           LogLevel.INFO);
 
