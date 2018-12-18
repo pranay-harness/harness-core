@@ -53,15 +53,15 @@ public class Artifact extends Base {
   @Indexed private String artifactStreamId;
   @Indexed private String artifactSourceName;
   private Map<String, String> metadata = Maps.newHashMap();
-  @Indexed @NotEmpty private String displayName;
-  @Indexed private String revision;
+  @NotEmpty private String displayName;
+  private String revision;
   private List<String> serviceIds = new ArrayList<>();
   @Transient private List<Service> services;
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
-  @Indexed private Status status;
+  private Status status;
   private String description;
   private String errorMessage;
-  @Indexed private ContentStatus contentStatus;
+  private ContentStatus contentStatus;
   transient Map<String, String> source;
 
   /**
