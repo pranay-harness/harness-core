@@ -35,9 +35,15 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Indexes(@Index(options = @IndexOptions(name = "stateTypes"),
-    fields = { @Field("appId")
-               , @Field("executionUuid"), @Field("stateType") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "stateTypes"),
+      fields = { @Field("appId")
+                 , @Field("executionUuid"), @Field("stateType") })
+  ,
+      @Index(options = @IndexOptions(name = "parentInstanceIds"), fields = {
+        @Field("appId"), @Field("executionUuid"), @Field("parentInstanceId")
+      })
+})
 public class StateExecutionInstance extends Base {
   public static final String CALLBACK_KEY = "callback";
   public static final String CONTEXT_ELEMENT_KEY = "contextElement";

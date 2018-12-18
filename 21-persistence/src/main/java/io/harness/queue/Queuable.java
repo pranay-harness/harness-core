@@ -6,7 +6,6 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PrePersist;
 
@@ -16,13 +15,10 @@ import java.util.Date;
   @Index(options = @IndexOptions(name = "stuck"), fields = { @Field("running")
                                                              , @Field("resetTimestamp") })
   , @Index(options = @IndexOptions(name = "count"), fields = { @Field("running") }),
-      @Index(options = @IndexOptions(name = "obtain"), fields = {
-        @Field("running"), @Field("priority"), @Field("created"), @Field("earliestGet")
-      })
 })
 public abstract class Queuable {
   @Id private String id;
-  @Indexed private boolean running;
+  private boolean running;
   private Date resetTimestamp = new Date(Long.MAX_VALUE);
   private Date earliestGet = new Date();
   private double priority;
