@@ -136,8 +136,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     oldSettings.setUrl(settings.getUrl());
     oldSettings.setDisplayName(settings.getDisplayName());
     oldSettings.setConnectionSettings(settings.getConnectionSettings());
-    oldSettings.setUserSettings(settings.getUserSettings());
-    oldSettings.setGroupSettings(settings.getGroupSettings());
+    oldSettings.setUserSettingsList(settings.getUserSettingsList());
+    oldSettings.setGroupSettingsList(settings.getGroupSettingsList());
     oldSettings.encryptFields(secretManager);
     LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, oldSettings);
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());

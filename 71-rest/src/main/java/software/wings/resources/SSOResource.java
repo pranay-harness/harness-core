@@ -246,7 +246,6 @@ public class SSOResource {
     Collection<LdapGroupResponse> groups = ssoService.searchGroupsByName(ldapId, query);
     return new RestResponse<>(groups);
   }
-
   @Data
   public static class LDAPTestAuthenticationRequest {
     @NotBlank String email;

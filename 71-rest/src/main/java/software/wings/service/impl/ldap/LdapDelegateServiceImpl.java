@@ -17,14 +17,18 @@ import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.LdapTestResponse.Status;
 import software.wings.beans.sso.LdapUserResponse;
 import software.wings.helpers.ext.ldap.LdapConstants;
+import software.wings.helpers.ext.ldap.LdapGroupConfig;
 import software.wings.helpers.ext.ldap.LdapResponse;
+import software.wings.helpers.ext.ldap.LdapUserConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,7 +58,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     logger.info("Initiating validateLdapUserSettings with ldap settings : ", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
-    LdapResponse response = helper.validateUserConfig(settings.getUserSettings());
+    LdapResponse response = helper.validateUserConfig(settings.getUserSettingsList());
     if (response.getStatus() == LdapResponse.Status.SUCCESS) {
       return LdapTestResponse.builder().status(Status.SUCCESS).message(response.getMessage()).build();
     }
@@ -66,7 +70,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     logger.info("Initiating validateLdapGroupSettings with ldap settings : ", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
-    LdapResponse response = helper.validateGroupConfig(settings.getGroupSettings());
+    LdapResponse response = helper.validateGroupConfig(settings.getGroupSettingsList().get(0));
     if (response.getStatus() == LdapResponse.Status.SUCCESS) {
       return LdapTestResponse.builder().status(Status.SUCCESS).message(response.getMessage()).build();
     }
@@ -84,17 +88,17 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       throw new WingsException("Failed to decrypt the password.");
     }
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
-    return helper.authenticate(settings.getUserSettings(), username, password);
+    return helper.authenticate(settings.getUserSettingsList(), username, password);
   }
 
-  private LdapGroupResponse buildLdapGroupResponse(LdapEntry group, LdapSettings settings) {
+  private LdapGroupResponse buildLdapGroupResponse(LdapEntry group, LdapGroupConfig settings) {
     Set<String> availableAttrs = Sets.newHashSet(group.getAttributeNames());
-    String name = group.getAttribute(settings.getGroupSettings().getNameAttr()).getStringValue();
+    String name = group.getAttribute(settings.getNameAttr()).getStringValue();
     String description = StringUtils.EMPTY;
-    String descriptionAttr = settings.getGroupSettings().getDescriptionAttr();
+    String descriptionAttr = settings.getDescriptionAttr();
 
     if (availableAttrs.contains(descriptionAttr)) {
-      description = group.getAttribute(settings.getGroupSettings().getDescriptionAttr()).getStringValue();
+      description = group.getAttribute(settings.getDescriptionAttr()).getStringValue();
     }
 
     int totalMembers = Integer.parseInt(group.getAttribute(LdapConstants.GROUP_SIZE_ATTR).getStringValue());
@@ -116,12 +120,12 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
         .build();
   }
 
-  private LdapUserResponse buildLdapUserResponse(LdapEntry user, LdapSettings settings) {
+  private LdapUserResponse buildLdapUserResponse(LdapEntry user, LdapUserConfig userConfig) {
     String name;
-    String email = user.getAttribute(settings.getUserSettings().getEmailAttr()).getStringValue();
+    String email = user.getAttribute(userConfig.getEmailAttr()).getStringValue();
 
-    if (Arrays.asList(user.getAttributeNames()).contains(settings.getUserSettings().getDisplayNameAttr())) {
-      name = user.getAttribute(settings.getUserSettings().getDisplayNameAttr()).getStringValue();
+    if (Arrays.asList(user.getAttributeNames()).contains(userConfig.getDisplayNameAttr())) {
+      name = user.getAttribute(userConfig.getDisplayNameAttr()).getStringValue();
     } else {
       name = email;
     }
@@ -135,37 +139,68 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     try {
-      SearchResult groups = helper.searchGroupsByName(settings.getGroupSettings(), nameQuery);
-      helper.populateGroupSize(groups, settings.getUserSettings());
-      return groups.getEntries()
-          .stream()
-          .map(group -> buildLdapGroupResponse(group, settings))
-          .collect(Collectors.toList());
+      List<LdapListGroupsResponse> ldapListGroupsResponses =
+          helper.searchGroupsByName(settings.getGroupSettingsList(), nameQuery);
+      return createLdapGroupResponse(helper, ldapListGroupsResponses, settings);
     } catch (LdapException e) {
       throw new WingsException(e.getResultCode().toString(), e);
     }
+  }
+
+  private Collection<LdapGroupResponse> createLdapGroupResponse(LdapHelper helper,
+      List<LdapListGroupsResponse> ldapListGroupsResponses, LdapSettings ldapSettings) throws LdapException {
+    Collection<LdapGroupResponse> ldapGroupResponse = new ArrayList<>();
+    for (LdapListGroupsResponse ldapListGroupsResponse : ldapListGroupsResponses) {
+      if (LdapResponse.Status.SUCCESS.equals(ldapListGroupsResponse.getLdapResponse().getStatus())) {
+        helper.populateGroupSize(ldapListGroupsResponse.getSearchResult(), ldapSettings.getUserSettingsList());
+        Collection<LdapEntry> entries = ldapListGroupsResponse.getSearchResult().getEntries();
+        for (LdapEntry entry : entries) {
+          ldapGroupResponse.add(buildLdapGroupResponse(entry, ldapListGroupsResponse.getLdapGroupConfig()));
+        }
+      }
+    }
+    return ldapGroupResponse;
   }
 
   @Override
   public LdapGroupResponse fetchGroupByDn(LdapSettings settings, EncryptedDataDetail encryptedDataDetail, String dn) {
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
+    LdapGroupResponse groupResponse = null;
     try {
-      SearchResult groups = helper.getGroupByDn(settings.getGroupSettings(), dn);
-      helper.populateGroupSize(groups, settings.getUserSettings());
+      LdapListGroupsResponse listGroupsResponse = helper.getGroupByDn(settings.getGroupSettingsList(), dn);
+
+      // Is the call to fetch the group failed.
+      if (LdapResponse.Status.SUCCESS != listGroupsResponse.getLdapResponse().getStatus()) {
+        return groupResponse;
+      }
+
+      SearchResult groups = listGroupsResponse.getSearchResult();
+      helper.populateGroupSize(groups, settings.getUserSettingsList());
+
+      // If there are no entries in the group.
       LdapEntry group = groups.getEntries().isEmpty() ? null : groups.getEntries().iterator().next();
       if (null == group) {
         return null;
       }
 
-      LdapGroupResponse groupResponse = buildLdapGroupResponse(group, settings);
+      groupResponse = buildLdapGroupResponse(group, listGroupsResponse.getLdapGroupConfig());
       if (!groupResponse.isSelectable()) {
         return groupResponse;
       }
 
-      SearchResult users = helper.listGroupUsers(settings.getUserSettings(), dn);
-      Collection<LdapUserResponse> userResponses =
-          users.getEntries().stream().map(user -> buildLdapUserResponse(user, settings)).collect(Collectors.toList());
+      Collection<LdapUserResponse> userResponses = null;
+
+      LdapGetUsersResponse ldapGetUsersResponse = helper.listGroupUsers(settings.getUserSettingsList(), dn);
+
+      if (ldapGetUsersResponse != null
+          && ldapGetUsersResponse.getLdapResponse().getStatus() == LdapResponse.Status.SUCCESS) {
+        userResponses = ldapGetUsersResponse.getSearchResult()
+                            .getEntries()
+                            .stream()
+                            .map(user -> buildLdapUserResponse(user, ldapGetUsersResponse.getLdapUserConfig()))
+                            .collect(Collectors.toList());
+      }
 
       groupResponse.setUsers(userResponses);
       return groupResponse;

@@ -49,8 +49,11 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 public class SSOServiceTest extends WingsBaseTest {
@@ -82,9 +85,12 @@ public class SSOServiceTest extends WingsBaseTest {
     connectionSettings.setBindPassword("testBindPassword");
     LdapUserSettings userSettings = new LdapUserSettings();
     userSettings.setBaseDN("testBaseDN");
+    List<LdapUserSettings> userSettingsList = new ArrayList<>();
+    userSettingsList.add(userSettings);
     LdapGroupSettings groupSettings = new LdapGroupSettings();
     groupSettings.setBaseDN("testBaseDN");
-    ldapSettings = new LdapSettings("testSettings", ACCOUNT_ID, connectionSettings, userSettings, groupSettings);
+    ldapSettings = new LdapSettings(
+        "testSettings", ACCOUNT_ID, connectionSettings, userSettingsList, Arrays.asList(groupSettings));
   }
 
   @Test

@@ -17,6 +17,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.io.IOException;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -32,19 +33,36 @@ import javax.validation.constraints.NotNull;
 public class LdapSettings extends SSOSettings {
   @NotBlank String accountId;
   @NotNull @Valid LdapConnectionSettings connectionSettings;
-  @Valid LdapUserSettings userSettings;
-  @Valid LdapGroupSettings groupSettings;
+
+  /**
+   * Keeping the below two attributes only for migration purpose.
+   * Will be removed in subsequent release.
+   */
+  @Deprecated @Valid LdapUserSettings userSettings;
+
+  @Deprecated @Valid LdapGroupSettings groupSettings;
+
+  @Valid List<LdapUserSettings> userSettingsList;
+
+  @Valid List<LdapGroupSettings> groupSettingsList;
+
+  /**
+   * Keeping this attribute only for migration purpose.
+   * Will be removed in subsequent release.
+   * Also, saving this info at present as UI still needs
+   * some work to start using collections of groupSettings
+   */
 
   @JsonCreator
   public LdapSettings(@JsonProperty("displayName") String displayName, @JsonProperty("accountId") String accountId,
       @JsonProperty("connectionSettings") LdapConnectionSettings connectionSettings,
-      @JsonProperty("userSettings") LdapUserSettings userSettings,
-      @JsonProperty("groupSettings") LdapGroupSettings groupSettings) {
+      @JsonProperty("userSettingsList") List<LdapUserSettings> userSettingsList,
+      @JsonProperty("groupSettingsList") List<LdapGroupSettings> groupSettingsList) {
     super(SSOType.LDAP, displayName, connectionSettings.generateUrl());
     this.accountId = accountId;
     this.connectionSettings = connectionSettings;
-    this.userSettings = userSettings;
-    this.groupSettings = groupSettings;
+    this.userSettingsList = userSettingsList;
+    this.groupSettingsList = groupSettingsList;
   }
 
   public EncryptedDataDetail getEncryptedDataDetails(SecretManager secretManager) {
