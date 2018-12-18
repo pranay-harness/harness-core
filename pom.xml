@@ -36,23 +36,18 @@
     <properties>
         <alpnboot.version>8.1.11.v20170118</alpnboot.version>
         <argLine>-Xmx1024m</argLine>
-        <artifactory.javaclient.version>2.5.0</artifactory.javaclient.version>
-        <atmosphere-version>2.4.9</atmosphere-version>
         <aws.sdk.version>1.11.421</aws.sdk.version>
         <build.fullVersion>${build.majorVersion}.${build.minorVersion}.${build.number}</build.fullVersion>
         <build.majorVersion>1</build.majorVersion>
         <build.minorVersion>0</build.minorVersion>
         <build.number>19800</build.number>
         <buildTimeStamp>${maven.build.timestamp}</buildTimeStamp>
-        <datagen.exclude>**/DataGenUtil.java</datagen.exclude>
-        <datagen.include />
         <deployHost>{env.HOSTNAME}</deployHost>
         <deployUsername>${user.name}</deployUsername>
         <dropwizard.version>1.0.2</dropwizard.version>
         <extensions-version>2.4.3</extensions-version>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
-        <google.monitoring.version>v3-rev477-1.25.0</google.monitoring.version>
         <maven.build.timestamp.format>yyMMdd-HHmm</maven.build.timestamp.format>
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
@@ -295,6 +290,11 @@
                         <artifactId>guava-jdk5</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.google.apis</groupId>
+                <artifactId>google-api-services-monitoring</artifactId>
+                <version>v3-rev477-1.25.0</version>
             </dependency>
             <dependency>
                 <groupId>com.google.apis</groupId>
@@ -652,7 +652,7 @@
             <dependency>
                 <groupId>org.atmosphere</groupId>
                 <artifactId>atmosphere-runtime</artifactId>
-                <version>${atmosphere-version}</version>
+                <version>2.4.9</version>
             </dependency>
             <dependency>
                 <groupId>org.atteo</groupId>
@@ -693,7 +693,7 @@
             <dependency>
                 <groupId>org.jfrog.artifactory.client</groupId>
                 <artifactId>artifactory-java-client-services</artifactId>
-                <version>${artifactory.javaclient.version}</version>
+                <version>2.5.0</version>
             </dependency>
             <dependency>
                 <groupId>org.jooq</groupId>
@@ -1207,10 +1207,8 @@
                         <includes>
                             <include>**/IntegrationTest*.java</include>
                             <include>**/*IntegrationTest.java</include>
-                            <include>${datagen.include}</include>
                         </includes>
                         <excludes>
-                            <exclude>${datagen.exclude}</exclude>
                             <exclude>**/DelegateIntegrationTest</exclude>
                             <exclude>**/VaultIntegrationTest</exclude>
                             <exclude>**/JenkinsSettingOverWriteTest.java</exclude>
@@ -1311,13 +1309,9 @@
                                     <exclude>**/*IT*.java</exclude>
                                     <exclude>**/*IntegrationTest.java</exclude>
                                     <exclude>**/IntegrationTest*.java</exclude>
-                                    <exclude>${datagen.exclude}</exclude>
                                     <exclude>**/integration/*</exclude>
                                     <exclude>**/JenkinsSettingOverWriteTest.java</exclude>
                                 </excludes>
-                                <includes>
-                                    <include>${datagen.include}</include>
-                                </includes>
                                 <forkCount>6</forkCount>
                                 <reuseForks>true</reuseForks>
                             </configuration>
@@ -1351,7 +1345,6 @@
                         <exclude>**/*IT*.java</exclude>
                         <exclude>**/*IntegrationTest.java</exclude>
                         <exclude>**/IntegrationTest*.java</exclude>
-                        <exclude>${datagen.exclude}</exclude>
                         <exclude>**/integration/*</exclude>
                         <exclude>**/JenkinsSettingOverWriteTest.java</exclude>
                     </excludes>
