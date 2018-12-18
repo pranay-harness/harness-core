@@ -39,6 +39,7 @@ import migrations.all.GitSyncToAllAccounts;
 import migrations.all.HelmReleaseNamePrefixMigration;
 import migrations.all.HelmReleaseNameSuffixMigration;
 import migrations.all.InfraProvisionerFilteringTypeMigration;
+import migrations.all.LdapSettingsMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
 import migrations.all.LicenseDataMigration;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
@@ -71,6 +72,7 @@ import migrations.all.UsageRestrictionsMigration;
 import migrations.all.YamlGitConfigAppMigration;
 import migrations.all.YamlGitConfigMigration;
 import migrations.all.YamlGitConfigRefactoringMigration;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -170,6 +172,7 @@ public class MigrationList {
         .add(Pair.of(214, MarketoLeadDataMigration.class))
         .add(Pair.of(215, DanglingUserInviteCleanupMigration.class))
         .add(Pair.of(216, MarketoLeadDataMigration.class))
+        .add(Pair.of(217, LdapSettingsMigration.class))
         .build();
   }
 }

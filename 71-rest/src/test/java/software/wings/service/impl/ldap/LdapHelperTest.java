@@ -35,7 +35,10 @@ import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.ldap.LdapResponse.Status;
 import software.wings.helpers.ext.ldap.LdapSearch;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Swapnil
@@ -58,6 +61,7 @@ public class LdapHelperTest extends WingsBaseTest {
     when(searchBuilder.limit(anyInt())).thenReturn(searchBuilder);
     when(searchBuilder.referralsEnabled(anyBoolean())).thenReturn(searchBuilder);
     when(searchBuilder.maxReferralHops(anyInt())).thenReturn(searchBuilder);
+    when(searchBuilder.fallBackSearchFilter(anyString())).thenReturn(searchBuilder);
     when(searchBuilder.build()).thenReturn(search);
   }
 
@@ -69,9 +73,14 @@ public class LdapHelperTest extends WingsBaseTest {
     connectionSettings.setBindPassword("testBindPassword");
     LdapUserSettings userSettings = new LdapUserSettings();
     userSettings.setBaseDN("testBaseDN");
+    List<LdapUserSettings> userSettingsList = new ArrayList<>();
+    userSettingsList.add(userSettings);
     LdapGroupSettings groupSettings = new LdapGroupSettings();
     groupSettings.setBaseDN("testBaseDN");
-    ldapSettings = new LdapSettings("testSettings", "testAccount", connectionSettings, userSettings, groupSettings);
+    ldapSettings = new LdapSettings(
+        "testSettings", "testAccount", connectionSettings, userSettingsList, Arrays.asList(groupSettings));
+    ldapSettings.setGroupSettings(groupSettings);
+    ldapSettings.setUserSettings(userSettings);
 
     DefaultConnectionFactory cf = mock(DefaultConnectionFactory.class);
     Connection c = mock(Connection.class);
@@ -94,15 +103,15 @@ public class LdapHelperTest extends WingsBaseTest {
     mockLdapSearchBuilder(searchBuilder, search);
     when(search.execute()).thenReturn(searchResult);
     when(searchResult.size()).thenReturn(0);
-    assertThat(helper.validateUserConfig(ldapSettings.getUserSettings()).getStatus()).isEqualTo(Status.FAILURE);
+    assertThat(helper.validateUserConfig(ldapSettings.getUserSettingsList()).getStatus()).isEqualTo(Status.FAILURE);
 
     when(searchResult.size()).thenReturn(1);
-    assertThat(helper.validateUserConfig(ldapSettings.getUserSettings()).getStatus()).isEqualTo(Status.SUCCESS);
+    assertThat(helper.validateUserConfig(ldapSettings.getUserSettingsList()).getStatus()).isEqualTo(Status.SUCCESS);
 
     LdapException ldapException = mock(LdapException.class);
     when(ldapException.getResultCode()).thenReturn(ResultCode.OPERATIONS_ERROR);
     when(search.execute()).thenThrow(ldapException);
-    assertThat(helper.validateUserConfig(ldapSettings.getUserSettings()).getStatus()).isEqualTo(Status.FAILURE);
+    assertThat(helper.validateUserConfig(ldapSettings.getUserSettingsList()).getStatus()).isEqualTo(Status.FAILURE);
   }
 
   @Test
@@ -111,15 +120,18 @@ public class LdapHelperTest extends WingsBaseTest {
     when(search.execute(any())).thenReturn(searchResult);
     when(search.execute()).thenReturn(searchResult);
     when(searchResult.size()).thenReturn(0);
-    assertThat(helper.validateGroupConfig(ldapSettings.getGroupSettings()).getStatus()).isEqualTo(Status.FAILURE);
+    assertThat(helper.validateGroupConfig(ldapSettings.getGroupSettingsList().get(0)).getStatus())
+        .isEqualTo(Status.FAILURE);
 
     when(searchResult.size()).thenReturn(1);
-    assertThat(helper.validateGroupConfig(ldapSettings.getGroupSettings()).getStatus()).isEqualTo(Status.SUCCESS);
+    assertThat(helper.validateGroupConfig(ldapSettings.getGroupSettingsList().get(0)).getStatus())
+        .isEqualTo(Status.SUCCESS);
 
     LdapException ldapException = mock(LdapException.class);
     when(ldapException.getResultCode()).thenReturn(ResultCode.OPERATIONS_ERROR);
     when(search.execute(Matchers.anyVararg())).thenThrow(ldapException);
-    assertThat(helper.validateGroupConfig(ldapSettings.getGroupSettings()).getStatus()).isEqualTo(Status.FAILURE);
+    assertThat(helper.validateGroupConfig(ldapSettings.getGroupSettingsList().get(0)).getStatus())
+        .isEqualTo(Status.FAILURE);
   }
 
   @Test
@@ -130,7 +142,7 @@ public class LdapHelperTest extends WingsBaseTest {
     when(search.execute(Matchers.anyVararg())).thenReturn(searchResult);
     when(searchResult.getEntries()).thenReturn(Collections.singletonList(group));
     when(searchResult.size()).thenReturn(1);
-    helper.populateGroupSize(groups, ldapSettings.getUserSettings());
+    helper.populateGroupSize(groups, ldapSettings.getUserSettingsList());
     assertThat(group.getAttribute("groupSize").getStringValue()).isEqualTo("1");
   }
 
@@ -144,19 +156,7 @@ public class LdapHelperTest extends WingsBaseTest {
         .thenReturn(searchResult);
     when(searchResult.getEntries()).thenReturn(Collections.singletonList(group));
     when(searchResult.size()).thenReturn(1);
-    helper.populateGroupSize(groups, ldapSettings.getUserSettings());
-    assertThat(group.getAttribute("groupSize").getStringValue()).isEqualTo("1");
-  }
-
-  @Test(expected = LdapException.class)
-  public void populateGroupSizeWithoutExtendedMatchingFilterShouldFail() throws LdapException {
-    LdapEntry group = new LdapEntry("groupDN");
-    SearchResult groups = new SearchResult(group);
-    mockLdapSearchBuilder(searchBuilder, search);
-    when(search.execute(Matchers.anyVararg())).thenThrow(new LdapException("Error", ResultCode.INVALID_RESPONSE));
-    when(searchResult.getEntries()).thenReturn(Collections.singletonList(group));
-    when(searchResult.size()).thenReturn(1);
-    helper.populateGroupSize(groups, ldapSettings.getUserSettings());
+    helper.populateGroupSize(groups, ldapSettings.getUserSettingsList());
     assertThat(group.getAttribute("groupSize").getStringValue()).isEqualTo("1");
   }
 
@@ -167,7 +167,7 @@ public class LdapHelperTest extends WingsBaseTest {
     when(search.execute()).thenReturn(searchResult);
     when(searchResult.size()).thenReturn(1);
     String oldBaseDN = ldapSettings.getGroupSettings().getBaseDN();
-    helper.getGroupByDn(ldapSettings.getGroupSettings(), "groupDN");
+    helper.getGroupByDn(ldapSettings.getGroupSettingsList(), "groupDN");
     assertThat(ldapSettings.getGroupSettings().getBaseDN()).isEqualTo(oldBaseDN);
   }
 
@@ -181,7 +181,8 @@ public class LdapHelperTest extends WingsBaseTest {
     when(search.getSearchDnResolver(anyString())).thenReturn(searchDnResolver);
     when(searchDnResolver.resolve(any())).thenReturn("");
 
-    LdapResponse response = helper.authenticate(ldapSettings.getUserSettings(), "myemail@mycompany.com", "mypassword");
+    LdapResponse response =
+        helper.authenticate(ldapSettings.getUserSettingsList(), "myemail@mycompany.com", "mypassword");
     assertThat(response.getStatus()).isEqualTo(Status.FAILURE);
 
     Authenticator authenticator = mock(Authenticator.class);
@@ -190,18 +191,18 @@ public class LdapHelperTest extends WingsBaseTest {
     AuthenticationResponse authenticationResponse = mock(AuthenticationResponse.class);
     when(authenticationResponse.getResult()).thenReturn(true);
     when(authenticator.authenticate(any())).thenReturn(authenticationResponse);
-    response = helper.authenticate(ldapSettings.getUserSettings(), "myemail@mycompany.com", "mypassword");
+    response = helper.authenticate(ldapSettings.getUserSettingsList(), "myemail@mycompany.com", "mypassword");
     assertThat(response.getStatus()).isEqualTo(Status.SUCCESS);
 
     when(authenticationResponse.getResult()).thenReturn(false);
     when(authenticationResponse.getResultCode()).thenReturn(ResultCode.INVALID_CREDENTIALS);
-    response = helper.authenticate(ldapSettings.getUserSettings(), "myemail@mycompany.com", "mypassword");
+    response = helper.authenticate(ldapSettings.getUserSettingsList(), "myemail@mycompany.com", "mypassword");
     assertThat(response.getStatus()).isEqualTo(Status.FAILURE);
 
     LdapException ldapException = mock(LdapException.class);
     when(authenticator.authenticate(any())).thenThrow(ldapException);
     when(ldapException.getResultCode()).thenReturn(ResultCode.OPERATIONS_ERROR);
-    response = helper.authenticate(ldapSettings.getUserSettings(), "myemail@mycompany.com", "mypassword");
+    response = helper.authenticate(ldapSettings.getUserSettingsList(), "myemail@mycompany.com", "mypassword");
     assertThat(response.getStatus()).isEqualTo(Status.FAILURE);
   }
 }

@@ -35,4 +35,6 @@ public class LdapConstants {
       "User group syncing failed for group: %s. Remote group could be wrong or empty.";
   public static final String USER_GROUP_SYNC_NOT_ELIGIBLE = "User group %s not eligible for syncing. %s";
   public static final String SSO_PROVIDER_NOT_REACHABLE = "SSO Provider %s not reachable from delegates.";
+  public static final String NO_USER_CONFIG_FAILURE =
+      "No user config found. Please send at least one user configuration.";
 }

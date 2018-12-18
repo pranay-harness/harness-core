@@ -3,6 +3,7 @@ package software.wings.helpers.ext.ldap;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Builder.Default;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,12 +25,17 @@ import org.slf4j.LoggerFactory;
 import javax.validation.constraints.NotNull;
 
 // TODO: Move these to  portal/rest/src/main/java/software/wings/security
+@Getter
 @Builder(builderClassName = "Builder", buildMethodName = "internalBuild")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LdapSearch implements LdapValidator {
   @NotNull ConnectionFactory connectionFactory;
   @NotNull String baseDN;
   @NotBlank String searchFilter;
+  /**
+   * This is required in case of Oracle Directory services
+   */
+  String fallBackSearchFilter;
   @NotNull @Default SearchScope searchScope = SearchScope.SUBTREE;
   int limit;
   boolean referralsEnabled;
