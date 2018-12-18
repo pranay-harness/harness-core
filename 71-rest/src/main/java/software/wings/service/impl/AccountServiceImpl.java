@@ -288,7 +288,11 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public boolean exists(String accountName) {
-    return wingsPersistence.createQuery(Account.class).field(ACCOUNT_NAME_KEY).equal(accountName).getKey() != null;
+    return wingsPersistence.createQuery(Account.class, excludeAuthority)
+               .field(ACCOUNT_NAME_KEY)
+               .equal(accountName)
+               .getKey()
+        != null;
   }
 
   @Override
