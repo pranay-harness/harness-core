@@ -63,9 +63,9 @@ public class WorkflowExecution extends Base {
 
   private String stateMachineId;
   @Indexed private String envId;
-  @Indexed private List<String> envIds;
+  private List<String> envIds;
   @Indexed private List<String> serviceIds;
-  @Indexed private List<String> infraMappingIds;
+  private List<String> infraMappingIds;
   private String appName;
   private String envName;
   private EnvironmentType envType;
