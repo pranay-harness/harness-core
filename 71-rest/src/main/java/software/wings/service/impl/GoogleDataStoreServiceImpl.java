@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.DataStoreService;
 
 import java.io.File;
@@ -111,6 +112,10 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
 
     dataStoreClasses.forEach(dataStoreClass -> {
       String collectionName = dataStoreClass.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value();
+      if (collectionName.equals(
+              NewRelicMetricDataRecord.class.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())) {
+        return;
+      }
       logger.info("cleaning up {}", collectionName);
       Query<Key> query = Query.newKeyQueryBuilder()
                              .setKind(collectionName)

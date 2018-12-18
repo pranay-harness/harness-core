@@ -9,6 +9,7 @@ import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
+import com.google.common.hash.Hashing;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -34,6 +35,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -141,6 +143,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
     addFieldIfNotEmpty(recordBuilder, "stateExecutionId", stateExecutionId, false);
     recordBuilder.set("timeStamp", timeStamp);
     recordBuilder.set("dataCollectionMinute", dataCollectionMinute);
+    addFieldIfNotEmpty(recordBuilder, "host", host, false);
     addFieldIfNotEmpty(recordBuilder, "level", level == null ? null : level.name(), true);
     addFieldIfNotEmpty(recordBuilder, "tag", tag, true);
     addFieldIfNotEmpty(recordBuilder, "groupName", groupName, false);
@@ -200,10 +203,9 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
     appendIfNecessary(keyBuilder, stateExecutionId);
     appendIfNecessary(keyBuilder, serviceId);
     appendIfNecessary(keyBuilder, workflowId);
-    appendIfNecessary(keyBuilder, level == null ? null : level.name());
     appendIfNecessary(keyBuilder, stateType.name());
     appendIfNecessary(keyBuilder, groupName);
-    return keyBuilder.toString();
+    return Hashing.sha256().hashString(keyBuilder.toString(), StandardCharsets.UTF_8).toString();
   }
 
   private void appendIfNecessary(StringBuilder keyBuilder, String value) {
