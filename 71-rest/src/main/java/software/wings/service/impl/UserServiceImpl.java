@@ -1053,6 +1053,10 @@ public class UserServiceImpl implements UserService {
       updateOperations.set("reportedMarketoCampaigns", user.getReportedMarketoCampaigns());
     }
 
+    if (user.getLastLogin() > 0L) {
+      updateOperations.set("lastLogin", user.getLastLogin());
+    }
+
     wingsPersistence.update(user, updateOperations);
     evictUserFromCache(user.getUuid());
     return wingsPersistence.getWithAppId(User.class, user.getAppId(), user.getUuid());

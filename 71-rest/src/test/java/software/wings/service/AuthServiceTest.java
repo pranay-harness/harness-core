@@ -4,7 +4,9 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -54,6 +56,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 
 import java.io.UnsupportedEncodingException;
@@ -77,6 +80,7 @@ public class AuthServiceTest extends WingsBaseTest {
   @Mock private Cache<String, User> userCache;
 
   @Mock private AccountService accountService;
+  @Mock private UserService userService;
   @Mock FeatureFlagService featureFlagService;
   @Mock PortalConfig portalConfig;
   @Inject @InjectMocks MainConfiguration mainConfiguration;
@@ -291,6 +295,8 @@ public class AuthServiceTest extends WingsBaseTest {
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
     User mockUser = Builder.anUser().withUuid(USER_ID).withAccounts(Arrays.asList(mockAccount)).build();
     when(userCache.get(USER_ID)).thenReturn(mockUser);
+    when(userService.update(any(User.class))).thenReturn(mockUser);
+    doNothing().when(userService).evictUserFromCache(anyString());
     User user = authService.generateBearerTokenForUser(mockUser);
     assertThat(user.getToken().length()).isGreaterThan(32);
     Algorithm algorithm = Algorithm.HMAC256(AUTH_SECRET);

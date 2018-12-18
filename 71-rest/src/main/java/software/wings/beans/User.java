@@ -58,6 +58,8 @@ public class User extends Base implements Principal {
 
   private long lastLogin;
 
+  @Transient private boolean firstLogin;
+
   @Transient private char[] password;
   @Transient private String token;
   @Transient private String twoFactorJwtToken;
@@ -215,6 +217,14 @@ public class User extends Base implements Principal {
    */
   public void setLastLogin(long lastLogin) {
     this.lastLogin = lastLogin;
+  }
+
+  public boolean isFirstLogin() {
+    return firstLogin;
+  }
+
+  public void setFirstLogin(boolean firstLogin) {
+    this.firstLogin = firstLogin;
   }
 
   /**
@@ -536,6 +546,7 @@ public class User extends Base implements Principal {
     private List<Account> accounts = new ArrayList<>();
     private List<Account> supportAccounts = new ArrayList<>();
     private long lastLogin;
+    private boolean firstLogin;
     private char[] password;
     private String token;
     private boolean emailVerified;
@@ -623,6 +634,11 @@ public class User extends Base implements Principal {
       return this;
     }
 
+    public Builder withFirstLogin(boolean firstLogin) {
+      this.firstLogin = firstLogin;
+      return this;
+    }
+
     public Builder withStatsFetchedOn(long statsFetchedOn) {
       this.statsFetchedOn = statsFetchedOn;
       return this;
@@ -693,6 +709,7 @@ public class User extends Base implements Principal {
           .withPassword(password)
           .withToken(token)
           .withEmailVerified(emailVerified)
+          .withFirstLogin(firstLogin)
           .withStatsFetchedOn(statsFetchedOn)
           .withUuid(uuid)
           .withAccountName(accountName)
@@ -722,6 +739,7 @@ public class User extends Base implements Principal {
       user.setPassword(password);
       user.setToken(token);
       user.setEmailVerified(emailVerified);
+      user.setFirstLogin(firstLogin);
       user.setStatsFetchedOn(statsFetchedOn);
       user.setUuid(uuid);
       user.setAppId(appId);

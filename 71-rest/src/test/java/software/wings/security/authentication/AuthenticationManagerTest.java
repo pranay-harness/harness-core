@@ -117,6 +117,8 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     when(AUTHSERVICE.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
     User user = authenticationManager.defaultLogin(Base64.encodeBase64String("testUser@test.com:password".getBytes()));
     assertThat(user.getToken()).isEqualTo("TestToken");
+    assertThat(authenticatedUser.getLastLogin() != 0L);
+    assertThat(authenticatedUser.getLastLogin() <= System.currentTimeMillis());
   }
 
   @Test
