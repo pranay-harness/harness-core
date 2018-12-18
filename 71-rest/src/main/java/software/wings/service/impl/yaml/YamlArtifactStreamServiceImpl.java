@@ -1,12 +1,13 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.eraro.Level;
+import io.harness.exception.WingsException;
 import software.wings.beans.Base;
 import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.ArtifactStream;
@@ -41,10 +42,8 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
           getArtifactStreamYamlObject(artifactStream), artifactStream.getName() + YAML_EXTENSION);
     }
 
-    RestResponse rr = new RestResponse<>();
-    YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR,
-        "ArtifactStream with this Id: '" + artifactStreamId + "' was not found!");
-    return rr;
+    throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
+        .addParam("message", "ArtifactStream with this Id: '" + artifactStreamId + "' was not found!");
   }
 
   @Override
