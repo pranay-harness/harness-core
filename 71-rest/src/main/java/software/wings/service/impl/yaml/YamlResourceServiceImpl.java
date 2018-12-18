@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
@@ -10,7 +11,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.eraro.Level;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -116,12 +116,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       return YamlHelper.getYamlRestResponse(yamlGitSyncService, serviceCommand.getUuid(), accountId, commandYaml,
           serviceCommand.getName() + YAML_EXTENSION);
     } else {
-      // handle missing serviceCommand
-      RestResponse rr = new RestResponse<>();
-      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR,
-          "The ServiceCommand with appId: '" + appId + "' and serviceCommandId: '" + serviceCommandId
-              + "' was not found!");
-      return rr;
+      throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
+          .addParam("message",
+              "The ServiceCommand with appId: '" + appId + "' and serviceCommandId: '" + serviceCommandId
+                  + "' was not found!");
     }
   }
 
@@ -190,11 +188,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     if (artifactStream == null) {
       // handle missing artifactStream
-      RestResponse rr = new RestResponse<>();
-      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR,
-          "The ArtifactStream with appId: '" + appId + "' and artifactStreamId: '" + artifactStreamId
-              + "' was not found!");
-      return rr;
+      throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
+          .addParam("message",
+              "The ArtifactStream with appId: '" + appId + "' and artifactStreamId: '" + artifactStreamId
+                  + "' was not found!");
     }
 
     ArtifactStream.Yaml artifactStreamYaml =
@@ -210,11 +207,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       if (service != null) {
         serviceName = service.getName();
       } else {
-        // handle service not found
-        RestResponse rr = new RestResponse<>();
-        YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, Level.ERROR,
-            "The Service with appId: '" + appId + "' and serviceId: '" + serviceId + "' was not found!");
-        return rr;
+        throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
+            .addParam(
+                "message", "The Service with appId: '" + appId + "' and serviceId: '" + serviceId + "' was not found!");
       }
     }
     String payLoadName = artifactStream.getSourceName() + "(" + serviceName + ")";

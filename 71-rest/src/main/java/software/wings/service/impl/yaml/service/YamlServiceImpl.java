@@ -53,7 +53,6 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
-import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.FileUtils;
@@ -184,9 +183,11 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList, false);
 
       } else {
-        software.wings.yaml.YamlHelper.addResponseMessage(
-            rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Update yaml failed. Reason: " + yamlPayload.getName());
+        throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
+            .addParam("message", "Update failed. Reason: " + yamlPayload.getName());
       }
+
+      return rr;
     } catch (YamlProcessingException ex) {
       Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = ex.getFailedYamlFileChangeMap();
       String errorMsg;
@@ -200,11 +201,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       } else {
         errorMsg = "Internal error";
       }
-      software.wings.yaml.YamlHelper.addResponseMessage(
-          rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Update failed. Reason:" + errorMsg);
-    }
 
-    return rr;
+      throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
+          .addParam("message", "Update failed. Reason: " + errorMsg);
+    }
   }
 
   @Override
