@@ -139,6 +139,7 @@ import software.wings.utils.Misc;
 import software.wings.utils.Util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -446,7 +447,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       } else {
         fieldsToRemove.add("region");
       }
-      if (lambdaInfraStructureMapping.getVpcId() != null) {
+      if (lambdaInfraStructureMapping.getVpcId() == null) {
+        if (isNotEmpty(lambdaInfraStructureMapping.getSubnetIds())
+            || isNotEmpty(lambdaInfraStructureMapping.getSecurityGroupIds())) {
+          throw new InvalidRequestException("Subnets or Security Groups can't be added without any VPC.");
+        }
+        fieldsToRemove.addAll(Arrays.asList("vpcId", "subnetIds", "securityGroupIds"));
+      } else {
         keyValuePairs.put("vpcId", lambdaInfraStructureMapping.getVpcId());
         keyValuePairs.put("subnetIds", lambdaInfraStructureMapping.getSubnetIds());
         keyValuePairs.put("securityGroupIds", lambdaInfraStructureMapping.getSecurityGroupIds());
