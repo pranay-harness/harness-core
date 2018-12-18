@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -110,12 +111,23 @@ public class IndexManagement {
     final long now = System.currentTimeMillis();
     final Date tooNew = new Date(now - Duration.ofDays(7).toMillis());
 
+    final Set<String> uniqueIndexes = collection.getIndexInfo()
+                                          .stream()
+                                          .filter(obj -> {
+                                            final Object unique = obj.get("unique");
+                                            return unique != null && unique.toString().equals("true");
+                                          })
+                                          .map(obj -> obj.get("name").toString())
+                                          .collect(toSet());
+
     accesses.entrySet()
         .stream()
         .filter(entry -> entry.getValue().getOperations() == 0)
         .filter(entry -> entry.getValue().getSince().compareTo(tooNew) < 0)
         // Exclude ttl indexes, Ttl monitoring is not tracked as operations
         .filter(entry -> !entry.getKey().startsWith("validUntil"))
+        // Exclude unique indexes. Adding items is not tracked as index operations
+        .filter(entry -> !uniqueIndexes.contains(entry.getKey()))
         // Temporary exclude indexes that coming from Base class. Currently we have no flexibility to enable/disable
         // such for different objects.
         .filter(entry -> !entry.getKey().startsWith("appId"))
