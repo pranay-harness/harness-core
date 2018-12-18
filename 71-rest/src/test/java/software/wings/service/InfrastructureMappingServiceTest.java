@@ -956,4 +956,15 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertEquals(ROUTE, ((List) keyValuePairs.get("tempRouteMap")).get(0));
     assertEquals(ROUTE, ((List) keyValuePairs.get("routeMaps")).get(0));
   }
+
+  @Test
+  public void testListInfraMappings() {
+    InfrastructureMappingServiceImpl serviceImpl = (InfrastructureMappingServiceImpl) infrastructureMappingService;
+
+    when(service.getDeploymentType()).thenReturn(DeploymentType.KUBERNETES);
+    Map<DeploymentType, List<SettingVariableTypes>> result = serviceImpl.listInfraTypes(APP_ID, ENV_ID, SERVICE_ID);
+
+    assertThat(result.size()).isEqualTo(1);
+    assertThat(result.keySet()).contains(DeploymentType.KUBERNETES);
+  }
 }
