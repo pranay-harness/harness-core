@@ -141,30 +141,67 @@ public class Log extends Base implements GoogleDataStoreAware {
     return log;
   }
 
-  /**
-   * The enum Log level.
-   */
-  public enum LogLevel {
-    /**
-     * Debug log level.
-     */
-    DEBUG,
-    /**
-     * Info log level.
-     */
-    INFO,
-    /**
-     * Warn log level.
-     */
-    WARN,
-    /**
-     * Error log level.
-     */
-    ERROR,
-    /**
-     * Fatal log level.
-     */
-    FATAL
+  public enum LogLevel { DEBUG, INFO, WARN, ERROR, FATAL }
+
+  static final String END_MARK = "#==#";
+  static final String NO_FORMATTING = "\033[0m";
+
+  public static String color(String value, LogColor color) {
+    return color(value, color, LogWeight.Normal, LogColor.Black);
+  }
+
+  public static String color(String value, LogColor color, LogWeight weight) {
+    return color(value, color, weight, LogColor.Black);
+  }
+
+  public static String color(String value, LogColor color, LogWeight weight, LogColor background) {
+    String format = "\033[" + weight.value + ";" + color.value + "m\033[" + getBackgroundColorValue(background) + "m";
+    return format + value.replaceAll(END_MARK, format) + END_MARK;
+  }
+
+  private static int getBackgroundColorValue(LogColor background) {
+    return background.value + 10;
+  }
+
+  public static String doneColoring(String value) {
+    return value.replaceAll(END_MARK, NO_FORMATTING);
+  }
+
+  public enum LogColor {
+    Red(91),
+    Orange(33),
+    Yellow(93),
+    Green(92),
+    Blue(94),
+    Purple(95),
+    Cyan(96),
+    Gray(37),
+    Black(30),
+    White(97),
+
+    GrayDark(90),
+    RedDark(31),
+    GreenDark(32),
+    BlueDark(34),
+    PurpleDark(35),
+    CyanDark(36);
+
+    final int value;
+
+    LogColor(int value) {
+      this.value = value;
+    }
+  }
+
+  public enum LogWeight {
+    Normal(0),
+    Bold(1);
+
+    final int value;
+
+    LogWeight(int value) {
+      this.value = value;
+    }
   }
 
   /**
