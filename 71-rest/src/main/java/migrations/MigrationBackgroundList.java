@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.NewRelicMetricDataBackupMigration;
+import migrations.all.SetLastLoginTimeToAllUsers;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class MigrationBackgroundList {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends Migration>>>()
         .add(Pair.of(1, AddValidUntilToCommandLog.class))
         .add(Pair.of(2, NewRelicMetricDataBackupMigration.class))
+        .add(Pair.of(3, SetLastLoginTimeToAllUsers.class))
         .build();
   }
 }

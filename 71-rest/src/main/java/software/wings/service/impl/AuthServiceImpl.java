@@ -792,12 +792,18 @@ public class AuthServiceImpl implements AuthService {
     AuthToken authToken = new AuthToken(user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
     authToken.setJwtToken(generateJWTSecret(authToken.getUuid()));
     wingsPersistence.save(authToken);
+    boolean isFirstLogin = user.getLastLogin() == 0L;
+    user.setLastLogin(System.currentTimeMillis());
+    userService.update(user);
+
     userService.evictUserFromCache(user.getUuid());
     if (isRefreshTokenEnabledForUser(user)) {
       user.setToken(authToken.getJwtToken());
     } else {
       user.setToken(authToken.getUuid());
     }
+
+    user.setFirstLogin(isFirstLogin);
     return user;
   }
 
