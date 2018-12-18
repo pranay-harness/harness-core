@@ -33,7 +33,7 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class TimeSeriesMetricGroup extends Base {
-  @NotEmpty @Indexed private StateType stateType;
+  @NotEmpty private StateType stateType;
 
   @NotEmpty @Indexed private String stateExecutionId;
 

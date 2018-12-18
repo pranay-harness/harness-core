@@ -29,6 +29,7 @@ import software.wings.sm.StateType;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -50,7 +51,7 @@ public class LogVerificationResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
+  public RestResponse<Set<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("clusterLevel") ClusterLevel clusterLevel, @QueryParam("compareCurrent") boolean compareCurrent,
       @QueryParam("stateType") StateType stateType, LogRequest logRequest) {

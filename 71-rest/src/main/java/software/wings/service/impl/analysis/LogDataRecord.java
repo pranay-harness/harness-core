@@ -36,31 +36,31 @@ import java.util.List;
   }, options = @IndexOptions(unique = true, name = "logUniqueIdx"))
 })
 @Data
-@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "logMessage"})
 @NoArgsConstructor
 public class LogDataRecord extends Base {
-  @NotEmpty @Indexed private StateType stateType;
+  @NotEmpty private StateType stateType;
 
-  @NotEmpty @Indexed private String workflowId;
+  @NotEmpty private String workflowId;
 
   @NotEmpty @Indexed private String workflowExecutionId;
 
-  @NotEmpty @Indexed private String serviceId;
+  @NotEmpty private String serviceId;
 
   @NotEmpty @Indexed private String stateExecutionId;
 
-  @NotEmpty @Indexed private String query;
+  @NotEmpty private String query;
 
   @NotEmpty private String clusterLabel;
   @NotEmpty private String host;
 
-  @NotEmpty @Indexed private long timeStamp;
+  @NotEmpty private long timeStamp;
 
   @NotEmpty private int count;
   @NotEmpty private String logMessage;
   @NotEmpty private String logMD5Hash;
-  @NotEmpty @Indexed private ClusterLevel clusterLevel;
-  @NotEmpty @Indexed private int logCollectionMinute;
+  @NotEmpty private ClusterLevel clusterLevel;
+  @NotEmpty private int logCollectionMinute;
 
   @SchemaIgnore
   @JsonIgnore

@@ -180,7 +180,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     final LogRequest logRequest = new LogRequest(
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
 
-    List<LogDataRecord> logDataRecords =
+    Set<LogDataRecord> logDataRecords =
         analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
     assertTrue(logDataRecords.isEmpty());
 
@@ -192,7 +192,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     logDataRecords =
         analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
     assertEquals(1, logDataRecords.size());
-    final LogDataRecord logDataRecord = logDataRecords.get(0);
+    final LogDataRecord logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
     assertEquals(logElement.getQuery(), logDataRecord.getQuery());
     assertEquals(logElement.getClusterLabel(), logDataRecord.getClusterLabel());
@@ -236,7 +236,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     assertTrue(status);
 
-    List<LogDataRecord> logData =
+    Set<LogDataRecord> logData =
         analysisService.getLogData(logRequest, true, UUID.randomUUID().toString(), ClusterLevel.L1, StateType.SPLUNKV2);
     assertEquals(0, logData.size());
   }
@@ -284,10 +284,10 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     assertTrue(status);
 
-    List<LogDataRecord> logDataRecords =
+    Set<LogDataRecord> logDataRecords =
         analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
     assertEquals(1, logDataRecords.size());
-    final LogDataRecord logDataRecord = logDataRecords.get(0);
+    final LogDataRecord logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
     assertEquals(logElement.getQuery(), logDataRecord.getQuery());
     assertEquals(logElement.getClusterLabel(), logDataRecord.getClusterLabel());
@@ -330,10 +330,10 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     final LogRequest logRequest = new LogRequest(
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
-    List<LogDataRecord> logDataRecords =
+    Set<LogDataRecord> logDataRecords =
         analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
     assertEquals(1, logDataRecords.size());
-    LogDataRecord logDataRecord = logDataRecords.get(0);
+    LogDataRecord logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
     assertEquals(logElement.getQuery(), logDataRecord.getQuery());
     assertEquals(logElement.getClusterLabel(), logDataRecord.getClusterLabel());
@@ -350,7 +350,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     logDataRecords =
         analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L2, StateType.SPLUNKV2);
     assertEquals(1, logDataRecords.size());
-    logDataRecord = logDataRecords.get(0);
+    logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
     assertEquals(logElement.getQuery(), logDataRecord.getQuery());
     assertEquals(logElement.getClusterLabel(), logDataRecord.getClusterLabel());

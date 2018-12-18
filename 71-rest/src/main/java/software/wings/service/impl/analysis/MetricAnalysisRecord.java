@@ -36,19 +36,16 @@ import java.util.Map;
 @Setter
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 public class MetricAnalysisRecord extends Base {
-  // Represents type of State
-  @NotEmpty @Indexed private StateType stateType;
+  @NotEmpty private StateType stateType;
 
-  // Work flow exec id
-  @NotEmpty @Indexed private String workflowExecutionId;
+  @NotEmpty private String workflowExecutionId;
 
-  // State exec id
   @NotEmpty @Indexed private String stateExecutionId;
 
   // no. of minutes of analysis
-  @NotEmpty @Indexed private int analysisMinute;
+  @NotEmpty private int analysisMinute;
 
-  @Indexed private String groupName = DEFAULT_GROUP_NAME;
+  private String groupName = DEFAULT_GROUP_NAME;
 
   private String baseLineExecutionId;
 

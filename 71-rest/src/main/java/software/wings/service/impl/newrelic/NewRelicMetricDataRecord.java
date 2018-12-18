@@ -65,31 +65,31 @@ import java.util.Map;
 public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAware {
   @Transient public static String DEFAULT_GROUP_NAME = "default";
 
-  @NotEmpty @Indexed private StateType stateType;
+  @NotEmpty private StateType stateType;
 
   @NotEmpty @Indexed private String name;
 
-  @Indexed private String workflowId;
+  private String workflowId;
 
   @Indexed private String workflowExecutionId;
 
-  @Indexed private String serviceId;
+  private String serviceId;
 
   @Indexed private String cvConfigId;
 
   @Indexed private String stateExecutionId;
 
-  @NotEmpty @Indexed private long timeStamp;
+  @NotEmpty private long timeStamp;
 
   @Indexed private int dataCollectionMinute;
 
-  @NotEmpty private String host;
+  private String host;
 
-  @Indexed private ClusterLevel level;
+  private ClusterLevel level;
 
   private String tag;
 
-  @Indexed private String groupName = DEFAULT_GROUP_NAME;
+  private String groupName = DEFAULT_GROUP_NAME;
 
   private Map<String, Double> values = new HashMap<>();
 
