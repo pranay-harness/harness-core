@@ -3,8 +3,8 @@ package software.wings.scheduler;
 import com.google.inject.Inject;
 
 import io.harness.lock.AcquiredLock;
-import io.harness.lock.PersistentLocker;
 import io.harness.scheduler.PersistentScheduler;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -17,12 +17,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.licensing.LicenseService;
 
 import java.time.Duration;
-import java.util.concurrent.ExecutorService;
 
-/**
- *
- * @author rktummala on 11/14/2018
- */
+@DisallowConcurrentExecution
 public class LicenseCheckJob implements Job {
   private static final String CRON_NAME = "LICENSE_CHECK_CRON_NAME";
   private static final String CRON_GROUP = "LICENSE_CHECK_CRON_GROUP";
@@ -30,8 +26,8 @@ public class LicenseCheckJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LicenseCheckJob.class);
 
   @Inject private LicenseService licenseManager;
-  @Inject private ExecutorService executorService;
-  @Inject private PersistentLocker persistentLocker;
+  @Inject private BackgroundExecutorService executorService;
+  @Inject private BackgroundSchedulerLocker persistentLocker;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
@@ -40,7 +36,7 @@ public class LicenseCheckJob implements Job {
   }
 
   private void executeInternal() {
-    try (AcquiredLock lock = persistentLocker.tryToAcquireLock(LOCK, Duration.ofMinutes(5))) {
+    try (AcquiredLock lock = persistentLocker.getLocker().tryToAcquireLock(LOCK, Duration.ofMinutes(5))) {
       if (lock == null) {
         return;
       }

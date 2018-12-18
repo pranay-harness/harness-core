@@ -112,7 +112,8 @@ public class PersistentLockerTest extends PersistenceTest {
     when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
     Logger logger = mock(Logger.class);
-    Whitebox.setInternalState(new AcquiredLock(null, 0L), "logger", logger);
+    Whitebox.setInternalState(
+        AcquiredDistributedLock.builder().lock(null).startTimestamp(0L).build(), "logger", logger);
 
     try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
     }
