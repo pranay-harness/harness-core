@@ -2,11 +2,8 @@ package software.wings.service.impl.aws.delegate;
 
 import static io.harness.exception.WingsException.USER;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.applicationautoscaling.AWSApplicationAutoScaling;
 import com.amazonaws.services.applicationautoscaling.AWSApplicationAutoScalingClientBuilder;
 import com.amazonaws.services.applicationautoscaling.model.DeleteScalingPolicyRequest;
@@ -40,53 +37,59 @@ import java.util.List;
 @Singleton
 public class AwsAppAutoScalingHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsAppAutoScalingHelperServiceDelegate {
-  @VisibleForTesting
-  AWSApplicationAutoScaling getAWSApplicationAutoScalingClient(String region, String accessKey, char[] secretKey) {
-    return AWSApplicationAutoScalingClientBuilder.standard()
-        .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
-        .build();
+  private AWSApplicationAutoScaling getAWSApplicationAutoScalingClient(
+      String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+    AWSApplicationAutoScalingClientBuilder builder =
+        AWSApplicationAutoScalingClientBuilder.standard().withRegion(region);
+    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    return builder.build();
   }
 
   public RegisterScalableTargetResult registerScalableTarget(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, RegisterScalableTargetRequest scalableTargetRequest) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
-    return getAWSApplicationAutoScalingClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+    return getAWSApplicationAutoScalingClient(
+        region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
         .registerScalableTarget(scalableTargetRequest);
   }
 
   public DeregisterScalableTargetResult deregisterScalableTarget(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DeregisterScalableTargetRequest deregisterTargetRequest) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
-    return getAWSApplicationAutoScalingClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+    return getAWSApplicationAutoScalingClient(
+        region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
         .deregisterScalableTarget(deregisterTargetRequest);
   }
 
   public DescribeScalableTargetsResult listScalableTargets(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DescribeScalableTargetsRequest request) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
-    return getAWSApplicationAutoScalingClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+    return getAWSApplicationAutoScalingClient(
+        region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
         .describeScalableTargets(request);
   }
 
   public DescribeScalingPoliciesResult listScalingPolicies(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DescribeScalingPoliciesRequest request) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
-    return getAWSApplicationAutoScalingClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+    return getAWSApplicationAutoScalingClient(
+        region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
         .describeScalingPolicies(request);
   }
 
   public PutScalingPolicyResult upsertScalingPolicy(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, PutScalingPolicyRequest putScalingPolicyRequest) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
-    return getAWSApplicationAutoScalingClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+    return getAWSApplicationAutoScalingClient(
+        region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
         .putScalingPolicy(putScalingPolicyRequest);
   }
 
   public DeleteScalingPolicyResult deleteScalingPolicy(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, DeleteScalingPolicyRequest deleteScalingPolicyRequest) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
-    return getAWSApplicationAutoScalingClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+    return getAWSApplicationAutoScalingClient(
+        region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
         .deleteScalingPolicy(deleteScalingPolicyRequest);
   }
 
