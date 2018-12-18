@@ -4,6 +4,7 @@ import static io.harness.k8s.manifest.ObjectYamlUtils.YAML_DOCUMENT_DELIMITER;
 import static io.harness.k8s.manifest.ObjectYamlUtils.splitYamlFile;
 import static io.harness.k8s.model.Kind.Secret;
 import static io.harness.k8s.model.KubernetesResource.redactSecretValues;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -22,8 +23,10 @@ import java.util.stream.Collectors;
 
 public class ManifestHelper {
   public static final String values_filename = "values.yaml";
-  public static final String currentReleaseExpression = "${kubernetes.currentRelease.name}";
-  public static final String previousReleaseExpression = "${kubernetes.previousRelease.name}";
+  public static final String currentReleaseWorkloadExpression = "${k8s.currentReleaseWorkload}";
+  public static final String previousReleaseWorkloadExpression = "${k8s.previousReleaseWorkload}";
+  public static final String primaryServiceNameExpression = "${k8s.primaryServiceName}";
+  public static final String stageServiceNameExpression = "${k8s.stageServiceName}";
 
   private static KubernetesResource getKubernetesResourceFromSpec(String spec) {
     Map map = null;
@@ -120,5 +123,21 @@ public class ManifestHelper {
             .collect(Collectors.toList());
 
     return result.get(0);
+  }
+
+  public static String getValuesYamlGitFilePath(String filePath) {
+    if (isBlank(filePath)) {
+      return values_filename;
+    }
+
+    return normalizeFilePath(filePath) + values_filename;
+  }
+
+  public static String normalizeFilePath(String filePath) {
+    if (isBlank(filePath)) {
+      return filePath;
+    }
+
+    return filePath.endsWith("/") ? filePath : filePath + "/";
   }
 }

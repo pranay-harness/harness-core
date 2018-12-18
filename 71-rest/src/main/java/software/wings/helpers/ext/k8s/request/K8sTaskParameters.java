@@ -22,6 +22,7 @@ public class K8sTaskParameters implements TaskParameters {
     DEPLOYMENT_ROLLING_ROLLBACK,
     SCALE,
     CANARY_SETUP,
-    CANARY_ROLLBACK;
+    CANARY_ROLLBACK,
+    BLUE_GREEN_DEPLOY;
   }
 }

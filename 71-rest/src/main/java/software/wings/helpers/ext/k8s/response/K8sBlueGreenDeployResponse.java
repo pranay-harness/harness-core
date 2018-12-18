@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 @Builder
-public class K8sRollingDeployResponse implements K8sTaskResponse {
+public class K8sBlueGreenDeployResponse implements K8sTaskResponse {
   Integer releaseNumber;
 }

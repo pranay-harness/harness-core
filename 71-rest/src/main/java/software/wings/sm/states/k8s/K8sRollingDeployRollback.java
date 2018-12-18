@@ -1,7 +1,5 @@
 package software.wings.sm.states.k8s;
 
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
 
@@ -9,7 +7,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
@@ -17,12 +14,8 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.k8s.K8sContextElement;
-import software.wings.api.k8s.K8sSetupExecutionData;
+import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
-import software.wings.beans.Application;
-import software.wings.beans.ContainerInfrastructureMapping;
-import software.wings.beans.DelegateTask;
-import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
@@ -45,10 +38,8 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
 
-import java.util.Arrays;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -74,20 +65,9 @@ public class K8sRollingDeployRollback extends State {
     super(name, K8S_DEPLOYMENT_ROLLING_ROLLBACK.name());
   }
 
-  @Attributes(title = "Timeout (ms)")
-  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
-  @Override
-  public Integer getTimeoutMillis() {
-    return super.getTimeoutMillis();
-  }
-
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      Application app = appService.get(context.getAppId());
-
-      ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
-
       K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
 
       Activity activity = k8sStateHelper.createK8sActivity(context, K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME,
@@ -96,44 +76,16 @@ public class K8sRollingDeployRollback extends State {
               new K8sDummyCommandUnit(K8sDummyCommandUnit.Rollback),
               new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState)));
 
-      K8sTaskParameters commandRequest =
-          K8sRollingDeployRollbackTaskParameters.builder()
-              .activityId(activity.getUuid())
-              .appId(app.getUuid())
-              .accountId(app.getAccountId())
-              .releaseName(k8sContextElement.getReleaseName())
-              .releaseNumber(k8sContextElement.getReleaseNumber())
-              .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
-              .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
-              .k8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping))
-              .workflowExecutionId(context.getWorkflowExecutionId())
-              .timeoutIntervalInMin(10)
-              .build();
+      K8sTaskParameters k8sTaskParameters = K8sRollingDeployRollbackTaskParameters.builder()
+                                                .activityId(activity.getUuid())
+                                                .releaseName(k8sContextElement.getReleaseName())
+                                                .releaseNumber(k8sContextElement.getReleaseNumber())
+                                                .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
+                                                .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
+                                                .timeoutIntervalInMin(10)
+                                                .build();
 
-      DelegateTask delegateTask =
-          aDelegateTask()
-              .withAccountId(app.getAccountId())
-              .withAppId(app.getUuid())
-              .withTaskType(TaskType.K8S_COMMAND_TASK)
-              .withWaitId(activity.getUuid())
-              .withTags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(commandRequest))
-              .withParameters(new Object[] {commandRequest})
-              .withEnvId(k8sStateHelper.getEnvironment(context).getUuid())
-              .withTimeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
-              .withInfrastructureMappingId(infraMapping.getUuid())
-              .build();
-
-      String delegateTaskId = delegateService.queueTask(delegateTask);
-
-      return ExecutionResponse.Builder.anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(Arrays.asList(activity.getUuid()))
-          .withStateExecutionData(K8sSetupExecutionData.builder()
-                                      .activityId(activity.getUuid())
-                                      .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
-                                      .build())
-          .withDelegateTaskId(delegateTaskId)
-          .build();
+      return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -146,16 +98,15 @@ public class K8sRollingDeployRollback extends State {
     try {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       String appId = workflowStandardParams.getAppId();
-      String activityId = response.keySet().iterator().next();
       K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) response.values().iterator().next();
 
       ExecutionStatus executionStatus =
           executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                                : ExecutionStatus.FAILED;
 
-      activityService.updateStatus(activityId, appId, executionStatus);
+      activityService.updateStatus(k8sStateHelper.getActivityId(context), appId, executionStatus);
 
-      K8sSetupExecutionData stateExecutionData = (K8sSetupExecutionData) context.getStateExecutionData();
+      K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
 
       return anExecutionResponse()

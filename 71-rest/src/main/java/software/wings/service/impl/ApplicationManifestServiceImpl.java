@@ -5,7 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.appmanifest.ManifestFile.APP_MANIFEST_FILE_NAME;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
-import static software.wings.delegatetasks.k8s.Utils.manifestFilesFromGitFetchFilesResult;
+import static software.wings.delegatetasks.k8s.K8sTaskHelper.manifestFilesFromGitFetchFilesResult;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 

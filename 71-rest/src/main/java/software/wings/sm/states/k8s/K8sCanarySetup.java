@@ -1,11 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.Integer.parseInt;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_CANARY_SETUP;
 
@@ -15,26 +11,18 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.k8s.K8sContextElement;
-import software.wings.api.k8s.K8sSetupExecutionData;
-import software.wings.beans.Activity;
-import software.wings.beans.Application;
+import software.wings.api.k8s.K8sElement;
+import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.ContainerInfrastructureMapping;
-import software.wings.beans.DelegateTask;
-import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
-import software.wings.beans.yaml.GitCommandExecutionResponse;
-import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sCanarySetupTaskParameters;
@@ -54,15 +42,13 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class K8sCanarySetup extends State {
+public class K8sCanarySetup extends State implements K8sStateExecutor {
   private static final transient Logger logger = LoggerFactory.getLogger(K8sCanarySetup.class);
 
   @Inject private transient ActivityService activityService;
@@ -86,138 +72,50 @@ public class K8sCanarySetup extends State {
   @Getter @Setter @Attributes(title = "Prefer Existing Instance Count") private boolean preferExistingInstanceCount;
 
   @Override
-  public ExecutionResponse execute(ExecutionContext context) {
-    try {
-      parseInt(context.renderExpression(this.defaultInstanceCount)); // validating input.
-
-      ApplicationManifest applicationManifest = k8sStateHelper.getApplicationManifest(context);
-
-      Activity activity = k8sStateHelper.createK8sActivity(context, K8S_CANARY_SETUP_COMMAND_NAME, getStateType(),
-          activityService, getCommandUnitList(applicationManifest));
-
-      switch (applicationManifest.getStoreType()) {
-        case Local:
-          return executeK8sCanarySetupTask(context, activity.getUuid(), null);
-
-        case Remote:
-          return k8sStateHelper.executeGitTask(
-              context, applicationManifest, activity.getUuid(), K8S_CANARY_SETUP_COMMAND_NAME);
-
-        default:
-          throw new WingsException("Unhandled manifest storeType " + applicationManifest.getStoreType());
-      }
-    } catch (WingsException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new InvalidRequestException(Misc.getMessage(e), e);
-    }
+  public String commandName() {
+    return K8S_CANARY_SETUP_COMMAND_NAME;
   }
 
-  private ExecutionResponse executeK8sCanarySetupTask(
-      ExecutionContext context, String activityId, String valueYamlFromGit) {
-    Application app = appService.get(context.getAppId());
+  @Override
+  public String stateType() {
+    return getStateType();
+  }
 
+  @Override
+  public void validateParameters(ExecutionContext context) {
+    parseInt(context.renderExpression(this.defaultInstanceCount));
+  }
+
+  @Override
+  public ExecutionResponse execute(ExecutionContext context) {
+    return k8sStateHelper.executeWrapperWithManifest(this, context);
+  }
+
+  public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId, List<String> valuesYaml) {
     ApplicationManifest applicationManifest = k8sStateHelper.getApplicationManifest(context);
-
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
-
-    // ToDo anshul -- Fetch values yaml from service and environment and then decide the order
-
-    List<String> valuesYamlList = getValuesYamlList(valueYamlFromGit);
 
     K8sTaskParameters k8sTaskParameters =
         K8sCanarySetupTaskParameters.builder()
             .activityId(activityId)
-            .appId(app.getUuid())
-            .accountId(app.getAccountId())
             .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
             .commandName(K8S_CANARY_SETUP_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.CANARY_SETUP)
-            .k8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping))
-            .workflowExecutionId(context.getWorkflowExecutionId())
             .timeoutIntervalInMin(10)
             .k8sDelegateManifestConfig(k8sStateHelper.createDelegateManifestConfig(applicationManifest))
-            .valuesYamlList(valuesYamlList)
+            .valuesYamlList(valuesYaml)
             .build();
 
-    String waitId = generateUuid();
-    DelegateTask delegateTask =
-        aDelegateTask()
-            .withAccountId(app.getAccountId())
-            .withAppId(app.getUuid())
-            .withTaskType(TaskType.K8S_COMMAND_TASK)
-            .withWaitId(waitId)
-            .withTags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sTaskParameters))
-            .withParameters(new Object[] {k8sTaskParameters})
-            .withEnvId(k8sStateHelper.getEnvironment(context).getUuid())
-            .withTimeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
-            .withInfrastructureMappingId(infraMapping.getUuid())
-            .build();
-
-    String delegateTaskId = delegateService.queueTask(delegateTask);
-
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Arrays.asList(waitId))
-        .withStateExecutionData(K8sSetupExecutionData.builder()
-                                    .activityId(activityId)
-                                    .commandName(K8S_CANARY_SETUP_COMMAND_NAME)
-                                    .namespace(k8sTaskParameters.getK8sClusterConfig().getNamespace())
-                                    .clusterName(k8sTaskParameters.getK8sClusterConfig().getClusterName())
-                                    .releaseName(k8sTaskParameters.getReleaseName())
-                                    .build())
-        .withDelegateTaskId(delegateTaskId)
-        .addContextElement(K8sContextElement.builder().currentTaskType(TaskType.K8S_COMMAND_TASK).build())
-        .build();
+    return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
   }
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    try {
-      K8sContextElement contextElement = context.getContextElement(ContextElementType.K8S);
-
-      TaskType taskType = contextElement.getCurrentTaskType();
-      switch (taskType) {
-        case GIT_COMMAND:
-          return handleAsyncResponseForGitTask(context, response);
-
-        case K8S_COMMAND_TASK:
-          return handleAsyncResponseForK8CommandTask(context, response);
-
-        default:
-          throw new WingsException("Unhandled task type " + taskType);
-      }
-
-    } catch (WingsException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new InvalidRequestException(Misc.getMessage(e), e);
-    }
+    return k8sStateHelper.handleAsyncResponseWrapper(this, context, response);
   }
 
-  private ExecutionResponse handleAsyncResponseForGitTask(
-      ExecutionContext context, Map<String, ResponseData> response) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String appId = workflowStandardParams.getAppId();
-    String activityId = response.keySet().iterator().next();
-    GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus = executionResponse.getGitCommandStatus().equals(GitCommandStatus.SUCCESS)
-        ? ExecutionStatus.SUCCESS
-        : ExecutionStatus.FAILED;
-
-    if (ExecutionStatus.FAILED.equals(executionStatus)) {
-      activityService.updateStatus(activityId, appId, executionStatus);
-      return anExecutionResponse().withExecutionStatus(executionStatus).build();
-    }
-
-    String valueYamlFromGit = k8sStateHelper.getFileFromGitResponse(executionResponse);
-
-    // ToDo anshul how to handle unhappy case
-    return executeK8sCanarySetupTask(context, activityId, valueYamlFromGit);
-  }
-
-  private ExecutionResponse handleAsyncResponseForK8CommandTask(
-      ExecutionContext context, Map<String, ResponseData> response) {
+  @Override
+  public ExecutionResponse handleAsyncResponseForK8sTask(ExecutionContext context, Map<String, ResponseData> response) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) response.values().iterator().next();
@@ -233,52 +131,45 @@ public class K8sCanarySetup extends State {
       targetInstances = k8sCanarySetupResponse.getCurrentInstances();
     }
 
-    K8sContextElement k8sContextElement = K8sContextElement.builder()
-                                              .releaseNumber(k8sCanarySetupResponse.getReleaseNumber())
-                                              .targetInstances(targetInstances)
-                                              .build();
+    K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
 
-    String activityId = k8sCanarySetupResponse.getActivityId();
-    activityService.updateStatus(activityId, appId, executionStatus);
-
-    K8sSetupExecutionData stateExecutionData = (K8sSetupExecutionData) context.getStateExecutionData();
     stateExecutionData.setReleaseNumber(k8sCanarySetupResponse.getReleaseNumber());
     stateExecutionData.setTargetInstances(targetInstances);
     stateExecutionData.setStatus(executionStatus);
 
+    String activityId = stateExecutionData.getActivityId();
+    activityService.updateStatus(activityId, appId, executionStatus);
+
+    k8sStateHelper.saveK8sElement(context,
+        K8sElement.builder()
+            .releaseNumber(k8sCanarySetupResponse.getReleaseNumber())
+            .targetInstances(targetInstances)
+            .currentReleaseWorkload(k8sCanarySetupResponse.getCurrentReleaseWorkload())
+            .previousReleaseWorkload(k8sCanarySetupResponse.getPreviousReleaseWorkload())
+            .build());
+
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(context.getStateExecutionData())
-        .addContextElement(k8sContextElement)
-        .addNotifyElement(k8sContextElement)
         .build();
   }
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  private List<CommandUnit> getCommandUnitList(ApplicationManifest appManifest) {
-    List<CommandUnit> commandUnits = new ArrayList<>();
+  @Override
+  public List<CommandUnit> commandUnitList(StoreType storeType) {
+    List<CommandUnit> canaryCommandUnits = new ArrayList<>();
 
-    if (StoreType.Remote.equals(appManifest.getStoreType())) {
-      commandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.FetchFiles));
+    if (StoreType.Remote.equals(storeType)) {
+      canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.FetchFiles));
     }
 
-    commandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init));
-    commandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Prepare));
-    commandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply));
-    commandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WrapUp));
+    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init));
+    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Prepare));
+    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply));
+    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WrapUp));
 
-    return commandUnits;
-  }
-
-  private List<String> getValuesYamlList(String valuesYamlFromGit) {
-    List<String> valuesYamlList = new ArrayList<>();
-
-    if (isNotBlank(valuesYamlFromGit)) {
-      valuesYamlList.add(valuesYamlFromGit);
-    }
-
-    return valuesYamlList;
+    return canaryCommandUnits;
   }
 }

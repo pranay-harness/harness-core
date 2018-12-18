@@ -11,6 +11,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import io.harness.exception.KubernetesYamlException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.ApplyCommand;
@@ -42,7 +45,11 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
@@ -54,13 +61,15 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class Utils {
-  private static final Logger logger = LoggerFactory.getLogger(Utils.class);
+@Singleton
+public class K8sTaskHelper {
+  @Inject protected DelegateLogService delegateLogService;
+  private static final Logger logger = LoggerFactory.getLogger(K8sTaskHelper.class);
 
   private static String eventOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,MESSAGE:.message,REASON:.reason";
 
-  public static boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
+  public boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8SDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
     FileIo.writeUtf8StringToFile(
         k8SDelegateTaskParams.getWorkingDirectory() + "/manifests.yaml", ManifestHelper.toYaml(resources));
@@ -92,7 +101,7 @@ public class Utils {
     return true;
   }
 
-  public static boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId,
+  public boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId,
       K8sDelegateTaskParams k8SDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
     final String eventFormat = "%-7s: %s";
     final String statusFormat = "%n%-7s: %s";
@@ -160,9 +169,8 @@ public class Utils {
     }
   }
 
-  public static boolean scale(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
-      KubernetesResourceId resourceId, int targetReplicaCount, ExecutionLogCallback executionLogCallback)
-      throws Exception {
+  public boolean scale(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams, KubernetesResourceId resourceId,
+      int targetReplicaCount, ExecutionLogCallback executionLogCallback) throws Exception {
     executionLogCallback.saveExecutionLog("\nScaling " + resourceId.kindNameRef());
 
     ScaleCommand scaleCommand = client.scale().resource(resourceId.kindNameRef()).replicas(targetReplicaCount);
@@ -192,13 +200,13 @@ public class Utils {
         return true;
       } else {
         executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
-        logger.warn("Failed to scale resource. Error {}", result.getOutput());
+        logger.warn("Failed to scale workload. Error {}", result.getOutput());
         return false;
       }
     }
   }
 
-  public static void cleanup(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams, ReleaseHistory releaseHistory,
+  public void cleanup(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams, ReleaseHistory releaseHistory,
       ExecutionLogCallback executionLogCallback) throws Exception {
     final int lastSuccessfulReleaseNumber =
         (releaseHistory.getLastSuccessfulRelease() != null) ? releaseHistory.getLastSuccessfulRelease().getNumber() : 0;
@@ -247,7 +255,7 @@ public class Utils {
         release -> release.getNumber() < lastSuccessfulReleaseNumber || release.getStatus() == Failed);
   }
 
-  public static void describe(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
+  public void describe(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
       ExecutionLogCallback executionLogCallback) throws Exception {
     DescribeCommand describeCommand = client.describe().filename("manifests.yaml");
 
@@ -268,7 +276,7 @@ public class Utils {
         });
   }
 
-  public static String getLatestRevision(
+  public String getLatestRevision(
       Kubectl client, KubernetesResourceId resourceId, K8sDelegateTaskParams k8SDelegateTaskParams) throws Exception {
     RolloutHistoryCommand rolloutHistoryCommand =
         client.rollout().history().resource(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
@@ -293,7 +301,7 @@ public class Utils {
     return "";
   }
 
-  public static Integer getCurrentReplicas(
+  public Integer getCurrentReplicas(
       Kubectl client, KubernetesResourceId resourceId, K8sDelegateTaskParams k8SDelegateTaskParams) throws Exception {
     GetCommand getCommand = client.get()
                                 .resources(resourceId.kindNameRef())
@@ -321,7 +329,7 @@ public class Utils {
     }
   }
 
-  public static List<ManifestFile> renderTemplate(K8sDelegateTaskParams k8SDelegateTaskParams,
+  public List<ManifestFile> renderTemplate(K8sDelegateTaskParams k8SDelegateTaskParams,
       List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback) throws Exception {
     Optional<ManifestFile> valuesFile =
         manifestFiles.stream()
@@ -363,7 +371,7 @@ public class Utils {
     return result;
   }
 
-  public static List<KubernetesResource> readManifests(
+  public List<KubernetesResource> readManifests(
       List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback) {
     List<KubernetesResource> result = new ArrayList<>();
 
@@ -386,7 +394,7 @@ public class Utils {
     return result.stream().sorted(new KubernetesResourceComparer()).collect(Collectors.toList());
   }
 
-  public static String getResourcesInTableFormat(List<KubernetesResource> resources) {
+  public String getResourcesInTableFormat(List<KubernetesResource> resources) {
     StringBuilder sb = new StringBuilder(1024);
     final String tableFormat = "%-20s%-40s%-6s";
     sb.append(System.lineSeparator())
@@ -403,7 +411,7 @@ public class Utils {
     return sb.toString();
   }
 
-  private static List<ManifestFile> getManifesFilesFromGit(
+  private List<ManifestFile> getManifesFilesFromGit(
       K8sDelegateManifestConfig delegateManifestConfig, GitService gitService, EncryptionService encryptionService) {
     GitFileConfig gitFileConfig = delegateManifestConfig.getGitFileConfig();
     GitConfig gitConfig = delegateManifestConfig.getGitConfig();
@@ -417,7 +425,7 @@ public class Utils {
     return manifestFilesFromGitFetchFilesResult(gitFetchFilesResult, gitFileConfig.getFilePath());
   }
 
-  public static List<ManifestFile> fetchManifestFiles(K8sDelegateManifestConfig delegateManifestConfig,
+  public List<ManifestFile> fetchManifestFiles(K8sDelegateManifestConfig delegateManifestConfig,
       ExecutionLogCallback executionLogCallback, GitService gitService, EncryptionService encryptionService) {
     if (StoreType.Local.equals(delegateManifestConfig.getManifestStoreTypes())) {
       return delegateManifestConfig.getManifestFiles();
@@ -449,22 +457,6 @@ public class Utils {
     return gitFile.getFilePath().substring(prefixPath.length());
   }
 
-  public static String getValuesYamlGitFilePath(String filePath) {
-    if (isBlank(filePath)) {
-      return values_filename;
-    }
-
-    return normalizeFilePath(filePath) + values_filename;
-  }
-
-  public static String normalizeFilePath(String filePath) {
-    if (isBlank(filePath)) {
-      return filePath;
-    }
-
-    return filePath.endsWith("/") ? filePath : filePath + "/";
-  }
-
   public static List<ManifestFile> manifestFilesFromGitFetchFilesResult(
       GitFetchFilesResult gitFetchFilesResult, String prefixPath) {
     List<ManifestFile> manifestFiles = new ArrayList<>();
@@ -479,5 +471,18 @@ public class Utils {
     }
 
     return manifestFiles;
+  }
+
+  public K8sTaskExecutionResponse getK8sTaskExecutionResponse(
+      K8sTaskResponse k8sTaskResponse, CommandExecutionStatus commandExecutionStatus) {
+    return K8sTaskExecutionResponse.builder()
+        .k8sTaskResponse(k8sTaskResponse)
+        .commandExecutionStatus(commandExecutionStatus)
+        .build();
+  }
+
+  public ExecutionLogCallback getExecutionLogCallback(K8sTaskParameters request, String commandUnit) {
+    return new ExecutionLogCallback(
+        delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), commandUnit);
   }
 }
