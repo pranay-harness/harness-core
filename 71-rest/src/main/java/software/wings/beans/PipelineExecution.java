@@ -20,13 +20,13 @@ public class PipelineExecution extends Base {
   public static final String PIPELINE_ID_KEY = "pipelineId";
 
   @Indexed private String pipelineId;
-  @Indexed private String workflowExecutionId;
+  private String workflowExecutionId;
   private String stateMachineId;
   private Pipeline pipeline;
   private List<PipelineStageExecution> pipelineStageExecutions = new ArrayList<>();
   private String appName;
-  @Indexed private WorkflowType workflowType;
-  @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
+  private WorkflowType workflowType;
+  private ExecutionStatus status = ExecutionStatus.NEW;
   @Version private Long version;
 
   private String name;
