@@ -1738,6 +1738,25 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     ArtifactType artifactType = service.getArtifactType();
     Map<DeploymentType, List<SettingVariableTypes>> infraTypes = new HashMap<>();
 
+    if (service.getDeploymentType() != null) {
+      boolean restrictInfraMappings = true;
+      switch (service.getDeploymentType()) {
+        case KUBERNETES:
+          infraTypes.put(KUBERNETES,
+              asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
+          break;
+        case HELM:
+          infraTypes.put(HELM,
+              asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
+          break;
+        default:
+          restrictInfraMappings = false;
+      }
+      if (restrictInfraMappings) {
+        return infraTypes;
+      }
+    }
+
     if (artifactType == ArtifactType.DOCKER) {
       infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
       infraTypes.put(KUBERNETES,
