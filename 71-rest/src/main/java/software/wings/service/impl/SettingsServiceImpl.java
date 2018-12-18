@@ -188,6 +188,11 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     try {
+      SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
+      if (existingSetting != null) {
+        resetUnchangedEncryptedFields(existingSetting, settingAttribute);
+      }
+
       return settingValidationService.validateConnectivity(settingAttribute);
     } catch (Exception ex) {
       return new ValidationResult(false, getMessage(ex));
@@ -315,7 +320,14 @@ public class SettingsServiceImpl implements SettingsService {
 
   private void resetUnchangedEncryptedFields(
       SettingAttribute existingSettingAttribute, SettingAttribute newSettingAttribute) {
-    if (existingSettingAttribute.getValue() instanceof EncryptableSetting) {
+    if (EncryptableSetting.class.isInstance(existingSettingAttribute.getValue())) {
+      EncryptableSetting object = (EncryptableSetting) existingSettingAttribute.getValue();
+      object.setDecrypted(false);
+
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails(object, newSettingAttribute.getAppId(), null);
+      managerDecryptionService.decrypt(object, encryptionDetails);
+
       secretManager.resetUnchangedEncryptedFields((EncryptableSetting) existingSettingAttribute.getValue(),
           (EncryptableSetting) newSettingAttribute.getValue());
     }
@@ -337,16 +349,8 @@ public class SettingsServiceImpl implements SettingsService {
     // e.g. User is saving GitConnector and setWebhookToken is needed.
     // This fields is populated by us and not by user
     autoGenerateFieldsIfRequired(settingAttribute);
-    if (EncryptableSetting.class.isInstance(existingSetting.getValue())) {
-      EncryptableSetting object = (EncryptableSetting) existingSetting.getValue();
-      object.setDecrypted(false);
-      List<EncryptedDataDetail> encryptionDetails =
-          secretManager.getEncryptionDetails(object, settingAttribute.getAppId(), null);
-      managerDecryptionService.decrypt(object, encryptionDetails);
-    }
 
     resetUnchangedEncryptedFields(existingSetting, settingAttribute);
-
     settingValidationService.validate(settingAttribute);
 
     SettingAttribute savedSettingAttributes = get(settingAttribute.getUuid());
