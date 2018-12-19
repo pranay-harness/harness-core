@@ -14,9 +14,9 @@ import io.dropwizard.Configuration;
 import io.harness.event.EventsModule;
 import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
+import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
-import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -86,7 +86,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
       closingFactory.addServer(mongoClient);
     }
     Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
     datastore.setQueryFactory(new QueryFactory());
 

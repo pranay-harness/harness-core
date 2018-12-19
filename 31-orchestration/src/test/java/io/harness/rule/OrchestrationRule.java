@@ -7,9 +7,9 @@ import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.MongoClient;
 import io.harness.OrchestrationModule;
 import io.harness.factory.ClosingFactory;
+import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
-import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -42,7 +42,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     MongoClient mongoClient = fakeMongoClient(0, closingFactory);
 
     Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, databaseName);
     datastore.setQueryFactory(new QueryFactory());
 

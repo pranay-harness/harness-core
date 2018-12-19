@@ -8,9 +8,9 @@ import com.google.inject.Module;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.MongoClient;
 import io.harness.factory.ClosingFactory;
+import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
-import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.time.TimeModule;
@@ -41,7 +41,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     MongoClient mongoClient = fakeMongoClient(0, closingFactory);
 
     Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, databaseName);
     datastore.setQueryFactory(new QueryFactory());
 

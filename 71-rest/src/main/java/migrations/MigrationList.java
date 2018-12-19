@@ -72,7 +72,6 @@ import migrations.all.UsageRestrictionsMigration;
 import migrations.all.YamlGitConfigAppMigration;
 import migrations.all.YamlGitConfigMigration;
 import migrations.all.YamlGitConfigRefactoringMigration;
-
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
