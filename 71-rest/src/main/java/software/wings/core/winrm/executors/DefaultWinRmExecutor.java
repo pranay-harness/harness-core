@@ -2,6 +2,7 @@ package software.wings.core.winrm.executors;
 
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -11,6 +12,7 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.utils.WinRmHelperUtil.GetErrorDetailsFromWinRmClientException;
 
+import io.harness.data.encoding.EncodingUtils;
 import io.harness.eraro.ResponseMessage;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,10 +25,13 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
+import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.ExecutionLogWriter;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -37,12 +42,14 @@ import java.util.Map;
 
 public class DefaultWinRmExecutor implements WinRmExecutor {
   private static final Logger logger = LoggerFactory.getLogger(DefaultWinRmExecutor.class);
-
   protected DelegateLogService logService;
   private final WinRmSessionConfig config;
+  protected DelegateFileManager delegateFileManager;
 
-  DefaultWinRmExecutor(DelegateLogService logService, WinRmSessionConfig config) {
+  DefaultWinRmExecutor(
+      DelegateLogService logService, DelegateFileManager delegateFileManager, WinRmSessionConfig config) {
     this.logService = logService;
+    this.delegateFileManager = delegateFileManager;
     this.config = config;
   }
 
@@ -195,6 +202,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       commandExecutionResult.withStatus(commandExecutionStatus);
       commandExecutionResult.withCommandExecutionData(executionDataBuilder.build());
       return commandExecutionResult.build();
+    } catch (RuntimeException re) {
+      throw re;
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;
       executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
@@ -241,8 +250,92 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
             .build());
   }
 
+  private CommandExecutionStatus downloadConfigFile(ConfigFileMetaData configFileMetaData) {
+    CommandExecutionStatus commandExecutionStatus = FAILURE;
+    WinRmSession session = null;
+    ExecutionLogWriter outputWriter = ExecutionLogWriter.builder()
+                                          .accountId(config.getAccountId())
+                                          .appId(config.getAppId())
+                                          .commandUnitName(config.getCommandUnitName())
+                                          .executionId(config.getExecutionId())
+                                          .hostName(config.getHostname())
+                                          .logService(logService)
+                                          .stringBuilder(new StringBuilder(1024))
+                                          .logLevel(INFO)
+                                          .build();
+
+    ExecutionLogWriter errorWriter = ExecutionLogWriter.builder()
+                                         .accountId(config.getAccountId())
+                                         .appId(config.getAppId())
+                                         .commandUnitName(config.getCommandUnitName())
+                                         .executionId(config.getExecutionId())
+                                         .hostName(config.getHostname())
+                                         .logService(logService)
+                                         .stringBuilder(new StringBuilder(1024))
+                                         .logLevel(ERROR)
+                                         .build();
+
+    try {
+      session = new WinRmSession(config);
+      saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
+      saveExecutionLog(format("Executing command ..."), INFO);
+
+      byte[] fileBytes = new byte[configFileMetaData.getLength().intValue()];
+
+      try (InputStream inputStream = delegateFileManager.downloadByConfigFileId(configFileMetaData.getFileId(),
+               config.getAccountId(), config.getAppId(), configFileMetaData.getActivityId())) {
+        // Copy config file content
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        int nRead;
+        int configSize = configFileMetaData.getLength().intValue();
+        byte[] data = new byte[configSize];
+        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+          buffer.write(data, 0, nRead);
+        }
+
+        fileBytes = buffer.toByteArray();
+      } catch (Exception e) {
+        logger.error("Error while downloading config file.", e);
+      }
+
+      String encodedFile = EncodingUtils.encodeBase64(fileBytes);
+      String command = "#### Convert Base64 string back to config file ####\n"
+          + "\n"
+          + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\""
+          + encodedFile + "\"))\n"
+          + "Write-Host \"Decoding config file on the host.\"\n"
+          + "$decodedFile = \'" + configFileMetaData.getFilename() + "\'\n"
+          + "[IO.File]::WriteAllText($decodedFile, $DecodedString) \n"
+          + "Write-Host \"Copied config file to the host.\"\n";
+
+      int exitCode = session.executeCommandString(psWrappedCommand(command), outputWriter, errorWriter);
+      logger.info("Execute Command String returned exit code.", exitCode);
+      commandExecutionStatus = SUCCESS;
+    } catch (RuntimeException re) {
+      throw re;
+    } catch (Exception e) {
+      logger.error("Error while executing command", e);
+      ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
+      saveExecutionLog(
+          format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
+    } finally {
+      if (session != null) {
+        session.close();
+      }
+    }
+    return commandExecutionStatus;
+  }
+
   public CommandExecutionStatus copyConfigFiles(ConfigFileMetaData configFileMetaData) {
-    throw new NotImplementedException("Not implemented");
+    CommandExecutionStatus commandExecutionStatus = FAILURE;
+    if (isBlank(configFileMetaData.getFileId()) || isBlank(configFileMetaData.getFilename())) {
+      saveExecutionLog("There is no config file to copy. " + configFileMetaData.toString(), INFO);
+      commandExecutionStatus = CommandExecutionStatus.SUCCESS;
+    }
+    commandExecutionStatus = downloadConfigFile(configFileMetaData);
+    logger.info("Copy Config command execution returned.", commandExecutionStatus);
+    return commandExecutionStatus;
   }
 
   public CommandExecutionStatus copyFiles(String destinationDirectoryPath, List<String> files) {
