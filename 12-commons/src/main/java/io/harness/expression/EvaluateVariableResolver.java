@@ -29,7 +29,7 @@ public class EvaluateVariableResolver extends StrLookup {
       }
       value = expressionEvaluator.evaluate(variable, context);
       if (variableResolverTracker != null) {
-        variableResolverTracker.observed(variable);
+        variableResolverTracker.observed(variable, value);
       }
     } catch (JexlException exception) {
       if (exception.getCause() instanceof FunctorException) {

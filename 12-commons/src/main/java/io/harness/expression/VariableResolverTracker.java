@@ -6,9 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class VariableResolverTracker {
-  @Getter Map<String, Integer> usage = new HashMap<>();
+  @Getter Map<String, Map<Object, Integer>> usage = new HashMap<>();
 
-  void observed(String variable) {
-    usage.compute(variable, (key, value) -> value == null ? 1 : value + 1);
+  void observed(String variable, Object value) {
+    final Map<Object, Integer> integerMap = usage.computeIfAbsent(variable, key -> new HashMap<>());
+    integerMap.compute(value, (key, count) -> count == null ? 1 : count + 1);
   }
 }

@@ -22,11 +22,11 @@ public class VariableResolverTrackerTest {
     VariableResolverTracker tracker = new VariableResolverTracker();
     expressionEvaluator.substitute("${count} ${dummy} ${direct}", context, tracker);
 
-    assertThat(tracker.getUsage().get("count")).isEqualTo(1);
-    assertThat(tracker.getUsage().get("indirect")).isEqualTo(2);
+    assertThat(tracker.getUsage().get("count").get("foo")).isEqualTo(1);
+    assertThat(tracker.getUsage().get("indirect").get("foo")).isEqualTo(2);
     assertThat(tracker.getUsage().get("dummy")).isNull();
 
     expressionEvaluator.substitute("${count} ${dummy}", context, tracker);
-    assertThat(tracker.getUsage().get("count")).isEqualTo(2);
+    assertThat(tracker.getUsage().get("count").get("foo")).isEqualTo(2);
   }
 }
