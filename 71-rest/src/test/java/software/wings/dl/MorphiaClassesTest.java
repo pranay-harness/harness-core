@@ -2,7 +2,7 @@ package software.wings.dl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
+import io.harness.mongo.HObjectFactory;
 import org.junit.Test;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.MappedClass;
@@ -19,7 +19,7 @@ public class MorphiaClassesTest {
   @Test
   public void testSearchAndList() {
     Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
     morphia.mapPackage("software.wings");
     morphia.mapPackage("io.harness");

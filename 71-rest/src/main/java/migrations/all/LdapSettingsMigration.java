@@ -4,13 +4,10 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
-
 import migrations.Migration;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;

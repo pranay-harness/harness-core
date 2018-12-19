@@ -76,8 +76,8 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.WorkflowGenerator.Workflows;
+import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.IndexManagement;
-import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.persistence.ReadPref;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -264,7 +264,7 @@ public class DataGenService {
   protected void dropDBAndEnsureIndexes() {
     wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).getDB().dropDatabase();
     Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
     morphia.mapPackage("software.wings");
     morphia.mapPackage("io.harness");

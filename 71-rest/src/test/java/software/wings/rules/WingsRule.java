@@ -59,9 +59,9 @@ import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
+import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
-import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
@@ -222,7 +222,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     }
 
     Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
 
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
     datastore.setQueryFactory(new QueryFactory());

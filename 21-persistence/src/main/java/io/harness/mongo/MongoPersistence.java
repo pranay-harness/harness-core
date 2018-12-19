@@ -112,7 +112,7 @@ public class MongoPersistence implements HPersistence {
   public void ensureIndex(Class cls) {
     AdvancedDatastore datastore = getDatastore(cls, ReadPref.NORMAL);
     Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
 
     Set<Class> classSet = new HashSet<>();
     classSet.add(cls);

@@ -42,7 +42,7 @@ public class MongoModule extends AbstractModule {
 
   public static AdvancedDatastore createDatastore(String uri, Set<Class> collectionClasses, ReadPref readPref) {
     Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
     morphia.map(collectionClasses);
 
@@ -59,7 +59,7 @@ public class MongoModule extends AbstractModule {
     registerLogger(MorphiaLoggerFactory.class);
 
     Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
     morphia.map(collectionClasses);
 
