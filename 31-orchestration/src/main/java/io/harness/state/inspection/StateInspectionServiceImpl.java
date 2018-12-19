@@ -1,5 +1,6 @@
 package io.harness.state.inspection;
 
+import static io.harness.persistence.HPersistence.UPSERT_RETURN_NEW_OPTIONS;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
@@ -47,6 +48,6 @@ public class StateInspectionServiceImpl implements StateInspectionService {
       updateOperations.set(StateInspection.DATA_KEY + "." + item.key(), item);
     }
 
-    persistence.upsert(query, updateOperations);
+    persistence.upsert(query, updateOperations, UPSERT_RETURN_NEW_OPTIONS);
   }
 }

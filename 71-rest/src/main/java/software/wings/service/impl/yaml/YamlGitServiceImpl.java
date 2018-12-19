@@ -6,6 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HPersistence.UPSERT_RETURN_NEW_OPTIONS;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -754,16 +755,17 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   public <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage, boolean fullSyncPath) {
     Query<GitSyncError> failedQuery = wingsPersistence.createQuery(GitSyncError.class)
-                                          .filter("accountId", failedChange.getAccountId())
-                                          .filter("yamlFilePath", failedChange.getFilePath());
+                                          .filter(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
+                                          .filter("yamlFilePath", failedChange.getFilePath())
+                                          .project(GitSyncError.ID_KEY, true);
     GitFileChange failedGitFileChange = (GitFileChange) failedChange;
     String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";
     String appId = obtainAppIdFromGitFileChange(failedChange.getAccountId(), failedChange.getFilePath());
 
     UpdateOperations<GitSyncError> failedUpdateOperations =
         wingsPersistence.createUpdateOperations(GitSyncError.class)
-            .setOnInsert("_id", generateUuid())
-            .set("accountId", failedChange.getAccountId())
+            .setOnInsert(GitSyncError.ID_KEY, generateUuid())
+            .set(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
             .set("yamlFilePath", failedChange.getFilePath())
             .set("yamlContent", failedChange.getFileContent())
             .set("gitCommitId", failedCommitId)
@@ -773,7 +775,7 @@ public class YamlGitServiceImpl implements YamlGitService {
             .set("fullSyncPath", fullSyncPath)
             .set(APP_ID_KEY, appId);
 
-    wingsPersistence.upsert(failedQuery, failedUpdateOperations);
+    wingsPersistence.upsert(failedQuery, failedUpdateOperations, UPSERT_RETURN_NEW_OPTIONS);
   }
 
   private String obtainAppIdFromGitFileChange(String accountId, String yamlFilePath) {

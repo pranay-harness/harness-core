@@ -4,6 +4,7 @@ import com.mongodb.DBCollection;
 import io.harness.annotation.StoreIn;
 import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -221,6 +222,9 @@ public interface HPersistence {
    */
   <T extends PersistentEntity> boolean delete(T entity);
 
+  FindAndModifyOptions UPSERT_RETURN_NEW_OPTIONS = new FindAndModifyOptions().upsert(true).returnNew(true);
+  FindAndModifyOptions UPSERT_RETURN_OLD_OPTIONS = new FindAndModifyOptions().upsert(true).returnNew(false);
+
   /**
    * Upsert t.
    *
@@ -228,7 +232,8 @@ public interface HPersistence {
    * @param updateOperations the update operations
    * @return the entity
    */
-  <T extends PersistentEntity> T upsert(Query<T> query, UpdateOperations<T> updateOperations);
+  <T extends PersistentEntity> T upsert(
+      Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions options);
 
   /**
    * Update.

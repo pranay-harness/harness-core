@@ -268,10 +268,9 @@ public class MongoPersistence implements HPersistence {
     return !(result == null || result.getN() == 0);
   }
 
-  private static FindAndModifyOptions UPSERT_OPTIONS = new FindAndModifyOptions().upsert(true);
-
   @Override
-  public <T extends PersistentEntity> T upsert(Query<T> query, UpdateOperations<T> updateOperations) {
+  public <T extends PersistentEntity> T upsert(
+      Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions options) {
     // TODO: add encryption handling; right now no encrypted classes use upsert
     // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
 
@@ -286,7 +285,7 @@ public class MongoPersistence implements HPersistence {
     }
 
     onUpdate(query, updateOperations, currentTime);
-    return getDatastore(query.getEntityClass(), ReadPref.NORMAL).findAndModify(query, updateOperations, UPSERT_OPTIONS);
+    return getDatastore(query.getEntityClass(), ReadPref.NORMAL).findAndModify(query, updateOperations, options);
   }
 
   private <T extends PersistentEntity> void onUpdate(
