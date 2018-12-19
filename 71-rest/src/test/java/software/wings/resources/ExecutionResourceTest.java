@@ -39,9 +39,7 @@ public class ExecutionResourceTest {
    */
   @ClassRule
   public static final ResourceTestRule resources =
-      ResourceTestRule.builder()
-          .addResource(new ExecutionResource(appService, workflowExecutionService, authHandler))
-          .build();
+      ResourceTestRule.builder().addResource(new ExecutionResource()).build();
 
   /**
    * Tear down.

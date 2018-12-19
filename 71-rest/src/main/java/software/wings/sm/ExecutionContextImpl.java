@@ -20,7 +20,6 @@ import io.harness.expression.LateBindingMap;
 import io.harness.expression.LateBindingValue;
 import lombok.Builder;
 import org.mongodb.morphia.Key;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
@@ -78,21 +77,21 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   private static final Pattern argsCharPattern = Pattern.compile("[()\"']");
   private static final Logger logger = LoggerFactory.getLogger(ExecutionContextImpl.class);
 
-  @Inject @Transient private ManagerExpressionEvaluator evaluator;
-  @Inject @Transient private ExpressionProcessorFactory expressionProcessorFactory;
-  @Inject @Transient private VariableProcessor variableProcessor;
-  @Inject @Transient private SettingsService settingsService;
-  @Inject @Transient private ServiceTemplateService serviceTemplateService;
-  @Inject @Transient private ArtifactService artifactService;
-  @Inject @Transient private AppService appService;
+  @Inject private transient AppService appService;
+  @Inject private transient ArtifactService artifactService;
   @Inject private transient ArtifactStreamService artifactStreamService;
-  @Inject private transient SweepingOutputService sweepingOutputService;
+  @Inject private transient ExpressionProcessorFactory expressionProcessorFactory;
   @Inject private transient ManagerDecryptionService managerDecryptionService;
+  @Inject private transient ManagerExpressionEvaluator evaluator;
   @Inject private transient SecretManager secretManager;
+  @Inject private transient ServiceTemplateService serviceTemplateService;
+  @Inject private transient SettingsService settingsService;
+  @Inject private transient SweepingOutputService sweepingOutputService;
+  @Inject private transient VariableProcessor variableProcessor;
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
-  @Transient private transient Map<String, Object> contextMap;
+  private transient Map<String, Object> contextMap;
 
   /**
    * Instantiates a new execution context impl.
