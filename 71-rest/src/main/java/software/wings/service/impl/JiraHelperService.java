@@ -142,4 +142,12 @@ public class JiraHelperService {
       return JiraExecutionData.builder().errorMessage("Delegate task failed with an exception").build();
     }
   }
+
+  public Object getCreateMetadata(String connectorId, String accountId, String appId) {
+    JiraTaskParameters jiraTaskParameters =
+        JiraTaskParameters.builder().accountId(accountId).jiraAction(JiraAction.GET_CREATE_METADATA).build();
+
+    JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
+    return jiraExecutionData.getCreateMetadata();
+  }
 }

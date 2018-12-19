@@ -25,9 +25,12 @@ public class JiraExecutionData extends StateExecutionData implements ResponseDat
   private JiraAction jiraAction;
   private String issueId;
   private String issueUrl;
+
   private JSONArray projects;
   private JSONObject fields;
   private JSONArray statuses;
+  private JSONObject createMetadata;
+
   private String webhookUrl;
   private JiraApprovalActionType jiraApprovalActionType;
 
