@@ -36,9 +36,15 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
   private Long approvedOn;
   private String comments;
   private String approvalId;
-  private List<String> userGroups;
   private String workflowId;
   private String appId;
+
+  /** User group Approval */
+  private List<String> userGroups;
+
+  /** Jira Approval */
+  private String issueUrl;
+  private String webhookUrl;
 
   // Setting these variables for pipeline executions with only approval state
   @Transient private transient List<UserGroup> userGroupList;
@@ -64,6 +70,8 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
         ExecutionDataValue.builder().displayName("Approval Id").value(approvalId).build());
     putNotNull(executionDetails, "status",
         ExecutionDataValue.builder().displayName("Approval Status").value(getStatus()).build());
+    putNotNull(
+        executionDetails, "issueUrl", ExecutionDataValue.builder().displayName("Issue Url").value(issueUrl).build());
 
     if (approvedBy != null) {
       StringBuilder approvedRejectedBy =

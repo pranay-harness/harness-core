@@ -1,8 +1,6 @@
 package software.wings.delegatetasks.jira;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.api.JiraExecutionData.JiraApprovalActionType.CREATE_WEBHOOK;
-import static software.wings.api.JiraExecutionData.JiraApprovalActionType.DELETE_WEBHOOK;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 
@@ -88,11 +86,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       case CREATE_TICKET:
         return createTicket(parameters);
 
-      case APPROVE_TICKET:
+      case CREATE_WEBHOOK:
         return createWebhook(parameters);
-
-      case CREATE_AND_APPROVE_TICKET:
-        return createTicketAndWebhook(parameters);
 
       case DELETE_WEBHOOK:
         return deleteWebhook(parameters);
@@ -323,15 +318,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return new JiraClient(jiraConfig.getBaseUrl(), creds);
   }
 
-  private ResponseData createTicketAndWebhook(JiraTaskParameters parameters) {
-    JiraExecutionData jiraExecutionData = (JiraExecutionData) createTicket(parameters);
-    if (jiraExecutionData.getExecutionStatus().equals(ExecutionStatus.FAILED)) {
-      return jiraExecutionData;
-    }
-    parameters.setIssueId(jiraExecutionData.getIssueId());
-    return createWebhook(parameters);
-  }
-
   private ResponseData deleteWebhook(JiraTaskParameters parameters) {
     JiraConfig jiraConfig = parameters.getJiraConfig();
     encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
@@ -347,13 +333,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       saveExecutionLog(
           parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
 
-      return JiraExecutionData.builder()
-          .executionStatus(ExecutionStatus.FAILED)
-          .activityId(parameters.getActivityId())
-          .jiraApprovalActionType(DELETE_WEBHOOK)
-          .approvalId(parameters.getApprovalId())
-          .errorMessage(error)
-          .build();
+      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(error).build();
     }
 
     try {
@@ -367,7 +347,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage("Unable to delete the JIRA webhook " + parameters.getIssueId())
-          .jiraApprovalActionType(DELETE_WEBHOOK)
           .build();
     }
     commandExecutionStatus = CommandExecutionStatus.SUCCESS;
@@ -376,12 +355,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     return JiraExecutionData.builder()
         .executionStatus(ExecutionStatus.SUCCESS)
-        .jiraApprovalActionType(DELETE_WEBHOOK)
         .errorMessage("Approval provided on ticket: " + issue.getKey())
         .issueUrl(getIssueUrl(jiraConfig, issue))
-        .approvedBy(parameters.getApprovedBy())
-        .approvedOn(parameters.getApprovedOn())
-        .approvalId(parameters.getApprovalId())
         .build();
   }
 
@@ -400,14 +375,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       saveExecutionLog(
           parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
 
-      return JiraExecutionData.builder()
-          .executionStatus(ExecutionStatus.FAILED)
-          .activityId(parameters.getActivityId())
-          .approvalId(parameters.getApprovalId())
-          .jiraApprovalActionType(CREATE_WEBHOOK)
-          .issueId(parameters.getIssueId())
-          .errorMessage(error)
-          .build();
+      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(error).build();
     }
 
     List<String> events = new ArrayList<>();
@@ -446,14 +414,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       saveExecutionLog(
           parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
 
-      return JiraExecutionData.builder()
-          .executionStatus(ExecutionStatus.FAILED)
-          .activityId(parameters.getActivityId())
-          .approvalId(parameters.getApprovalId())
-          .jiraApprovalActionType(CREATE_WEBHOOK)
-          .errorMessage(error)
-          .issueId(parameters.getIssueId())
-          .build();
+      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(error).build();
     }
 
     commandExecutionStatus = CommandExecutionStatus.SUCCESS;
@@ -464,11 +425,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         .executionStatus(ExecutionStatus.SUCCESS)
         .webhookUrl(webhookUrl)
         .errorMessage("Waiting for Approval on ticket: " + issue.getKey())
-        .approvalId(parameters.getApprovalId())
-        .activityId(parameters.getActivityId())
-        .jiraApprovalActionType(CREATE_WEBHOOK)
         .issueUrl(getIssueUrl(jiraConfig, issue))
-        .issueId(parameters.getIssueId())
         .build();
   }
 

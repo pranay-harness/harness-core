@@ -113,7 +113,6 @@ import software.wings.api.CommandStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.InstanceElement;
-import software.wings.api.JiraExecutionData;
 import software.wings.api.KubernetesSteadyStateCheckExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
@@ -491,94 +490,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               && approvalStateExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
               && approvalStateExecutionData.getApprovalId().equals(approvalId)) {
             return approvalStateExecutionData;
-          }
-        }
-      }
-    }
-
-    return null;
-  }
-
-  @Override
-  public JiraExecutionData fetchJiraExecutionDataFromWorkflowExecution(
-      String appId, String workflowExecutionId, String stateExecutionId, ApprovalDetails approvalDetails) {
-    notNullCheck("appId", appId, USER);
-
-    notNullCheck("ApprovalDetails", approvalDetails, USER);
-    notNullCheck("ApprovalId", approvalDetails.getApprovalId());
-    notNullCheck("Approval action", approvalDetails.getAction());
-    String approvalId = approvalDetails.getApprovalId();
-
-    notNullCheck("workflowExecutionId", workflowExecutionId, USER);
-    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
-    notNullCheck("workflowExecution", workflowExecution, USER);
-
-    JiraExecutionData jiraExecutionData = null;
-    String workflowType = "";
-
-    // Pipeline approval
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
-      workflowType = "Pipeline";
-      jiraExecutionData = fetchPipelineWaitingJiraExecutionData(workflowExecution.getPipelineExecution(), approvalId);
-    }
-
-    // Workflow approval
-    if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)) {
-      workflowType = "Workflow";
-      jiraExecutionData = fetchWorkflowWaitingJiraExecutionData(workflowExecution, stateExecutionId, approvalId);
-    }
-
-    if (jiraExecutionData == null) {
-      throw new WingsException(INVALID_ARGUMENT, USER)
-          .addParam("args",
-              "No " + workflowType + " execution [" + workflowExecutionId + "] waiting for approval id: " + approvalId);
-    }
-
-    return jiraExecutionData;
-  }
-
-  private JiraExecutionData fetchPipelineWaitingJiraExecutionData(
-      PipelineExecution pipelineExecution, String approvalId) {
-    if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null) {
-      return null;
-    }
-
-    for (PipelineStageExecution pe : pipelineExecution.getPipelineStageExecutions()) {
-      if (pe.getStateExecutionData() instanceof JiraExecutionData) {
-        JiraExecutionData jiraExecutionData = (JiraExecutionData) pe.getStateExecutionData();
-
-        if (pe.getStatus().equals(ExecutionStatus.PAUSED)
-            && jiraExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
-            && approvalId.equals(jiraExecutionData.getApprovalId())) {
-          return jiraExecutionData;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  private JiraExecutionData fetchWorkflowWaitingJiraExecutionData(
-      WorkflowExecution workflowExecution, String stateExecutionId, String approvalId) {
-    if (stateExecutionId != null) {
-      StateExecutionInstance stateExecutionInstance =
-          wingsPersistence.createQuery(StateExecutionInstance.class).filter(ID_KEY, stateExecutionId).get();
-
-      JiraExecutionData jiraExecutionData = (JiraExecutionData) stateExecutionInstance.getStateExecutionData();
-      // Check for Approval Id in PAUSED status
-      if (jiraExecutionData != null && jiraExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
-          && jiraExecutionData.getApprovalId().equals(approvalId)) {
-        return jiraExecutionData;
-      }
-    } else {
-      List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
-      for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
-        if (stateExecutionInstance.getStateExecutionData() instanceof JiraExecutionData) {
-          JiraExecutionData jiraExecutionData = (JiraExecutionData) stateExecutionInstance.getStateExecutionData();
-          // Check for Approval Id in PAUSED status
-          if (jiraExecutionData != null && jiraExecutionData.getStatus().equals(ExecutionStatus.PAUSED)
-              && jiraExecutionData.getApprovalId().equals(approvalId)) {
-            return jiraExecutionData;
           }
         }
       }

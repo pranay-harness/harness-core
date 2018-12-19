@@ -24,7 +24,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.Matchers;
 import software.wings.WingsBaseTest;
-import software.wings.api.JiraExecutionData;
+import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.RestResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.JiraHelperService;
@@ -56,9 +56,9 @@ public class TicketingServiceResourceTest extends WingsBaseTest {
     String token = generateMockJWTToken(claimsMap);
     when(JIRA_HELPER_SERVICE.validateJiraToken(Matchers.anyString()))
         .then(invocationOnMock -> getClaimMockMap(claimsMap));
-    when(WORKFLOW_EXECUTION_SERVICE.fetchJiraExecutionDataFromWorkflowExecution(
+    when(WORKFLOW_EXECUTION_SERVICE.fetchApprovalStateExecutionDataFromWorkflowExecution(
              Matchers.anyString(), Matchers.anyString(), Matchers.anyString(), Matchers.any()))
-        .thenReturn(mock(JiraExecutionData.class));
+        .thenReturn(mock(ApprovalStateExecutionData.class));
 
     String json =
         "{\"timestamp\": 1543331334925,\"webhookEvent\": \"jira:issue_updated\",\"issue_event_type_name\": \"issue_generic\",\"user\": {\"self\": \"http://localhost:8080/rest/api/2/user?username=pooja.singhal\",\"name\": \"pooja.singhal\",\"key\": \"pooja.singhal\",\"emailAddress\": \"pooja.singhal@harness.io\",\"avatarUrls\": {\"48x48\": \"http://localhost:8080/secure/useravatar?avatarId=10337\",\"24x24\": \"http://localhost:8080/secure/useravatar?size=small&avatarId=10337\",\"16x16\": \"http://localhost:8080/secure/useravatar?size=xsmall&avatarId=10337\",\"32x32\": \"http://localhost:8080/secure/useravatar?size=medium&avatarId=10337\"},\"displayName\": \"pooja.singhal@harness.io\",\"active\": true,\"timeZone\": \"Asia/Kolkata\"},\"changelog\": {\"id\": \"10203\",\"items\": [{\"field\": \"Status\",\"fieldtype\": \"jira\",\"from\": \"10001\",\"fromString\": \"Done\",\"to\": \"10000\",\"toString\": \"TO DO\"}]}}";

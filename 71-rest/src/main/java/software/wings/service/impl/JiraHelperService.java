@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.delegatetasks.jira.JiraAction.CREATE_WEBHOOK;
+import static software.wings.delegatetasks.jira.JiraAction.DELETE_WEBHOOK;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -20,6 +22,7 @@ import software.wings.api.JiraExecutionData;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.TaskType;
+import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.security.SecretManager.JWT_CATEGORY;
@@ -116,6 +119,33 @@ public class JiraHelperService {
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
     return jiraExecutionData.getStatuses();
+  }
+
+  public JiraExecutionData createWebhook(JiraApprovalParams jiraApprovalParams, String accountId, String appId,
+      String workflowExecutionId, String approvalId) {
+    String token = createJiraToken(appId, workflowExecutionId, approvalId, jiraApprovalParams.getApprovalField(),
+        jiraApprovalParams.getApprovalValue());
+    JiraTaskParameters jiraTaskParameters = JiraTaskParameters.builder()
+                                                .accountId(accountId)
+                                                .appId(appId)
+                                                .approvalId(approvalId)
+                                                .jiraAction(CREATE_WEBHOOK)
+                                                .issueId(jiraApprovalParams.getIssueId())
+                                                .jiraToken(token)
+                                                .build();
+    return runTask(accountId, appId, jiraApprovalParams.getJiraConnectorId(), jiraTaskParameters);
+  }
+
+  public JiraExecutionData deleteWebhook(
+      JiraApprovalParams jiraApprovalParams, String webhookUrl, String appId, String accountId) {
+    JiraTaskParameters parameters = JiraTaskParameters.builder()
+                                        .jiraAction(DELETE_WEBHOOK)
+                                        .webhookUrl(webhookUrl)
+                                        .issueId(jiraApprovalParams.getIssueId())
+                                        .appId(appId)
+                                        .accountId(accountId)
+                                        .build();
+    return runTask(accountId, appId, jiraApprovalParams.getJiraConnectorId(), parameters);
   }
 
   private JiraExecutionData runTask(
