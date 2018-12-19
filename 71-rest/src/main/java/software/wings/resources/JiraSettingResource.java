@@ -68,4 +68,20 @@ public class JiraSettingResource {
       @PathParam("connectorId") String connectorId, @QueryParam("project") String project) {
     return new RestResponse<>(jiraHelperService.getStatuses(connectorId, project, accountId, appId));
   }
+
+  /**
+   * List.
+   *
+   * @param accountId the account id
+   * @param connectorId   the request
+   * @return the rest response
+   */
+  @GET
+  @Path("{connectorId}/createmeta")
+  @Timed
+  @ExceptionMetered
+  public RestResponse getCreateMetadata(@QueryParam("appId") String appId,
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("connectorId") String connectorId) {
+    return new RestResponse<>(jiraHelperService.getCreateMetadata(connectorId, accountId, appId));
+  }
 }

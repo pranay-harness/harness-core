@@ -106,11 +106,37 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       case GET_STATUSES:
         return getStatuses(parameters);
 
+      case GET_CREATE_METADATA:
+        return getCreateMetadata(parameters);
+
       default:
         break;
     }
 
     return null;
+  }
+
+  private ResponseData getCreateMetadata(JiraTaskParameters parameters) {
+    JiraClient jiraClient = getJiraClient(parameters);
+
+    URI uri = null;
+    try {
+      Map<String, String> queryParams = new HashMap<>();
+      queryParams.put("expand", "projects.issuetypes.fields");
+
+      uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/createmeta", queryParams);
+
+      JSON response = jiraClient.getRestClient().get(uri);
+
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .createMetadata((JSONObject) response)
+          .build();
+    } catch (URISyntaxException | RestException | IOException e) {
+      String errorMessage = "Failed to fetch statuses from JIRA server.";
+      logger.error(errorMessage);
+      return JiraExecutionData.builder().errorMessage(errorMessage).build();
+    }
   }
 
   private ResponseData getStatuses(JiraTaskParameters parameters) {

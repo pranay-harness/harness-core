@@ -1,5 +1,6 @@
 package software.wings.sm.states.collaboration;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -70,8 +71,14 @@ public class JiraCreateUpdate extends State {
   @Getter @Setter private String comment;
   @Getter @Setter private String issueId;
 
+  @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
+  @Getter @Setter private String sweepingOutputName;
+
   public JiraCreateUpdate(String name) {
     super(name, StateType.JIRA_CREATE_UPDATE.getName());
+
+    sweepingOutputName = name;
+    sweepingOutputScope = Scope.PIPELINE;
   }
 
   @Override
@@ -84,7 +91,7 @@ public class JiraCreateUpdate extends State {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
     JiraConfig jiraConfig = getJiraConfig(jiraConnectorId);
-    issueId = context.renderExpression(issueId);
+    renderExpressions(context);
 
     JiraTaskParameters parameters = JiraTaskParameters.builder()
                                         .jiraConfig(jiraConfig)
@@ -119,6 +126,14 @@ public class JiraCreateUpdate extends State {
         .withDelegateTaskId(delegateTaskId)
         .withStateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
         .build();
+  }
+
+  private void renderExpressions(ExecutionContext context) {
+    issueId = context.renderExpression(issueId);
+    labels = context.renderExpression(labels);
+    summary = context.renderExpression(summary);
+    description = context.renderExpression(description);
+    comment = context.renderExpression(comment);
   }
 
   private JiraConfig getJiraConfig(String jiraConnectorId) {
@@ -174,11 +189,11 @@ public class JiraCreateUpdate extends State {
     Map<String, String> sweepingOutputMap = new HashMap<>();
 
     if (jiraExecutionData.getExecutionStatus() == ExecutionStatus.SUCCESS
-        && jiraExecutionData.getJiraAction() == JiraAction.CREATE_TICKET) {
+        && jiraExecutionData.getJiraAction() == JiraAction.CREATE_TICKET && isNotEmpty(sweepingOutputName)) {
       sweepingOutputMap.put(JIRA_ISSUE_ID_KEY, jiraExecutionData.getIssueId());
 
       final SweepingOutput sweepingOutput = context.prepareSweepingOutputBuilder(Scope.PIPELINE)
-                                                .name(JIRA_SWEEPING_OUTPUT_NAME)
+                                                .name(sweepingOutputName)
                                                 .output(KryoUtils.asDeflatedBytes(sweepingOutputMap))
                                                 .build();
 
