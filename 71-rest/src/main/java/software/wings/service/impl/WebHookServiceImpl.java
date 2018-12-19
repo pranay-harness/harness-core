@@ -127,19 +127,31 @@ public class WebHookServiceImpl implements WebHookService {
     }
   }
 
+  private boolean isGithubPingEvent(HttpHeaders httpHeaders) {
+    WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(httpHeaders);
+
+    if (!WebhookSource.GITHUB.equals(webhookSource)) {
+      return false;
+    }
+
+    return WebhookEventType.PING.getValue().equals(webhookEventUtils.obtainEventType(webhookSource, httpHeaders));
+  }
+
   @Override
   public Response executeByEvent(String token, String webhookEventPayload, HttpHeaders httpHeaders) {
     TriggerExecutionBuilder triggerExecutionBuilder = TriggerExecution.builder();
     TriggerExecution triggerExecution = triggerExecutionBuilder.build();
     try {
-      logger.info("Received the webhook event payload {}", webhookEventPayload);
-      logger.info("Received the webhook event payload headers {}", httpHeaders);
       Trigger trigger = triggerService.getTriggerByWebhookToken(token);
       if (trigger == null) {
         WebHookResponse webHookResponse =
             WebHookResponse.builder().error("Trigger not associated to the given token").build();
 
         return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
+      }
+
+      if (isGithubPingEvent(httpHeaders)) {
+        return prepareResponse(WebHookResponse.builder().message("Received ping event").build(), Response.Status.OK);
       }
 
       triggerExecution.setAppId(trigger.getAppId());
