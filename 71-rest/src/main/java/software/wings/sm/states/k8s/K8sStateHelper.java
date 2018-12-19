@@ -200,7 +200,8 @@ public class K8sStateHelper {
     Application app = appService.get(context.getAppId());
     ServiceElement serviceElement = phaseElement.getServiceElement();
 
-    ApplicationManifest applicationManifest = applicationManifestService.get(app.getUuid(), serviceElement.getUuid());
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByServiceId(app.getUuid(), serviceElement.getUuid());
     if (applicationManifest == null) {
       throw new InvalidRequestException("Manifests not found for service.");
     }

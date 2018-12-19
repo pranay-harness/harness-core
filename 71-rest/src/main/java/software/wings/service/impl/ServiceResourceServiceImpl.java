@@ -1803,7 +1803,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return;
     }
 
-    if (applicationManifestService.get(service.getAppId(), service.getUuid()) != null) {
+    if (applicationManifestService.getByServiceId(service.getAppId(), service.getUuid()) != null) {
       return;
     }
 
@@ -1814,7 +1814,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     applicationManifestService.create(applicationManifest);
 
     ManifestFile defaultSpec =
-        ManifestFile.builder().fileName("templates/deploy.yaml").fileContent(default_k8s_spec_yaml).build();
+        ManifestFile.builder().fileName("templates/spec.yaml").fileContent(default_k8s_spec_yaml).build();
     defaultSpec.setAppId(service.getAppId());
     applicationManifestService.createManifestFile(defaultSpec, service.getUuid());
 
@@ -1825,7 +1825,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void cloneAppManifests(String appId, String clonedServiceId, String originalServiceId) {
-    ApplicationManifest applicationManifest = applicationManifestService.get(appId, originalServiceId);
+    ApplicationManifest applicationManifest = applicationManifestService.getByServiceId(appId, originalServiceId);
     if (applicationManifest == null) {
       return;
     }

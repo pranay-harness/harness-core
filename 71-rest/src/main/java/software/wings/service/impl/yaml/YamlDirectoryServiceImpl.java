@@ -258,8 +258,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             break;
           case "ApplicationManifest":
             ServiceLevelYamlNode serviceLevelYamlNode = (ServiceLevelYamlNode) dn;
-            ApplicationManifest applicationManifest =
-                applicationManifestService.get(serviceLevelYamlNode.getAppId(), serviceLevelYamlNode.getServiceId());
+            ApplicationManifest applicationManifest = applicationManifestService.getByServiceId(
+                serviceLevelYamlNode.getAppId(), serviceLevelYamlNode.getServiceId());
             gitFileChanges.addAll(
                 yamlChangeSetHelper.getApplicationManifestGitChangeSet(applicationManifest, ChangeType.ADD));
             addToFileChangeList = false;
@@ -909,7 +909,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     DirectoryPath manifestFilePath = applicationManifestPath.clone().add(MANIFEST_FILE_FOLDER);
 
-    ApplicationManifest applicationManifest = applicationManifestService.get(service.getAppId(), service.getUuid());
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByServiceId(service.getAppId(), service.getUuid());
     if (applicationManifest != null) {
       applicationManifestFolder.addChild(new ServiceLevelYamlNode(accountId, applicationManifest.getUuid(),
           service.getAppId(), service.getUuid(), INDEX_YAML, ApplicationManifest.class,
@@ -967,7 +968,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private FolderNode generateManifestFileFoldeNodeForServiceView(String accountId, Service service) {
-    ApplicationManifest applicationManifest = applicationManifestService.get(service.getAppId(), service.getUuid());
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByServiceId(service.getAppId(), service.getUuid());
     DirectoryPath manifestFilePath = new DirectoryPath(MANIFEST_FILE_FOLDER);
     return generateManifestFileFolderNode(accountId, service, applicationManifest, manifestFilePath);
   }

@@ -95,7 +95,7 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
     notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId, USER);
 
-    ApplicationManifest applicationManifest = applicationManifestService.get(appId, serviceId);
+    ApplicationManifest applicationManifest = applicationManifestService.getByServiceId(appId, serviceId);
     notNullCheck("ApplicationManifest null for given yaml file:" + yamlFilePath, applicationManifest, USER);
 
     ManifestFile manifestFile = ManifestFile.builder()
@@ -119,7 +119,7 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
     notNullCheck("Could not find Service for the yaml file: " + yamlFilePath, serviceId, USER);
 
-    ApplicationManifest applicationManifest = applicationManifestService.get(appId, serviceId);
+    ApplicationManifest applicationManifest = applicationManifestService.getByServiceId(appId, serviceId);
     notNullCheck("ApplicationManifest null for given yaml file:" + yamlFilePath, applicationManifest, USER);
 
     return applicationManifestService.getManifestFileByFileName(

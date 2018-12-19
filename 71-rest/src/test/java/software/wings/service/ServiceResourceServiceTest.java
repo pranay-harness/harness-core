@@ -513,7 +513,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     savedClonedService.setDescription("clone description");
     savedClonedService.setUuid("CLONED_SERVICE_ID");
     when(mockWingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(savedClonedService);
-    when(applicationManifestService.get(anyString(), anyString())).thenReturn(null);
+    when(applicationManifestService.getByServiceId(anyString(), anyString())).thenReturn(null);
 
     doReturn(savedClonedService)
         .when(spyServiceResourceService)

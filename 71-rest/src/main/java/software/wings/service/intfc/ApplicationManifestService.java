@@ -16,7 +16,7 @@ public interface ApplicationManifestService extends OwnedByService {
 
   ApplicationManifest update(ApplicationManifest applicationManifest);
 
-  ApplicationManifest get(String appId, String serviceId);
+  ApplicationManifest getByServiceId(String appId, String serviceId);
 
   ApplicationManifest getById(String appId, String id);
 
