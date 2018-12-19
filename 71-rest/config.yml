@@ -41,7 +41,7 @@ serviceScheduler:
   #instanceId: automation_service
   instanceId: automation_background
   tablePrefix: quartz
-  threadCount: 1
+  threadCount: 25
   #mongoUri: mongodb://localhost:27017/service_scheduler
 
 trialRegistrationAllowed: true
