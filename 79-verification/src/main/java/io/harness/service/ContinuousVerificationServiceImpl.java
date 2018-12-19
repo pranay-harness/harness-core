@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
-import static software.wings.common.VerificationConstants.DATA_ANALYSIS_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
@@ -90,8 +89,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // List all the CV configurations for a given account
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
 
-    AtomicLong totalDataAnalysisTasks = new AtomicLong(0);
-
     // for each 24x7 enabled configurations do following
     // Get last CV Analysis minute on given configuration
     // Add new learning task for next ANALYSIS_PERIOD_MINUTES period
@@ -133,12 +130,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
         learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
 
-        totalDataAnalysisTasks.getAndIncrement();
         logger.info("Queuing analysis task for state {} config {} with startTime {}", cvConfiguration.getStateType(),
             cvConfiguration.getUuid(), analysisStartMinute);
       }
     });
-    metricRegistry.updateMetricValue(DATA_ANALYSIS_TASKS_PER_MINUTE, totalDataAnalysisTasks.get());
   }
 
   private LearningEngineAnalysisTask createLearningEngineAnalysisTask(

@@ -2,6 +2,7 @@ package io.harness.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static software.wings.common.VerificationConstants.DATA_ANALYSIS_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.VERIFICATION_TASK_TIMEOUT;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 import static software.wings.utils.Misc.generateSecretKey;
@@ -12,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.StringUtils;
@@ -49,6 +51,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   private static final String SERVICE_VERSION_FILE = "/service_version.properties";
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private HarnessMetricRegistry metricRegistry;
+
   private final ServiceApiVersion learningEngineApiVersion;
 
   public LearningEngineAnalysisServiceImpl() throws IOException {
@@ -96,24 +100,29 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .order("-createdAt")
             .get();
 
+    boolean isTaskCreated = false;
     if (learningEngineAnalysisTask == null) {
       wingsPersistence.save(analysisTask);
-      return true;
-    }
-
-    if (learningEngineAnalysisTask.getExecutionStatus() == ExecutionStatus.SUCCESS) {
+      isTaskCreated = true;
+    } else if (learningEngineAnalysisTask.getExecutionStatus() == ExecutionStatus.SUCCESS) {
       if (learningEngineAnalysisTask.getAnalysis_minute() < analysisTask.getAnalysis_minute()) {
         wingsPersistence.save(analysisTask);
-        return true;
+        isTaskCreated = true;
+      } else {
+        logger.warn("task is already marked success for min {}. task {}", analysisTask.getAnalysis_minute(),
+            learningEngineAnalysisTask);
       }
-      logger.warn("task is already marked success for min {}. task {}", analysisTask.getAnalysis_minute(),
+    } else {
+      logger.warn("task is already {}. Will not queue for minute {}, {}",
+          learningEngineAnalysisTask.getExecutionStatus(), analysisTask.getAnalysis_minute(),
           learningEngineAnalysisTask);
-      return false;
     }
-
-    logger.warn("task is already {}. Will not queue for minute {}, {}", learningEngineAnalysisTask.getExecutionStatus(),
-        analysisTask.getAnalysis_minute(), learningEngineAnalysisTask);
-    return false;
+    List<LearningEngineAnalysisTask> totalQueuedAnalysisTask =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter("executionStatus", ExecutionStatus.QUEUED)
+            .asList();
+    metricRegistry.updateMetricValue(DATA_ANALYSIS_TASKS_PER_MINUTE, totalQueuedAnalysisTask.size());
+    return isTaskCreated;
   }
 
   @Override
