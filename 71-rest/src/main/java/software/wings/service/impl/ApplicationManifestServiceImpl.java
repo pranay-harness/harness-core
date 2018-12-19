@@ -91,7 +91,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
-  public ApplicationManifest get(String appId, String serviceId) {
+  public ApplicationManifest getByServiceId(String appId, String serviceId) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
                                            .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId);
@@ -166,7 +166,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("Service doesn't exist");
     }
 
-    ApplicationManifest applicationManifest = getById(manifestFile.getAppId(), manifestFile.getApplicationManifestId());
+    ApplicationManifest applicationManifest = getByServiceId(manifestFile.getAppId(), serviceId);
     if (applicationManifest == null) {
       throw new InvalidRequestException("Application Manifest doesn't exist for Service: " + serviceId);
     }

@@ -1,6 +1,8 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateType.K8S_CANARY_ROLLBACK;
 
 import com.google.common.collect.ImmutableList;
@@ -69,6 +71,14 @@ public class K8sCanaryRollback extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     try {
       K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
+
+      if (k8sContextElement == null || k8sContextElement.getReleaseNumber() == null) {
+        return anExecutionResponse()
+            .withExecutionStatus(SKIPPED)
+            .withStateExecutionData(
+                aStateExecutionData().withErrorMsg("No context found for rollback. Skipping.").build())
+            .build();
+      }
 
       Activity activity =
           k8sStateHelper.createK8sActivity(context, K8S_CANARY_ROLLBACK_COMMAND_NAME, getStateType(), activityService,

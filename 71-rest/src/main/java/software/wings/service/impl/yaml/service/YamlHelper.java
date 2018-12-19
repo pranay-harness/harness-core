@@ -111,7 +111,7 @@ public class YamlHelper {
     Validator.notNullCheck("Service name null in the given yaml file: " + yamlFilePath, serviceName);
     Service service = serviceResourceService.getServiceByName(appId, serviceName);
     Validator.notNullCheck("Service name  in the given yaml file does not exists: " + yamlFilePath, service);
-    return applicationManifestService.get(appId, service.getUuid());
+    return applicationManifestService.getByServiceId(appId, service.getUuid());
   }
 
   public ManifestFile getManifestFile(String appId, String yamlFilePath, String fileName) {

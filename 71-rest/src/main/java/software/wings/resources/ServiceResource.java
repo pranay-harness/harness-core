@@ -631,6 +631,6 @@ public class ServiceResource {
   @ExceptionMetered
   public RestResponse<ApplicationManifest> getAppManifest(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
-    return new RestResponse<>(applicationManifestService.get(appId, serviceId));
+    return new RestResponse<>(applicationManifestService.getByServiceId(appId, serviceId));
   }
 }

@@ -98,7 +98,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
     ApplicationManifest savedManifest = applicationManifestService.create(applicationManifest);
 
-    ApplicationManifest manifest = applicationManifestService.get(APP_ID, SERVICE_ID);
+    ApplicationManifest manifest = applicationManifestService.getByServiceId(APP_ID, SERVICE_ID);
 
     assertThat(manifest).isEqualTo(savedManifest);
   }

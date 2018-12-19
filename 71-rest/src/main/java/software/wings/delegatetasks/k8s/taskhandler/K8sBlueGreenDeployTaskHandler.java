@@ -163,7 +163,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
     } catch (Exception e) {
-      executionLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
 
