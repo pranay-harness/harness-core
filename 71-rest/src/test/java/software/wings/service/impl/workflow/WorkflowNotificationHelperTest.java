@@ -12,6 +12,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -54,6 +55,7 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureNotification;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Service;
@@ -61,12 +63,16 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.PhaseSubWorkflow;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by anubhaw on 4/14/17.
@@ -90,6 +96,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Mock private FieldEnd stateExecutionInstanceEnd;
   @Mock private HQuery<WorkflowExecution> workflowExecutionQuery;
   @Mock private FieldEnd workflowExecutionEnd;
+  @Mock private NotificationSetupService notificationSetupService;
 
   @Before
   public void setUp() throws Exception {
@@ -149,6 +156,39 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.SUCCESS);
 
+    verifyNotifications(notificationRule);
+  }
+
+  @Test
+  public void shouldSendWorkflowStatusChangeNotificationForTemplatedNotificationGroup() {
+    List<NotificationGroup> notificationGroupList = new ArrayList<>();
+    notificationGroupList.add(aNotificationGroup().withName("${workflow.variables.MyNotificationGroups}").build());
+
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withExecutionScope(ExecutionScope.WORKFLOW)
+                                            .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
+                                            .withNotificationGroupAsExpression(true)
+                                            .withNotificationGroups(notificationGroupList)
+                                            .build();
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
+
+    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    when(executionContext.renderExpression("${workflow.variables.MyNotificationGroups}")).thenReturn("Group1, Group2");
+
+    when(notificationSetupService.readNotificationGroupByName(ACCOUNT_ID, "Group1"))
+        .thenReturn(aNotificationGroup().withName("Group1").build());
+
+    when(notificationSetupService.readNotificationGroupByName(ACCOUNT_ID, "Group2"))
+        .thenReturn(aNotificationGroup().withName("Group2").build());
+
+    workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.SUCCESS);
+
+    verifyNotifications(notificationRule);
+  }
+
+  private void verifyNotifications(NotificationRule notificationRule) {
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)

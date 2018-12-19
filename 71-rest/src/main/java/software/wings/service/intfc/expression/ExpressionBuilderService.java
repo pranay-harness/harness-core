@@ -1,6 +1,7 @@
 package software.wings.service.intfc.expression;
 
 import software.wings.beans.EntityType;
+import software.wings.beans.SubEntityType;
 import software.wings.sm.StateType;
 
 import java.util.Set;
@@ -13,4 +14,7 @@ public interface ExpressionBuilderService {
   Set<String> listExpressions(String appId, String entityId, EntityType entityType, String serviceId);
   Set<String> listExpressions(
       String appId, String entityId, EntityType entityType, String serviceId, StateType stateType);
+
+  Set<String> listExpressions(String appId, String entityId, EntityType entityType, String serviceId,
+      StateType stateType, SubEntityType subEntityType);
 }

@@ -40,6 +40,7 @@ import io.harness.beans.PageRequest;
 import software.wings.beans.EntityType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.SubEntityType;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.sm.StateType;
@@ -135,6 +136,11 @@ public abstract class ExpressionBuilder {
 
   public Set<String> getExpressions(String appId, String entityId, String serviceId, StateType stateType) {
     return getExpressions(appId, entityId);
+  }
+
+  public Set<String> getExpressions(
+      String appId, String entityId, String serviceId, StateType stateType, SubEntityType subEntityType) {
+    return getExpressions(appId, entityId, serviceId, stateType);
   }
 
   public abstract Set<String> getExpressions(String appId, String entityId);
