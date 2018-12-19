@@ -65,23 +65,9 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.APPLICATION)
 @Produces("application/json")
 public class ExecutionResource {
-  private AppService appService;
-  private WorkflowExecutionService workflowExecutionService;
-  private AuthHandler authHandler;
-
-  /**
-   * Instantiates a new execution resource.
-   *
-   * @param appService               the app service
-   * @param workflowExecutionService the workflow service
-   */
-  @Inject
-  public ExecutionResource(
-      AppService appService, WorkflowExecutionService workflowExecutionService, AuthHandler authHandler) {
-    this.appService = appService;
-    this.workflowExecutionService = workflowExecutionService;
-    this.authHandler = authHandler;
-  }
+  @Inject private AppService appService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private AuthHandler authHandler;
 
   /**
    * List.

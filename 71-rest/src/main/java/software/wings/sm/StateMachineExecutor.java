@@ -134,22 +134,23 @@ public class StateMachineExecutor {
 
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
-  @Inject private AppService appService;
-  @Inject private ExecutorService executorService;
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private Injector injector;
-  @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private ExecutionInterruptManager executionInterruptManager;
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
-  @Inject private DelegateService delegateService;
   @Inject private AlertService alertService;
-  @Inject private WorkflowService workflowService;
-  @Inject private NotificationService notificationService;
-  @Inject private NotificationMessageResolver notificationMessageResolver;
-  @Inject private WorkflowNotificationHelper workflowNotificationHelper;
+  @Inject private AppService appService;
   @Inject private DelayEventHelper delayEventHelper;
+  @Inject private DelegateService delegateService;
+  @Inject private ExecutionInterruptManager executionInterruptManager;
+  @Inject private ExecutorService executorService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private Injector injector;
+  @Inject private NotificationMessageResolver notificationMessageResolver;
+  @Inject private NotificationService notificationService;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private WorkflowNotificationHelper workflowNotificationHelper;
+  @Inject private WorkflowService workflowService;
+
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   /**
    * Execute.
