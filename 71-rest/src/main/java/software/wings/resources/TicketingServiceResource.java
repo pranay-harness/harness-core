@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import static software.wings.api.JiraExecutionData.JiraApprovalActionType.WAIT_JIRA_APPROVAL;
 import static software.wings.service.impl.JiraHelperService.APPROVAL_FIELD_KEY;
 import static software.wings.service.impl.JiraHelperService.APPROVAL_ID_KEY;
 import static software.wings.service.impl.JiraHelperService.APPROVAL_VALUE_KEY;
@@ -21,7 +20,7 @@ import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.http.Body;
-import software.wings.api.JiraExecutionData;
+import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.RestResponse;
@@ -93,12 +92,12 @@ public class TicketingServiceResource {
         approvalDetails.setAction(Action.APPROVE);
         approvalDetails.setApprovalId(approvalId);
         approvalDetails.setApprovedBy(user);
-        JiraExecutionData executionData = workflowExecutionService.fetchJiraExecutionDataFromWorkflowExecution(
-            appId, workflowExecutionId, null, approvalDetails);
+        ApprovalStateExecutionData executionData =
+            workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
+                appId, workflowExecutionId, null, approvalDetails);
         executionData.setStatus(ExecutionStatus.SUCCESS);
         executionData.setApprovedOn(System.currentTimeMillis());
         executionData.setApprovedBy(user);
-        executionData.setJiraApprovalActionType(WAIT_JIRA_APPROVAL);
         waitNotifyEngine.notify(approvalId, executionData);
       }
       return new RestResponse<>(isApproved);
