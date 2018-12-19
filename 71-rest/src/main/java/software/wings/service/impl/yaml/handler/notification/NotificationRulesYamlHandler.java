@@ -46,6 +46,9 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
           yaml.getNotificationGroups()
               .stream()
               .map(notificationGroupName -> {
+                if (yaml.isNotificationGroupAsExpression()) {
+                  return aNotificationGroup().withName(notificationGroupName).build();
+                }
                 NotificationGroup notificationGroup =
                     notificationSetupService.readNotificationGroupByName(accountId, notificationGroupName);
                 notNullCheck(
@@ -70,30 +73,36 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
         .withBatchNotifications(false)
         .withConditions(conditions)
         .withExecutionScope(executionScope)
+        .withNotificationGroupAsExpression(yaml.isNotificationGroupAsExpression())
         .withNotificationGroups(notificationGroups)
         .build();
   }
 
   @Override
-  public Yaml toYaml(NotificationRule bean, String appId) {
-    List<String> conditionList = bean.getConditions().stream().map(condition -> condition.name()).collect(toList());
+  public Yaml toYaml(NotificationRule notificationRule, String appId) {
+    List<String> conditionList =
+        notificationRule.getConditions().stream().map(condition -> condition.name()).collect(toList());
 
     List<String> notificationGroupList =
-        bean.getNotificationGroups()
+        notificationRule.getNotificationGroups()
             .stream()
             .map(notificationGroup -> {
-              NotificationGroup notificationGroupFromDB = notificationSetupService.readNotificationGroup(
-                  notificationGroup.getAccountId(), notificationGroup.getUuid());
-              notNullCheck("Invalid notification group for the given id: " + notificationGroup.getUuid(),
-                  notificationGroupFromDB, USER);
-              return notificationGroupFromDB.getName();
+              if (!notificationRule.isNotificationGroupAsExpression()) {
+                NotificationGroup notificationGroupFromDB = notificationSetupService.readNotificationGroup(
+                    notificationGroup.getAccountId(), notificationGroup.getUuid());
+                notNullCheck("Invalid notification group for the given id: " + notificationGroup.getUuid(),
+                    notificationGroupFromDB, USER);
+                return notificationGroupFromDB.getName();
+              }
+              return notificationGroup.getName();
             })
             .collect(toList());
 
     return Yaml.builder()
         .conditions(conditionList)
-        .executionScope(Util.getStringFromEnum(bean.getExecutionScope()))
+        .executionScope(Util.getStringFromEnum(notificationRule.getExecutionScope()))
         .notificationGroups(notificationGroupList)
+        .notificationGroupAsExpression(notificationRule.isNotificationGroupAsExpression())
         .build();
   }
 

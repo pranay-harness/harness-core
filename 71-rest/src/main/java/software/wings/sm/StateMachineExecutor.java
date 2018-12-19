@@ -671,6 +671,9 @@ public class StateMachineExecutor {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
+    for (NotificationRule notificationRule : notificationRules) {
+      workflowNotificationHelper.renderNotificationGroups(context, notificationRule);
+    }
 
     Map<String, String> placeholderValues = getManualInterventionPlaceholderValues(context);
     notificationService.sendNotificationAsync(

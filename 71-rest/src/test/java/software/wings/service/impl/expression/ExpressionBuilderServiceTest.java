@@ -54,9 +54,11 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.EntityType;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.SubEntityType;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
@@ -330,7 +332,8 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetWorkflowStateExpressions() {
-    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
+    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build(),
+        aVariable().withName("Environment").withEntityType(EntityType.ENVIRONMENT).build());
     Workflow workflow =
         aWorkflow()
             .withName(WORKFLOW_NAME)
@@ -363,8 +366,51 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     assertThat(expressions).isNotNull();
     assertThat(expressions).contains("env.name");
     assertThat(expressions).contains("workflow.variables.name1");
+    assertThat(expressions).contains("workflow.variables.Environment");
     assertThat(expressions).contains("workflow.name", "workflow.startTs", "pipeline.name", "pipeline.startTs");
     assertThat(expressions).contains(HTTP_URL);
+  }
+
+  @Test
+  public void shouldGetWorkflowNotificationGroupExpressions() {
+    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build(),
+        aVariable().withName("Environment").withEntityType(EntityType.ENVIRONMENT).build());
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withEnvId(ENV_ID)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withUserVariables(userVariables)
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    PageRequest<ServiceVariable> serviceVariablePageRequest =
+        aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter("appId", EQ, APP_ID)
+            .addFilter("entityId", IN, asList(TEMPLATE_ID).toArray())
+            .build();
+    serviceVariables =
+        aPageResponse()
+            .withResponse(asList(
+                ServiceVariable.builder().name("ENV").entityId(TEMPLATE_ID).entityType(SERVICE_TEMPLATE).build()))
+            .build();
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
+
+    Set<String> expressions = builderService.listExpressions(
+        APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, null, SubEntityType.NOTIFICATION_GROUP);
+    assertThat(expressions).isNotNull();
+    assertThat(expressions).doesNotContain("env.name");
+    assertThat(expressions).doesNotContain("app.defaults.Param1");
+    assertThat(expressions).contains("workflow.variables.name1");
+    assertThat(expressions).doesNotContain("workflow.variables.Environment");
+    assertThat(expressions).doesNotContain("workflow.name", "workflow.startTs", "pipeline.name", "pipeline.startTs");
   }
 
   @Test

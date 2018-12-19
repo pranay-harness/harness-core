@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
+import software.wings.beans.SubEntityType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
@@ -49,6 +50,12 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
   @Override
   public Set<String> listExpressions(
       String appId, String entityId, EntityType entityType, String serviceId, StateType stateType) {
+    return listExpressions(appId, entityId, entityType, serviceId, stateType, null);
+  }
+
+  @Override
+  public Set<String> listExpressions(String appId, String entityId, EntityType entityType, String serviceId,
+      StateType stateType, SubEntityType subEntityType) {
     Set<String> expressions = new TreeSet<>();
     Application application = appService.getApplicationWithDefaults(appId);
     notNullCheck("Application does not exist. May be deleted", application, USER);
@@ -68,7 +75,16 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
     } else if (entityType.equals(ENVIRONMENT)) {
       expressions.addAll(envExpressionBuilder.getExpressions(appId, entityId, serviceId));
     } else if (entityType.equals(WORKFLOW)) {
-      expressions.addAll(workflowExpressionBuilder.getExpressions(appId, entityId, serviceId, stateType));
+      expressions.addAll(
+          workflowExpressionBuilder.getExpressions(appId, entityId, serviceId, stateType, subEntityType));
+      if (SubEntityType.NOTIFICATION_GROUP.equals(subEntityType)) {
+        // Filter account and app defaults
+        final Set<String> filteredExpressions =
+            expressions.stream()
+                .filter(s -> !(s.startsWith("app.defaults") || s.startsWith("account.defaults")))
+                .collect(Collectors.toSet());
+        expressions = new TreeSet<>(filteredExpressions);
+      }
     } else if (entityType.equals(APPLICATION)) {
       expressions.addAll(applicationExpressionBuilder.getExpressions(appId, entityId));
     }

@@ -37,6 +37,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureNotification;
 import software.wings.beans.InformationNotification;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflowType;
@@ -45,6 +46,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
@@ -77,6 +79,7 @@ public class WorkflowNotificationHelper {
   @Inject private MainConfiguration configuration;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Clock clock;
+  @Inject private NotificationSetupService notificationSetupService;
 
   private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
   private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
@@ -178,11 +181,34 @@ public class WorkflowNotificationHelper {
       for (NotificationRule notificationRule : notificationRules) {
         if (executionScope.equals(notificationRule.getExecutionScope()) && notificationRule.getConditions() != null
             && notificationRule.getConditions().contains(status)) {
-          filteredNotificationRules.add(notificationRule);
+          // Render the expression of notification group
+          if (notificationRule.isNotificationGroupAsExpression()) {
+            filteredNotificationRules.add(renderNotificationGroups(context, notificationRule));
+          } else {
+            filteredNotificationRules.add(notificationRule);
+          }
         }
       }
     }
     return filteredNotificationRules;
+  }
+
+  public NotificationRule renderNotificationGroups(ExecutionContextImpl context, NotificationRule notificationRule) {
+    if (notificationRule.isNotificationGroupAsExpression()) {
+      List<NotificationGroup> renderedNotificationGroups = new ArrayList<>();
+      List<NotificationGroup> notificationGroups = notificationRule.getNotificationGroups();
+      for (NotificationGroup notificationGroup : notificationGroups) {
+        for (String notificationGroupName : context.renderExpression(notificationGroup.getName()).split(",")) {
+          NotificationGroup renderedNotificationGroup = notificationSetupService.readNotificationGroupByName(
+              context.getApp().getAccountId(), notificationGroupName.trim());
+          if (renderedNotificationGroup != null) {
+            renderedNotificationGroups.add(renderedNotificationGroup);
+          }
+        }
+      }
+      notificationRule.setNotificationGroups(renderedNotificationGroups);
+    }
+    return notificationRule;
   }
 
   private Map<String, String> getPlaceholderValues(ExecutionContext context, Application app, Environment env,

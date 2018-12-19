@@ -8,7 +8,9 @@ import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;
@@ -24,7 +26,7 @@ public class NotificationRule {
   private String uuid = generateUuid();
   private List<ExecutionStatus> conditions = new ArrayList<>();
   private ExecutionScope executionScope;
-
+  @Getter @Setter private boolean notificationGroupAsExpression;
   @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
 
   private boolean batchNotifications;
@@ -182,6 +184,7 @@ public class NotificationRule {
     private List<NotificationGroup> notificationGroups = new ArrayList<>();
     private boolean batchNotifications;
     private boolean active = true;
+    private boolean notificationGroupAsExpression;
 
     private NotificationRuleBuilder() {}
 
@@ -271,19 +274,9 @@ public class NotificationRule {
       return this;
     }
 
-    /**
-     * But notification rule builder.
-     *
-     * @return the notification rule builder
-     */
-    public NotificationRuleBuilder but() {
-      return aNotificationRule()
-          .withUuid(uuid)
-          .withConditions(conditions)
-          .withExecutionScope(executionScope)
-          .withNotificationGroups(notificationGroups)
-          .withBatchNotifications(batchNotifications)
-          .withActive(active);
+    public NotificationRuleBuilder withNotificationGroupAsExpression(boolean notificationGroupAsExpression) {
+      this.notificationGroupAsExpression = notificationGroupAsExpression;
+      return this;
     }
 
     /**
@@ -299,6 +292,7 @@ public class NotificationRule {
       notificationRule.setNotificationGroups(notificationGroups);
       notificationRule.setBatchNotifications(batchNotifications);
       notificationRule.setActive(active);
+      notificationRule.setNotificationGroupAsExpression(notificationGroupAsExpression);
       return notificationRule;
     }
   }
@@ -310,12 +304,15 @@ public class NotificationRule {
     private List<String> conditions = new ArrayList<>();
     private String executionScope;
     private List<String> notificationGroups = new ArrayList<>();
+    private boolean notificationGroupAsExpression;
 
     @Builder
-    public Yaml(List<String> conditions, String executionScope, List<String> notificationGroups) {
+    public Yaml(List<String> conditions, String executionScope, List<String> notificationGroups,
+        boolean notificationGroupAsExpression) {
       this.conditions = conditions;
       this.executionScope = executionScope;
       this.notificationGroups = notificationGroups;
+      this.notificationGroupAsExpression = notificationGroupAsExpression;
     }
   }
 }
