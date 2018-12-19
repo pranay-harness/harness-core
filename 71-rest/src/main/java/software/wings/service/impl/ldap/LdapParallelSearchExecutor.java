@@ -9,7 +9,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.helpers.ext.ldap.LdapResponse.Status;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,12 +85,12 @@ public class LdapParallelSearchExecutor {
     return ldapUserExistsReturn;
   }
 
-  public LdapGetUsersResponse getUserSearchResult(final List<LdapGetUsersRequest> ldapGetUsersRequests,
+  public List<LdapGetUsersResponse> getUserSearchResult(final List<LdapGetUsersRequest> ldapGetUsersRequests,
       Function<LdapGetUsersRequest, LdapGetUsersResponse> executeLdapGetUsersRequest) {
-    LdapGetUsersResponse ldapGetUsersResponse = null;
+    List<LdapGetUsersResponse> ldapGetUsersResponse = new ArrayList<>();
     if (CollectionUtils.isNotEmpty(ldapGetUsersRequests)) {
       if (ldapGetUsersRequests.size() == 1) {
-        ldapGetUsersResponse = executeLdapGetUsersRequest.apply(ldapGetUsersRequests.get(0));
+        ldapGetUsersResponse = Arrays.asList(executeLdapGetUsersRequest.apply(ldapGetUsersRequests.get(0)));
       } else {
         ldapGetUsersResponse = executeLdapGetUsersRequest(ldapGetUsersRequests, executeLdapGetUsersRequest);
       }
@@ -100,17 +99,16 @@ public class LdapParallelSearchExecutor {
     return ldapGetUsersResponse;
   }
 
-  private LdapGetUsersResponse executeLdapGetUsersRequest(@NotNull List<LdapGetUsersRequest> ldapGetUsersRequests,
+  private List<LdapGetUsersResponse> executeLdapGetUsersRequest(@NotNull List<LdapGetUsersRequest> ldapGetUsersRequests,
       Function<LdapGetUsersRequest, LdapGetUsersResponse> executeLdapGetUsersRequest) {
     CompletionService<LdapGetUsersResponse> taskCompletionService = new ExecutorCompletionService<>(
         Executors.newWorkStealingPool(min(ldapGetUsersRequests.size(), MAX_THREAD_COUNT)));
 
-    List<Future<? extends AbstractLdapResponse>> ldapGetUsersResponseFutures =
-        ldapGetUsersRequests.stream()
-            .map(request -> taskCompletionService.submit(() -> executeLdapGetUsersRequest.apply(request)))
-            .collect(Collectors.toList());
+    ldapGetUsersRequests.stream()
+        .map(request -> taskCompletionService.submit(() -> executeLdapGetUsersRequest.apply(request)))
+        .collect(Collectors.toList());
 
-    LdapGetUsersResponse ldapGetUsersResponse = null;
+    List<LdapGetUsersResponse> ldapGetUsersResponse = new ArrayList<>();
 
     for (int i = 0; i < ldapGetUsersRequests.size(); i++) {
       LdapGetUsersResponse currentLdapGetUsersResponse = null;
@@ -128,14 +126,7 @@ public class LdapParallelSearchExecutor {
       if (currentLdapGetUsersResponse != null) {
         if (currentLdapGetUsersResponse.getSearchResult() != null
             && currentLdapGetUsersResponse.getSearchResult().size() > 0) {
-          ldapGetUsersResponse = currentLdapGetUsersResponse;
-          // Cancel other tasks
-          cancelPendingTasks(ldapGetUsersResponseFutures);
-          break;
-        }
-
-        if (ldapGetUsersResponse == null || ldapGetUsersResponse.getLdapResponse().getStatus() == Status.FAILURE) {
-          ldapGetUsersResponse = currentLdapGetUsersResponse;
+          ldapGetUsersResponse.add(currentLdapGetUsersResponse);
         }
       }
     }

@@ -36,7 +36,9 @@ import software.wings.helpers.ext.ldap.LdapSearch;
 import software.wings.helpers.ext.ldap.LdapUserConfig;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -232,9 +234,9 @@ public class LdapHelper {
     return listGroups(groupConfig, String.format("*%s*", name), LdapConstants.MAX_GROUP_SEARCH_SIZE);
   }
 
-  public LdapGetUsersResponse listGroupUsers(List<? extends LdapUserConfig> ldapUserConfigs, String groupDn)
+  public List<LdapGetUsersResponse> listGroupUsers(List<? extends LdapUserConfig> ldapUserConfigs, String groupDn)
       throws LdapException {
-    LdapGetUsersResponse ldapGetUsersResponse = null;
+    List<LdapGetUsersResponse> ldapGetUsersResponse = new ArrayList<>();
 
     if (!Collections.isEmpty(ldapUserConfigs)) {
       List<LdapGetUsersRequest> ldapGetUsersRequests =
@@ -260,10 +262,11 @@ public class LdapHelper {
   }
 
   public int getGroupUserCount(List<? extends LdapUserConfig> configs, String groupDn) throws LdapException {
-    LdapGetUsersResponse ldapGetUsersResponse = listGroupUsers(configs, groupDn);
-    return ldapGetUsersResponse != null && ldapGetUsersResponse.getSearchResult() != null
-        ? ldapGetUsersResponse.getSearchResult().size()
-        : 0;
+    Collection<LdapGetUsersResponse> ldapGetUsersResponses = listGroupUsers(configs, groupDn);
+
+    return ldapGetUsersResponses.stream()
+        .mapToInt(ldapGetUsersResponse -> ldapGetUsersResponse.getSearchResult().size())
+        .sum();
   }
 
   public void populateGroupSize(SearchResult groups, List<? extends LdapUserConfig> configs) throws LdapException {

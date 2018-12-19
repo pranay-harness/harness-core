@@ -191,16 +191,17 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
 
       Collection<LdapUserResponse> userResponses = null;
 
-      LdapGetUsersResponse ldapGetUsersResponse = helper.listGroupUsers(settings.getUserSettingsList(), dn);
+      List<LdapGetUsersResponse> ldapGetUsersResponses = helper.listGroupUsers(settings.getUserSettingsList(), dn);
 
-      if (ldapGetUsersResponse != null
-          && ldapGetUsersResponse.getLdapResponse().getStatus() == LdapResponse.Status.SUCCESS) {
-        userResponses = ldapGetUsersResponse.getSearchResult()
-                            .getEntries()
-                            .stream()
-                            .map(user -> buildLdapUserResponse(user, ldapGetUsersResponse.getLdapUserConfig()))
-                            .collect(Collectors.toList());
-      }
+      userResponses = ldapGetUsersResponses.stream()
+                          .map(ldapGetUsersResponse
+                              -> ldapGetUsersResponse.getSearchResult()
+                                     .getEntries()
+                                     .stream()
+                                     .map(user -> buildLdapUserResponse(user, ldapGetUsersResponse.getLdapUserConfig()))
+                                     .collect(Collectors.toList()))
+                          .flatMap(x -> x.stream())
+                          .collect(Collectors.toList());
 
       groupResponse.setUsers(userResponses);
       return groupResponse;

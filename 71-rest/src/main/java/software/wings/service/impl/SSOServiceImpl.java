@@ -86,10 +86,6 @@ public class SSOServiceImpl implements SSOService {
         displayName = settings.getDisplayName();
       }
 
-      if (isEmpty(groupMembershipAttr)) {
-        groupMembershipAttr = settings.getGroupMembershipAttr();
-      }
-
       buildAndUploadSamlSettings(accountId, fileAsString, displayName, groupMembershipAttr);
       return getAccountAccessManagementSettings(accountId);
     } catch (SamlException | IOException | URISyntaxException e) {
