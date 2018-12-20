@@ -53,18 +53,16 @@ echo "System-Properties: version=1.0.${VERSION} logdnakey=${LOGDNA_KEY}" >> app.
 echo "Application-Version: version=1.0.${VERSION}" >> app.mf
 
 mkdir -p dist/delegate
-cd dist/delegate
-cp ../../81-delegate/target/delegate-capsule.jar .
-cd ../..
-cp 81-delegate/target/delegate-capsule.jar delegate-${VERSION}.jar
-jar ufm delegate-${VERSION}.jar app.mf
+cp 81-delegate/target/delegate-capsule.jar dist/delegate/delegate-${VERSION}.jar
+jar ufm dist/delegate/delegate-${VERSION}.jar app.mf
+cp dist/delegate/delegate-${VERSION}.jar .
 
 mkdir -p dist/watcher
-cd dist/watcher
-cp ../../82-watcher/target/watcher-capsule.jar .
-cd ../..
-cp 82-watcher/target/watcher-capsule.jar watcher-${VERSION}.jar
-jar ufm watcher-${VERSION}.jar app.mf
+cp 82-watcher/target/watcher-capsule.jar dist/watcher/watcher-${VERSION}.jar
+jar ufm dist/watcher/watcher-${VERSION}.jar app.mf
+cp dist/watcher/watcher-${VERSION}.jar .
+
+rm -rf app.mf
 
 mkdir -p dist/disconnected_on_prem_pov
 cd dist/disconnected_on_prem_pov
@@ -86,5 +84,3 @@ cd dist/test
 cp ../../91-model-gen-tool/target/model-gen-tool-capsule.jar .
 cp ../../91-model-gen-tool/config-datagen.yml .
 cd ../..
-
-rm -rf app.mf
