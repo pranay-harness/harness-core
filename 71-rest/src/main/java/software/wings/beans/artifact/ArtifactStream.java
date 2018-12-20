@@ -18,8 +18,6 @@ import software.wings.beans.config.ArtifactSourceable;
 import software.wings.utils.Util;
 import software.wings.yaml.BaseEntityYaml;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
@@ -36,7 +34,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 public abstract class ArtifactStream extends Base implements ArtifactSourceable {
-  protected static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
+  protected static final String dateFormat = "HHMMSS";
 
   public static final String NAME_KEY = "name";
   public static final String SERVICE_ID_KEY = "serviceId";
