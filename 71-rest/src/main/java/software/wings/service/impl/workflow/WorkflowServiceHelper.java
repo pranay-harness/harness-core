@@ -558,7 +558,7 @@ public class WorkflowServiceHelper {
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
-  private boolean isDaemonSchedulingStrategy(
+  boolean isDaemonSchedulingStrategy(
       String appId, WorkflowPhase workflowPhase, OrchestrationWorkflowType orchestrationWorkflowType) {
     boolean isDaemonSchedulingStrategy = false;
 

@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
@@ -64,7 +64,6 @@ import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -99,10 +98,6 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
-import software.wings.service.impl.AwsInfrastructureProvider;
-import software.wings.service.impl.ContainerServiceParams;
-import software.wings.service.impl.InfrastructureMappingServiceImpl;
-import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -904,17 +899,16 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     Map<String, Object> keyValuePairs = new HashMap<>();
     Set<String> fieldsToRemove = new HashSet<>();
 
-    MethodUtils.invokeMethod(serviceImpl, true, "handleEcsInfraMapping",
-        new Object[] {keyValuePairs, fieldsToRemove,
-            anEcsInfrastructureMapping()
-                .withClusterName(CLUSTER_NAME)
-                .withRegion("us-east-1")
-                .withVpcId(null)
-                .withSubnetIds(null)
-                .withSecurityGroupIds(null)
-                .withExecutionRole(null)
-                .withLaunchType(LaunchType.EC2.name())
-                .build()});
+    serviceImpl.handleEcsInfraMapping(keyValuePairs, fieldsToRemove,
+        anEcsInfrastructureMapping()
+            .withClusterName(CLUSTER_NAME)
+            .withRegion("us-east-1")
+            .withVpcId(null)
+            .withSubnetIds(null)
+            .withSecurityGroupIds(null)
+            .withExecutionRole(null)
+            .withLaunchType(LaunchType.EC2.name())
+            .build());
 
     // map should not contains any null values as that cause db.update to fail
     assertEquals(8, keyValuePairs.size());
@@ -938,14 +932,13 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     Map<String, Object> keyValuePairs = new HashMap<>();
 
-    MethodUtils.invokeMethod(serviceImpl, true, "handlePcfInfraMapping",
-        new Object[] {keyValuePairs,
-            PcfInfrastructureMapping.builder()
-                .organization(ORGANIZATION)
-                .space(SPACE)
-                .routeMaps(asList(ROUTE))
-                .tempRouteMap(asList(ROUTE))
-                .build()});
+    serviceImpl.handlePcfInfraMapping(keyValuePairs,
+        PcfInfrastructureMapping.builder()
+            .organization(ORGANIZATION)
+            .space(SPACE)
+            .routeMaps(asList(ROUTE))
+            .tempRouteMap(asList(ROUTE))
+            .build());
 
     assertEquals(4, keyValuePairs.size());
     assertEquals(keyValuePairs.get("organization"), ORGANIZATION);
