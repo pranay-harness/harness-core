@@ -435,19 +435,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public TimeSeriesMLTransactionThresholds getCustomThreshold(String appId, StateType stateType, String serviceId,
-      String groupName, String transactionName, String metricName) {
-    return wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
-        .filter("appId", appId)
-        .filter("stateType", stateType)
-        .filter("serviceId", serviceId)
-        .filter("groupName", groupName)
-        .filter("transactionName", transactionName)
-        .filter("metricName", metricName)
-        .get();
-  }
-
-  @Override
   public Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(String appId, StateType stateType,
       String stateExecutionId, String serviceId, String cvConfigId, String groupName) {
     Map<String, Map<String, TimeSeriesMetricDefinition>> result = new HashMap<>();

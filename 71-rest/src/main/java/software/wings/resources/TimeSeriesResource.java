@@ -12,6 +12,7 @@ import software.wings.beans.RestResponse;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.intfc.FeatureFlagService;
@@ -88,7 +89,19 @@ public class TimeSeriesResource {
       @QueryParam("transactionName") String transactionName, @QueryParam("cvConfigId") String cvConfigId,
       TimeSeriesMetricDefinition timeSeriesMetricDefinition) {
     return new RestResponse<>(metricDataAnalysisService.saveCustomThreshold(
-        appId, stateType, serviceId, cvConfigId, groupName, transactionName, timeSeriesMetricDefinition));
+        appId, stateType, serviceId, cvConfigId, transactionName, groupName, timeSeriesMetricDefinition));
+  }
+
+  @GET
+  @Path("/threshold")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<TimeSeriesMLTransactionThresholds> getCustomThreshold(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
+      @QueryParam("transactionName") String transactionName, @QueryParam("metricName") String metricName) {
+    return new RestResponse<>(metricDataAnalysisService.getCustomThreshold(
+        appId, stateType, serviceId, groupName, transactionName, metricName));
   }
 
   @DELETE

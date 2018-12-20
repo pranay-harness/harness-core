@@ -176,6 +176,19 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
+  public TimeSeriesMLTransactionThresholds getCustomThreshold(String appId, StateType stateType, String serviceId,
+      String groupName, String transactionName, String metricName) {
+    return wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+        .filter("appId", appId)
+        .filter("stateType", stateType)
+        .filter("serviceId", serviceId)
+        .filter("groupName", groupName)
+        .filter("transactionName", transactionName)
+        .filter("metricName", metricName)
+        .get();
+  }
+
+  @Override
   public boolean saveCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
       String transactionName, String groupName, TimeSeriesMetricDefinition metricDefinition) {
     final Query<TimeSeriesMLTransactionThresholds> query =

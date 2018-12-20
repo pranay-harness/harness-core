@@ -158,14 +158,4 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
         accountId, applicationId, stateType, stateExecutionId, serviceId, cvConfigId, groupName);
     assertEquals(metricTemplate, resp.getResource());
   }
-
-  @Test
-  public void testGetCustomThreshold() {
-    when(timeSeriesAnalysisService.getCustomThreshold(
-             applicationId, stateType, serviceId, groupName, transactionName, metricName))
-        .thenReturn(timeSeriesMLTransactionThresholds);
-    RestResponse<TimeSeriesMLTransactionThresholds> resp = timeSeriesResource.getCustomThreshold(
-        accountId, applicationId, stateType, serviceId, groupName, transactionName, metricName);
-    assertEquals(timeSeriesMLTransactionThresholds, resp.getResource());
-  }
 }

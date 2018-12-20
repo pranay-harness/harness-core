@@ -17,7 +17,6 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
-import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateType;
@@ -141,18 +140,6 @@ public class TimeSeriesResource {
       @QueryParam("groupName") String groupName) {
     return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplate(
         appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName));
-  }
-
-  @GET
-  @Path("/threshold")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<TimeSeriesMLTransactionThresholds> getCustomThreshold(@QueryParam("accountId") String accountId,
-      @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
-      @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
-      @QueryParam("transactionName") String transactionName, @QueryParam("metricName") String metricName) {
-    return new RestResponse<>(timeSeriesAnalysisService.getCustomThreshold(
-        appId, stateType, serviceId, groupName, transactionName, metricName));
   }
 
   @Produces({"application/json", "application/v1+json"})
