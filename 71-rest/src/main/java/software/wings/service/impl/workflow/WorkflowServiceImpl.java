@@ -126,7 +126,6 @@ import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
-import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
@@ -516,6 +515,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public Workflow readWorkflowWithoutServices(String appId, String workflowId) {
+    Workflow workflow = wingsPersistence.getWithAppId(Workflow.class, appId, workflowId);
+    if (workflow == null) {
+      return null;
+    }
+    loadOrchestrationWorkflow(workflow, null, false);
+    return workflow;
+  }
+
+  @Override
   public Workflow readWorkflowWithoutOrchestration(String appId, String workflowId) {
     return wingsPersistence.getWithAppId(Workflow.class, appId, workflowId);
   }
@@ -550,13 +559,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         workflow.getAppId(), workflow.getUuid(), version == null ? workflow.getDefaultVersion() : version);
     if (stateMachine != null) {
       // @TODO This check needs to be removed once on teplatizing, env is set to null.
-      if (workflow.checkEnvironmentTemplatized()) {
-        if (workflow.getEnvId() != null) {
-          Environment environment = environmentService.get(workflow.getAppId(), workflow.getEnvId());
-          workflow.setEnvId(environment == null ? null : environment.getUuid());
+      if (withServices) {
+        if (workflow.checkEnvironmentTemplatized()) {
+          if (workflow.getEnvId() != null) {
+            boolean environmentExists = environmentService.exist(workflow.getAppId(), workflow.getEnvId());
+            workflow.setEnvId(environmentExists ? workflow.getEnvId() : null);
+          }
         }
       }
-
       workflow.setOrchestrationWorkflow(stateMachine.getOrchestrationWorkflow());
       OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       if (orchestrationWorkflow != null) {
@@ -896,7 +906,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       WorkflowServiceTemplateHelper.transformEnvTemplateExpressions(workflow, orchestrationWorkflow);
       orchestrationWorkflow.onSave();
 
-      updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
+      //      updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
       stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
@@ -1075,7 +1085,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflow.setEnvId(envId);
           setUnset(ops, "envId", envId);
         }
-        updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
+        //        updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       }
       if (!cloned) {
         EntityVersion entityVersion = entityVersionService.newEntityVersion(workflow.getAppId(), WORKFLOW,
@@ -1949,16 +1959,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return null;
   }
 
-  private Set<EntityType> updateRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
-    Set<EntityType> entityTypes = fetchRequiredEntityTypes(appId, orchestrationWorkflow);
-
-    if (isNotEmpty(entityTypes)) {
-      orchestrationWorkflow.setRequiredEntityTypes(entityTypes);
-    }
-
-    return entityTypes;
-  }
-
   private Set<EntityType> updateRequiredEntityTypes(String appId, WorkflowPhase workflowPhase,
       Map<String, String> workflowVaraibles, List<String> artifactNeededServiceIds,
       boolean preDeploymentStepNeededArtifact) {
@@ -1974,12 +1974,26 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         String serviceTemplatizedName = workflowPhase.fetchServiceTemplatizedName();
         if (serviceTemplatizedName != null) {
           serviceId = workflowVaraibles.get(serviceTemplatizedName);
-        } // TODO Check whether it is an expression if not throw exception
+        }
       }
     }
+    if (preDeploymentStepNeededArtifact) {
+      if (serviceId != null) {
+        if (!artifactNeededServiceIds.contains(serviceId) && !matchesVariablePattern(serviceId)) {
+          artifactNeededServiceIds.add(serviceId);
+        }
+      }
+    }
+
     for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
       if (phaseStep.getSteps() == null) {
         continue;
+      }
+      if (requiredEntityTypes.contains(EntityType.ARTIFACT)) {
+        // Check if service already included. Then, no need to go over service and steps
+        if (artifactNeededServiceIds.contains(serviceId)) {
+          return requiredEntityTypes;
+        }
       }
       updateRequiredEntityTypes(appId, serviceId, phaseStep, requiredEntityTypes, workflowPhase, workflowVaraibles);
     }

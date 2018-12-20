@@ -51,6 +51,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   Workflow readWorkflow(@NotNull String appId, @NotNull String workflowId);
 
+  Workflow readWorkflowWithoutServices(@NotNull String appId, @NotNull String workflowId);
+
   Workflow readWorkflowWithoutOrchestration(@NotNull String appId, @NotNull String workflowId);
 
   Workflow readWorkflowByName(String appId, String workflowName);

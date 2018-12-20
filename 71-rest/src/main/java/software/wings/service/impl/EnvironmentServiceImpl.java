@@ -97,6 +97,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
@@ -334,14 +335,24 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                          .field(Environment.ID_KEY)
                                          .in(envIds)
                                          .asList();
-    return environments.stream()
-        .map(environment
-            -> EnvSummary.builder()
-                   .uuid(environment.getUuid())
-                   .name(environment.getName())
-                   .environmentType(environment.getEnvironmentType())
-                   .build())
-        .collect(Collectors.toList());
+
+    List<EnvSummary> envSummaries = environments.stream()
+                                        .map(environment
+                                            -> EnvSummary.builder()
+                                                   .uuid(environment.getUuid())
+                                                   .name(environment.getName())
+                                                   .environmentType(environment.getEnvironmentType())
+                                                   .build())
+                                        .collect(Collectors.toList());
+    List<EnvSummary> orderedEnvSummaries = new ArrayList<>();
+    Map<String, EnvSummary> envSummaryMap =
+        envSummaries.stream().collect(Collectors.toMap(EnvSummary::getUuid, Function.identity()));
+    for (String envId : envIds) {
+      if (envSummaryMap.containsKey(envId)) {
+        orderedEnvSummaries.add(envSummaryMap.get(envId));
+      }
+    }
+    return orderedEnvSummaries;
   }
 
   @Override
