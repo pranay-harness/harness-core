@@ -754,8 +754,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return wingsPersistence.getWithAppId(InfrastructureMapping.class, appId, infraMappingId);
   }
 
-  private void handlePcfInfraMapping(
-      Map<String, Object> keyValuePairs, PcfInfrastructureMapping pcfInfrastructureMapping) {
+  void handlePcfInfraMapping(Map<String, Object> keyValuePairs, PcfInfrastructureMapping pcfInfrastructureMapping) {
     keyValuePairs.put("organization", pcfInfrastructureMapping.getOrganization());
     keyValuePairs.put("space", pcfInfrastructureMapping.getSpace());
     keyValuePairs.put("tempRouteMap",
@@ -766,7 +765,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                         : pcfInfrastructureMapping.getRouteMaps());
   }
 
-  private void handleEcsInfraMapping(Map<String, Object> keyValuePairs, Set<String> fieldsToRemove,
+  void handleEcsInfraMapping(Map<String, Object> keyValuePairs, Set<String> fieldsToRemove,
       EcsInfrastructureMapping ecsInfrastructureMapping) {
     if (isNotEmpty(ecsInfrastructureMapping.getClusterName())) {
       keyValuePairs.put("clusterName", ecsInfrastructureMapping.getClusterName());

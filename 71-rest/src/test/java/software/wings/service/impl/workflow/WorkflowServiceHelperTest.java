@@ -20,7 +20,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -76,40 +75,33 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     serviceSpecification.setSchedulingStrategy(ECS_DAEMON_SCHEDULING_STRATEGY);
     doReturn(serviceSpecification).when(serviceResourceService).getEcsServiceSpecification(anyString(), anyString());
 
-    boolean isDaemonSchedulingStrategy =
-        (boolean) MethodUtils.invokeMethod(workflowServiceHelper, true, "isDaemonSchedulingStrategy", APP_ID,
-            aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
+    boolean isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
+        APP_ID, aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
     assertTrue(isDaemonSchedulingStrategy);
 
-    isDaemonSchedulingStrategy =
-        (boolean) MethodUtils.invokeMethod(workflowServiceHelper, true, "isDaemonSchedulingStrategy", APP_ID,
-            aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.CANARY);
+    isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
+        APP_ID, aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.CANARY);
     assertFalse(isDaemonSchedulingStrategy);
-    isDaemonSchedulingStrategy =
-        (boolean) MethodUtils.invokeMethod(workflowServiceHelper, true, "isDaemonSchedulingStrategy", APP_ID,
-            aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.ROLLING);
+    isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
+        APP_ID, aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.ROLLING);
     assertFalse(isDaemonSchedulingStrategy);
-    isDaemonSchedulingStrategy =
-        (boolean) MethodUtils.invokeMethod(workflowServiceHelper, true, "isDaemonSchedulingStrategy", APP_ID,
-            aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.CUSTOM);
+    isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
+        APP_ID, aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.CUSTOM);
     assertFalse(isDaemonSchedulingStrategy);
 
     serviceSpecification.setSchedulingStrategy(ECS_REPLICA_SCHEDULING_STRATEGY);
-    isDaemonSchedulingStrategy =
-        (boolean) MethodUtils.invokeMethod(workflowServiceHelper, true, "isDaemonSchedulingStrategy", APP_ID,
-            aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
+    isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
+        APP_ID, aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
     assertFalse(isDaemonSchedulingStrategy);
 
     serviceSpecification.resetToDefaultSpecification();
-    isDaemonSchedulingStrategy =
-        (boolean) MethodUtils.invokeMethod(workflowServiceHelper, true, "isDaemonSchedulingStrategy", APP_ID,
-            aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
+    isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
+        APP_ID, aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
     assertFalse(isDaemonSchedulingStrategy);
 
     serviceSpecification.setServiceSpecJson(serviceSpecification.getServiceSpecJson().replace("REPLICA", "DAEMON"));
-    isDaemonSchedulingStrategy =
-        (boolean) MethodUtils.invokeMethod(workflowServiceHelper, true, "isDaemonSchedulingStrategy", APP_ID,
-            aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
+    isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
+        APP_ID, aWorkflowPhase().withServiceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
     assertTrue(isDaemonSchedulingStrategy);
   }
 
