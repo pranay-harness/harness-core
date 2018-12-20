@@ -25,9 +25,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by peeyushaggarwal on 9/30/16.
- */
 public class JsonSubtypeResolver extends SubtypeResolver {
   private static final Logger logger = LoggerFactory.getLogger(JsonSubtypeResolver.class);
   private SubtypeResolver subtypeResolver;
@@ -64,6 +61,11 @@ public class JsonSubtypeResolver extends SubtypeResolver {
   @Override
   public void registerSubtypes(Class<?>... classes) {
     subtypeResolver.registerSubtypes(classes);
+  }
+
+  @Override
+  public void registerSubtypes(Collection<Class<?>> collection) {
+    subtypeResolver.registerSubtypes(collection);
   }
 
   @Override
