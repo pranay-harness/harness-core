@@ -322,6 +322,10 @@
             <artifactId>expiringmap</artifactId>
         </dependency>
         <dependency>
+            <groupId>net.rcarz</groupId>
+            <artifactId>jira-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>net.redhogs.cronparser</groupId>
             <artifactId>cron-parser</artifactId>
         </dependency>
@@ -610,12 +614,6 @@
             <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
-        <?SORTPOM IGNORE?>
-        <dependency>
-            <groupId>net.rcarz</groupId>
-            <artifactId>jira-client</artifactId>
-        </dependency>
-        <?SORTPOM RESUME?>
     </dependencies>
     <build>
         <finalName>rest</finalName>
