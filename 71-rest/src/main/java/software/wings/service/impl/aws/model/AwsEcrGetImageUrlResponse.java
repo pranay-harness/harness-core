@@ -1,18 +1,15 @@
 package software.wings.service.impl.aws.model;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class AwsEcrGetImageUrlResponse extends AwsResponse {
+@Builder
+public class AwsEcrGetImageUrlResponse implements AwsResponse {
+  private DelegateMetaInfo delegateMetaInfo;
+  private ExecutionStatus executionStatus;
+  private String errorMessage;
   String ecrImageUrl;
-
-  @Builder
-  public AwsEcrGetImageUrlResponse(ExecutionStatus executionStatus, String errorMessage, String ecrImageUrl) {
-    super(executionStatus, errorMessage);
-    this.ecrImageUrl = ecrImageUrl;
-  }
 }

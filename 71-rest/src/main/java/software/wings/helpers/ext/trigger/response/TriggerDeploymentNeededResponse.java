@@ -12,7 +12,7 @@ public class TriggerDeploymentNeededResponse extends TriggerResponse {
 
   @Builder
   public TriggerDeploymentNeededResponse(ExecutionStatus executionStatus, String errorMsg, boolean deploymentNeeded) {
-    super(executionStatus, errorMsg);
+    super(null, executionStatus, errorMsg);
     this.deploymentNeeded = deploymentNeeded;
   }
 }

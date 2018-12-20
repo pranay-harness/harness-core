@@ -1,20 +1,17 @@
 package software.wings.service.impl.aws.model;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.Map;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class AwsIamListRolesResponse extends AwsResponse {
+@Builder
+public class AwsIamListRolesResponse implements AwsResponse {
+  private DelegateMetaInfo delegateMetaInfo;
+  private ExecutionStatus executionStatus;
+  private String errorMessage;
   private Map<String, String> roles;
-
-  @Builder
-  public AwsIamListRolesResponse(ExecutionStatus executionStatus, String errorMessage, Map<String, String> roles) {
-    super(executionStatus, errorMessage);
-    this.roles = roles;
-  }
 }

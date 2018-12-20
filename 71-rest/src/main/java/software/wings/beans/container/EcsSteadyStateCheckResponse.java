@@ -1,6 +1,7 @@
 package software.wings.beans.container;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +17,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class EcsSteadyStateCheckResponse extends DelegateTaskNotifyResponseData {
+public class EcsSteadyStateCheckResponse implements DelegateTaskNotifyResponseData {
+  private DelegateMetaInfo delegateMetaInfo;
   private String errorMessage;
   private ExecutionStatus executionStatus;
   private List<ContainerInfo> containerInfoList;

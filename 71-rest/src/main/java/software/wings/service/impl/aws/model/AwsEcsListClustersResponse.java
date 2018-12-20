@@ -1,20 +1,17 @@
 package software.wings.service.impl.aws.model;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class AwsEcsListClustersResponse extends AwsResponse {
+@Builder
+public class AwsEcsListClustersResponse implements AwsResponse {
+  private DelegateMetaInfo delegateMetaInfo;
+  private ExecutionStatus executionStatus;
+  private String errorMessage;
   private List<String> clusters;
-
-  @Builder
-  public AwsEcsListClustersResponse(ExecutionStatus executionStatus, String errorMessage, List<String> clusters) {
-    super(executionStatus, errorMessage);
-    this.clusters = clusters;
-  }
 }

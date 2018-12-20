@@ -1,18 +1,15 @@
 package software.wings.service.impl.aws.model;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class AwsEcrGetAuthTokenResponse extends AwsResponse {
+@Builder
+public class AwsEcrGetAuthTokenResponse implements AwsResponse {
+  private DelegateMetaInfo delegateMetaInfo;
+  private ExecutionStatus executionStatus;
+  private String errorMessage;
   String ecrAuthToken;
-
-  @Builder
-  public AwsEcrGetAuthTokenResponse(ExecutionStatus executionStatus, String errorMessage, String ecrAuthToken) {
-    super(executionStatus, errorMessage);
-    this.ecrAuthToken = ecrAuthToken;
-  }
 }

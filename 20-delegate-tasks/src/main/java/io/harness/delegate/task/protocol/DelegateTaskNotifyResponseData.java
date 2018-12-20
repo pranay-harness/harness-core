@@ -1,8 +1,6 @@
 package io.harness.delegate.task.protocol;
 
-import lombok.Data;
-
-@Data
-public abstract class DelegateTaskNotifyResponseData implements ResponseData {
-  private DelegateMetaInfo delegateMetaInfo;
+public interface DelegateTaskNotifyResponseData extends ResponseData {
+  DelegateMetaInfo getDelegateMetaInfo();
+  void setDelegateMetaInfo(DelegateMetaInfo metaInfo);
 }
