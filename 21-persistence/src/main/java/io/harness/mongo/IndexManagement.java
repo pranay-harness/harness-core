@@ -124,6 +124,8 @@ public class IndexManagement {
         .stream()
         .filter(entry -> entry.getValue().getOperations() == 0)
         .filter(entry -> entry.getValue().getSince().compareTo(tooNew) < 0)
+        // Exclude the object id index. It is rare but it might be unused
+        .filter(entry -> !entry.getKey().equals("_id_"))
         // Exclude ttl indexes, Ttl monitoring is not tracked as operations
         .filter(entry -> !entry.getKey().startsWith("validUntil"))
         // Exclude unique indexes. Adding items is not tracked as index operations

@@ -27,8 +27,8 @@ import java.util.List;
 public class Whitelist extends Base {
   @Indexed @NotEmpty private String accountId;
   private String description;
-  @Indexed @NotEmpty private WhitelistStatus status = WhitelistStatus.ACTIVE;
-  @Indexed @NotEmpty private String filter;
+  @NotEmpty private WhitelistStatus status = WhitelistStatus.ACTIVE;
+  @NotEmpty private String filter;
 
   @Builder
   public Whitelist(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

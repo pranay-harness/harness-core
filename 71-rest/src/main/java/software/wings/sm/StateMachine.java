@@ -64,9 +64,9 @@ public class StateMachine extends Base {
 
   @Indexed private String originId;
 
-  @Indexed private Integer originVersion;
+  private Integer originVersion;
 
-  @Indexed private String name;
+  private String name;
 
   private OrchestrationWorkflow orchestrationWorkflow;
 

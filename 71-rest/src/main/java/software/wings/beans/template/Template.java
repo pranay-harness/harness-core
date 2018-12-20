@@ -44,10 +44,10 @@ public class Template extends Base {
   public static final String GALLERY_ID_KEY = "galleryId";
 
   @Indexed @NotNull @EntityName(groups = {Create.class, Update.class}) private String name;
-  @Indexed @NotEmpty private String accountId;
-  @Indexed private String type;
+  @NotEmpty private String accountId;
+  private String type;
   @Indexed private String folderId;
-  @Indexed Long version;
+  Long version;
   private String description;
   private String folderPathId;
   private transient String folderPath;
@@ -56,7 +56,7 @@ public class Template extends Base {
   private transient List<Variable> variables;
   private transient VersionedTemplate versionedTemplate;
   private String galleryId;
-  @Indexed private String referencedTemplateId;
+  private String referencedTemplateId;
   private Long referencedTemplateVersion;
   private transient String referencedTemplateUri;
 
