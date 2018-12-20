@@ -41,6 +41,8 @@ public class NewRelicConfig extends SettingValue implements EncryptableSetting {
 
   @Attributes(title = "API key", required = true) @Encrypted private char[] apiKey;
 
+  @Attributes(title = "NewRelic Account Id") private String newRelicAccountId;
+
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedApiKey;
@@ -53,11 +55,23 @@ public class NewRelicConfig extends SettingValue implements EncryptableSetting {
   }
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")
+  public NewRelicConfig(
+      String newRelicUrl, char[] apiKey, String newRelicAccountId, String accountId, String encryptedApiKey) {
+    this();
+    this.newRelicUrl = newRelicUrl;
+    this.apiKey = apiKey;
+    this.accountId = accountId;
+    this.newRelicAccountId = newRelicAccountId;
+    this.encryptedApiKey = encryptedApiKey;
+  }
+
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public NewRelicConfig(String newRelicUrl, char[] apiKey, String accountId, String encryptedApiKey) {
     this();
     this.newRelicUrl = newRelicUrl;
     this.apiKey = apiKey;
     this.accountId = accountId;
+    this.newRelicAccountId = "";
     this.encryptedApiKey = encryptedApiKey;
   }
 
@@ -66,11 +80,21 @@ public class NewRelicConfig extends SettingValue implements EncryptableSetting {
   @NoArgsConstructor
   public static final class Yaml extends VerificationProviderYaml {
     private String apiKey;
+    private String newRelicAccountId;
+
+    @Builder
+    public Yaml(String type, String harnessApiVersion, String apiKey, String newRelicAccountId,
+        UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
+      this.apiKey = apiKey;
+      this.newRelicAccountId = newRelicAccountId;
+    }
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String apiKey, UsageRestrictions usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.apiKey = apiKey;
+      this.newRelicAccountId = "";
     }
   }
 }

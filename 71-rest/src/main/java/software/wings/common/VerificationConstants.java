@@ -63,6 +63,10 @@ public class VerificationConstants {
       "#/location=METRIC_BROWSER&viewTree=true&axis=linear&showPoints=false&application={applicationId}"
       + "&timeRange=Custom_Time_Range.BETWEEN_TIMES.{endTimeMs}.{startTimeMs}.6&metrics=APPLICATION_COMPONENT.{metricString}";
 
+  public static final String NEW_RELIC_DEEPLINK_FORMAT =
+      "https://rpm.newrelic.com/set_time_window?back=https://rpm.newrelic.com/accounts/{accountId}/"
+      + "applications/{applicationId}&tw[from_local]=true&tw[dur]={duration}&tw[end]={endTime}";
+
   public static final Map<String, String> ERROR_METRIC_NAMES =
       Collections.unmodifiableMap(new HashMap<String, String>() {
         {
