@@ -18,8 +18,9 @@ public class MigrationBackgroundList {
   public static List<Pair<Integer, Class<? extends Migration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends Migration>>>()
         .add(Pair.of(1, AddValidUntilToCommandLog.class))
-        .add(Pair.of(2, NewRelicMetricDataBackupMigration.class))
+        .add(Pair.of(2, BaseMigration.class))
         .add(Pair.of(3, SetLastLoginTimeToAllUsers.class))
+        .add(Pair.of(4, NewRelicMetricDataBackupMigration.class))
         .build();
   }
 }
