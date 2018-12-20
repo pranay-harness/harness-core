@@ -13,6 +13,7 @@ import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_F
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.ERROR_METRIC_NAMES;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
+import static software.wings.common.VerificationConstants.NEW_RELIC_DEEPLINK_FORMAT;
 import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeriesDataPointsList;
 
 import com.google.common.base.Preconditions;
@@ -32,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.FeatureName;
+import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
@@ -47,6 +49,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.settings.SettingValue;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AppDynamicsState;
@@ -58,6 +61,7 @@ import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.dashboard.HeatMapUnit;
+import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -653,17 +657,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         TimeSeriesFilter.builder().startTime(startTime).endTime(endTime).historyStartTime(historyStartTime).build());
   }
 
-  private String getBaseUrlOfConnector(CVConfiguration cvConfiguration) {
-    switch (cvConfiguration.getStateType()) {
-      case APP_DYNAMICS:
-        AppDynamicsConfig appDynamicsConfig =
-            (AppDynamicsConfig) wingsPersistence.get(SettingAttribute.class, cvConfiguration.getConnectorId())
-                .getValue();
-        return appDynamicsConfig.getControllerUrl();
-      default:
-        logger.info("Unsupported stateType {} for deeplinking", cvConfiguration.getStateType());
-        return "";
+  private SettingValue getConnectorConfig(CVConfiguration cvConfiguration) {
+    if (isNotEmpty(cvConfiguration.getConnectorId())) {
+      return wingsPersistence.get(SettingAttribute.class, cvConfiguration.getConnectorId()).getValue();
     }
+    return null;
   }
 
   private Double getNormalizedMetricValue(String metricName, NewRelicMetricDataRecord dataRecord) {
@@ -685,15 +683,28 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private String getDeeplinkUrl(
-      CVConfiguration cvConfig, String baseUrl, long startTime, long endTime, String metricString) {
+      CVConfiguration cvConfig, SettingValue connectorConfig, long startTime, long endTime, String metricString) {
     switch (cvConfig.getStateType()) {
       case APP_DYNAMICS:
         AppDynamicsCVServiceConfiguration config = (AppDynamicsCVServiceConfiguration) cvConfig;
+        String baseUrl = ((AppDynamicsConfig) connectorConfig).getControllerUrl();
         return baseUrl
             + APPDYNAMICS_DEEPLINK_FORMAT.replace("{startTimeMs}", String.valueOf(startTime))
                   .replace("{endTimeMs}", String.valueOf(endTime))
                   .replace("{applicationId}", config.getAppDynamicsApplicationId())
                   .replace("{metricString}", metricString);
+      case NEW_RELIC:
+        String newRelicAppId = ((NewRelicCVServiceConfiguration) cvConfig).getApplicationId();
+        String newRelicAccountId = ((NewRelicConfig) connectorConfig).getNewRelicAccountId();
+        if (isEmpty(newRelicAccountId)) {
+          return "";
+        }
+        int durationInHours = (int) TimeUnit.MILLISECONDS.toHours(endTime - startTime);
+        long endTimeSeconds = TimeUnit.MILLISECONDS.toSeconds(endTime);
+        return NEW_RELIC_DEEPLINK_FORMAT.replace("{accountId}", newRelicAccountId)
+            .replace("{applicationId}", newRelicAppId)
+            .replace("{duration}", String.valueOf(durationInHours))
+            .replace("{endTime}", String.valueOf(endTimeSeconds));
       default:
         logger.info("Unsupported stateType {} for deeplinking", cvConfig.getStateType());
         return "";
@@ -794,7 +805,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     long endTime = filter.getEndTime();
     long riskCutOffTime = filter.getStartTime();
 
-    String baseUrlForLink = getBaseUrlOfConnector(cvConfiguration);
+    SettingValue connectorConfig = getConnectorConfig(cvConfiguration);
     int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
     int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime);
 
@@ -907,7 +918,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 metricRecord.getDataCollectionMinute(), getNormalizedMetricValue(metricName, metricRecord));
         if (isNotEmpty(metricRecord.getDeeplinkMetadata())) {
           if (metricRecord.getDeeplinkMetadata().containsKey(metricName)) {
-            String deeplinkUrl = getDeeplinkUrl(cvConfiguration, baseUrlForLink, startTime, endTime,
+            String deeplinkUrl = getDeeplinkUrl(cvConfiguration, connectorConfig, startTime, endTime,
                 metricRecord.getDeeplinkMetadata().get(metricName));
             metricMap.get(metricName).setMetricDeeplinkUrl(deeplinkUrl);
           }
