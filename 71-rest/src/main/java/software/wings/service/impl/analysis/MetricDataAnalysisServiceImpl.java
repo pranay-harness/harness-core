@@ -1,6 +1,9 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
@@ -13,6 +16,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -22,11 +28,12 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
@@ -35,6 +42,9 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DataStoreService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
@@ -51,6 +61,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * Created by rsingh on 9/26/17.
@@ -61,16 +72,45 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private LearningEngineService learningEngineService;
-  @Inject protected DelegateServiceImpl delegateService;
   @Inject protected SettingsService settingsService;
   @Inject private WorkflowService workflowService;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private AppService appService;
+  @Inject private DataStoreService dataStoreService;
 
   @Override
   public String getLastSuccessfulWorkflowExecutionIdWithData(
       StateType stateType, String appId, String workflowId, String serviceId) {
     List<String> successfulExecutions =
         workflowService.getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId);
+    final boolean isGoogleMetricReadEnabled =
+        featureFlagService.isEnabled(FeatureName.METRIC_READ_GOOGLE, appService.getAccountIdByAppId(appId));
     for (String successfulExecution : successfulExecutions) {
+      if (isGoogleMetricReadEnabled) {
+        PageRequest<NewRelicMetricDataRecord> pageRequest =
+            aPageRequest()
+                .withLimit(UNLIMITED)
+                .addFilter("workflowExecutionId", Operator.EQ, successfulExecution)
+                .build();
+
+        if (dataStoreService instanceof MongoDataStoreServiceImpl) {
+          pageRequest.addFilter("appId", Operator.EQ, appId);
+        }
+
+        final PageResponse<NewRelicMetricDataRecord> results =
+            dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+        List<NewRelicMetricDataRecord> rv =
+            results.stream()
+                .filter(dataRecord
+                    -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
+                        && !ClusterLevel.H0.equals(dataRecord.getLevel())
+                        && !ClusterLevel.HF.equals(dataRecord.getLevel()))
+                .collect(Collectors.toList());
+
+        if (isNotEmpty(rv)) {
+          return successfulExecution;
+        }
+      }
       if (wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
               .filter("stateType", stateType)
               .filter("appId", appId)
@@ -84,7 +124,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         return successfulExecution;
       }
     }
-    logger.warn("Could not get a successful workflow to find control nodes");
+    logger.warn(
+        "Could not get a successful workflow to find control nodes for workflow {}, service {}", workflowId, serviceId);
     return null;
   }
 

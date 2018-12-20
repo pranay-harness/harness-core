@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -15,6 +16,7 @@ import com.google.cloud.datastore.StringValue;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.OrderBy;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
@@ -37,6 +39,7 @@ import java.util.List;
 import java.util.Set;
 
 public class GoogleDataStoreServiceImpl implements DataStoreService {
+  private static int INSERT_BATCH_SIZE = 500;
   private static int PURGE_BATCH_SIZE = 10000;
   private static final Logger logger = LoggerFactory.getLogger(GoogleDataStoreServiceImpl.class);
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
@@ -57,9 +60,12 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     if (isEmpty(records)) {
       return;
     }
-    List<Entity> logList = new ArrayList<>();
-    records.forEach(log -> logList.add(log.convertToCloudStorageEntity(datastore)));
-    datastore.put(logList.stream().toArray(Entity[] ::new));
+    List<List<T>> batches = Lists.partition(records, INSERT_BATCH_SIZE);
+    batches.forEach(batch -> {
+      List<Entity> logList = new ArrayList<>();
+      batch.forEach(record -> logList.add(record.convertToCloudStorageEntity(datastore)));
+      datastore.put(logList.stream().toArray(Entity[] ::new));
+    });
   }
 
   @Override
@@ -152,7 +158,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
       });
     }
 
-    if (isNotEmpty(pageRequest.getLimit())) {
+    if (isNotEmpty(pageRequest.getLimit()) && !pageRequest.getLimit().equals(UNLIMITED)) {
       queryBuilder.setLimit(Integer.parseInt(pageRequest.getLimit()));
     }
 
@@ -179,7 +185,10 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     CompositeFilter compositeFilter = null;
     if (isNotEmpty(pageRequest.getFilters())) {
       List<PropertyFilter> propertyFilters = new ArrayList<>();
-      pageRequest.getFilters().forEach(searchFilter -> propertyFilters.add(createFilter(searchFilter)));
+      pageRequest.getFilters()
+          .stream()
+          .filter(searchFilter -> searchFilter.getFieldValues()[0] != null)
+          .forEach(searchFilter -> propertyFilters.add(createFilter(searchFilter)));
       if (propertyFilters.size() == 1) {
         compositeFilter = CompositeFilter.and(propertyFilters.get(0));
       } else {
@@ -193,21 +202,30 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
   private PropertyFilter createFilter(SearchFilter searchFilter) {
     switch (searchFilter.getOp()) {
       case EQ:
-        return searchFilter.getFieldValues()[0] instanceof String
-            ? PropertyFilter.eq(searchFilter.getFieldName(), (String) searchFilter.getFieldValues()[0])
-            : PropertyFilter.eq(searchFilter.getFieldName(), (Long) searchFilter.getFieldValues()[0]);
+        if (searchFilter.getFieldValues()[0] instanceof String) {
+          return PropertyFilter.eq(searchFilter.getFieldName(), (String) searchFilter.getFieldValues()[0]);
+        } else if (searchFilter.getFieldValues()[0].getClass() != null
+            && searchFilter.getFieldValues()[0].getClass().isEnum()) {
+          return PropertyFilter.eq(searchFilter.getFieldName(), ((Enum) searchFilter.getFieldValues()[0]).name());
+        } else {
+          return PropertyFilter.eq(searchFilter.getFieldName(), (long) searchFilter.getFieldValues()[0]);
+        }
 
       case LT:
-        return PropertyFilter.lt(searchFilter.getFieldName(), (Long) searchFilter.getFieldValues()[0]);
+        return PropertyFilter.lt(
+            searchFilter.getFieldName(), Long.parseLong(String.valueOf(searchFilter.getFieldValues()[0])));
 
       case LT_EQ:
-        return PropertyFilter.le(searchFilter.getFieldName(), (Long) searchFilter.getFieldValues()[0]);
+        return PropertyFilter.le(
+            searchFilter.getFieldName(), Long.parseLong(String.valueOf(searchFilter.getFieldValues()[0])));
 
       case GT:
-        return PropertyFilter.gt(searchFilter.getFieldName(), (Long) searchFilter.getFieldValues()[0]);
+        return PropertyFilter.gt(
+            searchFilter.getFieldName(), Long.parseLong(String.valueOf(searchFilter.getFieldValues()[0])));
 
       case GE:
-        return PropertyFilter.ge(searchFilter.getFieldName(), (Long) searchFilter.getFieldValues()[0]);
+        return PropertyFilter.ge(
+            searchFilter.getFieldName(), Long.parseLong(String.valueOf(searchFilter.getFieldValues()[0])));
 
       default:
         throw new IllegalArgumentException("Not supported filter: " + searchFilter);

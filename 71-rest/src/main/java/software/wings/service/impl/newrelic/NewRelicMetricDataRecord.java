@@ -133,18 +133,18 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
                       .setKind(this.getClass().getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
                       .newKey(generateUniqueKey());
     com.google.cloud.datastore.Entity.Builder recordBuilder = com.google.cloud.datastore.Entity.newBuilder(taskKey);
-    addFieldIfNotEmpty(recordBuilder, "stateType", stateType.getName(), true);
+    addFieldIfNotEmpty(recordBuilder, "stateType", stateType.name(), true);
     addFieldIfNotEmpty(recordBuilder, "appId", appId, false);
     addFieldIfNotEmpty(recordBuilder, "name", name, false);
     addFieldIfNotEmpty(recordBuilder, "workflowId", workflowId, true);
     addFieldIfNotEmpty(recordBuilder, "workflowExecutionId", workflowExecutionId, false);
-    addFieldIfNotEmpty(recordBuilder, "serviceId", serviceId, false);
+    addFieldIfNotEmpty(recordBuilder, "serviceId", serviceId, true);
     addFieldIfNotEmpty(recordBuilder, "cvConfigId", cvConfigId, false);
     addFieldIfNotEmpty(recordBuilder, "stateExecutionId", stateExecutionId, false);
     recordBuilder.set("timeStamp", timeStamp);
     recordBuilder.set("dataCollectionMinute", dataCollectionMinute);
     addFieldIfNotEmpty(recordBuilder, "host", host, false);
-    addFieldIfNotEmpty(recordBuilder, "level", level == null ? null : level.name(), true);
+    addFieldIfNotEmpty(recordBuilder, "level", level == null ? null : level.name(), false);
     addFieldIfNotEmpty(recordBuilder, "tag", tag, true);
     addFieldIfNotEmpty(recordBuilder, "groupName", groupName, false);
 
@@ -154,6 +154,11 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
     if (isNotEmpty(deeplinkMetadata)) {
       addFieldIfNotEmpty(recordBuilder, "deeplinkMetadata", JsonUtils.asJson(deeplinkMetadata), true);
     }
+
+    if (validUntil == null) {
+      validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
+    }
+    recordBuilder.set("validUntil", validUntil.getTime());
 
     return recordBuilder.build();
   }

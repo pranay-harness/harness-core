@@ -6,8 +6,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.RestResponse.Builder.aRestResponse;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
@@ -16,12 +20,16 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
+import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
@@ -54,6 +62,8 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
+  @Mock private VerificationManagerClientHelper managerClientHelper;
 
   private String accountId;
   private String appId;
@@ -62,8 +72,11 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
 
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(false).build());
+    setInternalState(timeSeriesAnalysisService, "managerClientHelper", managerClientHelper);
+    setInternalState(continuousVerificationService, "timeSeriesAnalysisService", timeSeriesAnalysisService);
     Account account = anAccount().withAccountName(generateUUID()).build();
-
     account.setEncryptedLicenseInfo(
         EncryptionUtils.encrypt(LicenseUtil.convertToString(LicenseInfo.builder().accountType(AccountType.PAID).build())
                                     .getBytes(Charset.forName("UTF-8")),
