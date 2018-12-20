@@ -16,3 +16,31 @@ indexes:
   - name: stateExecutionId
   - name: createdAt
     direction: desc
+
+- kind: newRelicMetricRecords
+  properties:
+  - name: stateExecutionId
+  - name: groupName
+  - name: dataCollectionMinute
+    direction: desc
+
+- kind: newRelicMetricRecords
+  properties:
+  - name: workflowExecutionId
+  - name: groupName
+  - name: dataCollectionMinute
+    direction: desc
+
+- kind: newRelicMetricRecords
+  properties:
+  - name: stateExecutionId
+  - name: groupName
+  - name: level
+  - name: dataCollectionMinute
+    direction: desc
+
+- kind: newRelicMetricRecords
+  properties:
+  - name: cvConfigId
+  - name: dataCollectionMinute
+    direction: desc

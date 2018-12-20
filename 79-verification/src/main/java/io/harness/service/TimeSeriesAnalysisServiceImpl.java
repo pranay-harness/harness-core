@@ -1,5 +1,7 @@
 package io.harness.service;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
@@ -18,6 +20,10 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.app.VerificationServiceConfiguration;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.entities.TimeSeriesCumulativeSums;
 import io.harness.exception.WingsException;
@@ -34,10 +40,13 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.DataStorageMode;
+import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
@@ -66,6 +75,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -74,6 +84,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by rsingh on 9/26/17.
@@ -308,6 +319,25 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public List<NewRelicMetricDataRecord> getRecords(String appId, String stateExecutionId, String groupName,
       Set<String> nodes, int analysisMinute, int analysisStartMinute) {
+    if (isGoogleMetricReadEnabled(appId)) {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter("stateExecutionId", Operator.EQ, stateExecutionId)
+              .addFilter("groupName", Operator.EQ, groupName)
+              .addFilter("dataCollectionMinute", Operator.LT_EQ, analysisMinute)
+              .addFilter("dataCollectionMinute", Operator.GE, analysisStartMinute)
+              .build();
+
+      addAppIdInRequestIfNecessary(pageRequest, appId);
+      final PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      return results.stream()
+          .filter(dataRecord
+              -> nodes.contains(dataRecord.getHost()) && !ClusterLevel.H0.equals(dataRecord.getLevel())
+                  && !ClusterLevel.HF.equals(dataRecord.getLevel()))
+          .collect(Collectors.toList());
+    }
     return wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeCount)
         .filter("stateExecutionId", stateExecutionId)
         .filter("appId", appId)
@@ -325,10 +355,32 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
-      String appId, String workflowExecutionID, String groupName, int analysisMinute, int analysisStartMinute) {
+      String appId, String workflowExecutionId, String groupName, int analysisMinute, int analysisStartMinute) {
+    if (isEmpty(workflowExecutionId)) {
+      return Collections.emptyList();
+    }
+    if (isGoogleMetricReadEnabled(appId)) {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter("workflowExecutionId", Operator.EQ, workflowExecutionId)
+              .addFilter("groupName", Operator.EQ, groupName)
+              .addFilter("dataCollectionMinute", Operator.LT_EQ, analysisMinute)
+              .addFilter("dataCollectionMinute", Operator.GE, analysisStartMinute)
+              .build();
+
+      addAppIdInRequestIfNecessary(pageRequest, appId);
+      final PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      return results.stream()
+          .filter(dataRecord
+              -> !ClusterLevel.H0.equals(dataRecord.getLevel()) && !ClusterLevel.HF.equals(dataRecord.getLevel()))
+          .collect(Collectors.toList());
+    }
+
     MorphiaIterator<NewRelicMetricDataRecord, NewRelicMetricDataRecord> iterator =
         wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-            .filter("workflowExecutionId", workflowExecutionID)
+            .filter("workflowExecutionId", workflowExecutionId)
             .filter("appId", appId)
             .field("groupName")
             .in(asList(groupName, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME))
@@ -349,19 +401,48 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public int getMaxControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
       String workflowExecutionId, String groupName) {
-    NewRelicMetricDataRecord newRelicMetricDataRecord =
-        wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-            .filter("stateType", stateType)
-            .filter("appId", appId)
-            .filter("workflowId", workflowId)
-            .filter("workflowExecutionId", workflowExecutionId)
-            .filter("serviceId", serviceId)
-            .field("groupName")
-            .in(asList(groupName, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME))
-            .field("level")
-            .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
-            .order("-dataCollectionMinute")
-            .get();
+    if (isGoogleMetricReadEnabled(appId)) {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter("workflowExecutionId", Operator.EQ, workflowExecutionId)
+              .build();
+      addAppIdInRequestIfNecessary(pageRequest, appId);
+
+      PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      if (results.isEmpty()) {
+        return -1;
+      }
+      final List<NewRelicMetricDataRecord> records =
+          results.getResponse()
+              .stream()
+              .filter(dataRecord
+                  -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
+                      && (dataRecord.getGroupName().equals(groupName)
+                             || dataRecord.getGroupName().equals(DEFAULT_GROUP_NAME))
+                      && (!ClusterLevel.H0.equals(dataRecord.getLevel())
+                             && !ClusterLevel.HF.equals(dataRecord.getLevel())))
+              .collect(Collectors.toList());
+      if (records.isEmpty()) {
+        return -1;
+      }
+      Collections.sort(records, (o1, o2) -> o2.getDataCollectionMinute() - o1.getDataCollectionMinute());
+      return records.get(0).getDataCollectionMinute();
+    }
+
+    NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                            .filter("stateType", stateType)
+                                                            .filter("appId", appId)
+                                                            .filter("workflowId", workflowId)
+                                                            .filter("workflowExecutionId", workflowExecutionId)
+                                                            .filter("serviceId", serviceId)
+                                                            .field("groupName")
+                                                            .in(asList(groupName, DEFAULT_GROUP_NAME))
+                                                            .field("level")
+                                                            .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
+                                                            .order("-dataCollectionMinute")
+                                                            .get();
 
     return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
   }
@@ -369,6 +450,35 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public int getMinControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
       String workflowExecutionId, String groupName) {
+    if (isGoogleMetricReadEnabled(appId)) {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter("workflowExecutionId", Operator.EQ, workflowExecutionId)
+              .build();
+      addAppIdInRequestIfNecessary(pageRequest, appId);
+
+      PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      if (results.isEmpty()) {
+        return -1;
+      }
+      final List<NewRelicMetricDataRecord> records =
+          results.getResponse()
+              .stream()
+              .filter(dataRecord
+                  -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
+                      && (dataRecord.getGroupName().equals(groupName)
+                             || dataRecord.getGroupName().equals(DEFAULT_GROUP_NAME))
+                      && (!ClusterLevel.H0.equals(dataRecord.getLevel())
+                             && !ClusterLevel.HF.equals(dataRecord.getLevel())))
+              .collect(Collectors.toList());
+      if (records.isEmpty()) {
+        return -1;
+      }
+      Collections.sort(records, Comparator.comparingInt(NewRelicMetricDataRecord::getDataCollectionMinute));
+      return records.get(0).getDataCollectionMinute();
+    }
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                             .filter("stateType", stateType)
                                                             .filter("appId", appId)
@@ -389,6 +499,33 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       StateType stateType, String appId, String workflowId, String serviceId) {
     List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId);
     for (String successfulExecution : successfulExecutions) {
+      if (isGoogleMetricReadEnabled(appId)) {
+        PageRequest<NewRelicMetricDataRecord> pageRequest =
+            aPageRequest()
+                .withLimit(UNLIMITED)
+                .addFilter("workflowExecutionId", Operator.EQ, successfulExecution)
+                .build();
+        addAppIdInRequestIfNecessary(pageRequest, appId);
+
+        PageResponse<NewRelicMetricDataRecord> results =
+            dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+        if (results.isEmpty()) {
+          continue;
+        }
+        final List<NewRelicMetricDataRecord> records =
+            results.getResponse()
+                .stream()
+                .filter(dataRecord
+                    -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
+
+                        && (!ClusterLevel.H0.equals(dataRecord.getLevel())
+                               && !ClusterLevel.HF.equals(dataRecord.getLevel())))
+                .collect(Collectors.toList());
+        if (!records.isEmpty()) {
+          return successfulExecution;
+        }
+      }
+
       if (wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
               .filter("stateType", stateType)
               .filter("appId", appId)
@@ -642,6 +779,35 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     logger.info(
         "Querying for getLastHeartBeat. Params are: stateType {}, appId {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
         stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName);
+
+    if (isGoogleMetricReadEnabled(appId)) {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter("stateExecutionId", Operator.EQ, stateExecutionId)
+              .addFilter("groupName", Operator.EQ, groupName)
+              .addOrder("dataCollectionMinute", OrderType.DESC)
+              .build();
+
+      addAppIdInRequestIfNecessary(pageRequest, appId);
+      final PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      List<NewRelicMetricDataRecord> rv =
+          results.stream()
+              .filter(dataRecord
+                  -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
+                      && ClusterLevel.HF.equals(dataRecord.getLevel()))
+              .collect(Collectors.toList());
+
+      if (isEmpty(rv)) {
+        logger.info(
+            "No heartbeat record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}",
+            ClusterLevel.HF, stateExecutionId, workflowExecutionId, serviceId);
+        return null;
+      }
+      return rv.get(0);
+    }
+
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                             .filter("stateType", stateType)
                                                             .filter("appId", appId)
@@ -670,6 +836,35 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     logger.info(
         "Querying for getLastHeartBeat. Params are: stateType {}, appId {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
         stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName);
+    if (isGoogleMetricReadEnabled(appId)) {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter("stateExecutionId", Operator.EQ, stateExecutionId)
+              .addFilter("groupName", Operator.EQ, groupName)
+              .addOrder("dataCollectionMinute", OrderType.DESC)
+              .build();
+
+      addAppIdInRequestIfNecessary(pageRequest, appId);
+
+      final PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      List<NewRelicMetricDataRecord> rv =
+          results.stream()
+              .filter(dataRecord
+                  -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
+                      && ClusterLevel.H0.equals(dataRecord.getLevel()))
+              .collect(Collectors.toList());
+
+      if (isEmpty(rv)) {
+        logger.info(
+            "No metric record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}.",
+            ClusterLevel.H0, stateExecutionId, workflowExecutionId, serviceId);
+        return null;
+      }
+      logger.info("Returning the record: {} from getAnalysisMinute", rv.get(0));
+      return rv.get(0);
+    }
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                             .filter("stateType", stateType)
                                                             .filter("appId", appId)
@@ -698,6 +893,27 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     logger.info(
         "bumpCollectionMinuteToProcess. Going to update the record for stateExecutionId {} and dataCollectionMinute {}",
         stateExecutionId, analysisMinute);
+    if (isEmpty(stateExecutionId)) {
+      return;
+    }
+    if (isGoogleMetricReadEnabled(appId)) {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter("stateExecutionId", Operator.EQ, stateExecutionId)
+              .addFilter("groupName", Operator.EQ, groupName)
+              .addFilter("level", Operator.EQ, ClusterLevel.H0)
+              .addFilter("dataCollectionMinute", Operator.LT_EQ, analysisMinute)
+              .addOrder("dataCollectionMinute", OrderType.DESC)
+              .build();
+      addAppIdInRequestIfNecessary(pageRequest, appId);
+      final PageResponse<NewRelicMetricDataRecord> dataRecords =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+
+      dataRecords.forEach(dataRecord -> dataRecord.setLevel(ClusterLevel.HF));
+      dataStoreService.save(NewRelicMetricDataRecord.class, dataRecords);
+    }
+
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                 .filter("appId", appId)
                                                 .filter("workflowExecutionId", workflowExecutionId)
@@ -795,6 +1011,21 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public int getMaxCVCollectionMinute(String appId, String cvConfigId) {
+    if (isGoogleMetricReadEnabled(appId)) {
+      PageRequest<NewRelicMetricDataRecord> pageRequest = aPageRequest()
+                                                              .withLimit("1")
+                                                              .addFilter("cvConfigId", Operator.EQ, cvConfigId)
+                                                              .addOrder("dataCollectionMinute", OrderType.DESC)
+                                                              .build();
+      addAppIdInRequestIfNecessary(pageRequest, appId);
+
+      final PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      if (isEmpty(results)) {
+        return -1;
+      }
+      return results.get(0).getDataCollectionMinute();
+    }
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
                                                             .filter("appId", appId)
                                                             .filter("cvConfigId", cvConfigId)
@@ -818,6 +1049,22 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public List<NewRelicMetricDataRecord> getMetricRecords(StateType stateType, String appId, String serviceId,
       String cvConfigId, int analysisStartMinute, int analysisEndMinute) {
+    if (isGoogleMetricReadEnabled(appId)) {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter("cvConfigId", Operator.EQ, cvConfigId)
+              .addFilter("dataCollectionMinute", Operator.GE, analysisStartMinute)
+              .addFilter("dataCollectionMinute", Operator.LT_EQ, analysisEndMinute)
+              .build();
+      addAppIdInRequestIfNecessary(pageRequest, appId);
+
+      final PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      return results.stream()
+          .filter(dataRecord -> !dataRecord.getName().equals(HARNESS_HEARTBEAT_METRIC_NAME))
+          .collect(Collectors.toList());
+    }
     return wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeCount)
         .filter("stateType", stateType)
         .filter("appId", appId)
@@ -934,5 +1181,18 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       logger.error(errorMsg);
       throw new WingsException(errorMsg);
     }
+  }
+
+  private void addAppIdInRequestIfNecessary(PageRequest pageRequest, String appId) {
+    if (dataStoreService instanceof MongoDataStoreServiceImpl) {
+      pageRequest.addFilter("appId", Operator.EQ, appId);
+    }
+  }
+
+  private boolean isGoogleMetricReadEnabled(String appId) {
+    return managerClientHelper
+        .callManagerWithRetry(managerClient.isFeatureEnabled(
+            FeatureName.METRIC_READ_GOOGLE, wingsPersistence.get(Application.class, appId).getAccountId()))
+        .getResource();
   }
 }

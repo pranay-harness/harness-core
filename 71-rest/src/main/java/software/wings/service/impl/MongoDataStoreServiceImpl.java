@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.service.impl.LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY;
 
 import com.google.inject.Inject;
@@ -49,7 +50,7 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public <T extends GoogleDataStoreAware> PageResponse<T> list(Class<T> clazz, PageRequest<T> pageRequest) {
-    return wingsPersistence.query(clazz, pageRequest);
+    return wingsPersistence.query(clazz, pageRequest, excludeAuthority);
   }
 
   @Override

@@ -6,15 +6,23 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
@@ -45,6 +53,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   private String groupName;
   private String delegateTaskId;
   private Integer analysisMinute;
+  @Mock private VerificationManagerClientHelper managerClientHelper;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TimeSeriesAnalysisService metricDataAnalysisService;
@@ -52,8 +61,10 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    accountId = generateUuid();
-    appId = generateUuid();
+    when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(false).build());
+    setInternalState(metricDataAnalysisService, "managerClientHelper", managerClientHelper);
+    accountId = wingsPersistence.save(anAccount().withAccountName(generateUuid()).build());
+    appId = wingsPersistence.save(anApplication().withName(generateUuid()).withAccountId(accountId).build());
     stateExecutionId = generateUuid();
     workflowId = generateUuid();
     workflowExecutionId = generateUuid();

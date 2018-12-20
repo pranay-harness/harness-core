@@ -588,7 +588,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     final String workflowExecutionId = UUID.randomUUID().toString();
     final String serviceId = UUID.randomUUID().toString();
     final String stateExecutionId = UUID.randomUUID().toString();
-    final String appId = UUID.randomUUID().toString();
+    final String appId =
+        wingsPersistence.save(anApplication().withName(generateUuid()).withAccountId(accountId).build());
     final String delegateTaskId = UUID.randomUUID().toString();
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -698,12 +699,13 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  public void controlNoTest() throws IOException {
+  public void controlNoTest() {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
     final String serviceId = UUID.randomUUID().toString();
     final String stateExecutionId = UUID.randomUUID().toString();
-    final String appId = UUID.randomUUID().toString();
+    final String appId =
+        wingsPersistence.save(anApplication().withName(generateUuid()).withAccountId(accountId).build());
     final String delegateTaskId = UUID.randomUUID().toString();
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -831,12 +833,13 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  public void testNoControl() throws IOException {
-    final String workflowId = UUID.randomUUID().toString();
-    final String workflowExecutionId = UUID.randomUUID().toString();
-    final String serviceId = UUID.randomUUID().toString();
-    final String stateExecutionId = UUID.randomUUID().toString();
-    final String appId = UUID.randomUUID().toString();
+  public void testNoControl() {
+    final String workflowId = generateUuid();
+    final String workflowExecutionId = generateUuid();
+    final String serviceId = generateUuid();
+    final String stateExecutionId = generateUuid();
+    final String appId =
+        wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     final String delegateTaskId = UUID.randomUUID().toString();
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -966,12 +969,13 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  public void txnInTestButNotControl() throws IOException, InterruptedException {
+  public void txnInTestButNotControl() throws InterruptedException {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
     final String serviceId = UUID.randomUUID().toString();
     final String stateExecutionId = UUID.randomUUID().toString();
-    final String appId = UUID.randomUUID().toString();
+    final String appId =
+        wingsPersistence.save(anApplication().withName(generateUuid()).withAccountId(accountId).build());
     final String delegateTaskId = UUID.randomUUID().toString();
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -1194,7 +1198,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     final String workflowExecutionId = UUID.randomUUID().toString();
     final String serviceId = UUID.randomUUID().toString();
     final String stateExecutionId = UUID.randomUUID().toString();
-    final String appId = UUID.randomUUID().toString();
+    final String appId =
+        wingsPersistence.save(anApplication().withName(generateUuid()).withAccountId(accountId).build());
     final String delegateTaskId = UUID.randomUUID().toString();
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();

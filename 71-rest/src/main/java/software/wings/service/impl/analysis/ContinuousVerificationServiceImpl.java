@@ -1,5 +1,7 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeCount;
@@ -38,8 +40,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.PipelineSummary;
@@ -79,7 +84,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuthService authService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private AppService appService;
   @Inject private CVConfigurationService cvConfigurationService;
+  @Inject private DataStoreService dataStoreService;
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
   private static final int DURATION_IN_MINUTES = 10;
@@ -791,73 +798,91 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
     int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime);
 
-    Map<Integer, Integer> startEndMap = new HashMap<>();
-    int movingStart = startMinute, movingEnd = startMinute + 60;
-    while (movingEnd <= endMinute) {
-      startEndMap.put(movingStart, movingEnd);
-      movingStart = movingEnd;
-      movingEnd = movingStart + 60;
-    }
-    if (movingEnd > endMinute) {
-      startEndMap.put(movingStart, endMinute);
-    }
-    List<NewRelicMetricDataRecord> metricRecords = new ArrayList<>();
-    startEndMap.entrySet().parallelStream().forEach(entry -> {
-      PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
-          PageRequestBuilder.aPageRequest()
-              .withLimit("5000")
-              .withOffset("0")
-              .addFilter("appId", Operator.EQ, cvConfiguration.getAppId())
+    final List<NewRelicMetricDataRecord> metricRecords = new ArrayList<>();
+    if (featureFlagService.isEnabled(
+            FeatureName.METRIC_READ_GOOGLE, appService.getAccountIdByAppId(cvConfiguration.getAppId()))
+        && dataStoreService instanceof GoogleDataStoreServiceImpl) {
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
               .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
-              .addFilter("dataCollectionMinute", Operator.GE, entry.getKey())
-              .addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME)
-              .addFieldsIncluded("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata")
+              .addFilter("dataCollectionMinute", Operator.GE, startMinute)
+              .addFilter("dataCollectionMinute", Operator.LT_EQ, endMinute)
               .build();
-
-      if (entry.getValue() == endMinute) {
-        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT_EQ, entry.getValue());
-      } else {
-        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, entry.getValue());
+      dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest).getResponse().forEach(dataRecord -> {
+        if (!HEARTBEAT_METRIC_NAME.equals(dataRecord.getName())) {
+          metricRecords.add(dataRecord);
+        }
+      });
+    } else {
+      Map<Integer, Integer> startEndMap = new HashMap<>();
+      int movingStart = startMinute, movingEnd = startMinute + 60;
+      while (movingEnd <= endMinute) {
+        startEndMap.put(movingStart, movingEnd);
+        movingStart = movingEnd;
+        movingEnd = movingStart + 60;
       }
-      int previousOffSet = 0;
-      PageResponse<NewRelicMetricDataRecord> response =
-          wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
-      while (!response.isEmpty()) {
-        final List<NewRelicMetricDataRecord> records = new ArrayList<>();
-        response.getResponse().forEach(dataRecord -> {
-          // filter for txnName
-          if (isEmpty(filter.getTxnNames())) {
-            records.add(dataRecord);
-          } else if (filter.getTxnNames().contains(dataRecord.getName())) {
-            records.add(dataRecord);
-          }
-        });
+      if (movingEnd > endMinute) {
+        startEndMap.put(movingStart, endMinute);
+      }
 
-        // filter for metric names
-        if (isNotEmpty(filter.getMetricNames())) {
-          records.forEach(dataRecord -> {
-            for (Iterator<Entry<String, Double>> iterator = dataRecord.getValues().entrySet().iterator();
-                 iterator.hasNext();) {
-              final Entry<String, Double> valueEntry = iterator.next();
-              if (!filter.getMetricNames().contains(valueEntry.getKey())) {
-                iterator.remove();
-              }
+      startEndMap.entrySet().parallelStream().forEach(entry -> {
+        PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
+            PageRequestBuilder.aPageRequest()
+                .withLimit("5000")
+                .withOffset("0")
+                .addFilter("appId", Operator.EQ, cvConfiguration.getAppId())
+                .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
+                .addFilter("dataCollectionMinute", Operator.GE, entry.getKey())
+                .addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME)
+                .addFieldsIncluded("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata")
+                .build();
+
+        if (entry.getValue() == endMinute) {
+          dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT_EQ, entry.getValue());
+        } else {
+          dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, entry.getValue());
+        }
+        int previousOffSet = 0;
+        PageResponse<NewRelicMetricDataRecord> response =
+            wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
+        while (!response.isEmpty()) {
+          final List<NewRelicMetricDataRecord> records = new ArrayList<>();
+          response.getResponse().forEach(dataRecord -> {
+            // filter for txnName
+            if (isEmpty(filter.getTxnNames())) {
+              records.add(dataRecord);
+            } else if (filter.getTxnNames().contains(dataRecord.getName())) {
+              records.add(dataRecord);
             }
           });
 
-          for (Iterator<NewRelicMetricDataRecord> recordIterator = records.iterator(); recordIterator.hasNext();) {
-            NewRelicMetricDataRecord dataRecord = recordIterator.next();
-            if (isEmpty(dataRecord.getValues())) {
-              recordIterator.remove();
+          // filter for metric names
+          if (isNotEmpty(filter.getMetricNames())) {
+            records.forEach(dataRecord -> {
+              for (Iterator<Entry<String, Double>> iterator = dataRecord.getValues().entrySet().iterator();
+                   iterator.hasNext();) {
+                final Entry<String, Double> valueEntry = iterator.next();
+                if (!filter.getMetricNames().contains(valueEntry.getKey())) {
+                  iterator.remove();
+                }
+              }
+            });
+
+            for (Iterator<NewRelicMetricDataRecord> recordIterator = records.iterator(); recordIterator.hasNext();) {
+              NewRelicMetricDataRecord dataRecord = recordIterator.next();
+              if (isEmpty(dataRecord.getValues())) {
+                recordIterator.remove();
+              }
             }
           }
+          metricRecords.addAll(records);
+          previousOffSet += response.size();
+          dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
+          response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
         }
-        metricRecords.addAll(records);
-        previousOffSet += response.size();
-        dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
-        response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
-      }
-    });
+      });
+    }
 
     logger.info("Size of metric records : {}", metricRecords.size());
     for (NewRelicMetricDataRecord metricRecord : metricRecords) {
