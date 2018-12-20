@@ -71,12 +71,6 @@
                         <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; padding-top: 25px; border-collapse: collapse;" class="social-icons" width="87.5%">
                             <table width="256" border="0" cellpadding="0" cellspacing="0" align="center" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; padding: 0; border-collapse: collapse;">
                                 <tr>
-                                    <!-- Facebook -->
-                                    <td align="center" valign="middle" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 0; padding: 0; padding-left: 10px; padding-right: 10px; border-spacing: 0; border-collapse: collapse;">
-                                        <a target="_blank" href="https://www.facebook.com/harness.io" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; color: #00ade4; text-decoration: none;">
-                                            <img border="0" vspace="0" hspace="0" style="line-height: 100%; padding: 0; margin: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; border: none; display: inline-block; color: #000000;" alt="F" title="Follow us on Facebook" width="44" height="44" src="https://s3.amazonaws.com/wings-assets/email-assets/facebook.png">
-                                        </a>
-                                    </td>
                                     <!-- Twitter -->
                                     <td align="center" valign="middle" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 0; padding: 0; padding-left: 0; padding-right: 0; border-spacing: 0; border-collapse: collapse;">
                                         <a target="_blank" href="https://twitter.com/harnessio" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; color: #00ade4; text-decoration: none;">
@@ -95,9 +89,9 @@
                     </tr>
                     <tr>
                         <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; font-size: 13px; font-weight: 400; line-height: 150%; padding-top: 20px; padding-bottom: 20px; color: #999999; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;" class="footer" width="87.5%">
-                            Copyright &copy; 2017 Harness. Inc. All Rights Reserved.
+                            Copyright &copy; 2019 Harness. Inc. All Rights Reserved.
                             <br>
-                            <a href="https://www.google.com/maps/place/116+New+Montgomery+St+%23200,+San+Francisco,+CA+94105/@37.7857739,-122.4006368,16.55z/data=!4m5!3m4!1s0x8085807d496517f3:0x6b10cbd0d6af2855!8m2!3d37.7870722!4d-122.4004509" target="_blank" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; text-decoration: underline; color: #999999; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; font-size: 13px; font-weight: 400; line-height: 150%;">116 New Montgomery St. Suite 200, San Francisco CA 94041</a>.
+                            <a href="https://www.google.com/maps/place/116+New+Montgomery+St+%23200,+San+Francisco,+CA+94105/@37.7857739,-122.4006368,16.55z/data=!4m5!3m4!1s0x8085807d496517f3:0x6b10cbd0d6af2855!8m2!3d37.7870722!4d-122.4004509" target="_blank" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; text-decoration: underline; color: #999999; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; font-size: 13px; font-weight: 400; line-height: 150%;">116 New Montgomery St. Suite 200, San Francisco CA 94105</a>.
                         </td>
                     </tr>
                 </table>

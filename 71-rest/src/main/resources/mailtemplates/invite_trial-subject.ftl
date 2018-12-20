@@ -1,1 +1,1 @@
-You are invited to join Harness.io at Harness Platform
+Verify Your Email for Harness Trial
