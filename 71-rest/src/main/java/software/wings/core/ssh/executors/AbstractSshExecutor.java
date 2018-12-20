@@ -236,7 +236,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
   }
 
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   public CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
     CommandExecutionResult.Builder commandExecutionResult = aCommandExecutionResult().but();
@@ -323,12 +322,10 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                 if (br != null) {
                   br.close();
                 }
-                if (envVariablesFilename != null) {
-                  try {
-                    ((ChannelSftp) channel).rm(envVariablesFilename);
-                  } catch (SftpException e) {
-                    logger.error("Failed to delete file " + envVariablesFilename);
-                  }
+                try {
+                  ((ChannelSftp) channel).rm(envVariablesFilename);
+                } catch (SftpException e) {
+                  logger.error("Failed to delete file " + envVariablesFilename);
                 }
               }
             }
