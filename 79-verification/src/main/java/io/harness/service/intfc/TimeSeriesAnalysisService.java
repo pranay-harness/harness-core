@@ -9,7 +9,6 @@ import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
-import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -81,9 +80,6 @@ public interface TimeSeriesAnalysisService {
       String accountId, StateType stateType, String stateExecutionId, String cvConfigId);
 
   Map<String, TimeSeriesMlAnalysisGroupInfo> getMetricGroups(String appId, String stateExecutionId);
-
-  TimeSeriesMLTransactionThresholds getCustomThreshold(
-      String appId, StateType stateType, String serviceId, String groupName, String transactionName, String metricName);
 
   void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId,
       Map<String, TimeSeriesMetricDefinition> metricTemplates);
