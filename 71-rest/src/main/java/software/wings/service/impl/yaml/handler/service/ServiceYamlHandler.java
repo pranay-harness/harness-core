@@ -13,6 +13,7 @@ import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -57,10 +58,12 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     List<NameValuePair.Yaml> nameValuePairList = convertToNameValuePair(service.getServiceVariables());
     AppContainer appContainer = service.getAppContainer();
     String applicationStack = appContainer != null ? appContainer.getName() : null;
+    String deploymentType = service.getDeploymentType() != null ? service.getDeploymentType().name() : null;
     return Yaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
         .description(service.getDescription())
         .artifactType(service.getArtifactType().name())
+        .deploymentType(deploymentType)
         .configMapYaml(service.getConfigMapYaml())
         .helmValueYaml(service.getHelmValueYaml())
         .configVariables(nameValuePairList)
@@ -137,6 +140,10 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     } else {
       ArtifactType artifactType = Util.getEnumFromString(ArtifactType.class, yaml.getArtifactType());
       currentService.setArtifactType(artifactType);
+      if (StringUtils.isNotBlank(yaml.getDeploymentType())) {
+        DeploymentType deploymentType = Util.getEnumFromString(DeploymentType.class, yaml.getDeploymentType());
+        currentService.setDeploymentType(deploymentType);
+      }
       currentService =
           serviceResourceService.save(currentService, true, serviceResourceService.hasInternalCommands(currentService));
       saveOrUpdateServiceVariables(
