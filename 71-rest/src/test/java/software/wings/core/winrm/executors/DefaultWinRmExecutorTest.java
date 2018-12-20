@@ -5,7 +5,6 @@ import static org.mockito.Mockito.doReturn;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
