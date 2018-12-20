@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
+import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -17,6 +18,7 @@ import com.google.inject.Inject;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
@@ -182,6 +184,21 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
 
       executionLogCallback.saveExecutionLog(
           "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
+
+      List<KubernetesResource> workloads = getWorkloads(resources);
+
+      if (workloads.size() != 1) {
+        if (workloads.isEmpty()) {
+          executionLogCallback.saveExecutionLog(
+              "\nNo workload found in the Manifests. Can't do Canary Deployment.", ERROR, FAILURE);
+        } else {
+          executionLogCallback.saveExecutionLog(
+              "\nMore than one workloads found in the Manifests. Only one can be managed. Others should be marked with annotation "
+                  + HarnessAnnotations.directApply + ": true",
+              ERROR, FAILURE);
+        }
+        return false;
+      }
 
       currentRelease = releaseHistory.createNewRelease(
           resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));

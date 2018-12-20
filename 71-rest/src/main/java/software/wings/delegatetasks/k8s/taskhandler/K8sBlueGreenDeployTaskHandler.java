@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
+import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static io.harness.k8s.model.Kind.Service;
@@ -22,6 +23,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.DeleteCommand;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
@@ -185,6 +187,21 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   private boolean prepareForBlueGreen(K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
     try {
+      List<KubernetesResource> workloads = getWorkloads(resources);
+
+      if (workloads.size() != 1) {
+        if (workloads.isEmpty()) {
+          executionLogCallback.saveExecutionLog(
+              "\nNo workload found in the Manifests. Can't do Blue/Green Deployment.", ERROR, FAILURE);
+        } else {
+          executionLogCallback.saveExecutionLog(
+              "\nMore than one workloads found in the Manifests. Only one can be managed. Others should be marked with annotation "
+                  + HarnessAnnotations.directApply + ": true",
+              ERROR, FAILURE);
+        }
+        return false;
+      }
+
       markVersionedResources(resources, true);
 
       executionLogCallback.saveExecutionLog(
