@@ -15,7 +15,8 @@ public enum WebhookSource {
   public enum GitHubEventType {
     PULL_REQUEST("Pull Request", "pull_request"),
     PUSH("Push", "push"),
-    PING("Ping", "ping");
+    PING("Ping", "ping"),
+    DELETE("Delete", "delete");
 
     @Getter private String displayName;
     @Getter private String value;
