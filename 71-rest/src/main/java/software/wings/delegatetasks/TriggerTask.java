@@ -75,7 +75,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
       logger.error(format("Exception in processing trigger task for account %s, triggerCommandType %s",
                        triggerRequest.getAccountId(), triggerCommandType),
           ex);
-      return new TriggerResponse(ExecutionStatus.FAILED, Misc.getMessage(ex));
+      return new TriggerResponse(null, ExecutionStatus.FAILED, Misc.getMessage(ex));
     }
   }
 

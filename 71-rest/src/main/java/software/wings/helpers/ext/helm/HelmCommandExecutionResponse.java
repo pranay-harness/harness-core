@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm;
 
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,8 @@ import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class HelmCommandExecutionResponse extends DelegateTaskNotifyResponseData {
+public class HelmCommandExecutionResponse implements DelegateTaskNotifyResponseData {
+  private DelegateMetaInfo delegateMetaInfo;
   private HelmCommandResponse helmCommandResponse;
   private String errorMessage;
   private CommandExecutionStatus commandExecutionStatus;

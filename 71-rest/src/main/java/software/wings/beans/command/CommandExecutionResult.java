@@ -3,14 +3,18 @@ package software.wings.beans.command;
 import com.google.common.base.MoreObjects;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
+import lombok.Data;
 
 import java.util.Objects;
 
 /**
  * Created by anubhaw on 2/28/17.
  */
-public class CommandExecutionResult extends DelegateTaskNotifyResponseData {
+@Data
+public class CommandExecutionResult implements DelegateTaskNotifyResponseData {
+  private DelegateMetaInfo delegateMetaInfo;
   private CommandExecutionStatus status;
   private CommandExecutionData commandExecutionData;
   private String errorMessage;

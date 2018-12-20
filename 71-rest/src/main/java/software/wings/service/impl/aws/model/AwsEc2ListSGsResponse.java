@@ -1,20 +1,17 @@
 package software.wings.service.impl.aws.model;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class AwsEc2ListSGsResponse extends AwsResponse {
+@Builder
+public class AwsEc2ListSGsResponse implements AwsResponse {
+  private DelegateMetaInfo delegateMetaInfo;
+  private ExecutionStatus executionStatus;
+  private String errorMessage;
   private List<String> securityGroups;
-
-  @Builder
-  public AwsEc2ListSGsResponse(ExecutionStatus executionStatus, String errorMessage, List<String> securityGroups) {
-    super(executionStatus, errorMessage);
-    this.securityGroups = securityGroups;
-  }
 }

@@ -22,6 +22,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.waiter.ErrorNotifyResponseData;
@@ -519,7 +520,8 @@ public class JenkinsState extends State {
   @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode(callSuper = false)
-  public static final class JenkinsExecutionResponse extends DelegateTaskNotifyResponseData {
+  public static final class JenkinsExecutionResponse implements DelegateTaskNotifyResponseData {
+    private DelegateMetaInfo delegateMetaInfo;
     private ExecutionStatus executionStatus;
     private String jenkinsResult;
     private String errorMessage;

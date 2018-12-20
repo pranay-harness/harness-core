@@ -1,32 +1,22 @@
 package software.wings.service.impl.aws.model;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class AwsAmiServiceSetupResponse extends AwsResponse {
+@Builder
+public class AwsAmiServiceSetupResponse implements AwsResponse {
+  private DelegateMetaInfo delegateMetaInfo;
+  private ExecutionStatus executionStatus;
+  private String errorMessage;
   private String newAsgName;
   private String lastDeployedAsgName;
   private Integer harnessRevision;
   private List<String> oldAsgNames;
   private AwsAmiPreDeploymentData preDeploymentData;
   private boolean blueGreen;
-
-  @Builder
-  public AwsAmiServiceSetupResponse(ExecutionStatus executionStatus, String errorMessage, String newAsgName,
-      String lastDeployedAsgName, Integer harnessRevision, AwsAmiPreDeploymentData preDeploymentData,
-      List<String> oldAsgNames, boolean blueGreen) {
-    super(executionStatus, errorMessage);
-    this.newAsgName = newAsgName;
-    this.lastDeployedAsgName = lastDeployedAsgName;
-    this.harnessRevision = harnessRevision;
-    this.preDeploymentData = preDeploymentData;
-    this.oldAsgNames = oldAsgNames;
-    this.blueGreen = blueGreen;
-  }
 }

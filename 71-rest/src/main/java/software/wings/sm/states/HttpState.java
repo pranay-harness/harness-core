@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
@@ -661,7 +662,8 @@ public class HttpState extends State {
   @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode(callSuper = false)
-  public static final class HttpStateExecutionResponse extends DelegateTaskNotifyResponseData {
+  public static final class HttpStateExecutionResponse implements DelegateTaskNotifyResponseData {
+    private DelegateMetaInfo delegateMetaInfo;
     private ExecutionStatus executionStatus;
     private String errorMessage;
     private String httpResponseBody;

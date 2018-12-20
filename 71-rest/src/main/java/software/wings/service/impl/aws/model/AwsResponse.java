@@ -2,16 +2,8 @@ package software.wings.service.impl.aws.model;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public abstract class AwsResponse extends DelegateTaskNotifyResponseData {
-  private ExecutionStatus executionStatus;
-  private String errorMessage;
+public interface AwsResponse extends DelegateTaskNotifyResponseData {
+  ExecutionStatus getExecutionStatus();
+  String getErrorMessage();
 }

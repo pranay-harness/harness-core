@@ -1,20 +1,17 @@
 package software.wings.service.impl.aws.model;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class AwsElbListAppElbsResponse extends AwsResponse {
+@Builder
+public class AwsElbListAppElbsResponse implements AwsResponse {
+  private DelegateMetaInfo delegateMetaInfo;
+  private ExecutionStatus executionStatus;
+  private String errorMessage;
   private List<String> appElbs;
-
-  @Builder
-  public AwsElbListAppElbsResponse(ExecutionStatus executionStatus, String errorMessage, List<String> appElbs) {
-    super(executionStatus, errorMessage);
-    this.appElbs = appElbs;
-  }
 }
