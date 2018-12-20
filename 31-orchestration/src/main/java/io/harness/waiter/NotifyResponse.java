@@ -34,9 +34,9 @@ public class NotifyResponse<T extends ResponseData> implements PersistentEntity,
 
   private boolean error;
 
-  @Indexed private Date expiryTs;
+  private Date expiryTs;
 
-  @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
+  private ExecutionStatus status = ExecutionStatus.NEW;
 
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());

@@ -33,10 +33,10 @@ public class DeploymentSummary extends Base {
   private String deployedByName;
   private long deployedAt;
   private DeploymentInfo deploymentInfo;
-  @Indexed private PcfDeploymentKey pcfDeploymentKey;
-  @Indexed private AwsAmiDeploymentKey awsAmiDeploymentKey;
-  @Indexed private AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey;
-  @Indexed private ContainerDeploymentKey containerDeploymentKey;
+  private PcfDeploymentKey pcfDeploymentKey;
+  private AwsAmiDeploymentKey awsAmiDeploymentKey;
+  private AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey;
+  private ContainerDeploymentKey containerDeploymentKey;
 
   @Builder
   public DeploymentSummary(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
