@@ -130,6 +130,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -951,19 +952,30 @@ public class UserServiceImpl implements UserService {
   public boolean overrideTwoFactorforAccount(String accountId, User user, boolean adminOverrideTwoFactorEnabled) {
     try {
       Query<User> updateQuery = wingsPersistence.createQuery(User.class);
-      if (updateQuery != null && updateQuery.count() > 0) {
+      updateQuery.filter("accounts", accountId);
+      if (updateQuery.count() > 0) {
+        // Update 2FA email sent set at account level and add this user to set.
+        Account account = accountService.get(accountId);
+        Set<String> reset2FAEmailSentUserSet = account.getReset2FAEmailSentUsers();
+        if (isEmpty(reset2FAEmailSentUserSet)) {
+          reset2FAEmailSentUserSet = new HashSet<>();
+        }
+
         for (User u : updateQuery) {
           // Look for user who has only 1 account
-          if (u.getAccounts() != null && u.getAccounts().size() == 1
-              && u.getAccounts().get(0).getUuid().equals(accountId)) {
+          if (u.getAccounts().size() == 1) {
             if (!u.isTwoFactorAuthenticationEnabled()) {
               u.setTwoFactorAuthenticationEnabled(true);
               u.setTwoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP);
               update(u);
               twoFactorAuthenticationManager.sendTwoFactorAuthenticationResetEmail(u.getUuid());
+              reset2FAEmailSentUserSet.add(u.getUuid());
             }
           }
         }
+
+        account.setReset2FAEmailSentUsers(reset2FAEmailSentUserSet);
+        accountService.update(account);
       }
     } catch (Exception ex) {
       throw new WingsException(GENERAL_ERROR, USER)

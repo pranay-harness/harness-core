@@ -1,6 +1,7 @@
 package software.wings.security.authentication;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -12,11 +13,14 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
+
+import java.util.Set;
 
 @Singleton
 public class TwoFactorAuthenticationManager {
@@ -118,8 +122,28 @@ public class TwoFactorAuthenticationManager {
           if (success) {
             eventPublishHelper.publishSetup2FAEvent(accountId);
           }
-
           return success;
+        } else {
+          // Disable 2FA for users who are enforced by admin
+          Account account = accountService.get(accountId);
+          Set<String> toDisableUserSet = account.getReset2FAEmailSentUsers();
+
+          if (isEmpty(toDisableUserSet)) {
+            logger.info("User set for disabling 2FA is empty = {}", accountId);
+            return true;
+          } else {
+            for (String userId : toDisableUserSet) {
+              User u = userService.get(userId);
+              // Disable 2FA for this user, previously enforced by admin
+              if (u != null && u.isTwoFactorAuthenticationEnabled()) {
+                u.setTwoFactorAuthenticationEnabled(false);
+                u.setTwoFactorAuthenticationMechanism(null);
+                u.setTotpSecretKey(null);
+                userService.update(u);
+              }
+            }
+            return true;
+          }
         }
       }
     } catch (Exception ex) {
