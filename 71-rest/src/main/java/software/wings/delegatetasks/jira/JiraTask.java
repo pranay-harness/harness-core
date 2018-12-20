@@ -22,9 +22,11 @@ import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.JiraExecutionData;
+import software.wings.api.JiraExecutionData.ApprovalStatus;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
@@ -103,6 +105,9 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       case GET_CREATE_METADATA:
         return getCreateMetadata(parameters);
+
+      case CHECK_APPROVAL:
+        return checkJiraApproval(parameters);
 
       default:
         break;
@@ -283,6 +288,31 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         .issueId(issue.getId())
         .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
         .build();
+  }
+
+  private ResponseData checkJiraApproval(JiraTaskParameters parameters) {
+    JiraClient jira = getJiraClient(parameters);
+    Issue issue;
+    CommandExecutionStatus commandExecutionStatus;
+    try {
+      issue = jira.getIssue(parameters.getIssueId());
+    } catch (JiraException e) {
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
+      saveExecutionLog(
+          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
+
+      String errorMessage = "Failed to fetch jira issue for " + parameters.getIssueId();
+      logger.error(errorMessage, e);
+      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
+    }
+    String fieldValue = issue.getField(parameters.getApprovalField()).toString();
+    if (StringUtils.equals(fieldValue, parameters.getApprovalValue())) {
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .approvalStatus(ApprovalStatus.APPROVED)
+          .build();
+    }
+    return JiraExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
   }
 
   private String getIssueUrl(JiraConfig jiraConfig, Issue issue) {

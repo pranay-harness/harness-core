@@ -11,7 +11,8 @@ public enum JiraAction {
   GET_CREATE_METADATA(""),
 
   CREATE_WEBHOOK("Create webhook"),
-  DELETE_WEBHOOK("Delete Webhook");
+  DELETE_WEBHOOK("Delete Webhook"),
+  CHECK_APPROVAL("Check Jira Approval");
 
   private String displayName;
   JiraAction(String s) {
