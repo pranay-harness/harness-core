@@ -1665,12 +1665,22 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public List<Service> fetchServicesByUuids(String appId, List<String> serviceUuids) {
     if (isNotEmpty(serviceUuids)) {
-      return wingsPersistence.createQuery(Service.class)
-          .project("appContainer", false)
-          .filter("appId", appId)
-          .field("uuid")
-          .in(serviceUuids)
-          .asList();
+      List<Service> services = wingsPersistence.createQuery(Service.class)
+                                   .project("appContainer", false)
+                                   .filter("appId", appId)
+                                   .field("uuid")
+                                   .in(serviceUuids)
+                                   .asList();
+
+      List<Service> orderedServices = new ArrayList<>();
+      Map<String, Service> servicesMap =
+          services.stream().collect(Collectors.toMap(Service::getUuid, Function.identity()));
+      for (String serviceId : serviceUuids) {
+        if (servicesMap.containsKey(serviceId)) {
+          orderedServices.add(servicesMap.get(serviceId));
+        }
+      }
+      return orderedServices;
     }
     return new ArrayList<>();
   }

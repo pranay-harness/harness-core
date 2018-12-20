@@ -331,6 +331,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(environmentService.get(APP_ID, ENV_ID, false))
         .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withAppId(APP_ID).build());
 
+    when(environmentService.exist(APP_ID, ENV_ID)).thenReturn(true);
+
     when(environmentService.get(APP_ID, ENV_ID))
         .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withAppId(APP_ID).build());
 
