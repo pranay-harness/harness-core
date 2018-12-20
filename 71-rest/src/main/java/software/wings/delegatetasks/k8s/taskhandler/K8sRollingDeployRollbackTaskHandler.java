@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Rollback;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
@@ -73,14 +74,18 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
-    k8sTaskHelper.doStatusCheck(client, release.getManagedWorkload(), k8sDelegateTaskParams,
-        new ExecutionLogCallback(delegateLogService, k8sTaskParameters.getAccountId(), k8sTaskParameters.getAppId(),
-            k8sTaskParameters.getActivityId(), WaitForSteadyState));
+    if (release.getManagedWorkload() == null) {
+      k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState)
+          .saveExecutionLog("Skipping Status Check since there is no Managed Workload.", INFO, SUCCESS);
+    } else {
+      k8sTaskHelper.doStatusCheck(client, release.getManagedWorkload(), k8sDelegateTaskParams,
+          k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState));
 
-    release.setStatus(Status.Failed);
-    // update the revision on the previous release.
-    previousRollbackEligibleRelease.setManagedWorkloadRevision(
-        k8sTaskHelper.getLatestRevision(client, release.getManagedWorkload(), k8sDelegateTaskParams));
+      release.setStatus(Status.Failed);
+      // update the revision on the previous release.
+      previousRollbackEligibleRelease.setManagedWorkloadRevision(
+          k8sTaskHelper.getLatestRevision(client, release.getManagedWorkload(), k8sDelegateTaskParams));
+    }
 
     kubernetesContainerService.saveReleaseHistory(
         kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
@@ -106,7 +111,9 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
     } else {
       releaseHistory = ReleaseHistory.createFromData(releaseHistoryData);
       release = releaseHistory.getLatestRelease();
-      executionLogCallback.saveExecutionLog("\nManaged Workload is: " + release.getManagedWorkload().kindNameRef());
+      if (release.getManagedWorkload() != null) {
+        executionLogCallback.saveExecutionLog("\nManaged Workload is: " + release.getManagedWorkload().kindNameRef());
+      }
     }
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
@@ -122,6 +129,12 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       return true;
     }
 
+    if (release.getManagedWorkload() == null) {
+      executionLogCallback.saveExecutionLog("\nNo Managed Workload found. Skipping rollback.");
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return true;
+    }
+
     previousRollbackEligibleRelease =
         releaseHistory.getPreviousRollbackEligibleRelease(k8sRollingDeployRollbackTaskParameters.getReleaseNumber());
 
@@ -133,6 +146,13 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
 
     executionLogCallback.saveExecutionLog("Previous eligible Release is " + previousRollbackEligibleRelease.getNumber()
         + " with status " + previousRollbackEligibleRelease.getStatus());
+
+    if (previousRollbackEligibleRelease.getManagedWorkload() == null) {
+      executionLogCallback.saveExecutionLog(
+          "No Managed Workload found in previous eligible release. Skipping rollback.");
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return true;
+    }
 
     executionLogCallback.saveExecutionLog("\nRolling back to release " + previousRollbackEligibleRelease.getNumber());
 
