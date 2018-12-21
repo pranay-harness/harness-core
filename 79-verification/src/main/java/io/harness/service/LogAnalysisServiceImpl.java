@@ -651,7 +651,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
             .project("appId", true)
             .project("stateType", true)
             .project("experiment_name", true)
-            .project("createdAt", true)
+            .project(ExperimentalLogMLAnalysisRecord.CREATED_AT_KEY, true)
             .asList(new FindOptions().limit(limit));
 
     List<LogMLExpAnalysisInfo> result = new ArrayList<>();
@@ -1132,7 +1132,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                               .filter("appId", appId)
                                               .filter("workflowId", workflowId)
                                               .filter("status", SUCCESS)
-                                              .order(Sort.descending("createdAt"))
+                                              .order(Sort.descending(WorkflowExecution.CREATED_AT_KEY))
                                               .get();
 
     if (workflowExecution == null) {

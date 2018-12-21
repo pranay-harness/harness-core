@@ -2363,7 +2363,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                            .addFilter("appId", Operator.EQ, appId)
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, SUCCESS)
-                                                           .addOrder("createdAt", OrderType.DESC)
+                                                           .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
                                                            .withOffset(String.valueOf(offSet))
                                                            .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
                                                            .build();
@@ -2500,7 +2500,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                            .addFilter("appId", Operator.EQ, appId)
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
-                                                           .addOrder("createdAt", OrderType.DESC)
+                                                           .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
                                                            .build();
     if (!isEmpty(serviceId)) {
       pageRequest.addFilter("serviceIds", Operator.CONTAINS, serviceId);

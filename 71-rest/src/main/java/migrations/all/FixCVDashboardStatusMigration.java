@@ -28,7 +28,7 @@ public class FixCVDashboardStatusMigration implements Migration {
       List<ContinuousVerificationExecutionMetaData> cvMetadataList =
           wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
               .filter("executionStatus", "RUNNING")
-              .field("createdAt")
+              .field(ContinuousVerificationExecutionMetaData.CREATED_AT_KEY)
               .greaterThanOrEq(Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(30))
               .asList();
 

@@ -356,7 +356,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
                                                            .addFilter("serviceIds", Operator.CONTAINS, serviceId)
-                                                           .addOrder("createdAt", OrderType.DESC)
+                                                           .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
                                                            .build();
 
     final PageResponse<WorkflowExecution> workflowExecutions =
@@ -920,7 +920,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                               .filter("appId", appId)
                                               .filter("workflowId", workflowId)
                                               .filter("status", SUCCESS)
-                                              .order(Sort.descending("createdAt"))
+                                              .order(Sort.descending(WorkflowExecution.CREATED_AT_KEY))
                                               .get();
 
     if (workflowExecution == null) {
@@ -956,7 +956,7 @@ public class AnalysisServiceImpl implements AnalysisService {
             .project("appId", true)
             .project("stateType", true)
             .project("experiment_name", true)
-            .project("createdAt", true)
+            .project(ExperimentalLogMLAnalysisRecord.CREATED_AT_KEY, true)
             .asList(new FindOptions().limit(limit));
 
     List<LogMLExpAnalysisInfo> result = new ArrayList<>();

@@ -31,7 +31,7 @@ public class AddValidUntilToActivity implements Migration {
     try (HIterator<Activity> activities = new HIterator<>(wingsPersistence.createQuery(Activity.class)
                                                               .field("validUntil")
                                                               .doesNotExist()
-                                                              .project("createdAt", true)
+                                                              .project(Activity.CREATED_AT_KEY, true)
                                                               .fetch())) {
       while (activities.hasNext()) {
         final Activity activity = activities.next();

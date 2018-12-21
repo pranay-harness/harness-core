@@ -25,6 +25,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -155,7 +156,7 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
                   BlobValue.newBuilder(Blob.copyFrom(compressString(JsonUtils.asJson(getResponse()))))
                       .setExcludeFromIndexes(true)
                       .build())
-              .set("createdAt", currentTimeMillis());
+              .set(CreatedAtAccess.CREATED_AT_KEY, currentTimeMillis());
       if (isNotEmpty(getAppId())) {
         logEntityBuilder.set("appId", getAppId());
       }

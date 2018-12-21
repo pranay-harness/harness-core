@@ -31,7 +31,7 @@ public class AddValidUntilToCommandLog implements Migration {
     try (HIterator<Log> logs = new HIterator<>(wingsPersistence.createQuery(Log.class)
                                                    .field("validUntil")
                                                    .doesNotExist()
-                                                   .project("createdAt", true)
+                                                   .project(Log.CREATED_AT_KEY, true)
                                                    .fetch())) {
       while (logs.hasNext()) {
         final Log log = logs.next();

@@ -29,7 +29,6 @@ import javax.validation.Valid;
 @Singleton
 public class DeploymentServiceImpl implements DeploymentService {
   private static final Logger logger = LoggerFactory.getLogger(DeploymentServiceImpl.class);
-  private static final String CREATED_AT_KEY = "createdAt";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
@@ -39,7 +38,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     Query<DeploymentSummary> query = wingsPersistence.createAuthorizedQuery(DeploymentSummary.class);
     query.filter("infraMappingId", deploymentSummary.getInfraMappingId());
     DeploymentKey deploymentKey = addDeploymentKeyFilterToQuery(query, deploymentSummary);
-    query.order(Sort.descending(CREATED_AT_KEY));
+    query.order(Sort.descending(DeploymentSummary.CREATED_AT_KEY));
 
     if (query.get() == null) {
       synchronized (deploymentKey) {
@@ -58,7 +57,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     // to check keyClass and perform required chack
     query.filter("infraMappingId", deploymentSummary.getInfraMappingId());
     addDeploymentKeyFilterToQuery(query, deploymentSummary);
-    query.order(Sort.descending(CREATED_AT_KEY));
+    query.order(Sort.descending(DeploymentSummary.CREATED_AT_KEY));
     DeploymentSummary summary = query.get();
     if (summary == null) {
       return Optional.empty();

@@ -326,12 +326,13 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public List<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       final String appId, final String stateExecutionId, final String workflowExecutionId) {
     List<NewRelicMetricAnalysisRecord> analysisRecords = new ArrayList<>();
-    List<TimeSeriesMLAnalysisRecord> allAnalysisRecords = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                                                              .filter("appId", appId)
-                                                              .filter("stateExecutionId", stateExecutionId)
-                                                              .filter("workflowExecutionId", workflowExecutionId)
-                                                              .order(Sort.descending("createdAt"))
-                                                              .asList();
+    List<TimeSeriesMLAnalysisRecord> allAnalysisRecords =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+            .filter("appId", appId)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("workflowExecutionId", workflowExecutionId)
+            .order(Sort.descending(TimeSeriesMLAnalysisRecord.CREATED_AT_KEY))
+            .asList();
 
     Map<String, TimeSeriesMLAnalysisRecord> groupVsAnalysisRecord = new HashMap<>();
     allAnalysisRecords.forEach(analysisRecord -> {
@@ -390,7 +391,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
             .filter("appId", appId)
             .filter("stateExecutionId", stateExecutionId)
             .filter("workflowExecutionId", workflowExecutionId)
-            .order(Sort.descending("createdAt"))
+            .order(Sort.descending(NewRelicMetricAnalysisRecord.CREATED_AT_KEY))
             .asList();
 
     Map<String, NewRelicMetricAnalysisRecord> groupVsMetricAnalysisRecord = new HashMap<>();

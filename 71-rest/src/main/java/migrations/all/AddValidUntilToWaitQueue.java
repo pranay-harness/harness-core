@@ -32,7 +32,7 @@ public class AddValidUntilToWaitQueue implements Migration {
     try (HIterator<WaitQueue> waitQueues = new HIterator<>(wingsPersistence.createQuery(WaitQueue.class)
                                                                .field("validUntil")
                                                                .doesNotExist()
-                                                               .project("createdAt", true)
+                                                               .project(WaitQueue.CREATED_AT_KEY, true)
                                                                .fetch())) {
       while (waitQueues.hasNext()) {
         final WaitQueue waitQueue = waitQueues.next();

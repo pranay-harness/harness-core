@@ -31,7 +31,7 @@ public class CleanUpDatadogCallLogMigration implements Migration {
       List<StateExecutionInstance> stateExecutionInstances =
           wingsPersistence.createQuery(StateExecutionInstance.class)
               .filter("stateType", "DATA_DOG")
-              .field("createdAt")
+              .field(StateExecutionInstance.CREATED_AT_KEY)
               .greaterThanOrEq(Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(30))
               .asList();
 

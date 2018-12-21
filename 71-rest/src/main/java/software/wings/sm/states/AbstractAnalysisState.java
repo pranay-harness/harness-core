@@ -320,7 +320,7 @@ public abstract class AbstractAnalysisState extends State {
             .addFilter("_id", Operator.NOT_EQ, context.getWorkflowExecutionId())
             .addFilter("envId", Operator.EQ, envId)
             .addFilter("status", Operator.EQ, SUCCESS)
-            .addOrder("createdAt", OrderType.DESC)
+            .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
             .withOffset(String.valueOf(offSet))
             .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
             .build();

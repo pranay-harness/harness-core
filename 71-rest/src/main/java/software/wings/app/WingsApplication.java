@@ -84,7 +84,6 @@ import software.wings.jersey.KryoFeature;
 import software.wings.licensing.LicenseService;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.AdministrativeJob;
-import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.BarrierBackupJob;
 import software.wings.scheduler.ExecutionLogsPruneJob;
 import software.wings.scheduler.LicenseCheckJob;
@@ -305,11 +304,6 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
 
-    startArchival(injector);
-    // TODO purge behavior is buggy.
-    // TODO it needs to be revisited
-    // startAnalysisLogPurger(injector);
-
     initializeFeatureFlags(injector);
 
     initializeServiceSecretKeys(injector);
@@ -505,11 +499,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     PluginManager pluginManager = injector.getInstance(PluginManager.class);
     pluginManager.loadPlugins();
     pluginManager.startPlugins();
-  }
-
-  private void startArchival(Injector injector) {
-    final ArchivalManager archivalManager = new ArchivalManager(injector.getInstance(WingsPersistence.class));
-    archivalManager.startArchival();
   }
 
   private void initializeFeatureFlags(Injector injector) {

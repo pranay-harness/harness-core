@@ -39,7 +39,7 @@ public class MLServiceUtil {
                                               .filter("appId", nodeData.getAppId())
                                               .filter("workflowId", nodeData.getWorkflowId())
                                               .filter("status", SUCCESS)
-                                              .order(Sort.descending("createdAt"))
+                                              .order(Sort.descending(WorkflowExecution.CREATED_AT_KEY))
                                               .get();
 
     if (workflowExecution == null) {
@@ -51,7 +51,7 @@ public class MLServiceUtil {
       StateExecutionInstance stateExecutionInstance = wingsPersistence.createQuery(StateExecutionInstance.class)
                                                           .filter("executionUuid", workflowExecution.getUuid())
                                                           .filter("stateType", StateType.PHASE)
-                                                          .order(Sort.descending("createdAt"))
+                                                          .order(Sort.descending(StateExecutionInstance.CREATED_AT_KEY))
                                                           .get();
       ExecutionContext executionContext = executionContextFactory.createExecutionContext(stateExecutionInstance, null);
       String hostName = isEmpty(nodeData.getHostExpression())

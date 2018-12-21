@@ -156,7 +156,7 @@ public class AuditServiceImpl implements AuditService {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
           List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class, excludeAuthority)
-                                               .field("createdAt")
+                                               .field(AuditHeader.CREATED_AT_KEY)
                                                .lessThan(System.currentTimeMillis() - retentionMillis)
                                                .asList(new FindOptions().limit(limit).batchSize(batchSize));
           if (isEmpty(auditHeaders)) {

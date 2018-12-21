@@ -173,7 +173,7 @@ public class EventPublishHelper {
     PageRequest<CVConfiguration> pageRequest = aPageRequest()
                                                    .addFilter("accountId", Operator.EQ, accountId)
                                                    .addFilter("createdBy.email", Operator.EQ, userEmail)
-                                                   .addOrder("createdAt", OrderType.ASC)
+                                                   .addOrder(CVConfiguration.CREATED_AT_KEY, OrderType.ASC)
                                                    .addFieldsIncluded("_id")
                                                    .withLimit("1")
                                                    .build();
@@ -219,7 +219,7 @@ public class EventPublishHelper {
       PageRequest<UserGroup> pageRequest = aPageRequest()
                                                .addFilter("accountId", Operator.EQ, accountId)
                                                .addFilter("createdBy.email", Operator.EQ, userEmail)
-                                               .addOrder("createdAt", OrderType.ASC)
+                                               .addOrder(UserGroup.CREATED_AT_KEY, OrderType.ASC)
                                                .build();
       PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, false);
       List<UserGroup> userGroups = pageResponse.getResponse();
@@ -254,7 +254,7 @@ public class EventPublishHelper {
       PageRequest<User> pageRequest = aPageRequest()
                                           .addFilter("accounts", Operator.IN, account)
                                           .addFilter("createdBy.email", Operator.EQ, userEmail)
-                                          .addOrder("createdAt", OrderType.ASC)
+                                          .addOrder(User.CREATED_AT_KEY, OrderType.ASC)
                                           .withLimit("10")
                                           .build();
 
@@ -307,7 +307,7 @@ public class EventPublishHelper {
     PageRequest<Whitelist> pageRequest = aPageRequest()
                                              .addFilter("accountId", Operator.EQ, accountId)
                                              .addFilter("createdBy.email", Operator.EQ, userEmail)
-                                             .addOrder("createdAt", OrderType.ASC)
+                                             .addOrder(Whitelist.CREATED_AT_KEY, OrderType.ASC)
                                              .addFieldsIncluded("_id")
                                              .withLimit("1")
                                              .build();
@@ -394,7 +394,7 @@ public class EventPublishHelper {
   private boolean isFirstDelegateInAccount(String delegateId, String accountId) {
     PageRequest<Delegate> pageRequest = aPageRequest()
                                             .addFilter("accountId", Operator.EQ, accountId)
-                                            .addOrder("createdAt", OrderType.ASC)
+                                            .addOrder(Delegate.CREATED_AT_KEY, OrderType.ASC)
                                             .addFieldsIncluded("_id")
                                             .withLimit("1")
                                             .build();
@@ -440,7 +440,7 @@ public class EventPublishHelper {
     PageRequest<Workflow> pageRequest = aPageRequest()
                                             .addFilter("appId", Operator.IN, appIds.toArray())
                                             .addFilter("createdBy.email", Operator.EQ, userEmail)
-                                            .addOrder("createdAt", OrderType.ASC)
+                                            .addOrder(Workflow.CREATED_AT_KEY, OrderType.ASC)
                                             .addFieldsIncluded("_id")
                                             .withLimit("1")
                                             .build();
@@ -605,7 +605,7 @@ public class EventPublishHelper {
     PageRequest<WorkflowExecution> executionPageRequest = PageRequestBuilder.aPageRequest()
                                                               .addFilter("appId", Operator.IN, appIds.toArray())
                                                               .addFilter("createdBy.email", Operator.EQ, userEmail)
-                                                              .addOrder("createdAt", OrderType.ASC)
+                                                              .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.ASC)
                                                               .withLimit("1")
                                                               .build();
 
@@ -622,15 +622,16 @@ public class EventPublishHelper {
 
   private void publishIfExecutionHasVerificationState(
       String workflowExecutionId, List<String> appIds, String accountId, String userEmail) {
-    PageRequest<StateExecutionInstance> pageRequest = PageRequestBuilder.aPageRequest()
-                                                          .addFilter("appId", Operator.IN, appIds.toArray())
-                                                          .addFilter("executionUuid", Operator.EQ, workflowExecutionId)
-                                                          .addFilter("stateType", Operator.IN, analysisStates.toArray())
-                                                          .addFilter("status", Operator.EQ, "SUCCESS")
-                                                          .addFieldsIncluded("_id")
-                                                          .addOrder("createdAt", OrderType.ASC)
-                                                          .withLimit("1")
-                                                          .build();
+    PageRequest<StateExecutionInstance> pageRequest =
+        PageRequestBuilder.aPageRequest()
+            .addFilter("appId", Operator.IN, appIds.toArray())
+            .addFilter("executionUuid", Operator.EQ, workflowExecutionId)
+            .addFilter("stateType", Operator.IN, analysisStates.toArray())
+            .addFilter("status", Operator.EQ, "SUCCESS")
+            .addFieldsIncluded("_id")
+            .addOrder(StateExecutionInstance.CREATED_AT_KEY, OrderType.ASC)
+            .withLimit("1")
+            .build();
     PageResponse<StateExecutionInstance> pageResponse = stateExecutionService.list(pageRequest);
     List<StateExecutionInstance> stateExecutionInstances = pageResponse.getResponse();
 
@@ -641,14 +642,15 @@ public class EventPublishHelper {
 
   private void publishIfExecutionHasRollbackState(
       String workflowExecutionId, List<String> appIds, String accountId, String userEmail) {
-    PageRequest<StateExecutionInstance> pageRequest = PageRequestBuilder.aPageRequest()
-                                                          .addFilter("appId", Operator.IN, appIds.toArray())
-                                                          .addFilter("executionUuid", Operator.EQ, workflowExecutionId)
-                                                          .addFilter("rollback", Operator.EQ, true)
-                                                          .addFieldsIncluded("_id")
-                                                          .addOrder("createdAt", OrderType.ASC)
-                                                          .withLimit("1")
-                                                          .build();
+    PageRequest<StateExecutionInstance> pageRequest =
+        PageRequestBuilder.aPageRequest()
+            .addFilter("appId", Operator.IN, appIds.toArray())
+            .addFilter("executionUuid", Operator.EQ, workflowExecutionId)
+            .addFilter("rollback", Operator.EQ, true)
+            .addFieldsIncluded("_id")
+            .addOrder(StateExecutionInstance.CREATED_AT_KEY, OrderType.ASC)
+            .withLimit("1")
+            .build();
     PageResponse<StateExecutionInstance> pageResponse = stateExecutionService.list(pageRequest);
     List<StateExecutionInstance> stateExecutionInstances = pageResponse.getResponse();
 

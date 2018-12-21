@@ -29,7 +29,7 @@ public class DeleteStaleSecretUsageLogs implements Migration {
         logger.info("Deleting stale secret usage log for {} id {}", account.getAccountName(), account.getUuid());
         wingsPersistence.delete(wingsPersistence.createQuery(SecretUsageLog.class)
                                     .filter("accountId", account.getUuid())
-                                    .field("createdAt")
+                                    .field(SecretUsageLog.CREATED_AT_KEY)
                                     .lessThan(toBeDeleted));
       }
     }
