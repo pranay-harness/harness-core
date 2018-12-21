@@ -19,10 +19,8 @@ import software.wings.yaml.BaseEntityYaml;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -70,8 +68,6 @@ public class Account extends Base {
   public boolean isTwoFactorAdminEnforced() {
     return twoFactorAdminEnforced;
   }
-
-  private Set<String> reset2FAEmailSentUsers = new HashSet<>();
 
   /**
    * Default mechanism is USER_PASSWORD
@@ -207,14 +203,6 @@ public class Account extends Base {
     this.emailSentToSales = emailSentToSales;
   }
 
-  public Set<String> getReset2FAEmailSentUsers() {
-    return reset2FAEmailSentUsers;
-  }
-
-  public void setReset2FAEmailSentUsers(Set<String> reset2FAEmailSentUsers) {
-    this.reset2FAEmailSentUsers = reset2FAEmailSentUsers;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -261,7 +249,6 @@ public class Account extends Base {
     private Map<String, String> defaults = new HashMap<>();
     private LicenseInfo licenseInfo;
     private boolean emailSentToSales;
-    private Set<String> reset2FAEmailSentUsers;
 
     private Builder() {}
 
@@ -344,11 +331,6 @@ public class Account extends Base {
       return this;
     }
 
-    public Builder withReset2FAEmailSentUsers(Set<String> reset2FAEmailSentUsers) {
-      this.reset2FAEmailSentUsers = reset2FAEmailSentUsers;
-      return this;
-    }
-
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -365,8 +347,7 @@ public class Account extends Base {
           .withDelegateConfiguration(delegateConfiguration)
           .withDefaults(defaults)
           .withLicenseInfo(licenseInfo)
-          .withEmailSentToSales(emailSentToSales)
-          .withReset2FAEmailSentUsers(reset2FAEmailSentUsers);
+          .withEmailSentToSales(emailSentToSales);
     }
 
     public Account build() {
@@ -386,7 +367,6 @@ public class Account extends Base {
       account.setDefaults(defaults);
       account.setLicenseInfo(licenseInfo);
       account.setEmailSentToSales(emailSentToSales);
-      account.setReset2FAEmailSentUsers(reset2FAEmailSentUsers);
       return account;
     }
   }

@@ -301,7 +301,6 @@ public class AccountServiceImpl implements AccountService {
         wingsPersistence.createUpdateOperations(Account.class)
             .set("companyName", account.getCompanyName())
             .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
-            .set("reset2FAEmailSentUsers", account.getReset2FAEmailSentUsers())
             .set("authenticationMechanism", account.getAuthenticationMechanism()));
     dbCache.invalidate(Account.class, account.getUuid());
     Account updatedAccount = wingsPersistence.get(Account.class, account.getUuid());
