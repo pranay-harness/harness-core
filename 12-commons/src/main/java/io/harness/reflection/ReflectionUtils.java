@@ -58,8 +58,18 @@ public class ReflectionUtils {
           boolean isAccessible = f.isAccessible();
           f.setAccessible(true);
           try {
-            String value = functor.update((String) f.get(o));
-            f.set(o, value);
+            Object object = f.get(o);
+            if (object != null) {
+              if (object instanceof List) {
+                List objectList = (List) object;
+                for (int i = 0; i < objectList.size(); i++) {
+                  objectList.set(i, functor.update((String) objectList.get(i)));
+                }
+              } else {
+                String value = functor.update((String) object);
+                f.set(o, value);
+              }
+            }
             f.setAccessible(isAccessible);
           } catch (IllegalAccessException e) {
             logger.error("Field [{}] is not accessible ", f.getName());
