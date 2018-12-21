@@ -114,6 +114,15 @@ public class AuthenticationManager {
       }
       String userName = decryptedData[0];
       String password = decryptedData[1];
+      return defaultLogin(userName, password);
+    } catch (Exception e) {
+      logger.warn("Failed to login via default mechanism", e);
+      throw new WingsException(INVALID_CREDENTIAL, USER);
+    }
+  }
+
+  public User defaultLogin(String userName, String password) {
+    try {
       AuthHandler authHandler = getAuthHandler(getAuthenticationMechanism(userName));
       User user = authHandler.authenticate(userName, password);
       if (user.isTwoFactorAuthenticationEnabled()) {

@@ -302,6 +302,16 @@ public interface UserService {
   UserInvite completeTrialSignup(User user, UserInvite userInvite);
 
   /**
+   * Complete the trial user signup and signin. Both the trial account and the account admin user will be created
+   * as part of this operation.
+   *
+   * @param user The user to be signed up for a free trial
+   * @param userInvite the user invite.
+   * @return the completed user invite
+   */
+  User completeTrialSignupAndSignIn(User user, UserInvite userInvite);
+
+  /**
    * Delete invite user invite.
    *
    * @param accountId the account id

@@ -104,6 +104,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
@@ -174,6 +175,7 @@ public class UserServiceImpl implements UserService {
   @Inject private SSOSettingService ssoSettingService;
   @Inject private SamlClientService samlClientService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private AuthenticationManager authenticationManager;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -802,6 +804,12 @@ public class UserServiceImpl implements UserService {
 
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), existingUser);
     return existingInvite;
+  }
+
+  @Override
+  public User completeTrialSignupAndSignIn(User user, UserInvite userInvite) {
+    completeTrialSignup(user, userInvite);
+    return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
   }
 
   @Override
