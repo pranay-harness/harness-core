@@ -150,12 +150,13 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
                                                   .lessThanOrEq(LearningEngineAnalysisTask.RETRIES);
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
-            query.criteria("lastUpdatedAt").lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
+            query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
+                .lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
             .set("executionStatus", ExecutionStatus.RUNNING)
             .inc("retry")
-            .set("lastUpdatedAt", System.currentTimeMillis());
+            .set(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY, System.currentTimeMillis());
     LearningEngineAnalysisTask task =
         wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
     if (task != null && task.getRetry() >= LearningEngineAnalysisTask.RETRIES) {
@@ -176,15 +177,16 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .filter("version", serviceApiVersion)
             .filter("experiment_name", experimentName)
             .field("retry")
-            .lessThan(LearningEngineAnalysisTask.RETRIES);
+            .lessThan(LearningEngineExperimentalAnalysisTask.RETRIES);
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
-            query.criteria("lastUpdatedAt").lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
+            query.criteria(LearningEngineExperimentalAnalysisTask.LAST_UPDATED_AT_KEY)
+                .lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
     UpdateOperations<LearningEngineExperimentalAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineExperimentalAnalysisTask.class)
             .set("executionStatus", ExecutionStatus.RUNNING)
             .inc("retry")
-            .set("lastUpdatedAt", System.currentTimeMillis());
+            .set(LearningEngineExperimentalAnalysisTask.LAST_UPDATED_AT_KEY, System.currentTimeMillis());
     return wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
   }
 
@@ -285,11 +287,13 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
                                        .lessThan(LearningEngineAnalysisTask.RETRIES);
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
-            query.criteria("lastUpdatedAt").lessThan(System.currentTimeMillis() - VERIFICATION_TASK_TIMEOUT)));
-    UpdateOperations<AnalysisContext> updateOperations = wingsPersistence.createUpdateOperations(AnalysisContext.class)
-                                                             .set("executionStatus", ExecutionStatus.RUNNING)
-                                                             .inc("retry")
-                                                             .set("lastUpdatedAt", System.currentTimeMillis());
+            query.criteria(AnalysisContext.LAST_UPDATED_AT_KEY)
+                .lessThan(System.currentTimeMillis() - VERIFICATION_TASK_TIMEOUT)));
+    UpdateOperations<AnalysisContext> updateOperations =
+        wingsPersistence.createUpdateOperations(AnalysisContext.class)
+            .set("executionStatus", ExecutionStatus.RUNNING)
+            .inc("retry")
+            .set(AnalysisContext.LAST_UPDATED_AT_KEY, System.currentTimeMillis());
     AnalysisContext analysisContext =
         wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
     if (analysisContext != null) {

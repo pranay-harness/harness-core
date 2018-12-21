@@ -132,12 +132,13 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
                                                   .lessThan(LearningEngineAnalysisTask.RETRIES);
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
-            query.criteria("lastUpdatedAt").lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
+            query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
+                .lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
             .set("executionStatus", ExecutionStatus.RUNNING)
             .inc("retry")
-            .set("lastUpdatedAt", System.currentTimeMillis());
+            .set(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY, System.currentTimeMillis());
     return wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
   }
 
@@ -152,12 +153,13 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .lessThan(LearningEngineAnalysisTask.RETRIES);
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
-            query.criteria("lastUpdatedAt").lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
+            query.criteria(LearningEngineExperimentalAnalysisTask.LAST_UPDATED_AT_KEY)
+                .lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
     UpdateOperations<LearningEngineExperimentalAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineExperimentalAnalysisTask.class)
             .set("executionStatus", ExecutionStatus.RUNNING)
             .inc("retry")
-            .set("lastUpdatedAt", System.currentTimeMillis());
+            .set(LearningEngineExperimentalAnalysisTask.LAST_UPDATED_AT_KEY, System.currentTimeMillis());
     return wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
   }
 

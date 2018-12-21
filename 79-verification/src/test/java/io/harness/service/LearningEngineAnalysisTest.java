@@ -212,14 +212,14 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
 
       assertEquals(numOfTasks - i,
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-              .field("lastUpdatedAt")
+              .field(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
               .greaterThan(startTime)
               .filter("retry", 0)
               .asList()
               .size());
       assertEquals(i,
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-              .field("lastUpdatedAt")
+              .field(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
               .greaterThan(startTime)
               .filter("retry", 1)
               .asList()

@@ -105,7 +105,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     // Delete flags that were marked obsolete more than ten days ago
     wingsPersistence.delete(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
                                 .filter("obsolete", true)
-                                .field("lastUpdatedAt")
+                                .field(FeatureFlag.LAST_UPDATED_AT_KEY)
                                 .lessThan(clock.millis() - TimeUnit.DAYS.toMillis(10)));
 
     // Persist new flags initialized as enabled false

@@ -487,7 +487,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .filter("accountId", delegate.getAccountId())
               .filter("delegateId", delegate.getUuid())
               .filter("status", DelegateTask.Status.STARTED)
-              .field("lastUpdatedAt")
+              .field(DelegateTask.LAST_UPDATED_AT_KEY)
               .lessThan(System.currentTimeMillis())
               .field(ID_KEY)
               .in(delegate.getCurrentlyExecutingDelegateTasks().stream().map(DelegateTask::getUuid).collect(toList()));
