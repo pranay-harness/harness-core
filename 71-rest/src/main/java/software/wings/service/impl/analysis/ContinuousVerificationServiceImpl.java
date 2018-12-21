@@ -25,7 +25,6 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
-import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
@@ -711,51 +710,47 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
   }
 
-  private void updateRisksForTimeSeries(long startTime, long endTime, long riskCutOff, CVConfiguration cvConfiguration,
+  private void updateRisksFromSummary(long startTime, long endTime, long riskCutOff, CVConfiguration cvConfiguration,
       Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries) {
-    List<TimeSeriesMLAnalysisRecord> analysisRecords = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                                                           .filter("appId", cvConfiguration.getAppId())
-                                                           .filter("cvConfigId", cvConfiguration.getUuid())
-                                                           .field("analysisMinute")
-                                                           .greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime))
-                                                           .field("analysisMinute")
-                                                           .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-                                                           .order("analysisMinute")
-                                                           .asList();
-    analysisRecords.forEach(timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
-    try {
-      for (TimeSeriesMLAnalysisRecord record : analysisRecords) {
-        if (isEmpty(record.getTransactions())) {
-          continue;
-        }
-        for (Entry<String, TimeSeriesMLTxnSummary> transaction : record.getTransactions().entrySet()) {
-          Map<String, TimeSeriesOfMetric> metricMap = observedTimeSeries.get(transaction.getValue().getTxn_name());
-          if (metricMap == null) {
-            // there's no data in this time range for this txn, so we're  moving on.
-            logger.info("Skipping {}", transaction.getValue().getTxn_name());
-            continue;
-          }
+    List<TimeSeriesRiskSummary> riskSummaries = wingsPersistence.createQuery(TimeSeriesRiskSummary.class)
+                                                    .filter("appId", cvConfiguration.getAppId())
+                                                    .filter("cvConfigId", cvConfiguration.getUuid())
+                                                    .field("analysisMinute")
+                                                    .greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime))
+                                                    .field("analysisMinute")
+                                                    .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
+                                                    .order("analysisMinute")
+                                                    .asList();
 
-          for (TimeSeriesMLMetricSummary metricSummary : transaction.getValue().getMetrics().values()) {
-            final String metricName = metricSummary.getMetric_name();
-            if (!metricMap.containsKey(metricName)) {
-              // there's no data in this time range for this metric, so we're  moving on.
-              logger.info("In transaction {}, skipping {}", transaction.getValue().getTxn_name(), metricName);
-              continue;
-            }
-            if (TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()) > riskCutOff) {
-              metricMap.get(metricSummary.getMetric_name()).updateRisk(metricSummary.getMax_risk());
-            }
+    riskSummaries.forEach(summary -> summary.decompressMaps());
 
-            metricMap.get(metricSummary.getMetric_name())
-                .addToRiskMap(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()), metricSummary.getMax_risk());
-            metricMap.get(metricSummary.getMetric_name()).setLongTermPattern(metricSummary.getLong_term_pattern());
-          }
-        }
-      }
-    } catch (Exception ex) {
-      logger.error("Exception while computing timeSeries data for cvConfiguration: {}", cvConfiguration.getUuid());
-      throw new WingsException("Exception while computing TimeSeries data", ex);
+    for (TimeSeriesRiskSummary summary : riskSummaries) {
+      observedTimeSeries.forEach((transaction, metricMap) -> {
+        metricMap.entrySet()
+            .stream()
+            .filter(e
+                -> summary.getTxnMetricRisk().containsKey(transaction)
+                    && summary.getTxnMetricRisk().get(transaction).containsKey(e.getKey()))
+            .forEach(entry -> {
+              Integer risk = summary.getTxnMetricRisk().get(transaction).get(entry.getKey());
+              if (TimeUnit.MINUTES.toMillis(summary.getAnalysisMinute()) > riskCutOff) {
+                observedTimeSeries.get(transaction).get(entry.getKey()).updateRisk(risk);
+              }
+              observedTimeSeries.get(transaction)
+                  .get(entry.getKey())
+                  .addToRiskMap(TimeUnit.MINUTES.toMillis(summary.getAnalysisMinute()), risk);
+            });
+
+        metricMap.entrySet()
+            .stream()
+            .filter(e
+                -> summary.getTxnMetricLongTermPattern().containsKey(transaction)
+                    && summary.getTxnMetricLongTermPattern().get(transaction).containsKey(e.getKey()))
+            .forEach(entry -> {
+              Integer pattern = summary.getTxnMetricLongTermPattern().get(transaction).get(entry.getKey());
+              observedTimeSeries.get(transaction).get(entry.getKey()).setLongTermPattern(pattern);
+            });
+      });
     }
   }
 
@@ -927,19 +922,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     // Find and add the risks for those metrics above
-    Map<Long, Long> startEndMsMap = new HashMap<>();
-    Long startMs = startTime, endMs = startTime + TimeUnit.MINUTES.toMillis(60);
-    while (endMs <= endTime) {
-      startEndMsMap.put(startMs, endMs);
-      startMs = endMs;
-      endMs = startMs + TimeUnit.MINUTES.toMillis(60);
-    }
-    if (endMs > endTime) {
-      startEndMsMap.put(startMs, endTime);
-    }
-    startEndMsMap.entrySet().parallelStream().forEach(entry -> {
-      updateRisksForTimeSeries(entry.getKey(), entry.getValue(), riskCutOffTime, cvConfiguration, observedTimeSeries);
-    });
+    updateRisksFromSummary(startTime, endTime, riskCutOffTime, cvConfiguration, observedTimeSeries);
 
     return observedTimeSeries;
   }

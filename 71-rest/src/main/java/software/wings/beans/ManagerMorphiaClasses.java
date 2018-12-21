@@ -82,6 +82,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
+import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
@@ -159,6 +160,6 @@ public class ManagerMorphiaClasses {
       DatadogCVServiceConfiguration.class, MetricAnalysisRecord.class, YamlVersion.class, EncryptionConfig.class,
       Principal.class, PrometheusCVServiceConfiguration.class, EncryptedData.class,
       NewRelicCVServiceConfiguration.class, ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class,
-      YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, GitSyncWebhook.class, ExecutionEvent.class,
-      ManifestFile.class, GcsFileMetadata.class, QueableEvent.class);
+      YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class,
+      ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class);
 }
