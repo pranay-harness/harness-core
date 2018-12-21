@@ -250,9 +250,9 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
   private ResponseData createTicket(JiraTaskParameters parameters) {
     JiraClient jira = getJiraClient(parameters);
-    Issue issue = null;
+    Issue issue;
 
-    CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.RUNNING;
+    CommandExecutionStatus commandExecutionStatus;
     try {
       issue = jira.createIssue(parameters.getProject(), parameters.getIssueType())
                   .field(Field.SUMMARY, parameters.getSummary())

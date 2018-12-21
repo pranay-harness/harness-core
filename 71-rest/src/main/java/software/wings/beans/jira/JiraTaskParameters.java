@@ -19,7 +19,7 @@ public class JiraTaskParameters {
   private String description;
   private String issueType;
   private Priority priority;
-  private String labels;
+  private List<String> labels;
   private String assignee;
 
   private String issueId;
