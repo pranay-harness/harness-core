@@ -22,7 +22,9 @@ import software.wings.yaml.BaseEntityYaml;
 @Data
 @Builder
 public class ManifestFile extends Base {
-  public static final String APP_MANIFEST_FILE_NAME = "fileName";
+  public static final String FILE_NAME_KEY = "fileName";
+  public static final String APPLICATION_MANIFEST_ID_KEY = "applicationManifestId";
+
   @NotEmpty String fileName;
   private String fileContent;
   private String applicationManifestId;
