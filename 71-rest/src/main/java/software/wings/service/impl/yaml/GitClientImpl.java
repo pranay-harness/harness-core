@@ -818,7 +818,7 @@ public class GitClientImpl implements GitClient {
    *
    * @param gitConfig the git config
    */
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
+
   public synchronized void cloneRepoForFilePathCheckout(GitConfig gitConfig, String branch, String connectorId) {
     logger.info(new StringBuilder(64)
                     .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))

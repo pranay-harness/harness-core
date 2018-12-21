@@ -147,7 +147,6 @@ public class HelmDeployState extends State {
     }
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE") // TODO
   protected ExecutionResponse executeInternal(ExecutionContext context) throws InterruptedException {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);

@@ -27,9 +27,6 @@ public class JiraExecutionData extends StateExecutionData implements ResponseDat
   private JSONObject createMetadata;
 
   private String webhookUrl;
-  private ApprovalStatus approvalStatus;
-
-  public enum ApprovalStatus { APPROVED, REJECTED }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
