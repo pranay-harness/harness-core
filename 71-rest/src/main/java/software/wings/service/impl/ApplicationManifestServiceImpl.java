@@ -1,9 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.appmanifest.ManifestFile.APP_MANIFEST_FILE_NAME;
+import static software.wings.beans.appmanifest.ManifestFile.FILE_NAME_KEY;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.manifestFilesFromGitFetchFilesResult;
 import static software.wings.utils.Validator.duplicateCheck;
@@ -47,6 +49,7 @@ import software.wings.yaml.directory.DirectoryPath;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -119,7 +122,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public List<ManifestFile> getManifestFilesByAppManifestId(String appId, String applicationManifestId) {
     return wingsPersistence.createQuery(ManifestFile.class)
-        .filter(ManifestFile.APP_MANIFEST_ID_KEY, applicationManifestId)
+        .filter(ManifestFile.APPLICATION_MANIFEST_ID_KEY, applicationManifestId)
         .filter(ManifestFile.APP_ID_KEY, appId)
         .asList();
   }
@@ -135,8 +138,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public ManifestFile getManifestFileByFileName(String applicationManifestId, String fileName) {
     Query<ManifestFile> query = wingsPersistence.createQuery(ManifestFile.class)
-                                    .filter(ManifestFile.APP_MANIFEST_ID_KEY, applicationManifestId)
-                                    .filter(APP_MANIFEST_FILE_NAME, fileName);
+                                    .filter(ManifestFile.APPLICATION_MANIFEST_ID_KEY, applicationManifestId)
+                                    .filter(ManifestFile.FILE_NAME_KEY, fileName);
     return query.get();
   }
 
@@ -185,6 +188,23 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
+  private void validateFileNamePrefixForDirectory(ManifestFile manifestFile) {
+    Pattern pattern = Pattern.compile("^" + manifestFile.getFileName() + "/");
+
+    List<ManifestFile> manifestFiles =
+        wingsPersistence.createQuery(ManifestFile.class)
+            .filter(ManifestFile.APPLICATION_MANIFEST_ID_KEY, manifestFile.getApplicationManifestId())
+            .filter(FILE_NAME_KEY, pattern)
+            .asList();
+
+    if (isNotEmpty(manifestFiles)) {
+      throw new InvalidRequestException(
+          format("Cannot create manifest file with name %s. There exists a directory with same name",
+              manifestFile.getFileName()),
+          USER);
+    }
+  }
+
   public ManifestFile upsertApplicationManifestFile(ManifestFile manifestFile, String serviceId, boolean isCreate) {
     validateManifestFileName(manifestFile);
 
@@ -197,11 +217,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("Application Manifest doesn't exist for Service: " + serviceId);
     }
 
+    validateFileNamePrefixForDirectory(manifestFile);
+
     manifestFile.setApplicationManifestId(applicationManifest.getUuid());
-    ManifestFile savedManifestFile =
-        duplicateCheck(()
-                           -> wingsPersistence.saveAndGet(ManifestFile.class, manifestFile),
-            APP_MANIFEST_FILE_NAME, manifestFile.getFileName());
+    ManifestFile savedManifestFile = duplicateCheck(
+        () -> wingsPersistence.saveAndGet(ManifestFile.class, manifestFile), FILE_NAME_KEY, manifestFile.getFileName());
 
     String appId = applicationManifest.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
@@ -233,7 +253,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public void deleteManifestFiles(String appId, String applicationManifestId) {
     Query<ManifestFile> query = wingsPersistence.createQuery(ManifestFile.class)
-                                    .filter(ManifestFile.APP_MANIFEST_ID_KEY, applicationManifestId)
+                                    .filter(ManifestFile.APPLICATION_MANIFEST_ID_KEY, applicationManifestId)
                                     .filter(ManifestFile.APP_ID_KEY, appId);
     wingsPersistence.delete(query);
   }
