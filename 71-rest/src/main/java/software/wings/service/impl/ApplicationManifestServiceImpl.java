@@ -161,7 +161,33 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     return savedApplicationManifest;
   }
 
+  private void validateManifestFileName(ManifestFile manifestFile) {
+    String manifestFileName = manifestFile.getFileName();
+
+    if (isBlank(manifestFileName)) {
+      throw new InvalidRequestException("Manifest file name cannot be empty", USER);
+    }
+
+    if (manifestFileName.charAt(0) == '/' || manifestFileName.charAt(manifestFileName.length() - 1) == '/') {
+      throw new InvalidRequestException("Manifest file name should not begin or end with /", USER);
+    }
+
+    String[] filePathComponents = manifestFileName.split("/");
+    for (String filePathComponent : filePathComponents) {
+      if (isBlank(filePathComponent)) {
+        throw new InvalidRequestException("Manifest file path component cannot be empty", USER);
+      }
+
+      if (!filePathComponent.trim().equals(filePathComponent)) {
+        throw new InvalidRequestException(
+            "Manifest file path component cannot contain leading or trailing whitespaces", USER);
+      }
+    }
+  }
+
   public ManifestFile upsertApplicationManifestFile(ManifestFile manifestFile, String serviceId, boolean isCreate) {
+    validateManifestFileName(manifestFile);
+
     if (!serviceResourceService.exist(manifestFile.getAppId(), serviceId)) {
       throw new InvalidRequestException("Service doesn't exist");
     }
