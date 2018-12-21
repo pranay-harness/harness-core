@@ -9,7 +9,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static software.wings.beans.User.Builder.anUser;
 
 import com.google.common.collect.Sets;
@@ -170,13 +169,11 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertTrue(savedUser.isEmailVerified());
     assertEquals(1, savedUser.getAccounts().size());
 
-    // Trial signup again after signup completed will result in an error message.
-    try {
-      target.request().post(entity(email, TEXT_PLAIN), new GenericType<RestResponse<Boolean>>() {});
-      fail("Exception is expected when signup with a user which has completed the signup");
-    } catch (Exception e) {
-      logger.warn("Failed to sign-up with an email which has completed signup already.");
-    }
+    // Trial signup again after signup completed will result in user to get another email saying he/she should just
+    // login.
+    target.request().post(entity(email, TEXT_PLAIN), new GenericType<RestResponse<Boolean>>() {});
+    assertEquals(0, response.getResponseMessages().size());
+    assertTrue(response.getResource());
 
     // Delete the user just created as a cleanup
     userService.delete(savedUser.getAccounts().get(0).getUuid(), savedUser.getUuid());
