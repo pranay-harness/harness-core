@@ -950,19 +950,19 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     processManifestFiles(manifestFiles, map, manifestFilesDirectUnderFiles);
 
-    manifestFilesDirectUnderFiles.forEach(yamlManifestFileNode -> {
-      manifestFileFolder.addChild(new ServiceLevelYamlNode(accountId, yamlManifestFileNode.getUuId(),
-          service.getAppId(), service.getUuid(), yamlManifestFileNode.getName(), ManifestFile.class,
-          manifestFilePath.clone().add(yamlManifestFileNode.getName()), yamlGitSyncService,
-          Type.APPLICATION_MANIFEST_FILE));
-    });
-
     if (isNotEmpty(map)) {
       for (Map.Entry<String, YamlManifestFileNode> entry : map.entrySet()) {
         addYamlDirectoryNode(
             accountId, service.getAppId(), service.getUuid(), manifestFileFolder, entry.getValue(), manifestFilePath);
       }
     }
+
+    manifestFilesDirectUnderFiles.forEach(yamlManifestFileNode -> {
+      manifestFileFolder.addChild(new ServiceLevelYamlNode(accountId, yamlManifestFileNode.getUuId(),
+          service.getAppId(), service.getUuid(), yamlManifestFileNode.getName(), ManifestFile.class,
+          manifestFilePath.clone().add(yamlManifestFileNode.getName()), yamlGitSyncService,
+          Type.APPLICATION_MANIFEST_FILE));
+    });
 
     return manifestFileFolder;
   }
