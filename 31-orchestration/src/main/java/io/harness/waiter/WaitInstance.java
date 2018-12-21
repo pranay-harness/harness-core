@@ -1,7 +1,6 @@
 package io.harness.waiter;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
@@ -22,11 +21,10 @@ import java.util.List;
 @Entity(value = "waitInstances", noClassnameStored = true)
 @Value
 @Builder
-public class WaitInstance implements PersistentEntity, UuidAccess, CreatedAtAccess {
+public class WaitInstance implements PersistentEntity, UuidAccess {
   public static final Duration TTL = WaitQueue.TTL.plusDays(7);
 
   @Id private String uuid;
-  private long createdAt;
 
   private List<String> correlationIds;
 
