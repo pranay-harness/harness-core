@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -245,6 +246,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     when(mockWingsPersistence.createQuery(Service.class)).thenReturn(wingsPersistence.createQuery(Service.class));
     when(mockWingsPersistence.createQuery(ServiceCommand.class))
+        .thenReturn(wingsPersistence.createQuery(ServiceCommand.class));
+    when(mockWingsPersistence.createQuery(ServiceCommand.class, excludeAuthority))
         .thenReturn(wingsPersistence.createQuery(ServiceCommand.class));
     when(mockWingsPersistence.createQuery(Command.class)).thenReturn(wingsPersistence.createQuery(Command.class));
     when(mockWingsPersistence.createQuery(ContainerTask.class))

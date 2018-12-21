@@ -103,6 +103,11 @@ public class HQuery<T> extends QueryImpl<T> {
     return list;
   }
 
+  public MorphiaIterator<T, T> fetch() {
+    enforceHarnessRules();
+    return super.fetch();
+  }
+
   @Override
   public MorphiaIterator<T, T> fetchEmptyEntities(FindOptions options) {
     enforceHarnessRules();

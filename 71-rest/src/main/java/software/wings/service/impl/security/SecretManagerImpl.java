@@ -615,7 +615,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public void checkAndAlertForInvalidManagers() {
-    Query<Account> query = wingsPersistence.createQuery(Account.class);
+    Query<Account> query = wingsPersistence.createQuery(Account.class, excludeAuthority);
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
       while (records.hasNext()) {
         Account account = records.next();

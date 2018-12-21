@@ -1,7 +1,10 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HQuery.allChecks;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
@@ -9,6 +12,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.sm.states.ResourceConstraintState.HoldingScope.WORKFLOW;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -38,6 +42,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -137,7 +142,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @Override
   public Set<String> updateActiveConstraints(String appId, String workflowExecutionId) {
     final Query<ResourceConstraintInstance> query =
-        wingsPersistence.createQuery(ResourceConstraintInstance.class)
+        wingsPersistence.createQuery(ResourceConstraintInstance.class, appId == null ? excludeAuthority : allChecks)
             .filter(ResourceConstraintInstance.STATE_KEY, State.ACTIVE.name());
 
     if (appId != null) {
@@ -182,11 +187,11 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   public Set<String> selectBlockedConstraints() {
     Set<String> constraintIds = new HashSet<>();
     Set<String> excludeConstraintIds = new HashSet<>();
-    try (HIterator<ResourceConstraintInstance> iterator =
-             new HIterator<ResourceConstraintInstance>(wingsPersistence.createQuery(ResourceConstraintInstance.class)
-                                                           .field(ResourceConstraintInstance.STATE_KEY)
-                                                           .notEqual(State.FINISHED.name())
-                                                           .fetch())) {
+    try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
+             wingsPersistence.createQuery(ResourceConstraintInstance.class, excludeAuthority)
+                 .field(ResourceConstraintInstance.STATE_KEY)
+                 .notEqual(State.FINISHED.name())
+                 .fetch())) {
       while (iterator.hasNext()) {
         ResourceConstraintInstance instance = iterator.next();
         if (State.ACTIVE.name().equals(instance.getState())) {
@@ -207,7 +212,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   }
 
   private Query<ResourceConstraintInstance> runnableQuery(String constraintId) {
-    return wingsPersistence.createQuery(ResourceConstraintInstance.class)
+    return wingsPersistence.createQuery(ResourceConstraintInstance.class, excludeAuthority)
         .filter(ResourceConstraintInstance.RESOURCE_CONSTRAINT_ID_KEY, constraintId)
         .field(ResourceConstraintInstance.STATE_KEY)
         .in(asList(State.BLOCKED.name(), State.ACTIVE.name()));
@@ -227,8 +232,12 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
   @Override
   public void updateBlockedConstraints(Set<String> constraintIds) {
+    if (isEmpty(constraintIds)) {
+      return;
+    }
+
     try (HIterator<ResourceConstraint> iterator =
-             new HIterator<ResourceConstraint>(wingsPersistence.createQuery(ResourceConstraint.class)
+             new HIterator<ResourceConstraint>(wingsPersistence.createQuery(ResourceConstraint.class, excludeAuthority)
                                                    .field(ResourceConstraint.ID_KEY)
                                                    .in(constraintIds)
                                                    .fetch())) {
@@ -236,6 +245,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
         ResourceConstraint instance = iterator.next();
         final Constraint constraint = createAbstraction(instance);
         final List<ConstraintUnit> units = units(instance);
+
+        logger.info("Resource constraint {} has running units {}", instance.getUuid(), Joiner.on(", ").join(units));
 
         units.forEach(unit -> {
           final RunnableConsumers runnableConsumers = constraint.runnableConsumers(unit, getRegistry());
@@ -454,7 +465,11 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
         wingsPersistence.createUpdateOperations(ResourceConstraintInstance.class)
             .set(ResourceConstraintInstance.STATE_KEY, State.FINISHED.name());
 
-    wingsPersistence.update(query, ops);
+    final UpdateResults updateResults = wingsPersistence.update(query, ops);
+    if (updateResults == null || updateResults.getUpdatedCount() == 0) {
+      logger.error("The attempt to finish {}.{} for {} failed", id.getValue(), unit.getValue(), consumerId.getValue());
+      return false;
+    }
     return true;
   }
 }

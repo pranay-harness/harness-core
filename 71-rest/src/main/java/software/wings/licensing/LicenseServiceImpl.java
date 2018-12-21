@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.LICENSE_EXPIRED;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static software.wings.common.Constants.DEFAULT_FREE_LICENSE_UNITS;
 import static software.wings.common.Constants.DEFAULT_TRIAL_LICENSE_UNITS;
@@ -66,7 +67,7 @@ public class LicenseServiceImpl implements LicenseService {
 
   @Override
   public void checkForLicenseExpiry() {
-    Query<Account> query = wingsPersistence.createQuery(Account.class);
+    Query<Account> query = wingsPersistence.createQuery(Account.class, excludeAuthority);
     query.project("_id", true);
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
       while (records.hasNext()) {

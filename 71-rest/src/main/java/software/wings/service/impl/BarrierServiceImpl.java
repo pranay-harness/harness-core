@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.distribution.barrier.Barrier.State.STANDING;
 import static io.harness.eraro.ErrorCode.BARRIERS_NOT_RUNNING_CONCURRENTLY;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.sm.StateType.BARRIER;
@@ -394,7 +395,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Override
   public void updateAllActiveBarriers() {
     try (HIterator<BarrierInstance> barrierInstances =
-             new HIterator<>(wingsPersistence.createQuery(BarrierInstance.class)
+             new HIterator<>(wingsPersistence.createQuery(BarrierInstance.class, excludeAuthority)
                                  .filter(BarrierInstance.STATE_KEY, STANDING.name())
                                  .fetch())) {
       while (barrierInstances.hasNext()) {
