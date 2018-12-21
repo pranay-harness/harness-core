@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
+import software.wings.api.TerraformExecutionData;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Event.Type;
@@ -398,7 +399,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       throw new InvalidRequestException("Source repo provided is not Valid");
     }
 
-    terraformDirectory = handleUserInput(terraformDirectory);
+    terraformDirectory = normalizeScriptPath(terraformDirectory);
     GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
     gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
@@ -445,7 +446,54 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
   }
 
-  private String handleUserInput(String terraformDirectory) {
+  @Override
+  public List<String> getTerraformTargets(String appId, String accountId, String provisionerId) {
+    InfrastructureProvisioner infrastructureProvisioner = get(appId, provisionerId);
+    if (infrastructureProvisioner == null) {
+      throw new InvalidRequestException("Infra Provisioner not found");
+    }
+    if (!(infrastructureProvisioner instanceof TerraformInfrastructureProvisioner)) {
+      throw new InvalidRequestException("Targets only valid for Terraform Infrastructure Provisioner");
+    }
+    TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
+        (TerraformInfrastructureProvisioner) infrastructureProvisioner;
+    SettingAttribute settingAttribute = settingService.get(terraformInfrastructureProvisioner.getSourceRepoSettingId());
+    if (settingAttribute == null || !(settingAttribute.getValue() instanceof GitConfig)) {
+      throw new InvalidRequestException("Invalid Git Repo");
+    }
+    GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+
+    DelegateTask delegateTask =
+        aDelegateTask()
+            .withTaskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK)
+            .withAccountId(accountId)
+            .withAppId(appId)
+            .withParameters(new Object[] {
+                TerraformProvisionParameters.builder()
+                    .sourceRepo(gitConfig)
+                    .sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch())
+                    .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))
+                    .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
+                    .build()})
+            .withTimeout(TimeUnit.SECONDS.toMillis(30))
+            .withAsync(false)
+            .build();
+    ResponseData responseData;
+    try {
+      responseData = delegateService.executeTask(delegateTask);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new WingsException("Thread was interrupted. Please try again.");
+    }
+    if (responseData instanceof ErrorNotifyResponseData) {
+      throw new WingsException(((ErrorNotifyResponseData) responseData).getErrorMessage());
+    } else if (!(responseData instanceof TerraformExecutionData)) {
+      throw new WingsException("Unknown response from delegate.").addContext(ResponseData.class, responseData);
+    }
+    return ((TerraformExecutionData) responseData).getTargets();
+  }
+
+  private String normalizeScriptPath(String terraformDirectory) {
     return terraformDirectory.equals(".") ? "" : terraformDirectory;
   }
 }

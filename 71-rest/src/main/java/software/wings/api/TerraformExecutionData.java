@@ -30,6 +30,7 @@ public class TerraformExecutionData extends StateExecutionData implements Respon
   private List<NameValuePair> backendConfigs;
 
   private String sourceRepoReference;
+  private List<String> targets;
 
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();

@@ -41,7 +41,7 @@ import java.util.function.Supplier;
 public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(TerraformInputVariablesObtainTask.class);
   private static final String TERRAFORM_FILE_EXTENSION = ".tf";
-  @Inject GitService gitService;
+  @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
 
   public TerraformInputVariablesObtainTask(String delegateId, DelegateTask delegateTask,

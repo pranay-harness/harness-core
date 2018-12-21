@@ -55,4 +55,6 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
 
   List<NameValuePair> getTerraformVariables(
       String appId, String scmSettingId, String terraformDirectory, String accountId, String sourceRepoBranch);
+
+  List<String> getTerraformTargets(String appId, String accountId, String provisionerId);
 }

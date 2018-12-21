@@ -30,6 +30,7 @@ import software.wings.delegatetasks.ShellScriptTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.delegatetasks.StackDriverDataCollectionTask;
 import software.wings.delegatetasks.SumoDataCollectionTask;
+import software.wings.delegatetasks.TerraformFetchTargetsTask;
 import software.wings.delegatetasks.TerraformInputVariablesObtainTask;
 import software.wings.delegatetasks.TerraformProvisionTask;
 import software.wings.delegatetasks.TriggerTask;
@@ -275,6 +276,7 @@ public enum TaskType {
   TERRAFORM_PROVISION_TASK(TaskGroup.TERRAFORM, TerraformProvisionTask.class, TerraformValidation.class),
   TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK(
       TaskGroup.TERRAFORM, TerraformInputVariablesObtainTask.class, TerraformValidation.class),
+  TERRAFORM_FETCH_TARGETS_TASK(TaskGroup.TERRAFORM, TerraformFetchTargetsTask.class, TerraformValidation.class),
   SECRET_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   KUBERNETES_SWAP_SERVICE_SELECTORS_TASK(
       TaskGroup.CONTAINER, KubernetesSwapServiceSelectorsTask.class, KubernetesSwapServiceSelectorsValidation.class),

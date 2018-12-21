@@ -8,6 +8,7 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -188,20 +189,22 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
       File tfOutputsFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
 
+      String targetArgs = getTargetArgs(parameters.getTargets());
+
       String joinedCommands;
       switch (parameters.getCommand()) {
         case APPLY:
           joinedCommands = Joiner.on(" && ").join(asList("cd \"" + scriptDirectory + "\"",
               "terraform init -input=false -force-copy "
                   + (tfBackendConfigsFile.exists() ? "-backend-config=" + tfBackendConfigsFile.getAbsolutePath() : ""),
-              "terraform refresh -input=false", "terraform plan -out=tfplan -input=false",
+              "terraform refresh -input=false " + targetArgs, "terraform plan -out=tfplan -input=false " + targetArgs,
               "terraform apply -input=false tfplan", "(terraform output --json > " + tfOutputsFile.toString() + ")"));
           break;
         case DESTROY:
           joinedCommands = Joiner.on(" && ").join(asList("cd \"" + scriptDirectory + "\"",
               "terraform init -input=false "
                   + (tfBackendConfigsFile.exists() ? "-backend-config=" + tfBackendConfigsFile.getAbsolutePath() : ""),
-              "terraform refresh -input=false", "terraform destroy -force"));
+              "terraform refresh -input=false " + targetArgs, "terraform destroy -force " + targetArgs));
           break;
         default:
           throw new IllegalArgumentException("Invalid Terraform Command : " + parameters.getCommand().name());
@@ -322,6 +325,17 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       FileUtils.deleteQuietly(tfVariablesFile);
       FileUtils.deleteQuietly(tfBackendConfigsFile);
     }
+  }
+
+  @VisibleForTesting
+  public String getTargetArgs(List<String> targets) {
+    StringBuffer targetArgs = new StringBuffer();
+    if (isNotEmpty(targets)) {
+      for (String target : targets) {
+        targetArgs.append("-target=" + target + " ");
+      }
+    }
+    return targetArgs.toString();
   }
 
   private boolean isRemoteStateConfigured(String scriptDirectory) {

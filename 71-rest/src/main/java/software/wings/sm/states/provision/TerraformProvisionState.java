@@ -118,6 +118,7 @@ public abstract class TerraformProvisionState extends State {
 
   @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
   @Attributes(title = "Backend Configs") @Getter @Setter private List<NameValuePair> backendConfigs;
+  @Getter @Setter private List<String> targets;
 
   /**
    * Instantiates a new state.
@@ -426,6 +427,7 @@ public abstract class TerraformProvisionState extends State {
             .encryptedVariables(encryptedVariables)
             .backendConfigs(backendConfigs)
             .encryptedBackendConfigs(encryptedBackendConfigs)
+            .targets(targets)
             .build();
 
     DelegateTask delegateTask = aDelegateTask()
