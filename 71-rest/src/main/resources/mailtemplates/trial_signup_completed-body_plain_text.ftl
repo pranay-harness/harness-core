@@ -1,8 +1,6 @@
 Hi ${(name!"there")?capitalize},
 
-You have signed up a trial account using this email address already. Please login Harness directly.
-
-Thanks for checking out Harness!
+You have already completed the sign-up on Harness platform. Please use the following link to get to the login page. If you forgot your password, you can easily reset it using the forgot password link on the login page.
 
 ${url!}
 
