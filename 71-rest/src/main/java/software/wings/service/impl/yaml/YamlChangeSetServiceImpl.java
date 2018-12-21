@@ -86,7 +86,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       Query<YamlChangeSet> findQuery = wingsPersistence.createQuery(YamlChangeSet.class)
                                            .filter("accountId", accountId)
                                            .filter("status", Status.QUEUED)
-                                           .order("createdAt");
+                                           .order(YamlChangeSet.CREATED_AT_KEY);
       UpdateOperations<YamlChangeSet> updateOperations =
           wingsPersistence.createUpdateOperations(YamlChangeSet.class).set("status", Status.RUNNING);
       YamlChangeSet modifiedChangeSet = wingsPersistence.getDatastore(YamlChangeSet.class, ReadPref.NORMAL)
@@ -115,7 +115,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
                                                 .addFilter("status", Operator.IN, new Status[] {Status.QUEUED});
 
     if (mostRecentCompletedChangeSet != null) {
-      pageRequestBuilder.addFilter("createdAt", Operator.GE, mostRecentCompletedChangeSet.getCreatedAt());
+      pageRequestBuilder.addFilter(
+          YamlChangeSet.CREATED_AT_KEY, Operator.GE, mostRecentCompletedChangeSet.getCreatedAt());
     }
 
     return listYamlChangeSets(pageRequestBuilder.build()).getResponse();
@@ -126,7 +127,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
         listYamlChangeSets(aPageRequest()
                                .addFilter("accountId", Operator.EQ, accountId)
                                .addFilter("status", Operator.EQ, Status.COMPLETED)
-                               .addOrder("createdAt", OrderType.DESC)
+                               .addOrder(YamlChangeSet.CREATED_AT_KEY, OrderType.DESC)
                                .withLimit("1")
                                .build())
             .getResponse();
@@ -152,11 +153,12 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       PageRequestBuilder pageRequestBuilder = aPageRequest()
                                                   .addFilter("accountId", Operator.EQ, accountId)
                                                   .addFilter("status", Operator.IN, new Status[] {Status.QUEUED})
-                                                  .addOrder("createdAt", OrderType.ASC)
+                                                  .addOrder(YamlChangeSet.CREATED_AT_KEY, OrderType.ASC)
                                                   .withLimit("50");
 
       if (mostRecentCompletedChangeSet != null) {
-        pageRequestBuilder.addFilter("createdAt", Operator.GE, mostRecentCompletedChangeSet.getCreatedAt());
+        pageRequestBuilder.addFilter(
+            YamlChangeSet.CREATED_AT_KEY, Operator.GE, mostRecentCompletedChangeSet.getCreatedAt());
       }
       yamlChangeSets = listYamlChangeSets(pageRequestBuilder.build()).getResponse();
     } catch (WingsException exception) {
@@ -266,7 +268,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
         PageRequestBuilder pageRequestBuilder = aPageRequest()
                                                     .addFilter("accountId", Operator.EQ, accountId)
                                                     .addFilter("status", Operator.IN, statuses)
-                                                    .addFilter("createdAt", Operator.LT, cutOffTime)
+                                                    .addFilter(YamlChangeSet.CREATED_AT_KEY, Operator.LT, cutOffTime)
                                                     .addFieldsIncluded("_id")
                                                     .withLimit(batchSize);
 

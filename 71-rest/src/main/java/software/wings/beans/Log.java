@@ -85,7 +85,7 @@ public class Log extends Base implements GoogleDataStoreAware {
                   com.google.cloud.datastore.StringValue.newBuilder(getCommandExecutionStatus().name())
                       .setExcludeFromIndexes(true)
                       .build())
-              .set("createdAt", currentTimeMillis());
+              .set(Log.CREATED_AT_KEY, currentTimeMillis());
 
       if (getLogLine().length() <= 256) {
         logEntityBuilder.set("logLine", StringValue.newBuilder(getLogLine()).setExcludeFromIndexes(true).build());
@@ -122,7 +122,7 @@ public class Log extends Base implements GoogleDataStoreAware {
                         .withUuid(entity.getKey().getName())
                         .withActivityId(readString(entity, "activityId"))
                         .withLogLevel(LogLevel.valueOf(readString(entity, "logLevel")))
-                        .withCreatedAt(readLong(entity, "createdAt"))
+                        .withCreatedAt(readLong(entity, Log.CREATED_AT_KEY))
                         .withHostName(readString(entity, "hostName"))
                         .withAppId(readString(entity, "appId"))
                         .withCommandUnitName(readString(entity, "commandUnitName"))

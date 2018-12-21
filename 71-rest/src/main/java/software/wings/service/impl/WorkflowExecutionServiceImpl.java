@@ -671,12 +671,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private List<StateExecutionInstance> getStateExecutionInstances(WorkflowExecution workflowExecution) {
-    PageRequest<StateExecutionInstance> req = aPageRequest()
-                                                  .withLimit(UNLIMITED)
-                                                  .addFilter("appId", EQ, workflowExecution.getAppId())
-                                                  .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-                                                  .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-                                                  .build();
+    PageRequest<StateExecutionInstance> req =
+        aPageRequest()
+            .withLimit(UNLIMITED)
+            .addFilter("appId", EQ, workflowExecution.getAppId())
+            .addFilter("executionUuid", EQ, workflowExecution.getUuid())
+            .addFilter(StateExecutionInstance.CREATED_AT_KEY, GE, workflowExecution.getCreatedAt())
+            .build();
     return wingsPersistence.query(StateExecutionInstance.class, req).getResponse();
   }
 
@@ -2603,7 +2604,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .in(serviceIds)
         .field("envIds")
         .in(envIds)
-        .order(Sort.descending("createdAt"))
+        .order(Sort.descending(WorkflowExecution.CREATED_AT_KEY))
         .get(new FindOptions().skip(1));
   }
 

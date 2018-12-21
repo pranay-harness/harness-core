@@ -309,7 +309,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<Instance> getInstancesForAccount(String accountId, long timestamp, Query<Instance> query) {
     List<Instance> instanceList = new ArrayList<>();
     query.field("accountId").equal(accountId);
-    query.field("createdAt").lessThanOrEq(timestamp);
+    query.field(Instance.CREATED_AT_KEY).lessThanOrEq(timestamp);
     query.and(
         query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
     int counter = 0;
@@ -333,7 +333,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private long getCreatedTimeOfInstanceAtTimestamp(
       String accountId, long timestamp, Query<Instance> query, boolean oldest) {
     query.field("accountId").equal(accountId);
-    query.field("createdAt").lessThanOrEq(timestamp);
+    query.field(Instance.CREATED_AT_KEY).lessThanOrEq(timestamp);
     query.and(
         query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
     if (oldest) {
@@ -398,7 +398,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private Query<Instance> getInstanceQueryAtTime(String accountId, List<String> appIds, long timestamp)
       throws HarnessException {
     Query<Instance> query = getInstanceQuery(accountId, appIds, true, timestamp);
-    query.field("createdAt").lessThanOrEq(timestamp);
+    query.field(Instance.CREATED_AT_KEY).lessThanOrEq(timestamp);
     query.and(
         query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
     return query;
@@ -642,7 +642,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   public Set<String> getDeletedAppIds(String accountId, long fromTimestamp, long toTimestamp) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.project("appId", true);
-    query.project("createdAt", true);
+    query.project(Instance.CREATED_AT_KEY, true);
 
     // Find the timestamp of oldest instance alive at fromTimestamp
     long lhsCreatedAt = getCreatedTimeOfInstanceAtTimestamp(accountId, fromTimestamp, query, true);
@@ -651,8 +651,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
     query = wingsPersistence.createQuery(Instance.class);
     query.field("accountId").equal(accountId);
-    query.field("createdAt").greaterThanOrEq(lhsCreatedAt);
-    query.field("createdAt").lessThanOrEq(rhsCreatedAt);
+    query.field(Instance.CREATED_AT_KEY).greaterThanOrEq(lhsCreatedAt);
+    query.field(Instance.CREATED_AT_KEY).lessThanOrEq(rhsCreatedAt);
     query.project("appId", true);
 
     List<Instance> instanceList = new ArrayList<>();
@@ -678,7 +678,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                                      .addFilter("appId", EQ, appId)
                                                      .addFilter("workflowType", EQ, ORCHESTRATION)
                                                      .addFilter("serviceIds", HAS, serviceId)
-                                                     .addOrder("createdAt", OrderType.DESC)
+                                                     .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
                                                      .withLimit("10")
                                                      .build();
 

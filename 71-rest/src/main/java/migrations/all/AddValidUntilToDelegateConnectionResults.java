@@ -32,7 +32,7 @@ public class AddValidUntilToDelegateConnectionResults implements Migration {
              new HIterator<>(wingsPersistence.createQuery(DelegateConnectionResult.class)
                                  .field("validUntil")
                                  .doesNotExist()
-                                 .project("createdAt", true)
+                                 .project(DelegateConnectionResult.CREATED_AT_KEY, true)
                                  .fetch())) {
       while (activities.hasNext()) {
         final DelegateConnectionResult delegateConnectionResult = activities.next();

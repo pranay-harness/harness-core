@@ -76,7 +76,7 @@ public class LogServiceImpl implements LogService {
                                   aPageRequest()
                                       .addFilter("appId", Operator.EQ, appId)
                                       .addFilter("activityId", Operator.EQ, activityId)
-                                      .addOrder("createdAt", OrderType.ASC)
+                                      .addOrder(Log.CREATED_AT_KEY, OrderType.ASC)
                                       .build())
                               .getResponse();
       for (Log log : logList) {

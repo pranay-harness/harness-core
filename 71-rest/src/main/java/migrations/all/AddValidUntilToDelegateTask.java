@@ -31,7 +31,7 @@ public class AddValidUntilToDelegateTask implements Migration {
     try (HIterator<DelegateTask> delegateTasks = new HIterator<>(wingsPersistence.createQuery(DelegateTask.class)
                                                                      .field("validUntil")
                                                                      .doesNotExist()
-                                                                     .project("createdAt", true)
+                                                                     .project(DelegateTask.CREATED_AT_KEY, true)
                                                                      .fetch())) {
       while (delegateTasks.hasNext()) {
         final DelegateTask delegateTask = delegateTasks.next();

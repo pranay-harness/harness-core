@@ -208,8 +208,9 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public void cleanup(long keepAfterTimeMillis) {
-    Query<LearningEngineAnalysisTask> query =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).field("createdAt").lessThan(keepAfterTimeMillis);
+    Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                                  .field(LearningEngineAnalysisTask.CREATED_AT_KEY)
+                                                  .lessThan(keepAfterTimeMillis);
     wingsPersistence.delete(query);
   }
 

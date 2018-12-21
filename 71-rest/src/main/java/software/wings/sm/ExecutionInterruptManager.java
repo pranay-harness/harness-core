@@ -241,8 +241,8 @@ public class ExecutionInterruptManager {
               .withLimit("1")
               .addFilter("appId", EQ, executionInterrupt.getAppId())
               .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
-              .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-              .addOrder("createdAt", OrderType.DESC)
+              .addFilter(StateExecutionInstance.CREATED_AT_KEY, GE, workflowExecution.getCreatedAt())
+              .addOrder(StateExecutionInstance.CREATED_AT_KEY, OrderType.DESC)
               .withReadPref(ReadPref.CRITICAL)
               .build();
 
@@ -294,7 +294,7 @@ public class ExecutionInterruptManager {
                                               .addFilter("appId", EQ, executionInterrupt.getAppId())
                                               .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
                                               .addFilter("seized", EQ, false)
-                                              .addOrder("createdAt", OrderType.DESC)
+                                              .addOrder(ExecutionInterrupt.CREATED_AT_KEY, OrderType.DESC)
                                               .build();
     return wingsPersistence.query(ExecutionInterrupt.class, req);
   }
@@ -314,7 +314,7 @@ public class ExecutionInterruptManager {
             .addFilter("executionUuid", EQ, executionUuid)
             .addFilter("executionInterruptType", IN, ABORT_ALL, PAUSE_ALL, RESUME_ALL, ROLLBACK)
             .addFilter("seized", EQ, false)
-            .addOrder("createdAt", OrderType.DESC)
+            .addOrder(ExecutionInterrupt.CREATED_AT_KEY, OrderType.DESC)
             .build();
     PageResponse<ExecutionInterrupt> res = wingsPersistence.query(ExecutionInterrupt.class, req);
     if (res == null) {

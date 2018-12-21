@@ -266,7 +266,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     PageRequest pageRequest = aPageRequest()
                                   .addFilter("appId", EQ, appId)
                                   .addFilter("serviceId", EQ, serviceId)
-                                  .addOrder("createdAt", ASC)
+                                  .addOrder(ArtifactStream.CREATED_AT_KEY, ASC)
                                   .build();
     PageResponse pageResponse = wingsPersistence.query(ArtifactStream.class, pageRequest);
     return pageResponse.getResponse();

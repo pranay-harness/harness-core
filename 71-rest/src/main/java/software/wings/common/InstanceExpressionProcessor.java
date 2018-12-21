@@ -377,7 +377,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
                                                 .withLimit(UNLIMITED)
                                                 .addFilter("appId", Operator.EQ, appId)
                                                 .addFilter("envId", Operator.EQ, envId)
-                                                .addOrder("createdAt", OrderType.ASC);
+                                                .addOrder(ServiceTemplate.CREATED_AT_KEY, OrderType.ASC);
     if (isNotEmpty(services)) {
       pageRequestBuilder.addFilter(
           "serviceId", Operator.IN, services.stream().map(Service::getUuid).collect(toList()).toArray());

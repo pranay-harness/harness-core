@@ -164,7 +164,7 @@ public class ActivityResource {
     request.addFilter("appId", EQ, appId);
     request.addFilter("stateExecutionId", EQ, stateExecutionId);
     if (isEmpty(request.getOrders())) {
-      request.setOrders(asList(aSortOrder().withField("createdAt", DESC).build()));
+      request.setOrders(asList(aSortOrder().withField(ThirdPartyApiCallLog.CREATED_AT_KEY, DESC).build()));
     }
     return new RestResponse<>(dataStoreService.list(ThirdPartyApiCallLog.class, request));
   }

@@ -32,7 +32,7 @@ public class AddValidUntilToStateExecutionInstance implements Migration {
              new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
                                  .field("validUntil")
                                  .doesNotExist()
-                                 .project("createdAt", true)
+                                 .project(StateExecutionInstance.CREATED_AT_KEY, true)
                                  .fetch())) {
       while (stateExecutionInstances.hasNext()) {
         final StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();

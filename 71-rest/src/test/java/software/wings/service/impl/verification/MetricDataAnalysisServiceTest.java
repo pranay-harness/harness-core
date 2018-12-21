@@ -80,7 +80,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     List<TimeSeriesMLTransactionThresholds> thresholds =
         wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
             .filter("appId", this.appId)
-            .order("createdAt")
+            .order(TimeSeriesMLTransactionThresholds.CREATED_AT_KEY)
             .asList();
     assertEquals(numOfTransactions * numOfMetricsPerTxns, thresholds.size());
     for (int i = 0; i < numOfTransactions * numOfMetricsPerTxns; i++) {
@@ -133,7 +133,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
 
     thresholds = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
                      .filter("appId", this.appId)
-                     .order("createdAt")
+                     .order(TimeSeriesMLTransactionThresholds.CREATED_AT_KEY)
                      .asList();
     assertEquals(numOfTransactions * numOfMetricsPerTxns, thresholds.size());
     for (int i = 0; i < numOfTransactions * numOfMetricsPerTxns; i++) {

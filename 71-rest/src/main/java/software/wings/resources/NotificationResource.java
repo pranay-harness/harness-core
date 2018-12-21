@@ -57,8 +57,8 @@ public class NotificationResource {
     if (isNotEmpty(appId)) {
       pageRequest.addFilter("appId", EQ, appId);
     }
-    pageRequest.setOrders(
-        asList(aSortOrder().withField("complete", ASC).build(), aSortOrder().withField("createdAt", DESC).build()));
+    pageRequest.setOrders(asList(aSortOrder().withField("complete", ASC).build(),
+        aSortOrder().withField(Notification.CREATED_AT_KEY, DESC).build()));
     return new RestResponse<>(notificationService.list(pageRequest));
   }
 
