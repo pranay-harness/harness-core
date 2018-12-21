@@ -160,6 +160,7 @@ public class ApprovalState extends State {
 
   private ExecutionResponse executeUserGroupApproval(List<String> userGroups, String accountId,
       Map<String, String> placeholderValues, String approvalId, ApprovalStateExecutionData executionData) {
+    executionData.setUserGroups(userGroups);
     sendEmailToUserGroupMembers(userGroups, accountId, APPROVAL_NEEDED_NOTIFICATION, placeholderValues);
     return anExecutionResponse()
         .withAsync(true)
