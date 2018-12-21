@@ -118,7 +118,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
           learningEngineAnalysisTask);
     }
     List<LearningEngineAnalysisTask> totalQueuedAnalysisTask =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter("executionStatus", ExecutionStatus.QUEUED)
             .asList();
     metricRegistry.updateMetricValue(DATA_ANALYSIS_TASKS_PER_MINUTE, totalQueuedAnalysisTask.size());
