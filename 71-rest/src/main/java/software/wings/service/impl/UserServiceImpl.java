@@ -217,7 +217,9 @@ public class UserServiceImpl implements UserService {
     }
 
     final String emailAddress = email.trim().toLowerCase();
-    verifyEmailRegisteredOrAllowed(emailAddress, false);
+
+    // Only validate if the email address is valid. Won't check if the email has been registered already.
+    checkIfEmailIsValid(emailAddress);
 
     UserInvite userInvite = getUserInviteByEmail(emailAddress);
     if (userInvite == null) {
@@ -232,15 +234,13 @@ public class UserServiceImpl implements UserService {
 
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
-      sendNewInvitationMail(userInvite, null);
+      sendVerificationEmail(userInvite);
     } else if (userInvite.isCompleted()) {
       throw new WingsException(GENERAL_ERROR, USER)
           .addParam("message", "User invite for " + email + " has been completed.");
     } else {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message",
-              "User invite for " + email + " exists and is pending, "
-                  + "please finish the signup process through your verification email.");
+      // HAR-7250: If the user invite was not completed. Resend the verification/invitation email.
+      sendVerificationEmail(userInvite);
     }
 
     return true;
@@ -404,10 +404,20 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void verifyRegisteredOrAllowed(String email) {
-    verifyEmailRegisteredOrAllowed(email, true);
+    checkIfEmailIsValid(email);
+
+    final String emailAddress = email.trim();
+    if (!domainAllowedToRegister(emailAddress)) {
+      throw new WingsException(USER_DOMAIN_NOT_ALLOWED, USER);
+    }
+
+    User existingUser = getUserByEmail(emailAddress);
+    if (existingUser != null && existingUser.isEmailVerified()) {
+      throw new WingsException(USER_ALREADY_REGISTERED, USER);
+    }
   }
 
-  private void verifyEmailRegisteredOrAllowed(String email, boolean verifyAllowedDomain) {
+  private void checkIfEmailIsValid(String email) {
     if (isBlank(email)) {
       throw new WingsException(INVALID_EMAIL, USER);
     }
@@ -415,15 +425,6 @@ public class UserServiceImpl implements UserService {
     final String emailAddress = email.trim();
     if (!EmailValidator.getInstance().isValid(emailAddress)) {
       throw new WingsException(INVALID_EMAIL, USER);
-    }
-
-    if (verifyAllowedDomain && !domainAllowedToRegister(emailAddress)) {
-      throw new WingsException(USER_DOMAIN_NOT_ALLOWED, USER);
-    }
-
-    User existingUser = getUserByEmail(emailAddress);
-    if (existingUser != null && existingUser.isEmailVerified()) {
-      throw new WingsException(USER_ALREADY_REGISTERED, USER);
     }
   }
 
@@ -638,15 +639,19 @@ public class UserServiceImpl implements UserService {
   private Map<String, String> getNewInvitationTemplateModel(UserInvite userInvite, Account account)
       throws URISyntaxException {
     Map<String, String> model = new HashMap<>();
-    final String inviteUrl;
-    if (account == null) {
-      inviteUrl = buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()));
-    } else {
-      inviteUrl =
-          buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
-              account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
-      model.put("company", account.getCompanyName());
-    }
+    String inviteUrl =
+        buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
+            account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
+    model.put("company", account.getCompanyName());
+    model.put("name", userInvite.getEmail());
+    model.put("url", inviteUrl);
+    return model;
+  }
+
+  private Map<String, String> getEmailVerificationTemplateModel(UserInvite userInvite) throws URISyntaxException {
+    Map<String, String> model = new HashMap<>();
+    String inviteUrl =
+        buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()));
     model.put("name", userInvite.getEmail());
     model.put("url", inviteUrl);
     return model;
@@ -658,28 +663,38 @@ public class UserServiceImpl implements UserService {
       Map<String, String> templateModel = getNewInvitationTemplateModel(userInvite, account);
       List<String> toList = new ArrayList<>();
       toList.add(userInvite.getEmail());
-      final EmailData emailData;
-      if (account == null) {
-        emailData = EmailData.builder()
-                        .to(toList)
-                        .templateName(INVITE_TRIAL_EMAIL_TEMPLATE_NAME)
-                        .templateModel(templateModel)
-                        .build();
-      } else {
-        emailData = EmailData.builder()
-                        .to(toList)
-                        .templateName(INVITE_EMAIL_TEMPLATE_NAME)
-                        .templateModel(templateModel)
-                        .accountId(account.getUuid())
-                        .build();
-      }
-
+      EmailData emailData = EmailData.builder()
+                                .to(toList)
+                                .templateName(INVITE_EMAIL_TEMPLATE_NAME)
+                                .templateModel(templateModel)
+                                .accountId(account.getUuid())
+                                .build();
       emailData.setCc(Collections.emptyList());
       emailData.setRetries(2);
 
       emailNotificationService.send(emailData);
     } catch (URISyntaxException e) {
       logger.error("Invitation email couldn't be sent ", e);
+    }
+  }
+
+  private void sendVerificationEmail(UserInvite userInvite) {
+    try {
+      Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite);
+      List<String> toList = new ArrayList<>();
+      toList.add(userInvite.getEmail());
+      EmailData emailData = EmailData.builder()
+                                .to(toList)
+                                .templateName(INVITE_TRIAL_EMAIL_TEMPLATE_NAME)
+                                .templateModel(templateModel)
+                                .build();
+
+      emailData.setCc(Collections.emptyList());
+      emailData.setRetries(2);
+
+      emailNotificationService.send(emailData);
+    } catch (URISyntaxException e) {
+      logger.error("Verification email couldn't be sent ", e);
     }
   }
 
