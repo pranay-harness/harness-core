@@ -9,6 +9,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static software.wings.beans.User.Builder.anUser;
 
 import com.google.common.collect.Sets;
@@ -133,6 +134,11 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertEquals(0, response.getResponseMessages().size());
     assertTrue(response.getResource());
 
+    // Trial signup again using the same email should succeed. A new verification email will be sent.
+    response = target.request().post(entity(email, TEXT_PLAIN), new GenericType<RestResponse<Boolean>>() {});
+    assertEquals(0, response.getResponseMessages().size());
+    assertTrue(response.getResource());
+
     UserInvite userInvite = wingsPersistence.createQuery(UserInvite.class).filter("email", email).get();
     assertNotNull(userInvite);
     assertFalse(userInvite.isCompleted());
@@ -163,6 +169,14 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertNotNull(savedUser);
     assertTrue(savedUser.isEmailVerified());
     assertEquals(1, savedUser.getAccounts().size());
+
+    // Trial signup again after signup completed will result in an error message.
+    try {
+      target.request().post(entity(email, TEXT_PLAIN), new GenericType<RestResponse<Boolean>>() {});
+      fail("Exception is expected when signup with a user which has completed the signup");
+    } catch (Exception e) {
+      logger.warn("Failed to sign-up with an email which has completed signup already.");
+    }
 
     // Delete the user just created as a cleanup
     userService.delete(savedUser.getAccounts().get(0).getUuid(), savedUser.getUuid());
