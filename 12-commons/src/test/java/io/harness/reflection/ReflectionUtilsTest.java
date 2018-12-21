@@ -3,12 +3,15 @@ package io.harness.reflection;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Test;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,44 +22,7 @@ public class ReflectionUtilsTest {
     public String field;
     public String inheritField;
     @DummyAnnotation public String annotatedField;
-  }
-
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(ElementType.FIELD)
-  public @interface DummyAnnotation {
-    boolean value() default true;
-  }
-
-  @Test
-  public void getFieldByNameTest() {
-    assertThat(ReflectionUtils.getFieldByName(Field.class, "dummy")).isNull();
-    assertThat(ReflectionUtils.getFieldByName(Field.class, "inheritField").getName()).isEqualTo("inheritField");
-    assertThat(ReflectionUtils.getFieldByName(Field.class, "baseField").getName()).isEqualTo("baseField");
-    assertThat(ReflectionUtils.getFieldByName(Field.class, "annotatedField").getName()).isEqualTo("annotatedField");
-  }
-
-  @Test
-  public void getAllDeclaredAndInheritedFields() {
-    assertThat(ReflectionUtils.getAllDeclaredAndInheritedFields(Field.class)
-                   .stream()
-                   .filter(f -> f.getName().contains("ield"))
-                   .count())
-        .isEqualTo(4);
-  }
-
-  @Test
-  public void getDeclaredAndInheritedFields() {
-    assertThat(ReflectionUtils.getDeclaredAndInheritedFields(Field.class, f -> f.getName().endsWith("Field")))
-        .hasSize(3);
-  }
-
-  @Test
-  public void updateField() {
-    Field dummy = new Field();
-    dummy.annotatedField = "test";
-    ReflectionUtils.updateFieldValues(
-        dummy, f -> f.isAnnotationPresent(DummyAnnotation.class), value -> value + " hello world");
-    assertThat(dummy.annotatedField).isEqualTo("test hello world");
+    @DummyAnnotation public List<String> annotatedListField;
   }
 
   private class AccessorsBase {
@@ -111,6 +77,58 @@ public class ReflectionUtilsTest {
     public Boolean isABoolean() {
       return aBoolean;
     }
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.FIELD)
+  public @interface DummyAnnotation {
+    boolean value() default true;
+  }
+
+  @Test
+  public void getFieldByNameTest() {
+    assertThat(ReflectionUtils.getFieldByName(Field.class, "dummy")).isNull();
+    assertThat(ReflectionUtils.getFieldByName(Field.class, "inheritField").getName()).isEqualTo("inheritField");
+    assertThat(ReflectionUtils.getFieldByName(Field.class, "baseField").getName()).isEqualTo("baseField");
+    assertThat(ReflectionUtils.getFieldByName(Field.class, "annotatedField").getName()).isEqualTo("annotatedField");
+    assertThat(ReflectionUtils.getFieldByName(Field.class, "annotatedListField").getName())
+        .isEqualTo("annotatedListField");
+  }
+
+  @Test
+  public void getAllDeclaredAndInheritedFields() {
+    assertThat(ReflectionUtils.getAllDeclaredAndInheritedFields(Field.class)
+                   .stream()
+                   .filter(f -> f.getName().contains("ield"))
+                   .count())
+        .isEqualTo(5);
+  }
+
+  @Test
+  public void getDeclaredAndInheritedFields() {
+    assertThat(ReflectionUtils.getDeclaredAndInheritedFields(Field.class, f -> f.getName().endsWith("Field")))
+        .hasSize(4);
+  }
+
+  @Test
+  public void updateField() {
+    Field dummy = new Field();
+    dummy.annotatedField = "test";
+    ReflectionUtils.updateFieldValues(
+        dummy, f -> f.isAnnotationPresent(DummyAnnotation.class), value -> value + " hello world");
+    assertThat(dummy.annotatedField).isEqualTo("test hello world");
+  }
+
+  @Test
+  public void updateListField() {
+    Field dummy = new Field();
+    List<String> a = new ArrayList<>();
+    a.add("one");
+    a.add("two");
+    dummy.annotatedListField = a;
+    ReflectionUtils.updateFieldValues(
+        dummy, f -> f.isAnnotationPresent(DummyAnnotation.class), value -> value + " hello world");
+    assertThat(dummy.annotatedListField).isEqualTo(ImmutableList.of("one hello world", "two hello world"));
   }
 
   @Test
