@@ -9,16 +9,23 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.auth0.jwt.interfaces.Claim;
+import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.waiter.WaitNotifyEngine;
 import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.JiraExecutionData;
+import software.wings.beans.ApprovalDetails;
+import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.TaskType;
@@ -27,9 +34,12 @@ import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * All Jira apis should be accessed via this object.
@@ -42,11 +52,15 @@ public class JiraHelperService {
   @Inject private DelegateServiceImpl delegateService;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject SettingsService settingService;
+  @Inject WorkflowExecutionService workflowExecutionService;
+  @Inject WaitNotifyEngine waitNotifyEngine;
 
   public static final String APP_ID_KEY = "app_id";
   public static final String WORKFLOW_EXECUTION_ID_KEY = "workflow_execution_id";
   public static final String APPROVAL_FIELD_KEY = "approval_field";
   public static final String APPROVAL_VALUE_KEY = "approval_value";
+  public static final String REJECTION_FIELD_KEY = "rejection_field";
+  public static final String REJECTION_VALUE_KEY = "rejection_value";
   public static final String APPROVAL_ID_KEY = "approval_id";
   @Inject private software.wings.security.SecretManager secretManagerForToken;
 
@@ -101,12 +115,18 @@ public class JiraHelperService {
     return jiraExecutionData.getFields();
   }
 
-  public String createJiraToken(
-      String appId, String workflowExecutionId, String approvalId, String approvalField, String approvalValue) {
-    return secretManagerForToken.generateJWTToken(
-        ImmutableMap.of(APP_ID_KEY, appId, WORKFLOW_EXECUTION_ID_KEY, workflowExecutionId, APPROVAL_FIELD_KEY,
-            approvalField, APPROVAL_VALUE_KEY, approvalValue, APPROVAL_ID_KEY, approvalId),
-        JWT_CATEGORY.JIRA_SERVICE_SECRET);
+  public String createJiraToken(String appId, String workflowExecutionId, String approvalId, String approvalField,
+      String approvalValue, String rejectionFiled, String rejectionValue) {
+    Map<String, String> claimsMap = new HashMap<>();
+    claimsMap.put(APP_ID_KEY, appId);
+    claimsMap.put(WORKFLOW_EXECUTION_ID_KEY, workflowExecutionId);
+    claimsMap.put(APPROVAL_FIELD_KEY, approvalField);
+    claimsMap.put(APPROVAL_VALUE_KEY, approvalValue);
+    claimsMap.put(APPROVAL_ID_KEY, approvalId);
+    claimsMap.put(REJECTION_FIELD_KEY, rejectionFiled);
+    claimsMap.put(REJECTION_VALUE_KEY, rejectionValue);
+
+    return secretManagerForToken.generateJWTToken(ImmutableMap.copyOf(claimsMap), JWT_CATEGORY.JIRA_SERVICE_SECRET);
   }
 
   public Map<String, Claim> validateJiraToken(String token) {
@@ -124,7 +144,8 @@ public class JiraHelperService {
   public JiraExecutionData createWebhook(JiraApprovalParams jiraApprovalParams, String accountId, String appId,
       String workflowExecutionId, String approvalId) {
     String token = createJiraToken(appId, workflowExecutionId, approvalId, jiraApprovalParams.getApprovalField(),
-        jiraApprovalParams.getApprovalValue());
+        jiraApprovalParams.getApprovalValue(), jiraApprovalParams.getRejectionField(),
+        jiraApprovalParams.getRejectionValue());
     JiraTaskParameters jiraTaskParameters = JiraTaskParameters.builder()
                                                 .accountId(accountId)
                                                 .appId(appId)
@@ -179,5 +200,57 @@ public class JiraHelperService {
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
     return jiraExecutionData.getCreateMetadata();
+  }
+
+  public ExecutionStatus checkApprovalFromWebhookCallback(String token, String respJson) {
+    Map<String, Claim> claimMap = this.validateJiraToken(token);
+    String appId = claimMap.get(APP_ID_KEY).asString();
+    String workflowExecutionId = claimMap.get(WORKFLOW_EXECUTION_ID_KEY).asString();
+    String approvalField = claimMap.get(APPROVAL_FIELD_KEY).asString().toLowerCase();
+    String approvalValue = claimMap.get(APPROVAL_VALUE_KEY).asString().toLowerCase();
+    String rejectionField = claimMap.get(REJECTION_FIELD_KEY).asString().toLowerCase();
+    String rejectionValue = claimMap.get(REJECTION_VALUE_KEY).asString().toLowerCase();
+    String approvalId = claimMap.get(APPROVAL_ID_KEY).asString();
+
+    JSONObject jsonObject = JSONObject.fromObject(respJson);
+    JSONObject changeLog = jsonObject.getJSONObject("changelog");
+    JSONArray items = changeLog.getJSONArray("items");
+
+    ExecutionStatus approvalStatus = null;
+    Action action = null;
+    for (int i = 0; i < items.size(); i++) {
+      JSONObject item = items.getJSONObject(i);
+      if (Objects.equals(item.getString("field").toLowerCase(), approvalField)
+          && Objects.equals(item.getString("toString").toLowerCase(), approvalValue)) {
+        approvalStatus = ExecutionStatus.SUCCESS;
+        action = Action.APPROVE;
+      }
+      if (Objects.equals(item.getString("field").toLowerCase(), rejectionField)
+          && Objects.equals(item.getString("toString").toLowerCase(), rejectionValue)) {
+        approvalStatus = ExecutionStatus.REJECTED;
+        action = Action.REJECT;
+      }
+    }
+
+    if (approvalStatus != null) {
+      JSONObject jiraUser = jsonObject.getJSONObject("user");
+      String username = jiraUser.getString("name");
+      String email = jiraUser.getString("emailAddress");
+
+      EmbeddedUser user = new EmbeddedUser(null, username, email);
+
+      ApprovalDetails approvalDetails = new ApprovalDetails();
+      approvalDetails.setAction(action);
+      approvalDetails.setApprovalId(approvalId);
+      approvalDetails.setApprovedBy(user);
+      ApprovalStateExecutionData executionData =
+          workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
+              appId, workflowExecutionId, null, approvalDetails);
+      executionData.setStatus(approvalStatus);
+      executionData.setApprovedOn(System.currentTimeMillis());
+      executionData.setApprovedBy(user);
+      waitNotifyEngine.notify(approvalId, executionData);
+    }
+    return approvalStatus;
   }
 }

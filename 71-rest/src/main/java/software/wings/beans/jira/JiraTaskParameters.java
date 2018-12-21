@@ -36,4 +36,6 @@ public class JiraTaskParameters {
   private String jiraToken;
   private String approvalField;
   private String approvalValue;
+  private String rejectionField;
+  private String rejectionValue;
 }

@@ -26,7 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.JiraExecutionData;
-import software.wings.api.JiraExecutionData.ApprovalStatus;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
@@ -305,12 +304,13 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       logger.error(errorMessage, e);
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
     }
-    String fieldValue = issue.getField(parameters.getApprovalField()).toString();
-    if (StringUtils.equals(fieldValue, parameters.getApprovalValue())) {
-      return JiraExecutionData.builder()
-          .executionStatus(ExecutionStatus.SUCCESS)
-          .approvalStatus(ApprovalStatus.APPROVED)
-          .build();
+    String approvalFieldValue = issue.getField(parameters.getApprovalField()).toString();
+    String rejectionFieldValue = issue.getField(parameters.getApprovalField()).toString();
+
+    if (StringUtils.equals(approvalFieldValue, parameters.getApprovalValue())) {
+      return JiraExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
+    } else if (StringUtils.equals(rejectionFieldValue, parameters.getRejectionValue())) {
+      return JiraExecutionData.builder().executionStatus(ExecutionStatus.REJECTED).build();
     }
     return JiraExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
   }
