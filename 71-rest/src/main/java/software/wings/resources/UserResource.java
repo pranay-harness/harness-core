@@ -758,6 +758,25 @@ public class UserResource {
     return getPublicUserInvite(userService.completeTrialSignup(user, userInvite));
   }
 
+  @PublicApi
+  @PUT
+  @Path("invites/trial/{inviteId}/signin")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> completeTrialSignupAndSignIn(@QueryParam("account") @NotEmpty String accountName,
+      @QueryParam("company") @NotEmpty String companyName, @PathParam("inviteId") @NotEmpty String inviteId,
+      @NotNull UserInvite userInvite) {
+    userInvite.setUuid(inviteId);
+    User user = User.Builder.anUser()
+                    .withEmail(userInvite.getEmail())
+                    .withName(userInvite.getName())
+                    .withPassword(userInvite.getPassword())
+                    .withAccountName(accountName)
+                    .withCompanyName(companyName)
+                    .build();
+    return new RestResponse<>(userService.completeTrialSignupAndSignIn(user, userInvite));
+  }
+
   /**
    * Delete invite rest response.
    *
