@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -1720,8 +1721,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<String> serviceIds = services.stream().map(service -> service.getUuid()).collect(toList());
     ArrayListMultimap<String, ArtifactStream> serviceToArtifactStreamMap = ArrayListMultimap.create();
 
-    try (HIterator<ArtifactStream> iterator = new HIterator<>(
-             wingsPersistence.createQuery(ArtifactStream.class).field("serviceId").in(serviceIds).fetch())) {
+    try (HIterator<ArtifactStream> iterator =
+             new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
+                                 .field("serviceId")
+                                 .in(serviceIds)
+                                 .fetch())) {
       while (iterator.hasNext()) {
         ArtifactStream artifactStream = iterator.next();
         serviceToArtifactStreamMap.put(artifactStream.getServiceId(), artifactStream);
@@ -1733,8 +1737,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public void setServiceCommands(List<Service> services) {
     List<String> serviceIds = services.stream().map(service -> service.getUuid()).collect(toList());
     ArrayListMultimap<String, ServiceCommand> serviceToServiceCommandMap = ArrayListMultimap.create();
-    try (HIterator<ServiceCommand> iterator = new HIterator<>(
-             wingsPersistence.createQuery(ServiceCommand.class).field("serviceId").in(serviceIds).fetch())) {
+    try (HIterator<ServiceCommand> iterator =
+             new HIterator<>(wingsPersistence.createQuery(ServiceCommand.class, excludeAuthority)
+                                 .field("serviceId")
+                                 .in(serviceIds)
+                                 .fetch())) {
       while (iterator.hasNext()) {
         ServiceCommand serviceCommand = iterator.next();
         serviceToServiceCommandMap.put(serviceCommand.getServiceId(), serviceCommand);

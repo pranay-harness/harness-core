@@ -88,8 +88,11 @@ public class Notifier implements Runnable {
     Map<String, List<String>> waitInstances = new HashMap<>();
 
     // Get wait queue entries
-    try (HIterator<WaitQueue> iterator = new HIterator<WaitQueue>(
-             persistence.createQuery(WaitQueue.class).field(WaitQueue.CORRELATION_ID_KEY).in(correlationIds).fetch())) {
+    try (HIterator<WaitQueue> iterator =
+             new HIterator<WaitQueue>(persistence.createQuery(WaitQueue.class, excludeAuthority)
+                                          .field(WaitQueue.CORRELATION_ID_KEY)
+                                          .in(correlationIds)
+                                          .fetch())) {
       while (iterator.hasNext()) {
         // process distinct set of wait instanceIds
         final WaitQueue waitQueue = iterator.next();
