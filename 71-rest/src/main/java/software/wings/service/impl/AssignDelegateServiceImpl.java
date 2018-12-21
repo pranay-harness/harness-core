@@ -250,7 +250,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                                                         .filter("criteria", criteria);
             UpdateOperations<DelegateConnectionResult> updateOperations =
                 wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
-                    .set("lastUpdatedAt", clock.millis());
+                    .set(DelegateConnectionResult.LAST_UPDATED_AT_KEY, clock.millis());
             DelegateConnectionResult result =
                 wingsPersistence.getDatastore(DelegateConnectionResult.class, ReadPref.NORMAL)
                     .findAndModify(query, updateOperations);
