@@ -17,6 +17,7 @@ import static software.wings.utils.Misc.replaceUnicodeWithDot;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.app.VerificationServiceConfiguration;
@@ -61,6 +62,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
+import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
@@ -188,6 +190,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     int aggregatedRisk = -1;
 
+    TimeSeriesRiskSummary riskSummary =
+        TimeSeriesRiskSummary.builder().analysisMinute(analysisMinute).cvConfigId(cvConfigId).build();
+
+    riskSummary.setAppId(appId);
+    TreeBasedTable<String, String, Integer> risks = TreeBasedTable.create();
+    TreeBasedTable<String, String, Integer> longTermPatterns = TreeBasedTable.create();
     for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
       TimeSeriesMLTxnScores txnScores =
           TimeSeriesMLTxnScores.builder().transactionName(txnSummary.getTxn_name()).scoresMap(new HashMap<>()).build();
@@ -213,11 +221,18 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
           mlMetricSummary.setResults(timeSeriesMLHostSummaryMap);
           ++metricId;
 
+          risks.put(txnSummary.getTxn_name(), mlMetricSummary.getMetric_name(), mlMetricSummary.getMax_risk());
+          longTermPatterns.put(
+              txnSummary.getTxn_name(), mlMetricSummary.getMetric_name(), mlMetricSummary.getLong_term_pattern());
           aggregatedRisk = max(aggregatedRisk, mlMetricSummary.getMax_risk());
         }
       }
       ++txnId;
     }
+
+    riskSummary.setTxnMetricRisk(risks.rowMap());
+    riskSummary.setTxnMetricLongTermPattern(longTermPatterns.rowMap());
+    riskSummary.compressMaps();
 
     mlAnalysisResponse.setAggregatedRisk(aggregatedRisk);
 
@@ -274,6 +289,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       wingsPersistence.save(cumulativeSums);
     }
     wingsPersistence.save(mlAnalysisResponse);
+    wingsPersistence.save(riskSummary);
     logger.info("inserted MetricAnalysisRecord to persistence layer for "
             + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
         stateType, workflowExecutionId, stateExecutionId);

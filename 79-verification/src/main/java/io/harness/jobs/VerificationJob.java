@@ -81,10 +81,11 @@ public class VerificationJob implements Job {
       List<Account> enabledAccounts =
           accounts.stream()
               .filter(account
-                  -> (account.getLicenseInfo() != null)
-                      && (account.getLicenseInfo().getAccountStatus().equals(AccountStatus.ACTIVE)
-                             && (account.getLicenseInfo().getAccountType().equals(AccountType.TRIAL)
-                                    || account.getLicenseInfo().getAccountType().equals(AccountType.PAID))))
+                  -> account.getLicenseInfo() == null
+                      || ((account.getLicenseInfo() != null)
+                             && (account.getLicenseInfo().getAccountStatus().equals(AccountStatus.ACTIVE)
+                                    && (account.getLicenseInfo().getAccountType().equals(AccountType.TRIAL)
+                                           || account.getLicenseInfo().getAccountType().equals(AccountType.PAID)))))
               .collect(Collectors.toList());
 
       // remove all the enabled accounts from the accounts List. And disable cron's for all disabled accounts

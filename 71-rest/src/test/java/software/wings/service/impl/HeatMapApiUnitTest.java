@@ -12,6 +12,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
 import com.google.common.collect.Sets;
+import com.google.common.collect.TreeBasedTable;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
@@ -44,6 +45,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
+import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
@@ -674,6 +676,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
       });
       wingsPersistence.save(timeSeriesMLAnalysisRecords);
+      saveRiskSummaries(timeSeriesMLAnalysisRecords);
     }
     long startTime = TimeUnit.MINUTES.toMillis(25685446);
     long endTime = TimeUnit.MINUTES.toMillis(25685461);
@@ -776,6 +779,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         idx++;
       }
       wingsPersistence.save(timeSeriesMLAnalysisRecords);
+      saveRiskSummaries(timeSeriesMLAnalysisRecords);
     }
 
     long startTime = 1541522760001L;
@@ -930,6 +934,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
       });
       wingsPersistence.save(timeSeriesMLAnalysisRecords);
+      saveRiskSummaries(timeSeriesMLAnalysisRecords);
     }
     SortedSet<TransactionTimeSeries> timeSeries =
         cvDashboardResource
@@ -944,6 +949,35 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertEquals("/api/setup-as-code", timeSeriesList.get(0).getTransactionName());
   }
 
+  private void saveRiskSummaries(List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords) {
+    List<TimeSeriesRiskSummary> riskSummaries = new ArrayList<>();
+    timeSeriesMLAnalysisRecords.forEach(mlAnalysisResponse -> {
+      TimeSeriesRiskSummary riskSummary = TimeSeriesRiskSummary.builder()
+                                              .analysisMinute(mlAnalysisResponse.getAnalysisMinute())
+                                              .cvConfigId(mlAnalysisResponse.getCvConfigId())
+                                              .build();
+
+      riskSummary.setAppId(mlAnalysisResponse.getAppId());
+      TreeBasedTable<String, String, Integer> risks = TreeBasedTable.create();
+      TreeBasedTable<String, String, Integer> longTermPatterns = TreeBasedTable.create();
+      for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
+        for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
+          if (mlMetricSummary.getResults() != null) {
+            risks.put(txnSummary.getTxn_name(), mlMetricSummary.getMetric_name(), mlMetricSummary.getMax_risk());
+            longTermPatterns.put(
+                txnSummary.getTxn_name(), mlMetricSummary.getMetric_name(), mlMetricSummary.getLong_term_pattern());
+          }
+        }
+      }
+
+      riskSummary.setTxnMetricRisk(risks.rowMap());
+      riskSummary.setTxnMetricLongTermPattern(longTermPatterns.rowMap());
+      riskSummary.compressMaps();
+      riskSummaries.add(riskSummary);
+    });
+
+    wingsPersistence.save(riskSummaries);
+  }
   @Test
   public void testNoTxnMetricFilter() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
