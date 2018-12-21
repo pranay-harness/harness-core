@@ -8,10 +8,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
 import java.util.Objects;
@@ -20,7 +16,6 @@ import java.util.Objects;
  * Created by bsollish on 8/30/17
  */
 @Entity(value = "yamlVersion", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("entityId") }, options = @IndexOptions(name = "yamlVersionIdx")))
 public class YamlVersion extends Base implements YamlHistory {
   private String yamlVersionId;
   private int version;
