@@ -8,7 +8,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.yaml.GitFileChange;
@@ -27,12 +26,12 @@ import javax.validation.constraints.NotNull;
                              , @Field("status") }, options = @IndexOptions(name = "searchIdx")) })
 
 public class YamlChangeSet extends Base {
-  @Indexed @NotEmpty private String accountId;
+  @NotEmpty private String accountId;
   @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();
-  @Indexed @NotNull private Status status;
+  @NotNull private Status status;
   private boolean gitToHarness;
   private boolean forcePush;
-  @Indexed private long queuedOn = System.currentTimeMillis();
+  private long queuedOn = System.currentTimeMillis();
   private boolean fullSync;
   private String parentYamlChangeSetId;
 
