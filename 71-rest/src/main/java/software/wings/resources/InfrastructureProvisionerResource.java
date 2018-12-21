@@ -165,4 +165,14 @@ public class InfrastructureProvisionerResource {
     return new RestResponse<>(infrastructureProvisionerService.getTerraformVariables(
         appId, scmSettingId, terraformDirectory, accountId, sourceRepoBranch));
   }
+
+  @GET
+  @Path("terraform-targets")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PROVISIONER, action = READ)
+  public RestResponse<List<String>> getTerraformTargets(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, @NotNull @QueryParam("provisionerId") String provisionerId) {
+    return new RestResponse<>(infrastructureProvisionerService.getTerraformTargets(appId, accountId, provisionerId));
+  }
 }

@@ -41,4 +41,6 @@ public class TerraformProvisionParameters {
   private final TerraformCommand command;
   private final TerraformCommandUnit commandUnit;
   private final long timeoutInMillis = TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES);
+
+  private final List<String> targets;
 }
