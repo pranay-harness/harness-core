@@ -151,7 +151,8 @@ public class UserServiceImpl implements UserService {
   public static final String ADD_ROLE_EMAIL_TEMPLATE_NAME = "add_role";
   public static final String SIGNUP_EMAIL_TEMPLATE_NAME = "signup";
   public static final String INVITE_EMAIL_TEMPLATE_NAME = "invite";
-  public static final String INVITE_TRIAL_EMAIL_TEMPLATE_NAME = "invite_trial";
+  public static final String TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME = "invite_trial";
+  public static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
   private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
   /**
@@ -238,8 +239,8 @@ public class UserServiceImpl implements UserService {
       // such as password, account/company name information.
       sendVerificationEmail(userInvite);
     } else if (userInvite.isCompleted()) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "User invite for " + email + " has been completed.");
+      // HAR-7590: If user invite has completed. Send an email saying so and ask the user to login directly.
+      sendTrialSignupCompletedEmail(userInvite);
     } else {
       // HAR-7250: If the user invite was not completed. Resend the verification/invitation email.
       sendVerificationEmail(userInvite);
@@ -659,22 +660,19 @@ public class UserServiceImpl implements UserService {
     return model;
   }
 
+  private Map<String, String> getTrialSignupCompletedTemplatedModel(UserInvite userInvite) throws URISyntaxException {
+    Map<String, String> model = new HashMap<>();
+    String loginUrl = buildAbsoluteUrl(format("/login"));
+    model.put("name", userInvite.getEmail());
+    model.put("url", loginUrl);
+    return model;
+  }
+
   @Override
   public void sendNewInvitationMail(UserInvite userInvite, Account account) {
     try {
       Map<String, String> templateModel = getNewInvitationTemplateModel(userInvite, account);
-      List<String> toList = new ArrayList<>();
-      toList.add(userInvite.getEmail());
-      EmailData emailData = EmailData.builder()
-                                .to(toList)
-                                .templateName(INVITE_EMAIL_TEMPLATE_NAME)
-                                .templateModel(templateModel)
-                                .accountId(account.getUuid())
-                                .build();
-      emailData.setCc(Collections.emptyList());
-      emailData.setRetries(2);
-
-      emailNotificationService.send(emailData);
+      sendEmail(userInvite, INVITE_EMAIL_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
       logger.error("Invitation email couldn't be sent ", e);
     }
@@ -683,21 +681,31 @@ public class UserServiceImpl implements UserService {
   private void sendVerificationEmail(UserInvite userInvite) {
     try {
       Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite);
-      List<String> toList = new ArrayList<>();
-      toList.add(userInvite.getEmail());
-      EmailData emailData = EmailData.builder()
-                                .to(toList)
-                                .templateName(INVITE_TRIAL_EMAIL_TEMPLATE_NAME)
-                                .templateModel(templateModel)
-                                .build();
-
-      emailData.setCc(Collections.emptyList());
-      emailData.setRetries(2);
-
-      emailNotificationService.send(emailData);
+      sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
       logger.error("Verification email couldn't be sent ", e);
     }
+  }
+
+  private void sendTrialSignupCompletedEmail(UserInvite userInvite) {
+    try {
+      Map<String, String> templateModel = getTrialSignupCompletedTemplatedModel(userInvite);
+      sendEmail(userInvite, TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME, templateModel);
+    } catch (URISyntaxException e) {
+      logger.error("Trial sign-up completed email couldn't be sent ", e);
+    }
+  }
+
+  private void sendEmail(UserInvite userInvite, String templateName, Map<String, String> templateModel) {
+    List<String> toList = new ArrayList<>();
+    toList.add(userInvite.getEmail());
+    EmailData emailData =
+        EmailData.builder().to(toList).templateName(templateName).templateModel(templateModel).build();
+
+    emailData.setCc(Collections.emptyList());
+    emailData.setRetries(2);
+
+    emailNotificationService.send(emailData);
   }
 
   private Map<String, Object> getAddedRoleTemplateModel(User user, Account account) throws URISyntaxException {
