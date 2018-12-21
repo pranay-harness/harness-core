@@ -45,6 +45,7 @@ import software.wings.utils.Validator;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.validation.constraints.NotNull;
@@ -64,7 +65,7 @@ public class JiraCreateUpdate extends State {
   @Getter @Setter @NotNull private String project;
   @Getter @Setter private String issueType;
   @Getter @Setter private String priority;
-  @Getter @Setter private String labels;
+  @Getter @Setter private List<String> labels;
   @Getter @Setter private String summary;
   @Getter @Setter private String description;
   @Getter @Setter private String status;
@@ -101,6 +102,8 @@ public class JiraCreateUpdate extends State {
                                         .issueType(issueType)
                                         .summary(summary)
                                         .status(status)
+                                        .description(description)
+                                        .labels(labels)
                                         .comment(comment)
                                         .encryptionDetails(secretManager.getEncryptionDetails(jiraConfig,
                                             executionContext.getAppId(), executionContext.getWorkflowExecutionId()))
@@ -130,7 +133,7 @@ public class JiraCreateUpdate extends State {
 
   private void renderExpressions(ExecutionContext context) {
     issueId = context.renderExpression(issueId);
-    labels = context.renderExpression(labels);
+    labels = context.renderExpressionList(labels);
     summary = context.renderExpression(summary);
     description = context.renderExpression(description);
     comment = context.renderExpression(comment);
