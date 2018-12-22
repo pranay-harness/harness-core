@@ -7,6 +7,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
+import software.wings.service.impl.security.VaultMetadataReadResponse;
 import software.wings.service.impl.security.VaultReadResponseV2;
 import software.wings.service.impl.security.VaultSecretValue;
 
@@ -25,6 +26,7 @@ import software.wings.service.impl.security.VaultSecretValue;
  */
 public interface VaultRestClientV2 {
   String BASE_VAULT_URL = "v1/secret/data/";
+  String BASE_VAULT_METADATA_URL = "v1/secret/metadata/";
 
   @POST(BASE_VAULT_URL + "{path}")
   Call<Void> writeSecret(
@@ -35,6 +37,10 @@ public interface VaultRestClientV2 {
 
   @GET(BASE_VAULT_URL + "{path}")
   Call<VaultReadResponseV2> readSecret(@Header("X-Vault-Token") String header, @Path("path") String fullPath);
+
+  @GET(BASE_VAULT_METADATA_URL + "{path}")
+  Call<VaultMetadataReadResponse> readSecretMetadata(
+      @Header("X-Vault-Token") String header, @Path("path") String fullPath);
 
   @POST("v1/auth/token/renew-self") Call<Object> renewToken(@Header("X-Vault-Token") String header);
 }

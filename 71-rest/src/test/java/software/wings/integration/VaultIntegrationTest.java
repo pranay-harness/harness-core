@@ -20,9 +20,12 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.VaultConfig;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.util.List;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -365,6 +368,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       // Second secret will refer the first secret by absolute path of format "/foo/bar/FooSecret#value'.
       secretUuid2 = createSecretText(secretName2, null, absoluteSecretPath);
       verifySecretValue(secretUuid2, secretValue, savedVaultConfig);
+      verifyVaultChangeLog(secretUuid2);
 
     } finally {
       if (secretUuid1 != null) {
@@ -410,6 +414,16 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertEquals(0, restResponse.getResponseMessages().size());
     Boolean deleted = restResponse.getResource();
     assertTrue(deleted);
+  }
+
+  private void verifyVaultChangeLog(String uuid) {
+    WebTarget target = client.target(API_BASE + "/secrets/change-logs?accountId=" + accountId + "&entityId=" + uuid
+        + "&type=" + SettingVariableTypes.SECRET_TEXT);
+    RestResponse<List<SecretChangeLog>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<SecretChangeLog>>>() {});
+    // Verify vault config was successfully created.
+    assertEquals(0, restResponse.getResponseMessages().size());
+    assertTrue(restResponse.getResource().size() > 0);
   }
 
   private String createVaultConfig(VaultConfig vaultConfig) {

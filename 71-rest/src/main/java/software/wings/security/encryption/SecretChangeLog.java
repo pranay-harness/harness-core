@@ -30,4 +30,8 @@ public class SecretChangeLog extends Base {
   @NotNull private EmbeddedUser user;
 
   @NotEmpty private String description;
+
+  // Secret change log could be retrieved from external system such as Vault (secret versions metadata)
+  // This flag is used to denote if this log entry is originated from external system.
+  private boolean external;
 }

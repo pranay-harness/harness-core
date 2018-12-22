@@ -28,6 +28,7 @@ import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.amazonaws.services.kms.model.KMSInternalException;
 import com.amazonaws.services.kms.model.KeyUnavailableException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.DelegateRetryableException;
@@ -40,6 +41,8 @@ import software.wings.beans.VaultConfig;
 import software.wings.helpers.ext.vault.VaultRestClientFactory;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretChangeLog;
+import software.wings.service.impl.security.VaultSecretMetadata.VersionMetadata;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -49,7 +52,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -233,6 +240,55 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
           .addParam("reason", "Deletion of secret failed");
     }
+  }
+
+  @Override
+  public List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedData encryptedData, VaultConfig vaultConfig) {
+    List<SecretChangeLog> secretChangeLogs = new ArrayList<>();
+
+    EmbeddedUser vaultUser = EmbeddedUser.builder().name("VaultUser").build();
+    String encryptedDataId = encryptedData.getUuid();
+
+    try {
+      VaultSecretMetadata secretMetadata = VaultRestClientFactory.create(vaultConfig)
+                                               .readSecretMetadata(vaultConfig.getAuthToken(), encryptedData.getPath());
+      if (secretMetadata != null && isNotEmpty(secretMetadata.getVersions())) {
+        for (Entry<Integer, VersionMetadata> entry : secretMetadata.getVersions().entrySet()) {
+          int version = entry.getKey();
+          VersionMetadata versionMetadata = entry.getValue();
+          final String changeDescription;
+          final String changeTime;
+          if (versionMetadata.destroyed) {
+            changeDescription = "Deleted at version " + version + " in Vault";
+            changeTime = versionMetadata.deletionTime;
+          } else {
+            changeDescription = version == 1 ? "Created in Vault" : "Updated to version " + version + " in Vault";
+            changeTime = versionMetadata.createdTime;
+          }
+          SecretChangeLog changeLog = SecretChangeLog.builder()
+                                          .accountId(vaultConfig.getAccountId())
+                                          .encryptedDataId(encryptedDataId)
+                                          .description(changeDescription)
+                                          .external(true)
+                                          .user(vaultUser)
+                                          .build();
+          long changeTimeInMillis = Instant.parse(changeTime).toEpochMilli();
+          changeLog.setCreatedBy(vaultUser);
+          changeLog.setLastUpdatedBy(vaultUser);
+          changeLog.setCreatedAt(changeTimeInMillis);
+          changeLog.setLastUpdatedAt(changeTimeInMillis);
+
+          // need to set the change time to the corresponding field in SecretChangeLog.
+          // changeLog.setCreatedAt();
+          secretChangeLogs.add(changeLog);
+        }
+      }
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
+          .addParam("reason", "Retrieval of vault secret version history failed");
+    }
+
+    return secretChangeLogs;
   }
 
   @Override

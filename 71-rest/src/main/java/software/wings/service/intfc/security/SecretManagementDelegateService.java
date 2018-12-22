@@ -5,7 +5,10 @@ import software.wings.beans.TaskType;
 import software.wings.beans.VaultConfig;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretChangeLog;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+
+import java.util.List;
 
 /**
  * Created by rsingh on 10/2/17.
@@ -39,6 +42,13 @@ public interface SecretManagementDelegateService {
    * successful; Return false if the deletion failed (e.g. the path specified doesn't have any value bound to).
    */
   @DelegateTaskType(TaskType.VAULT_DELETE_SECRET) boolean deleteVaultSecret(String path, VaultConfig vaultConfig);
+
+  /**
+   * Retrieve the versions metadata for Vault managed secrets from Hashicorp Vault, and construct the version history as
+   * {@see SecretChangeLog} to be displayed in Harness UI.
+   */
+  @DelegateTaskType(TaskType.VAULT_GET_CHANGELOG)
+  List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedData encryptedData, VaultConfig vaultConfig);
 
   /**
    * Renew the Hashicorp Vault authentication token.

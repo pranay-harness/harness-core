@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.vault;
 
+import software.wings.service.impl.security.VaultSecretMetadata;
+
 import java.io.IOException;
 
 /**
@@ -14,6 +16,8 @@ public interface VaultRestClient {
   boolean deleteSecret(String authToken, String fullPath) throws IOException;
 
   String readSecret(String authToken, String fullPath) throws IOException;
+
+  VaultSecretMetadata readSecretMetadata(String authToken, String fullPath) throws IOException;
 
   boolean renewToken(String authToken) throws IOException;
 }
