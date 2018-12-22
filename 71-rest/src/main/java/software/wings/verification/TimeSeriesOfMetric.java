@@ -36,8 +36,8 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
   private String metricDeeplinkUrl;
   private boolean isLongTermPattern;
 
-  @JsonIgnore private SortedMap<Long, TimeSeriesDataPoint> timeSeries;
-  @JsonIgnore private SortedMap<Long, TimeSeriesRisk> risksForTimeSeries;
+  private SortedMap<Long, TimeSeriesDataPoint> timeSeries;
+  private SortedMap<Long, TimeSeriesRisk> risksForTimeSeries;
 
   public Collection<TimeSeriesDataPoint> getTimeSeries() {
     return timeSeries.values();
