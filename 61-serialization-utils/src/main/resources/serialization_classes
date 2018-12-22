@@ -647,3 +647,4 @@ software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo, 5594
 software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters, 5595
 software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse, 5596
 software.wings.api.k8s.K8sElement, 5597
+software.wings.security.encryption.SecretChangeLog, 5598

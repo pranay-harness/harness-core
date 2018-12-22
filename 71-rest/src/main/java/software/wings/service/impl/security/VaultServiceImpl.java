@@ -48,6 +48,7 @@ import software.wings.common.Constants;
 import software.wings.helpers.ext.vault.VaultSysMountsRestClient;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -358,6 +359,14 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .deleteVaultSecret(path, vaultConfig);
+  }
+
+  @Override
+  public List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedData encryptedData, VaultConfig vaultConfig) {
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(vaultConfig.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+        .getVaultSecretChangeLogs(encryptedData, vaultConfig);
   }
 
   void validateVaultConfig(String accountId, VaultConfig vaultConfig) {

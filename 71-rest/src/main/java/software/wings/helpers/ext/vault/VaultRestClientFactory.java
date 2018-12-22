@@ -13,8 +13,10 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.VaultConfig;
+import software.wings.service.impl.security.VaultMetadataReadResponse;
 import software.wings.service.impl.security.VaultReadResponse;
 import software.wings.service.impl.security.VaultReadResponseV2;
+import software.wings.service.impl.security.VaultSecretMetadata;
 import software.wings.service.impl.security.VaultSecretValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -142,6 +144,12 @@ public class VaultRestClientFactory {
     }
 
     @Override
+    public VaultSecretMetadata readSecretMetadata(String authToken, String fullPath) throws IOException {
+      // Older Vault services doesn't have secret version metadata available!
+      return null;
+    }
+
+    @Override
     public boolean renewToken(String authToken) throws IOException {
       return vaultRestClient.renewToken(authToken).execute().isSuccessful();
     }
@@ -177,6 +185,14 @@ public class VaultRestClientFactory {
       VaultReadResponseV2 response = vaultRestClient.readSecret(authToken, pathAndKey.path).execute().body();
       return response == null || response.getData() == null ? null
                                                             : response.getData().getData().get(pathAndKey.keyName);
+    }
+
+    @Override
+    public VaultSecretMetadata readSecretMetadata(String authToken, String fullPath) throws IOException {
+      VaultPathAndKey pathAndKey = parseFullPath(fullPath);
+      VaultMetadataReadResponse response =
+          vaultRestClient.readSecretMetadata(authToken, pathAndKey.path).execute().body();
+      return response == null ? null : response.getData();
     }
 
     @Override

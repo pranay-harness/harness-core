@@ -373,13 +373,39 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public List<SecretChangeLog> getChangeLogs(String accountId, String entityId, SettingVariableTypes variableType)
       throws IllegalAccessException {
+    EncryptedData encryptedData = null;
+    if (variableType == SettingVariableTypes.SECRET_TEXT) {
+      encryptedData = wingsPersistence.get(EncryptedData.class, entityId);
+    }
+
+    return getChangeLogsInternal(accountId, entityId, encryptedData, variableType);
+  }
+
+  private List<SecretChangeLog> getChangeLogsInternal(String accountId, String entityId, EncryptedData encryptedData,
+      SettingVariableTypes variableType) throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(entityId, variableType);
-    return wingsPersistence.createQuery(SecretChangeLog.class, excludeCount)
-        .filter("accountId", accountId)
-        .field("encryptedDataId")
-        .hasAnyOf(secretIds)
-        .order("-createdAt")
-        .asList();
+    List<SecretChangeLog> secretChangeLogs = wingsPersistence.createQuery(SecretChangeLog.class, excludeCount)
+                                                 .filter("accountId", accountId)
+                                                 .field("encryptedDataId")
+                                                 .hasAnyOf(secretIds)
+                                                 .order("-createdAt")
+                                                 .asList();
+
+    // HAR-7150: Retrieve version history/changelog from Vault if secret text is a path reference.
+    if (variableType == SettingVariableTypes.SECRET_TEXT && encryptedData != null) {
+      EncryptionType encryptionType = encryptedData.getEncryptionType();
+      if (encryptionType == EncryptionType.VAULT && isNotEmpty(encryptedData.getPath())) {
+        VaultConfig vaultConfig = vaultService.getSecretConfig(accountId);
+        if (vaultConfig != null) {
+          secretChangeLogs.addAll(vaultService.getVaultSecretChangeLogs(encryptedData, vaultConfig));
+          // Sort the change log by change time in descending order.
+          secretChangeLogs.sort(
+              (SecretChangeLog o1, SecretChangeLog o2) -> (int) (o2.getLastUpdatedAt() - o1.getLastUpdatedAt()));
+        }
+      }
+    }
+
+    return secretChangeLogs;
   }
 
   @Override
@@ -1195,9 +1221,9 @@ public class SecretManagerImpl implements SecretManager {
 
           encryptedData.setSetupUsage(getSecretUsage(encryptedData.getAccountId(), encryptedData.getUuid()).size());
           encryptedData.setRunTimeUsage(getUsageLogsSize(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT));
-          encryptedData.setChangeLog(
-              getChangeLogs(encryptedData.getAccountId(), encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT)
-                  .size());
+          encryptedData.setChangeLog(getChangeLogsInternal(
+              encryptedData.getAccountId(), encryptedData.getUuid(), encryptedData, SettingVariableTypes.SECRET_TEXT)
+                                         .size());
         }
 
         // Already got all data the page request wanted. Break out of the loop, no more filtering
