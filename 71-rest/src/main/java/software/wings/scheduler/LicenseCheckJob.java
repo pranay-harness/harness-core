@@ -3,6 +3,8 @@ package software.wings.scheduler;
 import com.google.inject.Inject;
 
 import io.harness.lock.AcquiredLock;
+import io.harness.scheduler.BackgroundExecutorService;
+import io.harness.scheduler.BackgroundSchedulerLocker;
 import io.harness.scheduler.PersistentScheduler;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;

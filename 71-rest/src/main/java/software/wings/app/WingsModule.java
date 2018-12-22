@@ -19,6 +19,7 @@ import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.scheduler.SchedulerConfig;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import ro.fortsoft.pf4j.DefaultPluginManager;
@@ -386,6 +387,9 @@ public class WingsModule extends DependencyModule {
   protected void configure() {
     bind(AuthService.class).to(AuthServiceImpl.class);
     bind(MainConfiguration.class).toInstance(configuration);
+    bind(SchedulerConfig.class)
+        .annotatedWith(Names.named("BackgroundSchedule"))
+        .toInstance(configuration.getBackgroundSchedulerConfig());
     bind(QueueController.class).to(ConfigurationController.class);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
