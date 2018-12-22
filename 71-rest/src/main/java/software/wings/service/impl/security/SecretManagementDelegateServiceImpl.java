@@ -98,12 +98,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           } finally {
             Thread.currentThread().setContextClassLoader(prevClassLoader);
           }
-        }, 15, TimeUnit.SECONDS, true);
+        }, 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
             logger.warn(format("Encryption failed. trial num: %d", retry), e);
-            sleep(ofMillis(100));
+            sleep(ofMillis(1000));
           } else {
             String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
             throw new DelegateRetryableException(new KmsOperationException(reason, e, USER));
@@ -138,7 +138,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           } finally {
             Thread.currentThread().setContextClassLoader(prevClassLoader);
           }
-        }, 15, TimeUnit.SECONDS, true);
+        }, 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
@@ -171,7 +171,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           } finally {
             Thread.currentThread().setContextClassLoader(prevClassLoader);
           }
-        }, 15, TimeUnit.SECONDS, true);
+        }, 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
@@ -206,7 +206,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           } finally {
             Thread.currentThread().setContextClassLoader(prevClassLoader);
           }
-        }, 15, TimeUnit.SECONDS, true);
+        }, 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {

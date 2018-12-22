@@ -6,10 +6,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
+import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
+import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
@@ -80,8 +84,26 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public char[] decrypt(EncryptedData data, String accountId, VaultConfig vaultConfig) {
-    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
-    return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).decrypt(data, vaultConfig);
+    char[] value = null;
+    // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
+    for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
+      try {
+        SyncTaskContext syncTaskContext =
+            aContext().withAccountId(accountId).withTimeout(5000).withAppId(Base.GLOBAL_APP_ID).build();
+        return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+            .decrypt(data, vaultConfig);
+      } catch (WingsException e) {
+        if (retry < NUM_OF_RETRIES) {
+          logger.info(format("Decryption failed. trial num: %d", retry), e);
+          sleep(ofMillis(1000));
+        } else {
+          throw e;
+        }
+      }
+    }
+
+    return value;
+    // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
   }
 
   @Override

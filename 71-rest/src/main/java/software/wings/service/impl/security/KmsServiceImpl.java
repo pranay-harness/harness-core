@@ -5,9 +5,13 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
+import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
+import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.base.Preconditions;
@@ -69,8 +73,26 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (kmsConfig == null || data.getEncryptedValue() == null) {
       return decryptLocal(data);
     }
-    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
-    return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
+
+    char[] value = null;
+    // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
+    for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
+      try {
+        SyncTaskContext syncTaskContext =
+            aContext().withAccountId(accountId).withTimeout(5000).withAppId(Base.GLOBAL_APP_ID).build();
+        value =
+            delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
+      } catch (WingsException e) {
+        if (retry < NUM_OF_RETRIES) {
+          logger.info(format("Decryption failed. trial num: %d", retry), e);
+          sleep(ofMillis(1000));
+        } else {
+          throw e;
+        }
+      }
+    }
+
+    return value;
   }
 
   @Override
