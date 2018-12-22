@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
-import software.wings.scheduler.ReminderNotifyResponse;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.impl.DelayEventNotifyData;
 import software.wings.service.intfc.ArtifactService;
@@ -116,10 +115,7 @@ public class ArtifactCheckState extends State {
     logger.info("Received handleAsyncResponse - response: {}", response);
     response.values().forEach(notifyResponseData -> {
       String artifactId = "";
-      if (notifyResponseData instanceof ReminderNotifyResponse) {
-        ReminderNotifyResponse reminderNotifyResponse = (ReminderNotifyResponse) notifyResponseData;
-        artifactId = reminderNotifyResponse.getParameters().get("artifactId");
-      } else if (notifyResponseData instanceof DelayEventNotifyData) {
+      if (notifyResponseData instanceof DelayEventNotifyData) {
         DelayEventNotifyData delayEventNotifyData = (DelayEventNotifyData) notifyResponseData;
         artifactId = delayEventNotifyData.getContext().get("artifactId");
       }
