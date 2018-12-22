@@ -25,13 +25,9 @@ public class WaitInstance implements PersistentEntity, UuidAccess {
   public static final Duration TTL = WaitQueue.TTL.plusDays(7);
 
   @Id private String uuid;
-
   private List<String> correlationIds;
-
   private NotifyCallback callback;
-
   private long timeoutMsec;
-
   private ExecutionStatus status = ExecutionStatus.NEW;
 
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

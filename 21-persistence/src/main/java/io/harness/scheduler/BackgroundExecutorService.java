@@ -1,10 +1,10 @@
-package software.wings.scheduler;
+package io.harness.scheduler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.threading.CurrentThreadExecutor;
-import software.wings.app.MainConfiguration;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -14,12 +14,12 @@ public class BackgroundExecutorService {
   private ExecutorService executorService;
 
   @Inject
-  public BackgroundExecutorService(ExecutorService executorService, MainConfiguration configuration) {
-    this.executorService =
-        configuration.getBackgroundSchedulerConfig().isClustered() ? new CurrentThreadExecutor() : executorService;
+  public BackgroundExecutorService(
+      ExecutorService executorService, @Named("BackgroundSchedule") SchedulerConfig configuration) {
+    this.executorService = configuration.isClustered() ? new CurrentThreadExecutor() : executorService;
   }
 
-  Future<?> submit(Runnable task) {
+  public Future<?> submit(Runnable task) {
     return executorService.submit(task);
   }
 }
