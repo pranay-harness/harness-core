@@ -53,14 +53,14 @@ echo "System-Properties: version=1.0.${VERSION} logdnakey=${LOGDNA_KEY}" >> app.
 echo "Application-Version: version=1.0.${VERSION}" >> app.mf
 
 mkdir -p dist/delegate
-cp 81-delegate/target/delegate-capsule.jar dist/delegate/delegate-${VERSION}.jar
-jar ufm dist/delegate/delegate-${VERSION}.jar app.mf
-cp dist/delegate/delegate-${VERSION}.jar .
+cp 81-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
+jar ufm dist/delegate/delegate-capsule.jar app.mf
+cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
 
 mkdir -p dist/watcher
-cp 82-watcher/target/watcher-capsule.jar dist/watcher/watcher-${VERSION}.jar
-jar ufm dist/watcher/watcher-${VERSION}.jar app.mf
-cp dist/watcher/watcher-${VERSION}.jar .
+cp 82-watcher/target/watcher-capsule.jar dist/watcher/watcher-capsule.jar
+jar ufm dist/watcher/watcher-capsule.jar app.mf
+cp dist/watcher/watcher-capsule.jar watcher-${VERSION}.jar
 
 rm -rf app.mf
 
