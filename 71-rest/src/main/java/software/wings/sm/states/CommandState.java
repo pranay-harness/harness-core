@@ -66,6 +66,7 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
+import software.wings.beans.command.InitSshCommandUnitV2;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.command.TailFilePatternEntry;
@@ -266,30 +267,30 @@ public class CommandState extends State {
         safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
       }
 
-      ActivityBuilder activityBuilder =
-          Activity.builder()
-              .applicationName(application.getName())
-              .environmentId(environment.getUuid())
-              .environmentName(environment.getName())
-              .environmentType(environment.getEnvironmentType())
-              .serviceTemplateId(serviceTemplateId)
-              .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
-              .serviceId(service.getUuid())
-              .serviceName(service.getName())
-              .commandName(command.getName())
-              .type(Type.Command)
-              .serviceInstanceId(serviceInstance.getUuid())
-              .workflowExecutionId(context.getWorkflowExecutionId())
-              .workflowType(context.getWorkflowType())
-              .workflowId(context.getWorkflowId())
-              .workflowExecutionName(context.getWorkflowExecutionName())
-              .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-              .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-              .commandType(command.getCommandUnitType().name())
-              .hostName(host.getHostName())
-              .publicDns(host.getPublicDns())
-              .commandUnits(getFlattenCommandUnits(appId, envId, service, infrastructureMapping.getDeploymentType()))
-              .status(ExecutionStatus.RUNNING);
+      ActivityBuilder activityBuilder = Activity.builder()
+                                            .applicationName(application.getName())
+                                            .environmentId(environment.getUuid())
+                                            .environmentName(environment.getName())
+                                            .environmentType(environment.getEnvironmentType())
+                                            .serviceTemplateId(serviceTemplateId)
+                                            .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
+                                            .serviceId(service.getUuid())
+                                            .serviceName(service.getName())
+                                            .commandName(command.getName())
+                                            .type(Type.Command)
+                                            .serviceInstanceId(serviceInstance.getUuid())
+                                            .workflowExecutionId(context.getWorkflowExecutionId())
+                                            .workflowType(context.getWorkflowType())
+                                            .workflowId(context.getWorkflowId())
+                                            .workflowExecutionName(context.getWorkflowExecutionName())
+                                            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                            .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+                                            .commandType(command.getCommandUnitType().name())
+                                            .hostName(host.getHostName())
+                                            .publicDns(host.getPublicDns())
+                                            .commandUnits(getFlattenCommandUnits(appId, envId, service,
+                                                infrastructureMapping.getDeploymentType(), accountId))
+                                            .status(ExecutionStatus.RUNNING);
 
       String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH);
       String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH);
@@ -390,7 +391,9 @@ public class CommandState extends State {
       expandCommand(serviceInstance, command, service.getUuid(), envId);
       executionDataBuilder.withTemplateVariable(convertToVariableMap(command.getTemplateVariables()));
       renderCommandString(command, context, executionDataBuilder.build(), artifact);
-
+      if (featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, accountId)) {
+        commandExecutionContextBuilder.withInlineSshCommand(true);
+      }
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId)
               .withDeploymentType(infrastructureMapping.getDeploymentType())
@@ -489,7 +492,8 @@ public class CommandState extends State {
     execCommandUnit.setTailPatterns(filePatternEntries);
   }
 
-  private List<CommandUnit> getFlattenCommandUnits(String appId, String envId, Service service, String deploymentType) {
+  private List<CommandUnit> getFlattenCommandUnits(
+      String appId, String envId, Service service, String deploymentType, String accountId) {
     List<CommandUnit> flattenCommandUnitList =
         serviceResourceService.getFlattenCommandUnitList(appId, service.getUuid(), envId, commandName);
 
@@ -498,7 +502,11 @@ public class CommandState extends State {
         flattenCommandUnitList.add(0, new InitPowerShellCommandUnit());
         flattenCommandUnitList.add(new CleanupPowerShellCommandUnit());
       } else {
-        flattenCommandUnitList.add(0, new InitSshCommandUnit());
+        if (featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, accountId)) {
+          flattenCommandUnitList.add(0, new InitSshCommandUnitV2());
+        } else {
+          flattenCommandUnitList.add(0, new InitSshCommandUnit());
+        }
         flattenCommandUnitList.add(new CleanupSshCommandUnit());
       }
     } else if (DeploymentType.WINRM.name().equals(deploymentType)) {

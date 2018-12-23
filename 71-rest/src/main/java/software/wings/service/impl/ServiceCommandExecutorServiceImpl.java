@@ -22,6 +22,7 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
+import software.wings.beans.command.InitSshCommandUnitV2;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -78,9 +79,15 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     ScriptType scriptType = getScriptType(command.getCommandUnits());
     try {
       if (scriptType == ScriptType.BASH) {
-        InitSshCommandUnit initCommandUnit = new InitSshCommandUnit();
-        initCommandUnit.setCommand(command);
-        command.getCommandUnits().add(0, initCommandUnit);
+        if (context.isInlineSshCommand()) {
+          InitSshCommandUnitV2 initCommandUnit = new InitSshCommandUnitV2();
+          initCommandUnit.setCommand(command);
+          command.getCommandUnits().add(0, initCommandUnit);
+        } else {
+          InitSshCommandUnit initCommandUnit = new InitSshCommandUnit();
+          initCommandUnit.setCommand(command);
+          command.getCommandUnits().add(0, initCommandUnit);
+        }
         command.getCommandUnits().add(new CleanupSshCommandUnit());
       } else if (scriptType == ScriptType.POWERSHELL) {
         InitPowerShellCommandUnit initPowerShellCommandUnit = new InitPowerShellCommandUnit();
