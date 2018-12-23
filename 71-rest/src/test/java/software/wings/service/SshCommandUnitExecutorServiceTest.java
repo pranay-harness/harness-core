@@ -59,6 +59,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
+import software.wings.beans.command.InitSshCommandUnitV2;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.infrastructure.Host;
@@ -321,6 +322,33 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   }
 
   /**
+   * Should execute init command.
+   *
+   */
+  @Test
+  public void shouldExecuteInitCommandV2() {
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
+    InitSshCommandUnitV2 commandUnit = new InitSshCommandUnitV2();
+    Command command =
+        aCommand()
+            .withCommandUnits(asList(commandUnit,
+                anExecCommandUnit().withName("dols").withCommandPath("/tmp").withCommandString("ls").build()))
+            .build();
+    commandUnit.setCommand(command);
+
+    when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
+    when(sshPwdAuthExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
+
+    sshCommandUnitExecutorService.execute(host, commandUnit,
+        commandExecutionContextBuider.but()
+            .withHostConnectionAttributes(HOST_CONN_ATTR_PWD)
+            .withInlineSshCommand(true)
+            .build());
+    verify(sshPwdAuthExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
+    assertThat(((ExecCommandUnit) command.getCommandUnits().get(1)).getPreparedCommand().contains("ls"));
+  }
+
+  /**
    * Should execute init command with nested units.
    *
    * @throws IOException the io exception
@@ -373,5 +401,44 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
             + DigestUtils.md5Hex("start1startscriptACTIVITY_ID"));
 
     verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", false);
+  }
+
+  /**
+   * Should execute init command with nested units.
+   *
+   */
+  @Test
+  public void shouldExecuteInitCommandV2WithNestedUnits() {
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
+    InitSshCommandUnitV2 commandUnit = new InitSshCommandUnitV2();
+    Command command =
+        aCommand()
+            .withCommandUnits(asList(commandUnit,
+                anExecCommandUnit().withName("dols").withCommandPath("/tmp").withCommandString("ls").build(),
+                aCommand()
+                    .withName("start1")
+                    .withCommandUnits(asList(anExecCommandUnit()
+                                                 .withName("startscript")
+                                                 .withCommandString("start.sh")
+                                                 .withCommandPath("/home/tomcat")
+                                                 .build()))
+                    .build()))
+            .build();
+    commandUnit.setCommand(command);
+
+    when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
+    when(sshPwdAuthExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
+    sshCommandUnitExecutorService.execute(host, commandUnit,
+        commandExecutionContextBuider.but()
+            .withHostConnectionAttributes(HOST_CONN_ATTR_PWD)
+            .withInlineSshCommand(true)
+            .build());
+
+    assertThat(((ExecCommandUnit) command.getCommandUnits().get(1)).getPreparedCommand().contains("ls"));
+    assertThat(((ExecCommandUnit) ((Command) command.getCommandUnits().get(2)).getCommandUnits().get(0))
+                   .getPreparedCommand()
+                   .contains("start.sh"));
+
+    verify(sshPwdAuthExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
   }
 }

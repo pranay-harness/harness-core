@@ -122,6 +122,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
+import software.wings.beans.command.InitSshCommandUnitV2;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
@@ -1687,6 +1688,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     ObjectDifferBuilder.buildDefault().compare(new CleanupSshCommandUnit(), new CleanupSshCommandUnit());
     ObjectDifferBuilder.buildDefault().compare(new CopyConfigCommandUnit(), new CopyConfigCommandUnit());
     ObjectDifferBuilder.buildDefault().compare(new InitSshCommandUnit(), new InitSshCommandUnit());
+    ObjectDifferBuilder.buildDefault().compare(new InitSshCommandUnitV2(), new InitSshCommandUnitV2());
   }
 
   @Test

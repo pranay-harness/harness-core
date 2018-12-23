@@ -61,6 +61,7 @@ public class CommandExecutionContext {
   private Integer timeout;
   private String deploymentType;
   private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
+  private boolean inlineSshCommand;
 
   public CommandExecutionContext() {}
 
@@ -103,6 +104,7 @@ public class CommandExecutionContext {
     this.timeout = other.timeout;
     this.deploymentType = other.deploymentType;
     this.artifactServerEncryptedDataDetails = other.artifactServerEncryptedDataDetails;
+    this.inlineSshCommand = other.inlineSshCommand;
   }
 
   /**
@@ -188,6 +190,7 @@ public class CommandExecutionContext {
     private Integer timeout;
     private String deploymentType;
     private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
+    private boolean inlineSshCommand;
 
     private Builder() {}
 
@@ -367,6 +370,11 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withInlineSshCommand(boolean inlineSshCommand) {
+      this.inlineSshCommand = inlineSshCommand;
+      return this;
+    }
+
     public Builder but() {
       return aCommandExecutionContext()
           .withAccountId(accountId)
@@ -402,7 +410,8 @@ public class CommandExecutionContext {
           .withServiceName(serviceName)
           .withTimeout(timeout)
           .withDeploymentType(deploymentType)
-          .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails);
+          .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails)
+          .withInlineSshCommand(inlineSshCommand);
     }
 
     public CommandExecutionContext build() {
@@ -441,6 +450,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setTimeout(timeout);
       commandExecutionContext.setDeploymentType(deploymentType);
       commandExecutionContext.setArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails);
+      commandExecutionContext.setInlineSshCommand(inlineSshCommand);
       return commandExecutionContext;
     }
   }
