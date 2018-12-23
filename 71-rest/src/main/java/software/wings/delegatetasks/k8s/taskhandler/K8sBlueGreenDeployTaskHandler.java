@@ -5,8 +5,11 @@ import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static io.harness.k8s.model.Kind.Service;
+import static software.wings.beans.Log.LogColor.Cyan;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.K8sDummyCommandUnit.Apply;
@@ -161,7 +164,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     try {
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
-          k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig().getManifestFiles(), executionLogCallback);
+          k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig().getManifestFiles(),
+          k8sBlueGreenDeployTaskParameters.getValuesYamlList(), executionLogCallback);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
     } catch (Exception e) {
@@ -275,18 +279,22 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       if (currentRelease.getNumber() == 1) {
         primaryService.get().addRevisionSelectorInService(currentRelease.getNumber());
         executionLogCallback.saveExecutionLog("Setting Primary Service ["
-            + primaryService.get().getResourceId().getName() + "] at revision " + currentRelease.getNumber());
+            + color(primaryService.get().getResourceId().getName(), Cyan, Bold) + "] at revision "
+            + currentRelease.getNumber());
       } else {
         primaryService.get().addRevisionSelectorInService(primaryRevision);
-        executionLogCallback.saveExecutionLog("Primary Service [" + primaryService.get().getResourceId().getName()
-            + "] remains at revision " + primaryRevision);
+        executionLogCallback.saveExecutionLog("Primary Service ["
+            + color(primaryService.get().getResourceId().getName(), Cyan, Bold) + "] remains at revision "
+            + primaryRevision);
       }
 
       stageService.get().addRevisionSelectorInService(currentRelease.getNumber());
-      executionLogCallback.saveExecutionLog("Setting Stage Service [" + stageService.get().getResourceId().getName()
-          + "] at revision " + currentRelease.getNumber());
+      executionLogCallback.saveExecutionLog("Setting Stage Service ["
+          + color(stageService.get().getResourceId().getName(), Cyan, Bold) + "] at revision "
+          + currentRelease.getNumber());
 
-      executionLogCallback.saveExecutionLog("\nManaged Workload is: " + managedWorkload.getResourceId().kindNameRef());
+      executionLogCallback.saveExecutionLog(
+          "\nManaged Workload is: " + color(managedWorkload.getResourceId().kindNameRef(), Cyan, Bold));
 
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, FAILURE);

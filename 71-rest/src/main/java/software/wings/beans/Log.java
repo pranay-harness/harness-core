@@ -156,7 +156,7 @@ public class Log extends Base implements GoogleDataStoreAware {
 
   public static String color(String value, LogColor color, LogWeight weight, LogColor background) {
     String format = "\033[" + weight.value + ";" + color.value + "m\033[" + getBackgroundColorValue(background) + "m";
-    return format + value.replaceAll(END_MARK, format) + END_MARK;
+    return format + value.replaceAll(END_MARK, format).replaceAll("\\n", "\n" + format) + END_MARK;
   }
 
   private static int getBackgroundColorValue(LogColor background) {

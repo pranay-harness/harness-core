@@ -1,20 +1,25 @@
 package software.wings.delegatetasks.k8s;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
+import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.k8s.model.Release.Status.Failed;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Log.LogColor.Gray;
+import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.KubernetesYamlException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.DeleteCommand;
@@ -57,7 +62,6 @@ import software.wings.utils.Misc;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -330,19 +334,25 @@ public class K8sTaskHelper {
   }
 
   public List<ManifestFile> renderTemplate(K8sDelegateTaskParams k8SDelegateTaskParams,
-      List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback) throws Exception {
-    Optional<ManifestFile> valuesFile =
-        manifestFiles.stream()
-            .filter(manifestFile -> StringUtils.equals(values_filename, manifestFile.getFileName()))
-            .findFirst();
-
-    if (!valuesFile.isPresent()) {
+      List<ManifestFile> manifestFiles, List<String> valuesFiles, ExecutionLogCallback executionLogCallback)
+      throws Exception {
+    if (isEmpty(valuesFiles)) {
       executionLogCallback.saveExecutionLog("No values.yaml file found. Skipping template rendering.");
       return manifestFiles;
     }
 
-    FileIo.writeUtf8StringToFile(
-        k8SDelegateTaskParams.getWorkingDirectory() + '/' + values_filename, valuesFile.get().getFileContent());
+    StringBuilder valuesFilesOptions = new StringBuilder(128);
+    for (int i = 0; i < valuesFiles.size(); i++) {
+      try {
+        String item = valuesFiles.get(i);
+        validateValuesFileContents(item);
+        FileIo.writeUtf8StringToFile(k8SDelegateTaskParams.getWorkingDirectory() + '/' + i + values_filename, item);
+        valuesFilesOptions.append(" -f ").append(i).append(values_filename);
+      } catch (Exception e) {
+        executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
+        throw e;
+      }
+    }
 
     List<ManifestFile> result = new ArrayList<>();
 
@@ -359,7 +369,7 @@ public class K8sTaskHelper {
               .timeout(10, TimeUnit.SECONDS)
               .directory(new File(k8SDelegateTaskParams.getWorkingDirectory()))
               .commandSplit(encloseWithQuotesIfNeeded(k8SDelegateTaskParams.getGoTemplateClientPath())
-                  + " -t template.yaml -f " + values_filename)
+                  + " -t template.yaml " + valuesFilesOptions.toString())
               .readOutput(true);
       ProcessResult processResult = processExecutor.execute();
       result.add(ManifestFile.builder()
@@ -381,11 +391,7 @@ public class K8sTaskHelper {
           result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
         } catch (Exception e) {
           executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
-          if (e instanceof KubernetesYamlException) {
-            executionLogCallback.saveExecutionLog(e.getMessage(), ERROR);
-          } else {
-            executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
-          }
+          executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
           throw e;
         }
       }
@@ -396,16 +402,15 @@ public class K8sTaskHelper {
 
   public String getResourcesInTableFormat(List<KubernetesResource> resources) {
     StringBuilder sb = new StringBuilder(1024);
-    final String tableFormat = "%-20s%-40s%-6s";
+    final String tableFormat = "%-20s%-40s%-10s";
     sb.append(System.lineSeparator())
-        .append(format(tableFormat, "Kind", "Name", "Versioned"))
-        .append(System.lineSeparator())
-        .append(format(tableFormat, "----", "----", "---------"))
+        .append(color(format(tableFormat, "Kind", "Name", "Versioned"), White, Bold))
         .append(System.lineSeparator());
 
     for (KubernetesResource resource : resources) {
       KubernetesResourceId id = resource.getResourceId();
-      sb.append(format(tableFormat, id.getKind(), id.getName(), id.isVersioned())).append(System.lineSeparator());
+      sb.append(color(format(tableFormat, id.getKind(), id.getName(), id.isVersioned()), Gray))
+          .append(System.lineSeparator());
     }
 
     return sb.toString();

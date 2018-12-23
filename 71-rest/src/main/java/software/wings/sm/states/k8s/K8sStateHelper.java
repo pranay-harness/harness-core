@@ -3,7 +3,7 @@ package software.wings.sm.states.k8s;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.k8s.manifest.ManifestHelper.normalizeFilePath;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -32,6 +32,7 @@ import software.wings.beans.SweepingOutput;
 import software.wings.beans.SweepingOutput.Scope;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
@@ -45,6 +46,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig.K8sDelegateManifestConfigBuilder;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -64,6 +66,7 @@ import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -208,6 +211,33 @@ public class K8sStateHelper {
     return applicationManifest;
   }
 
+  public List<String> getRenderedValuesFiles(
+      ApplicationManifest applicationManifest, ExecutionContext context, Map<K8sValuesLocation, String> valuesFiles) {
+    if (applicationManifest.getStoreType() == StoreType.Local) {
+      ManifestFile manifestFile =
+          applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
+      if (manifestFile != null) {
+        valuesFiles.put(K8sValuesLocation.Service, manifestFile.getFileContent());
+      }
+    }
+
+    List<String> result = new ArrayList<>();
+
+    if (valuesFiles.containsKey(K8sValuesLocation.Service)) {
+      result.add(context.renderExpression(valuesFiles.get(K8sValuesLocation.Service)));
+    }
+
+    if (valuesFiles.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
+      result.add(context.renderExpression(valuesFiles.get(K8sValuesLocation.EnvironmentGlobal)));
+    }
+
+    if (valuesFiles.containsKey(K8sValuesLocation.Environment)) {
+      result.add(context.renderExpression(valuesFiles.get(K8sValuesLocation.Environment)));
+    }
+
+    return result;
+  }
+
   public void saveK8sElement(ExecutionContext context, K8sElement k8sElement) {
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.PHASE)
                                    .name("k8s")
@@ -278,16 +308,6 @@ public class K8sStateHelper {
         .build();
   }
 
-  public List<String> getValuesYamlList(String valuesYamlFromGit) {
-    List<String> valuesYamlList = new ArrayList<>();
-
-    if (isNotBlank(valuesYamlFromGit)) {
-      valuesYamlList.add(valuesYamlFromGit);
-    }
-
-    return valuesYamlList;
-  }
-
   public String getAppId(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     return workflowStandardParams.getAppId();
@@ -308,7 +328,8 @@ public class K8sStateHelper {
 
       switch (applicationManifest.getStoreType()) {
         case Local:
-          return k8sStateExecutor.executeK8sTask(context, activity.getUuid(), null);
+          Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+          return k8sStateExecutor.executeK8sTask(context, activity.getUuid(), valuesFiles);
 
         case Remote:
           return executeGitTask(context, applicationManifest, activity.getUuid(), k8sStateExecutor.commandName());
@@ -378,7 +399,10 @@ public class K8sStateHelper {
 
     String valueYamlFromGit = getFileFromGitResponse(executionResponse);
 
+    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    valuesFiles.put(K8sValuesLocation.Service, valueYamlFromGit);
+
     // ToDo anshul how to handle unhappy case
-    return k8sStateExecutor.executeK8sTask(context, activityId, getValuesYamlList(valueYamlFromGit));
+    return k8sStateExecutor.executeK8sTask(context, activityId, valuesFiles);
   }
 }
