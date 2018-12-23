@@ -302,7 +302,9 @@ public enum ErrorCode {
 
   JIRA_ERROR,
 
-  EXPRESSION_EVALUATION_FAILED;
+  EXPRESSION_EVALUATION_FAILED,
+
+  KUBERNETES_VALUES_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -6,6 +6,7 @@ import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.color;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.K8sDummyCommandUnit.Apply;
 import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
@@ -30,6 +31,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.Log.LogColor;
+import software.wings.beans.Log.LogWeight;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -159,7 +162,8 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
 
     try {
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
-          k8sCanarySetupTaskParameters.getK8sDelegateManifestConfig().getManifestFiles(), executionLogCallback);
+          k8sCanarySetupTaskParameters.getK8sDelegateManifestConfig().getManifestFiles(),
+          k8sCanarySetupTaskParameters.getValuesYamlList(), executionLogCallback);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
     } catch (Exception e) {
@@ -211,7 +215,8 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
       managedWorkload = getManagedWorkload(resources);
       managedWorkload.addRevisionLabelInDeployment(currentRelease.getNumber(), true);
 
-      executionLogCallback.saveExecutionLog("\nManaged Workload is: " + managedWorkload.getResourceId().kindNameRef());
+      executionLogCallback.saveExecutionLog("\nManaged Workload is: "
+          + color(managedWorkload.getResourceId().kindNameRef(), LogColor.Cyan, LogWeight.Bold));
 
       k8sTaskHelper.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 

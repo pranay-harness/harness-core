@@ -28,6 +28,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sCanarySetupTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sCanarySetupResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
@@ -91,7 +92,8 @@ public class K8sCanarySetup extends State implements K8sStateExecutor {
     return k8sStateHelper.executeWrapperWithManifest(this, context);
   }
 
-  public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId, List<String> valuesYaml) {
+  public ExecutionResponse executeK8sTask(
+      ExecutionContext context, String activityId, Map<K8sValuesLocation, String> valuesFiles) {
     ApplicationManifest applicationManifest = k8sStateHelper.getApplicationManifest(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
@@ -103,7 +105,7 @@ public class K8sCanarySetup extends State implements K8sStateExecutor {
             .k8sTaskType(K8sTaskType.CANARY_SETUP)
             .timeoutIntervalInMin(10)
             .k8sDelegateManifestConfig(k8sStateHelper.createDelegateManifestConfig(applicationManifest))
-            .valuesYamlList(valuesYaml)
+            .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(applicationManifest, context, valuesFiles))
             .build();
 
     return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);

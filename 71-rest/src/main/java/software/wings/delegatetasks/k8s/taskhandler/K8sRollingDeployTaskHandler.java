@@ -4,8 +4,12 @@ import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
+import static software.wings.beans.Log.LogColor.Cyan;
+import static software.wings.beans.Log.LogColor.Yellow;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.K8sDummyCommandUnit.Apply;
@@ -154,8 +158,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     try {
-      List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(
-          k8sDelegateTaskParams, request.getK8sDelegateManifestConfig().getManifestFiles(), executionLogCallback);
+      List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
+          request.getK8sDelegateManifestConfig().getManifestFiles(), request.getValuesYamlList(), executionLogCallback);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
     } catch (Exception e) {
@@ -194,10 +198,10 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       managedWorkload = getManagedWorkload(resources);
 
       if (managedWorkload == null) {
-        executionLogCallback.saveExecutionLog("\nNo Managed Workload found");
+        executionLogCallback.saveExecutionLog(color("\nNo Managed Workload found.", Yellow, Bold));
       } else {
         executionLogCallback.saveExecutionLog(
-            "\nManaged Workload is: " + managedWorkload.getResourceId().kindNameRef());
+            "\nManaged Workload is: " + color(managedWorkload.getResourceId().kindNameRef(), Cyan, Bold));
       }
 
       release = releaseHistory.createNewRelease(

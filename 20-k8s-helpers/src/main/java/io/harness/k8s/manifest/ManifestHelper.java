@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableSet;
 
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
+import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
@@ -136,6 +137,24 @@ public class ManifestHelper {
     }
 
     return normalizeFilePath(filePath) + values_filename;
+  }
+
+  public static boolean validateValuesFileContents(String valuesFileContent) {
+    try {
+      if (StringUtils.isBlank(valuesFileContent)) {
+        return true;
+      }
+      YamlReader reader = new YamlReader(valuesFileContent);
+      Object o = reader.read();
+      if (o instanceof Map) {
+        // noop
+        return true;
+      } else {
+        throw new KubernetesValuesException("Object is not a map.");
+      }
+    } catch (YamlException e) {
+      throw new KubernetesValuesException(e.getMessage(), e.getCause());
+    }
   }
 
   public static String normalizeFilePath(String filePath) {

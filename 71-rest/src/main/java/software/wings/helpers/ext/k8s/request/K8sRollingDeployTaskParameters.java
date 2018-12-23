@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.k8s.request;
 
+import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,7 +11,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class K8sRollingDeployTaskParameters extends K8sTaskParameters {
   private K8sDelegateManifestConfig k8sDelegateManifestConfig;
-  private List<String> valuesYamlList;
+  @Expression private List<String> valuesYamlList;
 
   @Builder
   public K8sRollingDeployTaskParameters(String accountId, String appId, String commandName, String activityId,
