@@ -59,6 +59,7 @@ import freemarker.template.TemplateException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.WingsException;
+import io.harness.limits.LimitCheckerFactory;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
 import org.assertj.core.api.Assertions;
@@ -71,6 +72,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
@@ -103,6 +105,7 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
+import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -145,6 +148,7 @@ public class UserServiceTest extends WingsBaseTest {
    * The User invite query.
    */
   @Mock Query<UserInvite> userInviteQuery;
+
   /**
    * The User invite query end.
    */
@@ -157,6 +161,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private AuthService authService;
   @Mock private UserGroupService userGroupService;
   @Mock private CacheHelper cacheHelper;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   /**
    * The Cache.
@@ -190,6 +195,8 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.createQuery(UserInvite.class)).thenReturn(userInviteQuery);
     when(userInviteQuery.filter(any(), any())).thenReturn(userInviteQuery);
+    when(limitCheckerFactory.getInstance(Mockito.any(io.harness.limits.Action.class)))
+        .thenReturn(WingsTestConstants.mockChecker());
   }
 
   /**

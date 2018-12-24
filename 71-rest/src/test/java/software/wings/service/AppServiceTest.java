@@ -304,7 +304,11 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.delete(any(), any())).thenReturn(true);
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
-    Application application = anApplication().withUuid(APP_ID).withName("APP_NAME").build();
+    Application application = anApplication()
+                                  .withUuid(APP_ID)
+                                  .withName("APP_NAME")
+                                  .withAccountId("some-account-id-" + AppServiceTest.class.getSimpleName())
+                                  .build();
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
     appService.delete(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,

@@ -7,13 +7,13 @@ import static java.util.Objects.requireNonNull;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.checker.UsageLimitExceededException;
 import io.harness.limits.configuration.NoLimitConfiguredException;
-import io.harness.limits.lib.LimitChecker;
+import io.harness.limits.lib.RateLimitChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -30,15 +30,14 @@ public class PreDeploymentChecker {
 
   /**
    * checks if the deployments being done is within allowed rate limits.
-   * @throws WingsException with errorCode {@link ErrorCode#USAGE_LIMITS_EXCEEDED} in case limits are exceeded.
+   * @throws UsageLimitExceededException in case limit exceeds
    */
-  public void checkDeploymentRateLimit(String accountId, String appId) {
+  public void checkDeploymentRateLimit(String accountId, String appId) throws UsageLimitExceededException {
     Action deployAction = new Action(accountId, ActionType.DEPLOY);
     try {
-      LimitChecker checker = limitCheckerFactory.getInstance(deployAction);
+      RateLimitChecker checker = (RateLimitChecker) limitCheckerFactory.getInstance(deployAction);
       if (!checker.checkAndConsume()) {
-        throw new WingsException(
-            ErrorCode.USAGE_LIMITS_EXCEEDED, "Deployment Rate Limit Reached. Please contact Harness support.");
+        throw new UsageLimitExceededException(checker.getLimit(), accountId);
       }
     } catch (NoLimitConfiguredException e) {
       log.error(
