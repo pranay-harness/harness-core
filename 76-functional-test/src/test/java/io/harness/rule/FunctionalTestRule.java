@@ -19,6 +19,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
+import io.harness.threading.CurrentThreadExecutor;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.junit.rules.MethodRule;

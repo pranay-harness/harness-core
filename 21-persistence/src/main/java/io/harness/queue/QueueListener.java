@@ -8,7 +8,6 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -18,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,7 +31,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
 
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
-  @Inject @Named("timer") @Setter private ScheduledExecutorService timer;
+  @Inject @Setter private TimerScheduledExecutorService timer;
   @Inject @Setter private QueueController queueController;
 
   public QueueListener(boolean primaryOnly) {

@@ -17,6 +17,7 @@ import io.harness.mongo.MongoQueue;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue.Filter;
 import io.harness.queue.QueueListener;
+import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.version.VersionInfoManager;
 import org.junit.Before;
@@ -29,7 +30,6 @@ import software.wings.core.managerConfiguration.ConfigurationController;
 
 import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class QueueListenerTest extends WingsBaseTest {
@@ -52,7 +52,7 @@ public class QueueListenerTest extends WingsBaseTest {
     listener = new QueuableObjectListener();
     listener.setQueue(queue);
     listener.setRunOnce(true);
-    listener.setTimer(new ScheduledThreadPoolExecutor(1));
+    listener.setTimer(new TimerScheduledExecutorService());
     listener.setQueueController(new ConfigurationController(1));
     listener = spy(listener);
   }

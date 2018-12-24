@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.queue.QueueModule.EXECUTOR_NAME;
 import static java.time.Duration.ofSeconds;
 import static software.wings.common.Constants.USER_CACHE;
 
@@ -53,8 +52,10 @@ import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
+import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.waiter.Notifier;
+import io.harness.waiter.NotifierScheduledExecutorService;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -391,10 +392,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
     environment.lifecycle().manage(injector.getInstance(ConfigurationController.class));
-    environment.lifecycle().manage(
-        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, EXECUTOR_NAME)));
-    environment.lifecycle().manage(
-        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier"))));
+    environment.lifecycle().manage(injector.getInstance(TimerScheduledExecutorService.class));
+    environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
   }
 
@@ -423,7 +422,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void scheduleJobs(Injector injector) {
     logger.info("Initializing scheduled jobs...");
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))
+    injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 30L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 12L, TimeUnit.SECONDS);

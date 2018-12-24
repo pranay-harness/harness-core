@@ -1,6 +1,7 @@
 package io.harness.rule;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
@@ -13,8 +14,11 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
+import io.harness.queue.QueueListenerController;
+import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
+import io.harness.waiter.NotifierScheduledExecutorService;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -78,6 +82,19 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     modules.add(new MongoModule(datastore, datastore, distributedLockSvc));
     modules.addAll(new OrchestrationModule().cumulativeDependencies());
     return modules;
+  }
+
+  @Override
+  public void initialize(Injector injector) {
+    closingFactory.addServer(() -> {
+      try {
+        injector.getInstance(QueueListenerController.class).stop();
+      } catch (Exception exception) {
+        logger.error("", exception);
+      }
+    });
+    closingFactory.addServer(() -> injector.getInstance(TimerScheduledExecutorService.class).shutdown());
+    closingFactory.addServer(() -> injector.getInstance(NotifierScheduledExecutorService.class).shutdown());
   }
 
   @Override

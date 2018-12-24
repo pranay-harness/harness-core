@@ -27,6 +27,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
+import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.RealMongo;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -93,7 +94,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -1495,7 +1495,7 @@ public class VaultTest extends WingsBaseTest {
 
   private Thread startTransitionListener() {
     transitionEventListener = new KmsTransitionEventListener();
-    setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
+    setInternalState(transitionEventListener, "timer", new TimerScheduledExecutorService());
     setInternalState(transitionEventListener, "queueController", new ConfigurationController(1));
     setInternalState(transitionEventListener, "queue", transitionKmsQueue);
     setInternalState(transitionEventListener, "secretManager", secretManager);

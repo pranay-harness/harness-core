@@ -2,7 +2,6 @@ package software.wings.rules;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.maintenance.MaintenanceController.forceMaintenance;
-import static io.harness.queue.QueueModule.EXECUTOR_NAME;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -12,9 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
@@ -66,12 +63,14 @@ import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
+import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.BypassRuleMixin;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.rule.RealMongo;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.waiter.Notifier;
+import io.harness.waiter.NotifierScheduledExecutorService;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.junit.rules.MethodRule;
@@ -105,7 +104,6 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
@@ -406,7 +404,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
     try {
       log().info("Stopping notifier...");
-      ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))).stop();
+      ((Managed) injector.getInstance(NotifierScheduledExecutorService.class)).stop();
       log().info("Stopped notifier...");
     } catch (Exception ex) {
       logger.error("", ex);
@@ -422,7 +420,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
     try {
       log().info("Stopping timer...");
-      ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, EXECUTOR_NAME))).stop();
+      ((Managed) injector.getInstance(TimerScheduledExecutorService.class)).stop();
       log().info("Stopped timer...");
     } catch (Exception ex) {
       logger.error("", ex);
@@ -443,7 +441,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
   protected void registerScheduledJobs(Injector injector) {
     log().info("Initializing scheduledJobs...");
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))
+    injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 1000L, TimeUnit.MILLISECONDS);
   }
 
