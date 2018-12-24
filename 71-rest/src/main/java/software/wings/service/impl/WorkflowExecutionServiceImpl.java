@@ -88,6 +88,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.checker.UsageLimitExceededException;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
@@ -155,6 +156,8 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.UsageLimitExceededAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.command.ServiceCommand;
@@ -170,6 +173,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.WorkflowExecutionServiceImpl.Tree.TreeBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.BarrierService;
@@ -274,6 +278,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private PreDeploymentChecker preDeploymentChecker;
+  @Inject private AlertService alertService;
 
   /**
    * {@inheritDoc}
@@ -1398,7 +1403,25 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecution triggerEnvExecution(
       String appId, String envId, ExecutionArgs executionArgs, Trigger trigger) {
-    return triggerEnvExecution(appId, envId, executionArgs, null, trigger);
+    String accountId = appService.getAccountIdByAppId(appId);
+
+    try {
+      WorkflowExecution execution = triggerEnvExecution(appId, envId, executionArgs, null, trigger);
+      alertService.closeAlertsOfType(accountId, appId, AlertType.USAGE_LIMIT_EXCEEDED);
+      return execution;
+    } catch (UsageLimitExceededException e) {
+      String errMsg =
+          "Deployment rate limit reached. Some deployments may not be allowed. Please contact Harness support.";
+      logger.error(e.getMessage());
+
+      // open alert for triggers
+      if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION && null != trigger) {
+        alertService.openAlert(accountId, appId, AlertType.USAGE_LIMIT_EXCEEDED,
+            new UsageLimitExceededAlert(e.getAccountId(), e.getLimit(), errMsg));
+      }
+
+      throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED, errMsg);
+    }
   }
 
   @Override

@@ -54,7 +54,6 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -352,7 +351,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             if (hclParser == null) {
               throw new WingsException(ErrorCode.UNKNOWN_ERROR, "Unable to instantiate HCL Parser");
             }
-            parsedContents = hclParser.parse(new String(tfContent, Charset.forName("UTF-8")));
+            parsedContents = hclParser.parse(new String(tfContent, Charsets.UTF_8));
           } catch (IOException | HCLParserException e) {
             logger.error("HCL Parser Exception for file [" + file.getAbsolutePath() + "], ", e);
             throw new WingsException(

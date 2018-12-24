@@ -20,6 +20,8 @@ import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -93,6 +95,9 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class AppServiceImpl implements AppService {
   private static final Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
+
+  // key = appId, value = accountId
+  private Cache<String, String> appIdToAccountIdCache = CacheBuilder.newBuilder().maximumSize(1000).build();
 
   @Inject private AlertService alertService;
   @Inject private ArtifactService artifactService;
@@ -452,9 +457,15 @@ public class AppServiceImpl implements AppService {
       return null;
     }
 
-    Application app = get(appId);
+    String accountId = appIdToAccountIdCache.getIfPresent(appId);
+    if (null != accountId) {
+      return accountId;
+    }
 
-    return app.getAccountId();
+    Application app = get(appId);
+    accountId = app.getAccountId();
+    appIdToAccountIdCache.put(appId, accountId);
+    return accountId;
   }
 
   private void updateAppYamlGitConfig(Application savedApp, Application app, boolean performFullSync) {
