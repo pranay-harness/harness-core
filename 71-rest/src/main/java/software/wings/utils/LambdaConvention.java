@@ -7,6 +7,6 @@ public class LambdaConvention {
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"']");
 
   public static String normalizeFunctionName(String functionName) {
-    return wildCharPattern.matcher(functionName).replaceAll(DASH).toLowerCase();
+    return wildCharPattern.matcher(functionName).replaceAll(DASH);
   }
 }
