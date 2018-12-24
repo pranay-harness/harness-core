@@ -18,11 +18,13 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
+import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nonnull;
 
 @DisallowConcurrentExecution
 public class InstanceStatsCollectorJob implements Job {
@@ -37,6 +39,7 @@ public class InstanceStatsCollectorJob implements Job {
   @Inject private BackgroundExecutorService executorService;
   @Inject private BackgroundSchedulerLocker persistentLocker;
   @Inject private StatsCollector statsCollector;
+  @Inject private InstanceUsageLimitExcessHandler instanceLimitHandler;
 
   public static void add(PersistentScheduler jobScheduler, Account account) {
     jobScheduler.deleteJob(account.getUuid(), GROUP);
@@ -60,12 +63,16 @@ public class InstanceStatsCollectorJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    executorService.submit(() -> executeInternal(jobExecutionContext));
+    executorService.submit(() -> {
+      String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID);
+      Objects.requireNonNull(accountId, "Account Id must be passed in job context");
+      createStats(accountId);
+      instanceLimitHandler.handle(accountId);
+    });
   }
 
-  private void executeInternal(JobExecutionContext jobExecutionContext) {
-    String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID);
-    Objects.requireNonNull(accountId, "Account Id must be passed in job context");
+  private void createStats(@Nonnull final String accountId) {
+    Objects.requireNonNull(accountId, "Account Id must be present");
 
     try (AcquiredLock lock =
              persistentLocker.getLocker().tryToAcquireLock(Account.class, accountId, Duration.ofSeconds(120))) {

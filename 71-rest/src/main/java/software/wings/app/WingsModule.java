@@ -191,6 +191,9 @@ import software.wings.service.impl.infra.InfraDownloadServiceImpl;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
 import software.wings.service.impl.instance.DeploymentServiceImpl;
 import software.wings.service.impl.instance.InstanceServiceImpl;
+import software.wings.service.impl.instance.licensing.InstanceLimitProviderImpl;
+import software.wings.service.impl.instance.licensing.InstanceUsageLimitCheckerImpl;
+import software.wings.service.impl.instance.licensing.InstanceUsageLimitExcessHandlerImpl;
 import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
 import software.wings.service.impl.instance.stats.collector.StatsCollectorImpl;
 import software.wings.service.impl.instance.sync.ContainerSync;
@@ -327,6 +330,9 @@ import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
+import software.wings.service.intfc.instance.licensing.InstanceUsageLimitChecker;
+import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 import software.wings.service.intfc.newrelic.NewRelicService;
@@ -533,6 +539,10 @@ public class WingsModule extends DependencyModule {
     bind(SftpBuildService.class).to(SftpBuildServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
+
+    bind(InstanceUsageLimitChecker.class).to(InstanceUsageLimitCheckerImpl.class);
+    bind(InstanceUsageLimitExcessHandler.class).to(InstanceUsageLimitExcessHandlerImpl.class);
+    bind(InstanceLimitProvider.class).to(InstanceLimitProviderImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

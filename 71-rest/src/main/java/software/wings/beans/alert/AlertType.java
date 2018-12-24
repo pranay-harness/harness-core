@@ -21,7 +21,8 @@ public enum AlertType {
   GitConnectionError(Setup, Error, GitConnectionErrorAlert.class),
   INVALID_SMTP_CONFIGURATION(Setup, Error, InvalidSMTPConfigAlert.class),
   EMAIL_NOT_SENT_ALERT(Setup, Warning, EmailSendingFailedAlert.class),
-  USERGROUP_SYNC_FAILED(Setup, Error, SSOSyncFailedAlert.class);
+  USERGROUP_SYNC_FAILED(Setup, Error, SSOSyncFailedAlert.class),
+  INSTANCE_USAGE_APPROACHING_LIMIT(Setup, Warning, InstanceUsageLimitAlert.class);
 
   private AlertCategory category;
   private AlertSeverity severity;

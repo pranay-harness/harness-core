@@ -17,6 +17,8 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class DefaultLimitsServiceImpl implements DefaultLimitsService {
+  private static final Integer MAX_APP_COUNT = 50;
+
   @Value
   @AllArgsConstructor
   static class LimitKey {
@@ -30,14 +32,14 @@ public class DefaultLimitsServiceImpl implements DefaultLimitsService {
     Map<LimitKey, Limit> defaultLimits = new HashMap<>();
 
     // Application Limits
-    defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.TRIAL), new StaticLimit(1000));
-    defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.PAID), new StaticLimit(1000));
-    defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.FREE), new StaticLimit(1000));
+    defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.TRIAL), new StaticLimit(MAX_APP_COUNT));
+    defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.PAID), new StaticLimit(MAX_APP_COUNT));
+    defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.FREE), new StaticLimit(MAX_APP_COUNT));
 
     // Deployment Limits
     defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.TRIAL), new RateLimit(100, 24, TimeUnit.HOURS));
     defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.PAID), new RateLimit(100, 24, TimeUnit.HOURS));
-    defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.FREE), new RateLimit(100, 24, TimeUnit.HOURS));
+    defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.FREE), new RateLimit(5, 24, TimeUnit.HOURS));
 
     defaults = ImmutableMap.copyOf(defaultLimits);
   }
