@@ -32,6 +32,7 @@ public class GitServiceImpl implements GitService {
             .filePaths(filePaths)
             .gitConnectorId(connectorId)
             .useBranch(useBranch)
+            .recursive(true)
             .build());
   }
 
@@ -48,7 +49,7 @@ public class GitServiceImpl implements GitService {
 
   @Override
   public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, String connectorId, String commitId, String branch,
-      List<String> filePaths, boolean useBranch, List<String> fileExtensions) {
+      List<String> filePaths, boolean useBranch, List<String> fileExtensions, boolean isRecursive) {
     return gitClient.fetchFilesByPath(gitConfig,
         GitFetchFilesRequest.builder()
             .commitId(commitId)
@@ -57,6 +58,7 @@ public class GitServiceImpl implements GitService {
             .gitConnectorId(connectorId)
             .useBranch(useBranch)
             .fileExtensions(fileExtensions)
+            .recursive(isRecursive)
             .build());
   }
 }

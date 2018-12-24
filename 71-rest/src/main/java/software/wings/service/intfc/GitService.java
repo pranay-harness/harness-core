@@ -13,5 +13,5 @@ public interface GitService {
       GitConfig gitConfig, String newCommitId, String oldCommitId, String connectorId);
 
   GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, String connectorId, String commitId, String branch,
-      List<String> filePaths, boolean useBranch, List<String> fileExtensions);
+      List<String> filePaths, boolean useBranch, List<String> fileExtensions, boolean isRecursive);
 }

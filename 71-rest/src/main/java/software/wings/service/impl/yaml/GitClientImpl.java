@@ -611,7 +611,9 @@ public class GitClientImpl implements GitClient {
         String repoPath = gitClientHelper.getRepoPathForFileDownload(gitConfig, gitConnectorId);
 
         gitRequest.getFilePaths().forEach(filePath -> {
-          try (Stream<Path> paths = Files.walk(Paths.get(repoPath + "/" + filePath))) {
+          try {
+            Path repoFilePath = Paths.get(repoPath + "/" + filePath);
+            Stream<Path> paths = gitRequest.isRecursive() ? Files.walk(repoFilePath) : Files.walk(repoFilePath, 1);
             paths.filter(Files::isRegularFile)
                 .filter(path -> !path.toString().contains(".git"))
                 .filter(matchingFilesExtensions(gitRequest))

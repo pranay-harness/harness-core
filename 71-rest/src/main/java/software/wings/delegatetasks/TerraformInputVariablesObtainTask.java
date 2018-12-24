@@ -69,7 +69,7 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
           isNotEmpty(parameters.getSourceRepoBranch()) ? parameters.getSourceRepoBranch() : gitConfig.getBranch();
       GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, UUID.randomUUID().toString(), "",
           branch, Collections.singletonList(parameters.getScriptPath()), true,
-          Collections.singletonList(TERRAFORM_FILE_EXTENSION));
+          Collections.singletonList(TERRAFORM_FILE_EXTENSION), false);
 
       HCLParser hclParser = new HCLParser();
       Set<NameValuePair> variablesList = new HashSet<>();

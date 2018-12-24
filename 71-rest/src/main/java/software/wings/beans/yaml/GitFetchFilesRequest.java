@@ -16,6 +16,7 @@ public class GitFetchFilesRequest extends GitCommandRequest {
   private String gitConnectorId;
   private boolean useBranch;
   private List<String> fileExtensions;
+  private boolean recursive;
 
   public GitFetchFilesRequest() {
     super(GitCommandType.FETCH_FILES);
@@ -32,7 +33,7 @@ public class GitFetchFilesRequest extends GitCommandRequest {
   }
 
   public GitFetchFilesRequest(String commitId, List<String> filePaths, String branch, String gitConnectorId,
-      boolean useBranch, List<String> fileExtensions) {
+      boolean useBranch, List<String> fileExtensions, boolean recursive) {
     super(GitCommandType.FETCH_FILES);
     this.commitId = commitId;
     this.filePaths = filePaths;
@@ -40,5 +41,6 @@ public class GitFetchFilesRequest extends GitCommandRequest {
     this.gitConnectorId = gitConnectorId;
     this.useBranch = useBranch;
     this.fileExtensions = fileExtensions;
+    this.recursive = recursive;
   }
 }
