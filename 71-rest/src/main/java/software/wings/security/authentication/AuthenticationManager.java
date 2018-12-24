@@ -78,21 +78,32 @@ public class AuthenticationManager {
   }
 
   public LoginTypeResponse getLoginTypeResponse(String userName) {
-    User user = authenticationUtil.getUser(userName, USER);
-    AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user);
-
     LoginTypeResponseBuilder builder = LoginTypeResponse.builder();
-    switch (authenticationMechanism) {
-      case SAML:
-        SamlRequest samlRequest = samlClientService.generateSamlRequest(user);
-        builder.samlRequest(samlRequest);
-        break;
-      case LDAP: // No need to build anything extra for the response.
-      default:
-        // Nothing to do by default
-    }
 
-    return builder.authenticationMechanism(authenticationMechanism).build();
+    /**
+     * To prevent possibility of user enumeration (https://harness.atlassian.net/browse/HAR-7188),
+     * instead of throwing the USER_DOES_NOT_EXIST exception, send USER_PASSWORD as the login mechanism.
+     * The next page throws INVALID_CREDENTIAL exception in case of wrong userId/password which doesn't reveals any
+     * information.
+     */
+    try {
+      User user = authenticationUtil.getUser(userName, USER);
+      AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user);
+
+      switch (authenticationMechanism) {
+        case SAML:
+          SamlRequest samlRequest = samlClientService.generateSamlRequest(user);
+          builder.samlRequest(samlRequest);
+          break;
+        case LDAP: // No need to build anything extra for the response.
+        default:
+          // Nothing to do by default
+      }
+      return builder.authenticationMechanism(authenticationMechanism).build();
+    } catch (WingsException we) {
+      logger.error(we.getMessage(), we);
+      return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
+    }
   }
 
   private User generate2faJWTToken(User user) {

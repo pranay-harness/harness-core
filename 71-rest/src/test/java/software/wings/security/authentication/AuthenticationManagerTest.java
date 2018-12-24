@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 
 public class AuthenticationManagerTest extends WingsBaseTest {
+  public static final String NON_EXISTING_USER = "nonExistingUser";
   @Mock private PasswordBasedAuthHandler PASSWORD_BASED_AUTH_HANDLER;
   @Mock private SamlBasedAuthHandler SAML_BASED_AUTH_HANDLER;
   @Mock private SamlClientService SAML_CLIENT_SERVICE;
@@ -74,8 +75,15 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     Account account2 = mock(Account.class);
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
+    when(AUTHENTICATION_UTL.getUser(Matchers.same(NON_EXISTING_USER), Matchers.any(EnumSet.class)))
+        .thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
+    LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse(NON_EXISTING_USER);
+    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+    assertThat(loginTypeResponse.getSamlRequest()).isNull();
+
+    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), Matchers.any(EnumSet.class))).thenReturn(mockUser);
-    LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
+    loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
     assertThat(loginTypeResponse.getSamlRequest()).isNull();
 
