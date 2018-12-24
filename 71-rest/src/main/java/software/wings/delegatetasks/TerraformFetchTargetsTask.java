@@ -54,7 +54,7 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
       GitFetchFilesResult gitFetchFilesResult =
           gitService.fetchFilesByPath(parameters.getSourceRepo(), UUID.randomUUID().toString(), null,
               parameters.getSourceRepoBranch(), Collections.singletonList(parameters.getScriptPath()), true,
-              Collections.singletonList(TERRAFORM_FILE_EXTENSION));
+              Collections.singletonList(TERRAFORM_FILE_EXTENSION), false);
 
       if (gitFetchFilesResult == null) {
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, "Failed to fetch files from git");
