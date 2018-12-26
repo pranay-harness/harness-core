@@ -300,6 +300,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .sourceRepoReference(sourceRepoReference)
               .variables(variableList)
               .backendConfigs(backendConfigs)
+              .targets(parameters.getTargets())
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);
 
