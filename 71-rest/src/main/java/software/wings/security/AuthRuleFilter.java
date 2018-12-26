@@ -41,6 +41,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserRequestContext.UserRequestContextBuilder;
 import software.wings.security.UserRequestInfo.UserRequestInfoBuilder;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.CustomApiAuth;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.LearningEngineAuth;
@@ -129,6 +130,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)) {
+      return;
+    }
+
+    if (customAPI()) {
       return;
     }
 
@@ -545,6 +550,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     return resourceMethod.getAnnotation(PublicApi.class) != null
         || resourceClass.getAnnotation(PublicApi.class) != null;
+  }
+
+  private boolean customAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+
+    return resourceMethod.getAnnotation(CustomApiAuth.class) != null
+        || resourceClass.getAnnotation(CustomApiAuth.class) != null;
   }
 
   private boolean externalAPI() {

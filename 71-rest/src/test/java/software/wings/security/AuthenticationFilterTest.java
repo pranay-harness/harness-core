@@ -88,6 +88,7 @@ public class AuthenticationFilterTest {
     try {
       doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
       doReturn(false).when(authenticationFilter).externalFacingAPI();
+      doReturn(false).when(authenticationFilter).customApi();
       authenticationFilter.filter(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
@@ -100,6 +101,7 @@ public class AuthenticationFilterTest {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Delegate token");
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
     doReturn(false).when(authenticationFilter).externalFacingAPI();
+    doReturn(false).when(authenticationFilter).customApi();
     doReturn(true).when(authenticationFilter).delegateAPI();
     UriInfo uriInfo = mock(UriInfo.class);
     when(uriInfo.getPathParameters()).thenReturn(new MultivaluedHashMap<>());
@@ -116,6 +118,7 @@ public class AuthenticationFilterTest {
     doReturn(false).when(authenticationFilter).externalFacingAPI();
     doReturn(true).when(authenticationFilter).learningEngineServiceAPI();
     doReturn(false).when(authenticationFilter).delegateAPI();
+    doReturn(false).when(authenticationFilter).customApi();
     authenticationFilter.filter(context);
     assertThat(context.getSecurityContext().isSecure()).isTrue();
   }
@@ -156,6 +159,7 @@ public class AuthenticationFilterTest {
       doReturn(false).when(authenticationFilter).delegateAPI();
       doReturn(false).when(authenticationFilter).externalFacingAPI();
       doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
+      doReturn(false).when(authenticationFilter).customApi();
       when(authService.validateToken(anyString())).thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
       authenticationFilter.filter(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -172,6 +176,7 @@ public class AuthenticationFilterTest {
       doReturn(false).when(authenticationFilter).delegateAPI();
       doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
       doReturn(false).when(authenticationFilter).externalFacingAPI();
+      doReturn(false).when(authenticationFilter).customApi();
       AuthToken authToken = new AuthToken("testUser", 0L);
       authToken.setUser(mock(User.class));
       when(authService.validateToken(anyString())).thenReturn(authToken);
@@ -189,6 +194,7 @@ public class AuthenticationFilterTest {
       doReturn(false).when(authenticationFilter).delegateAPI();
       doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
       doReturn(false).when(authenticationFilter).externalFacingAPI();
+      doReturn(false).when(authenticationFilter).customApi();
       authenticationFilter.filter(context);
     } catch (WingsException e) {
       assertThatExceptionOfType(WingsException.class);

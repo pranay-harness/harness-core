@@ -9,7 +9,7 @@ import io.prometheus.client.exporter.common.TextFormat;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.security.annotations.PublicApi;
+import software.wings.security.annotations.CustomApiAuth;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/metrics")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@PublicApi
+@CustomApiAuth
 public class MetricResource {
   private static final Logger logger = LoggerFactory.getLogger(HealthResource.class);
 
