@@ -65,6 +65,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
@@ -175,6 +176,7 @@ public class UserServiceImpl implements UserService {
   @Inject private SSOSettingService ssoSettingService;
   @Inject private SamlClientService samlClientService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AuthenticationManager authenticationManager;
 
   /* (non-Javadoc)
@@ -950,6 +952,8 @@ public class UserServiceImpl implements UserService {
   public void logout(User user) {
     authService.invalidateToken(user.getToken());
     evictUserFromCache(user.getUuid());
+    Account account = user.getAccounts().get(0);
+    usageMetricsEventPublisher.publishUserLogoutEvent(account.getUuid(), account.getAccountName());
   }
 
   private void resetUserPassword(String email, char[] password, long tokenIssuedAt) {

@@ -37,6 +37,7 @@ import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
+import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.codec.DecoderException;
@@ -118,6 +119,7 @@ public class AuthServiceImpl implements AuthService {
   private AuthHandler authHandler;
   private HarnessUserGroupService harnessUserGroupService;
   private SecretManager secretManager;
+  private UsageMetricsEventPublisher usageMetricsEventPublisher;
 
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence wingsPersistence, UserService userService,
@@ -125,7 +127,7 @@ public class AuthServiceImpl implements AuthService {
       WorkflowService workflowService, EnvironmentService environmentService, CacheHelper cacheHelper,
       MainConfiguration configuration, LearningEngineService learningEngineService, AuthHandler authHandler,
       FeatureFlagService featureFlagService, HarnessUserGroupService harnessUserGroupService,
-      SecretManager secretManager) {
+      SecretManager secretManager, UsageMetricsEventPublisher usageMetricsEventPublisher) {
     this.dbCache = dbCache;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
@@ -140,6 +142,7 @@ public class AuthServiceImpl implements AuthService {
     this.featureFlagService = featureFlagService;
     this.harnessUserGroupService = harnessUserGroupService;
     this.secretManager = secretManager;
+    this.usageMetricsEventPublisher = usageMetricsEventPublisher;
   }
 
   @Override
@@ -802,6 +805,8 @@ public class AuthServiceImpl implements AuthService {
     } else {
       user.setToken(authToken.getUuid());
     }
+    Account account = user.getAccounts().get(0);
+    usageMetricsEventPublisher.publishUserLoginEvent(account.getUuid(), account.getAccountName());
 
     user.setFirstLogin(isFirstLogin);
     return user;

@@ -13,4 +13,5 @@ import java.util.Map;
 @Builder
 public class EventData {
   private Map<String, String> properties = new HashMap<>();
+  private double value;
 }

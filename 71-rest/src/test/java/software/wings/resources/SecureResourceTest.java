@@ -46,6 +46,7 @@ import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.WingsException;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -143,10 +144,12 @@ public class SecureResourceTest {
   private static WhitelistService whitelistService = mock(WhitelistService.class);
   private static HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupService.class);
   private static SecretManager secretManager = mock(SecretManager.class);
+  private static UsageMetricsEventPublisher usageMetricsEventPublisher = mock(UsageMetricsEventPublisher.class);
 
-  private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
-      userGroupService, usageRestrictionsService, workflowService, envService, cacheHelper, configuration,
-      learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager);
+  private static AuthService authService =
+      new AuthServiceImpl(genericDbCache, wingsPersistence, userService, userGroupService, usageRestrictionsService,
+          workflowService, envService, cacheHelper, configuration, learningEngineService, authHandler,
+          featureFlagService, harnessUserGroupService, secretManager, usageMetricsEventPublisher);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(auditService, auditHelper, authService, authHandler,
       appService, userService, featureFlagService, whitelistService, harnessUserGroupService);
