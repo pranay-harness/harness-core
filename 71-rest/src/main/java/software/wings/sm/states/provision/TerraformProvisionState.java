@@ -95,6 +95,7 @@ public abstract class TerraformProvisionState extends State {
 
   private static final String VARIABLES_KEY = "variables";
   private static final String BACKEND_CONFIGS_KEY = "backend_configs";
+  private static final String TARGETS_KEY = "targets";
   private static final String ENCRYPTED_VARIABLES_KEY = "encrypted_variables";
   private static final String ENCRYPTED_BACKEND_CONFIGS_KEY = "encrypted_backend_configs";
   private static final int DEFAULT_TERRAFORM_ASYNC_CALL_TIMEOUT = 30 * 60 * 1000; // 10 minutes
@@ -183,6 +184,7 @@ public abstract class TerraformProvisionState extends State {
       final Collection<NameValuePair> variables =
           validateAndFilterVariables(getVariables(), terraformProvisioner.getVariables());
       Collection<NameValuePair> backendConfigs = terraformExecutionData.getBackendConfigs();
+      List<String> targets = terraformExecutionData.getTargets();
 
       if (isNotEmpty(variables)) {
         others.put(VARIABLES_KEY,
@@ -208,6 +210,10 @@ public abstract class TerraformProvisionState extends State {
                 .filter(item -> item.getValue() != null)
                 .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
                 .collect(toMap(NameValuePair::getName, NameValuePair::getValue)));
+      }
+
+      if (isNotEmpty(targets)) {
+        others.put(TARGETS_KEY, targets);
       }
 
       if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
@@ -397,6 +403,10 @@ public abstract class TerraformProvisionState extends State {
                                                                            .value((String) entry.getValue())
                                                                            .build()),
             context);
+      }
+      List<String> targets = (List<String>) fileMetadata.getMetadata().get(TARGETS_KEY);
+      if (isNotEmpty(targets)) {
+        setTargets(targets);
       }
     } else {
       final Collection<NameValuePair> validVariables =
