@@ -13,7 +13,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import io.harness.exception.WingsException;
@@ -173,7 +172,6 @@ public class AccountExportImportResource {
   @GET
   @Path("/export")
   @Produces(MediaType.APPLICATION_JSON)
-  @Timed
   @ExceptionMetered
   public Response exportAccountData(@QueryParam("accountId") final String accountId,
       @QueryParam("mode") @DefaultValue("ALL") ExportMode exportMode,
@@ -323,7 +321,6 @@ public class AccountExportImportResource {
   @Path("/import")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
-  @Timed
   @ExceptionMetered
   public RestResponse<ImportStatusReport> importAccountData(@QueryParam("accountId") final String accountId,
       @QueryParam("mode") @DefaultValue("UPSERT") ImportMode importMode,
