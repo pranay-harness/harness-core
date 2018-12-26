@@ -183,6 +183,14 @@ public class WingsMongoExportImport {
     if (appName != null) {
       filterList.add(new BasicDBObject("appName", appName));
     }
+    String artifactSourceName = (String) importRecord.get("artifactSourceName");
+    if (artifactSourceName != null) {
+      filterList.add(new BasicDBObject("artifactSourceName", artifactSourceName));
+    }
+    String displayName = (String) importRecord.get("displayName");
+    if (displayName != null) {
+      filterList.add(new BasicDBObject("displayName", displayName));
+    }
     String folderId = (String) importRecord.get("folderId");
     if (folderId != null) {
       filterList.add(new BasicDBObject("folderId", folderId));
