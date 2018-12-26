@@ -39,6 +39,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.OrchestrationMorphiaClasses;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
+import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.lock.AcquiredLock;
@@ -338,6 +339,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     }
 
+    injector.getInstance(EventsModuleHelper.class).initialize();
     logger.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
 

@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.queue.Queue;
@@ -26,10 +27,12 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.ResourceConstraintService;
@@ -42,6 +45,7 @@ import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The Class WorkflowExecutionUpdate.
@@ -66,6 +70,8 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private StateExecutionService stateExecutionService;
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
+  @Inject private AccountService accountService;
 
   /**
    * Instantiates a new workflow execution update.
@@ -159,7 +165,31 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     }
     if (ExecutionStatus.isFinalStatus(status)) {
       alertService.deploymentCompleted(appId, context.getWorkflowExecutionId());
-      eventPublishHelper.handleDeploymentCompleted(context.getWorkflowExecutionId(), appId);
+      try {
+        WorkflowExecution workflowExecution =
+            workflowExecutionService.getWorkflowExecutionSummaryForMetrics(appId, workflowExecutionId);
+        alertService.deploymentCompleted(appId, context.getWorkflowExecutionId());
+        if (workflowExecution == null) {
+          logger.warn("No workflowExecutiod for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId);
+          return;
+        }
+        eventPublishHelper.handleDeploymentCompleted(workflowExecution);
+        String accountID = getApplicationDataForReporting(appId).getAccountId();
+        String accountName = accountService.getFromCache(accountID).getAccountName();
+        long executionDuration =
+            TimeUnit.MILLISECONDS.toSeconds(workflowExecution.getEndTs() - workflowExecution.getStartTs());
+        /**
+         * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is manual
+         */
+        boolean manual = workflowExecution.getDeploymentTriggerId() == null;
+
+        usageMetricsEventPublisher.publishDeploymentDurationEvent(executionDuration, accountID, accountName);
+        usageMetricsEventPublisher.publishDeploymentMetadataEvent(status, manual, accountID, accountName);
+
+      } catch (Exception e) {
+        logger.error(
+            "Failed to generate events for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId, e);
+      }
     }
   }
 
@@ -206,5 +236,12 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
   public void setNeedToNotifyPipeline(boolean needToNotifyPipeline) {
     this.needToNotifyPipeline = needToNotifyPipeline;
+  }
+
+  private Application getApplicationDataForReporting(String appId) {
+    return wingsPersistence.createQuery(Application.class)
+        .project(Application.ACCOUNT_ID_KEY, true)
+        .filter(Application.ID_KEY, appId)
+        .get();
   }
 }

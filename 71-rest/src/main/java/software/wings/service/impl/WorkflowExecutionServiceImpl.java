@@ -2708,4 +2708,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     return approvalAuthorization;
   }
+
+  @Override
+  public WorkflowExecution getWorkflowExecutionSummaryForMetrics(String appId, String workflowExecutionId) {
+    return wingsPersistence.createQuery(WorkflowExecution.class)
+        .project(WorkflowExecution.SERVICE_EXECUTION_SUMMARIES, false)
+        .project(WorkflowExecution.EXECUTION_ARGS, false)
+        .filter(WorkflowExecution.APP_ID_KEY, appId)
+        .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
+        .get();
+  }
 }

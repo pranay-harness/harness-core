@@ -55,6 +55,8 @@ public class WorkflowExecution extends Base {
   public static final String UUID_KEY = "uuid";
   public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String WORKFLOW_TYPE_ID_KEY = "workflowType";
+  public static final String EXECUTION_ARGS = "executionArgs";
+  public static final String SERVICE_EXECUTION_SUMMARIES = "serviceExecutionSummaries";
 
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);

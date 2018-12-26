@@ -7,6 +7,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import io.prometheus.client.Collector.MetricFamilySamples;
 import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import io.prometheus.client.Summary;
@@ -48,6 +49,32 @@ public class HarnessMetricRegistry {
     this.collectorRegistry.register(new CustomDropWizardExports(metricRegistry));
   }
 
+  public void registerCounterMetric(String metricName, String[] labels, String doc) {
+    String name = getAbsoluteMetricName(metricName);
+    Counter.Builder builder = Counter.build().name(name).help(doc);
+    if (labels != null) {
+      builder.labelNames(labels);
+    }
+    if (doc != null) {
+      builder.help(doc);
+    } else {
+      builder.help(metricName);
+    }
+    Counter metric = builder.create();
+
+    collectorRegistry.register(metric);
+    namesToCollectors.put(name, metric);
+  }
+
+  public void recordCounterInc(String metricName, String[] labelValues) {
+    Counter metric = (Counter) namesToCollectors.get(getAbsoluteMetricName(metricName));
+    if (labelValues != null) {
+      metric.labels(labelValues).inc();
+    } else {
+      metric.inc();
+    }
+  }
+
   public void registerGaugeMetric(String metricName, String[] labels, String doc) {
     String name = getAbsoluteMetricName(metricName);
     Gauge.Builder builder = Gauge.build().name(name).help(doc);
@@ -78,10 +105,30 @@ public class HarnessMetricRegistry {
     namesToCollectors.put(name, metric2);
   }
 
-  public void registerHistogramMetric(String metricName) {
+  public void registerHistogramMetric(String metricName, String[] labels, String doc) {
     String name = getAbsoluteMetricName(metricName);
-    Histogram metric1 = Histogram.build().name(name).help(metricName).register(collectorRegistry);
-    namesToCollectors.put(name, metric1);
+    Histogram.Builder builder = Histogram.build().name(name).help(doc);
+    if (labels != null) {
+      builder.labelNames(labels);
+    }
+    if (doc != null) {
+      builder.help(doc);
+    } else {
+      builder.help(metricName);
+    }
+    Histogram metric = builder.create();
+
+    collectorRegistry.register(metric);
+    namesToCollectors.put(name, metric);
+  }
+
+  public void recordHistorgram(String metricName, String[] labelValues, double amount) {
+    Histogram metric = (Histogram) namesToCollectors.get(getAbsoluteMetricName(metricName));
+    if (labelValues != null) {
+      metric.labels(labelValues).observe(amount);
+    } else {
+      metric.observe(amount);
+    }
   }
 
   public void recordGaugeInc(String metricName, String[] labelValues) {

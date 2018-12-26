@@ -15,5 +15,13 @@ public enum EventType {
   SETUP_RBAC,
   TRIAL_TO_PAID,
   TRIAL_TO_FREE,
-  FREE_TO_PAID
+  FREE_TO_PAID,
+
+  /***
+   * Usage metrics EventTypes
+   */
+  DEPLOYMENT_METADATA,
+  DEPLOYMENT_DURATION,
+  USERS_LOGGED_IN
+
 }

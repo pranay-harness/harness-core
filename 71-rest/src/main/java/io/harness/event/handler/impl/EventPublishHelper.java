@@ -538,10 +538,16 @@ public class EventPublishHelper {
     return marketoConfig.isEnabled();
   }
 
-  public void handleDeploymentCompleted(String workflowExecutionId, String appId) {
+  public void handleDeploymentCompleted(WorkflowExecution workflowExecution) {
     if (!checkIfMarketoIsEnabled()) {
       return;
     }
+
+    if (workflowExecution == null) {
+      return;
+    }
+    String appId = workflowExecution.getAppId();
+    String workflowExecutionId = workflowExecution.getUuid();
 
     executorService.submit(() -> {
       String accountId = appService.getAccountIdByAppId(appId);
@@ -549,16 +555,7 @@ public class EventPublishHelper {
       if (!shouldPublishEventForAccount(accountId)) {
         return;
       }
-
       List<String> appIds = appService.getAppIdsByAccountId(accountId);
-
-      WorkflowExecution workflowExecution =
-          workflowExecutionService.getExecutionWithoutSummary(appId, workflowExecutionId);
-
-      if (workflowExecution == null) {
-        logger.warn("Workflow execution not found for execution id {}", workflowExecutionId);
-        return;
-      }
 
       EmbeddedUser createdBy = workflowExecution.getCreatedBy();
 
