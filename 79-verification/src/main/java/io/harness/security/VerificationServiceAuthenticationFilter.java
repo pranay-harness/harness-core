@@ -1,5 +1,7 @@
 package io.harness.security;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
@@ -7,8 +9,11 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.mindrot.jbcrypt.BCrypt.checkpw;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -17,19 +22,25 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import io.harness.beans.PageRequest;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.service.intfc.LearningEngineService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ServiceSecretKey.ServiceType;
+import software.wings.dl.WingsPersistence;
+import software.wings.security.annotations.CustomApiAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -43,10 +54,16 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
   private static final Logger logger = LoggerFactory.getLogger(VerificationServiceAuthenticationFilter.class);
   @Context private ResourceInfo resourceInfo;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public void filter(ContainerRequestContext containerRequestContext) throws IOException {
     if (authenticationExemptedRequests(containerRequestContext)) {
+      return;
+    }
+
+    if (isCustomApiRequest(containerRequestContext)) {
+      validateCustomApiRequest(containerRequestContext);
       return;
     }
 
@@ -62,6 +79,42 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     }
 
     throw new WingsException(INVALID_CREDENTIAL, USER);
+  }
+
+  private boolean isCustomApiRequest(ContainerRequestContext requestContext) {
+    return customApi() && requestContext.getHeaderString(HttpHeaders.AUTHORIZATION).startsWith("Bearer");
+  }
+
+  private boolean customApi() {
+    return resourceInfo.getResourceClass().getAnnotation(CustomApiAuth.class) != null;
+  }
+
+  protected void validateCustomApiRequest(ContainerRequestContext containerRequestContext) {
+    String tokenString = extractToken(containerRequestContext, "Bearer");
+    if (isBlank(tokenString)) {
+      throw new InvalidRequestException("Api Key not supplied", USER);
+    }
+    validate(tokenString, GLOBAL_ACCOUNT_ID);
+  }
+
+  public void validate(String key, String accountId) {
+    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter("accountId", EQ, accountId).build();
+    if (!wingsPersistence.query(ApiKeyEntry.class, pageRequest)
+             .getResponse()
+             .stream()
+             .map(apiKeyEntry -> checkpw(key, apiKeyEntry.getHashOfKey()))
+             .collect(Collectors.toSet())
+             .contains(true)) {
+      throw new UnauthorizedException("Invalid Api Key", USER);
+    }
+  }
+
+  protected String extractToken(ContainerRequestContext requestContext, String prefix) {
+    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+    if (authorizationHeader == null || !authorizationHeader.startsWith(prefix)) {
+      throw new WingsException(INVALID_TOKEN, USER_ADMIN);
+    }
+    return authorizationHeader.substring(prefix.length()).trim();
   }
 
   protected boolean authenticationExemptedRequests(ContainerRequestContext requestContext) {

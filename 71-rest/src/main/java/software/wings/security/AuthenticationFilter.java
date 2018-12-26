@@ -10,6 +10,7 @@ import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -22,6 +23,7 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.annotations.CustomApiAuth;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.LearningEngineAuth;
@@ -83,6 +85,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     if (isExternalFacingApiRequest(containerRequestContext)) {
       ensureValidQPM(containerRequestContext.getHeaderString(EXTERNAL_FACING_API_HEADER));
       validateExternalFacingApiRequest(containerRequestContext);
+      return;
+    }
+
+    if (isCustomApiRequest(containerRequestContext)) {
+      validateCustomApiRequest(containerRequestContext);
       return;
     }
 
@@ -155,6 +162,14 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
   }
 
+  protected void validateCustomApiRequest(ContainerRequestContext containerRequestContext) {
+    String tokenString = extractToken(containerRequestContext, "Bearer");
+    if (isBlank(tokenString)) {
+      throw new InvalidRequestException("Api Key not supplied", USER);
+    }
+    apiKeyService.validate(tokenString, GLOBAL_ACCOUNT_ID);
+  }
+
   protected void validateExternalFacingApiRequest(ContainerRequestContext containerRequestContext) {
     String apiKey = containerRequestContext.getHeaderString(EXTERNAL_FACING_API_HEADER);
     if (isBlank(apiKey)) {
@@ -195,6 +210,14 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private boolean isLearningEngineServiceRequest(ContainerRequestContext requestContext) {
     return learningEngineServiceAPI()
         && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "LearningEngine ");
+  }
+
+  private boolean isCustomApiRequest(ContainerRequestContext requestContext) {
+    return customApi() && requestContext.getHeaderString(HttpHeaders.AUTHORIZATION).startsWith("Bearer");
+  }
+
+  protected boolean customApi() {
+    return resourceInfo.getResourceClass().getAnnotation(CustomApiAuth.class) != null;
   }
 
   private boolean isExternalFacingApiRequest(ContainerRequestContext requestContext) {
