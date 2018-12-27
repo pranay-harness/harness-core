@@ -46,6 +46,7 @@
         <deployUsername>${user.name}</deployUsername>
         <dropwizard.version>1.0.2</dropwizard.version>
         <extensions-version>2.4.3</extensions-version>
+        <fastxml.version>2.7.7</fastxml.version>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
         <maven.build.timestamp.format>yyMMdd-HHmm</maven.build.timestamp.format>
@@ -57,8 +58,6 @@
         <portalHost>localhost:8000</portalHost>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <!-- datagen is tricky - it lives in integration/ dir and is treated as integration but does not follow the xxIT naming convention
-            so we have to jump through some hoops to get it included -->
         <skip.integration.tests>true</skip.integration.tests>
     </properties>
     <dependencyManagement>
@@ -246,22 +245,47 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
-                <version>2.9.7</version>
+                <version>${fastxml.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
-                <version>2.9.7</version>
+                <version>${fastxml.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>2.9.7</version>
+                <version>${fastxml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>${fastxml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-guava</artifactId>
+                <version>${fastxml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jdk8</artifactId>
+                <version>${fastxml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-joda</artifactId>
+                <version>${fastxml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${fastxml.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.module</groupId>
                 <artifactId>jackson-module-afterburner</artifactId>
-                <version>2.9.7</version>
+                <version>${fastxml.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.allbegray</groupId>
