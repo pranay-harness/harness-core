@@ -23,7 +23,7 @@ import java.time.Instant;
  *
  * See <pre>MongoRateLimitCheckerIntegrationTest</pre> for expected behaviour.
  */
-public class MongoSlidingWindowRateLimitChecker implements RateLimitChecker {
+public class MongoSlidingWindowRateLimitChecker implements RateLimitChecker, RateLimitVicinityChecker {
   @Getter private final RateLimit limit;
   private final WingsPersistence persistence;
   private final String key;
@@ -48,14 +48,16 @@ public class MongoSlidingWindowRateLimitChecker implements RateLimitChecker {
   }
 
   // removes access times which are past the sliding window.
-  private void removeExpiredTimes(long leastAllowedTime) {
+  private UsageBucket removeExpiredTimes(long leastAllowedTime) {
     Query<UsageBucket> query = persistence.createQuery(UsageBucket.class).field("key").equal(key);
 
     AdvancedDatastore ds = persistence.getDatastore(UsageBucket.class, ReadPref.NORMAL);
     UpdateOperations<UsageBucket> update = ds.createUpdateOperations(UsageBucket.class,
         new BasicDBObject("$pull", new BasicDBObject("accessTimes", new BasicDBObject("$lt", leastAllowedTime))));
 
-    persistence.findAndModify(query, update, new FindAndModifyOptions());
+    FindAndModifyOptions options = new FindAndModifyOptions();
+    options.returnNew(true);
+    return persistence.findAndModify(query, update, options);
   }
 
   private UsageBucket addNewTime(long now) {
@@ -69,5 +71,16 @@ public class MongoSlidingWindowRateLimitChecker implements RateLimitChecker {
     options.upsert(true);
 
     return persistence.findAndModify(query, update, options);
+  }
+
+  @Override
+  public boolean crossed(int percentage) {
+    long now = Instant.now().toEpochMilli();
+    long lastTime = now - limit.getDurationUnit().toMillis(limit.getDuration());
+    UsageBucket updatedBucket = removeExpiredTimes(lastTime);
+
+    double percentValue = (percentage / 100.0) * limit.getCount();
+
+    return updatedBucket.getAccessTimes().size() > percentValue;
   }
 }
