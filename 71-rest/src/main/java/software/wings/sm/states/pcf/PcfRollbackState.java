@@ -1,5 +1,7 @@
 package software.wings.sm.states.pcf;
 
+import static java.util.Collections.emptyMap;
+
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfSetupContextElement;
@@ -15,6 +17,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 public class PcfRollbackState extends PcfDeployState {
   /**
@@ -106,5 +109,10 @@ public class PcfRollbackState extends PcfDeployState {
   @Override
   public Integer getDownsizeUpdateCount(Integer updateCount, PcfSetupContextElement pcfSetupContextElement) {
     return -1;
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    return emptyMap();
   }
 }
