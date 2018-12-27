@@ -95,6 +95,7 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
     if (schedulerConfig.getJobStoreClass().equals(
             com.novemberain.quartz.mongodb.DynamicMongoDBJobStore.class.getCanonicalName())) {
       Builder mongoClientOptions = MongoClientOptions.builder()
+                                       .retryWrites(true)
                                        .connectTimeout(30000)
                                        .serverSelectionTimeout(90000)
                                        .maxConnectionIdleTime(600000)

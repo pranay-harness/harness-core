@@ -31,7 +31,7 @@ public class MongoModule extends AbstractModule {
 
   public static final MongoClientOptions mongoClientOptions =
       MongoClientOptions.builder()
-          .retryWrites(false)
+          .retryWrites(true)
           // TODO: Using secondaryPreferred creates issues that need to be investigated
           //.readPreference(ReadPreference.secondaryPreferred())
           .connectTimeout(30000)
