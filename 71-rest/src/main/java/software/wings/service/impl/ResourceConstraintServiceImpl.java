@@ -245,6 +245,9 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
         ResourceConstraint instance = iterator.next();
         final Constraint constraint = createAbstraction(instance);
         final List<ConstraintUnit> units = units(instance);
+        if (isEmpty(units)) {
+          continue;
+        }
 
         logger.info("Resource constraint {} has running units {}", instance.getUuid(), Joiner.on(", ").join(units));
 
@@ -265,7 +268,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     Map<String, List<ResourceConstraintUsage.ActiveScope>> map = new HashMap<>();
 
     try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
-             wingsPersistence.createQuery(ResourceConstraintInstance.class)
+             wingsPersistence.createQuery(ResourceConstraintInstance.class, excludeAuthority)
                  .field(ResourceConstraintInstance.RESOURCE_CONSTRAINT_ID_KEY)
                  .in(resourceConstraintIds)
                  .filter(ResourceConstraintInstance.STATE_KEY, State.ACTIVE.name())
