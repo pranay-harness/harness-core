@@ -176,17 +176,6 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
             }
           }
 
-          //          if (isNotEmpty(((ExecCommandUnit) unit).getTailPatterns())) {
-          //            try (StringWriter stringWriter = new StringWriter()) {
-          //              cfg.getTemplate("tailwrapperv2.ftl")
-          //                  .process(ImmutableMap.of("tailPatterns", ((ExecCommandUnit) unit).getTailPatterns(),
-          //                  "executionId",
-          //                               activityId, "executionStagingDir", executionStagingDir, "commandString",
-          //                               ((ExecCommandUnit) unit).getCommandString()),
-          //                      stringWriter);
-          //              preparedCommand = preparedCommand + " " + stringWriter.toString();
-          //            }
-          //          }
           ((ExecCommandUnit) unit).setPreparedCommand(preparedCommand);
         }
       }

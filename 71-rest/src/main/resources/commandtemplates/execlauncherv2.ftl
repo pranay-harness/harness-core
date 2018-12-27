@@ -14,7 +14,6 @@ echo "export ${safeEnvVariable}=\"${safeEnvVariables[safeEnvVariable]}\""
 </#list>
 
 eval WINGS_SCRIPT_WORKING_DIRECTORY="${scriptWorkingDirectory}"
-if [[ -n "$WINGS_SCRIPT_WORKING_DIRECTORY" ]]
-then
+if [ -n "$WINGS_SCRIPT_WORKING_DIRECTORY" ]; then
     cd "$WINGS_SCRIPT_WORKING_DIRECTORY"
 fi
