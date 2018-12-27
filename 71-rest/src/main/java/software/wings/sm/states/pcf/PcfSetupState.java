@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -407,5 +408,14 @@ public class PcfSetupState extends State {
         .artifactId(artifact.getUuid());
 
     return activityService.save(activityBuilder.build());
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = newHashMap();
+    if (maxInstances == null || maxInstances < 0) {
+      invalidFields.put("maxInstances", "Maximum instances needs to be populated");
+    }
+    return invalidFields;
   }
 }

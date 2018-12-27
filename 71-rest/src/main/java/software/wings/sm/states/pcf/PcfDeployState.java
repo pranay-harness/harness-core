@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
@@ -327,5 +328,14 @@ public class PcfDeployState extends State {
         PCF_RESIZE_COMMAND, Type.Command, executionContext, getStateType(), CommandUnitType.PCF_RESIZE, env);
 
     return activityService.save(activityBuilder.build());
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = newHashMap();
+    if (instanceCount == null || instanceCount < 0) {
+      invalidFields.put("instanceCount", "Instance count needs to be populated");
+    }
+    return invalidFields;
   }
 }
