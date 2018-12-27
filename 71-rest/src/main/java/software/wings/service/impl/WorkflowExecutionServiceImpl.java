@@ -88,6 +88,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.checker.LimitApproachingException;
 import io.harness.limits.checker.UsageLimitExceededException;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
@@ -127,6 +128,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
+import software.wings.beans.Base;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
@@ -156,7 +158,9 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
 import software.wings.beans.alert.UsageLimitExceededAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
@@ -1476,8 +1480,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // This log is used to derive deployment metrics in logDNA, so if you change it, update the logDNA dashboard.
     logger.info("Execution Triggered. {}", context.toString());
 
-    // throws exception if account exceeds deployment rate limits
-    preDeploymentChecker.checkDeploymentRateLimit(accountId, appId);
+    try {
+      preDeploymentChecker.checkDeploymentRateLimit(accountId, appId);
+      alertService.closeAlertsOfType(accountId, Base.GLOBAL_APP_ID, AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT);
+    } catch (LimitApproachingException e) {
+      String errMsg = e.getPercent()
+          + "% of Deployment Rate Limit reached. Some deployments may not be allowed beyond 100% usage. Please contact Harness support.";
+      logger.error(e.getMessage());
+      AlertData alertData = new DeploymentRateApproachingLimitAlert(e.getLimit(), accountId, e.getPercent(), errMsg);
+      alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT, alertData);
+    }
 
     switch (executionArgs.getWorkflowType()) {
       case PIPELINE: {

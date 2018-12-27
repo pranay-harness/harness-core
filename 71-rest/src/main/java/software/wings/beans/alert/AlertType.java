@@ -23,7 +23,8 @@ public enum AlertType {
   EMAIL_NOT_SENT_ALERT(Setup, Warning, EmailSendingFailedAlert.class),
   USERGROUP_SYNC_FAILED(Setup, Error, SSOSyncFailedAlert.class),
   USAGE_LIMIT_EXCEEDED(Setup, Error, UsageLimitExceededAlert.class),
-  INSTANCE_USAGE_APPROACHING_LIMIT(Setup, Warning, InstanceUsageLimitAlert.class);
+  INSTANCE_USAGE_APPROACHING_LIMIT(Setup, Warning, InstanceUsageLimitAlert.class),
+  DEPLOYMENT_RATE_APPROACHING_LIMIT(Setup, Warning, DeploymentRateApproachingLimitAlert.class);
 
   private AlertCategory category;
   private AlertSeverity severity;

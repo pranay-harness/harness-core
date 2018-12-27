@@ -1,9 +1,11 @@
 package io.harness.limits.checker;
 
 import io.harness.limits.lib.Limit;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @Value
+@EqualsAndHashCode(callSuper = false)
 public class UsageLimitExceededException extends RuntimeException {
   private Limit limit;
   private String accountId;

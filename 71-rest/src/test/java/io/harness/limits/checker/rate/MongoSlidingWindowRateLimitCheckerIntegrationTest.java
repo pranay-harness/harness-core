@@ -95,6 +95,25 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
+  public void testVicinity() throws Exception {
+    int maxReq = 10;
+    int durationInMillis = 5000;
+    RateLimit limit = new RateLimit(maxReq, durationInMillis, TimeUnit.MILLISECONDS);
+    MongoSlidingWindowRateLimitChecker limitChecker =
+        new MongoSlidingWindowRateLimitChecker(limit, persistence, ACTION);
+
+    double count = 0.8 * maxReq;
+    for (int i = 0; i < count; i++) {
+      assertTrue("request should be allowed. Iteration: " + i, limitChecker.checkAndConsume());
+    }
+
+    assertTrue(
+        "requests should have crossed 70% limit since we are using 0.8 as multiple above", limitChecker.crossed(70));
+    assertFalse("requests should NOT have crossed 90% limit since we are using 0.8 as multiple above",
+        limitChecker.crossed(90));
+  }
+
+  @Test
   public void testCheckAndConsumeConcurrent() throws Exception {
     int maxAllowedReq = 40;
     int durationInMillis = 5000;
