@@ -9,13 +9,13 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.rule.RealMongo;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FileMetadata;
+import software.wings.rules.Integration;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
@@ -23,10 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-/**
- * Created by peeyushaggarwal on 5/17/16.
- */
-@RealMongo
+@Integration
 public class FileServiceIntegrationTest extends WingsBaseTest {
   /**
    * The Temporary folder.

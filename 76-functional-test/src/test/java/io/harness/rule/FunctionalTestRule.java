@@ -40,6 +40,7 @@ import software.wings.app.YamlModule;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -64,7 +65,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
   String VERIFICATION_PATH = "VERIFICATION_PATH";
 
   @Override
-  public List<Module> modules() {
+  public List<Module> modules(List<Annotation> annotations) {
     List<Module> modules = new ArrayList<>();
     MongoClient mongoClient;
     String dbName = System.getProperty("dbName", "harness");
@@ -148,6 +149,6 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, target);
+    return applyInjector(statement, frameworkMethod, target);
   }
 }

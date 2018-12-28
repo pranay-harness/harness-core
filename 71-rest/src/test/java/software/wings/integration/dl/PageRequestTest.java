@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.rule.RealMongo;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -23,7 +22,6 @@ import software.wings.dl.WingsPersistence;
 
 import java.util.List;
 
-@RealMongo
 public class PageRequestTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 

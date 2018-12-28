@@ -5,7 +5,6 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
-import com.mongodb.MongoClient;
 import io.harness.OrchestrationModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.mongo.HObjectFactory;
@@ -27,6 +26,7 @@ import org.mongodb.morphia.Morphia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,16 +41,16 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
   }
 
   @Override
-  public List<Module> modules() {
+  public List<Module> modules(List<Annotation> annotations) throws Exception {
     String databaseName = databaseName();
-    MongoClient mongoClient = fakeMongoClient(0, closingFactory);
+    MongoInfo mongoInfo = testMongo(annotations, closingFactory);
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, databaseName);
+    datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
 
-    DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoClient, databaseName, closingFactory);
+    DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoInfo.getClient(), databaseName, closingFactory);
 
     List<Module> modules = new ArrayList();
     modules.add(new AbstractModule() {
@@ -99,6 +99,6 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, target);
+    return applyInjector(statement, frameworkMethod, target);
   }
 }
