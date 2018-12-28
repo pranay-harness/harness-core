@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -163,7 +164,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
             .dataCollectionMinute(0)
-            .metricEndpoints(metricEndpointsInfo(serviceName, metricNames))
+            .metricEndpoints(metricEndpointsInfo(serviceName, metricNames, null))
             .accountId(accountId)
             .strategy(getComparisonStrategy())
             .dataCollectionFrequency(DATA_COLLECTION_RATE_MINS)
@@ -231,7 +232,8 @@ public class DatadogState extends AbstractMetricAnalysisState {
     this.datadogServiceName = datadogServiceName;
   }
 
-  public static Map<String, List<APMMetricInfo>> metricEndpointsInfo(String serviceName, List<String> metricNames) {
+  public static Map<String, List<APMMetricInfo>> metricEndpointsInfo(
+      String serviceName, List<String> metricNames, String applicationFilter) {
     YamlUtils yamlUtils = new YamlUtils();
     URL url = DatadogState.class.getResource("/apm/datadog.yml");
     try {
@@ -250,6 +252,9 @@ public class DatadogState extends AbstractMetricAnalysisState {
         APMMetricInfoBuilder newMetricInfoBuilder = APMMetricInfo.builder();
         MetricInfo metricInfo = metricInfos.get(metric.getDatadogMetricType());
         String metricUrl = metricInfo.getUrl();
+        if (isNotEmpty(applicationFilter)) {
+          metricUrl = metricInfo.getUrl24x7();
+        }
         newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
         newMetricInfoBuilder.metricName(metric.getDisplayName());
         newMetricInfoBuilder.metricType(metric.getMlMetricType());
@@ -259,6 +264,9 @@ public class DatadogState extends AbstractMetricAnalysisState {
 
         if (Arrays.asList("System", "Kubernetes", "Docker").contains(metric.getDatadogMetricType())) {
           metricUrl = metricUrl.replace("${query}", metric.getMetricName());
+          if (isNotEmpty(applicationFilter)) {
+            metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter);
+          }
           if (EmptyPredicate.isEmpty(metric.getTransformation())) {
             metricUrl = metricUrl.replace("${transformUnits}", "");
           } else {
@@ -272,6 +280,9 @@ public class DatadogState extends AbstractMetricAnalysisState {
         } else if (metric.getDatadogMetricType().equals("Servlet")) {
           metricUrl =
               metricUrl.replace("${datadogServiceName}", serviceName).replace("${query}", metric.getMetricName());
+          if (isNotEmpty(applicationFilter)) {
+            metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter);
+          }
           if (!result.containsKey(metricUrl)) {
             result.put(metricUrl, new ArrayList<>());
           }
@@ -352,6 +363,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     private String datadogMetricType;
     private String displayName;
     private String transformation;
+    private String transformation24x7;
     private Set<String> tags;
   }
 
@@ -359,6 +371,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
   @Builder
   public static class MetricInfo {
     private String url;
+    private String url24x7;
     private List<APMMetricInfo.ResponseMapper> responseMappers;
     public Map<String, APMMetricInfo.ResponseMapper> responseMapperMap() {
       Map<String, APMMetricInfo.ResponseMapper> result = new HashMap<>();

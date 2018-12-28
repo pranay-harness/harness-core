@@ -1,5 +1,6 @@
 Servlet:
   url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{service:${datadogServiceName}, $harness_batch{host:${host}, '|'}}by{resource_name, host}.rollup(avg,60)
+  url24x7: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{service:${datadogServiceName}, ${applicationFilter}}.rollup(avg,60)
   responseMappers:
         -
             fieldName: txnName
@@ -21,6 +22,7 @@ Servlet:
 
 System:
   url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{host:${host}}by{host}.rollup(avg,60)
+  url24x7: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{${applicationFilter}}.rollup(avg,60)
   responseMappers:
         -
             fieldName: txnName
@@ -39,6 +41,7 @@ System:
 
 Kubernetes:
   url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{pod_name:${host}}by{pod_name}.rollup(avg,60)${transformUnits}
+  url24x7: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{${applicationFilter}}.rollup(avg,60)${transformUnits}
   responseMappers:
         -
             fieldName: txnName
@@ -59,6 +62,7 @@ Kubernetes:
 
 Docker:
   url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{pod_name:${host}}by{pod_name}.rollup(avg,60)${transformUnits}
+  url24x7: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{${applicationFilter}}.rollup(avg,60)${transformUnits}
   responseMappers:
         -
             fieldName: txnName

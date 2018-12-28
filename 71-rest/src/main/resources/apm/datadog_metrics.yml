@@ -78,6 +78,7 @@ Docker:
       datadogMetricType: Docker
       displayName: Docker RSS Memory (%)
       transformation: /docker.mem.limit{pod_name:${host}}.rollup(avg,60)*100
+      transformation24x7: /docker.mem.limit{pod_name:${host}}.rollup(avg,60)*100
 
   -
       metricName: docker.cpu.throttled

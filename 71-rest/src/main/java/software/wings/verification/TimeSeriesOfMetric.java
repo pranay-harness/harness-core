@@ -52,7 +52,7 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
     if (risksForTimeSeries != null) {
       return risksForTimeSeries.values();
     }
-    return new ArrayList<TimeSeriesRisk>();
+    return new ArrayList<>();
   }
 
   @JsonIgnore
