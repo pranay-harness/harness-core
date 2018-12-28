@@ -1,6 +1,7 @@
 package io.harness.limits;
 
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
+import static io.harness.limits.ActionType.DEPLOY;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -33,7 +34,8 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   // namespacing accountId with class name to prevent collision with other tests
   private static final String NAMESPACE = LimitsEnforcementIntegrationTest.class.getSimpleName();
   private static final String ACCOUNT_ID = "acc-id-" + RandomStringUtils.randomAlphanumeric(5) + "-" + NAMESPACE;
-  private static final Action ACTION = new Action(ACCOUNT_ID, CREATE_APPLICATION);
+  private static final Action CREATE_APP_ACTION = new Action(ACCOUNT_ID, CREATE_APPLICATION);
+  private static final Action DEPLOY_ACTION = new Action(ACCOUNT_ID, DEPLOY);
 
   @Before
   public void init() throws Exception {
@@ -48,21 +50,22 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   @After
   public void cleanUp() {
     Datastore clds = dao.getDatastore(ConfiguredLimit.class, ReadPref.NORMAL);
-    clds.delete(clds.createQuery(ConfiguredLimit.class).filter("accountId", ACTION.getAccountId()));
+    clds.delete(clds.createQuery(ConfiguredLimit.class).filter("accountId", CREATE_APP_ACTION.getAccountId()));
 
     Datastore cds = dao.getDatastore(Counter.class, ReadPref.NORMAL);
-    cds.delete(cds.createQuery(Counter.class).filter("key", ACTION.key()));
+    cds.delete(cds.createQuery(Counter.class).filter("key", CREATE_APP_ACTION.key()));
   }
 
   @Test
   public void testLimitEnforcement() {
     // configure limits
     StaticLimit limit = new StaticLimit(0);
-    boolean configured = limitConfigSvc.configure(ACTION.getAccountId(), ACTION.getActionType(), limit);
+    boolean configured =
+        limitConfigSvc.configure(CREATE_APP_ACTION.getAccountId(), CREATE_APP_ACTION.getActionType(), limit);
     assertTrue(configured);
 
     // check limits
-    LimitChecker checker = limitCheckerFactory.getInstance(ACTION);
+    LimitChecker checker = limitCheckerFactory.getInstance(CREATE_APP_ACTION);
 
     if (checker.checkAndConsume()) {
       Assert.fail("since limit is zero, checkAndConsume should return false");
@@ -73,11 +76,11 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   public void testRateBasedLimitEnforcement() throws Exception {
     // configure limits
     RateLimit limit = new RateLimit(1, 4, TimeUnit.SECONDS);
-    boolean configured = limitConfigSvc.configure(ACTION.getAccountId(), ACTION.getActionType(), limit);
+    boolean configured = limitConfigSvc.configure(DEPLOY_ACTION.getAccountId(), DEPLOY_ACTION.getActionType(), limit);
     assertTrue(configured);
 
     // check limits
-    LimitChecker checker = limitCheckerFactory.getInstance(ACTION);
+    LimitChecker checker = limitCheckerFactory.getInstance(DEPLOY_ACTION);
     assertTrue("1 request allowed every 4 seconds. First request should pass.", checker.checkAndConsume());
     assertFalse("1 request allowed every 4 seconds. Second request should fail.", checker.checkAndConsume());
 
