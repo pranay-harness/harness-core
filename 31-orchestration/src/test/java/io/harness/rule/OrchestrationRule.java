@@ -18,6 +18,7 @@ import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
+import io.harness.waiter.NotifyEventListener;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -86,9 +87,12 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
 
   @Override
   public void initialize(Injector injector) {
+    final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
+    queueListenerController.register(injector.getInstance(NotifyEventListener.class), 1);
+
     closingFactory.addServer(() -> {
       try {
-        injector.getInstance(QueueListenerController.class).stop();
+        queueListenerController.stop();
       } catch (Exception exception) {
         logger.error("", exception);
       }
