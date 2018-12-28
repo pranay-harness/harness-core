@@ -247,6 +247,6 @@ public class ArtifactStreamGenerator {
       default:
         throw new UnsupportedOperationException();
     }
-    return artifactStreamService.forceCreate(newArtifactStream);
+    return artifactStreamService.create(newArtifactStream, false);
   }
 }

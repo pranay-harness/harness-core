@@ -117,14 +117,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream) {
-    validateArtifactSourceData(artifactStream);
-
-    return forceCreate(artifactStream);
+    return create(artifactStream, true);
   }
 
   @Override
   @ValidationGroups(Create.class)
-  public ArtifactStream forceCreate(ArtifactStream artifactStream) {
+  public ArtifactStream create(ArtifactStream artifactStream, boolean validate) {
+    if (validate) {
+      validateArtifactSourceData(artifactStream);
+    }
+
     artifactStream.setSourceName(artifactStream.generateSourceName());
     setAutoPopulatedName(artifactStream);
 
@@ -170,21 +172,21 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   @ValidationGroups(Update.class)
   public ArtifactStream update(ArtifactStream artifactStream) {
+    return update(artifactStream, true);
+  }
+
+  public ArtifactStream update(ArtifactStream artifactStream, boolean validate) {
     ArtifactStream savedArtifactStream =
         wingsPersistence.getWithAppId(ArtifactStream.class, artifactStream.getAppId(), artifactStream.getUuid());
     if (savedArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
     validateArtifactSourceData(artifactStream);
-    return forceUpdate(artifactStream);
-  }
 
-  public ArtifactStream forceUpdate(ArtifactStream artifactStream) {
-    ArtifactStream savedArtifactStream =
-        wingsPersistence.getWithAppId(ArtifactStream.class, artifactStream.getAppId(), artifactStream.getUuid());
-    if (savedArtifactStream == null) {
-      throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
+    if (validate) {
+      validateArtifactSourceData(artifactStream);
     }
+
     artifactStream.setSourceName(artifactStream.generateSourceName());
     ArtifactStream finalArtifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
 

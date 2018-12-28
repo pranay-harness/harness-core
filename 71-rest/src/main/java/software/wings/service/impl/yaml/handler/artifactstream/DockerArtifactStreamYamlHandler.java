@@ -42,9 +42,11 @@ public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
 
     if (previous != null) {
       dockerArtifactStream.setUuid(previous.getUuid());
-      return (DockerArtifactStream) artifactStreamService.update(dockerArtifactStream);
+      return (DockerArtifactStream) artifactStreamService.update(
+          dockerArtifactStream, !dockerArtifactStream.isSyncFromGit());
     } else {
-      return (DockerArtifactStream) artifactStreamService.create(dockerArtifactStream);
+      return (DockerArtifactStream) artifactStreamService.create(
+          dockerArtifactStream, !dockerArtifactStream.isSyncFromGit());
     }
   }
 

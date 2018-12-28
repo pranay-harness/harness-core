@@ -496,7 +496,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactoryArtifactStream.getArtifactPattern()).isEqualTo("todolist*");
     assertThat(updatedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("any");
 
-    verify(buildSourceService, times(2))
+    verify(buildSourceService, times(3))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
 
@@ -601,7 +601,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(buildSourceService, times(2))
+    verify(buildSourceService, times(3))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
 
@@ -701,7 +701,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
 
-    verify(buildSourceService, times(2))
+    verify(buildSourceService, times(3))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
 
@@ -924,7 +924,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     DockerArtifactStream updatedDockerArtifactStream = (DockerArtifactStream) savedArtifactSteam;
     assertThat(updatedDockerArtifactStream.getImageName()).isEqualTo("harness/todolist");
 
-    verify(buildSourceService, times(2))
+    verify(buildSourceService, times(3))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
 
@@ -996,7 +996,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     EcrArtifactStream updatedEcrArtifactStream = (EcrArtifactStream) savedArtifactSteam;
     assertThat(updatedEcrArtifactStream.getImageName()).isEqualTo("todolist-changed");
 
-    verify(buildSourceService, times(2))
+    verify(buildSourceService, times(3))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
 
@@ -1074,7 +1074,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .isEqualTo("exploration-161417/todolist-changed");
     assertThat(updatedArtifactSteam.getArtifactStreamAttributes().getRegistryHostName()).isEqualTo("gcr.io");
 
-    verify(buildSourceService, times(2))
+    verify(buildSourceService, times(3))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
 
@@ -1165,7 +1165,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedAcrArtifactStream.getRepositoryName()).isEqualTo("istio");
     assertThat(updatedAcrArtifactStream.getRegistryName()).isEqualTo("harnessprod");
 
-    verify(buildSourceService, times(2))
+    verify(buildSourceService, times(3))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
 
