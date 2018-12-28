@@ -114,15 +114,15 @@ public class ShellExecutor {
       }
     }
 
-    String envVariablesFilename = null;
+    String envVariablesFilename;
     File envVariablesOutputFile = null;
     if (!envVariablesToCollect.isEmpty()) {
       envVariablesFilename = "harness-" + this.config.getExecutionId() + ".out";
       envVariablesOutputFile = new File(workingDirectory, envVariablesFilename);
+      command = addEnvVariablesCollector(command, envVariablesToCollect, envVariablesOutputFile.getAbsolutePath());
     }
     Map<String, String> envVariablesMap = new HashMap<>();
     try (FileOutputStream outputStream = new FileOutputStream(scriptFile)) {
-      command = addEnvVariablesCollector(command, envVariablesToCollect, envVariablesFilename);
       outputStream.write(command.getBytes(Charset.forName("UTF-8")));
 
       String[] commandList = new String[] {"/bin/bash", scriptFilename};
@@ -188,7 +188,7 @@ public class ShellExecutor {
   }
 
   private String addEnvVariablesCollector(
-      String command, List<String> envVariablesToCollect, String envVariablesOutputFileName) {
+      String command, List<String> envVariablesToCollect, String envVariablesOutputFilePath) {
     StringBuilder wrapperCommand = new StringBuilder(command);
     wrapperCommand.append('\n');
     String redirect = ">";
@@ -199,7 +199,7 @@ public class ShellExecutor {
           .append(env)
           .append("=\" ")
           .append(redirect)
-          .append(envVariablesOutputFileName)
+          .append(envVariablesOutputFilePath)
           .append('\n');
       redirect = ">>";
     }
