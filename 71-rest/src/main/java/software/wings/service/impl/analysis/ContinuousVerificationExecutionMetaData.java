@@ -25,17 +25,17 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 public class ContinuousVerificationExecutionMetaData extends Base {
   @NotEmpty @Indexed private long workflowStartTs;
-  @NotEmpty @Indexed private long pipelineStartTs;
+  @NotEmpty private long pipelineStartTs;
 
   @NotEmpty @Indexed private String accountId;
-  @NotEmpty @Indexed private String envId;
+  @NotEmpty private String envId;
   @NotEmpty @Indexed private String applicationId;
   @NotEmpty @Indexed private String serviceId;
-  @NotEmpty @Indexed private String workflowId;
-  @NotEmpty @Indexed private String workflowExecutionId;
+  @NotEmpty private String workflowId;
+  @NotEmpty private String workflowExecutionId;
   @NotEmpty @Indexed private String stateExecutionId;
-  @NotEmpty @Indexed private StateType stateType;
-  @Indexed private String pipelineId;
+  @NotEmpty private StateType stateType;
+  private String pipelineId;
   @NotEmpty private String pipelineExecutionId;
   @NotEmpty private String phaseId;
 

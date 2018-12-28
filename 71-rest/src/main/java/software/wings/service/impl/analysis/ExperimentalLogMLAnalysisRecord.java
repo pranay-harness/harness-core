@@ -37,10 +37,10 @@ import java.util.Map;
 public class ExperimentalLogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
 
-  @NotEmpty @Indexed private StateType stateType;
-  @NotEmpty @Indexed private String experiment_name;
+  @NotEmpty private StateType stateType;
+  @NotEmpty private String experiment_name;
 
-  @NotEmpty @Indexed private int logCollectionMinute;
+  @NotEmpty private int logCollectionMinute;
 
   private boolean isBaseLineCreated = true;
 

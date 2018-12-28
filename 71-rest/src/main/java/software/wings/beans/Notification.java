@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,8 +23,8 @@ public abstract class Notification extends Base {
   private String accountId;
 
   @NotNull private NotificationType notificationType;
-  @Indexed @NotNull private boolean complete = true;
-  @Indexed @NotNull private boolean actionable;
+  @NotNull private boolean complete = true;
+  @NotNull private boolean actionable;
 
   private String notificationTemplateId;
   private Map<String, String> notificationTemplateVariables = new HashMap<>();

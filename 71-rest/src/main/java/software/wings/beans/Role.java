@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import io.harness.beans.EmbeddedUser;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -18,7 +17,7 @@ import java.util.List;
  */
 @Entity(value = "roles", noClassnameStored = true)
 public class Role extends Base {
-  @Indexed @NotEmpty private String name;
+  @NotEmpty private String name;
   private String description;
   @NotEmpty private String accountId;
 

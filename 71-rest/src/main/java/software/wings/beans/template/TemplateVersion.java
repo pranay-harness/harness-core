@@ -10,7 +10,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
@@ -31,7 +30,7 @@ public class TemplateVersion extends Base {
   private String templateName;
   private String templateType;
   private Long version;
-  @Indexed @NotEmpty private String accountId;
+  @NotEmpty private String accountId;
   private String galleryId;
 
   public enum ChangeType { CREATED, UPDATED }

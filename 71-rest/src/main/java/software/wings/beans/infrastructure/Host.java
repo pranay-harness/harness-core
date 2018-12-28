@@ -18,14 +18,14 @@ import java.util.Objects;
 @Entity(value = "hosts", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Host extends Base {
-  @Indexed @NotEmpty private String envId;
+  @NotEmpty private String envId;
   @Indexed private String serviceTemplateId;
   private String infraMappingId;
   private String computeProviderId;
   @Indexed @NotEmpty private String hostName;
   // In the case of EC2, publicDns could be either the public or private DNS name, depending on the setting in AWS_SSH
   // infrastructure mapping.
-  @Indexed private String publicDns;
+  private String publicDns;
   private String hostConnAttr;
   private String bastionConnAttr;
   private String winrmConnAttr;

@@ -6,11 +6,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.WorkflowType;
@@ -25,8 +22,6 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "triggerExecutions")
-@Indexes(@Index(options = @IndexOptions(name = "search"), fields = { @Field("triggerId")
-                                                                     , @Field("status") }))
 public class TriggerExecution extends Base {
   public static final String TRIGGER_ID_KEY = "triggerId";
   public static final String WEBHOOK_TOKEN_KEY = "webhookToken";
@@ -40,10 +35,10 @@ public class TriggerExecution extends Base {
   @NotEmpty private String triggerName;
   String workflowExecutionId;
   private String workflowExecutionName;
-  @NotNull @Indexed private Status status;
+  @NotNull private Status status;
   private String message;
   private Condition.Type type;
-  @Indexed private String webhookToken;
+  private String webhookToken;
   private WebhookEventDetails webhookEventDetails;
   private String envId;
   private ExecutionArgs executionArgs;

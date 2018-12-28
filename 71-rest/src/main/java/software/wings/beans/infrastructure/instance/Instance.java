@@ -25,10 +25,10 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Instance extends Base {
-  @Indexed @NotEmpty private InstanceType instanceType;
-  @Indexed private HostInstanceKey hostInstanceKey;
-  @Indexed private ContainerInstanceKey containerInstanceKey;
-  @Indexed private PcfInstanceKey pcfInstanceKey;
+  @NotEmpty private InstanceType instanceType;
+  private HostInstanceKey hostInstanceKey;
+  private ContainerInstanceKey containerInstanceKey;
+  private PcfInstanceKey pcfInstanceKey;
   @Indexed private String envId;
   private String envName;
   private EnvironmentType envType;
@@ -38,25 +38,25 @@ public class Instance extends Base {
   private String appName;
 
   @Indexed private String infraMappingId;
-  @Indexed private String infraMappingType;
+  private String infraMappingType;
 
   private String computeProviderId;
   private String computeProviderName;
 
   private String lastArtifactStreamId;
 
-  @Indexed private String lastArtifactId;
+  private String lastArtifactId;
   private String lastArtifactName;
-  @Indexed private String lastArtifactSourceName;
+  private String lastArtifactSourceName;
   @Indexed private String lastArtifactBuildNum;
 
   private String lastDeployedById;
   private String lastDeployedByName;
   private long lastDeployedAt;
-  @Indexed private String lastWorkflowExecutionId;
+  private String lastWorkflowExecutionId;
   private String lastWorkflowExecutionName;
 
-  @Indexed private String lastPipelineExecutionId;
+  private String lastPipelineExecutionId;
   private String lastPipelineExecutionName;
 
   private InstanceInfo instanceInfo;

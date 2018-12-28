@@ -46,7 +46,7 @@ import javax.validation.constraints.NotNull;
 public class Log extends Base implements GoogleDataStoreAware {
   @NotEmpty @Indexed private String activityId;
   private String hostName;
-  @NotEmpty @Indexed private String commandUnitName;
+  @NotEmpty private String commandUnitName;
   private String logLine;
   private int linesCount;
   @NotNull private LogLevel logLevel;
