@@ -50,9 +50,10 @@ public interface ArtifactStreamService extends OwnedByService {
    * Creates artifact without checking the validity artifact stream.
    *
    * @param artifactStream the artifact stream
+   * @param validate
    * @return the artifact stream
    */
-  @ValidationGroups(Create.class) ArtifactStream forceCreate(@Valid ArtifactStream artifactStream);
+  @ValidationGroups(Create.class) ArtifactStream create(@Valid ArtifactStream artifactStream, boolean validate);
 
   /**
    * Update artifact stream.
@@ -66,9 +67,10 @@ public interface ArtifactStreamService extends OwnedByService {
    * Update artifact stream.
    *
    * @param artifactStream the artifact stream
+   * @param validate
    * @return the artifact stream
    */
-  @ValidationGroups(Update.class) ArtifactStream forceUpdate(@Valid ArtifactStream artifactStream);
+  @ValidationGroups(Update.class) ArtifactStream update(@Valid ArtifactStream artifactStream, boolean validate);
 
   /**
    * Delete.

@@ -12,13 +12,13 @@ public class ArtifactStreamSampleDataProvider {
   @Inject public ArtifactStreamService artifactStreamService;
 
   public ArtifactStream createDockerArtifactStream(String appId, String serviceId, String settingId) {
-    return artifactStreamService.forceCreate(
-        DockerArtifactStream.builder()
-            .appId(appId)
-            .settingId(settingId)
-            .imageName(SampleDataProviderConstants.DOCKER_TODO_LIST_IMAGE_NAME)
-            .name(SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME)
-            .serviceId(serviceId)
-            .build());
+    return artifactStreamService.create(DockerArtifactStream.builder()
+                                            .appId(appId)
+                                            .settingId(settingId)
+                                            .imageName(SampleDataProviderConstants.DOCKER_TODO_LIST_IMAGE_NAME)
+                                            .name(SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME)
+                                            .serviceId(serviceId)
+                                            .build(),
+        false);
   }
 }

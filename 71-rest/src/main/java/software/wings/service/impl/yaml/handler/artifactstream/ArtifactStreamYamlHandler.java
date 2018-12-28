@@ -88,7 +88,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
     if (previous != null) {
       toBean(previous, changeContext, previous.getAppId());
       previous.setSyncFromGit(changeContext.getChange().isSyncFromGit());
-      return (B) artifactStreamService.update(previous);
+      return (B) artifactStreamService.update(previous, !previous.isSyncFromGit());
 
     } else {
       String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), yamlFilePath);
@@ -99,7 +99,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
       artifactStream.setAppId(appId);
       toBean(artifactStream, changeContext, appId);
       artifactStream.setSyncFromGit(changeContext.getChange().isSyncFromGit());
-      return (B) artifactStreamService.create(artifactStream);
+      return (B) artifactStreamService.create(artifactStream, !artifactStream.isSyncFromGit());
     }
   }
 
