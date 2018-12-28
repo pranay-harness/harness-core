@@ -34,7 +34,7 @@ public class VerificationTestRule extends WingsRule {
     configuration.getSchedulerConfig().setThreadCount("15");
     if (annotations.stream().anyMatch(SetupScheduler.class ::isInstance)) {
       configuration.getSchedulerConfig().setAutoStart("true");
-      if (fakeMongo) {
+      if (mongoType == MongoType.FAKE) {
         configuration.getSchedulerConfig().setJobStoreClass(org.quartz.simpl.RAMJobStore.class.getCanonicalName());
       }
     }
@@ -66,15 +66,6 @@ public class VerificationTestRule extends WingsRule {
   protected void after(List<Annotation> annotations) {
     log().info("Stopping servers...");
     closingFactory.stopServers();
-
-    try {
-      if (mongodExecutable != null) {
-        mongodExecutable.stop();
-      }
-    } catch (IllegalStateException ise) {
-      // we are   swallowing this - couldn't kill the embedded mongod process, but we don't care
-      log().info("Had issues stopping embedded mongod: {}", ise.getMessage());
-    }
   }
 
   @Override

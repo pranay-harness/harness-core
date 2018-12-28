@@ -21,18 +21,6 @@ import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.hazelcast.core.HazelcastInstance;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
-import de.flapdoodle.embed.mongo.Command;
-import de.flapdoodle.embed.mongo.MongodExecutable;
-import de.flapdoodle.embed.mongo.MongodStarter;
-import de.flapdoodle.embed.mongo.config.DownloadConfigBuilder;
-import de.flapdoodle.embed.mongo.config.ExtractedArtifactStoreBuilder;
-import de.flapdoodle.embed.mongo.config.IMongodConfig;
-import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
-import de.flapdoodle.embed.mongo.config.Net;
-import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
-import de.flapdoodle.embed.mongo.distribution.Version.Main;
-import de.flapdoodle.embed.process.config.IRuntimeConfig;
-import de.flapdoodle.embed.process.runtime.Network;
 import de.javakaffee.kryoserializers.ArraysAsListSerializer;
 import de.javakaffee.kryoserializers.GregorianCalendarSerializer;
 import de.javakaffee.kryoserializers.JdkProxySerializer;
@@ -67,7 +55,6 @@ import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.BypassRuleMixin;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
-import io.harness.rule.RealMongo;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.waiter.Notifier;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -113,26 +100,13 @@ import javax.validation.ValidatorFactory;
 public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
   private static final Logger logger = LoggerFactory.getLogger(WingsRule.class);
 
-  private static IRuntimeConfig runtimeConfig =
-      new RuntimeConfigBuilder()
-          .defaultsWithLogger(Command.MongoD, LoggerFactory.getLogger(RealMongo.class))
-          .artifactStore(new ExtractedArtifactStoreBuilder()
-                             .defaults(Command.MongoD)
-                             .download(new DownloadConfigBuilder()
-                                           .defaultsForCommand(Command.MongoD)
-                                           .downloadPath("https://storage.googleapis.com/harness-tests/")))
-          .build();
-
-  private static MongodStarter starter = MongodStarter.getInstance(runtimeConfig);
-
   protected ClosingFactory closingFactory = new ClosingFactory();
 
-  protected MongodExecutable mongodExecutable;
   protected Injector injector;
   protected AdvancedDatastore datastore;
   private int port;
   private ExecutorService executorService = new CurrentThreadExecutor();
-  protected boolean fakeMongo;
+  protected MongoType mongoType;
 
   /* (non-Javadoc)
    * @see org.junit.rules.MethodRule#apply(org.junit.runners.model.Statement, org.junit.runners.model.FrameworkMethod,
@@ -191,10 +165,8 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     forceMaintenance(false);
     MongoClient mongoClient;
     String dbName = System.getProperty("dbName", "harness");
-    if (annotations.stream().anyMatch(RealMongo.class ::isInstance)) {
-      mongoClient = getRandomPortMongoClient();
-      closingFactory.addServer(mongoClient);
-    } else if (annotations.stream().anyMatch(Integration.class ::isInstance) || doesExtendBaseIntegrationTest) {
+
+    if (annotations.stream().anyMatch(Integration.class ::isInstance) || doesExtendBaseIntegrationTest) {
       try {
         MongoClientURI clientUri = new MongoClientURI(
             System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName), mongoClientOptions);
@@ -215,8 +187,9 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
         closingFactory.addServer(mongoClient);
       }
     } else {
-      fakeMongo = true;
-      mongoClient = fakeMongoClient(port, closingFactory);
+      final MongoInfo mongoInfo = testMongo(annotations, closingFactory);
+      mongoClient = mongoInfo.getClient();
+      mongoType = mongoInfo.getType();
     }
 
     Morphia morphia = new Morphia();
@@ -294,7 +267,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     if (annotations.stream().anyMatch(SetupScheduler.class ::isInstance)) {
       configuration.getBackgroundSchedulerConfig().setAutoStart("true");
       configuration.getServiceSchedulerConfig().setAutoStart("true");
-      if (fakeMongo) {
+      if (mongoType == MongoType.FAKE) {
         configuration.getBackgroundSchedulerConfig().setJobStoreClass(
             org.quartz.simpl.RAMJobStore.class.getCanonicalName());
         configuration.getServiceSchedulerConfig().setJobStoreClass(
@@ -335,40 +308,6 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     modules.add(new TemplateModule());
     modules.add(new EventsModule((MainConfiguration) configuration));
     return modules;
-  }
-
-  private MongoClient getRandomPortMongoClient() throws Exception {
-    Exception persistent = null;
-
-    // FreeServerPort releases the port before it returns it. This creates a race between the moment it is obtain again
-    // and reserved for mongo. In rare cases this can cause the function to fail with port already in use exception.
-    //
-    // There is no good way to eliminate the race, since the port must be free mongo to be able to grab it.
-    //
-    // Lets retry a number of times to reduce the likelihood almost to zero.
-    for (int i = 0; i < 20; i++) {
-      int port = Network.getFreeServerPort();
-      IMongodConfig mongodConfig = new MongodConfigBuilder()
-                                       .version(Main.V3_6)
-                                       .net(new Net("127.0.0.1", port, Network.localhostIsIPv6()))
-                                       .build();
-      try {
-        // It seems that the starter is not thread safe. We still have a likelihood for multiprocessor problems
-        // but lets at least do what is cheap to have.
-        synchronized (starter) {
-          mongodExecutable = starter.prepare(mongodConfig);
-        }
-
-        mongodExecutable.start();
-        return new MongoClient("localhost", port);
-      } catch (Exception e) {
-        // Note this handles race int the port, but also in the starter prepare
-        Thread.sleep(250);
-        persistent = e;
-      }
-    }
-
-    throw persistent;
   }
 
   private void registerListeners(java.util.Optional<Annotation> listenerOptional) {
@@ -428,15 +367,6 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
     log().info("Stopping servers...");
     closingFactory.stopServers();
-
-    try {
-      if (mongodExecutable != null) {
-        mongodExecutable.stop();
-      }
-    } catch (IllegalStateException ise) {
-      // we are   swallowing this - couldn't kill the embedded mongod process, but we don't care
-      log().info("Had issues stopping embedded mongod: {}", ise.getMessage());
-    }
   }
 
   protected void registerScheduledJobs(Injector injector) {

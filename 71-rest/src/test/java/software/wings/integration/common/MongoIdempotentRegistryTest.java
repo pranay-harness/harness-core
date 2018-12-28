@@ -17,7 +17,6 @@ import io.harness.distribution.idempotence.IdempotentRegistry;
 import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.rule.RealMongo;
-import io.harness.rule.RepeatRule.Repeat;
 import io.harness.threading.Concurrent;
 import lombok.Builder;
 import lombok.Value;
@@ -30,7 +29,6 @@ import software.wings.dl.WingsPersistence;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
-@RealMongo
 public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
 
@@ -74,6 +72,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void testMongoRegisterNewAssumptions() {
     wingsPersistence.delete(Idempotent.class, id.getValue());
 
@@ -99,6 +98,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void testMongoRegisterSucceededAssumptions() {
     Idempotent doneIdempotent = new Idempotent();
     doneIdempotent.setUuid(id.getValue());
@@ -149,7 +149,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 10, successes = 10)
+  @RealMongo
   public void testConcurrency() throws InterruptedException {
     wingsPersistence.delete(Idempotent.class, id.getValue());
     concurrencyTest(idempotentRegistry);
@@ -170,6 +170,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void testResult() throws InterruptedException, UnableToRegisterIdempotentOperationException {
     wingsPersistence.delete(Idempotent.class, dataId.getValue());
     assertEquals("data: result 1", operation(dataId));
@@ -177,6 +178,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   public void testTimeout() throws InterruptedException, UnableToRegisterIdempotentOperationException {
     wingsPersistence.delete(Idempotent.class, id.getValue());
     IdempotentLock<TestIdempotentResult> idempotentLock = IdempotentLock.create(id, idempotentRegistry);

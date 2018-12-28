@@ -6,7 +6,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
-import com.mongodb.MongoClient;
 import io.harness.factory.ClosingFactory;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoModule;
@@ -24,6 +23,7 @@ import org.mongodb.morphia.Morphia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
 
 public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
@@ -36,16 +36,17 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     this.closingFactory = closingFactory;
   }
 
-  public List<Module> modules() {
+  @Override
+  public List<Module> modules(List<Annotation> annotations) throws Exception {
     String databaseName = databaseName();
-    MongoClient mongoClient = fakeMongoClient(0, closingFactory);
+    MongoInfo mongoInfo = testMongo(annotations, closingFactory);
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, databaseName);
+    datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
 
-    DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoClient, databaseName, closingFactory);
+    DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoInfo.getClient(), databaseName, closingFactory);
 
     Module dummyMongo = new AbstractModule() {
       @Override
@@ -57,8 +58,9 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     return asList(
         new VersionModule(), new TimeModule(), new MongoModule(datastore, datastore, distributedLockSvc), dummyMongo);
   }
+
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, target);
+    return applyInjector(statement, frameworkMethod, target);
   }
 }

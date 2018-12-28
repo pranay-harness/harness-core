@@ -18,7 +18,6 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.persistence.ReadPref;
-import io.harness.rule.RealMongo;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -78,7 +77,6 @@ import java.util.List;
  * |    |    |...Host9
  * |
  */
-@RealMongo
 @Ignore
 public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   /**
