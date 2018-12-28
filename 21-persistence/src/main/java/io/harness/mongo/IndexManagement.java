@@ -174,7 +174,7 @@ public class IndexManagement {
 
           BasicDBObject keys = new BasicDBObject();
           for (Field field : index.fields()) {
-            keys.append(field.value(), 1);
+            keys.append(field.value(), field.type().toIndexValue());
           }
 
           final String indexName = index.options().name();

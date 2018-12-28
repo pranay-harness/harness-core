@@ -9,15 +9,28 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PrePersist;
+import org.mongodb.morphia.utils.IndexType;
 
 import java.util.Date;
 
 @Indexes({
-  @Index(options = @IndexOptions(name = "stuck"), fields = { @Field("running")
-                                                             , @Field("resetTimestamp") })
-  , @Index(options = @IndexOptions(name = "count"), fields = { @Field("running") }),
+  @Index(options = @IndexOptions(name = "next"),
+      fields =
+      {
+        @Field(value = "priority", type = IndexType.DESC)
+        , @Field("created"), @Field("earliestGet"), @Field("running"), @Field("resetTimestamp"), @Field("version")
+      })
+  ,
+      @Index(options = @IndexOptions(name = "count"), fields = { @Field("running") }),
 })
 public abstract class Queuable implements PersistentEntity {
+  public static final String RUNNING_KEY = "running";
+  public static final String RESET_TIMESTAMP_KEY = "resetTimestamp";
+  public static final String EARLIEST_GET_KEY = "earliestGet";
+  public static final String PRIORITY_KEY = "priority";
+  public static final String CREATED_KEY = "created";
+  public static final String VERSION_KEY = "version";
+
   @Id private String id;
   private boolean running;
   private Date resetTimestamp = new Date(Long.MAX_VALUE);
