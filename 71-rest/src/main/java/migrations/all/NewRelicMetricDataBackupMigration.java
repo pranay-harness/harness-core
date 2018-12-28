@@ -2,7 +2,6 @@ package migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 
@@ -78,7 +77,7 @@ public class NewRelicMetricDataBackupMigration implements Migration {
       previousOffSet += response.size();
       logger.info("moved records:  " + previousOffSet);
       pageRequest.setOffset(String.valueOf(previousOffSet));
-      response = wingsPersistence.query(NewRelicMetricDataRecord.class, pageRequest, excludeCount);
+      response = wingsPersistence.query(NewRelicMetricDataRecord.class, pageRequest, excludeAuthority);
       sleep(ofMillis(2000));
     }
   }
