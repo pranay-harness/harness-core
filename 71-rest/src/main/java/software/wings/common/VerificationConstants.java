@@ -67,6 +67,10 @@ public class VerificationConstants {
       "https://rpm.newrelic.com/set_time_window?back=https://rpm.newrelic.com/accounts/{accountId}/"
       + "applications/{applicationId}&tw[from_local]=true&tw[dur]={duration}&tw[end]={endTime}";
 
+  public static final String PROMETHEUS_DEEPLINK_FORMAT =
+      "{baseUrl}/graph?g0.range_input={rangeInput}m&g0.end_input={endTime}&"
+      + "g0.expr={metricString}&g0.tab=0";
+
   public static final Map<String, String> ERROR_METRIC_NAMES =
       Collections.unmodifiableMap(new HashMap<String, String>() {
         {

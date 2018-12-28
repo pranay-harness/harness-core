@@ -52,7 +52,8 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
   @Override
   public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricRecords(String transactionName,
       String metricName, String appId, String workflowId, String workflowExecutionId, String stateExecutionId,
-      String serviceId, String host, String groupName, long collectionStartTime, String cvConfigId, boolean is247Task) {
+      String serviceId, String host, String groupName, long collectionStartTime, String cvConfigId, boolean is247Task,
+      String url) {
     TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
     if (!status.equals("success")) {
       return rv;
@@ -109,11 +110,25 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
           values = new HashMap<>();
           metricDataRecord.setValues(values);
         }
-
         values.put(metricName, value);
+
+        Map<String, String> deepLinkByMetricName = metricDataRecord.getDeeplinkMetadata();
+        if (deepLinkByMetricName == null) {
+          deepLinkByMetricName = new HashMap<>();
+          metricDataRecord.setDeeplinkMetadata(deepLinkByMetricName);
+        }
+        deepLinkByMetricName.put(metricName, getDeeplinkString(url));
       }
     }
     return rv;
+  }
+
+  private String getDeeplinkString(String url) {
+    // get Metric String from the url
+    // eg: for URL
+    // /api/v1/query_range?start=3245678&end=456789&step=60s&query=software_wings_resources_AccountResource_getAccounts_count
+    // the DeeplinkSting will be software_wings_resources_AccountResource_getAccounts_count
+    return url.substring(url.lastIndexOf('=') + 1, url.length());
   }
 
   private int getDataCollectionMinute(long metricTimeStamp, long collectionStartTime, boolean is247Task) {
