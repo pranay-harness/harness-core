@@ -162,7 +162,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
           case WORKFLOW:
             final WorkflowExecution workflowExecution =
                 workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
-            if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
+            if (workflowExecution == null || ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
               Map<String, Object> constraintContext =
                   ImmutableMap.of(ResourceConstraintInstance.APP_ID_KEY, instance.getAppId());
 

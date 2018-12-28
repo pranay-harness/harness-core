@@ -89,20 +89,19 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   public T get(final int waitDuration, long pollDuration) {
     final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
 
-    // reset stuck messages
-    datastore.update(createQuery().filter("running", true).field("resetTimestamp").lessThanOrEq(new Date()),
-        datastore.createUpdateOperations(klass).set("running", false));
+    Query<T> query = createQuery();
+    query.or(query.criteria(Queuable.RUNNING_KEY).equal(false),
+        query.criteria(Queuable.RESET_TIMESTAMP_KEY).lessThanOrEq(new Date()));
 
-    Query<T> query = createQuery()
-                         .filter("running", false)
-                         .field("earliestGet")
-                         .lessThanOrEq(new Date())
-                         .order(Sort.descending("priority"), Sort.ascending("created"));
+    query.field(Queuable.EARLIEST_GET_KEY)
+        .lessThanOrEq(new Date())
+        .order(Sort.descending(Queuable.PRIORITY_KEY), Sort.ascending(Queuable.CREATED_KEY));
 
     Date resetTimestamp = new Date(System.currentTimeMillis() + resetDurationMillis());
 
-    UpdateOperations<T> updateOperations =
-        datastore.createUpdateOperations(klass).set("running", true).set("resetTimestamp", resetTimestamp);
+    UpdateOperations<T> updateOperations = datastore.createUpdateOperations(klass)
+                                               .set(Queuable.RUNNING_KEY, true)
+                                               .set(Queuable.RESET_TIMESTAMP_KEY, resetTimestamp);
 
     long endTime = System.currentTimeMillis() + waitDuration;
 
@@ -137,9 +136,9 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
 
     Query<T> query = createQuery()
                          .filter("_id", message.getId())
-                         .field("resetTimestamp")
+                         .field(Queuable.RESET_TIMESTAMP_KEY)
                          .greaterThan(new Date())
-                         .filter("running", true);
+                         .filter(Queuable.RUNNING_KEY, true);
 
     Date resetTimestamp = new Date(System.currentTimeMillis() + resetDurationMillis());
 
@@ -164,9 +163,9 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
       case ALL:
         return datastore.getCount(klass);
       case RUNNING:
-        return datastore.getCount(createQuery().filter("running", true));
+        return datastore.getCount(createQuery().filter(Queuable.RUNNING_KEY, true));
       case NOT_RUNNING:
-        return datastore.getCount(createQuery().filter("running", false));
+        return datastore.getCount(createQuery().filter(Queuable.RUNNING_KEY, false));
       default:
         unhandled(filter);
     }
@@ -277,7 +276,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   private Query<T> createQuery() {
     final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
     return filterWithVersion
-        ? datastore.createQuery(klass).filter("version", versionInfoManager.getVersionInfo().getVersion())
+        ? datastore.createQuery(klass).filter(Queuable.VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
         : datastore.createQuery(klass);
   }
 }
