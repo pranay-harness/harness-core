@@ -2,15 +2,10 @@ package io.harness.queue;
 
 import com.google.common.base.MoreObjects;
 
-import org.junit.Ignore;
 import org.mongodb.morphia.annotations.Entity;
 
 import java.util.Objects;
 
-/**
- * Created by peeyushaggarwal on 4/13/16.
- */
-@Ignore
 @Entity(value = "!!!testQueue", noClassnameStored = true)
 public class QueuableObject extends Queuable {
   private int data;

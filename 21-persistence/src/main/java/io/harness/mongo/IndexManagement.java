@@ -267,7 +267,11 @@ public class IndexManagement {
         }
       });
 
-      checkForUnusedIndexes(collection);
+      try {
+        checkForUnusedIndexes(collection);
+      } catch (Exception exception) {
+        logger.warn("", exception);
+      }
     });
 
     Set<String> whitelistCollections = ImmutableSet.<String>of(

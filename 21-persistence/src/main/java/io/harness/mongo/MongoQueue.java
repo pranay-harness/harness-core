@@ -22,11 +22,6 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by peeyushaggarwal on 4/11/16.
- *
- * @param <T> the generic type
- */
 public class MongoQueue<T extends Queuable> implements Queue<T> {
   private static final Logger logger = LoggerFactory.getLogger(MongoQueue.class);
 
@@ -186,8 +181,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     Objects.requireNonNull(message);
     String id = message.getId();
 
-    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
-    datastore.delete(klass, id);
+    persistence.getDatastore(klass, ReadPref.CRITICAL).delete(klass, id);
   }
 
   /* (non-Javadoc)
@@ -205,8 +199,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     payload.setResetTimestamp(new Date(Long.MAX_VALUE));
     payload.setCreated(new Date());
 
-    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
-    datastore.save(payload);
+    persistence.getDatastore(klass, ReadPref.CRITICAL).save(payload);
   }
 
   /* (non-Javadoc)
@@ -251,8 +244,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     Objects.requireNonNull(payload);
     payload.setVersion(versionInfoManager.getVersionInfo().getVersion());
 
-    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
-    datastore.save(payload);
+    persistence.getDatastore(klass, ReadPref.CRITICAL).save(payload);
   }
 
   /* (non-Javadoc)

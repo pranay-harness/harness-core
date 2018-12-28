@@ -2,6 +2,7 @@ package io.harness.queue;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.persistence.PersistentEntity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
@@ -16,7 +17,7 @@ import java.util.Date;
                                                              , @Field("resetTimestamp") })
   , @Index(options = @IndexOptions(name = "count"), fields = { @Field("running") }),
 })
-public abstract class Queuable {
+public abstract class Queuable implements PersistentEntity {
   @Id private String id;
   private boolean running;
   private Date resetTimestamp = new Date(Long.MAX_VALUE);
