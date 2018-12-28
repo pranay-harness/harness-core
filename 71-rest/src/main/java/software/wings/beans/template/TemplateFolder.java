@@ -19,7 +19,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
@@ -40,14 +39,14 @@ public class TemplateFolder extends Base {
   public static final String NAME_KEY = "name";
   public static final String GALLERY_ID_KEY = "galleryId";
 
-  @Indexed @NotEmpty private String accountId;
+  @NotEmpty private String accountId;
   @NotEmpty @EntityName(groups = {Create.class, Update.class}) String name;
   private String description;
   private String parentId;
   private transient String nodeType = NodeType.FILE.name();
   private String galleryId;
   private transient long templatesCount;
-  @Indexed private String pathId;
+  private String pathId;
   private transient List<TemplateFolder> children = new ArrayList<>();
 
   public enum NodeType {

@@ -32,5 +32,5 @@ public class TerraformfConfig extends Base {
   private final List<NameValuePair> backendConfigs;
 
   @Indexed private final String entityId;
-  @Indexed private final String workflowExecutionId;
+  private final String workflowExecutionId;
 }

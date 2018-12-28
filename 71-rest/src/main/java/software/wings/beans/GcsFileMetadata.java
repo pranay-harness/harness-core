@@ -28,11 +28,11 @@ import software.wings.service.intfc.FileService.FileBucket;
 @Builder
 @Entity(value = "gcsFileMetadata", noClassnameStored = true)
 public class GcsFileMetadata extends Base {
-  @NotEmpty @Indexed private String accountId;
+  @NotEmpty private String accountId;
   @NotEmpty @Indexed private String fileId; // Mongo GridFs fileId.
-  @NotEmpty @Indexed private String gcsFileId;
-  @NotEmpty @Indexed private String fileName;
-  @NotEmpty @Indexed private FileBucket fileBucket;
-  @Indexed private String entityId;
-  @Indexed private int version;
+  @NotEmpty private String gcsFileId;
+  @NotEmpty private String fileName;
+  @NotEmpty private FileBucket fileBucket;
+  private String entityId;
+  private int version;
 }

@@ -32,14 +32,14 @@ public class ContainerDeploymentInfo extends Base {
   private InstanceType instanceType;
   private String clusterName;
   private String namespace;
-  @Indexed private long lastVisited;
+  private long lastVisited;
 
   /**
    * In case of ECS, this would be taskDefinitionArn
    * In case of Kubernetes, this would be replicationControllerName
    * This has the revision number in it.
    */
-  @Indexed private String containerSvcName;
+  private String containerSvcName;
   @Indexed private String containerSvcNameNoRevision;
 
   @Builder

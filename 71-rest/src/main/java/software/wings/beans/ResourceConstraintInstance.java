@@ -32,7 +32,7 @@ public class ResourceConstraintInstance extends Base {
 
   private String accountId;
 
-  @Indexed private String resourceConstraintId;
+  private String resourceConstraintId;
   private String resourceUnit;
   private int order;
 

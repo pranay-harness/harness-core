@@ -42,7 +42,7 @@ public class UserGroup extends Base {
   public static final String NAME_KEY = "name";
   public static final String ACCOUNT_ID_KEY = "accountId";
 
-  @Indexed @NotEmpty private String name;
+  @NotEmpty private String name;
   private String description;
 
   // TODO: User composition with SSOInfo class to store this info
@@ -55,7 +55,7 @@ public class UserGroup extends Base {
   private String ssoGroupName;
 
   @Indexed private String accountId;
-  @Indexed private List<String> memberIds;
+  private List<String> memberIds;
   @Transient private List<User> members;
 
   private Set<AppPermission> appPermissions;

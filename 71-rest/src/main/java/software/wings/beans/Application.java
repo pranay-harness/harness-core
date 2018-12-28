@@ -15,7 +15,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.yaml.BaseEntityYaml;
@@ -42,7 +41,7 @@ public class Application extends Base {
   @NotEmpty private String name;
   private String description;
 
-  @Indexed @NotEmpty private String accountId;
+  @NotEmpty private String accountId;
 
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<Environment> environments = new ArrayList<>();

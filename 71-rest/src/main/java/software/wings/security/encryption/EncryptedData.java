@@ -61,7 +61,7 @@ public class EncryptedData extends Base {
 
   @NotEmpty private SettingVariableTypes type;
 
-  @NotEmpty @Indexed @Default private Set<String> parentIds = new HashSet<>();
+  @NotEmpty @Default private Set<String> parentIds = new HashSet<>();
 
   @NotEmpty @Indexed private String accountId;
 
