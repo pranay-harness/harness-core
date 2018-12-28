@@ -227,11 +227,12 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
                   dataCollectionInfo.getApplicationId(), dataCollectionInfo.getWorkflowId(),
                   dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getStateExecutionId(),
                   dataCollectionInfo.getServiceId(), host, dataCollectionInfo.getHosts().get(host),
-                  dataCollectionInfo.getStartTime(), dataCollectionInfo.getCvConfigId(), is247Task);
+                  dataCollectionInfo.getStartTime(), dataCollectionInfo.getCvConfigId(), is247Task, url);
           metricRecords.cellSet().forEach(cell -> {
             if (rv.contains(cell.getRowKey(), cell.getColumnKey())) {
               NewRelicMetricDataRecord metricDataRecord = rv.get(cell.getRowKey(), cell.getColumnKey());
               metricDataRecord.getValues().putAll(cell.getValue().getValues());
+              metricDataRecord.getDeeplinkMetadata().putAll(cell.getValue().getDeeplinkMetadata());
             } else {
               rv.put(cell.getRowKey(), cell.getColumnKey(), cell.getValue());
             }

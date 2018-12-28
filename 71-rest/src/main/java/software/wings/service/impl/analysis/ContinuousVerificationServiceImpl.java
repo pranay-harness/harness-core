@@ -14,6 +14,7 @@ import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_
 import static software.wings.common.VerificationConstants.ERROR_METRIC_NAMES;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 import static software.wings.common.VerificationConstants.NEW_RELIC_DEEPLINK_FORMAT;
+import static software.wings.common.VerificationConstants.PROMETHEUS_DEEPLINK_FORMAT;
 import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeriesDataPointsList;
 
 import com.google.common.base.Preconditions;
@@ -25,6 +26,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
@@ -33,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
@@ -62,12 +65,16 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.dashboard.HeatMapUnit;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -76,6 +83,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -92,9 +100,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private DataStoreService dataStoreService;
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
-  private static final int DURATION_IN_MINUTES = 10;
   private static final int PAGE_LIMIT = 500;
   private static final int START_OFFSET = 0;
+  private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
 
   @Override
   public void saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData) {
@@ -704,6 +712,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .replace("{applicationId}", newRelicAppId)
             .replace("{duration}", String.valueOf(durationInHours))
             .replace("{endTime}", String.valueOf(endTimeSeconds));
+      case PROMETHEUS:
+        int durationInMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+        SimpleDateFormat format = new SimpleDateFormat(DATE_PATTERN);
+        format.setTimeZone(TimeZone.getTimeZone("GMT"));
+        String endDate = format.format(new Date(endTime));
+        try {
+          endDate = URLEncoder.encode(endDate, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+          logger.error("Unable to encode the time range : ", durationInMinutes);
+          throw new WingsException(e);
+        }
+        String url = ((PrometheusConfig) connectorConfig).getUrl();
+        return PROMETHEUS_DEEPLINK_FORMAT.replace("{baseUrl", url)
+            .replace("{rangeInput}", String.valueOf(durationInMinutes))
+            .replace("{endTime}", endDate)
+            .replace("{metricString}", String.valueOf(metricString));
       default:
         logger.info("Unsupported stateType {} for deeplinking", cvConfig.getStateType());
         return "";
