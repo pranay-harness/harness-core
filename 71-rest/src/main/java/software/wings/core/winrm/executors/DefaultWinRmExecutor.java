@@ -136,7 +136,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     String envVariablesOutputFile = null;
 
     if (!envVariablesToCollect.isEmpty()) {
-      envVariablesOutputFile = "harness-" + this.config.getExecutionId() + ".out";
+      envVariablesOutputFile = this.config.getWorkingDirectory() + "\\"
+          + "harness-" + this.config.getExecutionId() + ".out";
     }
     WinRmSession session = null;
     ExecutionLogWriter outputWriter = null;
@@ -214,7 +215,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     } finally {
       if (session != null) {
         if (envVariablesOutputFile != null) {
-          command = "Remove-Item " + envVariablesOutputFile;
+          command = "Remove-Item -Path " + envVariablesOutputFile;
           session.executeCommandString(psWrappedCommand(command), outputWriter, errorWriter);
         }
         session.close();

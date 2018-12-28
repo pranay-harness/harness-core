@@ -377,7 +377,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   private String addEnvVariablesCollector(
-      String command, List<String> envVariablesToCollect, String envVariablesOutputFileName) {
+      String command, List<String> envVariablesToCollect, String envVariablesOutputFilePath) {
     StringBuilder wrapperCommand = new StringBuilder(command);
     wrapperCommand.append('\n');
     String redirect = ">";
@@ -388,7 +388,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           .append(env)
           .append("=\" ")
           .append(redirect)
-          .append(envVariablesOutputFileName)
+          .append(envVariablesOutputFilePath)
           .append('\n');
       redirect = ">>";
     }
