@@ -21,4 +21,5 @@ import software.wings.verification.CVConfiguration;
 public class DatadogCVServiceConfiguration extends CVConfiguration {
   @Attributes(required = false, title = "Datadog Service Name") private String datadogServiceName;
   @Attributes(required = true, title = "Metrics") private String metrics;
+  @Attributes(required = true, title = "Application Filter") private String applicationFilter;
 }

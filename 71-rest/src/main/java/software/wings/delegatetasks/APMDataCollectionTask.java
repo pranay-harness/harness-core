@@ -96,7 +96,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Override
   protected int getInitialDelayMinutes() {
-    return initialDelayMins;
+    return this.getTaskType().equalsIgnoreCase(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name()) ? 0
+                                                                                                     : initialDelayMins;
   }
 
   @Override
@@ -491,7 +492,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               groupNameSet.add(newRelicMetricDataRecord.getGroupName());
 
               newRelicMetricDataRecord.setAppId(dataCollectionInfo.getApplicationId());
-              if (newRelicMetricDataRecord.getTimeStamp() >= startTimeMinForHost) {
+              if (newRelicMetricDataRecord.getTimeStamp() >= startTimeMinForHost || is24x7Task) {
                 records.put(newRelicMetricDataRecord.getName() + newRelicMetricDataRecord.getHost(),
                     newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord);
               } else {

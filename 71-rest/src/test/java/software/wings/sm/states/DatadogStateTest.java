@@ -48,7 +48,7 @@ public class DatadogStateTest extends WingsBaseTest {
   @Test
   public void metricEndpointsInfo() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
-        "todolist", Lists.newArrayList("system.cpu.iowait", "trace.servlet.request.duration"));
+        "todolist", Lists.newArrayList("system.cpu.iowait", "trace.servlet.request.duration"), null);
     assertEquals(2, metricEndpointsInfo.size());
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     for (String query : metricEndpointsInfo.keySet()) {
@@ -64,7 +64,7 @@ public class DatadogStateTest extends WingsBaseTest {
   @Test
   public void metricEndpointsInfoTransformation() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
-        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("kubernetes.cpu.usage.total"));
+        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("kubernetes.cpu.usage.total"), null);
     assertEquals(1, metricEndpointsInfo.size());
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     String query =
@@ -78,7 +78,7 @@ public class DatadogStateTest extends WingsBaseTest {
   @Test
   public void metricEndpointsInfoDocker() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
-        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("docker.cpu.usage"));
+        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("docker.cpu.usage"), null);
     assertEquals(1, metricEndpointsInfo.size());
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     String query =
@@ -89,15 +89,29 @@ public class DatadogStateTest extends WingsBaseTest {
         JsonUtils.asJson(apmMetricInfos));
   }
 
+  @Test
+  public void metricEndpointsInfoDocker24x7() {
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo =
+        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("docker.cpu.usage"), "cluster:harness-test");
+    assertEquals(1, metricEndpointsInfo.size());
+    List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
+    String query =
+        "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=docker.cpu.usage{cluster:harness-test}.rollup(avg,60)";
+    assertEquals("Transformed query must be same", query, metricEndpointsInfo.keySet().iterator().next());
+    assertEquals(
+        "[{\"metricName\":\"Docker CPU Usage\",\"responseMappers\":{\"host\":{\"fieldName\":\"host\",\"jsonPath\":\"series[*].scope\",\"regexs\":[\"((?<=pod_name:)([^,]*))\"]},\"value\":{\"fieldName\":\"value\",\"jsonPath\":\"series[*].pointlist[*].[1]\"},\"txnName\":{\"fieldName\":\"txnName\",\"jsonPath\":\"series[*].metric\",\"regexs\":[\"((?<=[(]|^)[^(]([^ /|+|-|*]*))\"]},\"timestamp\":{\"fieldName\":\"timestamp\",\"jsonPath\":\"series[*].pointlist[*].[0]\"}},\"metricType\":{},\"tag\":\"Docker\"}]",
+        JsonUtils.asJson(apmMetricInfos));
+  }
+
   @Test(expected = WingsException.class)
   public void testBadMetric() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
-        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("dummyMetricName"));
+        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("dummyMetricName"), null);
   }
 
   @Test(expected = WingsException.class)
   public void testBadServiceName() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
-        null, Lists.newArrayList("trace.servlet.request.duration", "system.cpu.iowait"));
+        null, Lists.newArrayList("trace.servlet.request.duration", "system.cpu.iowait"), null);
   }
 }

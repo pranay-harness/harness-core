@@ -107,7 +107,7 @@ public class APMVerificationServiceImpl implements APMVerificationService {
           apmValidateCollectorConfig.getOptions().put("to", String.valueOf(config.getToTime()));
 
           Map<String, List<APMMetricInfo>> metricInfoByQuery =
-              metricEndpointsInfo(config.getDatadogServiceName(), Arrays.asList(config.getMetrics().split(",")));
+              metricEndpointsInfo(config.getDatadogServiceName(), Arrays.asList(config.getMetrics().split(",")), null);
           List<Object> loadResponse = new ArrayList<>();
 
           // loop for each metric
@@ -329,12 +329,14 @@ public class APMVerificationServiceImpl implements APMVerificationService {
       DatadogCVServiceConfiguration config, String waitId, long startTime, long endTime) {
     DatadogConfig datadogConfig = (DatadogConfig) settingsService.get(config.getConnectorId()).getValue();
     int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    Map<String, String> hostsMap = new HashMap<>();
+    hostsMap.put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
     final APMDataCollectionInfo dataCollectionInfo =
         APMDataCollectionInfo.builder()
             .baseUrl(datadogConfig.getUrl())
             .validationUrl(DatadogConfig.validationUrl)
             .encryptedDataDetails(secretManager.getEncryptionDetails(datadogConfig, config.getAppId(), null))
-            .hosts(new HashMap<>())
+            .hosts(hostsMap)
             .stateType(StateType.DATA_DOG)
             .applicationId(config.getAppId())
             .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
@@ -342,8 +344,8 @@ public class APMVerificationServiceImpl implements APMVerificationService {
             .startTime(startTime)
             .cvConfigId(config.getUuid())
             .dataCollectionMinute(0)
-            .metricEndpoints(DatadogState.metricEndpointsInfo(
-                config.getDatadogServiceName(), Arrays.asList(config.getMetrics().split(","))))
+            .metricEndpoints(DatadogState.metricEndpointsInfo(config.getDatadogServiceName(),
+                Arrays.asList(config.getMetrics().split(",")), config.getApplicationFilter()))
             .accountId(config.getAccountId())
             .strategy(AnalysisComparisonStrategy.PREDICTIVE)
             .dataCollectionFrequency(1)

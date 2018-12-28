@@ -33,7 +33,7 @@ public class APMParserTest extends WingsBaseTest {
         Resources.toString(APMParserTest.class.getResource("/apm/datadog_sample_response_mem.json"), Charsets.UTF_8);
 
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
-        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("system.load.1", "system.mem.used"));
+        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("system.load.1", "system.mem.used"), null);
 
     Iterator<List<APMMetricInfo>> metricInfoIterator = metricEndpointsInfo.values().iterator();
     Collection<NewRelicMetricDataRecord> records =
@@ -64,7 +64,7 @@ public class APMParserTest extends WingsBaseTest {
         Resources.toString(APMParserTest.class.getResource("/apm/datadog_sample_response_mem.json"), Charsets.UTF_8);
 
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
-        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("system.load.1", "system.mem.used"));
+        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("system.load.1", "system.mem.used"), null);
 
     Iterator<List<APMMetricInfo>> metricInfoIterator = metricEndpointsInfo.values().iterator();
     Collection<NewRelicMetricDataRecord> records =
