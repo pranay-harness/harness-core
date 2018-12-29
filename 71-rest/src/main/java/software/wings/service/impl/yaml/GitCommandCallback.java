@@ -196,9 +196,26 @@ public class GitCommandCallback implements NotifyCallback {
                                     .commitId(gitDiffResult.getCommitId())
                                     .gitCommandResult(gitDiffResult)
                                     .build());
-    } catch (DuplicateKeyException e) {
-      logger.info(
-          "This was already persisted in DB. May Happens when 2 successive commits are made to git in short duration, and when 2nd commit is done before gitDiff for 1st one is in progress");
+    } catch (Exception e) {
+      if (e instanceof DuplicateKeyException) {
+        logger.info(
+            "This was already persisted in DB. May Happens when 2 successive commits are made to git in short duration, and when 2nd commit is done before gitDiff for 1st one is in progress");
+      } else {
+        logger.warn("Failed to save gitCommit", e);
+        // Try again without gitChangeSet and CommandResults.
+        yamlGitService.saveCommit(GitCommit.builder()
+                                      .accountId(accountId)
+                                      .yamlChangeSet(YamlChangeSet.builder()
+                                                         .accountId(accountId)
+                                                         .appId(Base.GLOBAL_APP_ID)
+                                                         .gitToHarness(true)
+                                                         .status(Status.COMPLETED)
+                                                         .build())
+                                      .yamlGitConfigIds(yamlGitConfigIds)
+                                      .status(GitCommit.Status.COMPLETED)
+                                      .commitId(gitDiffResult.getCommitId())
+                                      .build());
+      }
     }
   }
 
