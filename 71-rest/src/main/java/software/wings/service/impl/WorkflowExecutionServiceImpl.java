@@ -1727,8 +1727,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Validator.notNullCheck("Workflow type is required", executionArgs.getWorkflowType());
     if (executionArgs.getWorkflowType() == ORCHESTRATION) {
       Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
-      DeploymentMetadata deploymentMetadata =
-          workflowService.fetchDeploymentMetadata(appId, workflow, executionArgs.getWorkflowVariables());
+      DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
+          appId, workflow, executionArgs.getWorkflowVariables(), null, null, null);
 
       // Set Services
       deploymentMetadata.setArtifactRequiredServices(

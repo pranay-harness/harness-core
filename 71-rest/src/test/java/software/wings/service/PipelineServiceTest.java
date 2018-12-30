@@ -8,6 +8,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -43,6 +44,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -141,9 +143,13 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(updateOperations.unset(any())).thenReturn(updateOperations);
     when(serviceResourceService.fetchServicesByUuids(APP_ID, Arrays.asList(SERVICE_ID)))
         .thenReturn(Arrays.asList(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build()));
-    when(workflowService.fetchDeploymentMetadata(anyString(), any(Workflow.class), anyMap(), any(), any()))
-        .thenReturn(
-            DeploymentMetadata.builder().artifactRequiredServiceIds(asList(SERVICE_ID)).envIds(asList(ENV_ID)).build());
+    when(workflowService.fetchDeploymentMetadata(
+             anyString(), any(Workflow.class), anyMap(), anyList(), anyList(), any(), any(), any()))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactRequiredServiceIds(asList(SERVICE_ID))
+                        .envIds(asList(ENV_ID))
+                        .deploymentTypes(asList(DeploymentType.SSH))
+                        .build());
     when(environmentService.obtainEnvironmentSummaries(APP_ID, asList(ENV_ID)))
         .thenReturn(
             asList(EnvSummary.builder().name(ENV_NAME).uuid(ENV_ID).environmentType(EnvironmentType.PROD).build()));
@@ -160,7 +166,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
     when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
-    when(workflowService.fetchDeploymentMetadata(any(), any(Workflow.class), anyMap()))
+    when(workflowService.fetchDeploymentMetadata(any(), any(Workflow.class), anyMap(), any(), any(), any()))
         .thenReturn(DeploymentMetadata.builder().build());
     pipelineService.save(pipeline);
 
@@ -321,11 +327,87 @@ public class PipelineServiceTest extends WingsBaseTest {
     Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
+    assertThat(pipeline.getDeploymentTypes()).hasSize(1).contains(DeploymentType.SSH);
     assertThat(pipeline.getEnvSummaries()).hasSize(1).extracting("uuid").isEqualTo(asList(ENV_ID));
     assertThat(pipeline.getEnvSummaries())
         .hasSize(1)
         .extracting("environmentType")
         .isEqualTo(asList(EnvironmentType.PROD));
+
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
+  }
+
+  @Test
+  public void shouldReadPipelineWithDetails() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("envId", ENV_ID);
+    properties.put("workflowId", "BUILD_WORKFLOW_ID");
+    PipelineStage pipelineStage2 =
+        PipelineStage.builder()
+            .pipelineStageElements(asList(PipelineStageElement.builder()
+                                              .workflowVariables(ImmutableMap.of(ENV_NAME, ENV_ID, SERVICE_NAME,
+                                                  SERVICE_ID, INFRA_NAME, INFRA_MAPPING_ID, "MyVar", ""))
+                                              .name("STAGE1")
+                                              .type(ENV_STATE.name())
+                                              .properties(properties)
+                                              .build()))
+            .build();
+
+    Pipeline pipeline2 = Pipeline.builder()
+                             .name("pipeline2")
+                             .appId(APP_ID)
+                             .uuid(PIPELINE_ID)
+                             .pipelineStages(asList(pipelineStage2,
+                                 PipelineStage.builder()
+                                     .pipelineStageElements(asList(PipelineStageElement
+                                                                       .builder()
+
+                                                                       .name("STAGE2")
+                                                                       .type(ENV_STATE.name())
+                                                                       .properties(properties)
+                                                                       .build()))
+                                     .build()))
+                             .build();
+
+    when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID)).thenReturn(pipeline2);
+
+    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID))
+        .thenReturn(
+            aWorkflow()
+                .withName(WORKFLOW_NAME)
+                .withServices(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
+                .withOrchestrationWorkflow(
+                    aBasicOrchestrationWorkflow()
+                        .withUserVariables(asList(aVariable().withName(ENV_NAME).withEntityType(ENVIRONMENT).build(),
+                            aVariable().withName("MyVar").build()))
+                        .build())
+                .build());
+
+    when(workflowService.readWorkflowWithoutServices(APP_ID, "BUILD_WORKFLOW_ID"))
+        .thenReturn(
+            aWorkflow()
+                .withName(WORKFLOW_NAME)
+                .withServices(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
+                .withOrchestrationWorkflow(
+                    aBuildOrchestrationWorkflow()
+                        .withUserVariables(asList(aVariable().withName(ENV_NAME).withEntityType(ENVIRONMENT).build(),
+                            aVariable().withName("MyVar").build()))
+                        .build())
+                .build());
+
+    Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
+    assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
+    assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
+    assertThat(pipeline.getDeploymentTypes()).hasSize(1).contains(DeploymentType.SSH);
+    assertThat(pipeline.getEnvSummaries()).hasSize(1).extracting("uuid").isEqualTo(asList(ENV_ID));
+    assertThat(pipeline.getEnvSummaries())
+        .hasSize(1)
+        .extracting("environmentType")
+        .isEqualTo(asList(EnvironmentType.PROD));
+    assertThat(pipeline.isValid()).isFalse();
+    assertThat(pipeline.getValidationMessage()).isNotEmpty();
+    assertThat(pipeline.getPipelineVariables()).hasSize(1).extracting(Variable::getName).contains("MyVar");
+    assertThat(pipeline.isHasBuildWorkflow()).isTrue();
 
     verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
@@ -921,7 +1003,7 @@ public class PipelineServiceTest extends WingsBaseTest {
             .build();
 
     when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
-    when(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, Include.ARTIFACT_SERVICE))
+    when(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null, Include.ARTIFACT_SERVICE))
         .thenReturn(DeploymentMetadata.builder().artifactRequiredServiceIds(asList(SERVICE_ID)).build());
     List<EntityType> requiredEntities = pipelineService.getRequiredEntities(APP_ID, PIPELINE_ID);
     assertThat(requiredEntities).isNotEmpty().contains(ARTIFACT);
