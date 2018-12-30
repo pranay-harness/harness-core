@@ -14,6 +14,7 @@ import io.harness.cache.DistributedStore;
 import io.harness.cache.Nominal;
 import io.harness.cache.Ordinal;
 import io.harness.persistence.ReadPref;
+import io.harness.serializer.KryoUtils;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryFactory;
@@ -22,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CacheEntity;
 import software.wings.dl.WingsPersistence;
-import software.wings.utils.KryoUtils;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;

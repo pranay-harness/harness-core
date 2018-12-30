@@ -2,7 +2,7 @@ package software.wings.jersey;
 
 import com.google.common.io.ByteStreams;
 
-import software.wings.utils.KryoUtils;
+import io.harness.serializer.KryoUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

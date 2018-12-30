@@ -66,6 +66,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.observer.Subject;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.serializer.KryoUtils;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -104,7 +105,6 @@ import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
-import software.wings.utils.KryoUtils;
 import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
 

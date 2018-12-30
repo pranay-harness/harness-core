@@ -238,6 +238,11 @@
                 <version>0.1.7</version>
             </dependency>
             <dependency>
+                <groupId>com.esotericsoftware</groupId>
+                <artifactId>kryo</artifactId>
+                <version>4.0.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.esotericsoftware.yamlbeans</groupId>
                 <artifactId>yamlbeans</artifactId>
                 <version>1.13</version>

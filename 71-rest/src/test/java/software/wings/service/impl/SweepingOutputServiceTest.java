@@ -9,12 +9,12 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.RealMongo;
+import io.harness.serializer.KryoUtils;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SweepingOutput;
 import software.wings.beans.SweepingOutput.SweepingOutputBuilder;
 import software.wings.service.intfc.SweepingOutputService;
-import software.wings.utils.KryoUtils;
 
 public class SweepingOutputServiceTest extends WingsBaseTest {
   @Inject SweepingOutputService sweepingOutputService;

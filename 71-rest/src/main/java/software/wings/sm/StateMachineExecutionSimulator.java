@@ -20,6 +20,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.serializer.KryoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
@@ -35,7 +36,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
-import software.wings.utils.KryoUtils;
 
 import java.util.Collection;
 import java.util.HashMap;

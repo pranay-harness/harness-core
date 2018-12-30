@@ -1,10 +1,10 @@
 package software.wings.expression;
 
 import io.harness.expression.LateBindingValue;
+import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import software.wings.beans.SweepingOutput;
 import software.wings.service.intfc.SweepingOutputService;
-import software.wings.utils.KryoUtils;
 
 @Builder
 public class SweepingOutputValue implements LateBindingValue {
