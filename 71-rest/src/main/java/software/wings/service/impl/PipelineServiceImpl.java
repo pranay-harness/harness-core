@@ -352,8 +352,8 @@ public class PipelineServiceImpl implements PipelineService {
               return new ArrayList<>();
             }
             if (!entityTypes.contains(ARTIFACT)) {
-              DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
-                  pipeline.getAppId(), workflow, pipelineStageElement.getWorkflowVariables(), Include.ARTIFACT_SERVICE);
+              DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(pipeline.getAppId(),
+                  workflow, pipelineStageElement.getWorkflowVariables(), null, null, Include.ARTIFACT_SERVICE);
               if (deploymentMetadata != null) {
                 if (isNotEmpty(deploymentMetadata.getArtifactRequiredServiceIds())) {
                   entityTypes.add(ARTIFACT);
@@ -581,7 +581,11 @@ public class PipelineServiceImpl implements PipelineService {
     List<Variable> pipelineVariables = new ArrayList<>();
     boolean templatized = false;
     boolean envParameterized = false;
+    boolean hasBuildWorkflow = false;
+    List<DeploymentType> deploymentTypes = new ArrayList<>();
+    List<String> invalidWorkflows = new ArrayList<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+      List<String> invalidStageWorkflows = new ArrayList<>();
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
         if (ENV_STATE.name().equals(pse.getType())) {
           if (pse.isDisable()) {
@@ -591,7 +595,14 @@ public class PipelineServiceImpl implements PipelineService {
               pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
           Validator.notNullCheck("Workflow does not exist", workflow, USER);
           Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
-          resolveArtifactNeededServicesOfWorkflowAndEnvIds(serviceIds, envIds, pse.getWorkflowVariables(), workflow);
+          if (!hasBuildWorkflow) {
+            hasBuildWorkflow = BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+          }
+          resolveArtifactNeededServicesOfWorkflowAndEnvIds(
+              serviceIds, envIds, deploymentTypes, pse.getWorkflowVariables(), workflow);
+
+          validateWorkflowVariables(workflow, pse, invalidWorkflows, pse.getWorkflowVariables());
+
           setPipelineVariables(
               workflow.getOrchestrationWorkflow().getUserVariables(), pse.getWorkflowVariables(), pipelineVariables);
           if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
@@ -601,7 +612,17 @@ public class PipelineServiceImpl implements PipelineService {
             envParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
           }
         }
+        if (!invalidStageWorkflows.isEmpty()) {
+          pipelineStage.setValid(false);
+          pipelineStage.setValidationMessage(
+              format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidStageWorkflows.toString()));
+        }
+        invalidWorkflows.addAll(invalidStageWorkflows);
       }
+    }
+    if (!invalidWorkflows.isEmpty()) {
+      pipeline.setValid(false);
+      pipeline.setValidationMessage(format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
     }
 
     pipeline.setServices(serviceResourceService.fetchServicesByUuids(pipeline.getAppId(), serviceIds));
@@ -609,6 +630,8 @@ public class PipelineServiceImpl implements PipelineService {
     pipeline.setEnvSummaries(environmentService.obtainEnvironmentSummaries(pipeline.getAppId(), envIds));
     pipeline.setTemplatized(templatized);
     pipeline.setEnvParameterized(envParameterized);
+    pipeline.setDeploymentTypes(deploymentTypes);
+    pipeline.setHasBuildWorkflow(hasBuildWorkflow);
   }
 
   private void setPipelineVariables(
@@ -623,7 +646,11 @@ public class PipelineServiceImpl implements PipelineService {
 
     if (isEmpty(pseWorkflowVariables)) {
       if (!isEmpty(workflowVariables)) {
-        nonEntityVariables.forEach(variable -> pipelineVariables.add(variable.cloneInternal()));
+        nonEntityVariables.forEach(variable -> {
+          if (!contains(pipelineVariables, variable.getName())) {
+            pipelineVariables.add(variable.cloneInternal());
+          }
+        });
       }
       return;
     }
@@ -660,10 +687,11 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
-  private void resolveArtifactNeededServicesOfWorkflowAndEnvIds(
-      List<String> serviceIds, List<String> envIds, Map<String, String> pseWorkflowVariables, Workflow workflow) {
-    DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
-        workflow.getAppId(), workflow, pseWorkflowVariables, Include.ARTIFACT_SERVICE, Include.ENVIRONMENT);
+  private void resolveArtifactNeededServicesOfWorkflowAndEnvIds(List<String> serviceIds, List<String> envIds,
+      List<DeploymentType> deploymentTypes, Map<String, String> pseWorkflowVariables, Workflow workflow) {
+    DeploymentMetadata deploymentMetadata =
+        workflowService.fetchDeploymentMetadata(workflow.getAppId(), workflow, pseWorkflowVariables, serviceIds, envIds,
+            Include.ARTIFACT_SERVICE, Include.ENVIRONMENT, Include.DEPLOYMENT_TYPE);
     if (deploymentMetadata != null) {
       if (deploymentMetadata.getArtifactRequiredServiceIds() != null) {
         deploymentMetadata.getArtifactRequiredServiceIds()
@@ -673,6 +701,12 @@ public class PipelineServiceImpl implements PipelineService {
       }
       if (deploymentMetadata.getEnvIds() != null) {
         deploymentMetadata.getEnvIds().stream().filter(envId -> !envIds.contains(envId)).forEach(envIds::add);
+      }
+      if (deploymentMetadata.getDeploymentTypes() != null) {
+        deploymentMetadata.getDeploymentTypes()
+            .stream()
+            .filter(deploymentType -> !deploymentTypes.contains(deploymentType))
+            .forEach(deploymentTypes::add);
       }
     }
   }

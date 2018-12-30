@@ -1883,15 +1883,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public DeploymentMetadata fetchDeploymentMetadata(
-      String appId, Workflow workflow, Map<String, String> workflowVariables, Include... includes) {
+  public DeploymentMetadata fetchDeploymentMetadata(String appId, Workflow workflow,
+      Map<String, String> workflowVariables, List<String> artifactRequiredServiceIds, List<String> envIds,
+      Include... includes) {
     DeploymentMetadataBuilder deploymentMetadataBuilder = DeploymentMetadata.builder();
 
     List<Include> includeList = isEmpty(includes) ? Arrays.asList(Include.values()) : Arrays.asList(includes);
 
     if (includeList.contains(Include.ARTIFACT_SERVICE)) {
-      List<String> artifactRequiredServiceIds = new ArrayList<>();
-      fetchRequiredEntityTypes(
+      if (artifactRequiredServiceIds == null) {
+        artifactRequiredServiceIds = new ArrayList<>();
+      }
+      fetchArtifactNeededServiceIds(
           appId, workflow.getOrchestrationWorkflow(), workflowVariables, artifactRequiredServiceIds);
       deploymentMetadataBuilder.artifactRequiredServiceIds(artifactRequiredServiceIds);
     }
@@ -1902,9 +1905,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (includeList.contains(Include.ENVIRONMENT)) {
-      List<String> envIds = new ArrayList<>();
+      if (envIds == null) {
+        envIds = new ArrayList<>();
+      }
       final String resolvedEnvId = workflowServiceHelper.obtainTemplatedEnvironmentId(workflow, workflowVariables);
-      if (resolvedEnvId != null) {
+      if (resolvedEnvId != null && !envIds.contains(resolvedEnvId)) {
         envIds.add(resolvedEnvId);
       }
       deploymentMetadataBuilder.envIds(envIds);
@@ -1915,10 +1920,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
-    return fetchRequiredEntityTypes(appId, orchestrationWorkflow, null, new ArrayList<>());
+    List<String> artifactNeededServiceIds = new ArrayList<>();
+    Set<EntityType> requiredEntityTypes = new HashSet<>();
+    fetchArtifactNeededServiceIds(appId, orchestrationWorkflow, null, artifactNeededServiceIds);
+    if (isNotEmpty(artifactNeededServiceIds)) {
+      // At least one service needs artifact..so add required entity type as ARTIFACT
+      requiredEntityTypes.add(ARTIFACT);
+    }
+    return requiredEntityTypes;
   }
 
-  public Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow,
+  private void fetchArtifactNeededServiceIds(String appId, OrchestrationWorkflow orchestrationWorkflow,
       Map<String, String> workflowVariables, List<String> artifactNeededServiceIds) {
     notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
 
@@ -1953,10 +1965,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               .collect(Collectors.toSet());
 
       requiredEntityTypes.addAll(rollbackRequiredEntityTypes);
-
-      return requiredEntityTypes;
     }
-    return null;
   }
 
   private Set<EntityType> updateRequiredEntityTypes(String appId, WorkflowPhase workflowPhase,
@@ -1967,6 +1976,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
       return requiredEntityTypes;
     }
+
     String serviceId = workflowPhase.getServiceId();
     if (isNotEmpty(workflowVaraibles)) {
       // TODO: this check has to be removed once backward compatible change implemented
@@ -1977,11 +1987,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
     }
-    if (preDeploymentStepNeededArtifact) {
-      if (serviceId != null) {
-        if (!artifactNeededServiceIds.contains(serviceId) && !matchesVariablePattern(serviceId)) {
+
+    if (serviceId != null) {
+      if (artifactNeededServiceIds.contains(serviceId)) {
+        requiredEntityTypes.add(EntityType.ARTIFACT);
+        return requiredEntityTypes;
+      }
+      if (matchesVariablePattern(serviceId)) {
+        return requiredEntityTypes;
+      }
+      if (preDeploymentStepNeededArtifact) {
+        if (!artifactNeededServiceIds.contains(serviceId)) {
           artifactNeededServiceIds.add(serviceId);
         }
+        return requiredEntityTypes;
       }
     }
 
@@ -1997,11 +2016,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       updateRequiredEntityTypes(appId, serviceId, phaseStep, requiredEntityTypes, workflowPhase, workflowVaraibles);
     }
-    if (requiredEntityTypes.contains(EntityType.ARTIFACT) || preDeploymentStepNeededArtifact) {
-      if (serviceId != null) {
-        if (!artifactNeededServiceIds.contains(serviceId) && !matchesVariablePattern(serviceId)) {
-          artifactNeededServiceIds.add(serviceId);
-        }
+
+    if (requiredEntityTypes.contains(EntityType.ARTIFACT)) {
+      if (serviceId != null && !artifactNeededServiceIds.contains(serviceId)) {
+        artifactNeededServiceIds.add(serviceId);
       }
     }
 

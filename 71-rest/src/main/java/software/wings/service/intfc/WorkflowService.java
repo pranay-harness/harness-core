@@ -158,7 +158,7 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   List<EntityType> getRequiredEntities(String appId, String workflowId);
 
   DeploymentMetadata fetchDeploymentMetadata(String appId, Workflow workflow, Map<String, String> workflowVariables,
-      DeploymentMetadata.Include... includeList);
+      List<String> artifactNeededServiceIds, List<String> envIds, DeploymentMetadata.Include... includeList);
 
   Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow);
 

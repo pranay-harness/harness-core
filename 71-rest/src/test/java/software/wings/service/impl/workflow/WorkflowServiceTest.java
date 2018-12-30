@@ -859,7 +859,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
 
     assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
-    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null)
+    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
                    .contains(SERVICE_ID));
   }
@@ -891,7 +891,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflowService.fetchRequiredEntityTypes(Constants.APP_ID, orchestrationWorkflow))
         .contains(EntityType.ARTIFACT);
-    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null)
+    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
                    .contains(SERVICE_ID));
   }
@@ -943,7 +943,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, ROUTE_UPDATE, WRAP_UP);
 
     assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
-    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null)
+    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
                    .contains(SERVICE_ID));
   }
@@ -971,7 +971,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
 
     assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
-    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null)
+    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
                    .contains(SERVICE_ID));
   }

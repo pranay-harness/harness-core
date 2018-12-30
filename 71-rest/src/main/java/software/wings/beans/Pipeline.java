@@ -58,6 +58,7 @@ public class Pipeline extends Base {
   @JsonIgnore private transient Map<String, String> resolvedPipelineVariables = new LinkedHashMap<>();
   private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
   private transient List<EnvSummary> envSummaries = new ArrayList<>();
+  private transient boolean hasBuildWorkflow;
 
   @Builder
   public Pipeline(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
