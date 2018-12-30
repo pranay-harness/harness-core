@@ -3,10 +3,10 @@ package software.wings.expression;
 import static java.lang.String.format;
 
 import io.harness.expression.LateBindingMap;
+import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import software.wings.beans.SweepingOutput;
 import software.wings.service.intfc.SweepingOutputService;
-import software.wings.utils.KryoUtils;
 
 @Builder
 public class SweepingOutputFunctor extends LateBindingMap {

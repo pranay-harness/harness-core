@@ -2,13 +2,13 @@ package software.wings.managerclient;
 
 import static java.util.Arrays.stream;
 
+import io.harness.serializer.KryoUtils;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Converter.Factory;
 import retrofit2.Retrofit;
-import software.wings.utils.KryoUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;

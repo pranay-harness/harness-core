@@ -55,6 +55,7 @@ import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.BypassRuleMixin;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
+import io.harness.serializer.KryoUtils;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.waiter.Notifier;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -83,7 +84,6 @@ import software.wings.app.YamlModule;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
-import software.wings.utils.KryoUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;

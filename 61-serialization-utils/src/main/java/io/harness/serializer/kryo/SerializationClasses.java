@@ -1,4 +1,4 @@
-package software.wings.utils;
+package io.harness.serializer.kryo;
 
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
