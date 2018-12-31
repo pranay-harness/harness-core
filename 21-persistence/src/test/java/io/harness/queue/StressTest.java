@@ -28,7 +28,7 @@ public class StressTest extends PersistenceTest {
   @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
 
-  private MongoQueue<QueuableObject> queue;
+  private MongoQueue<TestQueuableObject> queue;
 
   /**
    * Setup.
@@ -37,7 +37,7 @@ public class StressTest extends PersistenceTest {
    */
   @Before
   public void setup() throws UnknownHostException {
-    queue = new MongoQueue<>(QueuableObject.class);
+    queue = new MongoQueue<>(TestQueuableObject.class);
     on(queue).set("persistence", persistence);
     on(queue).set("versionInfoManager", versionInfoManager);
   }
@@ -49,11 +49,11 @@ public class StressTest extends PersistenceTest {
   @RealMongo
   @Bypass
   public void shouldGetWithNegativeWait() throws IOException {
-    persistence.ensureIndex(QueuableObject.class);
+    persistence.ensureIndex(TestQueuableObject.class);
 
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       for (int i = 0; i < 10000; ++i) {
-        queue.send(new QueuableObject(i));
+        queue.send(new TestQueuableObject(i));
         if (i % 100 == 0) {
           logger.info("{} , {}", i, queue.count(ALL));
         }

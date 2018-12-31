@@ -13,11 +13,11 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.MongoQueue;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
-import io.harness.queue.QueuableObject;
-import io.harness.queue.QueuableObjectListener;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
+import io.harness.queue.TestQueuableObject;
+import io.harness.queue.TestQueuableObjectListener;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
@@ -47,7 +47,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
   @Override
   public void initialize(Injector injector) {
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(QueuableObjectListener.class), 1);
+    queueListenerController.register(injector.getInstance(TestQueuableObjectListener.class), 1);
 
     closingFactory.addServer(() -> {
       try {
@@ -66,6 +66,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
+    morphia.map(TestQueuableObject.class);
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
 
@@ -82,7 +83,8 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(new TypeLiteral<Queue<QueuableObject>>() {}).toInstance(new MongoQueue<>(QueuableObject.class, 5, true));
+        bind(new TypeLiteral<Queue<TestQueuableObject>>() {})
+            .toInstance(new MongoQueue<>(TestQueuableObject.class, 5, true));
 
         bind(QueueController.class).toInstance(new QueueController() {
           @Override

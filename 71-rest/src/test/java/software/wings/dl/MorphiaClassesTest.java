@@ -9,6 +9,8 @@ import org.mongodb.morphia.mapping.MappedClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.WingsApplication;
+import software.wings.integration.common.MongoDBTest.MongoEntity;
+import software.wings.integration.dl.PageRequestTest.Dummy;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,9 +28,8 @@ public class MorphiaClassesTest {
 
     Set<Class> classes = new HashSet();
     classes.addAll(WingsApplication.morphiaClasses);
-    classes.add(software.wings.integration.dl.PageRequestTest.Dummy.class);
-    classes.add(software.wings.integration.common.MongoDBTest.MongoEntity.class);
-    classes.add(software.wings.core.queue.QueuableObject.class);
+    classes.add(Dummy.class);
+    classes.add(MongoEntity.class);
 
     boolean success = true;
     for (MappedClass cls : morphia.getMapper().getMappedClasses()) {
