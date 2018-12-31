@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HQuery;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -149,7 +150,7 @@ public class InstanceStatServiceImpl implements InstanceStatService {
   public double percentile(String accountId, Instant from, Instant to, double p) {
     Preconditions.checkArgument(to.isAfter(from), "'to' timestamp should be after 'from'");
 
-    List<InstanceStatsSnapshot> dataPoints = persistence.createQuery(InstanceStatsSnapshot.class)
+    List<InstanceStatsSnapshot> dataPoints = persistence.createQuery(InstanceStatsSnapshot.class, HQuery.excludeCount)
                                                  .filter("accountId", accountId)
                                                  .field("timestamp")
                                                  .greaterThanOrEq(from)
@@ -160,7 +161,6 @@ public class InstanceStatServiceImpl implements InstanceStatService {
                                                  .asList();
 
     List<Integer> counts = dataPoints.stream().map(InstanceStatsSnapshot::getTotal).collect(Collectors.toList());
-
     return new SimplePercentile(counts).evaluate(p);
   }
 }
