@@ -531,7 +531,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     entity.setFieldA("fieldA1");
     entity.setTestEntityB(entityB);
     wingsPersistence.save(entity);
-    log().debug("Done with TestEntity save");
+    log().debug("Done with TestInternalEntity save");
     assertThat(entity)
         .isNotNull()
         .hasFieldOrPropertyWithValue("fieldA", "fieldA1")
@@ -542,7 +542,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
         .isNotNull()
         .hasFieldOrPropertyWithValue("fieldA", "fieldA1")
         .hasFieldOrPropertyWithValue("testEntityB", entityB);
-    log().debug("Done with TestEntity get");
+    log().debug("Done with TestInternalEntity get");
   }
 
   /**
@@ -659,7 +659,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertThat(password).isEqualTo(undecryptedResult.getValue());
   }
   /**
-   * The Class TestEntity.
+   * The Class TestInternalEntity.
    */
   public static class TestEntity extends Base {
     /**
@@ -742,14 +742,14 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     @Override
     public String toString() {
-      return "TestEntity{"
+      return "TestInternalEntity{"
           + "testEntityB=" + testEntityB + ", fieldA='" + fieldA + '\'' + ", fieldList=" + fieldList
           + ", mapField=" + mapField + ", testEntityBList=" + testEntityBList + '}';
     }
   }
 
   /**
-   * The Class TestEntity.
+   * The Class TestInternalEntity.
    */
   public static class TestEntityB extends Base {
     private String fieldB;
@@ -786,7 +786,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   /**
-   * The Class TestEntity.
+   * The Class TestInternalEntity.
    */
   public static class TestEntityC extends Base {
     @Reference(idOnly = true) private List<TestEntityB> testEntityBs;

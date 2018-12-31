@@ -1,13 +1,11 @@
 package io.harness.queue;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 
-import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
@@ -19,14 +17,9 @@ import io.harness.version.VersionInfoManager;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.PrePersist;
-import org.mongodb.morphia.annotations.Reference;
 
 import java.net.UnknownHostException;
 import java.util.Date;
-import java.util.Objects;
 
 public class MongoQueueTest extends PersistenceTest {
   @Inject private HPersistence persistence;
@@ -456,7 +449,7 @@ public class MongoQueueTest extends PersistenceTest {
     on(entityQueue).set("persistence", persistence);
     on(entityQueue).set("versionInfoManager", versionInfoManager);
 
-    TestEntity testEntity = new TestEntity(1);
+    TestInternalEntity testEntity = TestInternalEntity.builder().id("1").build();
     getDatastore().save(testEntity);
 
     TestQueuableWithEntity message = new TestQueuableWithEntity(testEntity);
@@ -492,174 +485,5 @@ public class MongoQueueTest extends PersistenceTest {
     versionQueue.send(message);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 2.0.0"));
     assertThat(versionQueue.get()).isNotNull();
-  }
-
-  @Entity(value = "testEntity")
-  private static class TestEntity {
-    @Id private String id;
-    private int data;
-
-    /**
-     * Instantiates a new Test entity.
-     */
-    TestEntity() {}
-
-    /**
-     * Instantiates a new Test entity.
-     *
-     * @param data the data
-     */
-    TestEntity(int data) {
-      this.data = data;
-    }
-
-    /**
-     * Gets id.
-     *
-     * @return the id
-     */
-    public String getId() {
-      return id;
-    }
-
-    /**
-     * Sets id.
-     *
-     * @param id the id
-     */
-    public void setId(String id) {
-      this.id = id;
-    }
-
-    /**
-     * Gets data.
-     *
-     * @return the data
-     */
-    public int getData() {
-      return data;
-    }
-
-    /**
-     * Sets data.
-     *
-     * @param data the data
-     */
-    public void setData(int data) {
-      this.data = data;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(id, data);
-    }
-
-    /**
-     * On update.
-     */
-    @PrePersist
-    public void onUpdate() {
-      if (id == null) {
-        id = generateUuid();
-      }
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null || getClass() != obj.getClass()) {
-        return false;
-      }
-      TestEntity that = (TestEntity) obj;
-      return data == that.data && Objects.equals(id, that.id);
-    }
-
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this).add("id", id).add("data", data).toString();
-    }
-  }
-
-  /**
-   * The Class TestQueuableWithEntity.
-   */
-  @Entity(value = "!!!testEntityQueue", noClassnameStored = true)
-  public static class TestQueuableWithEntity extends Queuable {
-    @Reference private TestEntity entity;
-
-    /**
-     * Instantiates a new test queuable with entity.
-     */
-    public TestQueuableWithEntity() {}
-
-    /**
-     * Instantiates a new test queuable with entity.
-     *
-     * @param other the other
-     */
-    public TestQueuableWithEntity(TestQueuableWithEntity other) {
-      super(other);
-      this.entity = other.entity;
-    }
-
-    /**
-     * Instantiates a new test queuable with entity.
-     *
-     * @param entity the entity
-     */
-    public TestQueuableWithEntity(TestEntity entity) {
-      this.entity = entity;
-    }
-
-    /**
-     * Gets entity.
-     *
-     * @return the entity
-     */
-    public TestEntity getEntity() {
-      return entity;
-    }
-
-    /**
-     * Sets entity.
-     *
-     * @param entity the entity
-     */
-    public void setEntity(TestEntity entity) {
-      this.entity = entity;
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null || getClass() != obj.getClass()) {
-        return false;
-      }
-      TestQueuableWithEntity that = (TestQueuableWithEntity) obj;
-      return Objects.equals(entity, that.entity);
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-      return Objects.hash(entity);
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this).add("entity", entity).toString();
-    }
   }
 }
