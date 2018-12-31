@@ -11,9 +11,6 @@ import software.wings.beans.artifact.Artifact;
 
 import java.util.Date;
 
-/**
- * Created by peeyushaggarwal on 5/11/16.
- */
 @Entity(value = "collectorQueue", noClassnameStored = true)
 public class CollectEvent extends Queuable {
   @Reference(idOnly = true) private Artifact artifact;

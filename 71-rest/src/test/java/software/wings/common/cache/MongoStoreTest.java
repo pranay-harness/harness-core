@@ -30,7 +30,7 @@ public class MongoStoreTest extends WingsBaseTest {
 
   @Value
   @Builder
-  static class TestNominalEntity implements Distributable, Nominal {
+  public static class TestNominalEntity implements Distributable, Nominal {
     public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(TestNominalEntity.class).getSerialVersionUID();
     public static final long algorithmId = 0;
 
@@ -62,7 +62,7 @@ public class MongoStoreTest extends WingsBaseTest {
 
   @Value
   @Builder
-  static class TestOrdinalEntity implements Distributable, Ordinal {
+  public static class TestOrdinalEntity implements Distributable, Ordinal {
     public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(TestOrdinalEntity.class).getSerialVersionUID();
     public static final long algorithmId = 0;
 
