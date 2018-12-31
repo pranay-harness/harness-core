@@ -11,9 +11,6 @@ import org.mongodb.morphia.annotations.Entity;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by peeyushaggarwal on 5/20/16.
- */
 @Entity(value = "emailQueue", noClassnameStored = true)
 @Data
 @EqualsAndHashCode(callSuper = false)

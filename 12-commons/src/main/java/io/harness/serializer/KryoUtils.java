@@ -53,10 +53,6 @@ public class KryoUtils {
           .softReferences()
           .build();
 
-  public static void setKryoPoolForTests(KryoPool pool) {
-    KryoUtils.pool = pool;
-  }
-
   public static String asString(Object obj) {
     return Base64.encodeBase64String(asBytes(obj));
   }

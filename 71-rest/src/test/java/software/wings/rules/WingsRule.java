@@ -15,29 +15,9 @@ import com.google.inject.Module;
 
 import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.pool.KryoPool;
-import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.hazelcast.core.HazelcastInstance;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
-import de.javakaffee.kryoserializers.ArraysAsListSerializer;
-import de.javakaffee.kryoserializers.GregorianCalendarSerializer;
-import de.javakaffee.kryoserializers.JdkProxySerializer;
-import de.javakaffee.kryoserializers.SynchronizedCollectionsSerializer;
-import de.javakaffee.kryoserializers.UnmodifiableCollectionsSerializer;
-import de.javakaffee.kryoserializers.cglib.CGLibProxySerializer;
-import de.javakaffee.kryoserializers.guava.ArrayListMultimapSerializer;
-import de.javakaffee.kryoserializers.guava.HashMultimapSerializer;
-import de.javakaffee.kryoserializers.guava.ImmutableListSerializer;
-import de.javakaffee.kryoserializers.guava.ImmutableMapSerializer;
-import de.javakaffee.kryoserializers.guava.ImmutableMultimapSerializer;
-import de.javakaffee.kryoserializers.guava.ImmutableSetSerializer;
-import de.javakaffee.kryoserializers.guava.LinkedHashMultimapSerializer;
-import de.javakaffee.kryoserializers.guava.LinkedListMultimapSerializer;
-import de.javakaffee.kryoserializers.guava.ReverseListSerializer;
-import de.javakaffee.kryoserializers.guava.TreeMultimapSerializer;
-import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
 import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.event.EventsModule;
@@ -55,7 +35,6 @@ import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.BypassRuleMixin;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
-import io.harness.serializer.KryoUtils;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.waiter.Notifier;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -67,7 +46,6 @@ import org.junit.runners.model.Statement;
 import org.mockito.internal.util.MockUtil;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
-import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -86,9 +64,7 @@ import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationHandler;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -160,7 +136,6 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
    */
   protected void before(List<Annotation> annotations, boolean doesExtendBaseIntegrationTest, String testName)
       throws Throwable {
-    setKryoClassRegistrationForTests();
     initializeLogging();
     forceMaintenance(false);
     MongoClient mongoClient;
@@ -377,46 +352,5 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
   protected Logger log() {
     return LoggerFactory.getLogger(getClass());
-  }
-
-  private void setKryoClassRegistrationForTests() {
-    KryoUtils.setKryoPoolForTests(
-        new KryoPool
-            .Builder(() -> {
-              Kryo kryo = new Kryo();
-              // Log.TRACE();
-              kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
-              kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(
-                  FieldSerializer.CachedFieldNameStrategy.EXTENDED);
-              kryo.getFieldSerializerConfig().setCopyTransient(false);
-              kryo.register(asList("").getClass(), new ArraysAsListSerializer());
-              kryo.register(GregorianCalendar.class, new GregorianCalendarSerializer());
-              kryo.register(InvocationHandler.class, new JdkProxySerializer());
-              UnmodifiableCollectionsSerializer.registerSerializers(kryo);
-              SynchronizedCollectionsSerializer.registerSerializers(kryo);
-
-              // custom serializers for non-jdk libs
-
-              // register CGLibProxySerializer, works in combination with the appropriate action in
-              // handleUnregisteredClass (see below)
-              kryo.register(CGLibProxySerializer.CGLibProxyMarker.class, new CGLibProxySerializer());
-              // guava ImmutableList, ImmutableSet, ImmutableMap, ImmutableMultimap, ReverseList,
-              // UnmodifiableNavigableSet
-              ImmutableListSerializer.registerSerializers(kryo);
-              ImmutableSetSerializer.registerSerializers(kryo);
-              ImmutableMapSerializer.registerSerializers(kryo);
-              ImmutableMultimapSerializer.registerSerializers(kryo);
-              ReverseListSerializer.registerSerializers(kryo);
-              UnmodifiableNavigableSetSerializer.registerSerializers(kryo);
-              // guava ArrayListMultimap, HashMultimap, LinkedHashMultimap, LinkedListMultimap, TreeMultimap
-              ArrayListMultimapSerializer.registerSerializers(kryo);
-              HashMultimapSerializer.registerSerializers(kryo);
-              LinkedHashMultimapSerializer.registerSerializers(kryo);
-              LinkedListMultimapSerializer.registerSerializers(kryo);
-              TreeMultimapSerializer.registerSerializers(kryo);
-              return kryo;
-            })
-            .softReferences()
-            .build());
   }
 }
