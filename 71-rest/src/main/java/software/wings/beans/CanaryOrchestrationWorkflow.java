@@ -309,6 +309,15 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
       workflowPhases.add(workflowPhase);
       workflowPhase.getPhaseSteps().forEach(phaseStep -> populatePhaseSteps(phaseStep, getGraph()));
+      if (workflowPhase.checkInfraTemplatized()) {
+        String infraVarName = workflowPhase.fetchInfraMappingTemplatizedName();
+        if (!workflowPhase.checkServiceTemplatized()) {
+          Variable variable = contains(userVariables, infraVarName);
+          if (variable != null) {
+            variable.getMetadata().put("serviceId", workflowPhase.getServiceId());
+          }
+        }
+      }
     }
     if (rollbackWorkflowPhaseIdMap != null) {
       rollbackWorkflowPhaseIdMap.values().forEach(workflowPhase -> {
@@ -478,6 +487,10 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       newVariables.addAll(nonEntityVariables);
     }
     userVariables = newVariables;
+  }
+
+  private Variable contains(List<Variable> variables, String name) {
+    return variables.stream().filter(variable -> variable.getName().equals(name)).findFirst().orElse(null);
   }
 
   private List<Variable> getEntityVariables() {
