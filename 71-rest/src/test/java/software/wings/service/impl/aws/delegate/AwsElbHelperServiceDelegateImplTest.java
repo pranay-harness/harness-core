@@ -12,11 +12,13 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import com.amazonaws.services.elasticloadbalancing.model.DescribeInstanceHealthResult;
 import com.amazonaws.services.elasticloadbalancing.model.InstanceState;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
+import com.amazonaws.services.elasticloadbalancingv2.model.CreateTargetGroupResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthResult;
@@ -245,5 +247,25 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
     } catch (Exception ex) {
       Assert.fail(format("Exception: [%s]", ex.getMessage()));
     }
+  }
+
+  @Test
+  public void testCloneTargetGroup() {
+    AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
+    doReturn(mockV2Client)
+        .when(awsElbHelperServiceDelegate)
+        .getAmazonElasticLoadBalancingClientV2(any(), anyString(), any(), anyBoolean());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(new DescribeTargetGroupsResult().withTargetGroups(new TargetGroup().withTargetType("ip").withPort(80)))
+        .when(mockV2Client)
+        .describeTargetGroups(any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doReturn(new CreateTargetGroupResult().withTargetGroups(new TargetGroup().withTargetGroupArn("arn1")))
+        .when(mockV2Client)
+        .createTargetGroup(any());
+    awsElbHelperServiceDelegate.cloneTargetGroup(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "arn", mockCallback);
+    verify(mockV2Client).createTargetGroup(any());
   }
 }

@@ -26,4 +26,6 @@ public interface AwsElbHelperServiceDelegate {
       String region, String classicLB, String asgName, int timeout, ExecutionLogCallback logCallback);
   void waitForAsgInstancesToDeRegisterWithClassicLB(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String classicLB, String asgName, int timeout, ExecutionLogCallback logCallback);
+  String cloneTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String targetGroupArn, ExecutionLogCallback logCallback);
 }
