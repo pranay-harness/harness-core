@@ -12,8 +12,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
-import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import de.javakaffee.kryoserializers.ArraysAsListSerializer;
 import de.javakaffee.kryoserializers.GregorianCalendarSerializer;
 import de.javakaffee.kryoserializers.JdkProxySerializer;
@@ -31,9 +29,7 @@ import de.javakaffee.kryoserializers.guava.LinkedListMultimapSerializer;
 import de.javakaffee.kryoserializers.guava.ReverseListSerializer;
 import de.javakaffee.kryoserializers.guava.TreeMultimapSerializer;
 import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.serializer.KryoRegistrar;
-import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +49,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.TreeMap;
@@ -61,15 +58,7 @@ import java.util.TreeSet;
 public class OldRegistrar implements KryoRegistrar {
   private static final Logger logger = LoggerFactory.getLogger(OldRegistrar.class);
   @Override
-  @SuppressFBWarnings("DM_EXIT")
   public void register(Kryo kryo) throws Exception {
-    kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
-    kryo.setDefaultSerializer(CompatibleFieldSerializer.class);
-    kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(FieldSerializer.CachedFieldNameStrategy.EXTENDED);
-    kryo.getFieldSerializerConfig().setCopyTransient(false);
-
-    kryo.setRegistrationRequired(true); // Don't change
-
     // Register Kryo default serializers
     kryo.register(byte[].class, 10);
     kryo.register(char[].class, 11);
@@ -161,16 +150,9 @@ public class OldRegistrar implements KryoRegistrar {
     // Harness classes
     Map<String, Integer> classIds = serializationClasses();
     if (classIds != null) {
-      classIds.keySet().forEach(className -> {
-        try {
-          kryo.register(Class.forName(className), classIds.get(className));
-        } catch (ClassNotFoundException ex) {
-          logger.error("Class not found, couldn't register {}", className);
-        }
-      });
-    } else {
-      logger.error("Failed to get serialization classes");
-      System.exit(1);
+      for (Entry<String, Integer> entry : classIds.entrySet()) {
+        kryo.register(Class.forName(entry.getKey()), entry.getValue());
+      }
     }
   }
 }
