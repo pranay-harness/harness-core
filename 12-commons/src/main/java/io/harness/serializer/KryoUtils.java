@@ -1,11 +1,15 @@
 package io.harness.serializer;
 
+import static java.lang.String.format;
+
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Registration;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.pool.KryoPool;
 import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
+import com.esotericsoftware.kryo.util.IntMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.codec.binary.Base64;
 import org.objenesis.strategy.StdInstantiatorStrategy;
@@ -25,8 +29,9 @@ public class KryoUtils {
   private static KryoPool pool =
       new KryoPool
           .Builder(() -> {
-            Kryo kryo = new Kryo();
-            // Log.TRACE();
+            final ClassResolver classResolver = new ClassResolver();
+            Kryo kryo = new HKryo(classResolver);
+
             kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
             kryo.setDefaultSerializer(CompatibleFieldSerializer.class);
             kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(
@@ -40,7 +45,16 @@ public class KryoUtils {
               for (Class clazz : reflections.getSubTypesOf(KryoRegistrar.class)) {
                 Constructor<?> constructor = clazz.getConstructor();
                 final KryoRegistrar kryoRegistrar = (KryoRegistrar) constructor.newInstance();
+
+                final IntMap<Registration> previousState = new IntMap<>(classResolver.getRegistrations());
                 kryoRegistrar.register(kryo);
+
+                try {
+                  check(previousState, classResolver.getRegistrations());
+                } catch (Exception exception) {
+                  throw new IllegalStateException(
+                      format("Check for registration of %s failed", clazz.getCanonicalName()), exception);
+                }
               }
 
             } catch (Exception e) {
@@ -52,6 +66,24 @@ public class KryoUtils {
           })
           .softReferences()
           .build();
+
+  static void check(IntMap<Registration> previousState, IntMap<Registration> newState) {
+    for (IntMap.Entry entry : newState.entries()) {
+      final Registration newRegistration = (Registration) entry.value;
+      final Registration previousRegistration = previousState.get(newRegistration.getId());
+
+      if (previousRegistration == null) {
+        continue;
+      }
+
+      if (previousRegistration.getType() == newRegistration.getType()) {
+        continue;
+      }
+
+      throw new IllegalStateException(format("The id %d changed its class from %s to %s", newRegistration.getId(),
+          previousRegistration.getType().getCanonicalName(), newRegistration.getType().getCanonicalName()));
+    }
+  }
 
   public static String asString(Object obj) {
     return Base64.encodeBase64String(asBytes(obj));
