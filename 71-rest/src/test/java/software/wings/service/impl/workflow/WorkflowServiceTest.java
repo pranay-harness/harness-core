@@ -2278,6 +2278,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(variable -> variable.getEntityType())
         .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
 
+    // Assert Service Infra variable has metadata with the associated service infrastructure
+    final Variable infraVariable1 =
+        orchestrationWorkflow.getUserVariables()
+            .stream()
+            .filter(variable -> variable.getEntityType().equals(EntityType.INFRASTRUCTURE_MAPPING))
+            .findFirst()
+            .orElse(null);
+
+    assertThat(infraVariable1.getMetadata().get("serviceId")).isEqualTo(SERVICE_ID);
+
     workflowPhase = workflowPhases.get(1);
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())

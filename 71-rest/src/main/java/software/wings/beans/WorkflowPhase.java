@@ -313,28 +313,34 @@ public class WorkflowPhase implements UuidAware {
   }
 
   public String fetchServiceTemplatizedName() {
-    TemplateExpression serviceTemplateExpression =
-        templateExpressions.stream()
-            .filter(templateExpression -> templateExpression.getFieldName().equals("serviceId"))
-            .findFirst()
-            .orElse(null);
+    TemplateExpression serviceTemplateExpression = fetchServiceTemplateExpression();
     return WorkflowServiceTemplateHelper.getName(serviceTemplateExpression.getExpression(), EntityType.SERVICE);
   }
 
   public String fetchInfraMappingTemplatizedName() {
-    TemplateExpression serviceTemplateExpression =
-        templateExpressions.stream()
-            .filter(templateExpression -> templateExpression.getFieldName().equals("infraMappingId"))
-            .findFirst()
-            .orElse(null);
+    TemplateExpression infraTemplateExpression = fetchInfraMappingTemplateExpression();
     return WorkflowServiceTemplateHelper.getName(
-        serviceTemplateExpression.getExpression(), EntityType.INFRASTRUCTURE_MAPPING);
+        infraTemplateExpression.getExpression(), EntityType.INFRASTRUCTURE_MAPPING);
   }
 
   private boolean checkFieldTemplatized(String fieldName) {
     return templateExpressions != null
         && templateExpressions.stream().anyMatch(
                templateExpression -> templateExpression.getFieldName().equals(fieldName));
+  }
+
+  private TemplateExpression fetchServiceTemplateExpression() {
+    return templateExpressions.stream()
+        .filter(templateExpression -> templateExpression.getFieldName().equals("serviceId"))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private TemplateExpression fetchInfraMappingTemplateExpression() {
+    return templateExpressions.stream()
+        .filter(templateExpression -> templateExpression.getFieldName().equals("infraMappingId"))
+        .findFirst()
+        .orElse(null);
   }
 
   public static final class WorkflowPhaseBuilder {
