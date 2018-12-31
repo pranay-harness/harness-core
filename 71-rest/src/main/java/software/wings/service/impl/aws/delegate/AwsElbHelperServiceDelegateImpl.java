@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -9,6 +10,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogLevel.ERROR;
 
@@ -27,6 +29,8 @@ import com.amazonaws.services.elasticloadbalancing.model.DescribeInstanceHealthR
 import com.amazonaws.services.elasticloadbalancing.model.InstanceState;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
+import com.amazonaws.services.elasticloadbalancingv2.model.CreateTargetGroupRequest;
+import com.amazonaws.services.elasticloadbalancingv2.model.CreateTargetGroupResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsRequest;
@@ -34,8 +38,8 @@ import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsR
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import software.wings.beans.AwsConfig;
@@ -237,13 +241,13 @@ public class AwsElbHelperServiceDelegateImpl
   private boolean allInstancesDeRegistered(
       com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> instanceIds, String classicLB, ExecutionLogCallback logCallback) {
-    if (EmptyPredicate.isEmpty(instanceIds)) {
+    if (isEmpty(instanceIds)) {
       return true;
     }
     DescribeInstanceHealthRequest request = new DescribeInstanceHealthRequest().withLoadBalancerName(classicLB);
     DescribeInstanceHealthResult result = amazonElasticLoadBalancingClient.describeInstanceHealth(request);
     List<InstanceState> instances = result.getInstanceStates();
-    if (EmptyPredicate.isEmpty(instances)) {
+    if (isEmpty(instances)) {
       return true;
     }
     Set<String> instanceIdsInService =
@@ -286,13 +290,13 @@ public class AwsElbHelperServiceDelegateImpl
   private boolean allInstancesRegistered(
       com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> instanceIds, String classicLB, ExecutionLogCallback logCallback) {
-    if (EmptyPredicate.isEmpty(instanceIds)) {
+    if (isEmpty(instanceIds)) {
       return true;
     }
     DescribeInstanceHealthRequest request = new DescribeInstanceHealthRequest().withLoadBalancerName(classicLB);
     DescribeInstanceHealthResult result = amazonElasticLoadBalancingClient.describeInstanceHealth(request);
     List<InstanceState> instances = result.getInstanceStates();
-    if (EmptyPredicate.isEmpty(instances)) {
+    if (isEmpty(instances)) {
       return false;
     }
     Set<String> instanceIdsInService = instances.stream()
@@ -337,13 +341,13 @@ public class AwsElbHelperServiceDelegateImpl
 
   private boolean allTargetsDeRegistered(AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> targetIds, String targetGroupARN, ExecutionLogCallback logCallback) {
-    if (EmptyPredicate.isEmpty(targetIds)) {
+    if (isEmpty(targetIds)) {
       return true;
     }
     DescribeTargetHealthRequest request = new DescribeTargetHealthRequest().withTargetGroupArn(targetGroupARN);
     DescribeTargetHealthResult result = amazonElasticLoadBalancingClient.describeTargetHealth(request);
     List<TargetHealthDescription> healthDescriptions = result.getTargetHealthDescriptions();
-    if (EmptyPredicate.isEmpty(healthDescriptions)) {
+    if (isEmpty(healthDescriptions)) {
       return true;
     }
     Set<String> instanceIdsStillRegistered = healthDescriptions.stream()
@@ -387,13 +391,13 @@ public class AwsElbHelperServiceDelegateImpl
 
   private boolean allTargetsRegistered(AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> targetIds, String targetGroupARN, ExecutionLogCallback logCallback) {
-    if (EmptyPredicate.isEmpty(targetIds)) {
+    if (isEmpty(targetIds)) {
       return true;
     }
     DescribeTargetHealthRequest request = new DescribeTargetHealthRequest().withTargetGroupArn(targetGroupARN);
     DescribeTargetHealthResult result = amazonElasticLoadBalancingClient.describeTargetHealth(request);
     List<TargetHealthDescription> healthDescriptions = result.getTargetHealthDescriptions();
-    if (EmptyPredicate.isEmpty(healthDescriptions)) {
+    if (isEmpty(healthDescriptions)) {
       return false;
     }
     Set<String> instanceIdsRegistered =
@@ -405,5 +409,50 @@ public class AwsElbHelperServiceDelegateImpl
     logCallback.saveExecutionLog(format(
         "[%d] out of [%d] targets registered and in healthy state", instanceIdsRegistered.size(), targetIds.size()));
     return instanceIdsRegistered.containsAll(targetIds);
+  }
+
+  @Override
+  public String cloneTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String targetGroupArn, ExecutionLogCallback logCallback) {
+    try {
+      if (isBlank(targetGroupArn)) {
+        logCallback.saveExecutionLog("No target group mentioned to clone. No Operation performed.");
+        return "";
+      }
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonElasticLoadBalancingClient client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      DescribeTargetGroupsRequest describeTargetGroupsRequest =
+          new DescribeTargetGroupsRequest().withTargetGroupArns(targetGroupArn);
+      DescribeTargetGroupsResult describeTargetGroupsResult = client.describeTargetGroups(describeTargetGroupsRequest);
+      List<TargetGroup> targetGroups = describeTargetGroupsResult.getTargetGroups();
+      if (isEmpty(targetGroups)) {
+        logCallback.saveExecutionLog(format("No target group found with Arn: [%s]", targetGroupArn));
+        return "";
+      }
+      TargetGroup sourceTargetGroup = targetGroups.get(0);
+      CreateTargetGroupRequest createTargetGroupRequest =
+          new CreateTargetGroupRequest()
+              .withName(format("Harness-Stage-TargetGroupClone-%s", sourceTargetGroup.getTargetGroupName()))
+              .withTargetType(sourceTargetGroup.getTargetType())
+              .withHealthCheckPath(sourceTargetGroup.getHealthCheckPath())
+              .withHealthCheckPort(sourceTargetGroup.getHealthCheckPort())
+              .withHealthCheckIntervalSeconds(sourceTargetGroup.getHealthCheckIntervalSeconds())
+              .withHealthCheckProtocol(sourceTargetGroup.getHealthCheckProtocol())
+              .withHealthCheckTimeoutSeconds(sourceTargetGroup.getHealthCheckTimeoutSeconds())
+              .withHealthyThresholdCount(sourceTargetGroup.getHealthyThresholdCount())
+              .withPort(sourceTargetGroup.getPort())
+              .withProtocol(sourceTargetGroup.getProtocol())
+              .withTargetType(sourceTargetGroup.getTargetType())
+              .withVpcId(sourceTargetGroup.getVpcId())
+              .withUnhealthyThresholdCount(sourceTargetGroup.getUnhealthyThresholdCount());
+      CreateTargetGroupResult createTargetGroupResult = client.createTargetGroup(createTargetGroupRequest);
+      return createTargetGroupResult.getTargetGroups().get(0).getTargetGroupArn();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return "";
   }
 }
