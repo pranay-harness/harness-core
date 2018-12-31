@@ -31,8 +31,8 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
 
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
-  @Inject @Setter private TimerScheduledExecutorService timer;
-  @Inject @Setter private QueueController queueController;
+  @Inject private TimerScheduledExecutorService timer;
+  @Inject private QueueController queueController;
 
   public QueueListener(boolean primaryOnly) {
     this.primaryOnly = primaryOnly;

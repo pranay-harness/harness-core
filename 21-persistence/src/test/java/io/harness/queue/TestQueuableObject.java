@@ -1,32 +1,26 @@
-package software.wings.core.queue;
+package io.harness.queue;
 
 import com.google.common.base.MoreObjects;
 
-import io.harness.queue.Queuable;
-import org.junit.Ignore;
 import org.mongodb.morphia.annotations.Entity;
 
 import java.util.Objects;
 
-/**
- * Created by peeyushaggarwal on 4/13/16.
- */
-@Ignore
 @Entity(value = "!!!testQueue", noClassnameStored = true)
-public class QueuableObject extends Queuable {
+public class TestQueuableObject extends Queuable {
   private int data;
 
   /**
    * Instantiates a new queuable object.
    */
-  public QueuableObject() {}
+  public TestQueuableObject() {}
 
   /**
    * Instantiates a new queuable object.
    *
    * @param data the data
    */
-  public QueuableObject(int data) {
+  public TestQueuableObject(int data) {
     this.data = data;
   }
 
@@ -35,7 +29,7 @@ public class QueuableObject extends Queuable {
    *
    * @param other the other
    */
-  public QueuableObject(QueuableObject other) {
+  public TestQueuableObject(TestQueuableObject other) {
     super(other);
   }
 
@@ -76,7 +70,7 @@ public class QueuableObject extends Queuable {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    QueuableObject that = (QueuableObject) obj;
+    TestQueuableObject that = (TestQueuableObject) obj;
     return data == that.data;
   }
 

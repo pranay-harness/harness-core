@@ -25,7 +25,7 @@ public class MongoQueueTest extends PersistenceTest {
   @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
 
-  private MongoQueue<QueuableObject> queue;
+  private MongoQueue<TestQueuableObject> queue;
 
   /**
    * Setup.
@@ -34,7 +34,7 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Before
   public void setup() throws UnknownHostException {
-    queue = new MongoQueue<>(QueuableObject.class);
+    queue = new MongoQueue<>(TestQueuableObject.class);
     on(queue).set("persistence", persistence);
     on(queue).set("versionInfoManager", versionInfoManager);
   }
@@ -46,7 +46,7 @@ public class MongoQueueTest extends PersistenceTest {
   public void shouldGetWithNegativeWait() {
     assertThat(queue.get(Integer.MIN_VALUE)).isNull();
 
-    queue.send(new QueuableObject(1));
+    queue.send(new TestQueuableObject(1));
 
     assertThat(queue.get(Integer.MIN_VALUE)).isNotNull();
   }
@@ -58,7 +58,7 @@ public class MongoQueueTest extends PersistenceTest {
   public void shouldGetWhenNegativePoll() {
     assertThat(queue.get(100, Long.MIN_VALUE)).isNull();
 
-    queue.send(new QueuableObject(1));
+    queue.send(new TestQueuableObject(1));
 
     assertThat(queue.get(100, Long.MIN_VALUE)).isNotNull();
   }
@@ -68,7 +68,7 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldNotGetMessageOnceAcquired() {
-    queue.send(new QueuableObject(1));
+    queue.send(new TestQueuableObject(1));
 
     assertThat(queue.get()).isNotNull();
 
@@ -81,11 +81,11 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldReturnMessageBasedOnPriority() {
-    QueuableObject messageTwo = new QueuableObject(2);
+    TestQueuableObject messageTwo = new TestQueuableObject(2);
     messageTwo.setPriority(0.4);
-    QueuableObject messageOne = new QueuableObject(1);
+    TestQueuableObject messageOne = new TestQueuableObject(1);
     messageOne.setPriority(0.5);
-    QueuableObject messageThree = new QueuableObject(3);
+    TestQueuableObject messageThree = new TestQueuableObject(3);
     messageThree.setPriority(0.3);
 
     queue.send(messageTwo);
@@ -104,9 +104,9 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldReturnMessageInTimeOrder() {
-    QueuableObject messageOne = new QueuableObject(1);
-    QueuableObject messageTwo = new QueuableObject(2);
-    QueuableObject messageThree = new QueuableObject(3);
+    TestQueuableObject messageOne = new TestQueuableObject(1);
+    TestQueuableObject messageTwo = new TestQueuableObject(2);
+    TestQueuableObject messageThree = new TestQueuableObject(3);
 
     queue.send(messageOne);
     queue.send(messageTwo);
@@ -137,7 +137,7 @@ public class MongoQueueTest extends PersistenceTest {
   public void shouldGetMessageWhenAvailableWithinWaitPeriod() {
     Date start = new Date();
 
-    queue.send(new QueuableObject(1));
+    queue.send(new TestQueuableObject(1));
 
     queue.get(3000);
 
@@ -152,7 +152,7 @@ public class MongoQueueTest extends PersistenceTest {
   @Test
   @Repeat(times = 3, successes = 1)
   public void shouldNotGetMessageBeforeEarliestGet() throws InterruptedException {
-    QueuableObject message = new QueuableObject(1);
+    TestQueuableObject message = new TestQueuableObject(1);
     message.setEarliestGet(new Date(System.currentTimeMillis() + 200));
     queue.send(message);
 
@@ -168,7 +168,7 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldResetStuckMessageWhenResetDurationHasExpired() {
-    queue.send(new QueuableObject(1));
+    queue.send(new TestQueuableObject(1));
 
     queue.resetDuration(0);
     // sets resetTimestamp on messageOne
@@ -189,13 +189,13 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldNotExtendResetTimestampOfAlreadyExpiredMessage() {
-    queue.send(new QueuableObject(1));
+    queue.send(new TestQueuableObject(1));
     // sets resetTimestamp on messageOne
-    QueuableObject message = queue.get(0);
+    TestQueuableObject message = queue.get(0);
 
     queue.updateResetDuration(message);
 
-    QueuableObject actual = getDatastore().get(QueuableObject.class, message.getId());
+    TestQueuableObject actual = getDatastore().get(TestQueuableObject.class, message.getId());
 
     assertThat(actual.getResetTimestamp()).isEqualTo(message.getResetTimestamp());
   }
@@ -205,13 +205,13 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldNotExtendResetTimestampOfMessageWhichIsNotRunning() {
-    QueuableObject message = new QueuableObject(1);
+    TestQueuableObject message = new TestQueuableObject(1);
 
     queue.send(message);
 
     queue.updateResetDuration(message);
 
-    QueuableObject actual = getDatastore().get(QueuableObject.class, message.getId());
+    TestQueuableObject actual = getDatastore().get(TestQueuableObject.class, message.getId());
 
     assertThat(actual).isEqualToComparingFieldByField(message);
   }
@@ -222,10 +222,10 @@ public class MongoQueueTest extends PersistenceTest {
   @Test
   public void shouldExtendResetTimestampOfMessageWhichIsRunningAndNotExpired() {
     queue.resetDuration(10);
-    queue.send(new QueuableObject(1));
+    queue.send(new TestQueuableObject(1));
 
     Date beforeGet = new Date();
-    QueuableObject message = queue.get();
+    TestQueuableObject message = queue.get();
 
     Date messageResetTimeStamp = message.getResetTimestamp();
 
@@ -233,7 +233,7 @@ public class MongoQueueTest extends PersistenceTest {
     queue.resetDuration(20);
     queue.updateResetDuration(message);
 
-    QueuableObject actual = getDatastore().get(QueuableObject.class, message.getId());
+    TestQueuableObject actual = getDatastore().get(TestQueuableObject.class, message.getId());
     log().info("Actual Timestamp of message = {}", actual.getResetTimestamp());
 
     assertThat(actual.getResetTimestamp()).isAfter(messageResetTimeStamp);
@@ -250,7 +250,7 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(queue.count(Filter.NOT_RUNNING)).isEqualTo(0);
     assertThat(queue.count(Filter.ALL)).isEqualTo(0);
 
-    queue.send(new QueuableObject(1));
+    queue.send(new TestQueuableObject(1));
 
     assertThat(queue.count(Filter.RUNNING)).isEqualTo(0);
     assertThat(queue.count(Filter.NOT_RUNNING)).isEqualTo(1);
@@ -268,19 +268,19 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldAckMessage() {
-    queue.send(new QueuableObject(0));
-    queue.send(new QueuableObject(1));
+    queue.send(new TestQueuableObject(0));
+    queue.send(new TestQueuableObject(1));
 
-    QueuableObject result = queue.get();
+    TestQueuableObject result = queue.get();
 
-    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(2);
+    assertThat(getDatastore().getCount(TestQueuableObject.class)).isEqualTo(2);
 
     getDatastore()
-        .getCollection(QueuableObject.class)
+        .getCollection(TestQueuableObject.class)
         .find()
         .forEach(dbObject -> log().debug("TestQueueable = {}", dbObject));
     queue.ack(result);
-    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(TestQueuableObject.class)).isEqualTo(1);
   }
 
   /**
@@ -296,30 +296,30 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldReplaceMessageKeepingSameIdOnAckSend() {
-    QueuableObject message = new QueuableObject(0);
+    TestQueuableObject message = new TestQueuableObject(0);
 
     queue.send(message);
 
-    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(TestQueuableObject.class)).isEqualTo(1);
 
-    QueuableObject resultOne = queue.get();
+    TestQueuableObject resultOne = queue.get();
 
     Date expectedEarliestGet = new Date();
     double expectedPriority = 0.8;
     Date timeBeforeAckSend = new Date();
-    QueuableObject toBeSent = new QueuableObject(1);
+    TestQueuableObject toBeSent = new TestQueuableObject(1);
     toBeSent.setEarliestGet(expectedEarliestGet);
     toBeSent.setPriority(expectedPriority);
     queue.ackSend(resultOne, toBeSent);
 
-    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(TestQueuableObject.class)).isEqualTo(1);
 
-    QueuableObject actual = getDatastore().find(QueuableObject.class).get();
+    TestQueuableObject actual = getDatastore().find(TestQueuableObject.class).get();
 
     Date actualCreated = actual.getCreated();
     assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeAckSend).isBeforeOrEqualsTo(new Date());
 
-    QueuableObject expected = new QueuableObject(1);
+    TestQueuableObject expected = new TestQueuableObject(1);
     expected.setEarliestGet(expectedEarliestGet);
     expected.setPriority(expectedPriority);
     expected.setCreated(actualCreated);
@@ -332,7 +332,8 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldThrowNpeWhenAckSendIsCalledWithNullMessage() {
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ackSend(null, new QueuableObject(1)));
+    assertThatExceptionOfType(NullPointerException.class)
+        .isThrownBy(() -> queue.ackSend(null, new TestQueuableObject(1)));
   }
 
   /**
@@ -340,7 +341,8 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldThrowNpeWhenAckSendIsCalledWithNullReplacementMessage() {
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ackSend(new QueuableObject(1), null));
+    assertThatExceptionOfType(NullPointerException.class)
+        .isThrownBy(() -> queue.ackSend(new TestQueuableObject(1), null));
   }
 
   /**
@@ -348,25 +350,25 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldRequeueMessage() {
-    QueuableObject message = new QueuableObject(0);
+    TestQueuableObject message = new TestQueuableObject(0);
 
     queue.send(message);
 
-    QueuableObject resultOne = queue.get();
+    TestQueuableObject resultOne = queue.get();
 
     Date expectedEarliestGet = new Date();
     double expectedPriority = 0.8;
     Date timeBeforeRequeue = new Date();
     queue.requeue(resultOne, expectedEarliestGet, expectedPriority);
 
-    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(TestQueuableObject.class)).isEqualTo(1);
 
-    QueuableObject actual = getDatastore().find(QueuableObject.class).get();
+    TestQueuableObject actual = getDatastore().find(TestQueuableObject.class).get();
 
     Date actualCreated = actual.getCreated();
     assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeRequeue).isBeforeOrEqualsTo(new Date());
 
-    QueuableObject expected = new QueuableObject(0);
+    TestQueuableObject expected = new TestQueuableObject(0);
     expected.setVersion(versionInfoManager.getVersionInfo().getVersion());
     expected.setEarliestGet(expectedEarliestGet);
     expected.setPriority(expectedPriority);
@@ -381,7 +383,7 @@ public class MongoQueueTest extends PersistenceTest {
   @Test
   public void shouldThrowIllegalArgumentExceptionWhenRequeuedWithPriorityNaN() {
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> queue.requeue(new QueuableObject(1), new Date(), Double.NaN));
+        .isThrownBy(() -> queue.requeue(new TestQueuableObject(1), new Date(), Double.NaN));
   }
 
   /**
@@ -397,7 +399,8 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() {
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(new QueuableObject(1), null));
+    assertThatExceptionOfType(NullPointerException.class)
+        .isThrownBy(() -> queue.requeue(new TestQueuableObject(1), null));
   }
 
   /**
@@ -414,7 +417,7 @@ public class MongoQueueTest extends PersistenceTest {
   @Test
   @Ignore // this test is intermittently failing
   public void shouldSendMessage() {
-    QueuableObject message = new QueuableObject(1);
+    TestQueuableObject message = new TestQueuableObject(1);
 
     Date expectedEarliestGet = new Date();
     double expectedPriority = 0.8;
@@ -423,14 +426,14 @@ public class MongoQueueTest extends PersistenceTest {
     message.setEarliestGet(expectedEarliestGet);
     queue.send(message);
 
-    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(TestQueuableObject.class)).isEqualTo(1);
 
-    QueuableObject actual = getDatastore().find(QueuableObject.class).get();
+    TestQueuableObject actual = getDatastore().find(TestQueuableObject.class).get();
 
     Date actualCreated = actual.getCreated();
     assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeSend).isBeforeOrEqualsTo(new Date());
 
-    QueuableObject expected = new QueuableObject(1);
+    TestQueuableObject expected = new TestQueuableObject(1);
     expected.setVersion(versionInfoManager.getVersionInfo().getVersion());
     expected.setEarliestGet(expectedEarliestGet);
     expected.setPriority(expectedPriority);
@@ -465,11 +468,11 @@ public class MongoQueueTest extends PersistenceTest {
 
   @Test
   public void shouldFilterWithVersion() {
-    Queue<QueuableObject> versionQueue;
-    versionQueue = new MongoQueue<>(QueuableObject.class, 5, true);
+    Queue<TestQueuableObject> versionQueue;
+    versionQueue = new MongoQueue<>(TestQueuableObject.class, 5, true);
     on(versionQueue).set("persistence", persistence);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
-    QueuableObject message = new QueuableObject(1);
+    TestQueuableObject message = new TestQueuableObject(1);
     versionQueue.send(message);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 2.0.0"));
     assertThat(versionQueue.get()).isNull();
@@ -477,11 +480,11 @@ public class MongoQueueTest extends PersistenceTest {
 
   @Test
   public void shouldNotFilterWithVersion() {
-    Queue<QueuableObject> versionQueue;
-    versionQueue = new MongoQueue<>(QueuableObject.class, 5, false);
+    Queue<TestQueuableObject> versionQueue;
+    versionQueue = new MongoQueue<>(TestQueuableObject.class, 5, false);
     on(versionQueue).set("persistence", persistence);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
-    QueuableObject message = new QueuableObject(1);
+    TestQueuableObject message = new TestQueuableObject(1);
     versionQueue.send(message);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 2.0.0"));
     assertThat(versionQueue.get()).isNotNull();
