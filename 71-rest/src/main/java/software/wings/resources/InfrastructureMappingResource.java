@@ -12,6 +12,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.task.protocol.AwsElbListener;
 import io.swagger.annotations.Api;
 import software.wings.api.DeploymentType;
 import software.wings.beans.HostValidationRequest;
@@ -344,6 +345,16 @@ public class InfrastructureMappingResource {
   public RestResponse<Map<String, String>> getTargetGroups(@QueryParam("appId") String appId,
       @PathParam("infraMappingId") String infraMappingId, @PathParam("loadbalancerName") String loadbalancerName) {
     return new RestResponse<>(infrastructureMappingService.listTargetGroups(appId, infraMappingId, loadbalancerName));
+  }
+
+  @GET
+  @Path("{infraMappingId}/load-balancers/{loadbalancerName}/listeners")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<AwsElbListener>> getListeners(@QueryParam("appId") String appId,
+      @PathParam("infraMappingId") String infraMappingId, @PathParam("loadbalancerName") String loadbalancerName) {
+    return new RestResponse<>(infrastructureMappingService.listListeners(appId, infraMappingId, loadbalancerName));
   }
 
   @GET

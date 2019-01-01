@@ -16,7 +16,8 @@ public class AwsElbRequest extends AwsRequest {
     LIST_APPLICATION_LBS,
     LIST_TARGET_GROUPS_FOR_ALBS,
     LIST_NETWORK_LBS,
-    LIST_ELB_LBS
+    LIST_ELB_LBS,
+    LIST_LISTENER_FOR_ELB
   }
   @NotNull private AwsElbRequestType requestType;
   @NotNull private String region;

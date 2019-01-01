@@ -52,6 +52,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.validator.EntityNameValidator;
+import io.harness.delegate.task.protocol.AwsElbListener;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -1450,6 +1451,26 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return infrastructureProvider.listTargetGroups(computeProviderSetting, region, loadbalancerName, appId);
     }
     return Collections.emptyMap();
+  }
+
+  @Override
+  public List<AwsElbListener> listListeners(String appId, String infraMappingId, String loadbalancerName) {
+    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
+    notNullCheck("Service Infrastructure", infrastructureMapping);
+
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (infrastructureMapping instanceof AwsInfrastructureMapping
+        || infrastructureMapping instanceof EcsInfrastructureMapping) {
+      String region = infrastructureMapping instanceof AwsInfrastructureMapping
+          ? ((AwsInfrastructureMapping) infrastructureMapping).getRegion()
+          : ((EcsInfrastructureMapping) infrastructureMapping).getRegion();
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listListeners(computeProviderSetting, region, loadbalancerName, appId);
+    }
+    return Collections.emptyList();
   }
 
   @Override

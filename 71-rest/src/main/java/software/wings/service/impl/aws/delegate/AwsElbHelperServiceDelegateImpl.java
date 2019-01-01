@@ -28,18 +28,25 @@ import com.amazonaws.services.elasticloadbalancing.model.DescribeInstanceHealthR
 import com.amazonaws.services.elasticloadbalancing.model.DescribeInstanceHealthResult;
 import com.amazonaws.services.elasticloadbalancing.model.InstanceState;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
+import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancing;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.elasticloadbalancingv2.model.CreateTargetGroupRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.CreateTargetGroupResult;
+import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersRequest;
+import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthResult;
+import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.task.protocol.AwsElbListener;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import software.wings.beans.AwsConfig;
@@ -50,10 +57,12 @@ import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Singleton
@@ -206,6 +215,81 @@ public class AwsElbHelperServiceDelegateImpl
       handleAmazonClientException(amazonClientException);
     }
     return emptyMap();
+  }
+
+  @Override
+  public Optional<TargetGroup> getTargetGroup(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupArn) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
+          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
+              awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      DescribeTargetGroupsRequest describeTargetGroupsRequest =
+          new DescribeTargetGroupsRequest().withTargetGroupArns(targetGroupArn);
+      DescribeTargetGroupsResult describeTargetGroupsResult =
+          amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest);
+
+      if (EmptyPredicate.isNotEmpty(describeTargetGroupsResult.getTargetGroups())) {
+        return Optional.of(describeTargetGroupsResult.getTargetGroups().get(0));
+      }
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<TargetGroup> getTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String targetGroupName, String loadBalancerName) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
+          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
+              awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      DescribeTargetGroupsRequest describeTargetGroupsRequest =
+          new DescribeTargetGroupsRequest().withNames(targetGroupName).withLoadBalancerArn(loadBalancerName);
+      DescribeTargetGroupsResult describeTargetGroupsResult =
+          amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest);
+
+      if (EmptyPredicate.isNotEmpty(describeTargetGroupsResult.getTargetGroups())) {
+        return Optional.of(describeTargetGroupsResult.getTargetGroups().get(0));
+      }
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<LoadBalancer> getLoadBalancer(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
+          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
+              awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      DescribeLoadBalancersRequest describeLoadBalancersRequest =
+          new DescribeLoadBalancersRequest().withNames(loadBalancerName);
+      DescribeLoadBalancersResult describeLoadBalancersResult =
+          amazonElasticLoadBalancingClient.describeLoadBalancers(describeLoadBalancersRequest);
+
+      if (EmptyPredicate.isNotEmpty(describeLoadBalancersResult.getLoadBalancers())) {
+        return Optional.of(describeLoadBalancersResult.getLoadBalancers().get(0));
+      }
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+
+    return Optional.empty();
   }
 
   @Override
@@ -412,12 +496,74 @@ public class AwsElbHelperServiceDelegateImpl
   }
 
   @Override
-  public String cloneTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      String targetGroupArn, ExecutionLogCallback logCallback) {
+  public List<AwsElbListener> getElbListenersForLoadBalaner(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName) {
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+
+    AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
+        getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
+            awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+    DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest().withNames(loadBalancerName);
+
+    DescribeLoadBalancersResult result = amazonElasticLoadBalancingClient.describeLoadBalancers(request);
+    if (EmptyPredicate.isEmpty(result.getLoadBalancers())) {
+      throw new WingsException(
+          ErrorCode.INVALID_ARGUMENT, "Invalid Load Balancer Name Provided. Could not be found", WingsException.USER)
+          .addParam("message", "Invalid Load Balancer Name Provided. Could not be found");
+    }
+
+    String elbArn = result.getLoadBalancers().get(0).getLoadBalancerArn();
+
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
+        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+
+    DescribeListenersResult listenerResult =
+        client.describeListeners(new DescribeListenersRequest().withLoadBalancerArn(elbArn));
+
+    if (EmptyPredicate.isEmpty(listenerResult.getListeners())) {
+      return Collections.emptyList();
+    }
+
+    return listenerResult.getListeners()
+        .stream()
+        .map(listener
+            -> AwsElbListener.builder()
+                   .listenerArn(listener.getListenerArn())
+                   .loadBalancerArn(elbArn)
+                   .protocol(listener.getProtocol())
+                   .port(listener.getPort())
+                   .build())
+        .collect(toList());
+  }
+
+  @Override
+  public Listener getElbListener(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String listenerArn) {
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
+        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+
+    DescribeListenersResult listenerResult =
+        client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));
+
+    if (EmptyPredicate.isEmpty(listenerResult.getListeners())) {
+      throw new WingsException(
+          ErrorCode.INVALID_ARGUMENT, "Invalid ListenerArn. Listener could not be found", WingsException.USER)
+          .addParam("message", "Invalid ListenerArn. Listener could not be found");
+    }
+
+    return listenerResult.getListeners().get(0);
+  }
+
+  @Override
+  public TargetGroup cloneTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String targetGroupArn, String newTargetGroupName) {
     try {
       if (isBlank(targetGroupArn)) {
-        logCallback.saveExecutionLog("No target group mentioned to clone. No Operation performed.");
-        return "";
+        throw new WingsException(
+            ErrorCode.INVALID_ARGUMENT, "TargetGroupArn to be cloned from can not be empty", WingsException.USER)
+            .addParam("message", "TargetGroupArn to be cloned from can not be empty");
       }
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonElasticLoadBalancingClient client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
@@ -427,8 +573,9 @@ public class AwsElbHelperServiceDelegateImpl
       DescribeTargetGroupsResult describeTargetGroupsResult = client.describeTargetGroups(describeTargetGroupsRequest);
       List<TargetGroup> targetGroups = describeTargetGroupsResult.getTargetGroups();
       if (isEmpty(targetGroups)) {
-        logCallback.saveExecutionLog(format("No target group found with Arn: [%s]", targetGroupArn));
-        return "";
+        throw new WingsException(
+            ErrorCode.INVALID_ARGUMENT, "TargetGroupArn to be cloned from could not be Found", WingsException.USER)
+            .addParam("message", "TargetGroupArn to be cloned from could not be Found");
       }
       TargetGroup sourceTargetGroup = targetGroups.get(0);
       CreateTargetGroupRequest createTargetGroupRequest =
@@ -447,12 +594,13 @@ public class AwsElbHelperServiceDelegateImpl
               .withVpcId(sourceTargetGroup.getVpcId())
               .withUnhealthyThresholdCount(sourceTargetGroup.getUnhealthyThresholdCount());
       CreateTargetGroupResult createTargetGroupResult = client.createTargetGroup(createTargetGroupRequest);
-      return createTargetGroupResult.getTargetGroups().get(0).getTargetGroupArn();
+      return createTargetGroupResult.getTargetGroups().get(0);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
     }
-    return "";
+
+    return null;
   }
 }

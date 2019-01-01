@@ -8,6 +8,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.task.protocol.AwsElbListener;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -21,6 +22,8 @@ import software.wings.service.impl.aws.model.AwsElbListAppElbsResponse;
 import software.wings.service.impl.aws.model.AwsElbListClassicElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListClassicElbsResponse;
 import software.wings.service.impl.aws.model.AwsElbListElbsRequest;
+import software.wings.service.impl.aws.model.AwsElbListListenerRequest;
+import software.wings.service.impl.aws.model.AwsElbListListenerResponse;
 import software.wings.service.impl.aws.model.AwsElbListNetworkElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListTargetGroupsRequest;
 import software.wings.service.impl.aws.model.AwsElbListTargetGroupsResponse;
@@ -102,6 +105,20 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
             .build(),
         appId);
     return ((AwsElbListTargetGroupsResponse) response).getTargetGroups();
+  }
+
+  @Override
+  public List<AwsElbListener> listListenersForElb(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String loadBalancerName, String appId) {
+    AwsResponse response = executeTask(awsConfig.getAccountId(),
+        AwsElbListListenerRequest.builder()
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .region(region)
+            .loadBalancerName(loadBalancerName)
+            .build(),
+        appId);
+    return ((AwsElbListListenerResponse) response).getAwsElbListeners();
   }
 
   private AwsResponse executeTask(String accountId, AwsElbRequest request, String appId) {

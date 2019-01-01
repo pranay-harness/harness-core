@@ -16,6 +16,7 @@ import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsElbListAppElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListClassicElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListElbsRequest;
+import software.wings.service.impl.aws.model.AwsElbListListenerRequest;
 import software.wings.service.impl.aws.model.AwsElbListNetworkElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListTargetGroupsRequest;
 import software.wings.service.impl.aws.model.AwsElbRequest;
@@ -50,5 +51,8 @@ public class AwsElbTaskTest extends WingsBaseTest {
     request = AwsElbListNetworkElbsRequest.builder().build();
     task.run(new Object[] {request});
     verify(mockElbHelperServiceDelegate).listNetworkLoadBalancers(any(), anyList(), anyString());
+    request = AwsElbListListenerRequest.builder().build();
+    task.run(new Object[] {request});
+    verify(mockElbHelperServiceDelegate).getElbListenersForLoadBalaner(any(), anyList(), anyString(), anyString());
   }
 }

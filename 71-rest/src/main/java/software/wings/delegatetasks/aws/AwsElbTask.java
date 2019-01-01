@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.AwsElbListener;
 import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -15,6 +16,8 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsElbListAppElbsResponse;
 import software.wings.service.impl.aws.model.AwsElbListClassicElbsResponse;
+import software.wings.service.impl.aws.model.AwsElbListListenerRequest;
+import software.wings.service.impl.aws.model.AwsElbListListenerResponse;
 import software.wings.service.impl.aws.model.AwsElbListTargetGroupsRequest;
 import software.wings.service.impl.aws.model.AwsElbListTargetGroupsResponse;
 import software.wings.service.impl.aws.model.AwsElbRequest;
@@ -72,6 +75,12 @@ public class AwsElbTask extends AbstractDelegateRunnableTask {
               elbHelperServiceDelegate.listTargetGroupsForAlb(request.getAwsConfig(), request.getEncryptionDetails(),
                   request.getRegion(), ((AwsElbListTargetGroupsRequest) request).getLoadBalancerName());
           return AwsElbListTargetGroupsResponse.builder().targetGroups(targetGroups).executionStatus(SUCCESS).build();
+        }
+        case LIST_LISTENER_FOR_ELB: {
+          List<AwsElbListener> listeners = elbHelperServiceDelegate.getElbListenersForLoadBalaner(
+              request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion(),
+              ((AwsElbListListenerRequest) request).getLoadBalancerName());
+          return AwsElbListListenerResponse.builder().awsElbListeners(listeners).executionStatus(SUCCESS).build();
         }
         default: {
           throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);
