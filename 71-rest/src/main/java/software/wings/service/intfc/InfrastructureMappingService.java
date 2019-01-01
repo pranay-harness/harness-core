@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.task.protocol.AwsElbListener;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.validation.Create;
@@ -138,4 +139,6 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   void deleteByYamlGit(String appId, String infraMappingId, boolean syncFromGit);
 
   List<InfrastructureMapping> listByComputeProviderId(String accountId, String computeProviderId);
+
+  List<AwsElbListener> listListeners(String appId, String infraMappingId, String loadbalancerName);
 }

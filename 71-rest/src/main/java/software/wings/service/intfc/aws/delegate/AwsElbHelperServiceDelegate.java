@@ -1,11 +1,16 @@
 package software.wings.service.intfc.aws.delegate;
 
+import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
+import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
+import io.harness.delegate.task.protocol.AwsElbListener;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface AwsElbHelperServiceDelegate {
   List<String> listClassicLoadBalancers(
@@ -26,6 +31,16 @@ public interface AwsElbHelperServiceDelegate {
       String region, String classicLB, String asgName, int timeout, ExecutionLogCallback logCallback);
   void waitForAsgInstancesToDeRegisterWithClassicLB(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String classicLB, String asgName, int timeout, ExecutionLogCallback logCallback);
-  String cloneTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      String targetGroupArn, ExecutionLogCallback logCallback);
+  TargetGroup cloneTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String targetGroupArn, String newTargetGroupName);
+  List<AwsElbListener> getElbListenersForLoadBalaner(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName);
+  Listener getElbListener(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String listenerArn);
+  Optional<TargetGroup> getTargetGroup(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupArn);
+  Optional<TargetGroup> getTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String targetGroupName, String loadBalancerName);
+  Optional<LoadBalancer> getLoadBalancer(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName);
 }

@@ -265,7 +265,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
         .when(mockV2Client)
         .createTargetGroup(any());
     awsElbHelperServiceDelegate.cloneTargetGroup(
-        AwsConfig.builder().build(), emptyList(), "us-east-1", "arn", mockCallback);
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "arn", "stageTargetGroup");
     verify(mockV2Client).createTargetGroup(any());
   }
 }

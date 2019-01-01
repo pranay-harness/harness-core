@@ -21,6 +21,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.model.AmazonECSException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.task.protocol.AwsElbListener;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -256,6 +257,13 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       SettingAttribute computeProviderSetting, String region, String loadBalancerName, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsElbHelperServiceManager.listTargetGroupsForAlb(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, loadBalancerName, appId);
+  }
+
+  public List<AwsElbListener> listListeners(
+      SettingAttribute computeProviderSetting, String region, String loadBalancerName, String appId) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsElbHelperServiceManager.listListenersForElb(
         awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, loadBalancerName, appId);
   }
 
