@@ -50,22 +50,6 @@ public abstract class Queuable implements PersistentEntity {
   }
 
   /**
-   * Instantiates a new queuable.
-   *
-   * @param other Queuable to copy from.
-   */
-  public Queuable(Queuable other) {
-    id = other.id;
-    running = other.running;
-    resetTimestamp = other.resetTimestamp;
-    earliestGet = other.earliestGet;
-    priority = other.priority;
-    created = other.created;
-    retries = other.retries;
-    version = other.version;
-  }
-
-  /**
    * Gets id.
    *
    * @return the id

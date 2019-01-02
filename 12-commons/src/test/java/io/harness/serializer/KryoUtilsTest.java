@@ -23,15 +23,17 @@ public class KryoUtilsTest {
     final ClassResolver classResolver = new ClassResolver();
     Kryo kryo = new HKryo(classResolver);
 
-    kryo.register(int[].class, 10);
+    kryo.register(KryoUtilsTest.class, 123456);
 
-    assertThatThrownBy(() -> kryo.register(int[].class, 11))
-        .hasMessage("The class int[] was already registered with id 10, do not double register it with 11");
+    assertThatThrownBy(() -> kryo.register(KryoUtilsTest.class, 123457))
+        .hasMessage("The class io.harness.serializer.KryoUtilsTest was already registered with id 123456,"
+            + " do not double register it with 123457");
 
     final IntMap<Registration> previousState = new IntMap<>(classResolver.getRegistrations());
-    kryo.register(short[].class, 10);
+    kryo.register(ClassResolver.class, 123456);
 
     assertThatThrownBy(() -> KryoUtils.check(previousState, classResolver.getRegistrations()))
-        .hasMessage("The id 10 changed its class from int[] to short[]");
+        .hasMessage("The id 123456 changed its class from io.harness.serializer.KryoUtilsTest"
+            + " to io.harness.serializer.ClassResolver");
   }
 }

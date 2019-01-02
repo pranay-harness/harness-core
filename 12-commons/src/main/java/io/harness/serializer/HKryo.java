@@ -1,20 +1,166 @@
 package io.harness.serializer;
 
+import static java.util.Arrays.asList;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.common.collect.TreeMultimap;
+
 import com.esotericsoftware.kryo.ClassResolver;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Registration;
 import com.esotericsoftware.kryo.Serializer;
+import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.esotericsoftware.kryo.util.DefaultStreamFactory;
 import com.esotericsoftware.kryo.util.IntMap;
 import com.esotericsoftware.kryo.util.MapReferenceResolver;
+import de.javakaffee.kryoserializers.ArraysAsListSerializer;
+import de.javakaffee.kryoserializers.GregorianCalendarSerializer;
+import de.javakaffee.kryoserializers.JdkProxySerializer;
+import de.javakaffee.kryoserializers.SynchronizedCollectionsSerializer;
+import de.javakaffee.kryoserializers.UnmodifiableCollectionsSerializer;
+import de.javakaffee.kryoserializers.cglib.CGLibProxySerializer;
+import de.javakaffee.kryoserializers.guava.ArrayListMultimapSerializer;
+import de.javakaffee.kryoserializers.guava.HashMultimapSerializer;
+import de.javakaffee.kryoserializers.guava.ImmutableListSerializer;
+import de.javakaffee.kryoserializers.guava.ImmutableMapSerializer;
+import de.javakaffee.kryoserializers.guava.ImmutableMultimapSerializer;
+import de.javakaffee.kryoserializers.guava.ImmutableSetSerializer;
+import de.javakaffee.kryoserializers.guava.LinkedHashMultimapSerializer;
+import de.javakaffee.kryoserializers.guava.LinkedListMultimapSerializer;
+import de.javakaffee.kryoserializers.guava.ReverseListSerializer;
+import de.javakaffee.kryoserializers.guava.TreeMultimapSerializer;
+import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
+import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.InvocationHandler;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Currency;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TimeZone;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class HKryo extends Kryo {
   private static final Logger logger = LoggerFactory.getLogger(HKryo.class);
 
   public HKryo(ClassResolver classResolver) {
     super(classResolver, new MapReferenceResolver(), new DefaultStreamFactory());
+    setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
+    setDefaultSerializer(CompatibleFieldSerializer.class);
+    getFieldSerializerConfig().setCachedFieldNameStrategy(FieldSerializer.CachedFieldNameStrategy.EXTENDED);
+    getFieldSerializerConfig().setCopyTransient(false);
+    setRegistrationRequired(true);
+
+    register(byte[].class, 10);
+    register(char[].class, 11);
+    register(short[].class, 12);
+    register(int[].class, 13);
+    register(long[].class, 14);
+    register(float[].class, 15);
+    register(double[].class, 16);
+    register(boolean[].class, 17);
+    register(String[].class, 18);
+    register(Object[].class, 19);
+    register(BigInteger.class, 20);
+    register(BigDecimal.class, 21);
+    register(Class.class, 22);
+    register(Date.class, 23);
+    // kryo.register(Enum.class, 24);
+    register(EnumSet.class, 25);
+    register(Currency.class, 26);
+    register(StringBuffer.class, 27);
+    register(StringBuilder.class, 28);
+    register(Collections.EMPTY_LIST.getClass(), 29);
+    register(Collections.EMPTY_MAP.getClass(), 30);
+    register(Collections.EMPTY_SET.getClass(), 31);
+    register(Collections.singletonList(null).getClass(), 32);
+    register(Collections.singletonMap(null, null).getClass(), 33);
+    register(Collections.singleton(null).getClass(), 34);
+    register(ArrayList.class, 35);
+    register(HashMap.class, 36);
+    register(TreeSet.class, 37);
+    register(Collection.class, 38);
+    register(TreeMap.class, 39);
+    register(Map.class, 40);
+    register(TimeZone.class, 41);
+    register(Calendar.class, 42);
+    register(Locale.class, 43);
+    register(Charset.class, 44);
+    register(URL.class, 45);
+    register(Optional.class, 46);
+    register(asList("").getClass(), new ArraysAsListSerializer(), 47);
+    register(java.util.Vector.class, 48);
+    register(java.util.HashSet.class, 49);
+    register(java.util.LinkedHashMap.class, 50);
+
+    // Guava ArrayListMultimap, HashMultimap, LinkedHashMultimap, LinkedListMultimap, TreeMultimap
+    register(ArrayListMultimap.class, new ArrayListMultimapSerializer(), 51);
+    register(HashMultimap.class, new HashMultimapSerializer(), 52);
+    register(LinkedHashMultimap.class, new LinkedHashMultimapSerializer(), 53);
+    register(LinkedListMultimap.class, new LinkedListMultimapSerializer(), 54);
+    register(TreeMultimap.class, new TreeMultimapSerializer(), 55);
+    register(InterruptedException.class, 56);
+    register(Sets.unmodifiableNavigableSet(new TreeSet<>()).getClass(), new UnmodifiableNavigableSetSerializer(), 57);
+    register(Lists.reverse(Lists.newLinkedList()).getClass(), ReverseListSerializer.forReverseList(), 58);
+    register(Lists.reverse(Lists.newArrayList()).getClass(), ReverseListSerializer.forRandomAccessReverseList(), 59);
+    register(InvocationHandler.class, new JdkProxySerializer(), 61);
+    register(GregorianCalendar.class, new GregorianCalendarSerializer(), 62);
+
+    // register CGLibProxySerializer, works in combination with the appropriate action in
+    // handleUnregisteredClass (see below)
+    register(CGLibProxySerializer.CGLibProxyMarker.class, new CGLibProxySerializer(), 63);
+
+    register(RuntimeException.class, 64);
+    register(NullPointerException.class, 65);
+    register(IllegalStateException.class, 66);
+    register(java.io.IOException.class, 67);
+    register(IllegalArgumentException.class, 68);
+    register(java.net.SocketTimeoutException.class, 69);
+    register(ExceptionInInitializerError.class, 70);
+    register(java.net.UnknownHostException.class, 71);
+    register(NoSuchMethodException.class, 72);
+    register(NoClassDefFoundError.class, 73);
+    register(javax.net.ssl.SSLHandshakeException.class, 74);
+    register(java.util.concurrent.atomic.AtomicInteger.class, 75);
+    register(java.net.ConnectException.class, 76);
+    register(StringIndexOutOfBoundsException.class, 77);
+    register(java.util.LinkedList.class, 78);
+    register(ArrayListMultimap.class, new ArrayListMultimapSerializer(), 51);
+    register(HashMultimap.class, new HashMultimapSerializer(), 52);
+    register(java.net.ConnectException.class, 76);
+    register(StringIndexOutOfBoundsException.class, 77);
+    register(java.util.LinkedList.class, 78);
+
+    // External Serializers
+    UnmodifiableCollectionsSerializer.registerSerializers(this);
+    SynchronizedCollectionsSerializer.registerSerializers(this);
+
+    // guava ImmutableList, ImmutableSet, ImmutableMap, ImmutableMultimap, ReverseList, UnmodifiableNavigableSet
+    ImmutableListSerializer.registerSerializers(this);
+    ImmutableSetSerializer.registerSerializers(this);
+    ImmutableMapSerializer.registerSerializers(this);
+    ImmutableMultimapSerializer.registerSerializers(this);
   }
 
   private Registration check(Registration registration, int id) {

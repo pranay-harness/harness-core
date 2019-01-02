@@ -23,18 +23,6 @@ public class NotifyEvent extends Queuable {
   public NotifyEvent() {}
 
   /**
-   * Copy constructor.
-   *
-   * @param other NotifyEvent to create copy for.
-   */
-  public NotifyEvent(NotifyEvent other) {
-    super(other);
-    this.waitInstanceId = other.waitInstanceId;
-    this.correlationIds = other.correlationIds;
-    this.error = other.error;
-  }
-
-  /**
    * Gets wait instance id.
    *
    * @return the wait instance id

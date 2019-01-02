@@ -7,12 +7,9 @@ import com.esotericsoftware.kryo.Registration;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.pool.KryoPool;
-import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
-import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.esotericsoftware.kryo.util.IntMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.codec.binary.Base64;
-import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +28,6 @@ public class KryoUtils {
           .Builder(() -> {
             final ClassResolver classResolver = new ClassResolver();
             Kryo kryo = new HKryo(classResolver);
-
-            kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
-            kryo.setDefaultSerializer(CompatibleFieldSerializer.class);
-            kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(
-                FieldSerializer.CachedFieldNameStrategy.EXTENDED);
-            kryo.getFieldSerializerConfig().setCopyTransient(false);
-
-            kryo.setRegistrationRequired(true); // Don't change
 
             try {
               Reflections reflections = new Reflections("io.harness.serializer.kryo");

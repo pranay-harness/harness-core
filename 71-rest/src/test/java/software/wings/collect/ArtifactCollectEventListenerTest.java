@@ -27,6 +27,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.serializer.KryoUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -66,6 +67,11 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   @Before
   public void setupMocks() {
     when(appService.get(APP_ID)).thenReturn(APP);
+  }
+
+  @Test
+  public void shouldClone() {
+    KryoUtils.clone(new CollectEvent());
   }
 
   @Test

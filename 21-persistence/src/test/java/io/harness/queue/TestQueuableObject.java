@@ -25,15 +25,6 @@ public class TestQueuableObject extends Queuable {
   }
 
   /**
-   * Instantiates a new queuable object.
-   *
-   * @param other the other
-   */
-  public TestQueuableObject(TestQueuableObject other) {
-    super(other);
-  }
-
-  /**
    * Gets data.
    *
    * @return the data

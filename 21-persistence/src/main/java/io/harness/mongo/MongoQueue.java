@@ -9,8 +9,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
+import io.harness.serializer.KryoUtils;
 import io.harness.version.VersionInfoManager;
-import org.joor.Reflect;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -228,7 +228,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
       throw new IllegalArgumentException("priority was NaN");
     }
 
-    T forRequeue = Reflect.on(klass).create(message).get();
+    T forRequeue = KryoUtils.clone(message);
     forRequeue.setId(null);
     forRequeue.setPriority(priority);
     forRequeue.setEarliestGet(earliestGet);

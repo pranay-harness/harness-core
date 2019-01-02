@@ -14,6 +14,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.serializer.KryoUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -29,6 +30,11 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Inject @InjectMocks private ExecutionEventListener executionEventListener;
   @Inject private WingsPersistence wingsPersistence;
   @Mock private StateMachineExecutor stateMachineExecutor;
+
+  @Test
+  public void shouldClone() {
+    KryoUtils.clone(ExecutionEvent.builder().build());
+  }
 
   @Test
   public void shouldNoQueueIfNotRunningOrPaused() throws Exception {
