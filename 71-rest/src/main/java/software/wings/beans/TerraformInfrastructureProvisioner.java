@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -23,8 +24,8 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
    * This could be either a branch or a commit id or any other reference which
    * can be checked out.
    */
-  private String sourceRepoBranch;
-  private String path;
+  @NotEmpty private String sourceRepoBranch;
+  @NotNull private String path;
   private List<NameValuePair> backendConfigs;
 
   @Override

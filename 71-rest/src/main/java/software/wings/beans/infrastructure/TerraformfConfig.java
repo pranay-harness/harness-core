@@ -7,6 +7,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
 
 import java.util.List;
 
@@ -30,6 +31,8 @@ public class TerraformfConfig extends Base {
    */
   private final List<NameValuePair> variables;
   private final List<NameValuePair> backendConfigs;
+  private final List<String> targets;
+  private final TerraformCommand command;
 
   @Indexed private final String entityId;
   private final String workflowExecutionId;

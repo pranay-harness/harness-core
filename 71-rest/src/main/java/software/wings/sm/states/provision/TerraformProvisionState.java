@@ -1,6 +1,7 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -223,7 +224,11 @@ public abstract class TerraformProvisionState extends State {
     } else {
       if (this.getStateType().equals(StateType.TERRAFORM_DESTROY.name())) {
         if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
-          deleteTerraformConfig(context);
+          if (isNotEmpty(getTargets())) {
+            saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
+          } else {
+            deleteTerraformConfig(context);
+          }
         }
       }
     }
@@ -420,6 +425,7 @@ public abstract class TerraformProvisionState extends State {
         encryptedBackendConfigs = extractEncryptedTextVariables(this.backendConfigs.stream(), context);
       }
     }
+    targets = resolveTargets(targets, context);
 
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder()
@@ -461,6 +467,13 @@ public abstract class TerraformProvisionState extends State {
         .build();
   }
 
+  protected List<String> resolveTargets(List<String> targets, ExecutionContext context) {
+    if (isEmpty(targets)) {
+      return targets;
+    }
+    return targets.stream().map(context::renderExpression).collect(Collectors.toList());
+  }
+
   /**
    * getVariables() returns all variables including backend configs.
    * for just the variables, this method should be called.
@@ -479,6 +492,8 @@ public abstract class TerraformProvisionState extends State {
                                             .variables(executionData.getVariables())
                                             .backendConfigs(executionData.getBackendConfigs())
                                             .workflowExecutionId(context.getWorkflowExecutionId())
+                                            .targets(executionData.getTargets())
+                                            .command(executionData.getCommandExecuted())
                                             .build();
 
     wingsPersistence.save(terraformfConfig);
