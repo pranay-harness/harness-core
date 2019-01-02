@@ -36,7 +36,7 @@
     <properties>
         <alpnboot.version>8.1.11.v20170118</alpnboot.version>
         <argLine>-Xmx1024m</argLine>
-        <aws.sdk.version>1.11.421</aws.sdk.version>
+        <aws.sdk.version>1.11.455</aws.sdk.version>
         <build.fullVersion>${build.majorVersion}.${build.minorVersion}.${build.number}</build.fullVersion>
         <build.majorVersion>1</build.majorVersion>
         <build.minorVersion>0</build.minorVersion>
