@@ -113,6 +113,8 @@ import java.util.stream.Collectors;
 public class SecretManagerImpl implements SecretManager {
   protected static final Logger logger = LoggerFactory.getLogger(SecretManagerImpl.class);
 
+  private static final String ILLEGAL_CHARACTERS = "[~!@#$%^&*\\[\\]'\"/?<>,;]";
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
   @Inject private VaultService vaultService;
@@ -685,6 +687,24 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public List<String> importSecrets(String accountId, List<SecretText> secretTexts) {
+    List<String> secretIds = new ArrayList<>();
+    EncryptionType encryptionType = getEncryptionType(accountId);
+    for (SecretText secretText : secretTexts) {
+      try {
+        String secretId =
+            upsertSecretInternal(accountId, null, secretText.getName(), secretText.getValue(), secretText.getPath(),
+                encryptionType, SettingVariableTypes.SECRET_TEXT, secretText.getUsageRestrictions(), false, true);
+        secretIds.add(secretId);
+        logger.info("Imported secret '{}' successfully with uid: {}", secretText.getName(), secretId);
+      } catch (WingsException e) {
+        logger.warn("Failed to save import secret '{}' with error: {}", secretText.getName(), e.getMessage());
+      }
+    }
+    return secretIds;
+  }
+
+  @Override
   public String saveSecretUsingLocalMode(
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     return upsertSecretInternal(accountId, null, name, value, path, EncryptionType.LOCAL,
@@ -713,6 +733,10 @@ public class SecretManagerImpl implements SecretManager {
       boolean upsert, boolean audit) {
     String auditMessage;
     String encryptedDataId;
+
+    if (containsIllegalCharacters(name)) {
+      throw new WingsException("Secret name '" + name + "' contains illegal characters", USER);
+    }
 
     if (isNotEmpty(path)) {
       if (encryptionType != EncryptionType.VAULT) {
@@ -972,6 +996,10 @@ public class SecretManagerImpl implements SecretManager {
     String savedFileId = null;
     EncryptedData encryptedData = null;
     final EncryptionType encryptionType;
+
+    if (containsIllegalCharacters(name)) {
+      throw new WingsException("Encrypted file name '" + name + "' contains illegal characters", USER);
+    }
 
     if (isNotEmpty(uuid)) {
       encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
@@ -1532,6 +1560,11 @@ public class SecretManagerImpl implements SecretManager {
         alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       }
     }
+  }
+
+  private static boolean containsIllegalCharacters(String name) {
+    String[] parts = name.split(ILLEGAL_CHARACTERS, 2);
+    return parts.length > 1;
   }
 
   @Data

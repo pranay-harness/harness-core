@@ -10,6 +10,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.service.impl.security.SecretText;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.BoundedInputStream;
@@ -76,6 +77,8 @@ public interface SecretManager {
   EncryptedData getSecretById(String accountId, String id);
 
   String saveSecret(String accountId, String name, String value, String path, UsageRestrictions usageRestrictions);
+
+  List<String> importSecrets(String accountId, List<SecretText> secretTexts);
 
   boolean updateSecret(
       String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions);

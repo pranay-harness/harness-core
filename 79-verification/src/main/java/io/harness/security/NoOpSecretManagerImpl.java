@@ -9,6 +9,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -140,6 +141,11 @@ public class NoOpSecretManagerImpl implements SecretManager {
   public String saveSecret(
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public List<String> importSecrets(String accountId, List<SecretText> secretTexts) {
+    return null;
   }
 
   @Override

@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static org.apache.commons.lang3.StringUtils.trim;
 
 import com.google.inject.Inject;
 
@@ -31,7 +32,12 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.BeanParam;
@@ -43,6 +49,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Created by rsingh on 10/30/17.
@@ -114,6 +121,44 @@ public class SecretManagementResource {
       @QueryParam("toEncryptionType") EncryptionType toEncryptionType, @QueryParam("toKmsId") String toKmsId) {
     return new RestResponse<>(
         secretManager.transitionSecrets(accountId, fromEncryptionType, fromKmsId, toEncryptionType, toKmsId));
+  }
+
+  @POST
+  @Path("/import-secrets")
+  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  @Produces(MediaType.APPLICATION_JSON)
+  @ExceptionMetered
+  public RestResponse<List<String>> importSecrets(
+      @QueryParam("accountId") final String accountId, @FormDataParam("file") final InputStream uploadInputStream) {
+    List<SecretText> secretTexts = new ArrayList<>();
+    InputStreamReader inputStreamReader = null;
+    BufferedReader reader = null;
+    try {
+      inputStreamReader = new InputStreamReader(uploadInputStream, Charset.defaultCharset());
+      reader = new BufferedReader(inputStreamReader);
+      String line;
+      while ((line = reader.readLine()) != null) {
+        String[] parts = line.split(",");
+        String path = parts.length > 2 ? trim(parts[2]) : null;
+        SecretText secretText = SecretText.builder().name(trim(parts[0])).value(trim(parts[1])).path(path).build();
+        secretTexts.add(secretText);
+      }
+    } catch (IOException e) {
+      throw new WingsException(e);
+    } finally {
+      try {
+        if (reader != null) {
+          reader.close();
+        }
+        if (inputStreamReader != null) {
+          inputStreamReader.close();
+        }
+      } catch (IOException e) {
+        // Ignore.
+      }
+    }
+
+    return new RestResponse<>(secretManager.importSecrets(accountId, secretTexts));
   }
 
   @POST
