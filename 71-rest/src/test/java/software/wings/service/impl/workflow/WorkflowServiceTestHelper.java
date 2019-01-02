@@ -96,14 +96,13 @@ import java.util.Map;
 
 public class WorkflowServiceTestHelper {
   public static Workflow constructCustomWorkflow() {
-    Graph graph =
-        aGraph()
-            .addNodes(aGraphNode().withId("n1").withName("stop").withType(ENV_STATE.name()).withOrigin(true).build(),
-                aGraphNode().withId("n2").withName("wait").withType(WAIT.name()).addProperty("duration", 1l).build(),
-                aGraphNode().withId("n3").withName("start").withType(ENV_STATE.name()).build())
-            .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
-            .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-            .build();
+    Graph graph = aGraph()
+                      .addNodes(aGraphNode().id("n1").name("stop").type(ENV_STATE.name()).origin(true).build(),
+                          aGraphNode().id("n2").name("wait").type(WAIT.name()).addProperty("duration", 1l).build(),
+                          aGraphNode().id("n3").name("start").type(ENV_STATE.name()).build())
+                      .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
+                      .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
+                      .build();
 
     CustomOrchestrationWorkflow orchestrationWorkflow = aCustomOrchestrationWorkflow().withGraph(graph).build();
     return aWorkflow()
@@ -214,7 +213,7 @@ public class WorkflowServiceTestHelper {
   }
 
   private static GraphNode constructHttpStep() {
-    return aGraphNode().withType("HTTP").withName("http").addProperty("url", "http://www.google.com").build();
+    return aGraphNode().type("HTTP").name("http").addProperty("url", "http://www.google.com").build();
   }
 
   public static Workflow constructBasicWorkflow() {
@@ -468,9 +467,9 @@ public class WorkflowServiceTestHelper {
                                       .withInfraMappingId(INFRA_MAPPING_ID)
                                       .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                                                         .addStep(aGraphNode()
-                                                                     .withId(generateUuid())
-                                                                     .withType(ECS_SERVICE_DEPLOY.name())
-                                                                     .withName(UPGRADE_CONTAINERS)
+                                                                     .id(generateUuid())
+                                                                     .type(ECS_SERVICE_DEPLOY.name())
+                                                                     .name(UPGRADE_CONTAINERS)
                                                                      .build())
                                                         .build())
                                       .build())
@@ -493,10 +492,10 @@ public class WorkflowServiceTestHelper {
                                       .withDeploymentType(DeploymentType.HELM)
                                       .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                                                         .addStep(aGraphNode()
-                                                                     .withId(generateUuid())
-                                                                     .withType(HELM_DEPLOY.name())
-                                                                     .withName(UPGRADE_CONTAINERS)
-                                                                     .withProperties(properties)
+                                                                     .id(generateUuid())
+                                                                     .type(HELM_DEPLOY.name())
+                                                                     .name(UPGRADE_CONTAINERS)
+                                                                     .properties(properties)
                                                                      .build())
                                                         .build())
                                       .build())
@@ -710,16 +709,16 @@ public class WorkflowServiceTestHelper {
                                     .get(0);
 
     verifyPhaseStep.getSteps().add(aGraphNode()
-                                       .withType("APP_DYNAMICS")
-                                       .withName("APP_DYNAMICS")
+                                       .type("APP_DYNAMICS")
+                                       .name("APP_DYNAMICS")
                                        .addProperty("analysisServerConfigId", "analysisServerConfigId")
                                        .addProperty("applicationId", "applicagionId")
                                        .addProperty("tierId", "tierId")
                                        .build());
 
     verifyPhaseStep.getSteps().add(aGraphNode()
-                                       .withType("ELK")
-                                       .withName("ELK")
+                                       .type("ELK")
+                                       .name("ELK")
                                        .addProperty("analysisServerConfigId", "analysisServerConfigId")
                                        .addProperty("indices", "indices")
                                        .build());
@@ -752,10 +751,10 @@ public class WorkflowServiceTestHelper {
 
   public static GraphNode constructHttpTemplateStep() {
     return aGraphNode()
-        .withType(StateType.HTTP.name())
-        .withTemplateUuid(TEMPLATE_ID)
-        .withProperties(constructHttpProperties())
-        .withTemplateVariables(
+        .type(StateType.HTTP.name())
+        .templateUuid(TEMPLATE_ID)
+        .properties(constructHttpProperties())
+        .templateVariables(
             asList(aVariable().withName("url").withValue("https://harness.io").build(), aVariable().build()))
         .build();
   }

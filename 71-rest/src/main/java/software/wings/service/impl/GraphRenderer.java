@@ -298,8 +298,7 @@ public class GraphRenderer {
         return;
       }
 
-      GraphNode elementNode =
-          aGraphNode().withId(instance.getUuid() + "-" + element).withName(element).withType("ELEMENT").build();
+      GraphNode elementNode = aGraphNode().id(instance.getUuid() + "-" + element).name(element).type("ELEMENT").build();
 
       group.getElements().add(elementNode);
 
@@ -323,10 +322,10 @@ public class GraphRenderer {
                                            : "" + total + " instances";
 
       GraphNode elementNode = aGraphNode()
-                                  .withId(instance.getUuid() + "-aggregate")
-                                  .withName(name)
-                                  .withType("ELEMENTS")
-                                  .withStatus(instance.getStatus().name())
+                                  .id(instance.getUuid() + "-aggregate")
+                                  .name(name)
+                                  .type("ELEMENTS")
+                                  .status(instance.getStatus().name())
                                   .build();
 
       group.getElements().add(elementNode);
@@ -417,14 +416,14 @@ public class GraphRenderer {
 
   GraphNode convertToNode(StateExecutionInstance instance) {
     GraphNodeBuilder builder = aGraphNode()
-                                   .withId(instance.getUuid())
-                                   .withName(instance.getDisplayName())
-                                   .withType(instance.getStateType())
-                                   .withRollback(instance.isRollback())
-                                   .withStatus(String.valueOf(instance.getStatus()).toUpperCase());
+                                   .id(instance.getUuid())
+                                   .name(instance.getDisplayName())
+                                   .type(instance.getStateType())
+                                   .rollback(instance.isRollback())
+                                   .status(String.valueOf(instance.getStatus()).toUpperCase());
 
     if (instance.getStateExecutionDataHistory() != null) {
-      builder.withExecutionHistoryCount(instance.getStateExecutionDataHistory().size());
+      builder.executionHistoryCount(instance.getStateExecutionDataHistory().size());
     }
     int interrupts = instance.getDedicatedInterruptCount() == null
         ? workflowExecutionService.getExecutionInterruptCount(instance.getUuid())
@@ -433,19 +432,19 @@ public class GraphRenderer {
     if (instance.getInterruptHistory() != null) {
       interrupts += instance.getInterruptHistory().size();
     }
-    builder.withInterruptHistoryCount(interrupts);
+    builder.interruptHistoryCount(interrupts);
 
     if (instance.getStateExecutionData() != null) {
       StateExecutionData executionData = instance.getStateExecutionData();
       injector.injectMembers(executionData);
       try {
-        builder.withExecutionSummary(executionData.getExecutionSummary());
+        builder.executionSummary(executionData.getExecutionSummary());
       } catch (RuntimeException e) {
         logger.error("Failed to get state execution summary for state instance id {} and state name {}",
             instance.getUuid(), instance.getDisplayName(), e);
       }
       try {
-        builder.withExecutionDetails(executionData.getExecutionDetails());
+        builder.executionDetails(executionData.getExecutionDetails());
       } catch (RuntimeException e) {
         logger.error("Failed to get state execution details for state instance id {} and state name {}",
             instance.getUuid(), instance.getDisplayName(), e);
@@ -454,7 +453,7 @@ public class GraphRenderer {
       if (executionData instanceof ElementStateExecutionData) {
         ElementStateExecutionData elementStateExecutionData = (ElementStateExecutionData) executionData;
         try {
-          builder.withElementStatusSummary(elementStateExecutionData.getElementStatusSummary());
+          builder.elementStatusSummary(elementStateExecutionData.getElementStatusSummary());
         } catch (RuntimeException e) {
           logger.error("Failed to get state element status summary for state instance id {} and state name {}",
               instance.getUuid(), instance.getDisplayName(), e);
@@ -463,10 +462,10 @@ public class GraphRenderer {
     }
     if (instance.getExecutionType() == WorkflowType.SIMPLE
         && StateType.COMMAND.name().equals(instance.getStateType())) {
-      builder.withName(((CommandStateExecutionData) instance.getStateExecutionData()).getCommandName());
+      builder.name(((CommandStateExecutionData) instance.getStateExecutionData()).getCommandName());
     }
     if (instance.getStateParams() != null) {
-      builder.withProperties(instance.getStateParams());
+      builder.properties(instance.getStateParams());
     }
     return builder.build();
   }
@@ -508,12 +507,12 @@ public class GraphRenderer {
     }
 
     GraphNodeBuilder builder = aGraphNode()
-                                   .withId(generateUuid())
-                                   .withName(instance.getDisplayName())
-                                   .withType(instance.getStateType())
-                                   .withRollback(instance.isRollback())
-                                   .withStatus(String.valueOf(status).toUpperCase())
-                                   .withExecutionDetails(executionDetails);
+                                   .id(generateUuid())
+                                   .name(instance.getDisplayName())
+                                   .type(instance.getStateType())
+                                   .rollback(instance.isRollback())
+                                   .status(String.valueOf(status).toUpperCase())
+                                   .executionDetails(executionDetails);
 
     return builder.build();
   }

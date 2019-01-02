@@ -30,14 +30,14 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
   protected GraphNode getGraphNode(ChangeContext<Y> changeContext, GraphNode previousNode) {
     Y yaml = changeContext.getYaml();
     return aGraphNode()
-        .withName(yaml.getName())
-        .withType(yaml.getCommandUnitType())
-        .withProperties(getNodeProperties(changeContext))
-        .withOrigin(previousNode == null)
-        .withId(getNodeId())
-        .withValid(false)
+        .name(yaml.getName())
+        .type(yaml.getCommandUnitType())
+        .properties(getNodeProperties(changeContext))
+        .origin(previousNode == null)
+        .id(getNodeId())
+        .valid(false)
         .build();
-    //    .withTemplateExpressions().withRollback(yaml.get);
+    //    .templateExpressions().rollback(yaml.get);
   }
 
   private String getNodeId() {

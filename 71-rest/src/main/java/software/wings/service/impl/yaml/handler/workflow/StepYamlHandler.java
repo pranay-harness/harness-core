@@ -106,14 +106,14 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       templateVersion = obtainTemplateVersion(templateUri);
     }
     return aGraphNode()
-        .withName(stepYaml.getName())
-        .withType(stepYaml.getType())
-        .withTemplateExpressions(templateExpressions)
-        .withRollback(isRollback)
-        .withProperties(outputProperties.isEmpty() ? null : outputProperties)
-        .withTemplateUuid(templateUuid)
-        .withTemplateVersion(templateVersion)
-        .withTemplateVariables(convertToEntityVariables(stepYaml.getTemplateVariables()))
+        .name(stepYaml.getName())
+        .type(stepYaml.getType())
+        .templateExpressions(templateExpressions)
+        .rollback(isRollback)
+        .properties(outputProperties.isEmpty() ? null : outputProperties)
+        .templateUuid(templateUuid)
+        .templateVersion(templateVersion)
+        .templateVariables(convertToEntityVariables(stepYaml.getTemplateVariables()))
         .build();
   }
 

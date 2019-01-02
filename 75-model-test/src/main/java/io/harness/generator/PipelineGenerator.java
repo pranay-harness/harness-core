@@ -167,8 +167,8 @@ public class PipelineGenerator {
                       .withPreDeploymentSteps(
                           aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
                               .addStep(aGraphNode()
-                                           .withType(RESOURCE_CONSTRAINT.name())
-                                           .withName(asapResourceConstraint.getName())
+                                           .type(RESOURCE_CONSTRAINT.name())
+                                           .name(asapResourceConstraint.getName())
                                            .addProperty("resourceConstraintId", asapResourceConstraint.getUuid())
                                            .addProperty("resourceUnit", "unit" + i / 2)
                                            .addProperty("permits", 6)

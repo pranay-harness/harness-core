@@ -245,8 +245,7 @@ public class WorkflowServiceHelper {
     if (artifactCheckFound) {
       return false;
     } else {
-      preDeploymentSteps.getSteps().add(
-          aGraphNode().withType(ARTIFACT_CHECK.name()).withName("Artifact Check").build());
+      preDeploymentSteps.getSteps().add(aGraphNode().type(ARTIFACT_CHECK.name()).name("Artifact Check").build());
       return true;
     }
   }
@@ -378,19 +377,19 @@ public class WorkflowServiceHelper {
         defaultData.put("blueGreen", true);
         workflowPhase.addPhaseStep(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
                                        .addStep(aGraphNode()
-                                                    .withId(generateUuid())
-                                                    .withType(AWS_AMI_SERVICE_SETUP.name())
-                                                    .withName("AWS AutoScaling Group Setup")
-                                                    .withProperties(defaultData)
+                                                    .id(generateUuid())
+                                                    .type(AWS_AMI_SERVICE_SETUP.name())
+                                                    .name("AWS AutoScaling Group Setup")
+                                                    .properties(defaultData)
                                                     .build())
                                        .build());
       }
     }
     workflowPhase.addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(AWS_AMI_SERVICE_DEPLOY.name())
-                                                .withName(Constants.UPGRADE_AUTOSCALING_GROUP)
+                                                .id(generateUuid())
+                                                .type(AWS_AMI_SERVICE_DEPLOY.name())
+                                                .name(Constants.UPGRADE_AUTOSCALING_GROUP)
                                                 .build())
                                    .build());
 
@@ -401,10 +400,10 @@ public class WorkflowServiceHelper {
     defaultDataSwitchRoutes.put("downsizeOldAsg", true);
     workflowPhase.addPhaseStep(aPhaseStep(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, SWAP_AUTOSCALING_GROUP_ROUTE)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(AWS_AMI_SWITCH_ROUTES.name())
-                                                .withName(UPGRADE_AUTOSCALING_GROUP_ROUTE)
-                                                .withProperties(defaultDataSwitchRoutes)
+                                                .id(generateUuid())
+                                                .type(AWS_AMI_SWITCH_ROUTES.name())
+                                                .name(UPGRADE_AUTOSCALING_GROUP_ROUTE)
+                                                .properties(defaultDataSwitchRoutes)
                                                 .build())
                                    .build());
 
@@ -425,19 +424,19 @@ public class WorkflowServiceHelper {
         defaultData.put("blueGreen", false);
         workflowPhase.addPhaseStep(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
                                        .addStep(aGraphNode()
-                                                    .withId(generateUuid())
-                                                    .withType(AWS_AMI_SERVICE_SETUP.name())
-                                                    .withName("AWS AutoScaling Group Setup")
-                                                    .withProperties(defaultData)
+                                                    .id(generateUuid())
+                                                    .type(AWS_AMI_SERVICE_SETUP.name())
+                                                    .name("AWS AutoScaling Group Setup")
+                                                    .properties(defaultData)
                                                     .build())
                                        .build());
       }
     }
     workflowPhase.addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(AWS_AMI_SERVICE_DEPLOY.name())
-                                                .withName(Constants.UPGRADE_AUTOSCALING_GROUP)
+                                                .id(generateUuid())
+                                                .type(AWS_AMI_SERVICE_DEPLOY.name())
+                                                .name(Constants.UPGRADE_AUTOSCALING_GROUP)
                                                 .build())
                                    .build());
 
@@ -454,13 +453,10 @@ public class WorkflowServiceHelper {
 
     workflowPhase.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
-                                   .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(AWS_LAMBDA_STATE.name())
-                                                .withName(Constants.AWS_LAMBDA)
-                                                .build())
-                                   .build());
+    workflowPhase.addPhaseStep(
+        aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
+            .addStep(aGraphNode().id(generateUuid()).type(AWS_LAMBDA_STATE.name()).name(Constants.AWS_LAMBDA).build())
+            .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
@@ -477,7 +473,7 @@ public class WorkflowServiceHelper {
 
     Map<String, String> stateDefaults = getStateDefaults(appId, service.getUuid(), AWS_CODEDEPLOY_STATE);
     GraphNodeBuilder node =
-        aGraphNode().withId(generateUuid()).withType(AWS_CODEDEPLOY_STATE.name()).withName(Constants.AWS_CODE_DEPLOY);
+        aGraphNode().id(generateUuid()).type(AWS_CODEDEPLOY_STATE.name()).name(Constants.AWS_CODE_DEPLOY);
     if (isNotEmpty(stateDefaults)) {
       if (isNotBlank(stateDefaults.get("bucket"))) {
         node.addProperty("bucket", stateDefaults.get("bucket"));
@@ -525,17 +521,17 @@ public class WorkflowServiceHelper {
       if (isDaemonEcsWorkflow) {
         workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                        .addStep(aGraphNode()
-                                                    .withId(generateUuid())
-                                                    .withType(ECS_DAEMON_SERVICE_SETUP.name())
-                                                    .withName(Constants.ECS_DAEMON_SERVICE_SETUP)
+                                                    .id(generateUuid())
+                                                    .type(ECS_DAEMON_SERVICE_SETUP.name())
+                                                    .name(Constants.ECS_DAEMON_SERVICE_SETUP)
                                                     .build())
                                        .build());
       } else {
         workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                        .addStep(aGraphNode()
-                                                    .withId(generateUuid())
-                                                    .withType(ECS_SERVICE_SETUP.name())
-                                                    .withName(Constants.ECS_SERVICE_SETUP)
+                                                    .id(generateUuid())
+                                                    .type(ECS_SERVICE_SETUP.name())
+                                                    .name(Constants.ECS_SERVICE_SETUP)
                                                     .build())
                                        .build());
       }
@@ -544,9 +540,9 @@ public class WorkflowServiceHelper {
     if (!isDaemonEcsWorkflow) {
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                      .addStep(aGraphNode()
-                                                  .withId(generateUuid())
-                                                  .withType(ECS_SERVICE_DEPLOY.name())
-                                                  .withName(Constants.UPGRADE_CONTAINERS)
+                                                  .id(generateUuid())
+                                                  .type(ECS_SERVICE_DEPLOY.name())
+                                                  .name(Constants.UPGRADE_CONTAINERS)
                                                   .build())
                                      .build());
     }
@@ -605,11 +601,11 @@ public class WorkflowServiceHelper {
             .withInfraMappingId(workflowPhase.getInfraMappingId())
             .addPhaseStep(aPhaseStep(PCF_SWICH_ROUTES, Constants.PCF_BG_MAP_ROUTE)
                               .addStep(aGraphNode()
-                                           .withId(generateUuid())
-                                           .withType(PCF_BG_MAP_ROUTE.name())
-                                           .withName(Constants.PCF_BG_SWAP_ROUTE)
-                                           .withProperties(defaultRouteUpdateProperties)
-                                           .withRollback(true)
+                                           .id(generateUuid())
+                                           .type(PCF_BG_MAP_ROUTE.name())
+                                           .name(Constants.PCF_BG_SWAP_ROUTE)
+                                           .properties(defaultRouteUpdateProperties)
+                                           .rollback(true)
                                            .build())
                               .withPhaseStepNameForRollback(Constants.PCF_BG_MAP_ROUTE)
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -617,10 +613,10 @@ public class WorkflowServiceHelper {
                               .build())
             .addPhaseStep(aPhaseStep(PhaseStepType.PCF_RESIZE, Constants.DEPLOY)
                               .addStep(aGraphNode()
-                                           .withId(generateUuid())
-                                           .withType(PCF_ROLLBACK.name())
-                                           .withName(Constants.PCF_ROLLBACK)
-                                           .withRollback(true)
+                                           .id(generateUuid())
+                                           .type(PCF_ROLLBACK.name())
+                                           .name(Constants.PCF_ROLLBACK)
+                                           .rollback(true)
                                            .build())
                               .withPhaseStepNameForRollback(Constants.DEPLOY)
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -656,10 +652,10 @@ public class WorkflowServiceHelper {
 
       workflowPhase.addPhaseStep(aPhaseStep(PCF_SETUP, Constants.SETUP)
                                      .addStep(aGraphNode()
-                                                  .withId(generateUuid())
-                                                  .withType(PCF_SETUP.name())
-                                                  .withName(Constants.PCF_SETUP)
-                                                  .withProperties(defaultSetupProperties)
+                                                  .id(generateUuid())
+                                                  .type(PCF_SETUP.name())
+                                                  .name(Constants.PCF_SETUP)
+                                                  .properties(defaultSetupProperties)
                                                   .build())
                                      .build());
     }
@@ -673,10 +669,10 @@ public class WorkflowServiceHelper {
 
     workflowPhase.addPhaseStep(aPhaseStep(PCF_RESIZE, Constants.DEPLOY)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(PCF_RESIZE.name())
-                                                .withName(Constants.PCF_RESIZE)
-                                                .withProperties(defaultUpgradeStageContainerProperties)
+                                                .id(generateUuid())
+                                                .type(PCF_RESIZE.name())
+                                                .name(Constants.PCF_RESIZE)
+                                                .properties(defaultUpgradeStageContainerProperties)
                                                 .build())
                                    .build());
 
@@ -689,10 +685,10 @@ public class WorkflowServiceHelper {
     defaultRouteUpdateProperties.put("downsizeOldApps", false);
     workflowPhase.addPhaseStep(aPhaseStep(PCF_SWICH_ROUTES, Constants.PCF_BG_MAP_ROUTE)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(PCF_BG_MAP_ROUTE.name())
-                                                .withName(Constants.PCF_BG_SWAP_ROUTE)
-                                                .withProperties(defaultRouteUpdateProperties)
+                                                .id(generateUuid())
+                                                .type(PCF_BG_MAP_ROUTE.name())
+                                                .name(Constants.PCF_BG_SWAP_ROUTE)
+                                                .properties(defaultRouteUpdateProperties)
                                                 .build())
                                    .build());
 
@@ -713,18 +709,17 @@ public class WorkflowServiceHelper {
 
       workflowPhase.addPhaseStep(aPhaseStep(PCF_SETUP, Constants.SETUP)
                                      .addStep(aGraphNode()
-                                                  .withId(generateUuid())
-                                                  .withType(PCF_SETUP.name())
-                                                  .withName(Constants.PCF_SETUP)
-                                                  .withProperties(defaultProperties)
+                                                  .id(generateUuid())
+                                                  .type(PCF_SETUP.name())
+                                                  .name(Constants.PCF_SETUP)
+                                                  .properties(defaultProperties)
                                                   .build())
                                      .build());
     }
 
     workflowPhase.addPhaseStep(
         aPhaseStep(PCF_RESIZE, Constants.DEPLOY)
-            .addStep(
-                aGraphNode().withId(generateUuid()).withType(PCF_RESIZE.name()).withName(Constants.PCF_RESIZE).build())
+            .addStep(aGraphNode().id(generateUuid()).type(PCF_RESIZE.name()).name(Constants.PCF_RESIZE).build())
             .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
@@ -739,13 +734,10 @@ public class WorkflowServiceHelper {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.HELM_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                   .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(HELM_DEPLOY.name())
-                                                .withName(Constants.HELM_DEPLOY)
-                                                .build())
-                                   .build());
+    workflowPhase.addPhaseStep(
+        aPhaseStep(PhaseStepType.HELM_DEPLOY, Constants.DEPLOY_CONTAINERS)
+            .addStep(aGraphNode().id(generateUuid()).type(HELM_DEPLOY.name()).name(Constants.HELM_DEPLOY).build())
+            .build());
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
@@ -761,13 +753,11 @@ public class WorkflowServiceHelper {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof GcpKubernetesInfrastructureMapping
           && Constants.RUNTIME.equals(((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName())) {
-        workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                                       .addStep(aGraphNode()
-                                                    .withId(generateUuid())
-                                                    .withType(GCP_CLUSTER_SETUP.name())
-                                                    .withName("GCP Cluster Setup")
-                                                    .build())
-                                       .build());
+        workflowPhase.addPhaseStep(
+            aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                .addStep(
+                    aGraphNode().id(generateUuid()).type(GCP_CLUSTER_SETUP.name()).name("GCP Cluster Setup").build())
+                .build());
       }
 
       Map<String, Object> defaultSetupProperties = new HashMap<>();
@@ -775,10 +765,10 @@ public class WorkflowServiceHelper {
       defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aGraphNode()
-                                                  .withId(generateUuid())
-                                                  .withType(KUBERNETES_SETUP.name())
-                                                  .withName(Constants.KUBERNETES_SERVICE_SETUP)
-                                                  .withProperties(defaultSetupProperties)
+                                                  .id(generateUuid())
+                                                  .type(KUBERNETES_SETUP.name())
+                                                  .name(Constants.KUBERNETES_SERVICE_SETUP)
+                                                  .properties(defaultSetupProperties)
                                                   .build())
                                      .build());
     }
@@ -791,10 +781,10 @@ public class WorkflowServiceHelper {
       }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                      .addStep(aGraphNode()
-                                                  .withId(generateUuid())
-                                                  .withType(KUBERNETES_DEPLOY.name())
-                                                  .withName(Constants.UPGRADE_CONTAINERS)
-                                                  .withProperties(properties)
+                                                  .id(generateUuid())
+                                                  .type(KUBERNETES_DEPLOY.name())
+                                                  .name(Constants.UPGRADE_CONTAINERS)
+                                                  .properties(properties)
                                                   .build())
                                      .build());
     }
@@ -832,10 +822,10 @@ public class WorkflowServiceHelper {
 
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aGraphNode()
-                                                  .withId(generateUuid())
-                                                  .withType(KUBERNETES_SETUP.name())
-                                                  .withName(Constants.KUBERNETES_SERVICE_SETUP_BLUEGREEN)
-                                                  .withProperties(defaultSetupProperties)
+                                                  .id(generateUuid())
+                                                  .type(KUBERNETES_SETUP.name())
+                                                  .name(Constants.KUBERNETES_SERVICE_SETUP_BLUEGREEN)
+                                                  .properties(defaultSetupProperties)
                                                   .build())
                                      .build());
     }
@@ -848,10 +838,10 @@ public class WorkflowServiceHelper {
 
     workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(KUBERNETES_DEPLOY.name())
-                                                .withName(Constants.UPGRADE_CONTAINERS)
-                                                .withProperties(defaultUpgradeStageContainerProperties)
+                                                .id(generateUuid())
+                                                .type(KUBERNETES_DEPLOY.name())
+                                                .name(Constants.UPGRADE_CONTAINERS)
+                                                .properties(defaultUpgradeStageContainerProperties)
                                                 .build())
                                    .build());
 
@@ -864,10 +854,10 @@ public class WorkflowServiceHelper {
     defaultRouteUpdateProperties.put("service2", STAGE_SERVICE_NAME_EXPRESSION);
     workflowPhase.addPhaseStep(aPhaseStep(ROUTE_UPDATE, Constants.ROUTE_UPDATE)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
-                                                .withName(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
-                                                .withProperties(defaultRouteUpdateProperties)
+                                                .id(generateUuid())
+                                                .type(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
+                                                .name(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                                                .properties(defaultRouteUpdateProperties)
                                                 .build())
                                    .build());
 
@@ -899,8 +889,8 @@ public class WorkflowServiceHelper {
         aPhaseStep(INFRASTRUCTURE_NODE, Constants.INFRASTRUCTURE_NODE_NAME);
 
     infrastructurePhaseStepBuilder.addStep(aGraphNode()
-                                               .withType(stateType.name())
-                                               .withName(Constants.SELECT_NODE_NAME)
+                                               .type(stateType.name())
+                                               .name(Constants.SELECT_NODE_NAME)
                                                .addProperty("specificHosts", false)
                                                .addProperty("instanceCount", 1)
                                                .addProperty("excludeSelectedHostsFromFuturePhases", true)
@@ -913,13 +903,13 @@ public class WorkflowServiceHelper {
 
     if (attachElbSteps(infrastructureMapping)) {
       disableServiceSteps.add(aGraphNode()
-                                  .withType(ELASTIC_LOAD_BALANCER.name())
-                                  .withName("Elastic Load Balancer")
+                                  .type(ELASTIC_LOAD_BALANCER.name())
+                                  .name("Elastic Load Balancer")
                                   .addProperty("operation", Disable)
                                   .build());
       enableServiceSteps.add(aGraphNode()
-                                 .withType(ELASTIC_LOAD_BALANCER.name())
-                                 .withName("Elastic Load Balancer")
+                                 .type(ELASTIC_LOAD_BALANCER.name())
+                                 .name("Elastic Load Balancer")
                                  .addProperty("operation", Enable)
                                  .build());
     }
@@ -960,10 +950,10 @@ public class WorkflowServiceHelper {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(PhaseStepType.PCF_RESIZE, Constants.DEPLOY)
                           .addStep(aGraphNode()
-                                       .withId(generateUuid())
-                                       .withType(PCF_ROLLBACK.name())
-                                       .withName(Constants.PCF_ROLLBACK)
-                                       .withRollback(true)
+                                       .id(generateUuid())
+                                       .type(PCF_ROLLBACK.name())
+                                       .name(Constants.PCF_ROLLBACK)
+                                       .rollback(true)
                                        .build())
                           .withPhaseStepNameForRollback(Constants.DEPLOY)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -991,10 +981,10 @@ public class WorkflowServiceHelper {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(PhaseStepType.HELM_DEPLOY, Constants.DEPLOY_CONTAINERS)
                           .addStep(aGraphNode()
-                                       .withId(generateUuid())
-                                       .withType(HELM_ROLLBACK.name())
-                                       .withName(Constants.HELM_ROLLBACK)
-                                       .withRollback(true)
+                                       .id(generateUuid())
+                                       .type(HELM_ROLLBACK.name())
+                                       .name(Constants.HELM_ROLLBACK)
+                                       .rollback(true)
                                        .build())
                           .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1022,10 +1012,10 @@ public class WorkflowServiceHelper {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, ROLLBACK_SERVICE)
                           .addStep(aGraphNode()
-                                       .withId(generateUuid())
-                                       .withType(AWS_AMI_SERVICE_ROLLBACK.name())
-                                       .withName(Constants.ROLLBACK_AWS_AMI_CLUSTER)
-                                       .withRollback(true)
+                                       .id(generateUuid())
+                                       .type(AWS_AMI_SERVICE_ROLLBACK.name())
+                                       .name(Constants.ROLLBACK_AWS_AMI_CLUSTER)
+                                       .rollback(true)
                                        .build())
                           .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1053,10 +1043,10 @@ public class WorkflowServiceHelper {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, ROLLBACK_SERVICE)
                           .addStep(aGraphNode()
-                                       .withId(generateUuid())
-                                       .withType(AWS_AMI_ROLLBACK_SWITCH_ROUTES.name())
-                                       .withName(ROLLBACK_AUTOSCALING_GROUP_ROUTE)
-                                       .withRollback(true)
+                                       .id(generateUuid())
+                                       .type(AWS_AMI_ROLLBACK_SWITCH_ROUTES.name())
+                                       .name(ROLLBACK_AUTOSCALING_GROUP_ROUTE)
+                                       .rollback(true)
                                        .build())
                           .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1084,10 +1074,10 @@ public class WorkflowServiceHelper {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
                           .addStep(aGraphNode()
-                                       .withId(generateUuid())
-                                       .withType(AWS_LAMBDA_ROLLBACK.name())
-                                       .withName(Constants.ROLLBACK_AWS_LAMBDA)
-                                       .withRollback(true)
+                                       .id(generateUuid())
+                                       .type(AWS_LAMBDA_ROLLBACK.name())
+                                       .name(Constants.ROLLBACK_AWS_LAMBDA)
+                                       .rollback(true)
                                        .build())
                           .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1120,10 +1110,10 @@ public class WorkflowServiceHelper {
     if (!isDaemonSchedulingStrategy) {
       phaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                     .addStep(aGraphNode()
-                                                 .withId(generateUuid())
-                                                 .withType(ECS_SERVICE_ROLLBACK.name())
-                                                 .withName(Constants.ROLLBACK_CONTAINERS)
-                                                 .withRollback(true)
+                                                 .id(generateUuid())
+                                                 .type(ECS_SERVICE_ROLLBACK.name())
+                                                 .name(Constants.ROLLBACK_CONTAINERS)
+                                                 .rollback(true)
                                                  .build())
                                     .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
                                     .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1133,10 +1123,10 @@ public class WorkflowServiceHelper {
       // For Daemon ECS workflow, need to add Setup rollback state
       phaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                     .addStep(aGraphNode()
-                                                 .withId(generateUuid())
-                                                 .withType(ECS_SERVICE_SETUP_ROLLBACK.name())
-                                                 .withName(Constants.ROLLBACK_CONTAINERS)
-                                                 .withRollback(true)
+                                                 .id(generateUuid())
+                                                 .type(ECS_SERVICE_SETUP_ROLLBACK.name())
+                                                 .name(Constants.ROLLBACK_CONTAINERS)
+                                                 .rollback(true)
                                                  .build())
                                     .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
                                     .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1168,10 +1158,10 @@ public class WorkflowServiceHelper {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
                           .addStep(aGraphNode()
-                                       .withId(generateUuid())
-                                       .withType(AWS_CODEDEPLOY_ROLLBACK.name())
-                                       .withName(Constants.ROLLBACK_AWS_CODE_DEPLOY)
-                                       .withRollback(true)
+                                       .id(generateUuid())
+                                       .type(AWS_CODEDEPLOY_ROLLBACK.name())
+                                       .name(Constants.ROLLBACK_AWS_CODE_DEPLOY)
+                                       .rollback(true)
                                        .build())
                           .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1199,16 +1189,16 @@ public class WorkflowServiceHelper {
 
     if (attachElbSteps(infrastructureMapping)) {
       disableServiceSteps.add(aGraphNode()
-                                  .withType(ELASTIC_LOAD_BALANCER.name())
-                                  .withName("Elastic Load Balancer")
+                                  .type(ELASTIC_LOAD_BALANCER.name())
+                                  .name("Elastic Load Balancer")
                                   .addProperty("operation", Disable)
-                                  .withRollback(true)
+                                  .rollback(true)
                                   .build());
       enableServiceSteps.add(aGraphNode()
-                                 .withType(ELASTIC_LOAD_BALANCER.name())
-                                 .withName("Elastic Load Balancer")
+                                 .type(ELASTIC_LOAD_BALANCER.name())
+                                 .name("Elastic Load Balancer")
                                  .addProperty("operation", Enable)
-                                 .withRollback(true)
+                                 .rollback(true)
                                  .build());
     }
 
@@ -1275,10 +1265,10 @@ public class WorkflowServiceHelper {
             .withInfraMappingId(workflowPhase.getInfraMappingId())
             .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                               .addStep(aGraphNode()
-                                           .withId(generateUuid())
-                                           .withType(KUBERNETES_DEPLOY_ROLLBACK.name())
-                                           .withName(Constants.ROLLBACK_CONTAINERS)
-                                           .withRollback(true)
+                                           .id(generateUuid())
+                                           .type(KUBERNETES_DEPLOY_ROLLBACK.name())
+                                           .name(Constants.ROLLBACK_CONTAINERS)
+                                           .rollback(true)
                                            .build())
                               .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1287,10 +1277,10 @@ public class WorkflowServiceHelper {
     if (serviceSetupRequired) {
       workflowPhaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                             .addStep(aGraphNode()
-                                                         .withId(generateUuid())
-                                                         .withType(KUBERNETES_SETUP_ROLLBACK.name())
-                                                         .withName(Constants.ROLLBACK_KUBERNETES_SETUP)
-                                                         .withRollback(true)
+                                                         .id(generateUuid())
+                                                         .type(KUBERNETES_SETUP_ROLLBACK.name())
+                                                         .name(Constants.ROLLBACK_KUBERNETES_SETUP)
+                                                         .rollback(true)
                                                          .build())
                                             .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
                                             .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1332,10 +1322,10 @@ public class WorkflowServiceHelper {
             .addPhaseStep(aPhaseStep(ROUTE_UPDATE, Constants.ROUTE_UPDATE)
                               .withPhaseStepNameForRollback(Constants.ROUTE_UPDATE)
                               .addStep(aGraphNode()
-                                           .withId(generateUuid())
-                                           .withType(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
-                                           .withName(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
-                                           .withProperties(defaultRouteUpdateProperties)
+                                           .id(generateUuid())
+                                           .type(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
+                                           .name(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                                           .properties(defaultRouteUpdateProperties)
                                            .build())
                               .withRollback(true)
                               .build())
@@ -1377,10 +1367,10 @@ public class WorkflowServiceHelper {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                           .addStep(aGraphNode()
-                                       .withId(generateUuid())
-                                       .withType(KUBERNETES_SETUP_ROLLBACK.name())
-                                       .withName(Constants.ROLLBACK_KUBERNETES_SETUP)
-                                       .withRollback(true)
+                                       .id(generateUuid())
+                                       .type(KUBERNETES_SETUP_ROLLBACK.name())
+                                       .name(Constants.ROLLBACK_KUBERNETES_SETUP)
+                                       .rollback(true)
                                        .build())
                           .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1426,11 +1416,11 @@ public class WorkflowServiceHelper {
 
     for (Command command : commands) {
       nodes.add(aGraphNode()
-                    .withId(generateUuid())
-                    .withType(COMMAND.name())
-                    .withName(command.getName())
+                    .id(generateUuid())
+                    .type(COMMAND.name())
+                    .name(command.getName())
                     .addProperty("commandName", command.getName())
-                    .withRollback(rollback)
+                    .rollback(rollback)
                     .build());
     }
     return nodes;
