@@ -6,6 +6,7 @@ import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static io.harness.k8s.model.Kind.Service;
 import static software.wings.beans.Log.LogColor.Cyan;
+import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
@@ -173,12 +174,11 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       return false;
     }
 
-    executionLogCallback.saveExecutionLog(
-        "\nManifests [Post template rendering]\n-----------------------------------\n");
+    executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
 
-    executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources) + "\n");
+    executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));
 
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+    executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
 
     return true;
   }

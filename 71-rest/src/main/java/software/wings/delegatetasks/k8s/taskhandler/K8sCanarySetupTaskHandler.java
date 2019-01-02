@@ -4,8 +4,10 @@ import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
+import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.K8sDummyCommandUnit.Apply;
@@ -32,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogColor;
-import software.wings.beans.Log.LogWeight;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -171,12 +172,11 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
       return false;
     }
 
-    executionLogCallback.saveExecutionLog(
-        "\nManifests [Post template rendering]\n-----------------------------------\n");
+    executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
 
-    executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources) + "\n");
+    executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));
 
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+    executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
 
     return true;
   }
@@ -215,8 +215,8 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
       managedWorkload = getManagedWorkload(resources);
       managedWorkload.addRevisionLabelInDeployment(currentRelease.getNumber(), true);
 
-      executionLogCallback.saveExecutionLog("\nManaged Workload is: "
-          + color(managedWorkload.getResourceId().kindNameRef(), LogColor.Cyan, LogWeight.Bold));
+      executionLogCallback.saveExecutionLog(
+          "\nManaged Workload is: " + color(managedWorkload.getResourceId().kindNameRef(), LogColor.Cyan, Bold));
 
       k8sTaskHelper.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 

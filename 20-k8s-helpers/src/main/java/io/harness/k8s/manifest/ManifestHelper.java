@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 public class ManifestHelper {
   public static final String values_filename = "values.yaml";
+  public static final String yaml_file_extension = ".yaml";
   public static final String currentReleaseWorkloadExpression = "${k8s.currentReleaseWorkload}";
   public static final String previousReleaseWorkloadExpression = "${k8s.previousReleaseWorkload}";
   public static final String primaryServiceNameExpression = "${k8s.primaryServiceName}";

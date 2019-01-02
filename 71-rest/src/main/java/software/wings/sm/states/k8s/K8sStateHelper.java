@@ -386,7 +386,7 @@ public class K8sStateHelper {
       K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, ResponseData> response) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
-    String activityId = response.keySet().iterator().next();
+    String activityId = getActivityId(context);
     GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = executionResponse.getGitCommandStatus().equals(GitCommandStatus.SUCCESS)
         ? ExecutionStatus.SUCCESS

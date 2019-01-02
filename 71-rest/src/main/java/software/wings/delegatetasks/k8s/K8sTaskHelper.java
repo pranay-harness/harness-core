@@ -6,6 +6,7 @@ import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
 import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
+import static io.harness.k8s.manifest.ManifestHelper.yaml_file_extension;
 import static io.harness.k8s.model.Release.Status.Failed;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -386,7 +387,8 @@ public class K8sTaskHelper {
     List<KubernetesResource> result = new ArrayList<>();
 
     for (ManifestFile manifestFile : manifestFiles) {
-      if (!StringUtils.equals(values_filename, manifestFile.getFileName())) {
+      if (StringUtils.endsWith(manifestFile.getFileName(), yaml_file_extension)
+          && !StringUtils.endsWith(manifestFile.getFileName(), values_filename)) {
         try {
           result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
         } catch (Exception e) {
