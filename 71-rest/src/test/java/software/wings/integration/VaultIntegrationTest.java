@@ -14,6 +14,8 @@ import static org.junit.Assert.fail;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.RestResponse;
@@ -25,9 +27,11 @@ import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.io.File;
 import java.util.List;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Created by rsingh on 9/21/18.
@@ -329,6 +333,13 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  public void test_importSecrets_fromCSV_shouldSucceed() {
+    importSecretTextsFromCsv("./encryption/secrets.csv");
+    verifySecretTextExists("secret1");
+    verifySecretTextExists("secret3");
+  }
+
+  @Test
   public void test_CreateSecretText_vaultWithBasePath_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath);
   }
@@ -406,6 +417,21 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertTrue(updated);
   }
 
+  private void importSecretTextsFromCsv(String secretCsvFilePath) {
+    File fileToImport = new File(getClass().getClassLoader().getResource(secretCsvFilePath).getFile());
+
+    MultiPart multiPart = new MultiPart();
+    FormDataBodyPart formDataBodyPart = new FormDataBodyPart("file", fileToImport, MediaType.MULTIPART_FORM_DATA_TYPE);
+    multiPart.bodyPart(formDataBodyPart);
+
+    WebTarget target = client.target(API_BASE + "/secrets/import-secrets?accountId=" + accountId);
+    RestResponse<List<String>> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), new GenericType<RestResponse<List<String>>>() {});
+    // Verify vault config was successfully created.
+    assertEquals(0, restResponse.getResponseMessages().size());
+    assertNotNull(restResponse.getResource());
+  }
+
   private void deleteSecretText(String uuid) {
     WebTarget target = client.target(API_BASE + "/secrets/delete-secret?accountId=" + accountId + "&uuid=" + uuid);
     RestResponse<Boolean> restResponse =
@@ -463,5 +489,12 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     char[] decrypted = secretManagementDelegateService.decrypt(encryptedData, vaultConfig);
     assertTrue(isNotEmpty(decrypted));
     assertEquals(expectedValue, new String(decrypted));
+  }
+
+  private void verifySecretTextExists(String secretName) {
+    EncryptedData encryptedData = secretManager.getSecretByName(accountId, secretName, false);
+    assertNotNull(encryptedData);
+    assertNull(encryptedData.getPath());
+    assertEquals(SettingVariableTypes.SECRET_TEXT, encryptedData.getType());
   }
 }
