@@ -62,12 +62,18 @@ public class ArtifactCollectionTaskHelper {
                                     .withAccountId(accountId)
                                     .build(); // TODO: more about delegate and task info
     DelegateFile fileRes = delegateFileManager.upload(delegateFile, in);
-    logger.info("Uploaded the file name {} and fileUuid {} for artifactPath {}", fileInfo.getKey(), fileRes.getFileId(),
-        artifactPath);
-    ArtifactFile artifactFile = new ArtifactFile();
-    artifactFile.setFileUuid(fileRes.getFileId());
-    artifactFile.setName(fileInfo.getKey());
-    res.addData(artifactFile);
+    if (fileRes == null || fileRes.getFileId() == null) {
+      logger.error(
+          "Failed to upload file name {} for artifactPath {} to manager. Artifact files will be uploaded during the deployment of Artifact Check Step",
+          fileInfo.getKey(), artifactPath);
+    } else {
+      logger.info("Uploaded the file name {} and fileUuid {} for artifactPath {}", fileInfo.getKey(),
+          fileRes.getFileId(), artifactPath);
+      ArtifactFile artifactFile = new ArtifactFile();
+      artifactFile.setFileUuid(fileRes.getFileId());
+      artifactFile.setName(fileInfo.getKey());
+      res.addData(artifactFile);
+    }
   }
 
   public Pair<String, InputStream> downloadArtifactAtRuntime(ArtifactStreamAttributes artifactStreamAttributes,
