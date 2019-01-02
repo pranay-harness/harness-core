@@ -2,9 +2,12 @@ package software.wings.security.authentication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
 import com.google.inject.Inject;
 
@@ -26,6 +29,7 @@ import software.wings.security.saml.SamlClientService;
 import software.wings.security.saml.SamlRequest;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserService;
 
@@ -44,6 +48,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Mock private SSOSettingService SSO_SETTING_SERVICE;
   @Mock private AuthenticationUtil AUTHENTICATION_UTL;
   @Mock private AuthService AUTHSERVICE;
+  @Mock private FeatureFlagService FEATURE_FLAG_SERVICE;
 
   @Inject @InjectMocks private AuthenticationManager authenticationManager;
 
@@ -74,15 +79,16 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     Account account1 = mock(Account.class);
     Account account2 = mock(Account.class);
 
+    when(FEATURE_FLAG_SERVICE.isEnabled(LOGIN_PROMPT_WHEN_NO_USER, GLOBAL_ACCOUNT_ID)).thenReturn(true);
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
-    when(AUTHENTICATION_UTL.getUser(Matchers.same(NON_EXISTING_USER), Matchers.any(EnumSet.class)))
+    when(AUTHENTICATION_UTL.getUser(Matchers.same(NON_EXISTING_USER), any(EnumSet.class)))
         .thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
     LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse(NON_EXISTING_USER);
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
     assertThat(loginTypeResponse.getSamlRequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
-    when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), Matchers.any(EnumSet.class))).thenReturn(mockUser);
+    when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), any(EnumSet.class))).thenReturn(mockUser);
     loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
     assertThat(loginTypeResponse.getSamlRequest()).isNull();
