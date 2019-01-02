@@ -49,6 +49,8 @@ public class Account extends Base {
   @JsonIgnore private EncryptionInterface encryption;
   private boolean twoFactorAdminEnforced;
 
+  private String newClusterUrl;
+
   private DelegateConfiguration delegateConfiguration;
 
   private transient Map<String, String> defaults = new HashMap<>();
@@ -67,6 +69,14 @@ public class Account extends Base {
 
   public boolean isTwoFactorAdminEnforced() {
     return twoFactorAdminEnforced;
+  }
+
+  public String getNewClusterUrl() {
+    return newClusterUrl;
+  }
+
+  public void setNewClusterUrl(String newClusterUrl) {
+    this.newClusterUrl = newClusterUrl;
   }
 
   /**

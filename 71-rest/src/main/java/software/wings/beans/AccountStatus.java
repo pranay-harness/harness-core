@@ -13,6 +13,8 @@ public interface AccountStatus {
   String ACTIVE = "ACTIVE";
   String EXPIRED = "EXPIRED";
   String DELETED = "DELETED";
+  String MIGRATING = "MIGRATING";
+  String MIGRATED = "MIGRATED";
 
   static boolean isValid(String status) {
     if (isEmpty(status)) {
@@ -23,6 +25,8 @@ public interface AccountStatus {
       case ACTIVE:
       case EXPIRED:
       case DELETED:
+      case MIGRATING:
+      case MIGRATED:
         return true;
       default:
         return false;

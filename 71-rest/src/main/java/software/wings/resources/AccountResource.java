@@ -31,6 +31,7 @@ import software.wings.service.intfc.HarnessUserGroupService;
 import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -53,6 +54,46 @@ public class AccountResource {
   @PublicApi
   public RestResponse<String> getStatus(@PathParam("accountId") String accountId) {
     return new RestResponse<>(accountService.getAccountStatus(accountId));
+  }
+
+  @POST
+  @Path("{accountId}/start-migration")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> startMigration(@PathParam("accountId") String accountId) {
+    User existingUser = UserThreadLocal.get();
+    if (existingUser == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+
+    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
+      return new RestResponse<>(accountService.startAccountMigration(accountId));
+    } else {
+      return Builder.aRestResponse()
+          .withResponseMessages(Lists.newArrayList(
+              ResponseMessage.builder().message("User not allowed to start account migration").build()))
+          .build();
+    }
+  }
+
+  @POST
+  @Path("{accountId}/complete-migration")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> completeMigration(@PathParam("accountId") String accountId, String newClusterUrl) {
+    User existingUser = UserThreadLocal.get();
+    if (existingUser == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+
+    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
+      return new RestResponse<>(accountService.completeAccountMigration(accountId, newClusterUrl));
+    } else {
+      return Builder.aRestResponse()
+          .withResponseMessages(Lists.newArrayList(
+              ResponseMessage.builder().message("User not allowed to complete account migration").build()))
+          .build();
+    }
   }
 
   @GET
