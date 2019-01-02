@@ -187,7 +187,7 @@ public class PluginServiceImpl implements PluginService {
         //            .withAccountId(accountId)
         //            .withIsEnabled(true)
         //            .withDisplayName(SettingVariableTypes.CLOUD_WATCH.getDisplayName())
-        //            .withType(SettingVariableTypes.CLOUD_WATCH.name())
+        //            .type(SettingVariableTypes.CLOUD_WATCH.name())
         //            .withPluginCategories(asList(Verification))
         //            .withUiSchema(readUiSchema(SettingVariableTypes.CLOUD_WATCH.name()))
         //            .build(),

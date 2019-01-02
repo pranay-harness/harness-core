@@ -112,10 +112,10 @@ public class HttpTemplateProcessor extends AbstractTemplateProcessor {
     Map<String, Object> properties = new HashMap<>();
     transform(httpTemplate, properties);
     return aGraphNode()
-        .withTemplateVariables(template.getVariables())
-        .withProperties(properties)
-        .withTemplateUuid(template.getUuid())
-        .withType(HTTP.name())
+        .templateVariables(template.getVariables())
+        .properties(properties)
+        .templateUuid(template.getUuid())
+        .type(HTTP.name())
         .build();
   }
 

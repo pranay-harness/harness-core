@@ -209,19 +209,19 @@ public class WorkflowPhase implements UuidAware {
 
   public GraphNode generatePhaseNode() {
     return aGraphNode()
-        .withId(uuid)
-        .withName(name)
-        .withType(PHASE.name())
+        .id(uuid)
+        .name(name)
+        .type(PHASE.name())
         .addProperty("serviceId", serviceId)
-        .withRollback(rollback)
+        .rollback(rollback)
         .addProperty("deploymentType", deploymentType)
         .addProperty("computeProviderId", computeProviderId)
         .addProperty("infraMappingName", infraMappingName)
         .addProperty("infraMappingId", infraMappingId)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .addProperty("phaseNameForRollback", phaseNameForRollback)
-        .withTemplateExpressions(templateExpressions)
-        .withVariableOverrides(variableOverrides)
+        .templateExpressions(templateExpressions)
+        .variableOverrides(variableOverrides)
         .build();
   }
 

@@ -523,7 +523,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Graph graph2 =
         JsonUtils.clone(((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(), Graph.class);
-    graph2.addNode(aGraphNode().withId("n5").withName("http").withType(HTTP.name()).build());
+    graph2.addNode(aGraphNode().id("n5").name("http").type(HTTP.name()).build());
     graph2.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n5").withType("success").build());
 
     Workflow updatedWorkflow = workflowService.updateWorkflow(workflow);
@@ -2155,8 +2155,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                     .collect(toList())
                                     .get(0);
 
-    deployPhaseStep.getSteps().add(
-        aGraphNode().withType("HTTP").withName("http").addProperty("url", "www.google.com").build());
+    deployPhaseStep.getSteps().add(aGraphNode().type("HTTP").name("http").addProperty("url", "www.google.com").build());
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase);
 
@@ -2947,9 +2946,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
   private PhaseStep createPhaseStep(String uuid) {
     return aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
         .addStep(aGraphNode()
-                     .withId(generateUuid())
-                     .withType(JENKINS.getName())
-                     .withName(UPGRADE_CONTAINERS)
+                     .id(generateUuid())
+                     .type(JENKINS.getName())
+                     .name(UPGRADE_CONTAINERS)
                      .addProperty(JENKINS.getName(), uuid)
                      .build())
         .build();
@@ -3196,10 +3195,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   private Workflow createLinkedTemplateWorkflow() {
     GraphNode step = aGraphNode()
-                         .withTemplateUuid(TEMPLATE_ID)
-                         .withTemplateVersion(LATEST_TAG)
-                         .withName("Ping Response")
-                         .withType(HTTP.name())
+                         .templateUuid(TEMPLATE_ID)
+                         .templateVersion(LATEST_TAG)
+                         .name("Ping Response")
+                         .type(HTTP.name())
                          .build();
 
     GraphNode templateStep = constructHttpTemplateStep();

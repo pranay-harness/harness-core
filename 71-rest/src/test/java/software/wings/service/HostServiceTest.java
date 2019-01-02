@@ -219,12 +219,12 @@ public class HostServiceTest extends WingsBaseTest {
             Host.PageResponseBuilder.aHost().withUuid(HOST_ID).withAppId(APP_ID).withEnvId(ENV_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME)
                 .withHost(hostPostSave).build();
 
-        when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().withName("PROD").build());
+        when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().name("PROD").build());
         when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
         when(wingsPersistence.saveAndGet(Host.class, hostPreSave)).thenReturn(hostPostSave);
         when(wingsPersistence.saveAndGet(Host.class, applicationHostPreSave)).thenReturn(applicationHostPostSave);
         when(infrastructureService.get(INFRA_ID))
-            .thenReturn(Infrastructure.PageResponseBuilder.anInfrastructure().withType(STATIC).withAppId(GLOBAL_APP_ID).withUuid(INFRA_ID).build());
+            .thenReturn(Infrastructure.PageResponseBuilder.anInfrastructure().type(STATIC).withAppId(GLOBAL_APP_ID).withUuid(INFRA_ID).build());
         when(settingsService.get(GLOBAL_APP_ID, HOST_CONN_ATTR_ID)).thenReturn(hostConnAttr);
 
         hostService.bulkSave(INFRA_ID, ENV_ID, requestHost);
@@ -240,8 +240,8 @@ public class HostServiceTest extends WingsBaseTest {
   public void shouldGetInfrastructureHostUsageByApplication() {
     /*
         List<Application> applications =
-            asList(anApplication().withUuid("ID1").withName("NAME1").build(),
-       anApplication().withUuid("ID2").withName("NAME2").build()); PageResponse pageResponse = new PageResponse();
+            asList(anApplication().withUuid("ID1").name("NAME1").build(),
+       anApplication().withUuid("ID2").name("NAME2").build()); PageResponse pageResponse = new PageResponse();
         pageResponse.setResponse(applications);
         when(appService.list(any(), eq(false), eq(0), eq(0))).thenReturn(pageResponse);
         when(wingsPersistence.getDatastore().createAggregation(Host.class)).thenReturn(aggregationPipeline);

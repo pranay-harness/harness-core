@@ -183,10 +183,10 @@ public class PhaseStep {
     // CodecConfigurationException: Can't find a codec for class software.wings.beans.FailureStrategy
 
     return aGraphNode()
-        .withId(uuid)
-        .withName(getName())
-        .withType(StateType.PHASE_STEP.name())
-        .withRollback(rollback)
+        .id(uuid)
+        .name(getName())
+        .type(StateType.PHASE_STEP.name())
+        .rollback(rollback)
         .addProperty("phaseStepType", phaseStepType)
         .addProperty("stepsInParallel", stepsInParallel)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
@@ -217,9 +217,9 @@ public class PhaseStep {
 
     if (stepsInParallel && steps.size() > 1) {
       GraphNode forkNode = aGraphNode()
-                               .withId(generateUuid())
-                               .withType(FORK.name())
-                               .withName(name + "-FORK")
+                               .id(generateUuid())
+                               .type(FORK.name())
+                               .name(name + "-FORK")
                                .addProperty("parentId", getUuid())
                                .build();
       graphBuilder.addNodes(forkNode);
@@ -249,8 +249,7 @@ public class PhaseStep {
           continue;
         }
         if (i < steps.size() - 1 && isExecuteWithPreviousSteps(steps.get(i + 1))) {
-          forkNode =
-              aGraphNode().withId(generateUuid()).withType(FORK.name()).withName("Fork-" + step.getName()).build();
+          forkNode = aGraphNode().id(generateUuid()).type(FORK.name()).name("Fork-" + step.getName()).build();
           graphBuilder.addNodes(forkNode);
           graphBuilder.addLinks(
               aLink().withFrom(forkNode.getId()).withTo(step.getId()).withType(TransitionType.FORK.name()).build());

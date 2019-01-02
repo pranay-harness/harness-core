@@ -69,16 +69,12 @@ public class PipelineServiceDBTest extends WingsBaseTest {
   }
 
   private Workflow createWorkflow(Application application) {
-    Graph graph = aGraph()
-                      .addNodes(aGraphNode()
-                                    .withId("n1")
-                                    .withName("stop")
-                                    .withType(StateType.ENV_STATE.name())
-                                    .withOrigin(true)
-                                    .build())
-                      .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
-                      .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-                      .build();
+    Graph graph =
+        aGraph()
+            .addNodes(aGraphNode().id("n1").name("stop").type(StateType.ENV_STATE.name()).origin(true).build())
+            .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
+            .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
+            .build();
 
     BuildWorkflow orchestrationWorkflow = aBuildOrchestrationWorkflow().withGraph(graph).build();
     Workflow workflow = aWorkflow()

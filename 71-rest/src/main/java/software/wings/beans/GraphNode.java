@@ -53,24 +53,24 @@ public class GraphNode {
 
   public GraphNode cloneInternal() {
     GraphNode clonedNode = aGraphNode()
-                               .withId("node_" + generateUuid())
-                               .withName(getName())
-                               .withType(getType())
-                               .withRollback(isRollback())
-                               .withStatus(getStatus())
-                               .withExecutionSummary(getExecutionSummary())
-                               .withExecutionDetails(getExecutionDetails())
-                               .withDetailsReference(getDetailsReference())
-                               .withOrigin(isOrigin())
-                               .withExecutionHistoryCount(getExecutionHistoryCount())
-                               .withInterruptHistoryCount(getInterruptHistoryCount())
-                               .withValid(isValid())
-                               .withValidationMessage(getValidationMessage())
-                               .withInValidFieldMessages(getInValidFieldMessages())
-                               .withElementStatusSummary(getElementStatusSummary())
-                               .withInstanceStatusSummary(getInstanceStatusSummary())
-                               .withTemplateExpressions(getTemplateExpressions())
-                               .withVariableOverrides(getVariableOverrides())
+                               .id("node_" + generateUuid())
+                               .name(getName())
+                               .type(getType())
+                               .rollback(isRollback())
+                               .status(getStatus())
+                               .executionSummary(getExecutionSummary())
+                               .executionDetails(getExecutionDetails())
+                               .detailsReference(getDetailsReference())
+                               .origin(isOrigin())
+                               .executionHistoryCount(getExecutionHistoryCount())
+                               .interruptHistoryCount(getInterruptHistoryCount())
+                               .valid(isValid())
+                               .validationMessage(getValidationMessage())
+                               .inValidFieldMessages(getInValidFieldMessages())
+                               .elementStatusSummary(getElementStatusSummary())
+                               .instanceStatusSummary(getInstanceStatusSummary())
+                               .templateExpressions(getTemplateExpressions())
+                               .variableOverrides(getVariableOverrides())
                                .build();
     clonedNode.setProperties(getProperties());
     return clonedNode;
@@ -119,107 +119,107 @@ public class GraphNode {
       return new GraphNodeBuilder();
     }
 
-    public GraphNodeBuilder withId(String id) {
+    public GraphNodeBuilder id(String id) {
       this.id = id;
       return this;
     }
 
-    public GraphNodeBuilder withName(String name) {
+    public GraphNodeBuilder name(String name) {
       this.name = name;
       return this;
     }
 
-    public GraphNodeBuilder withType(String type) {
+    public GraphNodeBuilder type(String type) {
       this.type = type;
       return this;
     }
 
-    public GraphNodeBuilder withRollback(boolean rollback) {
+    public GraphNodeBuilder rollback(boolean rollback) {
       this.rollback = rollback;
       return this;
     }
 
-    public GraphNodeBuilder withStatus(String status) {
+    public GraphNodeBuilder status(String status) {
       this.status = status;
       return this;
     }
 
-    public GraphNodeBuilder withExecutionSummary(Object executionSummary) {
+    public GraphNodeBuilder executionSummary(Object executionSummary) {
       this.executionSummary = executionSummary;
       return this;
     }
 
-    public GraphNodeBuilder withExecutionDetails(Object executionDetails) {
+    public GraphNodeBuilder executionDetails(Object executionDetails) {
       this.executionDetails = executionDetails;
       return this;
     }
 
-    public GraphNodeBuilder withDetailsReference(String detailsReference) {
+    public GraphNodeBuilder detailsReference(String detailsReference) {
       this.detailsReference = detailsReference;
       return this;
     }
 
-    public GraphNodeBuilder withOrigin(boolean origin) {
+    public GraphNodeBuilder origin(boolean origin) {
       this.origin = origin;
       return this;
     }
 
-    public GraphNodeBuilder withExecutionHistoryCount(int executionHistoryCount) {
+    public GraphNodeBuilder executionHistoryCount(int executionHistoryCount) {
       this.executionHistoryCount = executionHistoryCount;
       return this;
     }
 
-    public GraphNodeBuilder withInterruptHistoryCount(int interruptHistoryCount) {
+    public GraphNodeBuilder interruptHistoryCount(int interruptHistoryCount) {
       this.interruptHistoryCount = interruptHistoryCount;
       return this;
     }
 
-    public GraphNodeBuilder withValid(boolean valid) {
+    public GraphNodeBuilder valid(boolean valid) {
       this.valid = valid;
       return this;
     }
 
-    public GraphNodeBuilder withValidationMessage(String validationMessage) {
+    public GraphNodeBuilder validationMessage(String validationMessage) {
       this.validationMessage = validationMessage;
       return this;
     }
 
-    public GraphNodeBuilder withInValidFieldMessages(Map<String, String> inValidFieldMessages) {
+    public GraphNodeBuilder inValidFieldMessages(Map<String, String> inValidFieldMessages) {
       this.inValidFieldMessages = inValidFieldMessages;
       return this;
     }
 
-    public GraphNodeBuilder withElementStatusSummary(List<ElementExecutionSummary> elementStatusSummary) {
+    public GraphNodeBuilder elementStatusSummary(List<ElementExecutionSummary> elementStatusSummary) {
       this.elementStatusSummary = elementStatusSummary;
       return this;
     }
 
-    public GraphNodeBuilder withInstanceStatusSummary(List<InstanceStatusSummary> instanceStatusSummary) {
+    public GraphNodeBuilder instanceStatusSummary(List<InstanceStatusSummary> instanceStatusSummary) {
       this.instanceStatusSummary = instanceStatusSummary;
       return this;
     }
 
-    public GraphNodeBuilder withTemplateExpressions(List<TemplateExpression> templateExpressions) {
+    public GraphNodeBuilder templateExpressions(List<TemplateExpression> templateExpressions) {
       this.templateExpressions = templateExpressions;
       return this;
     }
 
-    public GraphNodeBuilder withVariableOverrides(List<NameValuePair> variableOverrides) {
+    public GraphNodeBuilder variableOverrides(List<NameValuePair> variableOverrides) {
       this.variableOverrides = variableOverrides;
       return this;
     }
 
-    public GraphNodeBuilder withTemplateVariables(List<Variable> templateVariables) {
+    public GraphNodeBuilder templateVariables(List<Variable> templateVariables) {
       this.templateVariables = templateVariables;
       return this;
     }
 
-    public GraphNodeBuilder withTemplateUuid(String templateUuid) {
+    public GraphNodeBuilder templateUuid(String templateUuid) {
       this.templateUuid = templateUuid;
       return this;
     }
 
-    public GraphNodeBuilder withTemplateVersion(String templateVersion) {
+    public GraphNodeBuilder templateVersion(String templateVersion) {
       this.templateVersion = templateVersion;
       return this;
     }
@@ -232,17 +232,17 @@ public class GraphNode {
       return this;
     }
 
-    public GraphNodeBuilder withProperties(Map<String, Object> properties) {
+    public GraphNodeBuilder properties(Map<String, Object> properties) {
       this.properties = properties;
       return this;
     }
 
-    public GraphNodeBuilder withNext(GraphNode next) {
+    public GraphNodeBuilder next(GraphNode next) {
       this.next = next;
       return this;
     }
 
-    public GraphNodeBuilder withGroup(GraphGroup group) {
+    public GraphNodeBuilder group(GraphGroup group) {
       this.group = group;
       return this;
     }

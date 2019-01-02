@@ -192,7 +192,7 @@ public class GraphRendererTest extends WingsBaseTest {
 
     {
       GraphNode infrastructureNode = getInfrastructureNode();
-      GraphNode next = aGraphNode().withName("next").build();
+      GraphNode next = aGraphNode().name("next").build();
       infrastructureNode.setNext(next);
 
       final GraphNode element = infrastructureNode.getGroup().getElements().get(0);

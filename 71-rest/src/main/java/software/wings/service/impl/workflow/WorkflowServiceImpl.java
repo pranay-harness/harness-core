@@ -608,10 +608,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<String, Object> defaultSetupProperties = new HashMap<>();
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(K8S_DEPLOYMENT_ROLLING.name())
-                                                .withName(Constants.K8S_DEPLOYMENT_ROLLING)
-                                                .withProperties(defaultSetupProperties)
+                                                .id(generateUuid())
+                                                .type(K8S_DEPLOYMENT_ROLLING.name())
+                                                .name(Constants.K8S_DEPLOYMENT_ROLLING)
+                                                .properties(defaultSetupProperties)
                                                 .build())
                                    .build());
 
@@ -626,10 +626,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     rollbackPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(K8S_DEPLOYMENT_ROLLING_ROLLBACK.name())
-                                                .withName(Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK)
-                                                .withRollback(true)
+                                                .id(generateUuid())
+                                                .type(K8S_DEPLOYMENT_ROLLING_ROLLBACK.name())
+                                                .name(Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK)
+                                                .rollback(true)
                                                 .build())
                                    .withPhaseStepNameForRollback(Constants.DEPLOY)
                                    .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -660,10 +660,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<String, Object> defaultSetupProperties = new HashMap<>();
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(K8S_BLUE_GREEN_DEPLOY.name())
-                                                .withName(Constants.K8S_BLUE_GREEN_DEPLOY)
-                                                .withProperties(defaultSetupProperties)
+                                                .id(generateUuid())
+                                                .type(K8S_BLUE_GREEN_DEPLOY.name())
+                                                .name(Constants.K8S_BLUE_GREEN_DEPLOY)
+                                                .properties(defaultSetupProperties)
                                                 .build())
                                    .build());
 
@@ -674,10 +674,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     defaultRouteUpdateProperties.put("service2", stageServiceNameExpression);
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.ROUTE_UPDATE)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
-                                                .withName(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
-                                                .withProperties(defaultRouteUpdateProperties)
+                                                .id(generateUuid())
+                                                .type(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
+                                                .name(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                                                .properties(defaultRouteUpdateProperties)
                                                 .build())
                                    .build());
 
@@ -752,10 +752,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SETUP)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(K8S_CANARY_SETUP.name())
-                                                .withName(Constants.K8S_CANARY_SETUP)
-                                                .withProperties(defaultSetupProperties)
+                                                .id(generateUuid())
+                                                .type(K8S_CANARY_SETUP.name())
+                                                .name(Constants.K8S_CANARY_SETUP)
+                                                .properties(defaultSetupProperties)
                                                 .build())
                                    .build());
 
@@ -773,16 +773,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SCALE + " 1")
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(K8S_SCALE.name())
-                                                .withName("Scale Up New")
-                                                .withProperties(defaultScaleUpNew1Properties)
+                                                .id(generateUuid())
+                                                .type(K8S_SCALE.name())
+                                                .name("Scale Up New")
+                                                .properties(defaultScaleUpNew1Properties)
                                                 .build())
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(K8S_SCALE.name())
-                                                .withName("Scale Down Old")
-                                                .withProperties(defaultScaleDownOld1Properties)
+                                                .id(generateUuid())
+                                                .type(K8S_SCALE.name())
+                                                .name("Scale Down Old")
+                                                .properties(defaultScaleDownOld1Properties)
                                                 .build())
                                    .build());
 
@@ -802,16 +802,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SCALE + " 2")
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(K8S_SCALE.name())
-                                                .withName("Scale Up New")
-                                                .withProperties(defaultScaleUpNew2Properties)
+                                                .id(generateUuid())
+                                                .type(K8S_SCALE.name())
+                                                .name("Scale Up New")
+                                                .properties(defaultScaleUpNew2Properties)
                                                 .build())
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(K8S_SCALE.name())
-                                                .withName("Scale Down Old")
-                                                .withProperties(defaultScaleDownOld2Properties)
+                                                .id(generateUuid())
+                                                .type(K8S_SCALE.name())
+                                                .name("Scale Down Old")
+                                                .properties(defaultScaleDownOld2Properties)
                                                 .build())
                                    .build());
 
@@ -821,10 +821,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void addK8sCanaryRollbackWorkflowPhaseSteps(WorkflowPhase rollbackPhase) {
     rollbackPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SETUP)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(K8S_CANARY_ROLLBACK.name())
-                                                .withName(Constants.K8S_CANARY_ROLLBACK)
-                                                .withRollback(true)
+                                                .id(generateUuid())
+                                                .type(K8S_CANARY_ROLLBACK.name())
+                                                .name(Constants.K8S_CANARY_ROLLBACK)
+                                                .rollback(true)
                                                 .build())
                                    .withPhaseStepNameForRollback(Constants.SETUP)
                                    .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1131,9 +1131,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflowPhase.addPhaseStep(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
                                    .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(ARTIFACT_COLLECTION.name())
-                                                .withName(Constants.ARTIFACT_COLLECTION)
+                                                .id(generateUuid())
+                                                .type(ARTIFACT_COLLECTION.name())
+                                                .name(Constants.ARTIFACT_COLLECTION)
                                                 .build())
                                    .build());
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
@@ -1335,10 +1335,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
       propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
       rollbackProvisionerNodes.add(aGraphNode()
-                                       .withType(getCorrespondingRollbackState(step).name())
-                                       .withRollback(true)
-                                       .withName("Rollback " + step.getName())
-                                       .withProperties(propertiesMap)
+                                       .type(getCorrespondingRollbackState(step).name())
+                                       .rollback(true)
+                                       .name("Rollback " + step.getName())
+                                       .properties(propertiesMap)
                                        .build());
     });
     rollbackProvisionerStep.setRollback(true);
