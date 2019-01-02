@@ -2,6 +2,7 @@ package software.wings.delegate.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.network.SafeHttpCall.execute;
+import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 import com.google.common.cache.CacheBuilder;
@@ -12,6 +13,7 @@ import com.google.inject.Singleton;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
@@ -193,7 +195,15 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
   @Override
   public DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException {
-    return execute(managerClient.getMetaInfo(fileId, fileBucket, accountId)).getResource();
+    RestResponse<DelegateFile> restResponse = execute(managerClient.getMetaInfo(fileId, fileBucket, accountId));
+    if (restResponse == null) {
+      logger.error("Unknown error occurred while retrieving metainfo for file {} from bucket {}", fileId, fileBucket);
+      throw new WingsException(format(
+          "Unknown error occurred while retrieving metainfo for file %s from bucket %s. Please check manager logs.",
+          fileId, fileBucket));
+    }
+    logger.info("Got info for file {}", fileId);
+    return restResponse.getResource();
   }
 
   @Override

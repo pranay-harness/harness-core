@@ -409,8 +409,14 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                 new FileProvider() {
                   @Override
                   public Pair<String, Long> getInfo() throws IOException {
-                    DelegateFile delegateFile =
-                        delegateFileManager.getMetaInfo(fileBucket, fileNamesId.getKey(), config.getAccountId());
+                    DelegateFile delegateFile;
+                    try {
+                      delegateFile =
+                          delegateFileManager.getMetaInfo(fileBucket, fileNamesId.getKey(), config.getAccountId());
+                    } catch (WingsException e) {
+                      saveExecutionLogError(e.getMessage());
+                      throw e;
+                    }
                     return ImmutablePair.of(
                         isBlank(fileNamesId.getRight()) ? delegateFile.getFileName() : fileNamesId.getRight(),
                         delegateFile.getLength());
@@ -424,7 +430,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                     }
                   }
                 }))
-        .filter(commandExecutionStatus -> commandExecutionStatus == CommandExecutionStatus.FAILURE)
+        .filter(commandExecutionStatus -> commandExecutionStatus == FAILURE)
         .findFirst()
         .orElse(CommandExecutionStatus.SUCCESS);
   }

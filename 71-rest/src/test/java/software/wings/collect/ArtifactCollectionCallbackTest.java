@@ -72,7 +72,7 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
   @Test
   public void shouldNotify() {
     artifactCollectionCallback.notify(Maps.newHashMap("", aListNotifyResponseData().addData(ARTIFACT_FILE).build()));
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.APPROVED, DOWNLOADED);
+    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.APPROVED, DOWNLOADED, "");
     verify(artifactService).addArtifactFile(ARTIFACT_ID, APP_ID, Lists.newArrayList(ARTIFACT_FILE));
   }
 }

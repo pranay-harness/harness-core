@@ -63,7 +63,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
         return;
       }
       artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), responseData.getData());
-      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED, DOWNLOADED);
+      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED, DOWNLOADED, "");
 
       notificationService.sendNotificationAsync(anApprovalNotification()
                                                     .withAppId(artifact.getAppId())
