@@ -36,11 +36,13 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -297,11 +299,21 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account update(@Valid Account account) {
-    wingsPersistence.update(account,
-        wingsPersistence.createUpdateOperations(Account.class)
-            .set("companyName", account.getCompanyName())
-            .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
-            .set("authenticationMechanism", account.getAuthenticationMechanism()));
+    // Need to update the account status if the account status is not null.
+    if (account.getLicenseInfo() != null && account.getLicenseInfo().getAccountStatus() != null) {
+      setAccountStatus(account.getUuid(), account.getLicenseInfo().getAccountStatus());
+    }
+
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class)
+                                                     .set("companyName", account.getCompanyName())
+                                                     .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced());
+    if (account.getAuthenticationMechanism() != null) {
+      updateOperations.set("authenticationMechanism", account.getAuthenticationMechanism());
+    }
+    if (isNotEmpty(account.getNewClusterUrl())) {
+      updateOperations.set("newClusterUrl", account.getNewClusterUrl());
+    }
+    wingsPersistence.update(account, updateOperations);
     dbCache.invalidate(Account.class, account.getUuid());
     Account updatedAccount = wingsPersistence.get(Account.class, account.getUuid());
     decryptLicenseInfo(singletonList(updatedAccount));
@@ -396,6 +408,34 @@ public class AccountServiceImpl implements AccountService {
                    .enabled(featureFlagService.isEnabled(featureName, accountId))
                    .build())
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public boolean startAccountMigration(String accountId) {
+    return setAccountStatus(accountId, AccountStatus.MIGRATING);
+  }
+
+  @Override
+  public boolean completeAccountMigration(String accountId, String newClusterUrl) {
+    Account account = get(accountId);
+    account.setNewClusterUrl(newClusterUrl);
+    update(account);
+
+    return setAccountStatus(accountId, AccountStatus.MIGRATED);
+  }
+
+  private boolean setAccountStatus(String accountId, String accountStatus) {
+    if (!AccountStatus.isValid(accountStatus)) {
+      throw new WingsException("Invalid account status: " + accountStatus, USER);
+    }
+
+    Account account = get(accountId);
+
+    LicenseInfo newLicenseInfo = account.getLicenseInfo();
+    newLicenseInfo.setAccountStatus(accountStatus);
+    licenseService.updateAccountLicense(accountId, newLicenseInfo, null);
+
+    return true;
   }
 
   private void createDefaultNotificationGroup(Account account, Role role) {

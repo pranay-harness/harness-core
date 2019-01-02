@@ -97,7 +97,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   protected static Client client;
 
   @Inject protected WingsPersistence wingsPersistence;
-  @Inject private AccountService accountService;
+  @Inject protected AccountService accountService;
   @Inject protected SettingsService settingsService;
   @Inject protected AppService appService;
   @Inject protected LearningEngineService learningEngineService;
