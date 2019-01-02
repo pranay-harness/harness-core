@@ -43,7 +43,6 @@ import software.wings.delegatetasks.aws.AwsEcrTask;
 import software.wings.delegatetasks.aws.AwsEcsTask;
 import software.wings.delegatetasks.aws.AwsElbTask;
 import software.wings.delegatetasks.aws.AwsIamTask;
-import software.wings.delegatetasks.aws.AwsLambdaAsyncTask;
 import software.wings.delegatetasks.aws.AwsLambdaTask;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
@@ -291,7 +290,6 @@ public enum TaskType {
   AWS_ASG_TASK(TaskGroup.AWS, AwsAsgTask.class, AwsConnectionValidation.class),
   AWS_CODE_DEPLOY_TASK(TaskGroup.AWS, AwsCodeDeployTask.class, AwsConnectionValidation.class),
   AWS_LAMBDA_TASK(TaskGroup.AWS, AwsLambdaTask.class, AwsConnectionValidation.class),
-  AWS_LAMBDA_ASYNC_TASK(TaskGroup.AWS, AwsLambdaAsyncTask.class, AwsConnectionValidation.class),
   AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AwsConnectionValidation.class),
   AWS_CF_TASK(TaskGroup.AWS, AwsCFTask.class, AwsConnectionValidation.class),
   K8S_COMMAND_TASK(TaskGroup.K8S, K8sTask.class, K8sCommandValidation.class),
