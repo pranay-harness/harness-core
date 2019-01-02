@@ -457,6 +457,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
     TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
         (TerraformInfrastructureProvisioner) infrastructureProvisioner;
+    if (isTemplatizedProvisioner(terraformInfrastructureProvisioner)) {
+      throw new InvalidRequestException("Fetching targets not possible for templatized provisioner");
+    }
     SettingAttribute settingAttribute = settingService.get(terraformInfrastructureProvisioner.getSourceRepoSettingId());
     if (settingAttribute == null || !(settingAttribute.getValue() instanceof GitConfig)) {
       throw new InvalidRequestException("Invalid Git Repo");
@@ -487,10 +490,18 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
     if (responseData instanceof ErrorNotifyResponseData) {
       throw new WingsException(((ErrorNotifyResponseData) responseData).getErrorMessage());
+    } else if (responseData instanceof RemoteMethodReturnValueData
+        && ((RemoteMethodReturnValueData) responseData).getException() instanceof InvalidRequestException) {
+      throw(InvalidRequestException)((RemoteMethodReturnValueData) responseData).getException();
     } else if (!(responseData instanceof TerraformExecutionData)) {
       throw new WingsException("Unknown response from delegate.").addContext(ResponseData.class, responseData);
     }
     return ((TerraformExecutionData) responseData).getTargets();
+  }
+
+  private boolean isTemplatizedProvisioner(TerraformInfrastructureProvisioner infrastructureProvisioner) {
+    return infrastructureProvisioner.getSourceRepoBranch().contains("$")
+        || infrastructureProvisioner.getPath().contains("$");
   }
 
   private String normalizeScriptPath(String terraformDirectory) {

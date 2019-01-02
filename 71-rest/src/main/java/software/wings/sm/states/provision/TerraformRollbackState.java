@@ -59,7 +59,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
 
   @Override
   protected TerraformCommand command() {
-    return null;
+    return rollbackCommand;
   }
 
   @Override
@@ -90,7 +90,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
           currentConfig = configParameter;
         }
       } else {
-        rollbackCommand = TerraformCommand.APPLY;
+        TerraformCommand savedCommand = configParameter.getCommand();
+        rollbackCommand = savedCommand != null ? savedCommand : TerraformCommand.APPLY;
         break;
       }
     }
@@ -121,6 +122,9 @@ public class TerraformRollbackState extends TerraformProvisionState {
       encryptedBackendConfigs = extractEncryptedTextVariables(allBackendConfigs.stream(), context);
     }
 
+    List<String> targets = configParameter.getTargets();
+    targets = resolveTargets(targets, context);
+
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder()
@@ -138,6 +142,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .encryptedVariables(encryptedTextVariables)
             .backendConfigs(backendConfigs)
             .encryptedBackendConfigs(encryptedBackendConfigs)
+            .targets(targets)
             .build();
 
     DelegateTask delegateTask = aDelegateTask()
