@@ -4,6 +4,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import lombok.Builder;
 import lombok.Data;
+import software.wings.api.AwsLambdaExecutionData;
+import software.wings.beans.LambdaTestEvent;
 
 @Data
 @Builder
@@ -15,4 +17,6 @@ public class AwsLambdaExecuteFunctionResponse implements AwsResponse {
   private String functionError;
   private String logResult;
   private String payload;
+  private AwsLambdaExecutionData awsLambdaExecutionData;
+  private LambdaTestEvent lambdaTestEvent;
 }

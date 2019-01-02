@@ -11,11 +11,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest;
 import software.wings.service.impl.aws.model.AwsLambdaRequest;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
 
 public class AwsLambdaTaskTest extends WingsBaseTest {
+  @Mock private DelegateLogService mockDelegateLogService;
   @Mock private AwsLambdaHelperServiceDelegate mockAwsLambdaHelperServiceDelegate;
 
   @InjectMocks
@@ -25,10 +28,18 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     on(task).set("awsLambdaHelperServiceDelegate", mockAwsLambdaHelperServiceDelegate);
+    on(task).set("delegateLogService", mockDelegateLogService);
   }
 
   @Test
-  public void testRun() {
+  public void testExecuteWf() {
+    AwsLambdaRequest request = AwsLambdaExecuteWfRequest.builder().build();
+    task.run(new Object[] {request});
+    verify(mockAwsLambdaHelperServiceDelegate).executeWf(any(), any());
+  }
+
+  @Test
+  public void testExecuteFunction() {
     AwsLambdaRequest request = AwsLambdaExecuteFunctionRequest.builder().build();
     task.run(new Object[] {request});
     verify(mockAwsLambdaHelperServiceDelegate).executeFunction(any());

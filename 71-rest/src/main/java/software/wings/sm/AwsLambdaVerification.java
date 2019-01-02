@@ -1,6 +1,11 @@
 package software.wings.sm;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -9,27 +14,34 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.AwsLambdaExecutionData;
 import software.wings.api.AwsLambdaFunctionElement;
+import software.wings.api.CommandStateExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TaskType;
 import software.wings.common.Constants;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse;
+import software.wings.service.impl.aws.model.AwsLambdaRequest;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.LambdaConvention;
 import software.wings.utils.Misc;
@@ -37,15 +49,18 @@ import software.wings.utils.Misc;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class AwsLambdaVerification extends State {
   @Attributes(title = "Function Test Events") private List<LambdaTestEvent> lambdaTestEvents = new ArrayList<>();
 
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private SecretManager secretManager;
-  @Transient @Inject private AwsLambdaHelperServiceManager awsLambdaHelperServiceManager;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private transient SettingsService settingsService;
+  private static final long TIME_OUT_IN_MINUTES = 2;
+  @Inject private DelegateService delegateService;
   @Transient private static final Logger logger = LoggerFactory.getLogger(AwsLambdaVerification.class);
 
   /**
@@ -60,11 +75,7 @@ public class AwsLambdaVerification extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
-    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    String errorMessage = null;
-
     AwsLambdaExecutionData awsLambdaExecutionData = new AwsLambdaExecutionData();
-    boolean assertionStatus = true;
     try {
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -94,42 +105,101 @@ public class AwsLambdaVerification extends State {
       LambdaTestEvent lambdaTestEvent =
           functionNameMap.getOrDefault(functionMeta.getFunctionName(), LambdaTestEvent.builder().build());
 
-      AwsLambdaExecuteFunctionResponse functionResponse = awsLambdaHelperServiceManager.executeFunction(awsConfig,
-          secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()),
-          awsLambdaFunctionElement.getRegion(), functionMeta.getFunctionArn(), functionMeta.getVersion(),
-          isNotBlank(lambdaTestEvent.getPayload()) ? lambdaTestEvent.getPayload() : null, context.getAppId());
+      return executeTask(awsConfig.getAccountId(),
+          AwsLambdaExecuteFunctionRequest.builder()
+              .awsConfig(awsConfig)
+              .encryptionDetails(
+                  secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()))
+              .region(awsLambdaFunctionElement.getRegion())
+              .functionName(functionMeta.getFunctionArn())
+              .qualifier(functionMeta.getVersion())
+              .payload(isNotBlank(lambdaTestEvent.getPayload()) ? lambdaTestEvent.getPayload() : null)
+              .awsLambdaExecutionData(awsLambdaExecutionData)
+              .lambdaTestEvent(lambdaTestEvent)
+              .build(),
+          context.getAppId(), activityId);
 
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new WingsException(Misc.getMessage(e), e);
+    }
+  }
+
+  private ExecutionResponse executeTask(String accountId, AwsLambdaRequest request, String appId, String activityId) {
+    DelegateTask delegateTask =
+        aDelegateTask()
+            .withTaskType(TaskType.AWS_LAMBDA_TASK)
+            .withAccountId(accountId)
+            .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
+            .withAsync(true)
+            .withTags(
+                isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .withTimeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
+            .withParameters(new Object[] {request})
+            .withWaitId(activityId)
+            .build();
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+    return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(singletonList(activityId))
+        .withDelegateTaskId(delegateTaskId)
+        .withStateExecutionData(
+            CommandStateExecutionData.Builder.aCommandStateExecutionData().withActivityId(activityId).build())
+        .build();
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    try {
+      String activityId = response.keySet().iterator().next();
+      AwsLambdaExecuteFunctionResponse functionResponse =
+          (AwsLambdaExecuteFunctionResponse) response.values().iterator().next();
+
+      AwsLambdaExecutionData awsLambdaExecutionData = functionResponse.getAwsLambdaExecutionData();
       awsLambdaExecutionData.setStatusCode(functionResponse.getStatusCode());
       awsLambdaExecutionData.setFunctionError(functionResponse.getFunctionError());
+
+      if (functionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
+        return ExecutionResponse.Builder.anExecutionResponse()
+            .withExecutionStatus(functionResponse.getExecutionStatus())
+            .withStateExecutionData(awsLambdaExecutionData)
+            .withErrorMessage(functionResponse.getErrorMessage())
+            .build();
+      }
+
+      boolean assertionStatus = true;
+      ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
       String logResult = functionResponse.getLogResult();
       if (logResult != null) {
         awsLambdaExecutionData.setLogResult(logResult);
       }
       awsLambdaExecutionData.setPayload(functionResponse.getPayload());
-      awsLambdaExecutionData.setAssertionStatement(lambdaTestEvent.getAssertion());
+      awsLambdaExecutionData.setAssertionStatement(functionResponse.getLambdaTestEvent().getAssertion());
 
-      if (isNotBlank(lambdaTestEvent.getAssertion())) {
-        assertionStatus = (boolean) context.evaluateExpression(lambdaTestEvent.getAssertion(), awsLambdaExecutionData);
+      if (isNotBlank(functionResponse.getLambdaTestEvent().getAssertion())) {
+        assertionStatus = (boolean) context.evaluateExpression(
+            functionResponse.getLambdaTestEvent().getAssertion(), awsLambdaExecutionData);
       }
-    } catch (Exception ex) {
-      logger.error("Exception in verifying lambda", ex);
-      errorMessage = Misc.getMessage(ex);
-      awsLambdaExecutionData.setErrorMsg(errorMessage);
-      executionStatus = ExecutionStatus.FAILED;
-    }
 
-    if (!assertionStatus || awsLambdaExecutionData.getStatusCode() < 200
-        || awsLambdaExecutionData.getStatusCode() > 299) { // Lambda return non 200 range for failure
-      executionStatus = ExecutionStatus.FAILED;
-    }
-    awsLambdaExecutionData.setAssertionStatus(executionStatus.name());
+      if (!assertionStatus || awsLambdaExecutionData.getStatusCode() < 200
+          || awsLambdaExecutionData.getStatusCode() > 299) { // Lambda return non 200 range for failure
+        executionStatus = ExecutionStatus.FAILED;
+      }
+      awsLambdaExecutionData.setAssertionStatus(executionStatus.name());
 
-    updateActivityStatus(activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionStatus);
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withStateExecutionData(awsLambdaExecutionData)
-        .withErrorMessage(errorMessage)
-        .build();
+      updateActivityStatus(activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionStatus);
+      return ExecutionResponse.Builder.anExecutionResponse()
+          .withExecutionStatus(executionStatus)
+          .withStateExecutionData(awsLambdaExecutionData)
+          .build();
+
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new WingsException(Misc.getMessage(e), e);
+    }
   }
 
   @Override

@@ -110,6 +110,8 @@ public class AwsLambdaHelperServiceDelegateImpl
         }
       }
       responseBuilder.payload(StandardCharsets.UTF_8.decode(invokeResult.getPayload()).toString());
+      responseBuilder.awsLambdaExecutionData(request.getAwsLambdaExecutionData())
+          .lambdaTestEvent(request.getLambdaTestEvent());
       return responseBuilder.build();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);

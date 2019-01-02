@@ -9,7 +9,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.TaskType.AWS_LAMBDA_ASYNC_TASK;
+import static software.wings.beans.TaskType.AWS_LAMBDA_TASK;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -300,7 +300,7 @@ public class AwsLambdaState extends State {
           app.getAccountId(), activity.getUuid());
       DelegateTask delegateTask =
           aDelegateTask()
-              .withTaskType(AWS_LAMBDA_ASYNC_TASK)
+              .withTaskType(AWS_LAMBDA_TASK)
               .withAccountId(app.getAccountId())
               .withWaitId(activity.getUuid())
               .withAppId(context.getAppId())
