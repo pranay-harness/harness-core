@@ -65,18 +65,19 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    */
   @Test
   public void shouldWaitForCorrelationId() throws IOException {
+    String uuid = generateUuid();
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
+      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
       assertThat(persistence.createQuery(WaitQueue.class, excludeAuthority).asList())
           .hasSize(1)
           .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
-          .containsExactly(tuple(waitInstanceId, "123"));
+          .containsExactly(tuple(waitInstanceId, uuid));
 
-      ResponseData data = StringNotifyResponseData.builder().data("response-123").build();
-      String id = waitNotifyEngine.notify("123", data);
+      ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
+      String id = waitNotifyEngine.notify(uuid, data);
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -85,25 +86,26 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       Puller.pullFor(Duration.ofSeconds(10), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
-      assertThat(responseMap).hasSize(1).isEqualTo(of("123", data));
+      assertThat(responseMap).hasSize(1).isEqualTo(of(uuid, data));
       assertThat(callCount.get()).isEqualTo(1);
     }
   }
 
   @Test
   public void stressWaitForCorrelationId() throws IOException {
+    String uuid = generateUuid();
     try (MaintenanceGuard guard = new MaintenanceGuard(true)) {
-      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
+      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
       assertThat(persistence.createQuery(WaitQueue.class, excludeAuthority).asList())
           .hasSize(1)
           .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
-          .containsExactly(tuple(waitInstanceId, "123"));
+          .containsExactly(tuple(waitInstanceId, uuid));
 
-      ResponseData data = StringNotifyResponseData.builder().data("response-123").build();
-      String id = waitNotifyEngine.notify("123", data);
+      ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
+      String id = waitNotifyEngine.notify(uuid, data);
 
       Concurrent.test(10, i -> { notifier.execute(); });
 
@@ -116,7 +118,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       assertThat(notifyEventQueue.count(Filter.ALL)).isEqualTo(0);
 
-      assertThat(responseMap).hasSize(1).isEqualTo(of("123", data));
+      assertThat(responseMap).hasSize(1).isEqualTo(of(uuid, data));
       assertThat(callCount.get()).isEqualTo(1);
     }
   }
@@ -126,19 +128,23 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    */
   @Test
   public void shouldWaitForCorrelationIds() throws IOException {
+    String uuid1 = generateUuid();
+    String uuid2 = generateUuid();
+    String uuid3 = generateUuid();
+
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123", "456", "789");
+      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid1, uuid2, uuid3);
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
       assertThat(persistence.createQuery(WaitQueue.class, excludeAuthority).asList())
           .hasSize(3)
           .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
-          .containsExactly(tuple(waitInstanceId, "123"), tuple(waitInstanceId, "456"), tuple(waitInstanceId, "789"));
+          .containsExactly(tuple(waitInstanceId, uuid1), tuple(waitInstanceId, uuid2), tuple(waitInstanceId, uuid3));
 
-      ResponseData data1 = StringNotifyResponseData.builder().data("response-123").build();
+      ResponseData data1 = StringNotifyResponseData.builder().data("response-" + uuid1).build();
 
-      String id = waitNotifyEngine.notify("123", data1);
+      String id = waitNotifyEngine.notify(uuid1, data1);
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -148,9 +154,9 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       Puller.pullFor(Duration.ofSeconds(10), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(0);
-      ResponseData data2 = StringNotifyResponseData.builder().data("response-456").build();
+      ResponseData data2 = StringNotifyResponseData.builder().data("response-" + uuid2).build();
 
-      id = waitNotifyEngine.notify("456", data2);
+      id = waitNotifyEngine.notify(uuid2, data2);
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -160,9 +166,9 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       Puller.pullFor(Duration.ofSeconds(10), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(0);
-      ResponseData data3 = StringNotifyResponseData.builder().data("response-789").build();
+      ResponseData data3 = StringNotifyResponseData.builder().data("response-" + uuid3).build();
 
-      id = waitNotifyEngine.notify("789", data3);
+      id = waitNotifyEngine.notify(uuid3, data3);
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -171,7 +177,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       Puller.pullFor(Duration.ofSeconds(10), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
-      assertThat(responseMap).hasSize(3).containsAllEntriesOf(of("123", data1, "456", data2, "789", data3));
+      assertThat(responseMap).hasSize(3).containsAllEntriesOf(of(uuid1, data1, uuid2, data2, uuid3, data3));
       assertThat(callCount.get()).isEqualTo(1);
     }
   }
@@ -181,10 +187,12 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    */
   @Test
   public void shouldWaitForCorrelationIdForMultipleWaitInstances() throws IOException {
+    String uuid = generateUuid();
+
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      String waitInstanceId1 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
-      String waitInstanceId2 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
-      String waitInstanceId3 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
+      String waitInstanceId1 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
+      String waitInstanceId2 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
+      String waitInstanceId3 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
 
       assertThat(persistence.createQuery(WaitInstance.class, excludeAuthority).asList())
           .hasSize(3)
@@ -194,10 +202,10 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       assertThat(persistence.createQuery(WaitQueue.class, excludeAuthority).asList())
           .hasSize(3)
           .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
-          .containsExactly(tuple(waitInstanceId1, "123"), tuple(waitInstanceId2, "123"), tuple(waitInstanceId3, "123"));
+          .containsExactly(tuple(waitInstanceId1, uuid), tuple(waitInstanceId2, uuid), tuple(waitInstanceId3, uuid));
 
-      ResponseData data = StringNotifyResponseData.builder().data("response-123").build();
-      String id = waitNotifyEngine.notify("123", data);
+      ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
+      String id = waitNotifyEngine.notify(uuid, data);
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -208,7 +216,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
         Thread.yield();
       }
 
-      assertThat(responseMap).hasSize(1).containsAllEntriesOf(of("123", data));
+      assertThat(responseMap).hasSize(1).containsAllEntriesOf(of(uuid, data));
       assertThat(callCount.get()).isEqualTo(3);
     }
   }
