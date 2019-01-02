@@ -17,16 +17,6 @@ public class TestQueuableWithEntity extends Queuable {
   /**
    * Instantiates a new test queuable with entity.
    *
-   * @param other the other
-   */
-  public TestQueuableWithEntity(TestQueuableWithEntity other) {
-    super(other);
-    this.entity = other.entity;
-  }
-
-  /**
-   * Instantiates a new test queuable with entity.
-   *
    * @param entity the entity
    */
   public TestQueuableWithEntity(TestInternalEntity entity) {
