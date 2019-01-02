@@ -7,6 +7,8 @@ import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -17,12 +19,12 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.User;
-import software.wings.dl.WingsPersistence;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.saml.SamlClientService;
 import software.wings.security.saml.SamlRequest;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 
 import java.net.URI;
@@ -40,8 +42,8 @@ public class AuthenticationManager {
   @Inject private SamlClientService samlClientService;
   @Inject private MainConfiguration configuration;
   @Inject private UserService userService;
-  @Inject private WingsPersistence wingsPersistence;
   @Inject private AuthService authService;
+  @Inject private FeatureFlagService featureFlagService;
 
   private static Logger logger = LoggerFactory.getLogger(AuthenticationManager.class);
 
@@ -58,7 +60,7 @@ public class AuthenticationManager {
 
   private AuthenticationMechanism getAuthenticationMechanism(User user) {
     AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
-    /**
+    /*
      * If the number of accounts > 1, by default assume it to be USER_PASSWORD.
      * Typically this should only be for Harness users.
      * All other customers should have only 1 account mapped to their users
@@ -80,7 +82,7 @@ public class AuthenticationManager {
   public LoginTypeResponse getLoginTypeResponse(String userName) {
     LoginTypeResponseBuilder builder = LoginTypeResponse.builder();
 
-    /**
+    /*
      * To prevent possibility of user enumeration (https://harness.atlassian.net/browse/HAR-7188),
      * instead of throwing the USER_DOES_NOT_EXIST exception, send USER_PASSWORD as the login mechanism.
      * The next page throws INVALID_CREDENTIAL exception in case of wrong userId/password which doesn't reveals any
@@ -101,8 +103,12 @@ public class AuthenticationManager {
       }
       return builder.authenticationMechanism(authenticationMechanism).build();
     } catch (WingsException we) {
-      logger.error(we.getMessage(), we);
-      return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
+      if (featureFlagService.isEnabled(LOGIN_PROMPT_WHEN_NO_USER, GLOBAL_ACCOUNT_ID)) {
+        logger.warn(we.getMessage(), we);
+        return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
+      } else {
+        throw we;
+      }
     }
   }
 

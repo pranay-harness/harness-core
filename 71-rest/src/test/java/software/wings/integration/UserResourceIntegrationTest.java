@@ -1,8 +1,11 @@
 package software.wings.integration;
 
 import static org.junit.Assert.assertEquals;
+import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
+import org.junit.Before;
 import org.junit.Test;
+import software.wings.beans.FeatureFlag;
 import software.wings.beans.RestResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
@@ -15,6 +18,11 @@ import javax.ws.rs.core.GenericType;
  */
 public class UserResourceIntegrationTest extends BaseIntegrationTest {
   final String getLoginTypeURI = "/users/logintype";
+
+  @Before
+  public void setUp() {
+    enableLoginPromptWhenNoUser();
+  }
 
   @Test
   public void testLoginTypeResponseForNewAdminUserShouldReturnUserPassWord() {
@@ -38,5 +46,17 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
 
   private String getLoginTypeResponseUri(final String uri, final String arguments) {
     return API_BASE + uri + "?" + arguments;
+  }
+
+  private void enableLoginPromptWhenNoUser() {
+    FeatureFlag featureFlag =
+        wingsPersistence.createQuery(FeatureFlag.class).filter("name", LOGIN_PROMPT_WHEN_NO_USER.name()).get();
+
+    if (featureFlag == null) {
+      featureFlag = FeatureFlag.builder().name(LOGIN_PROMPT_WHEN_NO_USER.name()).enabled(true).build();
+    } else {
+      featureFlag.setEnabled(true);
+    }
+    wingsPersistence.save(featureFlag);
   }
 }
