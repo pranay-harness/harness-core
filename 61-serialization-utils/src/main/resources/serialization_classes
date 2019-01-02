@@ -26,6 +26,8 @@ com.amazonaws.services.ec2.model.ProductCode, 1019
 com.amazonaws.services.ec2.model.Filter, 1020
 com.amazonaws.regions.Regions, 1021
 com.amazonaws.services.ec2.model.CpuOptions, 1022
+com.amazonaws.services.ec2.model.CapacityReservationSpecificationResponse, 1023
+com.amazonaws.services.ec2.model.CapacityReservationTargetResponse, 1024
 
 #Third party related exception classes
 io.fabric8.kubernetes.client.KubernetesClientException, 2000
