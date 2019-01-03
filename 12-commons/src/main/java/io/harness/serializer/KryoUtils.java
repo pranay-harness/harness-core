@@ -23,38 +23,37 @@ import java.util.zip.InflaterInputStream;
 @SuppressFBWarnings("DM_EXIT")
 public class KryoUtils {
   private static final Logger logger = LoggerFactory.getLogger(KryoUtils.class);
-  private static KryoPool pool =
-      new KryoPool
-          .Builder(() -> {
-            final ClassResolver classResolver = new ClassResolver();
-            Kryo kryo = new HKryo(classResolver);
 
-            try {
-              Reflections reflections = new Reflections("io.harness.serializer.kryo");
-              for (Class clazz : reflections.getSubTypesOf(KryoRegistrar.class)) {
-                Constructor<?> constructor = clazz.getConstructor();
-                final KryoRegistrar kryoRegistrar = (KryoRegistrar) constructor.newInstance();
+  private static synchronized Kryo kryo() {
+    final ClassResolver classResolver = new ClassResolver();
+    Kryo kryo = new HKryo(classResolver);
 
-                final IntMap<Registration> previousState = new IntMap<>(classResolver.getRegistrations());
-                kryoRegistrar.register(kryo);
+    try {
+      Reflections reflections = new Reflections("io.harness.serializer.kryo");
+      for (Class clazz : reflections.getSubTypesOf(KryoRegistrar.class)) {
+        Constructor<?> constructor = clazz.getConstructor();
+        final KryoRegistrar kryoRegistrar = (KryoRegistrar) constructor.newInstance();
 
-                try {
-                  check(previousState, classResolver.getRegistrations());
-                } catch (Exception exception) {
-                  throw new IllegalStateException(
-                      format("Check for registration of %s failed", clazz.getCanonicalName()), exception);
-                }
-              }
+        final IntMap<Registration> previousState = new IntMap<>(classResolver.getRegistrations());
+        kryoRegistrar.register(kryo);
 
-            } catch (Exception e) {
-              logger.error("Failed to initialize kryo", e);
-              System.exit(1);
-            }
+        try {
+          check(previousState, classResolver.getRegistrations());
+        } catch (Exception exception) {
+          throw new IllegalStateException(
+              format("Check for registration of %s failed", clazz.getCanonicalName()), exception);
+        }
+      }
 
-            return kryo;
-          })
-          .softReferences()
-          .build();
+    } catch (Exception e) {
+      logger.error("Failed to initialize kryo", e);
+      System.exit(1);
+    }
+
+    return kryo;
+  }
+
+  private static final KryoPool pool = new KryoPool.Builder(() -> kryo()).softReferences().build();
 
   static void check(IntMap<Registration> previousState, IntMap<Registration> newState) {
     for (IntMap.Entry entry : newState.entries()) {
