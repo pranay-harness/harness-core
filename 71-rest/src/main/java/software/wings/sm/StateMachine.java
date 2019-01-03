@@ -303,11 +303,7 @@ public class StateMachine extends Base {
 
       State state = stateTypeDesc.newInstance(node.getName());
 
-      Map<String, Object> properties = node.getProperties();
-      if (properties == null) {
-        properties = new HashMap<>();
-      }
-      properties.put("id", node.getId());
+      state.setId(node.getId());
       state.setRollback(node.isRollback());
 
       state.setTemplateExpressions(node.getTemplateExpressions());
@@ -316,7 +312,9 @@ public class StateMachine extends Base {
       state.setTemplateVersion(node.getTemplateVersion());
 
       // populate properties
-      MapperUtils.mapObject(properties, state);
+      if (node.getProperties() != null) {
+        MapperUtils.mapObject(node.getProperties(), state);
+      }
 
       state.resolveProperties();
 
