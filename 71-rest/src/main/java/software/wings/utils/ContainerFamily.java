@@ -171,7 +171,7 @@ public enum ContainerFamily {
                                       .id(graphIdGenerator("node"))
                                       .name("Setup Runtime Paths")
                                       .type(SETUP_ENV.name())
-                                      .addProperty("commandString", SetupEnvCommandUnit.setupEnvCommandString)
+                                      .addProperty("commandString", SetupEnvCommandUnit.SETUP_ENV_COMMAND_STRING)
                                       .build(),
                             aGraphNode()
                                 .id(graphIdGenerator("node"))
@@ -362,7 +362,7 @@ public enum ContainerFamily {
                                       .id(graphIdGenerator("node"))
                                       .name("Setup Runtime Paths")
                                       .type(SETUP_ENV.name())
-                                      .addProperty("commandString", SetupEnvCommandUnit.setupEnvCommandString)
+                                      .addProperty("commandString", SetupEnvCommandUnit.SETUP_ENV_COMMAND_STRING)
                                       .build(),
                             aGraphNode()
                                 .id(graphIdGenerator("node"))
