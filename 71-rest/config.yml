@@ -96,6 +96,7 @@ watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
 delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
 apiUrl:
 deployMode: AWS
+envPath:
 
 kubectlVersion: v1.12.2
 

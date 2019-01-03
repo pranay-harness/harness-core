@@ -61,6 +61,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
   @JsonProperty("hazelcast") private HazelcastConfiguration hazelcast;
   @JsonProperty("apiUrl") private String apiUrl;
+  @JsonProperty("envPath") private String envPath;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty("globalWhitelistConfig") private GlobalWhitelistConfig globalWhitelistConfig;
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;

@@ -50,6 +50,10 @@ if [[ -v "API_URL" ]]; then
     sed -i "s|apiUrl:|apiUrl: ${API_URL}|" /opt/harness/config.yml
 fi
 
+if [[ -v "ENV_PATH" ]]; then
+    sed -i "s|envPath:|envPath: ${ENV_PATH}|" /opt/harness/config.yml
+fi
+
 if [[ -v "DEPLOY_MODE" ]]; then
     sed -i "s|deployMode: AWS|deployMode: ${DEPLOY_MODE}|" /opt/harness/config.yml
 fi
