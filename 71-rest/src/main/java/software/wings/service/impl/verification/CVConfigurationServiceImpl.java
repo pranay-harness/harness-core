@@ -20,6 +20,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
+import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CloudWatchState;
@@ -149,8 +150,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         wingsPersistence.getWithAppId(CVConfiguration.class, appId, serviceConfigurationId);
     UpdateOperations<CVConfiguration> updateOperations = getUpdateOperations(stateType, updatedConfig);
     wingsPersistence.update(savedConfiguration, updateOperations);
-    updateMetricTemplate(appId, accountId,
-        wingsPersistence.getWithAppId(CVConfiguration.class, appId, serviceConfigurationId), stateType);
+    // TODO update metric template if it makes sense
     return savedConfiguration.getUuid();
   }
 
@@ -260,6 +260,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     Map<String, TimeSeriesMetricDefinition> metricTemplates;
     switch (stateType) {
       case APP_DYNAMICS:
+        metricTemplate = TimeSeriesMetricTemplates.builder()
+                             .stateType(stateType)
+                             .metricTemplates(NewRelicMetricValueDefinition.APP_DYNAMICS_24X7_VALUES_TO_ANALYZE)
+                             .cvConfigId(cvConfiguration.getUuid())
+                             .build();
+        break;
       case NEW_RELIC:
       case DYNA_TRACE:
         return;
@@ -297,68 +303,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     metricTemplate.setAppId(appId);
     metricTemplate.setAccountId(accountId);
     wingsPersistence.save(metricTemplate);
-  }
-
-  private void updateMetricTemplate(
-      String appId, String accountId, CVConfiguration cvConfiguration, StateType stateType) {
-    TimeSeriesMetricTemplates metricTemplate;
-    Map<String, TimeSeriesMetricDefinition> metricTemplates;
-    switch (stateType) {
-      case APP_DYNAMICS:
-      case NEW_RELIC:
-      case DYNA_TRACE:
-        // Uses default metric template no Metric Template needs to be persisted
-        return;
-      case PROMETHEUS:
-        metricTemplates = PrometheusState.createMetricTemplates(
-            ((PrometheusCVServiceConfiguration) cvConfiguration).getTimeSeriesToAnalyze());
-        metricTemplate = TimeSeriesMetricTemplates.builder()
-                             .stateType(stateType)
-                             .metricTemplates(metricTemplates)
-                             .cvConfigId(cvConfiguration.getUuid())
-                             .build();
-        break;
-      case DATA_DOG:
-        List<String> metricNames =
-            Arrays.asList(((DatadogCVServiceConfiguration) cvConfiguration).getMetrics().split(","));
-        metricTemplates = DatadogState.metricDefinitions(DatadogState.metrics(metricNames).values());
-        metricTemplate = TimeSeriesMetricTemplates.builder()
-                             .stateType(stateType)
-                             .metricTemplates(metricTemplates)
-                             .cvConfigId(cvConfiguration.getUuid())
-                             .build();
-        break;
-      case CLOUD_WATCH:
-        metricTemplates = CloudWatchState.fetchMetricTemplates(CloudWatchServiceImpl.fetchMetrics());
-        metricTemplate = TimeSeriesMetricTemplates.builder()
-                             .stateType(stateType)
-                             .metricTemplates(metricTemplates)
-                             .cvConfigId(cvConfiguration.getUuid())
-                             .build();
-        break;
-      default:
-        throw new WingsException("No matching state type found " + stateType);
-    }
-    metricTemplate.setAppId(appId);
-    metricTemplate.setAccountId(accountId);
-
-    UpdateOperations<TimeSeriesMetricTemplates> updateOperations =
-        wingsPersistence.createUpdateOperations(TimeSeriesMetricTemplates.class)
-            .set("stateType", stateType)
-            .set("cvConfigId", cvConfiguration.getUuid())
-            .set("metricTemplates", metricTemplate)
-            .set("appId", appId)
-            .set("accountId", accountId);
-
-    TimeSeriesMetricTemplates savedTimeSeriesMetricTemplates =
-        wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
-            .filter("cvConfigId", cvConfiguration.getUuid())
-            .filter("appId", appId)
-            .filter("accountId", accountId)
-            .filter("stateType", stateType)
-            .get();
-
-    wingsPersistence.update(savedTimeSeriesMetricTemplates, updateOperations);
   }
 
   public void deleteStaleConfigs() {
