@@ -40,6 +40,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -146,6 +147,9 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
       MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+
+    metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APP_DYNAMICS,
+        context.getStateExecutionInstanceId(), null, NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
 
     SettingAttribute settingAttribute = null;
     String finalApplicationId = applicationId;

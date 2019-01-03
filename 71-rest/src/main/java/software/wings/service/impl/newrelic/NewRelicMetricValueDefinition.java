@@ -95,10 +95,28 @@ public class NewRelicMetricValueDefinition {
     metricName = AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName();
     APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
         TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.THROUGHPUT).build());
+  }
+
+  public static Map<String, TimeSeriesMetricDefinition> APP_DYNAMICS_24X7_VALUES_TO_ANALYZE = new HashMap<>();
+  static {
+    // error
+    String metricName = AppdynamicsTimeSeries.ERRORS_PER_MINUTE.getMetricName();
+    APP_DYNAMICS_24X7_VALUES_TO_ANALYZE.put(
+        metricName, TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.ERROR).build());
+
+    // stalls
+    metricName = AppdynamicsTimeSeries.STALL_COUNT.getMetricName();
+    APP_DYNAMICS_24X7_VALUES_TO_ANALYZE.put(
+        metricName, TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.ERROR).build());
+
+    // calls per min
+    metricName = AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName();
+    APP_DYNAMICS_24X7_VALUES_TO_ANALYZE.put(metricName,
+        TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.THROUGHPUT).build());
 
     // avg response time
     metricName = AppdynamicsTimeSeries.AVG_RESPONSE_TIME.getMetricName();
-    APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
+    APP_DYNAMICS_24X7_VALUES_TO_ANALYZE.put(metricName,
         TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.RESP_TIME).build());
   }
 

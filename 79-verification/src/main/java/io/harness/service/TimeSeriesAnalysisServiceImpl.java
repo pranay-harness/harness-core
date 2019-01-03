@@ -595,12 +595,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       case NEW_RELIC:
         result.put("default", NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE);
         break;
-      case APP_DYNAMICS:
-        result.put("default", NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
-        break;
       case DYNA_TRACE:
         result.put("default", DynaTraceTimeSeries.getDefinitionsToAnalyze());
         break;
+      case APP_DYNAMICS:
       case PROMETHEUS:
       case CLOUD_WATCH:
       case DATA_DOG:
