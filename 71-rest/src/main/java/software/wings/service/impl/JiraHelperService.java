@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.JiraExecutionData;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.DelegateTask;
@@ -54,7 +55,9 @@ public class JiraHelperService {
   @Inject SettingsService settingService;
   @Inject WorkflowExecutionService workflowExecutionService;
   @Inject WaitNotifyEngine waitNotifyEngine;
+  @Inject private MainConfiguration mainConfiguration;
 
+  private static final String JIRA_APPROVAL_API_PATH = "api/ticketing/jira-approval/";
   public static final String APP_ID_KEY = "app_id";
   public static final String WORKFLOW_EXECUTION_ID_KEY = "workflow_execution_id";
   public static final String APPROVAL_FIELD_KEY = "approval_field";
@@ -146,15 +149,24 @@ public class JiraHelperService {
     String token = createJiraToken(appId, workflowExecutionId, approvalId, jiraApprovalParams.getApprovalField(),
         jiraApprovalParams.getApprovalValue(), jiraApprovalParams.getRejectionField(),
         jiraApprovalParams.getRejectionValue());
+    String url = getBaseUrl() + JIRA_APPROVAL_API_PATH + token;
     JiraTaskParameters jiraTaskParameters = JiraTaskParameters.builder()
                                                 .accountId(accountId)
                                                 .appId(appId)
                                                 .approvalId(approvalId)
                                                 .jiraAction(CREATE_WEBHOOK)
                                                 .issueId(jiraApprovalParams.getIssueId())
-                                                .jiraToken(token)
+                                                .callbackUrl(url)
                                                 .build();
     return runTask(accountId, appId, jiraApprovalParams.getJiraConnectorId(), jiraTaskParameters);
+  }
+
+  private String getBaseUrl() {
+    String baseUrl = mainConfiguration.getPortal().getUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
+    return baseUrl;
   }
 
   public JiraExecutionData deleteWebhook(
