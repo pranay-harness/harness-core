@@ -14,7 +14,7 @@ import java.util.List;
  */
 @JsonTypeName("SETUP_ENV")
 public class SetupEnvCommandUnit extends ExecCommandUnit {
-  public static final String setupEnvCommandString = "\n"
+  public static final String SETUP_ENV_COMMAND_STRING = "\n"
       + "# Execute as root and pass environment variables\n"
       + "# su -p -\n\n"
       + "# Execute as root via user credentials (with root privileges)\n"
@@ -39,7 +39,7 @@ public class SetupEnvCommandUnit extends ExecCommandUnit {
   }
 
   @Attributes(title = "Command")
-  @DefaultValue(setupEnvCommandString)
+  @DefaultValue(SETUP_ENV_COMMAND_STRING)
   @Override
   public String getCommandString() {
     return super.getCommandString();
