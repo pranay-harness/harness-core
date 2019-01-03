@@ -6,11 +6,13 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.resources.intfc.ExperimentalLogAnalysisResource;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.beans.WorkflowExecution;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
@@ -36,15 +38,18 @@ import javax.ws.rs.QueryParam;
 public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnalysisResource {
   @Inject private LogAnalysisService analysisService;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private VerificationManagerClient managerClient;
 
   @VisibleForTesting
   @Inject
   public ExperimentalLogAnalysisResourceImpl(LogAnalysisService analysisService,
-      LearningEngineService learningEngineService, VerificationManagerClient managerClient) {
+      LearningEngineService learningEngineService, VerificationManagerClient managerClient,
+      VerificationManagerClientHelper managerClientHelper) {
     this.analysisService = analysisService;
     this.learningEngineService = learningEngineService;
     this.managerClient = managerClient;
+    this.managerClientHelper = managerClientHelper;
   }
 
   @POST
@@ -63,6 +68,16 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
       learningEngineService.markExpTaskCompleted(taskId);
       return new RestResponse<>(true);
     } else {
+      WorkflowExecution workflowExecution =
+          managerClientHelper.callManagerWithRetry(managerClient.getWorkflowExecution(applicationId, stateExecutionId))
+              .getResource();
+      mlAnalysisResponse.setWorkflowExecutionId(workflowExecution.getUuid());
+      if (workflowExecution.getEnvId() == null) {
+        mlAnalysisResponse.setEnvId("build-workflow");
+      } else {
+        mlAnalysisResponse.setEnvId(workflowExecution.getEnvId());
+      }
+
       mlAnalysisResponse.setAppId(applicationId);
       mlAnalysisResponse.setStateExecutionId(stateExecutionId);
       mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);

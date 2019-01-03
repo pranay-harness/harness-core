@@ -26,7 +26,6 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
-import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateResults;
@@ -643,16 +642,17 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public List<LogMLExpAnalysisInfo> getExpAnalysisInfoList() {
-    // return max 1000 records.
-    final int limit = 1000;
-    final List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords =
+    final Query<ExperimentalLogMLAnalysisRecord> analysisRecords =
         wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
             .project("stateExecutionId", true)
             .project("appId", true)
             .project("stateType", true)
             .project("experiment_name", true)
-            .project(ExperimentalLogMLAnalysisRecord.CREATED_AT_KEY, true)
-            .asList(new FindOptions().limit(limit));
+            .project("createdAt", true)
+            .project("envId", true)
+            .project("workflowExecutionId", true);
+
+    List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords = analysisRecords.asList();
 
     List<LogMLExpAnalysisInfo> result = new ArrayList<>();
     experimentalLogMLAnalysisRecords.forEach(record -> {
@@ -662,7 +662,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                      .stateType(record.getStateType())
                      .createdAt(record.getCreatedAt())
                      .expName(record.getExperiment_name())
-                     .expName(record.getExperiment_name())
+                     .envId(record.getEnvId())
+                     .workflowExecutionId(record.getWorkflowExecutionId())
                      .build());
     });
 
