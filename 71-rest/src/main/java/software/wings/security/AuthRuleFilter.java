@@ -190,7 +190,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       }
     }
 
-    if (servletRequest != null && featureFlagService.isEnabled(FeatureName.WHITELIST, accountId)) {
+    if (servletRequest != null) {
       String forwardedFor = servletRequest.getHeader("X-Forwarded-For");
       String remoteHost = isNotBlank(forwardedFor) ? forwardedFor : servletRequest.getRemoteHost();
       if (!whitelistService.isValidIPAddress(accountId, remoteHost)) {
