@@ -65,9 +65,9 @@ public class AnalysisContext extends Base {
   private String delegateTaskId;
   private MLAnalysisType analysisType;
   private @Indexed ExecutionStatus executionStatus;
-  private @Indexed ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
+  private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
 
-  private @Indexed int retry;
+  private int retry;
 
   @SchemaIgnore
   @JsonIgnore

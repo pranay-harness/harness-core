@@ -25,10 +25,10 @@ import javax.validation.constraints.NotNull;
 public class CVConfiguration extends Base {
   @NotNull private String name;
   @NotNull @Indexed private String accountId;
-  @NotNull @Indexed private String connectorId;
+  @NotNull private String connectorId;
   @NotNull @Indexed private String envId;
   @NotNull @Indexed private String serviceId;
-  @NotNull @Indexed private StateType stateType;
+  @NotNull private StateType stateType;
   @NotNull private AnalysisTolerance analysisTolerance;
   private boolean enabled24x7;
 
