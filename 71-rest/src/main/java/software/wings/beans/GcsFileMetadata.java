@@ -10,6 +10,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.service.intfc.FileService.FileBucket;
 
+import java.util.Map;
+
 /**
  * Since artifacts etc. will be initially dual-written into Mongo GridFs and Google Cloud Storage, and each file id has
  * different format, we will need to use this mapping to store the file id mappings. So that we could use each format of
@@ -30,9 +32,14 @@ import software.wings.service.intfc.FileService.FileBucket;
 public class GcsFileMetadata extends Base {
   @NotEmpty private String accountId;
   @NotEmpty @Indexed private String fileId; // Mongo GridFs fileId.
-  @NotEmpty private String gcsFileId;
+  @NotEmpty @Indexed private String gcsFileId;
   @NotEmpty private String fileName;
   @NotEmpty private FileBucket fileBucket;
   private String entityId;
   private int version;
+  private long fileLength;
+  private String mimeType;
+  private ChecksumType checksumType;
+  private String checksum;
+  private Map<String, Object> others; // Additional metadata, typically used by TerraformState.
 }
