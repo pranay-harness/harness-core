@@ -322,4 +322,39 @@ public class SettingResource {
     settingsService.delete(appId, attrId);
     return new RestResponse();
   }
+
+  @POST
+  @Path("validate-gcp-connectivity")
+  @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ValidationResult> validateGcpConnectivity(@QueryParam("attrId") String attrId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
+      @FormDataParam("type") String type, @FormDataParam("name") String name,
+      @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
+    char[] credentials = IOUtils.toString(uploadedInputStream, Charset.defaultCharset()).toCharArray();
+    SettingValue value = null;
+    if (GCP.name().equals(type)) {
+      if (credentials.length > 0) {
+        value = GcpConfig.builder().serviceAccountKeyFileContent(credentials).build();
+      } else {
+        value = GcpConfig.builder().serviceAccountKeyFileContent(ENCRYPTED_FIELD_MASK).build();
+      }
+
+      ((EncryptableSetting) value).setAccountId(accountId);
+      ((EncryptableSetting) value).setDecrypted(true);
+    }
+
+    SettingAttribute.Builder settingAttribute =
+        aSettingAttribute()
+            .withUuid(attrId)
+            .withName(name)
+            .withAccountId(accountId)
+            .withAppId(appId)
+            .withCategory(Category.getCategory(SettingVariableTypes.valueOf(type)))
+            .withValue(value);
+
+    return new RestResponse<>(settingsService.validateConnectivity(settingAttribute.build()));
+  }
 }
