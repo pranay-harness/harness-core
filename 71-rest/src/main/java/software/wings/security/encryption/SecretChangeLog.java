@@ -23,7 +23,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Entity(value = "secretChangeLogs", noClassnameStored = true)
 public class SecretChangeLog extends Base {
-  @NotEmpty @Indexed private String accountId;
+  @NotEmpty private String accountId;
 
   @NotEmpty @Indexed private String encryptedDataId;
 

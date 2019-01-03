@@ -52,7 +52,7 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
 
   @NotEmpty private RiskLevel riskLevel;
 
-  @NotEmpty @Indexed private String workflowExecutionId;
+  @NotEmpty private String workflowExecutionId;
 
   @NotEmpty @Indexed private String stateExecutionId;
 

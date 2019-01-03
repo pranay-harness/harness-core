@@ -29,19 +29,19 @@ import java.util.List;
 public class LogMLFeedbackRecord extends Base {
   @NotEmpty @Indexed private String serviceId;
 
-  @NotEmpty @Indexed private String workflowId;
+  @NotEmpty private String workflowId;
 
   @NotEmpty @Indexed private String workflowExecutionId;
 
   @NotEmpty @Indexed private String stateExecutionId;
 
-  @NotEmpty @Indexed private StateType stateType;
+  @NotEmpty private StateType stateType;
 
-  @NotEmpty @Indexed private int clusterLabel;
+  @NotEmpty private int clusterLabel;
 
-  @NotEmpty @Indexed private AnalysisServiceImpl.CLUSTER_TYPE clusterType;
+  @NotEmpty private AnalysisServiceImpl.CLUSTER_TYPE clusterType;
 
-  @NotEmpty @Indexed private AnalysisServiceImpl.LogMLFeedbackType logMLFeedbackType;
+  @NotEmpty private AnalysisServiceImpl.LogMLFeedbackType logMLFeedbackType;
 
   @NotEmpty private String logMessage;
 

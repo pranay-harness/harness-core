@@ -29,15 +29,15 @@ import java.util.Map;
     options = @IndexOptions(name = "ScoresUniqueIdx")))
 @NoArgsConstructor
 public class TimeSeriesMLScores extends Base {
-  @NotEmpty @Indexed private StateType stateType;
+  @NotEmpty private StateType stateType;
 
-  @NotEmpty @Indexed private String workflowId;
+  @NotEmpty private String workflowId;
 
-  @NotEmpty @Indexed private String workflowExecutionId;
+  @NotEmpty private String workflowExecutionId;
 
   @NotEmpty @Indexed private String stateExecutionId;
 
-  @NotEmpty @Indexed private int analysisMinute;
+  @NotEmpty private int analysisMinute;
 
   private Map<String, TimeSeriesMLTxnScores> scoresMap;
 

@@ -31,7 +31,7 @@ public class SecretUsageLog extends Base {
 
   @NotEmpty @Indexed private String encryptedDataId;
 
-  @NotEmpty @Indexed private String accountId;
+  @NotEmpty private String accountId;
 
   @NotEmpty private String workflowExecutionId;
 

@@ -69,7 +69,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
 
   @NotEmpty private StateType stateType;
 
-  @NotEmpty @Indexed private String name;
+  @NotEmpty private String name;
 
   private String workflowId;
 
@@ -83,7 +83,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
 
   @NotEmpty private long timeStamp;
 
-  @Indexed private int dataCollectionMinute;
+  private int dataCollectionMinute;
 
   private String host;
 
