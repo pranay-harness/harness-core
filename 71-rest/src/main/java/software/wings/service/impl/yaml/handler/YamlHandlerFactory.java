@@ -241,9 +241,13 @@ public class YamlHandlerFactory {
         yamlHandler = defaultsYamlHandler;
         break;
       case APPLICATION_MANIFEST:
+      case APPLICATION_MANIFEST_ENV_OVERRIDE:
+      case APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE:
         yamlHandler = applicationManifestYamlHandler;
         break;
       case MANIFEST_FILE:
+      case MANIFEST_FILE_ENV_OVERRIDE:
+      case MANIFEST_FILE_ENV_SERVICE_OVERRIDE:
         yamlHandler = manifestFileYamlHandler;
         break;
       default:
@@ -290,10 +294,6 @@ public class YamlHandlerFactory {
       return YamlType.DEPLOYMENT_SPECIFICATION;
     } else if (entity instanceof EcsServiceSpecification) {
       return YamlType.DEPLOYMENT_SPECIFICATION;
-    } else if (entity instanceof ApplicationManifest) {
-      return YamlType.APPLICATION_MANIFEST;
-    } else if (entity instanceof ManifestFile) {
-      return YamlType.MANIFEST_FILE;
     }
 
     throw new InvalidRequestException(

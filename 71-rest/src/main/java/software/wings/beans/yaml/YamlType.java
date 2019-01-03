@@ -24,9 +24,11 @@ import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.VALUES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXPRESSION;
+import static software.wings.common.Constants.VALUES_YAML_KEY;
 import static software.wings.utils.Util.generatePath;
 
 import software.wings.beans.Application;
@@ -53,6 +55,7 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.AbstractCommandUnit;
@@ -94,11 +97,35 @@ public enum YamlType {
           INDEX_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER),
       Service.class),
+  APPLICATION_MANIFEST_ENV_OVERRIDE(YamlConstants.VALUES,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          VALUES_FOLDER, INDEX_YAML),
+      generatePath(
+          PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY, VALUES_FOLDER),
+      ApplicationManifest.class),
+  APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE(YamlConstants.VALUES,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          VALUES_FOLDER, SERVICES_FOLDER, ANY, INDEX_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          VALUES_FOLDER, SERVICES_FOLDER, ANY),
+      ApplicationManifest.class),
   MANIFEST_FILE(YamlConstants.MANIFEST_FILE,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
           MANIFEST_FILE_FOLDER, MANIFEST_FILE_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
           MANIFEST_FILE_FOLDER),
+      ManifestFile.class),
+  MANIFEST_FILE_ENV_OVERRIDE(YamlConstants.VALUES,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          VALUES_FOLDER, VALUES_YAML_KEY),
+      generatePath(
+          PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY, VALUES_FOLDER),
+      ManifestFile.class),
+  MANIFEST_FILE_ENV_SERVICE_OVERRIDE(YamlConstants.VALUES,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          VALUES_FOLDER, SERVICES_FOLDER, ANY, VALUES_YAML_KEY),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          VALUES_FOLDER, SERVICES_FOLDER, ANY),
       ManifestFile.class),
   PROVISIONER(EntityType.PROVISIONER.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PROVISIONERS_FOLDER, YAML_EXPRESSION),

@@ -586,7 +586,11 @@ public class YamlGitServiceImpl implements YamlGitService {
   private void matchPathPrefix(String filePath, List<YamlType> folderYamlTypes) {
     // only check for file and not directories
 
-    if (Pattern.compile(YamlType.MANIFEST_FILE.getPathExpression()).matcher(filePath).matches()) {
+    if (Pattern.compile(YamlType.MANIFEST_FILE.getPathExpression()).matcher(filePath).matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_ENV_OVERRIDE.getPathExpression()).matcher(filePath).matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_ENV_SERVICE_OVERRIDE.getPathExpression())
+               .matcher(filePath)
+               .matches()) {
       return;
     }
 

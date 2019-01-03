@@ -192,7 +192,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
             "Setup/Applications/APP_NAME/Environments/ENV_NAME/Service Infrastructure",
             "Setup/Applications/APP_NAME/Environments/ENV_NAME/Config Files"));
 
-    assertEquals(3, ((FolderNode) envFolderNode.getChildren().get(0)).getChildren().size());
+    assertEquals(expectedDirPaths.size(), ((FolderNode) envFolderNode.getChildren().get(0)).getChildren().size());
     for (DirectoryNode envChildNode : ((FolderNode) envFolderNode.getChildren().get(0)).getChildren()) {
       assertTrue(expectedDirPaths.contains(envChildNode.getDirectoryPath().getPath()));
       expectedDirPaths.remove(envChildNode.getDirectoryPath().getPath());

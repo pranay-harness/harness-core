@@ -91,7 +91,7 @@ public class ApplicationManifestResource {
       ManifestFile manifestFile) {
     manifestFile.setAppId(appId);
     manifestFile.setApplicationManifestId(appManifestId);
-    return new RestResponse<>(applicationManifestService.createManifestFile(manifestFile, serviceId));
+    return new RestResponse<>(applicationManifestService.createManifestFileByServiceId(manifestFile, serviceId));
   }
 
   @GET
@@ -115,7 +115,7 @@ public class ApplicationManifestResource {
     manifestFile.setUuid(manifestFileId);
     manifestFile.setAppId(appId);
     manifestFile.setApplicationManifestId(appManifestId);
-    return new RestResponse<>(applicationManifestService.updateManifestFile(manifestFile, serviceId));
+    return new RestResponse<>(applicationManifestService.updateManifestFileByServiceId(manifestFile, serviceId));
   }
 
   @DELETE

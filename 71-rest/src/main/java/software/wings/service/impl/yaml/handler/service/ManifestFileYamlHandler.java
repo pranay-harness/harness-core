@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.service;
 
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -10,8 +11,8 @@ import com.google.inject.Singleton;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Service;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.ManifestFile.Yaml;
 import software.wings.beans.yaml.Change;
@@ -47,11 +48,10 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
     notNullCheck("appId null for given yaml file:" + yamlFilePath, appId, USER);
 
-    String serviceName = yamlHelper.getServiceName(yamlFilePath);
-    Service service = serviceResourceService.getServiceByName(appId, serviceName);
-    notNullCheck("Service null for given yaml file:" + yamlFilePath, service, USER);
+    ApplicationManifest applicationManifest = yamlHelper.getApplicationManifest(appId, yamlFilePath);
+    notNullCheck("ApplicationManifest null for given yaml file:" + yamlFilePath, applicationManifest, USER);
 
-    String fileName = getActualFileName(yamlFilePath);
+    String fileName = getActualFileName(yamlFilePath, changeContext.getYamlType());
     ManifestFile previous = yamlHelper.getManifestFile(appId, yamlFilePath, fileName);
 
     ManifestFile manifestFile = toBean(changeContext, fileName);
@@ -62,7 +62,8 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
       manifestFile.setUuid(previous.getUuid());
       isCreate = false;
     }
-    return applicationManifestService.upsertApplicationManifestFile(manifestFile, service.getUuid(), isCreate);
+
+    return applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, isCreate);
   }
 
   /**
@@ -70,8 +71,8 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
    * @param yamlFilePath
    * @return
    */
-  private String getActualFileName(String yamlFilePath) {
-    Pattern pattern = Pattern.compile(YamlType.MANIFEST_FILE.getPrefixExpression());
+  private String getActualFileName(String yamlFilePath, YamlType yamlType) {
+    Pattern pattern = Pattern.compile(yamlType.getPrefixExpression());
     Matcher matcher = pattern.matcher(yamlFilePath);
     String prefix = matcher.find() ? matcher.group(0) : null;
 
@@ -84,7 +85,7 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
     return yamlFilePath.substring(prefix.length());
   }
 
-  private ManifestFile toBean(ChangeContext<Yaml> changeContext, String fileName) throws HarnessException {
+  private ManifestFile toBean(ChangeContext<Yaml> changeContext, String fileName) {
     Change change = changeContext.getChange();
 
     String yamlFilePath = changeContext.getChange().getFilePath();
@@ -92,11 +93,8 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), yamlFilePath);
     notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId, USER);
 
-    String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId, USER);
-
-    ApplicationManifest applicationManifest = applicationManifestService.getByServiceId(appId, serviceId);
-    notNullCheck("ApplicationManifest null for given yaml file:" + yamlFilePath, applicationManifest, USER);
+    ApplicationManifest applicationManifest = yamlHelper.getApplicationManifest(appId, yamlFilePath);
+    notNullCheck("Application Manifest null for given yaml file:" + yamlFilePath, applicationManifest, USER);
 
     ManifestFile manifestFile = ManifestFile.builder()
                                     .fileName(fileName)
@@ -115,15 +113,13 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
   @Override
   public ManifestFile get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Could not find Application  for the yaml file: " + yamlFilePath, appId, USER);
-    String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Could not find Service for the yaml file: " + yamlFilePath, serviceId, USER);
+    notNullCheck("Could not find Application for the yaml file: " + yamlFilePath, appId, USER);
 
-    ApplicationManifest applicationManifest = applicationManifestService.getByServiceId(appId, serviceId);
-    notNullCheck("ApplicationManifest null for given yaml file:" + yamlFilePath, applicationManifest, USER);
+    ApplicationManifest applicationManifest = yamlHelper.getApplicationManifest(appId, yamlFilePath);
+    notNullCheck("Application Manifest null for given yaml file:" + yamlFilePath, applicationManifest, USER);
 
-    return applicationManifestService.getManifestFileByFileName(
-        applicationManifest.getUuid(), getActualFileName(yamlFilePath));
+    return applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(),
+        getActualFileName(yamlFilePath, getManifestFileYamlTypeFromAppManifest(applicationManifest)));
   }
 
   @Override
@@ -133,7 +129,24 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
 
     ManifestFile manifestFile = get(change.getAccountId(), change.getFilePath());
     if (manifestFile != null) {
-      applicationManifestService.deleteManifestFileById(appId, manifestFile.getUuid());
+      manifestFile.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+      applicationManifestService.deleteManifestFile(appId, manifestFile);
+    }
+  }
+
+  private YamlType getManifestFileYamlTypeFromAppManifest(ApplicationManifest applicationManifest) {
+    AppManifestType appManifestType = applicationManifestService.getAppManifestType(applicationManifest);
+
+    switch (appManifestType) {
+      case SERVICE:
+        return YamlType.MANIFEST_FILE;
+      case ENV:
+        return YamlType.MANIFEST_FILE_ENV_OVERRIDE;
+      case ENV_SERVICE:
+        return YamlType.MANIFEST_FILE_ENV_SERVICE_OVERRIDE;
+      default:
+        unhandled(appManifestType);
+        throw new WingsException("Unhandled app manifest type");
     }
   }
 }

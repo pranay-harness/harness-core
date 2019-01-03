@@ -1,9 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.appmanifest.ManifestFile.FILE_NAME_KEY;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
@@ -30,6 +34,7 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -71,13 +76,13 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
-  public ManifestFile createManifestFile(ManifestFile manifestFile, String serviceId) {
-    return upsertApplicationManifestFile(manifestFile, serviceId, true);
+  public ManifestFile createManifestFileByServiceId(ManifestFile manifestFile, String serviceId) {
+    return upsertManifestFileForService(manifestFile, serviceId, true);
   }
 
   @Override
-  public ManifestFile updateManifestFile(ManifestFile manifestFile, String serviceId) {
-    return upsertApplicationManifestFile(manifestFile, serviceId, false);
+  public ManifestFile updateManifestFileByServiceId(ManifestFile manifestFile, String serviceId) {
+    return upsertManifestFileForService(manifestFile, serviceId, false);
   }
 
   @Override
@@ -97,6 +102,34 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public ApplicationManifest getByServiceId(String appId, String serviceId) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
+                                           .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId)
+                                           .filter(ApplicationManifest.ENV_ID_KEY, null);
+
+    return query.get();
+  }
+
+  @Override
+  public ApplicationManifest getByEnvId(String appId, String envId) {
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
+                                           .filter(ApplicationManifest.APP_ID_KEY, appId)
+                                           .filter(ApplicationManifest.ENV_ID_KEY, envId)
+                                           .filter(ApplicationManifest.SERVICE_ID_KEY, null);
+    return query.get();
+  }
+
+  @Override
+  public List<ApplicationManifest> getAllByEnvId(String appId, String envId) {
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
+                                           .filter(ApplicationManifest.APP_ID_KEY, appId)
+                                           .filter(ApplicationManifest.ENV_ID_KEY, envId);
+    return query.asList();
+  }
+
+  @Override
+  public ApplicationManifest getByEnvAndServiceId(String appId, String envId, String serviceId) {
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
+                                           .filter(ApplicationManifest.APP_ID_KEY, appId)
+                                           .filter(ApplicationManifest.ENV_ID_KEY, envId)
                                            .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId);
     return query.get();
   }
@@ -107,16 +140,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
                                            .filter(ApplicationManifest.ID_KEY, id)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId);
     return query.get();
-  }
-
-  @Override
-  public List<ManifestFile> getManifestFiles(String appId, String serviceId) {
-    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
-                                           .filter(ApplicationManifest.APP_ID_KEY, appId)
-                                           .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId);
-    ApplicationManifest applicationManifest = query.get();
-
-    return getManifestFilesByAppManifestId(appId, applicationManifest.getUuid());
   }
 
   @Override
@@ -146,20 +169,15 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   private ApplicationManifest upsertApplicationManifest(ApplicationManifest applicationManifest, boolean isCreate) {
     validateApplicationManifest(applicationManifest);
 
-    if (!serviceResourceService.exist(applicationManifest.getAppId(), applicationManifest.getServiceId())) {
-      throw new InvalidRequestException("Service doesn't exist");
-    }
-
     ApplicationManifest savedApplicationManifest =
         wingsPersistence.saveAndGet(ApplicationManifest.class, applicationManifest);
 
     String appId = savedApplicationManifest.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
-    Service service = serviceResourceService.get(appId, savedApplicationManifest.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
-    yamlPushService.pushYamlChangeSet(
-        accountId, service, savedApplicationManifest, type, savedApplicationManifest.isSyncFromGit());
+    yamlPushService.pushYamlChangeSet(accountId, isCreate ? null : savedApplicationManifest, savedApplicationManifest,
+        type, applicationManifest.isSyncFromGit(), false);
 
     return savedApplicationManifest;
   }
@@ -193,6 +211,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     List<ManifestFile> manifestFiles =
         wingsPersistence.createQuery(ManifestFile.class)
+            .filter(APP_ID_KEY, manifestFile.getAppId())
             .filter(ManifestFile.APPLICATION_MANIFEST_ID_KEY, manifestFile.getApplicationManifestId())
             .filter(FILE_NAME_KEY, pattern)
             .asList();
@@ -205,19 +224,12 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  public ManifestFile upsertApplicationManifestFile(ManifestFile manifestFile, String serviceId, boolean isCreate) {
+  @Override
+  public ManifestFile upsertApplicationManifestFile(
+      ManifestFile manifestFile, ApplicationManifest applicationManifest, boolean isCreate) {
     validateManifestFileName(manifestFile);
-
-    if (!serviceResourceService.exist(manifestFile.getAppId(), serviceId)) {
-      throw new InvalidRequestException("Service doesn't exist");
-    }
-
-    ApplicationManifest applicationManifest = getByServiceId(manifestFile.getAppId(), serviceId);
-    if (applicationManifest == null) {
-      throw new InvalidRequestException("Application Manifest doesn't exist for Service: " + serviceId);
-    }
-
     validateFileNamePrefixForDirectory(manifestFile);
+    notNullCheck("applicationManifest", applicationManifest, USER);
 
     manifestFile.setApplicationManifestId(applicationManifest.getUuid());
     ManifestFile savedManifestFile = duplicateCheck(
@@ -225,10 +237,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     String appId = applicationManifest.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
-    Service service = serviceResourceService.get(appId, applicationManifest.getServiceId());
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
-    yamlPushService.pushYamlChangeSet(accountId, service, savedManifestFile, type, savedManifestFile.isSyncFromGit());
+    yamlPushService.pushYamlChangeSet(
+        accountId, isCreate ? null : savedManifestFile, savedManifestFile, type, manifestFile.isSyncFromGit(), false);
 
     return savedManifestFile;
   }
@@ -242,31 +254,44 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     if (applicationManifest != null) {
       deleteManifestFiles(appId, applicationManifest.getUuid());
-
-      Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
-                                             .filter(ApplicationManifest.APP_ID_KEY, appId)
-                                             .filter(ApplicationManifest.ID_KEY, applicationManifest.getUuid());
-      wingsPersistence.delete(query);
+      deleteAppManifest(appId, applicationManifest.getUuid());
     }
   }
 
   @Override
   public void deleteManifestFiles(String appId, String applicationManifestId) {
-    Query<ManifestFile> query = wingsPersistence.createQuery(ManifestFile.class)
-                                    .filter(ManifestFile.APPLICATION_MANIFEST_ID_KEY, applicationManifestId)
-                                    .filter(ManifestFile.APP_ID_KEY, appId);
-    wingsPersistence.delete(query);
+    List<ManifestFile> manifestFiles = getManifestFilesByAppManifestId(appId, applicationManifestId);
+    if (isEmpty(manifestFiles)) {
+      return;
+    }
+
+    for (ManifestFile manifestFile : manifestFiles) {
+      deleteManifestFile(appId, manifestFile);
+    }
   }
 
   @Override
   public void deleteManifestFileById(String appId, String manifestFileId) {
-    Query<ManifestFile> query = wingsPersistence.createQuery(ManifestFile.class)
-                                    .filter(ManifestFile.APP_ID_KEY, appId)
-                                    .filter(ManifestFile.ID_KEY, manifestFileId);
-    wingsPersistence.delete(query);
+    deleteManifestFile(appId, getManifestFileById(appId, manifestFileId));
+  }
+
+  @Override
+  public void deleteManifestFile(String appId, ManifestFile manifestFile) {
+    if (manifestFile == null) {
+      return;
+    }
+
+    String accountId = appService.getAccountIdByAppId(appId);
+    yamlPushService.pushYamlChangeSet(accountId, manifestFile, null, Type.DELETE, manifestFile.isSyncFromGit(), false);
+
+    wingsPersistence.delete(manifestFile);
   }
 
   private void validateApplicationManifest(ApplicationManifest applicationManifest) {
+    if (isBlank(applicationManifest.getServiceId()) && isBlank(applicationManifest.getEnvId())) {
+      throw new InvalidRequestException("Both envId and serviceId cannot be empty for application manifest", USER);
+    }
+
     GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
 
     if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
@@ -290,6 +315,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
+  @Override
   public DirectoryNode getManifestFilesFromGit(String appId, String appManifestId) {
     Application app = appService.get(appId);
     ApplicationManifest appManifest = getById(appId, appManifestId);
@@ -335,5 +361,64 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     Service service = serviceResourceService.get(appId, appManifest.getServiceId());
     return yamlDirectoryService.generateManifestFileFolderNode(
         app.getAccountId(), service, manifestFiles, new DirectoryPath(MANIFEST_FILE_FOLDER));
+  }
+
+  private ManifestFile upsertManifestFileForService(ManifestFile manifestFile, String serviceId, boolean isCreate) {
+    if (!serviceResourceService.exist(manifestFile.getAppId(), serviceId)) {
+      throw new InvalidRequestException("Service doesn't exist");
+    }
+
+    return upsertApplicationManifestFile(manifestFile, getByServiceId(manifestFile.getAppId(), serviceId), isCreate);
+  }
+
+  @Override
+  public ApplicationManifest getAppManifest(String appId, String envId, String serviceId) {
+    AppManifestType appManifestType = getAppManifestType(envId, serviceId);
+
+    switch (appManifestType) {
+      case SERVICE:
+        return getByServiceId(appId, serviceId);
+      case ENV:
+        return getByEnvId(appId, envId);
+      case ENV_SERVICE:
+        return getByEnvAndServiceId(appId, envId, serviceId);
+      default:
+        unhandled(appManifestType);
+        throw new WingsException("Invalid application manifest type");
+    }
+  }
+
+  @Override
+  public AppManifestType getAppManifestType(ApplicationManifest applicationManifest) {
+    String serviceId = applicationManifest.getServiceId();
+    String envId = applicationManifest.getEnvId();
+
+    return getAppManifestType(envId, serviceId);
+  }
+
+  private AppManifestType getAppManifestType(String envId, String serviceId) {
+    if (isNotBlank(envId) && isNotBlank(serviceId)) {
+      return AppManifestType.ENV_SERVICE;
+    } else if (isNotBlank(envId)) {
+      return AppManifestType.ENV;
+    } else if (isNotBlank(serviceId)) {
+      return AppManifestType.SERVICE;
+    } else {
+      throw new WingsException("App manifest is invalid with empty envId and serviceId");
+    }
+  }
+
+  @Override
+  public void pruneByEnvironment(String appId, String envId) {
+    List<ApplicationManifest> appManifests = getAllByEnvId(appId, envId);
+
+    if (isEmpty(appManifests)) {
+      return;
+    }
+
+    for (ApplicationManifest applicationManifest : appManifests) {
+      deleteManifestFiles(appId, applicationManifest.getUuid());
+      deleteAppManifest(appId, applicationManifest.getUuid());
+    }
   }
 }

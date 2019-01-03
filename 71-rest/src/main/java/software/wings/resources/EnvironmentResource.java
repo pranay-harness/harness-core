@@ -17,6 +17,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.security.PermissionAttribute.Action;
@@ -318,5 +319,48 @@ public class EnvironmentResource {
       @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId) {
     return new RestResponse<>(
         environmentService.setHelmValueYamlForService(appId, envId, templateId, new KubernetesPayload()));
+  }
+
+  // ToDo anshul --- add delete endpoint
+  @POST
+  @Path("{envId}/values")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.CREATE)
+  public RestResponse<ManifestFile> createValues(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId, ManifestFile manifestFile) {
+    return new RestResponse<>(environmentService.createValues(appId, envId, null, manifestFile));
+  }
+
+  @PUT
+  @Path("{envId}/values")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
+  public RestResponse<ManifestFile> updateValues(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId, ManifestFile manifestFile) {
+    return new RestResponse<>(environmentService.updateValues(appId, envId, null, manifestFile));
+  }
+
+  // ToDo anshul --- add delete endpoint
+  @POST
+  @Path("{envId}/service/{serviceId}/values")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.CREATE)
+  public RestResponse<ManifestFile> createValuesForService(@QueryParam("appId") String appId,
+      @PathParam("envId") String envId, @PathParam("serviceId") String serviceId, ManifestFile manifestFile) {
+    return new RestResponse<>(environmentService.createValues(appId, envId, serviceId, manifestFile));
+  }
+
+  @PUT
+  @Path("{envId}/service/{serviceId}/values")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
+  public RestResponse<ManifestFile> updateValuesForService(@QueryParam("appId") String appId,
+      @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
+      @PathParam("appManifestId") String appManifestId, ManifestFile manifestFile) {
+    return new RestResponse<>(environmentService.updateValues(appId, envId, serviceId, manifestFile));
   }
 }
