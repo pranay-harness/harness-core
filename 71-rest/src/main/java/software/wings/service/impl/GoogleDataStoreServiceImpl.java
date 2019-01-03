@@ -170,6 +170,10 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
   }
 
   private <T extends GoogleDataStoreAware> int getNumberOfResults(Class<T> clazz, PageRequest<T> pageRequest) {
+    if (isEmpty(pageRequest.getLimit()) || pageRequest.getLimit().equals(UNLIMITED)) {
+      return 0;
+    }
+
     Query<Key> query = Query.newKeyQueryBuilder()
                            .setKind(clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
                            .setFilter(createCompositeFilter(pageRequest))

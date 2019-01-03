@@ -1,6 +1,5 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -18,6 +17,7 @@ import static software.wings.common.VerificationConstants.PROMETHEUS_DEEPLINK_FO
 import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeriesDataPointsList;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
@@ -829,50 +829,57 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime);
 
     final List<NewRelicMetricDataRecord> metricRecords = new ArrayList<>();
-    if (featureFlagService.isEnabled(
-            FeatureName.METRIC_READ_GOOGLE, appService.getAccountIdByAppId(cvConfiguration.getAppId()))
-        && dataStoreService instanceof GoogleDataStoreServiceImpl) {
-      PageRequest<NewRelicMetricDataRecord> pageRequest =
-          aPageRequest()
-              .withLimit(UNLIMITED)
+    Map<Integer, Integer> startEndMap = new HashMap<>();
+    int movingStart = startMinute, movingEnd = startMinute + 60;
+    while (movingEnd <= endMinute) {
+      startEndMap.put(movingStart, movingEnd);
+      movingStart = movingEnd;
+      movingEnd = movingStart + 60;
+    }
+    if (movingEnd > endMinute) {
+      startEndMap.put(movingStart, endMinute);
+    }
+
+    startEndMap.entrySet().parallelStream().forEach(entry -> {
+      PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
+          PageRequestBuilder.aPageRequest()
               .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
-              .addFilter("dataCollectionMinute", Operator.GE, startMinute)
-              .addFilter("dataCollectionMinute", Operator.LT_EQ, endMinute)
+              .addFilter("dataCollectionMinute", Operator.GE, entry.getKey())
               .build();
-      dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest).getResponse().forEach(dataRecord -> {
-        if (!HEARTBEAT_METRIC_NAME.equals(dataRecord.getName())) {
-          metricRecords.add(dataRecord);
-        }
-      });
-    } else {
-      Map<Integer, Integer> startEndMap = new HashMap<>();
-      int movingStart = startMinute, movingEnd = startMinute + 60;
-      while (movingEnd <= endMinute) {
-        startEndMap.put(movingStart, movingEnd);
-        movingStart = movingEnd;
-        movingEnd = movingStart + 60;
-      }
-      if (movingEnd > endMinute) {
-        startEndMap.put(movingStart, endMinute);
+
+      if (entry.getValue() == endMinute) {
+        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT_EQ, entry.getValue());
+      } else {
+        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, entry.getValue());
       }
 
-      startEndMap.entrySet().parallelStream().forEach(entry -> {
-        PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
-            PageRequestBuilder.aPageRequest()
-                .withLimit("5000")
-                .withOffset("0")
-                .addFilter("appId", Operator.EQ, cvConfiguration.getAppId())
-                .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
-                .addFilter("dataCollectionMinute", Operator.GE, entry.getKey())
-                .addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME)
-                .addFieldsIncluded("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata")
-                .build();
+      if (featureFlagService.isEnabled(
+              FeatureName.METRIC_READ_GOOGLE, appService.getAccountIdByAppId(cvConfiguration.getAppId()))
+          && dataStoreService instanceof GoogleDataStoreServiceImpl) {
+        dataRecordPageRequest.setLimit(UNLIMITED);
+        final List<NewRelicMetricDataRecord> records = new ArrayList<>();
+        dataStoreService.list(NewRelicMetricDataRecord.class, dataRecordPageRequest)
+            .getResponse()
+            .stream()
+            .filter(dataRecord -> !HEARTBEAT_METRIC_NAME.equals(dataRecord.getName()))
+            .forEach(dataRecord -> {
+              // filter for txnName
+              if (isEmpty(filter.getTxnNames())) {
+                records.add(dataRecord);
+              } else if (filter.getTxnNames().contains(dataRecord.getName())) {
+                records.add(dataRecord);
+              }
+            });
+        filterMetrics(filter, records);
 
-        if (entry.getValue() == endMinute) {
-          dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT_EQ, entry.getValue());
-        } else {
-          dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, entry.getValue());
-        }
+        metricRecords.addAll(records);
+      } else {
+        dataRecordPageRequest.addFilter("appId", Operator.EQ, cvConfiguration.getAppId());
+        dataRecordPageRequest.addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME);
+        dataRecordPageRequest.setFieldsIncluded(
+            Lists.newArrayList("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata"));
+        dataRecordPageRequest.setOffset("0");
+        dataRecordPageRequest.setLimit("5000");
         int previousOffSet = 0;
         PageResponse<NewRelicMetricDataRecord> response =
             wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
@@ -888,31 +895,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           });
 
           // filter for metric names
-          if (isNotEmpty(filter.getMetricNames())) {
-            records.forEach(dataRecord -> {
-              for (Iterator<Entry<String, Double>> iterator = dataRecord.getValues().entrySet().iterator();
-                   iterator.hasNext();) {
-                final Entry<String, Double> valueEntry = iterator.next();
-                if (!filter.getMetricNames().contains(valueEntry.getKey())) {
-                  iterator.remove();
-                }
-              }
-            });
-
-            for (Iterator<NewRelicMetricDataRecord> recordIterator = records.iterator(); recordIterator.hasNext();) {
-              NewRelicMetricDataRecord dataRecord = recordIterator.next();
-              if (isEmpty(dataRecord.getValues())) {
-                recordIterator.remove();
-              }
-            }
-          }
+          filterMetrics(filter, records);
           metricRecords.addAll(records);
           previousOffSet += response.size();
           dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
           response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
         }
-      });
-    }
+      }
+    });
 
     logger.info("Size of metric records : {}", metricRecords.size());
     for (NewRelicMetricDataRecord metricRecord : metricRecords) {
@@ -949,5 +939,27 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     updateRisksFromSummary(startTime, endTime, riskCutOffTime, cvConfiguration, observedTimeSeries);
 
     return observedTimeSeries;
+  }
+
+  private void filterMetrics(TimeSeriesFilter filter, List<NewRelicMetricDataRecord> records) {
+    // filter for metric names
+    if (isNotEmpty(filter.getMetricNames())) {
+      records.forEach(dataRecord -> {
+        for (Iterator<Entry<String, Double>> iterator = dataRecord.getValues().entrySet().iterator();
+             iterator.hasNext();) {
+          final Entry<String, Double> valueEntry = iterator.next();
+          if (!filter.getMetricNames().contains(valueEntry.getKey())) {
+            iterator.remove();
+          }
+        }
+      });
+
+      for (Iterator<NewRelicMetricDataRecord> recordIterator = records.iterator(); recordIterator.hasNext();) {
+        NewRelicMetricDataRecord dataRecord = recordIterator.next();
+        if (isEmpty(dataRecord.getValues())) {
+          recordIterator.remove();
+        }
+      }
+    }
   }
 }
