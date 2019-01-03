@@ -43,7 +43,7 @@ public class MetricAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
 
   // no. of minutes of analysis
-  @NotEmpty private int analysisMinute;
+  @NotEmpty @Indexed private int analysisMinute;
 
   private String groupName = DEFAULT_GROUP_NAME;
 
