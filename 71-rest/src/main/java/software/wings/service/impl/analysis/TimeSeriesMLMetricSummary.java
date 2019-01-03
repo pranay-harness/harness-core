@@ -21,4 +21,5 @@ public class TimeSeriesMLMetricSummary {
   private int long_term_pattern;
   private double importance;
   private long last_seen_time;
+  private double txn_relative_risk;
 }

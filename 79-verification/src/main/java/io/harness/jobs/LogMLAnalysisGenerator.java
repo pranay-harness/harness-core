@@ -24,6 +24,7 @@ import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTa
 import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
+import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 
 import java.util.List;
@@ -186,6 +187,10 @@ public class LogMLAnalysisGenerator implements Runnable {
           managerClientHelper.callManagerWithRetry(managerClient.isFeatureEnabled(LOGML_NEURAL_NET, accountId))
               .getResource();
       String featureName = isFlagEnabled ? null : "NEURAL_NET";
+
+      if (context.getStateType().equals(StateType.BUG_SNAG)) {
+        featureName = null;
+      }
 
       LearningEngineAnalysisTaskBuilder analysisTaskBuilder =
           LearningEngineAnalysisTask.builder()
