@@ -275,9 +275,10 @@ public class IndexManagement {
     });
 
     Set<String> whitelistCollections = ImmutableSet.<String>of(
-        // Files and chinks
+        // Files and chunks
         "artifacts.chunks", "artifacts.files", "audits.chunks", "audits.files", "configs.chunks", "configs.files",
-        "platforms.chunks", "platforms.files", "terraform_state.chunks", "terraform_state.files",
+        "platforms.chunks", "platforms.files", "profile_results.chunks", "profile_results.files",
+        "terraform_state.chunks", "terraform_state.files",
         // Quartz
         "quartz_calendars", "quartz_jobs", "quartz_locks", "quartz_schedulers", "quartz_triggers",
         // Quartz Verification
