@@ -254,7 +254,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     savedService = createDefaultHelmValueYaml(savedService, createdFromYaml);
     serviceTemplateService.createDefaultTemplatesByService(savedService);
-    createDefaultK8sManifests(savedService);
+    createDefaultK8sManifests(savedService, service.isSyncFromGit());
 
     sendNotificationAsync(savedService, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
 
@@ -1815,8 +1815,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return false;
   }
 
-  private void createDefaultK8sManifests(Service service) {
-    if (service.getDeploymentType() != DeploymentType.KUBERNETES) {
+  private void createDefaultK8sManifests(Service service, boolean createdFromGit) {
+    if (createdFromGit || service.getDeploymentType() != DeploymentType.KUBERNETES) {
       return;
     }
 
