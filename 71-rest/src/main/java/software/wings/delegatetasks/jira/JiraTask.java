@@ -26,7 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.JiraExecutionData;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.JiraConfig;
@@ -52,10 +51,8 @@ import java.util.function.Supplier;
 public class JiraTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
-  @Inject private MainConfiguration mainConfiguration;
 
   private static final String WEBHOOK_CREATION_URL = "/rest/webhooks/1.0/webhook/";
-  private static final String JIRA_APPROVAL_API_PATH = "api/ticketing/jira-approval/";
 
   private static final Logger logger = LoggerFactory.getLogger(JiraTask.class);
 
@@ -413,11 +410,9 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     Map<String, String> filters = new HashMap<>();
     filters.put("issue-related-events-section", "issue = " + parameters.getIssueId());
-    String token = parameters.getJiraToken();
+    String url = parameters.getCallbackUrl();
 
     // Todo: Replace hardcoded url after checking the Url from config
-
-    String url = getBaseUrl() + JIRA_APPROVAL_API_PATH + token;
 
     JiraWebhookParameters jiraWebhookParameters = JiraWebhookParameters.builder()
                                                       .name("webhook for issue = " + issue.getKey())
@@ -457,13 +452,5 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         .errorMessage("Waiting for Approval on ticket: " + issue.getKey())
         .issueUrl(getIssueUrl(jiraConfig, issue))
         .build();
-  }
-
-  private String getBaseUrl() {
-    String baseUrl = mainConfiguration.getPortal().getUrl().trim();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
-    }
-    return baseUrl;
   }
 }
