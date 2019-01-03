@@ -26,7 +26,7 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   ManifestFile getManifestFileById(String appId, String id);
 
-  void deleteManifestFiles(String appId, String applicationManifestId);
+  void deleteManifestFiles(String appId, String applicationManifestId, boolean isSyncFromGit);
 
   ManifestFile getManifestFileByFileName(String applicationManifestId, String fileName);
 
@@ -52,4 +52,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   void deleteManifestFile(String appId, ManifestFile manifestFile);
 
   void pruneByEnvironment(String appId, String envId);
+
+  void deleteAppManifest(ApplicationManifest applicationManifest);
 }
