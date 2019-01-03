@@ -50,7 +50,7 @@ templateObject:
       # Check if artifact is File or Folder structure
       $isFile = Test-Path -Path $artifactFilename -PathType Leaf
       $isFolder = Test-Path -Path $artifactFilename -PathType Container
-       if ($isFile -and ([IO.Path]::GetExtension($artifactFilename) -eq "*.zip" ))
+       if ($isFile -and ([IO.Path]::GetExtension($artifactFilename) -eq ".zip" ))
       {
           Write-Host "Extracting package from" $artifactFilename "to" $appPhysicalDirectory
           Expand-Archive -Path $artifactFilename -DestinationPath $appPhysicalDirectory -Force
