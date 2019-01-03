@@ -292,7 +292,7 @@ public class UserServiceImpl implements UserService {
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {
     try {
       String loginUrl = buildAbsoluteUrl(format("/login?company=%s&account=%s&email=%s", account.getCompanyName(),
-          account.getCompanyName(), user.getEmail()));
+          account.getAccountName(), user.getEmail()));
 
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("name", user.getName());
@@ -401,6 +401,12 @@ public class UserServiceImpl implements UserService {
     if (!baseUrl.endsWith("/")) {
       baseUrl += "/";
     }
+    String envPath = configuration.getEnvPath();
+    if (isNotEmpty(envPath)) {
+      String envPathQueryParam = fragment.contains("?") ? "&e=" + envPath.trim() : "?e=" + envPath.trim();
+      fragment += envPathQueryParam;
+    }
+
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
