@@ -76,7 +76,7 @@ public class AuthenticationManager {
   }
 
   public AuthenticationMechanism getAuthenticationMechanism(String userName) {
-    return getAuthenticationMechanism(authenticationUtil.getUser(userName));
+    return getAuthenticationMechanism(authenticationUtil.getUser(userName, USER));
   }
 
   public LoginTypeResponse getLoginTypeResponse(String userName) {
