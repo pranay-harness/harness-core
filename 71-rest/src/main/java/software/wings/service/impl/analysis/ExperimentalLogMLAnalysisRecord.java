@@ -42,6 +42,9 @@ public class ExperimentalLogMLAnalysisRecord extends Base {
 
   @NotEmpty private int logCollectionMinute;
 
+  private String envId;
+  private String workflowExecutionId;
+
   private boolean isBaseLineCreated = true;
 
   private String query;

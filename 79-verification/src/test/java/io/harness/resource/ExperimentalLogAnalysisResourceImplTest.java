@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.VerificationBaseTest;
 import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.network.SafeHttpCall;
 import io.harness.resources.ExperimentalLogAnalysisResourceImpl;
 import io.harness.service.intfc.LearningEngineService;
@@ -39,6 +40,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   private LogAnalysisService logAnalysisService;
   private LearningEngineService learningEngineService;
   private VerificationManagerClient verificationManagerClient;
+  private VerificationManagerClientHelper managerClientHelper;
   private SafeHttpCall httpCall;
   private WorkflowExecution workflowExecution;
 
@@ -57,8 +59,9 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
     logAnalysisService = mock(LogAnalysisService.class);
     learningEngineService = mock(LearningEngineService.class);
     verificationManagerClient = mock(VerificationManagerClient.class);
-    logAnalysisResource =
-        new ExperimentalLogAnalysisResourceImpl(logAnalysisService, learningEngineService, verificationManagerClient);
+    managerClientHelper = new VerificationManagerClientHelper();
+    logAnalysisResource = new ExperimentalLogAnalysisResourceImpl(
+        logAnalysisService, learningEngineService, verificationManagerClient, managerClientHelper);
     when(logAnalysisService.reQueueExperimentalTask(anyString(), anyString())).thenReturn(true);
   }
 
