@@ -59,7 +59,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     Account account2 = mock(Account.class);
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
-    when(AUTHENTICATION_UTL.getUser("testUser")).thenReturn(mockUser);
+    when(AUTHENTICATION_UTL.getUser("testUser", WingsException.USER)).thenReturn(mockUser);
     assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
         .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
 
@@ -94,7 +94,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     assertThat(loginTypeResponse.getSamlRequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
-    when(AUTHENTICATION_UTL.getUser("testUser")).thenReturn(mockUser);
+    when(AUTHENTICATION_UTL.getUser("testUser", WingsException.USER)).thenReturn(mockUser);
     assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
         .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
 
@@ -123,7 +123,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     when(MAIN_CONFIGURATION.getPortal()).thenReturn(portalConfig);
     Account account1 = mock(Account.class);
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
-    when(AUTHENTICATION_UTL.getUser("testUser@test.com")).thenReturn(mockUser);
+    when(AUTHENTICATION_UTL.getUser("testUser@test.com", WingsException.USER)).thenReturn(mockUser);
 
     when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString())).thenReturn(mockUser);
     User authenticatedUser = mock(User.class);
