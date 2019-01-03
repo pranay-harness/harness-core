@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
@@ -457,6 +458,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
     TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
         (TerraformInfrastructureProvisioner) infrastructureProvisioner;
+    validateProvisioner(terraformInfrastructureProvisioner);
     if (isTemplatizedProvisioner(terraformInfrastructureProvisioner)) {
       throw new InvalidRequestException("Fetching targets not possible for templatized provisioner");
     }
@@ -502,6 +504,16 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   private boolean isTemplatizedProvisioner(TerraformInfrastructureProvisioner infrastructureProvisioner) {
     return infrastructureProvisioner.getSourceRepoBranch().contains("$")
         || infrastructureProvisioner.getPath().contains("$");
+  }
+
+  private void validateProvisioner(TerraformInfrastructureProvisioner terraformInfrastructureProvisioner) {
+    if (isEmpty(terraformInfrastructureProvisioner.getSourceRepoBranch())) {
+      throw new InvalidRequestException("Provisioner Branch cannot be empty");
+    } else if (terraformInfrastructureProvisioner.getPath() == null) {
+      throw new InvalidRequestException("Provisioner path cannot be null");
+    } else if (isEmpty(terraformInfrastructureProvisioner.getSourceRepoSettingId())) {
+      throw new InvalidRequestException("Provisioner should have a source repo");
+    }
   }
 
   private String normalizeScriptPath(String terraformDirectory) {
