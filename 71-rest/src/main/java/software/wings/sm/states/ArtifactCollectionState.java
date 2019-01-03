@@ -16,7 +16,6 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Getter;
@@ -52,8 +51,10 @@ public class ArtifactCollectionState extends State {
   @Getter
   @Setter
   private String artifactStreamId;
-  @SchemaIgnore @Getter @Setter private boolean regex;
+
+  @Attributes(title = "Regex") @Getter @Setter private boolean regex;
   @Attributes(title = "Build / Tag") @Getter @Setter private String buildNo;
+
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient ArtifactService artifactService;
   @Inject private transient WorkflowExecutionService workflowExecutionService;
@@ -241,7 +242,8 @@ public class ArtifactCollectionState extends State {
       return artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(
           context.getAppId(), artifactStreamId, sourceName);
     } else {
-      return artifactService.getArtifactByBuildNumber(context.getAppId(), artifactStreamId, sourceName, buildNo);
+      return artifactService.getArtifactByBuildNumber(
+          context.getAppId(), artifactStreamId, sourceName, buildNo, isRegex());
     }
   }
 }
