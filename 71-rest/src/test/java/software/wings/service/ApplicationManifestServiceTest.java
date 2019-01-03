@@ -109,8 +109,8 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     applicationManifestService.create(applicationManifest);
     manifestFile.setApplicationManifestId(applicationManifest.getUuid());
 
-    ManifestFile savedmManifestFile =
-        applicationManifestService.createManifestFile(ApplicationManifestServiceTest.manifestFile, SERVICE_ID);
+    ManifestFile savedmManifestFile = applicationManifestService.createManifestFileByServiceId(
+        ApplicationManifestServiceTest.manifestFile, SERVICE_ID);
 
     ManifestFile manifestFileById = applicationManifestService.getManifestFileById(APP_ID, manifestFile.getUuid());
     assertThat(savedmManifestFile).isEqualTo(manifestFileById);
@@ -132,8 +132,9 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
         ManifestFile.builder().fileName("deploy.yaml").fileContent("duplicate deployment spec").build();
     manifestFileWithSameName.setAppId(APP_ID);
 
-    ManifestFile savedmManifestFile = applicationManifestService.createManifestFile(manifestFile, SERVICE_ID);
+    ManifestFile savedmManifestFile =
+        applicationManifestService.createManifestFileByServiceId(manifestFile, SERVICE_ID);
     assertNotNull(savedmManifestFile);
-    applicationManifestService.createManifestFile(manifestFileWithSameName, SERVICE_ID);
+    applicationManifestService.createManifestFileByServiceId(manifestFileWithSameName, SERVICE_ID);
   }
 }

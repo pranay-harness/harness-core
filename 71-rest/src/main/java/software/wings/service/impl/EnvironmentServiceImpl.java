@@ -12,6 +12,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -28,6 +29,7 @@ import static software.wings.beans.Environment.NAME_KEY;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.common.Constants.VALUES_YAML_KEY;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.Validator.notNullCheck;
@@ -63,6 +65,9 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;
@@ -70,6 +75,7 @@ import software.wings.common.NotificationMessageResolver.NotificationMessageType
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -126,6 +132,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private YamlPushService yamlPushService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   /**
    * {@inheritDoc}
@@ -572,6 +579,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                                                     .build();
       List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, OBTAIN_VALUE);
       cloneServiceVariables(clonedEnvironment, serviceVariables, null, null, null);
+      cloneAppManifests(clonedEnvironment.getAppId(), clonedEnvironment.getUuid(), envId);
       return clonedEnvironment;
     } else {
       String targetAppId = cloneMetadata.getTargetAppId();
@@ -658,6 +666,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                                                       .build();
         List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, OBTAIN_VALUE);
         cloneServiceVariables(clonedEnvironment, serviceVariables, null, targetAppId, null);
+        // ToDo anshul why do we have same thing in two places
+        cloneAppManifests(clonedEnvironment.getAppId(), clonedEnvironment.getUuid(), envId);
         logger.info("Cloning environment from appId {} to appId {}", appId, targetAppId);
       }
       return clonedEnvironment;
@@ -730,6 +740,33 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           logger.error("Error in cloning config file " + configFile.toString(), e);
           // Ignore and continue adding more files
         }
+      }
+    }
+  }
+
+  private void cloneAppManifests(String appId, String clonedEnvId, String originalEnvId) {
+    List<ApplicationManifest> applicationManifests = applicationManifestService.getAllByEnvId(appId, originalEnvId);
+
+    if (isEmpty(applicationManifests)) {
+      return;
+    }
+
+    for (ApplicationManifest applicationManifest : applicationManifests) {
+      ApplicationManifest applicationManifestNew = applicationManifest.cloneInternal();
+      applicationManifestNew.setEnvId(clonedEnvId);
+
+      ApplicationManifest createdAppManifest = applicationManifestService.create(applicationManifestNew);
+
+      List<ManifestFile> manifestFiles =
+          applicationManifestService.getManifestFilesByAppManifestId(appId, applicationManifest.getUuid());
+
+      if (isEmpty(manifestFiles)) {
+        return;
+      }
+
+      for (ManifestFile manifestFile : manifestFiles) {
+        ManifestFile manifestFileNew = manifestFile.cloneInternal();
+        applicationManifestService.upsertApplicationManifestFile(manifestFileNew, createdAppManifest, true);
       }
     }
   }
@@ -864,5 +901,71 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
 
     return get(appId, envId, false);
+  }
+
+  @Override
+  public ManifestFile createValues(String appId, String envId, String serviceId, ManifestFile manifestFile) {
+    validateEnvAndServiceExists(appId, envId, serviceId);
+
+    ApplicationManifest applicationManifest = applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId);
+    if (applicationManifest == null) {
+      applicationManifest =
+          ApplicationManifest.builder().storeType(StoreType.Local).envId(envId).serviceId(serviceId).build();
+      applicationManifest.setAppId(appId);
+      applicationManifest = applicationManifestService.create(applicationManifest);
+    }
+
+    manifestFile.setAppId(appId);
+    manifestFile.setFileName(VALUES_YAML_KEY);
+    manifestFile.setApplicationManifestId(applicationManifest.getUuid());
+    manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, true);
+
+    return manifestFile;
+  }
+
+  @Override
+  public ManifestFile updateValues(String appId, String envId, String serviceId, ManifestFile manifestFile) {
+    validateEnvAndServiceExists(appId, envId, serviceId);
+
+    ApplicationManifest appManifest = getAppManifest(appId, envId, serviceId);
+    if (appManifest == null) {
+      throw new InvalidRequestException(
+          format("Application manifest doesn't exist for environment: %s and service: %s", envId, serviceId));
+    }
+
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(appId, appManifest.getUuid());
+    if (isEmpty(manifestFiles)) {
+      throw new InvalidRequestException(
+          format("Values yaml doesn't exist for environment: %s and service: %s", envId, serviceId));
+    }
+
+    manifestFile.setAppId(appId);
+    manifestFile.setUuid(manifestFiles.get(0).getUuid());
+    manifestFile.setFileName(VALUES_YAML_KEY);
+    manifestFile.setApplicationManifestId(appManifest.getUuid());
+    manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, false);
+
+    return manifestFile;
+  }
+
+  private void validateEnvAndServiceExists(String appId, String envId, String serviceId) {
+    get(appId, envId, false);
+
+    if (isNotBlank(serviceId)) {
+      Service service = serviceResourceService.get(appId, serviceId, false);
+      notNullCheck("Service", service, USER);
+    }
+  }
+
+  private ApplicationManifest getAppManifest(String appId, String envId, String serviceId) {
+    if (isNotBlank(envId) && isNotBlank(serviceId)) {
+      return applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId);
+    } else if (isBlank(serviceId)) {
+      return applicationManifestService.getByEnvId(appId, envId);
+    } else {
+      throw new InvalidRequestException(
+          format("No valid application manifest exists for environment: %s and service: %s", envId, serviceId));
+    }
   }
 }

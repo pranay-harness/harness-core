@@ -1,11 +1,15 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -31,6 +35,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
@@ -148,7 +153,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     Validator.notNullCheck("No Application Manifest with the given id:" + applicationManifestId, applicationManifest);
     ApplicationManifest.Yaml yaml =
-        (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.APPLICATION_MANIFEST)
+        (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(applicationManifest))
             .toYaml(applicationManifest, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml, INDEX_YAML);
@@ -246,23 +251,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    */
   public RestResponse<YamlPayload> getApplicationManifest(String appId, ApplicationManifest manifest) {
     ApplicationManifest.Yaml yaml =
-        (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.APPLICATION_MANIFEST)
+        (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(manifest))
             .toYaml(manifest, appId);
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, null, null, yaml, INDEX_YAML);
-  }
-
-  /**
-   * Gets the yaml for a workflow
-   *
-   * @param appId     the app id
-   * @return the rest response
-   */
-  public RestResponse<YamlPayload> getManifestFile(String appId, ManifestFile manifestFile) {
-    WorkflowYaml workflowYaml =
-        (WorkflowYaml) yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE).toYaml(manifestFile, appId);
-
-    return YamlHelper.getYamlRestResponse(yamlGitSyncService, null, null, workflowYaml, manifestFile.getFileName());
   }
 
   /**
@@ -552,6 +544,28 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         yamlGitSyncService, configFile.getUuid(), accountId, yaml, yaml.getFileName() + YAML_EXTENSION);
   }
 
+  private RestResponse<YamlPayload> getAppManifestYaml(String accountId, ApplicationManifest applicationManifest) {
+    YamlType yamlType = getYamlTypeFromAppManifest(applicationManifest);
+
+    ApplicationManifest.Yaml yaml = (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(yamlType).toYaml(
+        applicationManifest, applicationManifest.getAppId());
+
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml,
+        YamlConstants.APPLICATIONS_MANIFEST + YAML_EXTENSION);
+  }
+
+  private RestResponse<YamlPayload> getManifestFileYaml(String accountId, ManifestFile manifestFile) {
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getById(manifestFile.getAppId(), manifestFile.getApplicationManifestId());
+    YamlType yamlType = getYamlTypeFromAppManifest(applicationManifest);
+
+    ManifestFile.Yaml yaml = (ManifestFile.Yaml) yamlHandlerFactory.getYamlHandler(yamlType).toYaml(
+        applicationManifest, applicationManifest.getAppId());
+
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml,
+        manifestFile.getFileName() + YAML_EXTENSION);
+  }
+
   @Override
   public <T> RestResponse<YamlPayload> obtainEntityYamlVersion(String accountId, T entity) {
     if (entity instanceof ArtifactStream) {
@@ -564,6 +578,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     } else if (entity instanceof ServiceCommand) {
       ServiceCommand serviceCommand = (ServiceCommand) entity;
       return getServiceCommand(serviceCommand.getAppId(), serviceCommand.getUuid());
+    } else if (entity instanceof ApplicationManifest) {
+      return getAppManifestYaml(accountId, (ApplicationManifest) entity);
+    } else if (entity instanceof ManifestFile) {
+      return getManifestFileYaml(accountId, (ManifestFile) entity);
     }
 
     if (entity instanceof Base) {
@@ -596,5 +614,22 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     }
 
     return entity;
+  }
+
+  @Override
+  public YamlType getYamlTypeFromAppManifest(ApplicationManifest applicationManifest) {
+    AppManifestType appManifestType = applicationManifestService.getAppManifestType(applicationManifest);
+
+    switch (appManifestType) {
+      case SERVICE:
+        return APPLICATION_MANIFEST;
+      case ENV:
+        return APPLICATION_MANIFEST_ENV_OVERRIDE;
+      case ENV_SERVICE:
+        return APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE;
+      default:
+        unhandled(appManifestType);
+        throw new WingsException("Unhandled app manifest type");
+    }
   }
 }

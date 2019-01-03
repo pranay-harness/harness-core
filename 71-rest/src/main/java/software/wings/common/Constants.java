@@ -941,4 +941,6 @@ public interface Constants {
   Integer REFERENCED_ENTITIES_TO_SHOW = 10;
   String EMAIL_ID = "EMAIL_ID";
   String ACCOUNT_ID = "ACCOUNT_ID";
+
+  String VALUES_YAML_KEY = "values.yaml";
 }

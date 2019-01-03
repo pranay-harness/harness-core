@@ -15,6 +15,8 @@ import static software.wings.beans.yaml.YamlType.ACCOUNT_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_STREAM;
 import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER;
@@ -29,12 +31,15 @@ import static software.wings.beans.yaml.YamlType.ENVIRONMENT;
 import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
 import static software.wings.beans.yaml.YamlType.LOADBALANCER_PROVIDER;
 import static software.wings.beans.yaml.YamlType.MANIFEST_FILE;
+import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.NOTIFICATION_GROUP;
 import static software.wings.beans.yaml.YamlType.PIPELINE;
 import static software.wings.beans.yaml.YamlType.PROVISIONER;
 import static software.wings.beans.yaml.YamlType.SERVICE;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
+import static software.wings.common.Constants.VALUES_YAML_KEY;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -132,7 +137,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         LOADBALANCER_PROVIDER, VERIFICATION_PROVIDER, NOTIFICATION_GROUP, APPLICATION, APPLICATION_DEFAULTS, SERVICE,
         PROVISIONER, ARTIFACT_STREAM, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE,
         APPLICATION_MANIFEST, MANIFEST_FILE, ENVIRONMENT, INFRA_MAPPING, CONFIG_FILE_OVERRIDE_CONTENT,
-        CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
+        CONFIG_FILE_OVERRIDE, APPLICATION_MANIFEST_ENV_OVERRIDE, APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE,
+        MANIFEST_FILE_ENV_OVERRIDE, MANIFEST_FILE_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE);
   }
 
   @Override
@@ -292,6 +298,32 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     changeList.sort(new FilePathComparator());
   }
 
+  private ChangeContext validateManifestFile(String yamlFilePath, Change change) {
+    ChangeContext.Builder changeContextBuilder = ChangeContext.Builder.aChangeContext().withChange(change);
+
+    if (yamlFilePath.contains(
+            YamlConstants.MANIFEST_FOLDER + YamlConstants.PATH_DELIMITER + YamlConstants.MANIFEST_FILE_FOLDER)) {
+      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE)
+          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE));
+
+      return changeContextBuilder.build();
+    } else if (yamlFilePath.contains(YamlConstants.VALUES_FOLDER + YamlConstants.PATH_DELIMITER + VALUES_YAML_KEY)) {
+      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_ENV_OVERRIDE)
+          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_ENV_OVERRIDE));
+
+      return changeContextBuilder.build();
+    } else if (yamlFilePath.contains(
+                   YamlConstants.VALUES_FOLDER + YamlConstants.PATH_DELIMITER + YamlConstants.SERVICES_FOLDER)
+        && yamlFilePath.contains(VALUES_YAML_KEY)) {
+      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_ENV_SERVICE_OVERRIDE)
+          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_ENV_SERVICE_OVERRIDE));
+
+      return changeContextBuilder.build();
+    }
+
+    return null;
+  }
+
   private <T extends BaseYamlHandler> List<ChangeContext> validate(List<Change> changeList)
       throws YamlProcessingException {
     logger.info(GIT_YAML_LOG_PREFIX + "Validating changeset");
@@ -302,14 +334,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       String yamlFilePath = change.getFilePath();
 
       try {
-        if (yamlFilePath.contains(
-                YamlConstants.MANIFEST_FOLDER + YamlConstants.PATH_DELIMITER + YamlConstants.MANIFEST_FILE_FOLDER)) {
-          ChangeContext.Builder changeContextBuilder =
-              ChangeContext.Builder.aChangeContext()
-                  .withChange(change)
-                  .withYamlType(YamlType.MANIFEST_FILE)
-                  .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE));
-          changeContextList.add(changeContextBuilder.build());
+        ChangeContext manifestFileChangeContext = validateManifestFile(yamlFilePath, change);
+
+        if (manifestFileChangeContext != null) {
+          changeContextList.add(manifestFileChangeContext);
         } else if (yamlFilePath.endsWith(YAML_EXTENSION)) {
           validateYaml(change.getFileContent());
           YamlType yamlType = findYamlType(yamlFilePath);

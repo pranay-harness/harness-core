@@ -84,4 +84,7 @@ public interface YamlConstants {
   String GIT_DEFAULT_LOG_PREFIX = "GIT_DEFAULT_LOG_PREFIX: ";
 
   String APPLICATION_FOLDER_PATH = SETUP_FOLDER_PATH + APPLICATIONS_FOLDER;
+
+  String VALUES = "VALUES";
+  String VALUES_FOLDER = "Values";
 }

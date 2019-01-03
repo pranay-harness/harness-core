@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.service;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.inject.Inject;
@@ -106,12 +107,36 @@ public class YamlHelper {
     return serviceResourceService.getServiceByName(appId, serviceName);
   }
 
+  public Service getServiceOverrideFromAppManifestPath(String appId, String yamlFilePath) {
+    String serviceOverrideName = extractParentEntityName(
+        YamlType.APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    if (isNotBlank(serviceOverrideName)) {
+      return serviceResourceService.getServiceByName(appId, serviceOverrideName, false);
+    }
+
+    return null;
+  }
+
   public ApplicationManifest getApplicationManifest(String appId, String yamlFilePath) {
+    Service service = null;
+    Environment environment = null;
+
     String serviceName = extractParentEntityName(YamlType.SERVICE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Service name null in the given yaml file: " + yamlFilePath, serviceName);
-    Service service = serviceResourceService.getServiceByName(appId, serviceName);
-    Validator.notNullCheck("Service name  in the given yaml file does not exists: " + yamlFilePath, service);
-    return applicationManifestService.getByServiceId(appId, service.getUuid());
+    if (isNotBlank(serviceName)) {
+      service = serviceResourceService.getServiceByName(appId, serviceName);
+    } else {
+      String envName =
+          extractParentEntityName(YamlType.ENVIRONMENT.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+      if (isNotBlank(envName)) {
+        environment = environmentService.getEnvironmentByName(appId, envName);
+        service = getServiceOverrideFromAppManifestPath(appId, yamlFilePath);
+      }
+    }
+
+    String serviceId = (service == null) ? null : service.getUuid();
+    String envId = (environment == null) ? null : environment.getUuid();
+
+    return applicationManifestService.getAppManifest(appId, envId, serviceId);
   }
 
   public ManifestFile getManifestFile(String appId, String yamlFilePath, String fileName) {

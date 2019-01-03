@@ -1833,12 +1833,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     ManifestFile defaultSpec =
         ManifestFile.builder().fileName("templates/spec.yaml").fileContent(default_k8s_spec_yaml).build();
     defaultSpec.setAppId(service.getAppId());
-    applicationManifestService.createManifestFile(defaultSpec, service.getUuid());
+    applicationManifestService.createManifestFileByServiceId(defaultSpec, service.getUuid());
 
     ManifestFile defaultValues =
         ManifestFile.builder().fileName("values.yaml").fileContent(default_k8s_values_yaml).build();
     defaultValues.setAppId(service.getAppId());
-    applicationManifestService.createManifestFile(defaultValues, service.getUuid());
+    applicationManifestService.createManifestFileByServiceId(defaultValues, service.getUuid());
   }
 
   private void cloneAppManifests(String appId, String clonedServiceId, String originalServiceId) {
@@ -1851,7 +1851,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     applicationManifestNew.setServiceId(clonedServiceId);
     applicationManifestService.create(applicationManifestNew);
 
-    List<ManifestFile> manifestFiles = applicationManifestService.getManifestFiles(appId, originalServiceId);
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(appId, applicationManifest.getUuid());
 
     if (isEmpty(manifestFiles)) {
       return;
@@ -1859,7 +1860,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     for (ManifestFile manifestFile : manifestFiles) {
       ManifestFile manifestFileNew = manifestFile.cloneInternal();
-      applicationManifestService.createManifestFile(manifestFileNew, clonedServiceId);
+      applicationManifestService.createManifestFileByServiceId(manifestFileNew, clonedServiceId);
     }
   }
 }

@@ -11,6 +11,7 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.Service;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.Yaml;
 import software.wings.beans.appmanifest.StoreType;
@@ -20,19 +21,23 @@ import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.yaml.YamlResourceService;
 
 import java.util.List;
 
 @Singleton
 public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, ApplicationManifest> {
   private static final Logger logger = LoggerFactory.getLogger(ApplicationManifestYamlHandler.class);
+
   @Inject YamlHelper yamlHelper;
   @Inject ApplicationManifestService applicationManifestService;
   @Inject GitFileConfigHelperService gitFileConfigHelperService;
+  @Inject YamlResourceService yamlResourceService;
 
   @Override
   public Yaml toYaml(ApplicationManifest applicationManifest, String appId) {
     return Yaml.builder()
+        .type(yamlResourceService.getYamlTypeFromAppManifest(applicationManifest).name())
         .harnessApiVersion(getHarnessApiVersion())
         .storeType(applicationManifest.getStoreType().name())
         .gitFileConfig(getGitFileConfigForToYaml(applicationManifest))
@@ -67,14 +72,23 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     String appId = yamlHelper.getAppId(accountId, filePath);
     notNullCheck("Could not lookup app for the yaml file: " + filePath, appId, USER);
 
-    String serviceId = yamlHelper.getServiceId(appId, filePath);
-    notNullCheck("Could not lookup service for the yaml file: " + filePath, serviceId, USER);
+    String envId = null;
+    String serviceId = getServiceIdFromYamlPath(appId, filePath);
+    if (serviceId == null) {
+      envId = getEnvIdFromYamlPath(appId, filePath);
+      Service service = yamlHelper.getServiceOverrideFromAppManifestPath(appId, filePath);
+      serviceId = (service == null) ? null : service.getUuid();
+    }
 
     StoreType storeType = Enum.valueOf(StoreType.class, yaml.getStoreType());
     GitFileConfig gitFileConfig = getGitFileConfigFromYaml(accountId, appId, yaml, storeType);
 
-    ApplicationManifest manifest =
-        ApplicationManifest.builder().serviceId(serviceId).storeType(storeType).gitFileConfig(gitFileConfig).build();
+    ApplicationManifest manifest = ApplicationManifest.builder()
+                                       .serviceId(serviceId)
+                                       .envId(envId)
+                                       .storeType(storeType)
+                                       .gitFileConfig(gitFileConfig)
+                                       .build();
 
     manifest.setAppId(appId);
     return manifest;
@@ -117,5 +131,21 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     }
 
     return gitFileConfigHelperService.getGitFileConfigFromYaml(accountId, appId, gitFileConfig);
+  }
+
+  private String getServiceIdFromYamlPath(String appId, String filePath) {
+    try {
+      return yamlHelper.getServiceId(appId, filePath);
+    } catch (WingsException ex) {
+      return null;
+    }
+  }
+
+  private String getEnvIdFromYamlPath(String appId, String filePath) {
+    try {
+      return yamlHelper.getEnvironmentId(appId, filePath);
+    } catch (WingsException ex) {
+      return null;
+    }
   }
 }

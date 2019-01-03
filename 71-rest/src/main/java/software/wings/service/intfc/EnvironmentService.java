@@ -10,6 +10,7 @@ import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.service.intfc.ownership.OwnedByApplication;
@@ -158,4 +159,8 @@ public interface EnvironmentService extends OwnedByApplication {
   void delete(String appId, String envId, boolean syncFromGit);
 
   List<EnvSummary> obtainEnvironmentSummaries(String appId, List<String> envIds);
+
+  ManifestFile createValues(String appId, String envId, String serviceId, ManifestFile manifestFile);
+
+  ManifestFile updateValues(String appId, String envId, String serviceId, ManifestFile manifestFile);
 }

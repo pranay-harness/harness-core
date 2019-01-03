@@ -3,6 +3,8 @@ package software.wings.service.intfc.yaml;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.RestResponse;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.yaml.YamlType;
 import software.wings.yaml.YamlPayload;
 
 /**
@@ -112,4 +114,6 @@ public interface YamlResourceService {
   RestResponse<YamlPayload> getApplicationManifest(String appId, String applicationManifestId);
 
   RestResponse<YamlPayload> getManifestFile(String appId, String manifestFileId);
+
+  YamlType getYamlTypeFromAppManifest(ApplicationManifest applicationManifest);
 }
