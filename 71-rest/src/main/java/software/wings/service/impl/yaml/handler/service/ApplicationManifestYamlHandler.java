@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.service;
 
 import static io.harness.exception.WingsException.USER;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -15,6 +16,7 @@ import software.wings.beans.Service;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.Yaml;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.GitFileConfigHelperService;
@@ -108,7 +110,20 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
 
   @Override
   public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
-    throw new UnsupportedOperationException();
+    Change change = changeContext.getChange();
+
+    ApplicationManifest applicationManifest = get(change.getAccountId(), change.getFilePath());
+    if (applicationManifest == null) {
+      return;
+    }
+
+    // Dont delete the appManifest if coming from git for service.
+    if (isBlank(applicationManifest.getEnvId())) {
+      throw new UnsupportedOperationException("Deleting the application manifest for service from git is not allowed");
+    }
+
+    applicationManifest.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+    applicationManifestService.deleteAppManifest(applicationManifest);
   }
 
   private GitFileConfig getGitFileConfigForToYaml(ApplicationManifest applicationManifest) {

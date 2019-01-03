@@ -92,10 +92,22 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   @Override
   public void deleteAppManifest(String appId, String appManifestId) {
-    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
-                                           .filter(ApplicationManifest.APP_ID_KEY, appId)
-                                           .filter(ApplicationManifest.ID_KEY, appManifestId);
-    wingsPersistence.delete(query);
+    deleteAppManifest(getById(appId, appManifestId));
+  }
+
+  @Override
+  public void deleteAppManifest(ApplicationManifest applicationManifest) {
+    if (applicationManifest == null) {
+      return;
+    }
+    wingsPersistence.delete(applicationManifest);
+
+    String accountId = appService.getAccountIdByAppId(applicationManifest.getAppId());
+    yamlPushService.pushYamlChangeSet(
+        accountId, applicationManifest, null, Type.DELETE, applicationManifest.isSyncFromGit(), false);
+
+    deleteManifestFiles(
+        applicationManifest.getAppId(), applicationManifest.getUuid(), applicationManifest.isSyncFromGit());
   }
 
   @Override
@@ -253,19 +265,19 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
                                                   .get();
 
     if (applicationManifest != null) {
-      deleteManifestFiles(appId, applicationManifest.getUuid());
       deleteAppManifest(appId, applicationManifest.getUuid());
     }
   }
 
   @Override
-  public void deleteManifestFiles(String appId, String applicationManifestId) {
+  public void deleteManifestFiles(String appId, String applicationManifestId, boolean isSyncFromGit) {
     List<ManifestFile> manifestFiles = getManifestFilesByAppManifestId(appId, applicationManifestId);
     if (isEmpty(manifestFiles)) {
       return;
     }
 
     for (ManifestFile manifestFile : manifestFiles) {
+      manifestFile.setSyncFromGit(isSyncFromGit);
       deleteManifestFile(appId, manifestFile);
     }
   }
@@ -281,10 +293,20 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       return;
     }
 
-    String accountId = appService.getAccountIdByAppId(appId);
-    yamlPushService.pushYamlChangeSet(accountId, manifestFile, null, Type.DELETE, manifestFile.isSyncFromGit(), false);
+    ApplicationManifest applicationManifest = getById(appId, manifestFile.getApplicationManifestId());
+    if (applicationManifest == null) {
+      return;
+    }
 
-    wingsPersistence.delete(manifestFile);
+    if (isNotBlank(applicationManifest.getEnvId())) {
+      applicationManifest.setSyncFromGit(manifestFile.isSyncFromGit());
+      deleteAppManifest(applicationManifest);
+    } else {
+      wingsPersistence.delete(manifestFile);
+      String accountId = appService.getAccountIdByAppId(appId);
+      yamlPushService.pushYamlChangeSet(
+          accountId, manifestFile, null, Type.DELETE, manifestFile.isSyncFromGit(), false);
+    }
   }
 
   private void validateApplicationManifest(ApplicationManifest applicationManifest) {
@@ -417,7 +439,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
 
     for (ApplicationManifest applicationManifest : appManifests) {
-      deleteManifestFiles(appId, applicationManifest.getUuid());
       deleteAppManifest(appId, applicationManifest.getUuid());
     }
   }
