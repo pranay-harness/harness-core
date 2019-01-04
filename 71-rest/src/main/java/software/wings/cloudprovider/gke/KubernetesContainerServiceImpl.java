@@ -1025,6 +1025,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails).nodes().list();
   }
 
+  private List<Pod> prunePodsInFinalState(List<Pod> pods) {
+    return pods.stream()
+        .filter(pod
+            -> !StringUtils.equals(pod.getStatus().getPhase(), "Failed")
+                && !StringUtils.equals(pod.getStatus().getPhase(), "Succeeded"))
+        .collect(toList());
+  }
+
   @Override
   public void waitForPodsToStop(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       Map<String, String> labels, int serviceSteadyStateTimeout, List<Pod> originalPods, long startTime,
@@ -1042,10 +1050,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         while (true) {
           executionLogCallback.saveExecutionLog(waitingMsg);
           List<Pod> pods = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
-          int size = pods.size();
+
           showPodEvents(
               kubernetesClient, namespace, pods, originalPodNames, seenEvents, startTime, executionLogCallback);
-          if (size <= 0) {
+
+          pods = prunePodsInFinalState(pods);
+          if (pods.size() <= 0) {
             return true;
           }
           sleep(ofSeconds(5));
@@ -1112,15 +1122,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
             List<Pod> pods = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
 
-            // Delete failed pods
-            pods.stream()
-                .filter(pod -> "Failed".equals(pod.getStatus().getPhase()))
-                .forEach(pod
-                    -> kubernetesClient.pods().inNamespace(namespace).withName(pod.getMetadata().getName()).delete());
-
             // Show pod events
             showPodEvents(
                 kubernetesClient, namespace, pods, originalPodNames, seenEvents, startTime, executionLogCallback);
+
+            pods = prunePodsInFinalState(pods);
 
             // Check current state
             if (pods.size() != desiredCount) {
