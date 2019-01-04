@@ -6,7 +6,6 @@ import groovy.lang.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -74,13 +73,13 @@ public class YamlChangeSetHelper {
     entityYamlChangeSet(accountId, null, entity, crudType);
   }
 
-  public <T> void entityYamlChangeSet(String accountId, Service service, T entity, ChangeType crudType) {
+  public <R, T> void entityYamlChangeSet(String accountId, R helperEntity, T entity, ChangeType crudType) {
     String appId = entityUpdateService.obtainAppIdFromEntity(entity);
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId, appId);
 
     if (ygs != null) {
       List<GitFileChange> changeSet =
-          entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, service, entity, crudType);
+          entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, helperEntity, entity, crudType);
 
       yamlChangeSetService.saveChangeSet(accountId, changeSet, entity);
     }
