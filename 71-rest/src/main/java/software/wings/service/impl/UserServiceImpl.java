@@ -442,12 +442,12 @@ public class UserServiceImpl implements UserService {
 
   private void checkIfEmailIsValid(String email) {
     if (isBlank(email)) {
-      throw new WingsException(INVALID_EMAIL, USER);
+      throw new WingsException(INVALID_EMAIL, USER).addParam("email", email);
     }
 
     final String emailAddress = email.trim();
     if (!EmailValidator.getInstance().isValid(emailAddress)) {
-      throw new WingsException(INVALID_EMAIL, USER);
+      throw new WingsException(INVALID_EMAIL, USER).addParam("email", emailAddress);
     }
   }
 
@@ -516,6 +516,9 @@ public class UserServiceImpl implements UserService {
   @Override
   public UserInvite inviteUser(UserInvite userInvite) {
     logger.info("Called inviteUser for userInvite: [{}]", userInvite);
+    // HAR-6861: should validate against invalid email address on user invitation.
+    checkIfEmailIsValid(userInvite.getEmail());
+
     String accountId = userInvite.getAccountId();
     Account account = accountService.get(accountId);
     String inviteId = wingsPersistence.save(userInvite);
