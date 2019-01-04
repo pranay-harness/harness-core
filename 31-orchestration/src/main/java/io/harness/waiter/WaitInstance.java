@@ -23,6 +23,10 @@ import java.util.List;
 @Builder
 public class WaitInstance implements PersistentEntity, UuidAccess {
   public static final Duration TTL = WaitQueue.TTL.plusDays(7);
+  public static final Duration AfterFinishTTL = Duration.ofHours(1);
+
+  public static final String STATUS_KEY = "status";
+  public static final String VALID_UNTIL_KEY = "validUntil";
 
   @Id private String uuid;
   private List<String> correlationIds;
