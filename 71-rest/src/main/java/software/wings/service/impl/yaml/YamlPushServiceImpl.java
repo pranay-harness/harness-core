@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
-import software.wings.beans.Service;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.Validator;
@@ -67,7 +66,7 @@ public class YamlPushServiceImpl implements YamlPushService {
   }
 
   @Override
-  public <T> void pushYamlChangeSet(String accountId, Service service, T entity, Type type, boolean syncFromGit) {
+  public <R, T> void pushYamlChangeSet(String accountId, R helperEntity, T entity, Type type, boolean syncFromGit) {
     if (syncFromGit) {
       return;
     }
@@ -75,29 +74,29 @@ public class YamlPushServiceImpl implements YamlPushService {
     executorService.submit(() -> {
       try {
         notNullCheck("entity", entity);
-        notNullCheck("service", service);
+        notNullCheck("helperEntity", helperEntity);
         notNullCheck("accountId", accountId);
 
-        logYamlPushRequestInfo(accountId, service, entity);
+        logYamlPushRequestInfo(accountId, helperEntity, entity);
 
         switch (type) {
           case CREATE:
-            yamlChangeSetHelper.entityYamlChangeSet(accountId, service, entity, ChangeType.ADD);
+            yamlChangeSetHelper.entityYamlChangeSet(accountId, helperEntity, entity, ChangeType.ADD);
             break;
 
           case UPDATE:
-            yamlChangeSetHelper.entityYamlChangeSet(accountId, service, entity, ChangeType.MODIFY);
+            yamlChangeSetHelper.entityYamlChangeSet(accountId, helperEntity, entity, ChangeType.MODIFY);
             break;
 
           case DELETE:
-            yamlChangeSetHelper.entityYamlChangeSet(accountId, service, entity, ChangeType.DELETE);
+            yamlChangeSetHelper.entityYamlChangeSet(accountId, helperEntity, entity, ChangeType.DELETE);
             break;
 
           default:
             unhandled(type);
         }
       } catch (Exception e) {
-        logYamlPushRequestInfo(accountId, service, entity);
+        logYamlPushRequestInfo(accountId, helperEntity, entity);
         logger.error(format("Exception in pushing yaml change set for account %s", accountId), e);
       }
     });
@@ -144,9 +143,9 @@ public class YamlPushServiceImpl implements YamlPushService {
     });
   }
 
-  private <T> void logYamlPushRequestInfo(String accountId, Service service, T entity) {
-    logger.info(format("%s accountId %s, entity %s, entityId %s, serviceId %s", YAML_PUSH_SERVICE_LOG, accountId,
-        entity.getClass().getSimpleName(), ((Base) entity).getUuid(), service.getUuid()));
+  private <R, T> void logYamlPushRequestInfo(String accountId, R helperEntity, T entity) {
+    logger.info(format("%s accountId %s, entity %s, entityId %s, helperEntityId %s", YAML_PUSH_SERVICE_LOG, accountId,
+        entity.getClass().getSimpleName(), ((Base) entity).getUuid(), ((Base) helperEntity).getUuid()));
   }
 
   private <T> void logYamlPushRequestInfo(String accountId, T oldEntity, T newEntity, Type type) {
