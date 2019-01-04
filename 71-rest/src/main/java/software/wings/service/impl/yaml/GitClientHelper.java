@@ -18,7 +18,6 @@ import groovy.lang.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.TransportException;
@@ -35,6 +34,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -120,19 +120,9 @@ public class GitClientHelper {
   }
 
   private String getFilePath(Path path, String repoPath) {
-    String filePath = StringUtils.EMPTY;
     Path fileAbsolutePath = path.toAbsolutePath();
-
-    if (fileAbsolutePath != null) {
-      String absolutePath = fileAbsolutePath.toString();
-      int firstIndex = absolutePath.indexOf(repoPath);
-      filePath = absolutePath.substring(firstIndex + repoPath.length());
-      if (filePath.charAt(0) == '/') {
-        filePath = filePath.substring(1);
-      }
-    }
-
-    return filePath;
+    Path repoAbsolutePath = Paths.get(repoPath).toAbsolutePath();
+    return repoAbsolutePath.relativize(fileAbsolutePath).toString();
   }
 
   public String getRepoPathForFileDownload(GitConfig gitConfig, String gitConnectorId) {
