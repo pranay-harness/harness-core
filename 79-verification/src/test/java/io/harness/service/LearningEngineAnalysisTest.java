@@ -1,6 +1,8 @@
 package io.harness.service;
 
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.persistence.UuidAccess.ID_KEY;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -18,12 +20,16 @@ import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TI
 
 import com.google.inject.Inject;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.persistence.ReadPref;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -50,6 +56,7 @@ import software.wings.utils.Misc;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -369,5 +376,33 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
         analysisTask.getAnalysis_start_min());
     assertEquals(
         analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
+  }
+
+  @Test
+  public void testLockCleanup() {
+    DBCollection collection =
+        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "quartz_verification_locks");
+    BasicDBObject lockObject = new BasicDBObject();
+    lockObject.put(ID_KEY, new ObjectId());
+    lockObject.put("type", "t");
+    lockObject.put("keyGroup", generateUUID());
+    lockObject.put("keyName", generateUUID());
+    lockObject.put("instanceId", generateUUID());
+    lockObject.put("time", new Date(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(6)));
+    collection.insert(lockObject);
+
+    assertEquals(1, collection.find().size());
+
+    continuousVerificationService.cleanupStuckLocks();
+    assertEquals(0, collection.find().size());
+
+    // insert and see its not deleted
+    lockObject.put(ID_KEY, new ObjectId());
+    lockObject.put("time", new Date(System.currentTimeMillis()));
+    collection.insert(lockObject);
+    assertEquals(1, collection.find().size());
+
+    continuousVerificationService.cleanupStuckLocks();
+    assertEquals(1, collection.find().size());
   }
 }
