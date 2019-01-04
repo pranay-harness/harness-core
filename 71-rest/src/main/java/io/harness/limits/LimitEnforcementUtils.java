@@ -39,10 +39,21 @@ public class LimitEnforcementUtils {
    * executes a function while decrementing the counter.
    * @param checker limit checker instance
    * @param fn fn to execute. This will typically delete a resource (example: delete an application)
-   * @param <T> return type of fn execution
    */
   public static void withCounterDecrement(StaticLimitCheckerWithDecrement checker, Runnable fn) {
     fn.run();
     checker.decrement();
+  }
+
+  /**
+   * executes a function while decrementing the counter.
+   * @param checker limit checker instance
+   * @param fn fn to execute. This will typically delete a resource (example: delete an application)
+   * @param <T> return type of fn execution
+   */
+  public static <T> T withCounterDecrement(StaticLimitCheckerWithDecrement checker, Supplier<T> fn) {
+    T value = fn.get();
+    checker.decrement();
+    return value;
   }
 }

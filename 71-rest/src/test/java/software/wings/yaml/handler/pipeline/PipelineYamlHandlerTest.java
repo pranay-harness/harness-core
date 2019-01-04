@@ -32,10 +32,14 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import io.harness.exception.WingsException;
+import io.harness.limits.Action;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -67,6 +71,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.sm.StateType;
+import software.wings.utils.WingsTestConstants.MockChecker;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
@@ -84,6 +89,8 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock private Account account;
   @Mock private AccountService accountService;
   @Mock private EnvironmentService environmentService;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
+
   @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject YamlDirectoryService yamlDirectoryService;
   @InjectMocks @Inject PipelineService pipelineService;
@@ -199,6 +206,9 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
 
   @Test
   public void testCRUDAndGet() throws HarnessException, IOException {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);
     gitFileChange.setFilePath(validYamlFilePath);
@@ -235,6 +245,9 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
 
   @Test
   public void testFailures() throws HarnessException, IOException {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+
     // Invalid yaml path
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);

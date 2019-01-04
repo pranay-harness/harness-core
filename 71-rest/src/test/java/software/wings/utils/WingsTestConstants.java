@@ -4,6 +4,8 @@ import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.lib.StaticLimit;
+import lombok.AllArgsConstructor;
+import lombok.Value;
 
 /**
  * Created by anubhaw on 5/26/16.
@@ -276,5 +278,28 @@ public interface WingsTestConstants {
         return new Action("invalid-account", ActionType.CREATE_APPLICATION);
       }
     };
+  }
+
+  @Value
+  @AllArgsConstructor
+  class MockChecker implements StaticLimitCheckerWithDecrement {
+    private final boolean allowRequest;
+    private final ActionType actionType;
+    private final StaticLimit limit = new io.harness.limits.impl.model.StaticLimit(1000);
+
+    @Override
+    public boolean checkAndConsume() {
+      return allowRequest;
+    }
+
+    @Override
+    public boolean decrement() {
+      return true;
+    }
+
+    @Override
+    public Action getAction() {
+      return new Action("invalid-account", actionType);
+    }
   }
 }
