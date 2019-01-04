@@ -61,6 +61,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -382,13 +384,16 @@ public class K8sTaskHelper {
     return result;
   }
 
+  private static boolean isValidManifestFile(String filename) {
+    return StringUtils.endsWith(filename, yaml_file_extension) && !StringUtils.equals(filename, values_filename);
+  }
+
   public List<KubernetesResource> readManifests(
       List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback) {
     List<KubernetesResource> result = new ArrayList<>();
 
     for (ManifestFile manifestFile : manifestFiles) {
-      if (StringUtils.endsWith(manifestFile.getFileName(), yaml_file_extension)
-          && !StringUtils.endsWith(manifestFile.getFileName(), values_filename)) {
+      if (isValidManifestFile(manifestFile.getFileName())) {
         try {
           result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
         } catch (Exception e) {
@@ -418,7 +423,7 @@ public class K8sTaskHelper {
     return sb.toString();
   }
 
-  private List<ManifestFile> getManifesFilesFromGit(
+  private List<ManifestFile> getManifestFilesFromGit(
       K8sDelegateManifestConfig delegateManifestConfig, GitService gitService, EncryptionService encryptionService) {
     GitFileConfig gitFileConfig = delegateManifestConfig.getGitFileConfig();
     GitConfig gitConfig = delegateManifestConfig.getGitConfig();
@@ -430,6 +435,16 @@ public class K8sTaskHelper {
         asList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch());
 
     return manifestFilesFromGitFetchFilesResult(gitFetchFilesResult, gitFileConfig.getFilePath());
+  }
+
+  private String getManifestFileNamesInLogFormat(List<ManifestFile> manifestFiles) {
+    StringBuilder sb = new StringBuilder(1024);
+    for (ManifestFile manifestFile : manifestFiles) {
+      if (isValidManifestFile(manifestFile.getFileName())) {
+        sb.append(color(format("- %s", manifestFile.getFileName()), Gray)).append(System.lineSeparator());
+      }
+    }
+    return sb.toString();
   }
 
   public List<ManifestFile> fetchManifestFiles(K8sDelegateManifestConfig delegateManifestConfig,
@@ -446,9 +461,11 @@ public class K8sTaskHelper {
 
     try {
       List<ManifestFile> manifestFilesFromGit =
-          getManifesFilesFromGit(delegateManifestConfig, gitService, encryptionService);
-      executionLogCallback.saveExecutionLog("Successfully fetched manifest files");
-      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+          getManifestFilesFromGit(delegateManifestConfig, gitService, encryptionService);
+      executionLogCallback.saveExecutionLog(
+          color("\nSuccessfully fetched following manifest [.yaml] files:", White, Bold));
+      executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesFromGit));
+      executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
       return manifestFilesFromGit;
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
@@ -456,12 +473,10 @@ public class K8sTaskHelper {
     }
   }
 
-  private static String getRelativePath(GitFile gitFile, String prefixPath) {
-    if (isBlank(prefixPath)) {
-      return gitFile.getFilePath();
-    }
-
-    return gitFile.getFilePath().substring(prefixPath.length());
+  private static String getRelativePath(String filePath, String prefixPath) {
+    Path fileAbsolutePath = Paths.get(filePath).toAbsolutePath();
+    Path prefixAbsolutePath = Paths.get(prefixPath).toAbsolutePath();
+    return prefixAbsolutePath.relativize(fileAbsolutePath).toString();
   }
 
   public static List<ManifestFile> manifestFilesFromGitFetchFilesResult(
@@ -472,7 +487,7 @@ public class K8sTaskHelper {
       List<GitFile> files = gitFetchFilesResult.getFiles();
 
       for (GitFile gitFile : files) {
-        String filePath = getRelativePath(gitFile, prefixPath);
+        String filePath = getRelativePath(gitFile.getFilePath(), prefixPath);
         manifestFiles.add(ManifestFile.builder().fileName(filePath).fileContent(gitFile.getFileContent()).build());
       }
     }
