@@ -3,7 +3,6 @@ package software.wings.beans.container;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.exception.WingsException.USER_SRE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -23,6 +22,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.expression.RegexFunctor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,7 +36,6 @@ import software.wings.utils.EcsConvention;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
@@ -178,6 +177,8 @@ public class EcsContainerTask extends ContainerTask {
                         .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
                         .replaceAll(EXECUTION_ROLE_PLACEHOLDER_REGEX, executionRole);
 
+    config = removeEmptySecretsContainerDefinitionString(config);
+
     return JsonUtils.asObject(config, TaskDefinition.class);
   }
 
@@ -196,29 +197,9 @@ public class EcsContainerTask extends ContainerTask {
 
   @VisibleForTesting
   String removeEmptySecretsContainerDefinitionString(String containerDefinitionStr) {
-    StringBuilder sb = new StringBuilder(128);
-
-    BufferedReader bufReader = new BufferedReader(new StringReader(containerDefinitionStr));
-    String line = null;
-
-    // pattern is
-    // <ws> is for 0 or more whitespaces
-    // <ws>"secrets"<ws>:<ws>[<ws>],"
-    // e.g. "secrets" : [ ],  or "secrets":[],
-    Pattern patternSecrets = Pattern.compile("^\\s*\"secrets\"\\s*:\\s*\\[\\s*\\],");
-    try {
-      while ((line = bufReader.readLine()) != null) {
-        Matcher matcher = patternSecrets.matcher(line);
-        if (matcher.find()) {
-          continue;
-        }
-        sb.append(line).append('\n');
-      }
-    } catch (Exception e) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR, "Failed while removing \"secrets\" : [] from Yaml", USER_SRE)
-          .addParam("message", "Failed while removing \"secrets\" : [] from Yaml");
-    }
-    return sb.toString();
+    containerDefinitionStr =
+        new RegexFunctor().replace("\\s*\"secrets\"\\s*:\\s*\\[\\s*\\],", StringUtils.EMPTY, containerDefinitionStr);
+    return containerDefinitionStr;
   }
 
   private TaskDefinition createTaskDefinition() {
