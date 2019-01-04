@@ -955,7 +955,7 @@ public class AnalysisServiceImpl implements AnalysisService {
             .project("experiment_name", true)
             .project("createdAt", true)
             .project("envId", true)
-            .project("workflowExecutionId", true);
+            .project("workflow_execution_id", true);
 
     List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords = analysisRecords.asList();
 
