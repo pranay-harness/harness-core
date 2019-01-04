@@ -342,7 +342,7 @@ public class YamlHandlerFactory {
     } else if (entity instanceof ManifestFile) {
       return ((ManifestFile) entity).getFileName();
     } else if (entity instanceof ApplicationManifest) {
-      return YamlConstants.APPLICATIONS_MANIFEST;
+      return YamlConstants.INDEX;
     }
 
     throw new InvalidRequestException(
@@ -412,7 +412,7 @@ public class YamlHandlerFactory {
   }
 
   private static List<String> obtainNonLeafEntities() {
-    return Lists.newArrayList("Environment", "Application", "Service", "ApplicationManifest");
+    return Lists.newArrayList("Environment", "Application", "Service");
   }
 
   private static List<String> obtainUseRealFileEntities() {
@@ -431,6 +431,6 @@ public class YamlHandlerFactory {
         "AmiArtifactStream", "AmazonS3ArtifactStream", "AcrArtifactStream", "HelmChartSpecification",
         "EcsServiceSpecification", "PcfServiceSpecification", "LambdaSpecification", "UserDataSpecification",
         "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute", "ServiceCommand",
-        "ManifestFile");
+        "ManifestFile", "ApplicationManifest");
   }
 }

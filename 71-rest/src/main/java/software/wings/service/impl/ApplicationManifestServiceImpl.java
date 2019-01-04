@@ -100,14 +100,14 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     if (applicationManifest == null) {
       return;
     }
+
+    deleteManifestFiles(applicationManifest.getAppId(), applicationManifest, applicationManifest.isSyncFromGit());
+
     wingsPersistence.delete(applicationManifest);
 
     String accountId = appService.getAccountIdByAppId(applicationManifest.getAppId());
     yamlPushService.pushYamlChangeSet(
         accountId, applicationManifest, null, Type.DELETE, applicationManifest.isSyncFromGit(), false);
-
-    deleteManifestFiles(
-        applicationManifest.getAppId(), applicationManifest.getUuid(), applicationManifest.isSyncFromGit());
   }
 
   @Override
@@ -269,17 +269,24 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  @Override
-  public void deleteManifestFiles(String appId, String applicationManifestId, boolean isSyncFromGit) {
-    List<ManifestFile> manifestFiles = getManifestFilesByAppManifestId(appId, applicationManifestId);
+  private void deleteManifestFiles(String appId, ApplicationManifest applicationManifest, boolean isSyncFromGit) {
+    List<ManifestFile> manifestFiles = getManifestFilesByAppManifestId(appId, applicationManifest.getUuid());
     if (isEmpty(manifestFiles)) {
       return;
     }
 
     for (ManifestFile manifestFile : manifestFiles) {
       manifestFile.setSyncFromGit(isSyncFromGit);
-      deleteManifestFile(appId, manifestFile);
+      deleteManifestFileUtility(appId, manifestFile, applicationManifest);
     }
+  }
+
+  private void deleteManifestFileUtility(
+      String appId, ManifestFile manifestFile, ApplicationManifest applicationManifest) {
+    wingsPersistence.delete(manifestFile);
+    String accountId = appService.getAccountIdByAppId(appId);
+    yamlPushService.pushYamlChangeSet(
+        accountId, applicationManifest, manifestFile, Type.DELETE, manifestFile.isSyncFromGit());
   }
 
   @Override
@@ -302,10 +309,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       applicationManifest.setSyncFromGit(manifestFile.isSyncFromGit());
       deleteAppManifest(applicationManifest);
     } else {
-      wingsPersistence.delete(manifestFile);
-      String accountId = appService.getAccountIdByAppId(appId);
-      yamlPushService.pushYamlChangeSet(
-          accountId, manifestFile, null, Type.DELETE, manifestFile.isSyncFromGit(), false);
+      deleteManifestFileUtility(appId, manifestFile, applicationManifest);
     }
   }
 

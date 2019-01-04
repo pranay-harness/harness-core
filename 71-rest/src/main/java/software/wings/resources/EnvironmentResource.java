@@ -25,6 +25,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.EnvironmentService;
 
 import java.util.List;
@@ -51,6 +52,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(permissionType = ENV)
 public class EnvironmentResource {
   @Inject private EnvironmentService environmentService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   /**
    * List.
@@ -321,7 +323,6 @@ public class EnvironmentResource {
         environmentService.setHelmValueYamlForService(appId, envId, templateId, new KubernetesPayload()));
   }
 
-  // ToDo anshul --- add delete endpoint
   @POST
   @Path("{envId}/values")
   @Timed
@@ -333,16 +334,37 @@ public class EnvironmentResource {
   }
 
   @PUT
-  @Path("{envId}/values")
+  @Path("{envId}/values/{manifestFileId}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
-  public RestResponse<ManifestFile> updateValues(
-      @QueryParam("appId") String appId, @PathParam("envId") String envId, ManifestFile manifestFile) {
+  public RestResponse<ManifestFile> updateValues(@QueryParam("appId") String appId, @PathParam("envId") String envId,
+      @PathParam("manifestFileId") String manifestFileId, ManifestFile manifestFile) {
+    manifestFile.setUuid(manifestFileId);
     return new RestResponse<>(environmentService.updateValues(appId, envId, null, manifestFile));
   }
 
-  // ToDo anshul --- add delete endpoint
+  @GET
+  @Path("{envId}/values/{manifestFileId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
+  public RestResponse<ManifestFile> getValues(@QueryParam("appId") String appId, @PathParam("envId") String envId,
+      @PathParam("manifestFileId") String manifestFileId) {
+    return new RestResponse<>(applicationManifestService.getManifestFileById(appId, manifestFileId));
+  }
+
+  @DELETE
+  @Path("{envId}/values/{manifestFileId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.DELETE)
+  public RestResponse<ManifestFile> deleteValues(@QueryParam("appId") String appId, @PathParam("envId") String envId,
+      @PathParam("manifestFileId") String manifestFileId) {
+    applicationManifestService.deleteManifestFileById(appId, manifestFileId);
+    return new RestResponse();
+  }
+
   @POST
   @Path("{envId}/service/{serviceId}/values")
   @Timed
@@ -354,13 +376,37 @@ public class EnvironmentResource {
   }
 
   @PUT
-  @Path("{envId}/service/{serviceId}/values")
+  @Path("{envId}/service/{serviceId}/values/{manifestFileId}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<ManifestFile> updateValuesForService(@QueryParam("appId") String appId,
       @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
-      @PathParam("appManifestId") String appManifestId, ManifestFile manifestFile) {
+      @PathParam("manifestFileId") String manifestFileId, ManifestFile manifestFile) {
+    manifestFile.setUuid(manifestFileId);
     return new RestResponse<>(environmentService.updateValues(appId, envId, serviceId, manifestFile));
+  }
+
+  @GET
+  @Path("{envId}/service/{serviceId}/values/{manifestFileId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
+  public RestResponse<ManifestFile> getValuesForService(@QueryParam("appId") String appId,
+      @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
+      @PathParam("manifestFileId") String manifestFileId) {
+    return new RestResponse<>(applicationManifestService.getManifestFileById(appId, manifestFileId));
+  }
+
+  @DELETE
+  @Path("{envId}/service/{serviceId}/values/{manifestFileId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.DELETE)
+  public RestResponse<ManifestFile> deleteValuesForService(@QueryParam("appId") String appId,
+      @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
+      @PathParam("manifestFileId") String manifestFileId) {
+    applicationManifestService.deleteManifestFileById(appId, manifestFileId);
+    return new RestResponse();
   }
 }
