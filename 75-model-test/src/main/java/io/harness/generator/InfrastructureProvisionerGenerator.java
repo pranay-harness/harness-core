@@ -158,6 +158,18 @@ public class InfrastructureProvisionerGenerator {
           return existing;
         }
 
+        if (terraformInfrastructureProvisioner.getPath() != null) {
+          builder.path(terraformInfrastructureProvisioner.getPath());
+        } else {
+          builder.path(".");
+        }
+
+        if (terraformInfrastructureProvisioner.getSourceRepoBranch() != null) {
+          builder.sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch());
+        } else {
+          builder.sourceRepoBranch("master");
+        }
+
         if (infrastructureProvisioner.getMappingBlueprints() != null) {
           builder.mappingBlueprints(infrastructureProvisioner.getMappingBlueprints());
         } else {
