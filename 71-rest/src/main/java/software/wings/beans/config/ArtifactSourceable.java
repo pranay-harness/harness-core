@@ -1,6 +1,8 @@
 package software.wings.beans.config;
 
 import static io.harness.data.structure.MapUtils.putIfNotEmpty;
+import static software.wings.common.Constants.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
+import static software.wings.common.Constants.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_USER_NAME_KEY;
@@ -14,6 +16,7 @@ public interface ArtifactSourceable {
     putIfNotEmpty(ARTIFACT_SOURCE_USER_NAME_KEY, fetchUserName(), attributes);
     putIfNotEmpty(ARTIFACT_SOURCE_REGISTRY_URL_KEY, fetchRegistryUrl(), attributes);
     putIfNotEmpty(ARTIFACT_SOURCE_REPOSITORY_NAME_KEY, fetchRepositoryName(), attributes);
+    putIfNotEmpty(ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY, ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER, attributes);
     return attributes;
   }
 

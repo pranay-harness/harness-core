@@ -25,6 +25,7 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
@@ -35,6 +36,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -272,6 +274,11 @@ public class K8sStateHelper {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Environment env = workflowStandardParams.getEnv();
     ContainerInfrastructureMapping infraMapping = getContainerInfrastructureMapping(context);
+    String serviceTemplateId = infraMapping.getServiceTemplateId();
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
+    String artifactStreamId = artifact == null ? null : artifact.getArtifactStreamId();
 
     k8sTaskParameters.setAccountId(app.getAccountId());
     k8sTaskParameters.setAppId(app.getUuid());
@@ -289,6 +296,8 @@ public class K8sStateHelper {
                                     .withEnvId(env.getUuid())
                                     .withTimeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .withInfrastructureMappingId(infraMapping.getUuid())
+                                    .withServiceTemplateId(serviceTemplateId)
+                                    .withArtifactStreamId(artifactStreamId)
                                     .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
