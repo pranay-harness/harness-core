@@ -8,6 +8,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -40,6 +41,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.FREEMIUM_ENV_PATH;
+import static software.wings.utils.WingsTestConstants.INVALID_USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 import static software.wings.utils.WingsTestConstants.ROLE_ID;
@@ -548,6 +550,34 @@ public class UserServiceTest extends WingsBaseTest {
     verify(accountService).get(ACCOUNT_ID);
     verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
     assertThat(userArgumentCaptor.getValue()).hasFieldOrPropertyWithValue("email", mixedEmail.trim().toLowerCase());
+  }
+
+  @Test
+  public void testInviteNewUser_invalidEmail_shouldFail() {
+    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+                                .withAppId(GLOBAL_APP_ID)
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmails(asList(INVALID_USER_EMAIL))
+                                .withRoles(asList(aRole().withUuid(ROLE_ID).build()))
+                                .build();
+
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount()
+                        .withCompanyName(COMPANY_NAME)
+                        .withUuid(ACCOUNT_ID)
+                        .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                        .build());
+    when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
+    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class)))
+        .thenReturn(userBuilder.withUuid(USER_ID).build());
+
+    try {
+      userService.inviteUsers(userInvite);
+      fail("Exception is expected when inviting with invalid user email");
+    } catch (WingsException e) {
+      // Ignore, exception expected here.
+    }
   }
 
   /**

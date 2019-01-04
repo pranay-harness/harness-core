@@ -119,6 +119,8 @@ public interface WingsTestConstants {
 
   String USER_EMAIL = "user@wings.software";
 
+  String INVALID_USER_EMAIL = "user@@non-existent.com";
+
   String COMPANY_NAME = "COMPANY_NAME";
 
   String ACCOUNT_NAME = "ACCOUNT_NAME";
