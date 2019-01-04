@@ -3,11 +3,14 @@ package software.wings.beans.container;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_SRE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import com.amazonaws.services.ecs.model.HostVolumeProperties;
 import com.amazonaws.services.ecs.model.MountPoint;
@@ -33,6 +36,7 @@ import software.wings.utils.EcsConvention;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
@@ -179,13 +183,42 @@ public class EcsContainerTask extends ContainerTask {
 
   private String fetchJsonConfig() {
     try {
-      return JsonUtils.asPrettyJson(createTaskDefinition())
-          .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)
-          .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
-          .replaceAll(DUMMY_EXECUTION_ROLE_ARN, EXECUTION_ROLE_PLACEHOLDER_REGEX);
+      String containerDefinitionStr = JsonUtils.asPrettyJson(createTaskDefinition())
+                                          .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)
+                                          .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
+                                          .replaceAll(DUMMY_EXECUTION_ROLE_ARN, EXECUTION_ROLE_PLACEHOLDER_REGEX);
+
+      return removeEmptySecretsContainerDefinitionString(containerDefinitionStr);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", Misc.getMessage(e));
     }
+  }
+
+  @VisibleForTesting
+  String removeEmptySecretsContainerDefinitionString(String containerDefinitionStr) {
+    StringBuilder sb = new StringBuilder(128);
+
+    BufferedReader bufReader = new BufferedReader(new StringReader(containerDefinitionStr));
+    String line = null;
+
+    // pattern is
+    // <ws> is for 0 or more whitespaces
+    // <ws>"secrets"<ws>:<ws>[<ws>],"
+    // e.g. "secrets" : [ ],  or "secrets":[],
+    Pattern patternSecrets = Pattern.compile("^\\s*\"secrets\"\\s*:\\s*\\[\\s*\\],");
+    try {
+      while ((line = bufReader.readLine()) != null) {
+        Matcher matcher = patternSecrets.matcher(line);
+        if (matcher.find()) {
+          continue;
+        }
+        sb.append(line).append('\n');
+      }
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.GENERAL_ERROR, "Failed while removing \"secrets\" : [] from Yaml", USER_SRE)
+          .addParam("message", "Failed while removing \"secrets\" : [] from Yaml");
+    }
+    return sb.toString();
   }
 
   private TaskDefinition createTaskDefinition() {
@@ -236,6 +269,7 @@ public class EcsContainerTask extends ContainerTask {
             .withName(strip(containerName))
             .withImage(strip(imageName));
 
+    containerDefinition.setSecrets(null);
     if (harnessContainerDefinition.getMemory() != null && harnessContainerDefinition.getMemory() > 0) {
       containerDefinition.setMemory(harnessContainerDefinition.getMemory());
     } else {
