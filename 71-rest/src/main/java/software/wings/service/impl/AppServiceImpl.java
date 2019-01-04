@@ -378,7 +378,6 @@ public class AppServiceImpl implements AppService {
       // will not reconsider and start using the object as they never intended to delete it, but
       // probably they will retry. This is why there is no reason for us to regenerate it at this
       // point. We should have the necessary APIs elsewhere, if we find the users want it.
-      return true;
     });
   }
 

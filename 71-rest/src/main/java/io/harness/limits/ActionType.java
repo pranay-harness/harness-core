@@ -8,6 +8,7 @@ import java.util.List;
 
 public enum ActionType {
   CREATE_APPLICATION(Collections.singletonList(LimitType.STATIC)),
+  CREATE_USER(Collections.singletonList(LimitType.STATIC)),
   DEPLOY(Collections.singletonList(LimitType.RATE_LIMIT));
 
   @Getter private List<LimitType> allowedLimitTypes;

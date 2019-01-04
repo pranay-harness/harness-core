@@ -12,7 +12,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -30,6 +29,7 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -37,11 +37,13 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
@@ -75,6 +77,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Mock private RoleService roleService;
   @Mock private AccountService accountService;
   @Mock private EmailNotificationService emailNotificationService;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
+
   private Account account = Account.Builder.anAccount()
                                 .withAccountName(ACCOUNT_NAME)
                                 .withCompanyName(COMPANY_NAME)
@@ -93,8 +97,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
   @Inject private WingsPersistence wingsPersistence;
   //  @InjectMocks @Inject private AccountService accountService = spy(AccountServiceImpl.class);
-  @InjectMocks @Inject private UserService userService = spy(UserServiceImpl.class);
-  @InjectMocks @Inject private UserGroupServiceImpl userGroupService = spy(UserGroupServiceImpl.class);
+  @InjectMocks @Inject private UserService userService;
+  @InjectMocks @Inject private UserGroupServiceImpl userGroupService;
 
   private String accountId = generateUuid();
   private String userGroupId = generateUuid();
@@ -111,6 +115,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     doNothing().when(authService).evictAccountUserPermissionInfoCache(anyString(), anyList());
     when(accountService.get(anyString())).thenReturn(account);
     when(accountService.save(any())).thenReturn(account);
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     when(roleService.getAccountAdminRole(any()))
         .thenReturn(Role.Builder.aRole().withAccountId(ACCOUNT_ID).withUuid(generateUuid()).build());
     try {

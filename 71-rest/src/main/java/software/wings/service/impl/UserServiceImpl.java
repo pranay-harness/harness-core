@@ -68,6 +68,10 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.LimitEnforcementUtils;
+import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.serializer.KryoUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -175,6 +179,7 @@ public class UserServiceImpl implements UserService {
   @Inject private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   @Inject private SSOSettingService ssoSettingService;
   @Inject private SamlClientService samlClientService;
+  @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AuthenticationManager authenticationManager;
@@ -317,16 +322,24 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User registerNewUser(User user, Account account) {
+    String accountId = account.getUuid();
+
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new io.harness.limits.Action(accountId, ActionType.CREATE_USER));
+
     User existingUser = getUserByEmail(user.getEmail());
     if (existingUser == null) {
-      user.setAppId(GLOBAL_APP_ID);
-      user.getAccounts().add(account);
-      user.setEmailVerified(false);
-      String hashed = hashpw(new String(user.getPassword()), BCrypt.gensalt());
-      user.setPasswordHash(hashed);
-      user.setPasswordChangedAt(System.currentTimeMillis());
-      user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
-      return save(user, account.getUuid());
+      return LimitEnforcementUtils.withLimitCheck(checker, () -> {
+        user.setAppId(GLOBAL_APP_ID);
+        user.getAccounts().add(account);
+        user.setEmailVerified(false);
+        String hashed = hashpw(new String(user.getPassword()), BCrypt.gensalt());
+        user.setPasswordHash(hashed);
+        user.setPasswordChangedAt(System.currentTimeMillis());
+        user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
+        return save(user, accountId);
+      });
+
     } else {
       Map<String, Object> map = new HashMap<>();
       map.put("name", user.getName());
@@ -1188,49 +1201,54 @@ public class UserServiceImpl implements UserService {
     // HAR-7189: If user removed, the corresponding user invite using the same email address should be removed.
     removeRelatedUserInvite(accountId, user.getEmail());
 
-    for (Account account : user.getAccounts()) {
-      if (account.getUuid().equals(accountId)) {
-        user.getAccounts().remove(account);
-        break;
-      }
-    }
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new io.harness.limits.Action(accountId, ActionType.CREATE_USER));
 
-    if (user.getAccounts().isEmpty() && wingsPersistence.delete(User.class, userId)) {
-      evictUserFromCache(userId);
-      return;
-    }
-
-    List<Role> accountRoles = roleService.getAccountRoles(accountId);
-    if (accountRoles != null) {
-      for (Role role : accountRoles) {
-        user.getRoles().remove(role);
-      }
-    }
-
-    PageResponse<UserGroup> pageResponse = userGroupService.list(
-        accountId, aPageRequest().addFilter("memberIds", Operator.HAS, user.getUuid()).build(), true);
-    List<UserGroup> userGroupList = pageResponse.getResponse();
-    userGroupList.forEach(userGroup -> {
-      List<User> members = userGroup.getMembers();
-      if (isNotEmpty(members)) {
-        // Find the user to be removed, then remove from the member list and update the user group.
-        Optional<User> userOptional = members.stream().filter(member -> member.getUuid().equals(userId)).findFirst();
-        if (userOptional.isPresent()) {
-          members.remove(userOptional.get());
-          userGroupService.updateMembers(userGroup, false);
+    LimitEnforcementUtils.withCounterDecrement(checker, () -> {
+      for (Account account : user.getAccounts()) {
+        if (account.getUuid().equals(accountId)) {
+          user.getAccounts().remove(account);
+          break;
         }
       }
+
+      if (user.getAccounts().isEmpty() && wingsPersistence.delete(User.class, userId)) {
+        evictUserFromCache(userId);
+        return;
+      }
+
+      List<Role> accountRoles = roleService.getAccountRoles(accountId);
+      if (accountRoles != null) {
+        for (Role role : accountRoles) {
+          user.getRoles().remove(role);
+        }
+      }
+
+      PageResponse<UserGroup> pageResponse = userGroupService.list(
+          accountId, aPageRequest().addFilter("memberIds", Operator.HAS, user.getUuid()).build(), true);
+      List<UserGroup> userGroupList = pageResponse.getResponse();
+      userGroupList.forEach(userGroup -> {
+        List<User> members = userGroup.getMembers();
+        if (isNotEmpty(members)) {
+          // Find the user to be removed, then remove from the member list and update the user group.
+          Optional<User> userOptional = members.stream().filter(member -> member.getUuid().equals(userId)).findFirst();
+          if (userOptional.isPresent()) {
+            members.remove(userOptional.get());
+            userGroupService.updateMembers(userGroup, false);
+          }
+        }
+      });
+
+      UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
+                                            .set("roles", user.getRoles())
+                                            .set("accounts", user.getAccounts());
+      Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
+      wingsPersistence.update(updateQuery, updateOp);
+
+      removeUserFromUserGroups(user, user.getUserGroups(), false);
+
+      evictUserFromCache(userId);
     });
-
-    UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
-                                          .set("roles", user.getRoles())
-                                          .set("accounts", user.getAccounts());
-    Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
-    wingsPersistence.update(updateQuery, updateOp);
-
-    removeUserFromUserGroups(user, user.getUserGroups(), false);
-
-    evictUserFromCache(userId);
   }
 
   /* (non-Javadoc)
