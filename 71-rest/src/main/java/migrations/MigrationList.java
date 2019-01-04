@@ -39,6 +39,8 @@ import migrations.all.GitSyncToAllAccounts;
 import migrations.all.HelmReleaseNamePrefixMigration;
 import migrations.all.HelmReleaseNameSuffixMigration;
 import migrations.all.InfraProvisionerFilteringTypeMigration;
+import migrations.all.InitPipelineCounters;
+import migrations.all.InitUserCounters;
 import migrations.all.LdapSettingsMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
 import migrations.all.LicenseDataMigration;
@@ -173,6 +175,7 @@ public class MigrationList {
         .add(Pair.of(216, MarketoLeadDataMigration.class))
         .add(Pair.of(217, LdapSettingsMigration.class))
         .add(Pair.of(218, InitUserCounters.class))
+        .add(Pair.of(219, InitPipelineCounters.class))
         .build();
   }
 }

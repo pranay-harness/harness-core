@@ -39,6 +39,11 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.limits.Action;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.LimitEnforcementUtils;
+import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
@@ -110,6 +115,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private WorkflowServiceHelper workflowServiceHelper;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
+  @Inject private LimitCheckerFactory limitCheckerFactory;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -281,15 +287,19 @@ public class PipelineServiceImpl implements PipelineService {
     if (pipeline == null) {
       return true;
     }
-
-    if (!forceDelete) {
-      ensurePipelineSafeToDelete(pipeline);
-    }
-
     String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
-    yamlPushService.pushYamlChangeSet(accountId, pipeline, null, Type.DELETE, syncFromGit, false);
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_PIPELINE));
 
-    return prunePipeline(appId, pipelineId);
+    return LimitEnforcementUtils.withCounterDecrement(checker, () -> {
+      if (!forceDelete) {
+        ensurePipelineSafeToDelete(pipeline);
+      }
+
+      yamlPushService.pushYamlChangeSet(accountId, pipeline, null, Type.DELETE, syncFromGit, false);
+
+      return prunePipeline(appId, pipelineId);
+    });
   }
 
   @Override
@@ -743,17 +753,22 @@ public class PipelineServiceImpl implements PipelineService {
   @ValidationGroups(Create.class)
   public Pipeline save(Pipeline pipeline) {
     ensurePipelineStageUuids(pipeline);
-
-    List<Object> keywords = pipeline.generateKeywords();
-    validatePipeline(pipeline, keywords);
-    pipeline.setKeywords(trimList(keywords));
-    Pipeline finalPipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
-    wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(finalPipeline, workflowService.stencilMap()));
-
     String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
-    yamlPushService.pushYamlChangeSet(accountId, null, finalPipeline, Type.CREATE, pipeline.isSyncFromGit(), false);
 
-    return finalPipeline;
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_PIPELINE));
+
+    return LimitEnforcementUtils.withLimitCheck(checker, () -> {
+      List<Object> keywords = pipeline.generateKeywords();
+      validatePipeline(pipeline, keywords);
+      pipeline.setKeywords(trimList(keywords));
+      Pipeline finalPipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
+      wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(finalPipeline, workflowService.stencilMap()));
+
+      yamlPushService.pushYamlChangeSet(accountId, null, finalPipeline, Type.CREATE, pipeline.isSyncFromGit(), false);
+
+      return finalPipeline;
+    });
   }
 
   @Override

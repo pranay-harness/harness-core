@@ -53,7 +53,11 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.limits.Action;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
 import io.harness.persistence.HQuery;
 import io.harness.resource.Loader;
 import org.junit.Before;
@@ -100,6 +104,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -123,6 +128,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Mock private MorphiaIterator<Pipeline, Pipeline> pipelineIterator;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private EnvironmentService environmentService;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Mock Query<Pipeline> pquery;
   @Mock private FieldEnd end;
@@ -135,6 +141,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     when(wingsPersistence.createQuery(PipelineExecution.class)).thenReturn(query);
+
     when(wingsPersistence.createQuery(Pipeline.class)).thenReturn(pipelineQuery);
     when(pipelineQuery.filter(any(), any())).thenReturn(pipelineQuery);
     when(wingsPersistence.createUpdateOperations(Pipeline.class)).thenReturn(updateOperations);
@@ -157,6 +164,9 @@ public class PipelineServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreatePipelineFromJson() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+
     String appId = "BB1xpV5rSmGHersn1KwCnA";
     String workflowId = "7-fkKHxHS7SsDeWbRa2zCw";
 
@@ -181,6 +191,9 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
   @Test
   public void shouldCreateLargePipeline() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+
     List<String> workflowIds = new ArrayList<>();
     List<PipelineStage> pipelineStages = new ArrayList<>();
     for (int index = 0; index < 60; index++) {
@@ -226,6 +239,9 @@ public class PipelineServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreatePipeline() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+
     PipelineStage pipelineStage = prepareStage1();
 
     FailureStrategy failureStrategy =
@@ -641,6 +657,9 @@ public class PipelineServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDeletePipeline() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+
     mockPipeline();
     when(wingsPersistence.delete(Pipeline.class, APP_ID, PIPELINE_ID)).thenReturn(true);
 
@@ -1029,6 +1048,36 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     verify(workflowService).readWorkflowWithoutServices(APP_ID, WORKFLOW_ID);
     verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
+  }
+
+  @Test(expected = WingsException.class)
+  public void shouldNotCreatePipelineWhenLimitExceeds() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(false, ActionType.CREATE_PIPELINE));
+
+    PipelineStage pipelineStage = prepareStage1();
+
+    FailureStrategy failureStrategy =
+        FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
+    Pipeline pipeline = Pipeline.builder()
+                            .name("pipeline1")
+                            .appId(APP_ID)
+                            .uuid(PIPELINE_ID)
+                            .pipelineStages(asList(pipelineStage))
+                            .failureStrategies(asList(failureStrategy))
+                            .build();
+
+    when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
+    when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+
+    try {
+      pipelineService.save(pipeline);
+    } catch (WingsException e) {
+      assertThat(e.getCode()).isEqualByComparingTo(ErrorCode.USAGE_LIMITS_EXCEEDED);
+      throw e;
+    }
   }
 
   @Test
