@@ -167,7 +167,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     try {
       return timeLimiter.callWithTimeout(
-          getControllerInternal(kubernetesConfig, encryptedDataDetails, name), 10, TimeUnit.SECONDS, true);
+          getControllerInternal(kubernetesConfig, encryptedDataDetails, name), 2, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
       logger.error(format("Timed out getting controller %s", name), e);
       throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Timed out while getting controller");
