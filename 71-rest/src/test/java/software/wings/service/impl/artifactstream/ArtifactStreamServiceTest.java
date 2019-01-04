@@ -18,6 +18,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
+import static software.wings.common.Constants.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_USER_NAME_KEY;
@@ -1280,8 +1281,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
     assertThat(artifactSourceProperties).isNotEmpty();
     assertThat(artifactSourceProperties)
-        .containsKeys(
-            ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+        .containsKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY,
+            ARTIFACT_SOURCE_REPOSITORY_NAME_KEY, ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY);
     assertThat(artifactSourceProperties).containsValues("username", "http://hub.docker.com/", "wingsplugins/todolist");
   }
 
@@ -1310,7 +1311,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
     assertThat(artifactSourceProperties).isNotEmpty();
     assertThat(artifactSourceProperties)
-        .containsOnlyKeys(ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+        .containsOnlyKeys(ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY,
+            ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY);
     assertThat(artifactSourceProperties).containsValues("gcr.io", "exploration-161417/todolist");
   }
 
@@ -1334,7 +1336,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
     assertThat(artifactSourceProperties).isNotEmpty();
     assertThat(artifactSourceProperties)
-        .containsOnlyKeys(ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+        .containsOnlyKeys(ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY,
+            ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY);
     assertThat(artifactSourceProperties).containsValues("harnessqa", "nginx");
   }
 
@@ -1356,7 +1359,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     Map<String, String> artifactSourceProperties =
         artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
     assertThat(artifactSourceProperties).isNotEmpty();
-    assertThat(artifactSourceProperties).containsOnlyKeys(ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+    assertThat(artifactSourceProperties)
+        .containsOnlyKeys(ARTIFACT_SOURCE_REPOSITORY_NAME_KEY, ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY);
     assertThat(artifactSourceProperties).containsValues("todolist");
   }
 
@@ -1377,7 +1381,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
     assertThat(artifactSourceProperties).isNotEmpty();
     assertThat(artifactSourceProperties)
-        .containsOnlyKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY);
+        .containsOnlyKeys(
+            ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY);
     assertThat(artifactSourceProperties).containsValues("username", "http://jenkins.software");
   }
 
@@ -1405,7 +1410,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
     assertThat(artifactSourceProperties).isNotEmpty();
     assertThat(artifactSourceProperties)
-        .containsOnlyKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY);
+        .containsOnlyKeys(
+            ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY);
     assertThat(artifactSourceProperties).containsValues("username", "http://bamboo.software");
   }
 
@@ -1434,7 +1440,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
     assertThat(artifactSourceProperties).isNotEmpty();
     assertThat(artifactSourceProperties)
-        .containsOnlyKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY);
+        .containsOnlyKeys(
+            ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY);
     assertThat(artifactSourceProperties).containsValues("username", "http://bamboo.software");
   }
 
@@ -1462,8 +1469,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
     assertThat(artifactSourceProperties).isNotEmpty();
     assertThat(artifactSourceProperties)
-        .containsOnlyKeys(
-            ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+        .containsOnlyKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY,
+            ARTIFACT_SOURCE_REPOSITORY_NAME_KEY, ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY);
     assertThat(artifactSourceProperties).containsValues("username", "http://bamboo.software", "wingsplugins/todolist");
   }
 
@@ -1492,7 +1499,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
     assertThat(artifactSourceProperties).isNotEmpty();
     assertThat(artifactSourceProperties)
-        .containsOnlyKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY);
+        .containsOnlyKeys(
+            ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY);
     assertThat(artifactSourceProperties).containsValues("username", "http://artifactory.com");
   }
 
@@ -1513,8 +1521,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, APP_ID, savedArtifactSteam.getUuid());
     assertThat(artifactSourceProperties).isNotEmpty();
     assertThat(artifactSourceProperties)
-        .containsOnlyKeys(
-            ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY, ARTIFACT_SOURCE_REPOSITORY_NAME_KEY);
+        .containsOnlyKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY,
+            ARTIFACT_SOURCE_REPOSITORY_NAME_KEY, ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY);
     assertThat(artifactSourceProperties).containsValues("username", "http://artifactory.com", "wingsplugins/todolist");
   }
 

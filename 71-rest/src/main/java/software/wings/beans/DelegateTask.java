@@ -59,6 +59,7 @@ public class DelegateTask extends Base {
   private String preAssignedDelegateId;
   private Set<String> alreadyTriedDelegates = new HashSet<>();
   private String serviceTemplateId;
+  private String artifactStreamId;
 
   @Transient private transient ResponseData notifyResponse;
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
@@ -267,6 +268,14 @@ public class DelegateTask extends Base {
     return this.serviceTemplateId;
   }
 
+  public void setArtifactStreamId(String artifactStreamId) {
+    this.artifactStreamId = artifactStreamId;
+  }
+
+  public String getArtifactStreamId() {
+    return this.artifactStreamId;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -287,14 +296,16 @@ public class DelegateTask extends Base {
         && Objects.equals(delegateRunnableTask, that.delegateRunnableTask)
         && Objects.equals(notifyResponse, that.notifyResponse)
         && Arrays.equals(serializedNotifyResponseData, that.serializedNotifyResponseData)
-        && Objects.equals(preAssignedDelegateId, that.preAssignedDelegateId);
+        && Objects.equals(preAssignedDelegateId, that.preAssignedDelegateId)
+        && Objects.equals(serviceTemplateId, that.serviceTemplateId)
+        && Objects.equals(artifactStreamId, that.artifactStreamId);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), version, taskType, parameters, tags, accountId, waitId, status, delegateId,
         timeout, async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse,
-        serializedNotifyResponseData, preAssignedDelegateId);
+        serializedNotifyResponseData, preAssignedDelegateId, serviceTemplateId, artifactStreamId);
   }
 
   @Override
@@ -453,6 +464,7 @@ public class DelegateTask extends Base {
     private ResponseData notifyResponse;
     private String preAssignedDelegateId;
     private String serviceTemplateId;
+    private String artifactStreamId;
 
     private Builder() {}
 
@@ -566,6 +578,11 @@ public class DelegateTask extends Base {
       return this;
     }
 
+    public Builder withArtifactStreamId(String artifactStreamId) {
+      this.artifactStreamId = artifactStreamId;
+      return this;
+    }
+
     public Builder but() {
       return aDelegateTask()
           .withVersion(version)
@@ -588,7 +605,8 @@ public class DelegateTask extends Base {
           .withLastUpdatedAt(lastUpdatedAt)
           .withNotifyResponse(notifyResponse)
           .withPreAssignedDelegateId(preAssignedDelegateId)
-          .withServiceTemplateId(serviceTemplateId);
+          .withServiceTemplateId(serviceTemplateId)
+          .withArtifactStreamId(artifactStreamId);
     }
 
     public DelegateTask build() {
@@ -614,6 +632,7 @@ public class DelegateTask extends Base {
       delegateTask.setNotifyResponse(notifyResponse);
       delegateTask.setPreAssignedDelegateId(preAssignedDelegateId);
       delegateTask.setServiceTemplateId(serviceTemplateId);
+      delegateTask.setArtifactStreamId(artifactStreamId);
       return delegateTask;
     }
   }

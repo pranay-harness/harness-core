@@ -132,6 +132,7 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
+import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -220,6 +221,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private ConfigService configService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ContainerDeploymentManagerHelper containerDeploymentHelper;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -1392,7 +1394,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (delegateTask != null) {
       final ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
           new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
-              delegateTask.getEnvId(), delegateTask.getServiceTemplateId());
+              delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), containerDeploymentHelper,
+              delegateTask.getArtifactStreamId());
       if (delegateTask.getParameters().length == 1 && delegateTask.getParameters()[0] instanceof TaskParameters) {
         ExpressionReflectionUtils.applyExpression(delegateTask.getParameters()[0],
             value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
