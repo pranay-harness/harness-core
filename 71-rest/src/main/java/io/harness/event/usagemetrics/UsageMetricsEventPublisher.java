@@ -86,6 +86,21 @@ public class UsageMetricsEventPublisher {
     publishEvent(Event.builder().eventType(EventType.USERS_LOGGED_IN).eventData(eventData).build());
   }
 
+  /**
+   *
+   * @param accountId
+   * @param accountName
+   * @param setupDataCount
+   */
+  public void publishSetupDataMetric(String accountId, String accountName, long setupDataCount, String setupDataType) {
+    Map properties = new HashMap();
+    properties.put(EventConstants.ACCOUNTID, accountId);
+    properties.put(EventConstants.ACCOUNTNAME, accountName);
+    properties.put(EventConstants.SETUP_DATA_TYPE, setupDataType);
+    EventData eventData = EventData.builder().properties(properties).value(setupDataCount).build();
+    publishEvent(Event.builder().eventType(EventType.SETUP_DATA).eventData(eventData).build());
+  }
+
   private void publishEvent(Event event) {
     executorService.submit(() -> {
       try {

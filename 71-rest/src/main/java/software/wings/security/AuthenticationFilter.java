@@ -213,7 +213,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   }
 
   private boolean isCustomApiRequest(ContainerRequestContext requestContext) {
-    return customApi() && requestContext.getHeaderString(HttpHeaders.AUTHORIZATION).startsWith("Bearer");
+    return customApi() && isNotEmpty(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION))
+        && requestContext.getHeaderString(HttpHeaders.AUTHORIZATION).startsWith("Bearer");
   }
 
   protected boolean customApi() {

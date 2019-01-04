@@ -193,6 +193,10 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(accountService.get(account.getUuid())).isEqualTo(account);
     assertThat(accountService.listAllAccounts()).isNotEmpty();
     assertThat(accountService.listAllAccounts().get(0)).isNotNull();
+    assertThat(accountService.listAllAccountWithDefaultsWithoutLicenseInfo()).isNotEmpty();
+    assertThat(accountService.listAllAccountWithDefaultsWithoutLicenseInfo().get(0)).isNotNull();
+    assertThat(accountService.listAllAccountWithDefaultsWithoutLicenseInfo().get(0).getUuid())
+        .isEqualTo(account.getUuid());
   }
 
   @Test

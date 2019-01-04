@@ -140,6 +140,15 @@ public class HarnessMetricRegistry {
     }
   }
 
+  public void recordGaugeValue(String metricName, String[] labelValues, double value) {
+    Gauge metric = (Gauge) namesToCollectors.get(getAbsoluteMetricName(metricName));
+    if (labelValues != null) {
+      metric.labels(labelValues).set(value);
+    } else {
+      metric.set(value);
+    }
+  }
+
   public void recordGaugeDec(String metricName, String[] labelValues) {
     Gauge metric = (Gauge) namesToCollectors.get(getAbsoluteMetricName(metricName));
     if (labelValues != null) {
