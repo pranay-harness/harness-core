@@ -1145,14 +1145,17 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private FolderNode generateEnvValuesFolder(String accountId, Environment env, DirectoryPath envPath) {
-    ApplicationManifest applicationManifest = applicationManifestService.getByEnvId(env.getAppId(), env.getUuid());
-    if (applicationManifest == null) {
+    List<ApplicationManifest> applicationManifests =
+        applicationManifestService.getAllByEnvId(env.getAppId(), env.getUuid());
+
+    if (isEmpty(applicationManifests)) {
       return null;
     }
 
     DirectoryPath valuesPath = envPath.clone().add(VALUES_FOLDER);
     FolderNode valuesFolder = new FolderNode(
         accountId, VALUES_FOLDER, ApplicationManifest.class, valuesPath, env.getAppId(), yamlGitSyncService);
+    ApplicationManifest applicationManifest = applicationManifestService.getByEnvId(env.getAppId(), env.getUuid());
     addValuesFolderFiles(accountId, env, valuesPath, valuesFolder, applicationManifest);
 
     // Fetch service specific environment value overrides
@@ -1535,9 +1538,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
-  public String getRootPathByManifestFile(ManifestFile manifestFile) {
-    ApplicationManifest applicationManifest =
-        applicationManifestService.getById(manifestFile.getAppId(), manifestFile.getApplicationManifestId());
+  public String getRootPathByManifestFile(ManifestFile manifestFile, ApplicationManifest applicationManifest) {
+    if (applicationManifest == null) {
+      applicationManifest =
+          applicationManifestService.getById(manifestFile.getAppId(), manifestFile.getApplicationManifestId());
+    }
 
     return getRootPathForAppManifest(applicationManifest, true);
   }
@@ -1596,11 +1601,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Override
   public String getRootPathByServiceCommand(Service service, ServiceCommand serviceCommand) {
     return getRootPathByService(service) + PATH_DELIMITER + COMMANDS_FOLDER;
-  }
-
-  @Override
-  public String getRootPathByApplicationManifest(Service service) {
-    return getRootPathByService(service) + PATH_DELIMITER + MANIFEST_FOLDER;
   }
 
   @Override
@@ -1821,7 +1821,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     } else if (entity instanceof ApplicationManifest) {
       return getRootPathByApplicationManifest((ApplicationManifest) entity);
     } else if (entity instanceof ManifestFile) {
-      return getRootPathByManifestFile((ManifestFile) entity);
+      return getRootPathByManifestFile((ManifestFile) entity, (ApplicationManifest) helperEntity);
     }
 
     throw new InvalidRequestException(

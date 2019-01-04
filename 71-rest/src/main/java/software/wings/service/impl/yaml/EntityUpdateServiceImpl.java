@@ -23,6 +23,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -262,7 +263,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       }
     } else if (entity instanceof ManifestFile) {
       ManifestFile manifestFile = (ManifestFile) entity;
-      String path = yamlDirectoryService.getRootPathByManifestFile(manifestFile);
+      String path = yamlDirectoryService.getRootPathByManifestFile(manifestFile, (ApplicationManifest) helperEntity);
       gitFileChanges.add(createGitChangeWhenUsingActualFile(
           accountId, path, manifestFile.getFileName(), manifestFile.getFileContent(), changeType));
     }

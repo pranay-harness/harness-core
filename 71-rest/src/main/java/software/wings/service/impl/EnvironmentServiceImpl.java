@@ -933,15 +933,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           format("Application manifest doesn't exist for environment: %s and service: %s", envId, serviceId));
     }
 
-    List<ManifestFile> manifestFiles =
-        applicationManifestService.getManifestFilesByAppManifestId(appId, appManifest.getUuid());
-    if (isEmpty(manifestFiles)) {
-      throw new InvalidRequestException(
-          format("Values yaml doesn't exist for environment: %s and service: %s", envId, serviceId));
-    }
-
     manifestFile.setAppId(appId);
-    manifestFile.setUuid(manifestFiles.get(0).getUuid());
     manifestFile.setFileName(VALUES_YAML_KEY);
     manifestFile.setApplicationManifestId(appManifest.getUuid());
     manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, false);

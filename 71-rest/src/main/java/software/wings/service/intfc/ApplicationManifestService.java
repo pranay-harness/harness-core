@@ -26,8 +26,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   ManifestFile getManifestFileById(String appId, String id);
 
-  void deleteManifestFiles(String appId, String applicationManifestId, boolean isSyncFromGit);
-
   ManifestFile getManifestFileByFileName(String applicationManifestId, String fileName);
 
   ManifestFile upsertApplicationManifestFile(
