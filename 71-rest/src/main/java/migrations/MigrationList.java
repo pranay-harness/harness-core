@@ -10,6 +10,7 @@ import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateConnectionResults;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.AddValidUntilToWaitQueue;
+import migrations.all.AppDTemplateMigration;
 import migrations.all.AppKeywordsMigration;
 import migrations.all.AuthTokenTtlMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
@@ -176,6 +177,7 @@ public class MigrationList {
         .add(Pair.of(217, LdapSettingsMigration.class))
         .add(Pair.of(218, InitUserCounters.class))
         .add(Pair.of(219, InitPipelineCounters.class))
+        .add(Pair.of(220, AppDTemplateMigration.class))
         .build();
   }
 }
