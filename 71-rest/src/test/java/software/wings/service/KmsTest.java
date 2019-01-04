@@ -1731,7 +1731,7 @@ public class KmsTest extends WingsBaseTest {
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
     int numOfSettingAttributes = 5;
-    List<Object> encryptedEntities = new ArrayList<>();
+    List<SettingAttribute> settingAttributes = new ArrayList<>();
     for (int i = 0; i < numOfSettingAttributes; i++) {
       final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                       .accountId(accountId)
@@ -1754,15 +1754,14 @@ public class KmsTest extends WingsBaseTest {
       appDynamicsConfig.setPassword(null);
       settingAttribute.setEncryptionType(EncryptionType.KMS);
       settingAttribute.setEncryptedBy(kmsConfig.getName());
-      encryptedEntities.add(settingAttribute);
+      settingAttributes.add(settingAttribute);
     }
 
     kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
 
     Collection<UuidAware> encryptedValues = secretManagementResource.listEncryptedValues(accountId).getResource();
-    assertEquals(encryptedEntities.size(), encryptedValues.size());
-    assertTrue(encryptedEntities.containsAll(encryptedValues));
+    validateContainEncryptedValues(settingAttributes, encryptedValues);
 
     for (UuidAware encryptedValue : encryptedValues) {
       assertEquals(EncryptionType.KMS, ((SettingAttribute) encryptedValue).getEncryptionType());
@@ -1771,11 +1770,26 @@ public class KmsTest extends WingsBaseTest {
     RestResponse<PageResponse<UuidAware>> restResponse = secretManagementResource.listEncryptedValues(
         accountId, SettingVariableTypes.APP_DYNAMICS, PageRequestBuilder.aPageRequest().build());
     encryptedValues = restResponse.getResource().getResponse();
-    assertEquals(encryptedEntities.size(), encryptedValues.size());
-    assertTrue(encryptedEntities.containsAll(encryptedValues));
+    validateContainEncryptedValues(settingAttributes, encryptedValues);
 
     for (UuidAware encryptedValue : encryptedValues) {
       assertEquals(EncryptionType.KMS, ((SettingAttribute) encryptedValue).getEncryptionType());
+    }
+  }
+
+  private void validateContainEncryptedValues(
+      List<SettingAttribute> settingAttributes, Collection<UuidAware> encryptedValues) {
+    assertEquals(settingAttributes.size(), encryptedValues.size());
+    Map<String, SettingAttribute> settingAttributeMap = new HashMap<>();
+    for (SettingAttribute settingAttribute : settingAttributes) {
+      settingAttributeMap.put(settingAttribute.getName(), settingAttribute);
+    }
+
+    for (UuidAware encryptedValue : encryptedValues) {
+      SettingAttribute settingAttribute = (SettingAttribute) encryptedValue;
+      assertTrue(settingAttributeMap.containsKey(settingAttribute.getName()));
+      AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+      assertEquals(SecretManager.ENCRYPTED_FIELD_MASK, appDynamicsConfig.getPassword());
     }
   }
 
