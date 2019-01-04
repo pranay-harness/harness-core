@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -18,16 +19,21 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
 import org.junit.Test;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.VaultConfig;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.List;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -340,6 +346,24 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  public void test_listSettingAttributes_shoudlSucceed() throws IllegalAccessException {
+    List<SettingAttribute> settingAttributes = listSettingAttributes();
+    for (SettingAttribute settingAttribute : settingAttributes) {
+      SettingValue settingValue = settingAttribute.getValue();
+      if (settingValue instanceof GcpConfig) {
+        // For some reason GcpConfig is not seting the full encrypted value back. Skip it for now.
+        continue;
+      }
+      List<Field> encryptedFields = settingValue.getEncryptedFields();
+      for (Field field : encryptedFields) {
+        field.setAccessible(true);
+        char[] secrets = (char[]) field.get(settingValue);
+        assertArrayEquals(SecretManager.ENCRYPTED_FIELD_MASK, secrets);
+      }
+    }
+  }
+
+  @Test
   public void test_CreateSecretText_vaultWithBasePath_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath);
   }
@@ -496,5 +520,15 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertNotNull(encryptedData);
     assertNull(encryptedData.getPath());
     assertEquals(SettingVariableTypes.SECRET_TEXT, encryptedData.getType());
+  }
+
+  private List<SettingAttribute> listSettingAttributes() {
+    WebTarget target = client.target(API_BASE + "/secrets/list-values?accountId=" + accountId);
+    RestResponse<List<SettingAttribute>> response =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<SettingAttribute>>>() {});
+    // Verify the vault config was deleted successfully
+    assertEquals(0, response.getResponseMessages().size());
+    assertTrue(response.getResource().size() > 0);
+    return response.getResource();
   }
 }

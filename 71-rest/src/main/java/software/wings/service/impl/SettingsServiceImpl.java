@@ -155,6 +155,11 @@ public class SettingsServiceImpl implements SettingsService {
 
       if (usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
               usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromUserPermissions)) {
+        // HAR-7726: Mask the encrypted field values when listing all settings.
+        SettingValue settingValue = settingAttribute.getValue();
+        if (settingValue instanceof EncryptableSetting) {
+          secretManager.maskEncryptedFields((EncryptableSetting) settingValue);
+        }
         filteredSettingAttributes.add(settingAttribute);
       }
     });
