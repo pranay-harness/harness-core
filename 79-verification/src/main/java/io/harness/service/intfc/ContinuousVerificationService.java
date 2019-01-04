@@ -11,4 +11,6 @@ public interface ContinuousVerificationService {
    * @param accountId
    */
   void triggerDataAnalysis(String accountId);
+
+  void cleanupStuckLocks();
 }

@@ -1,6 +1,9 @@
 package io.harness.service;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+import static io.harness.persistence.UuidAccess.ID_KEY;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
@@ -20,14 +23,21 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.Counted;
 import com.codahale.metrics.annotation.Timed;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
+import io.harness.persistence.ReadPref;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -35,6 +45,8 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -52,6 +64,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private LearningEngineService learningEngineService;
   @Inject private TimeSeriesAnalysisService analysisService;
   @Inject private HarnessMetricRegistry metricRegistry;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   @Counted
@@ -190,7 +203,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return learningEngineAnalysisTask;
   }
 
-  public String getMetricTemplateUrl(
+  private String getMetricTemplateUrl(
       String accountId, String appId, StateType stateType, String serviceId, String cvConfigId) {
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
         + "/get-metric-template?accountId=" + accountId + "&appId=" + appId + "&stateType=" + stateType
@@ -237,5 +250,29 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         + "?accountId=" + cvConfiguration.getAccountId() + "&applicationId=" + cvConfiguration.getAppId()
         + "&cvConfigId=" + cvConfiguration.getUuid() + "&analysisMinStart=" + startMin
         + "&analysisMinEnd=" + analysisMinute;
+  }
+
+  @Override
+  public void cleanupStuckLocks() {
+    DBCollection collection =
+        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "quartz_verification_locks");
+    DBCursor lockDataRecords = collection.find();
+
+    logger.info("will go through " + lockDataRecords.size() + " records");
+
+    List<ObjectId> toBeDeleted = new ArrayList<>();
+    while (lockDataRecords.hasNext()) {
+      DBObject next = lockDataRecords.next();
+
+      Date time = (Date) next.get("time");
+      long lockTime = time.getTime();
+      if (lockTime < System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5)) {
+        toBeDeleted.add((ObjectId) next.get(ID_KEY));
+      }
+    }
+    if (isNotEmpty(toBeDeleted)) {
+      logger.info("deleting locks {}", toBeDeleted);
+      collection.remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", toBeDeleted.toArray())));
+    }
   }
 }

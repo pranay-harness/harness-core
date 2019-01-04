@@ -14,6 +14,7 @@ import io.harness.beans.PageResponse;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.service.intfc.ContinuousVerificationService;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -59,11 +60,14 @@ public class VerificationJob implements Job {
 
   @Inject private CVConfigurationService cvConfigurationService;
 
+  @Inject private ContinuousVerificationService continuousVerificationService;
+
   private List<Account> lastAvailableAccounts = new ArrayList<>();
 
   @Override
   public void execute(JobExecutionContext JobExecutionContext) {
     logger.info("Running Verification Job to schedule APM and Log processing jobs");
+    continuousVerificationService.cleanupStuckLocks();
     // need to fetch accounts
     // Single api call to fetch both Enabled and disabled accounts
     // As this being a paginated request, it fetches max of 50 accounts at a time.
