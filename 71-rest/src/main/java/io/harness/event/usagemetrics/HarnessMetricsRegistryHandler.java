@@ -8,6 +8,7 @@ import io.harness.event.harnessmetrics.DeploymentDurationEvent;
 import io.harness.event.harnessmetrics.DeploymentMetadataEvent;
 import io.harness.event.harnessmetrics.HarnessMetricsEvent;
 import io.harness.event.harnessmetrics.LoggedInUserMetric;
+import io.harness.event.harnessmetrics.SetupDataMetric;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventType;
@@ -25,6 +26,7 @@ public class HarnessMetricsRegistryHandler implements EventHandler {
     registerMetrics(new DeploymentDurationEvent());
     registerMetrics(new DeploymentMetadataEvent());
     registerMetrics(new LoggedInUserMetric());
+    registerMetrics(new SetupDataMetric());
   }
 
   public void registerWithEventListener(EventListener eventListener) {

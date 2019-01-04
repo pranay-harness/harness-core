@@ -374,6 +374,18 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public List<Account> listAllAccountWithDefaultsWithoutLicenseInfo() {
+    return wingsPersistence.createQuery(Account.class, excludeAuthority)
+        .project(ID_KEY, true)
+        .project(ACCOUNT_NAME_KEY, true)
+        .project(COMPANY_NAME_KEY, true)
+        .asList()
+        .stream()
+        .filter(account -> !account.getUuid().equals(GLOBAL_ACCOUNT_ID))
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public PageResponse<Account> getAccounts(PageRequest pageRequest) {
     PageResponse<Account> responses = wingsPersistence.query(Account.class, pageRequest, excludeAuthority);
     List<Account> accounts = responses.getResponse();
