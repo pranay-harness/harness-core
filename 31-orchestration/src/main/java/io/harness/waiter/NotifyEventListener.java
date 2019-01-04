@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -139,7 +141,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
 
       // Make sure that the instance status is still new after the lock was obtained
       waitInstance = persistence.get(WaitInstance.class, waitInstanceId, ReadPref.CRITICAL);
-      if (waitInstance.getStatus() != ExecutionStatus.NEW) {
+      if (waitInstance == null || waitInstance.getStatus() != ExecutionStatus.NEW) {
         return;
       }
 
@@ -173,7 +175,10 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
       // time to cleanup
       try {
         UpdateOperations<WaitInstance> waitInstanceUpdate =
-            persistence.createUpdateOperations(WaitInstance.class).set("status", status);
+            persistence.createUpdateOperations(WaitInstance.class)
+                .set(WaitInstance.STATUS_KEY, status)
+                .set(WaitInstance.VALID_UNTIL_KEY,
+                    Date.from(OffsetDateTime.now().plus(WaitInstance.AfterFinishTTL).toInstant()));
         persistence.update(waitInstance, waitInstanceUpdate);
       } catch (Exception exception) {
         logger.error("Error in waitInstanceUpdate", exception);
