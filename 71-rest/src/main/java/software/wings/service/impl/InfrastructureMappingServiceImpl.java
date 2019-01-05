@@ -1767,6 +1767,34 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           infraTypes.put(HELM,
               asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
           break;
+        case ECS:
+          infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
+          break;
+        case AWS_CODEDEPLOY:
+          infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
+          break;
+        case AWS_LAMBDA:
+          infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
+          break;
+        case AMI:
+          infraTypes.put(AMI, asList(SettingVariableTypes.AWS));
+          break;
+        case WINRM:
+          infraTypes.put(WINRM,
+              asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS, SettingVariableTypes.AZURE));
+          break;
+        case PCF:
+          infraTypes.put(PCF, asList(SettingVariableTypes.PCF));
+          break;
+        case SSH:
+          if (ArtifactType.DOCKER.equals(artifactType)) {
+            infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
+          } else {
+            infraTypes.put(SSH,
+                asList(
+                    SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS, SettingVariableTypes.AZURE));
+          }
+          break;
         default:
           restrictInfraMappings = false;
       }
