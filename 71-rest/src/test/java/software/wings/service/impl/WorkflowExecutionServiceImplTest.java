@@ -214,17 +214,22 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                           .origin(true)
                           .name("RepeatByInstances")
                           .type(StateType.REPEAT.name())
-                          .addProperty("repeatElementExpression", "${instances()}")
-                          .addProperty("executionStrategyExpression", "${SIMPLE_WORKFLOW_REPEAT_STRATEGY}")
+                          .properties(ImmutableMap.<String, Object>builder()
+                                          .put("repeatElementExpression", "${instances()}")
+                                          .put("executionStrategyExpression", "${SIMPLE_WORKFLOW_REPEAT_STRATEGY}")
+                                          .build())
                           .build(),
                 aGraphNode()
                     .id("n2")
                     .name("email")
                     .type(StateType.EMAIL.name())
-                    .addProperty("toAddress", "a@b.com")
-                    .addProperty("subject", "commandName : ${SIMPLE_WORKFLOW_COMMAND_NAME}")
-                    .addProperty("body",
-                        "service:${service.name}, serviceTemplate:${serviceTemplate.name}, host:${host.name}, instance:${instance.name}")
+                    .properties(
+                        ImmutableMap.<String, Object>builder()
+                            .put("toAddress", "a@b.com")
+                            .put("subject", "commandName : ${SIMPLE_WORKFLOW_COMMAND_NAME}")
+                            .put("body",
+                                "service:${service.name}, serviceTemplate:${serviceTemplate.name}, host:${host.name}, instance:${instance.name}")
+                            .build())
                     .build())
             .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("repeat").build())
             .build();
@@ -331,23 +336,28 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldRenderSimpleWorkflow() throws InterruptedException {
-    Graph graph = aGraph()
-                      .addNodes(aGraphNode()
-                                    .id("n1")
-                                    .origin(true)
-                                    .name("RepeatByInstances")
-                                    .type(StateType.REPEAT.name())
-                                    .addProperty("repeatElementExpression", "${instances()}")
-                                    .addProperty("executionStrategyExpression", "${SIMPLE_WORKFLOW_REPEAT_STRATEGY}")
-                                    .build(),
-                          aGraphNode()
-                              .id("n2")
-                              .name("stop")
-                              .type(StateType.COMMAND.name())
-                              .addProperty("commandName", "${SIMPLE_WORKFLOW_COMMAND_NAME}")
-                              .build())
-                      .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("repeat").build())
-                      .build();
+    Graph graph =
+        aGraph()
+            .addNodes(aGraphNode()
+                          .id("n1")
+                          .origin(true)
+                          .name("RepeatByInstances")
+                          .type(StateType.REPEAT.name())
+                          .properties(ImmutableMap.<String, Object>builder()
+                                          .put("repeatElementExpression", "${instances()}")
+                                          .put("executionStrategyExpression", "${SIMPLE_WORKFLOW_REPEAT_STRATEGY}")
+                                          .build())
+                          .build(),
+                aGraphNode()
+                    .id("n2")
+                    .name("stop")
+                    .type(StateType.COMMAND.name())
+                    .properties(ImmutableMap.<String, Object>builder()
+                                    .put("commandName", "${SIMPLE_WORKFLOW_COMMAND_NAME}")
+                                    .build())
+                    .build())
+            .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("repeat").build())
+            .build();
 
     when(staticConfiguration.defaultSimpleWorkflow()).thenReturn(graph);
 
@@ -489,33 +499,37 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                           .origin(true)
                           .name("Repeat By Services")
                           .type(StateType.REPEAT.name())
-                          .addProperty("repeatElementExpression", "${services()}")
-                          .addProperty("executionStrategy", ExecutionStrategy.SERIAL)
+                          .properties(ImmutableMap.<String, Object>builder()
+                                          .put("repeatElementExpression", "${services()}")
+                                          .put("executionStrategy", ExecutionStrategy.SERIAL)
+                                          .build())
                           .build(),
                 aGraphNode()
                     .id("RepeatByInstances")
                     .name("RepeatByInstances")
                     .type(StateType.REPEAT.name())
-                    .addProperty("repeatElementExpression", "${instances}")
-                    .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
+                    .properties(ImmutableMap.<String, Object>builder()
+                                    .put("repeatElementExpression", "${instances}")
+                                    .put("executionStrategy", ExecutionStrategy.PARALLEL)
+                                    .build())
                     .build(),
                 aGraphNode()
                     .id("svcRepeatWait")
                     .name("svcRepeatWait")
                     .type(StateType.WAIT.name())
-                    .addProperty("duration", 1)
+                    .properties(ImmutableMap.<String, Object>builder().put("duration", 1).build())
                     .build(),
                 aGraphNode()
                     .id("instRepeatWait")
                     .name("instRepeatWait")
                     .type(StateType.WAIT.name())
-                    .addProperty("duration", 1)
+                    .properties(ImmutableMap.<String, Object>builder().put("duration", 1).build())
                     .build(),
                 aGraphNode()
                     .id("instSuccessWait")
                     .name("instSuccessWait")
                     .type(StateType.WAIT.name())
-                    .addProperty("duration", 1)
+                    .properties(ImmutableMap.<String, Object>builder().put("duration", 1).build())
                     .build())
             .addLinks(
                 aLink().withId("l1").withFrom("Repeat By Services").withTo("svcRepeatWait").withType("repeat").build())
@@ -643,33 +657,37 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                           .origin(true)
                           .name("Repeat By Services")
                           .type(StateType.REPEAT.name())
-                          .addProperty("repeatElementExpression", "${services()}")
-                          .addProperty("executionStrategy", ExecutionStrategy.SERIAL)
+                          .properties(ImmutableMap.<String, Object>builder()
+                                          .put("repeatElementExpression", "${services()}")
+                                          .put("executionStrategy", ExecutionStrategy.SERIAL)
+                                          .build())
                           .build(),
                 aGraphNode()
                     .id("RepeatByInstances")
                     .name("RepeatByInstances")
                     .type(StateType.REPEAT.name())
-                    .addProperty("repeatElementExpression", "${instances}")
-                    .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
+                    .properties(ImmutableMap.<String, Object>builder()
+                                    .put("repeatElementExpression", "${instances}")
+                                    .put("executionStrategy", ExecutionStrategy.PARALLEL)
+                                    .build())
                     .build(),
                 aGraphNode()
                     .id("svcRepeatWait")
                     .name("svcRepeatWait")
                     .type(StateType.WAIT.name())
-                    .addProperty("duration", 1)
+                    .properties(ImmutableMap.<String, Object>builder().put("duration", 1).build())
                     .build(),
                 aGraphNode()
                     .id("instRepeatWait")
                     .name("instRepeatWait")
                     .type(StateType.WAIT.name())
-                    .addProperty("duration", 1)
+                    .properties(ImmutableMap.<String, Object>builder().put("duration", 1).build())
                     .build(),
                 aGraphNode()
                     .id("instSuccessWait")
                     .name("instSuccessWait")
                     .type(StateType.WAIT.name())
-                    .addProperty("duration", 1)
+                    .properties(ImmutableMap.<String, Object>builder().put("duration", 1).build())
                     .build())
             .addLinks(
                 aLink().withId("l1").withFrom("Repeat By Services").withTo("svcRepeatWait").withType("repeat").build())
@@ -1015,15 +1033,17 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                     .id("n1")
                                     .name("wait")
                                     .type(StateType.WAIT.name())
-                                    .addProperty("duration", 1l)
+                                    .properties(ImmutableMap.<String, Object>builder().put("duration", 1l).build())
                                     .origin(true)
                                     .build(),
                           aGraphNode()
                               .id("n2")
                               .name("email")
                               .type(StateType.EMAIL.name())
-                              .addProperty("toAddress", "a@b.com")
-                              .addProperty("subject", "testing")
+                              .properties(ImmutableMap.<String, Object>builder()
+                                              .put("toAddress", "a@b.com")
+                                              .put("subject", "testing")
+                                              .build())
                               .build())
                       .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
                       .build();
@@ -1271,11 +1291,23 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .origin(true)
                       .name("RepeatByServices")
                       .type(StateType.REPEAT.name())
-                      .addProperty("repeatElementExpression", "${services()}")
-                      .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
+                      .properties(ImmutableMap.<String, Object>builder()
+                                      .put("repeatElementExpression", "${services()}")
+                                      .put("executionStrategy", ExecutionStrategy.PARALLEL)
+                                      .build())
                       .build(),
-            aGraphNode().id("wait1").name("wait1").type(StateType.WAIT.name()).addProperty("duration", 1).build(),
-            aGraphNode().id("wait2").name("wait2").type(StateType.WAIT.name()).addProperty("duration", 1).build())
+            aGraphNode()
+                .id("wait1")
+                .name("wait1")
+                .type(StateType.WAIT.name())
+                .properties(ImmutableMap.<String, Object>builder().put("duration", 1).build())
+                .build(),
+            aGraphNode()
+                .id("wait2")
+                .name("wait2")
+                .type(StateType.WAIT.name())
+                .properties(ImmutableMap.<String, Object>builder().put("duration", 1).build())
+                .build())
         .addLinks(aLink().withId("l1").withFrom("RepeatByServices").withTo("wait1").withType("repeat").build())
         .addLinks(aLink().withId("l2").withFrom("wait1").withTo("wait2").withType("success").build())
         .build();
@@ -1378,15 +1410,20 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .origin(true)
                       .name("wait1")
                       .type(StateType.WAIT.name())
-                      .addProperty("duration", 1)
+                      .properties(ImmutableMap.<String, Object>builder().put("duration", 1).build())
                       .build(),
             aGraphNode()
                 .id("pause1")
                 .name("pause1")
                 .type(StateType.PAUSE.name())
-                .addProperty("toAddress", "to1")
+                .properties(ImmutableMap.<String, Object>builder().put("toAddress", "to1").build())
                 .build(),
-            aGraphNode().id("wait2").name("wait2").type(StateType.WAIT.name()).addProperty("duration", 1).build())
+            aGraphNode()
+                .id("wait2")
+                .name("wait2")
+                .type(StateType.WAIT.name())
+                .properties(ImmutableMap.<String, Object>builder().put("duration", 1).build())
+                .build())
         .addLinks(aLink().withId("l1").withFrom("wait1").withTo("pause1").withType("success").build())
         .addLinks(aLink().withId("l2").withFrom("pause1").withTo("wait2").withType("success").build())
         .build();
@@ -1486,21 +1523,25 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                           .origin(true)
                           .name("RepeatByServices")
                           .type(StateType.REPEAT.name())
-                          .addProperty("repeatElementExpression", "${services()}")
-                          .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
+                          .properties(ImmutableMap.<String, Object>builder()
+                                          .put("repeatElementExpression", "${services()}")
+                                          .put("executionStrategy", ExecutionStrategy.PARALLEL)
+                                          .build())
                           .build(),
                 aGraphNode()
                     .id("RepeatByInstances")
                     .name("RepeatByInstances")
                     .type(StateType.REPEAT.name())
-                    .addProperty("repeatElementExpression", "${instances()}")
-                    .addProperty("executionStrategy", ExecutionStrategy.SERIAL)
+                    .properties(ImmutableMap.<String, Object>builder()
+                                    .put("repeatElementExpression", "${instances()}")
+                                    .put("executionStrategy", ExecutionStrategy.SERIAL)
+                                    .build())
                     .build(),
                 aGraphNode()
                     .id("install")
                     .name("install")
                     .type(StateType.COMMAND.name())
-                    .addProperty("command", "install")
+                    .properties(ImmutableMap.<String, Object>builder().put("command", "install").build())
                     .build())
             .addLinks(aLink()
                           .withId("l1")
@@ -1678,21 +1719,25 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                           .origin(true)
                           .name("RepeatByServices")
                           .type(StateType.REPEAT.name())
-                          .addProperty("repeatElementExpression", "${services()}")
-                          .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
+                          .properties(ImmutableMap.<String, Object>builder()
+                                          .put("repeatElementExpression", "${services()}")
+                                          .put("executionStrategy", ExecutionStrategy.PARALLEL)
+                                          .build())
                           .build(),
                 aGraphNode()
                     .id("RepeatByInstances")
                     .name("RepeatByInstances")
                     .type(StateType.REPEAT.name())
-                    .addProperty("repeatElementExpression", "${instances()}")
-                    .addProperty("executionStrategy", ExecutionStrategy.SERIAL)
+                    .properties(ImmutableMap.<String, Object>builder()
+                                    .put("repeatElementExpression", "${instances()}")
+                                    .put("executionStrategy", ExecutionStrategy.SERIAL)
+                                    .build())
                     .build(),
                 aGraphNode()
                     .id("install")
                     .name("install")
                     .type(StateType.COMMAND.name())
-                    .addProperty("command", "install")
+                    .properties(ImmutableMap.<String, Object>builder().put("command", "install").build())
                     .build())
             .addLinks(aLink()
                           .withId("l1")
@@ -1999,7 +2044,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                     .get(0);
 
     deployPhaseStep.getSteps().add(
-        aGraphNode().type("EMAIL").name("email").addProperty("toAddress", "a@b.com").build());
+        aGraphNode()
+            .type("EMAIL")
+            .name("email")
+            .properties(ImmutableMap.<String, Object>builder().put("toAddress", "a@b.com").build())
+            .build());
 
     workflowService.updateWorkflowPhase(
         orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(), workflowPhase);
@@ -2093,7 +2142,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                     .get(0);
 
     deployPhaseStep.getSteps().add(
-        aGraphNode().type("EMAIL").name("email").addProperty("toAddress", "a@b.com").build());
+        aGraphNode()
+            .type("EMAIL")
+            .name("email")
+            .properties(ImmutableMap.<String, Object>builder().put("toAddress", "a@b.com").build())
+            .build());
 
     workflowService.updateWorkflowPhase(
         orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(), workflowPhase);
