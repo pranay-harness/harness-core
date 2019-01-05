@@ -42,9 +42,10 @@ public class HttpStateExecutionData extends StateExecutionData implements Respon
   @Builder
   public HttpStateExecutionData(String stateName, String stateType, Long startTs, Long endTs, ExecutionStatus status,
       String errorMsg, Integer waitInterval, ContextElement element, Map<String, Object> stateParams,
-      Map<String, Object> variables, String httpUrl, String httpMethod, int httpResponseCode, String httpResponseBody,
-      String assertionStatement, String assertionStatus, Document document) {
-    super(stateName, stateType, startTs, endTs, status, errorMsg, waitInterval, element, stateParams, variables);
+      Map<String, Object> templateVariables, String httpUrl, String httpMethod, int httpResponseCode,
+      String httpResponseBody, String assertionStatement, String assertionStatus, Document document) {
+    super(
+        stateName, stateType, startTs, endTs, status, errorMsg, waitInterval, element, stateParams, templateVariables);
     this.httpUrl = httpUrl;
     this.httpMethod = httpMethod;
     this.httpResponseCode = httpResponseCode;

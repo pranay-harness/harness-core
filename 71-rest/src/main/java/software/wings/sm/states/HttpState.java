@@ -289,7 +289,7 @@ public class HttpState extends State {
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     HttpStateExecutionDataBuilder httpStateExecutionDataBuilder =
-        HttpStateExecutionData.builder().variables(convertToVariableMap(getTemplateVariables()));
+        HttpStateExecutionData.builder().templateVariables(convertToVariableMap(getTemplateVariables()));
     String envId = obtainEnvId(context.getContextElement(ContextElementType.STANDARD));
 
     String finalUrl = getFinalUrl(context);

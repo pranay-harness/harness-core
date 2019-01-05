@@ -305,9 +305,11 @@ public abstract class State {
     this.templateVariables = templateVariables;
   }
 
-  protected String scheduleDelegateTask(ExecutionContext context, DelegateTask task) {
+  protected String scheduleDelegateTask(
+      ExecutionContext context, DelegateTask task, StateExecutionData stateExecutionData) {
     if (task.getParameters().length == 1 && task.getParameters()[0] instanceof TaskParameters) {
-      ExpressionReflectionUtils.applyExpression(task.getParameters()[0], value -> context.renderExpression(value));
+      ExpressionReflectionUtils.applyExpression(
+          task.getParameters()[0], value -> context.renderExpression(value, stateExecutionData, null));
     }
     return delegateService.queueTask(task);
   }

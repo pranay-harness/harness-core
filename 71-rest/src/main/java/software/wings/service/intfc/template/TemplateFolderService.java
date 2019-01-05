@@ -20,6 +20,8 @@ public interface TemplateFolderService {
 
   TemplateFolder get(@NotEmpty String uuid);
 
+  TemplateFolder getRootLevelFolder(@NotEmpty String accountId, @NotEmpty String galleryId);
+
   void loadDefaultTemplateFolders();
 
   TemplateFolder getTemplateTree(@NotEmpty String accountId, String keyword, List<String> templateTypes);
