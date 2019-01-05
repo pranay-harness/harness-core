@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.reverse;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -354,10 +355,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
         trafficWeights =
             kubernetesContainerService.getTrafficWeights(kubernetesConfig, encryptedDataDetails, containerServiceName);
-        if (isNotBlank(lastCtrlName)) {
-          previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, lastCtrlName);
-          if (isNotBlank(previousAutoscalerYaml)) {
-            lastAutoscaler = lastCtrlName;
+
+        List<String> activeControllers = new ArrayList<>(activeServiceCounts.keySet());
+        // Find most recent active controller to get the last autoscaler
+        reverse(activeControllers);
+        for (String runningControllerName : activeControllers) {
+          if (activeServiceCounts.get(runningControllerName) > 0
+              && isNotBlank(getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, runningControllerName))) {
+            previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, runningControllerName);
+            lastAutoscaler = runningControllerName;
+            break;
           }
         }
       }
