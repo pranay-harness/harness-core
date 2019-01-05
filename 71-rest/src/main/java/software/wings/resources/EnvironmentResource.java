@@ -17,6 +17,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
@@ -407,6 +408,105 @@ public class EnvironmentResource {
       @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
       @PathParam("manifestFileId") String manifestFileId) {
     applicationManifestService.deleteManifestFileById(appId, manifestFileId);
+    return new RestResponse();
+  }
+
+  @POST
+  @Path("{envId}/values/app-manifest")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.CREATE)
+  public RestResponse<ApplicationManifest> createValuesAppManifest(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId, ApplicationManifest applicationManifest) {
+    applicationManifest.setAppId(appId);
+    applicationManifest.setEnvId(envId);
+    return new RestResponse<>(applicationManifestService.create(applicationManifest));
+  }
+
+  @GET
+  @Path("{envId}/values/app-manifest/{appManifestId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
+  public RestResponse<ApplicationManifest> getValuesAppManifest(@QueryParam("appId") String appId,
+      @PathParam("envId") String envId, @PathParam("appManifestId") String appManifestId) {
+    return new RestResponse<>(applicationManifestService.getById(appId, appManifestId));
+  }
+
+  @PUT
+  @Path("{envId}/values/app-manifest/{appManifestId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
+  public RestResponse<ApplicationManifest> updateValuesAppManifest(@QueryParam("appId") String appId,
+      @PathParam("envId") String envId, @PathParam("appManifestId") String appManifestId,
+      ApplicationManifest applicationManifest) {
+    applicationManifest.setAppId(appId);
+    applicationManifest.setEnvId(envId);
+    applicationManifest.setUuid(appManifestId);
+    return new RestResponse<>(applicationManifestService.update(applicationManifest));
+  }
+
+  @DELETE
+  @Path("{envId}/values/app-manifest/{appManifestId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.DELETE)
+  public RestResponse<ApplicationManifest> deleteValuesAppManifest(@QueryParam("appId") String appId,
+      @PathParam("envId") String envId, @PathParam("appManifestId") String appManifestId) {
+    applicationManifestService.deleteAppManifest(appId, appManifestId);
+    return new RestResponse();
+  }
+
+  @POST
+  @Path("{envId}/service/{serviceId}/values/app-manifest")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.CREATE)
+  public RestResponse<ApplicationManifest> createValuesAppManifestForService(@QueryParam("appId") String appId,
+      @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
+      ApplicationManifest applicationManifest) {
+    applicationManifest.setAppId(appId);
+    applicationManifest.setEnvId(envId);
+    applicationManifest.setServiceId(serviceId);
+    return new RestResponse<>(applicationManifestService.create(applicationManifest));
+  }
+
+  @GET
+  @Path("{envId}/service/{serviceId}/values/app-manifest/{appManifestId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
+  public RestResponse<ApplicationManifest> getValuesAppManifestForService(@QueryParam("appId") String appId,
+      @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
+      @PathParam("appManifestId") String appManifestId) {
+    return new RestResponse<>(applicationManifestService.getById(appId, appManifestId));
+  }
+
+  @PUT
+  @Path("{envId}/service/{serviceId}/values/app-manifest/{appManifestId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
+  public RestResponse<ApplicationManifest> updateValuesAppManifestForService(@QueryParam("appId") String appId,
+      @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
+      @PathParam("appManifestId") String appManifestId, ApplicationManifest applicationManifest) {
+    applicationManifest.setAppId(appId);
+    applicationManifest.setEnvId(envId);
+    applicationManifest.setServiceId(serviceId);
+    applicationManifest.setUuid(appManifestId);
+    return new RestResponse<>(applicationManifestService.update(applicationManifest));
+  }
+
+  @DELETE
+  @Path("{envId}/service/{serviceId}/values/app-manifest/{appManifestId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.DELETE)
+  public RestResponse<ApplicationManifest> deleteValuesAppManifestForService(@QueryParam("appId") String appId,
+      @PathParam("envId") String envId, @PathParam("serviceId") String serviceId,
+      @PathParam("appManifestId") String appManifestId) {
+    applicationManifestService.deleteAppManifest(appId, appManifestId);
     return new RestResponse();
   }
 }
