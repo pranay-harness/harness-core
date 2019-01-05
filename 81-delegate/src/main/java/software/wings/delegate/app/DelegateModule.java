@@ -37,6 +37,10 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.delegatetasks.MetricDataStoreService;
+import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsBlueGreenSetupCommandHandler;
+import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler;
+import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsListenerUpdateBGTaskHandler;
+import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sBlueGreenDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCanaryRollbackTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCanarySetupTaskHandler;
@@ -71,6 +75,7 @@ import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrClassicServiceImpl;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.ecr.EcrServiceImpl;
+import software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType;
 import software.wings.helpers.ext.gcr.GcrService;
 import software.wings.helpers.ext.gcr.GcrServiceImpl;
 import software.wings.helpers.ext.gcs.GcsService;
@@ -391,6 +396,15 @@ public class DelegateModule extends DependencyModule {
         .to(PcfApplicationDetailsCommandTaskHandler.class);
     commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.DATAFETCH.name())
         .to(PcfDataFetchCommandTaskHandler.class);
+
+    // ECS Command Tasks
+    MapBinder<String, EcsCommandTaskHandler> ecsCommandTaskTypeToTaskHandlerMap =
+        MapBinder.newMapBinder(binder(), String.class, EcsCommandTaskHandler.class);
+    ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.LISTENER_UPDATE_BG.name())
+        .to(EcsListenerUpdateBGTaskHandler.class);
+    ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.BG_SERVICE_SETUP.name())
+        .to(EcsBlueGreenSetupCommandHandler.class);
+    ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.SERVICE_SETUP.name()).to(EcsSetupCommandHandler.class);
 
     MapBinder<String, K8sTaskHandler> k8sCommandTaskTypeToTaskHandlerMap =
         MapBinder.newMapBinder(binder(), String.class, K8sTaskHandler.class);

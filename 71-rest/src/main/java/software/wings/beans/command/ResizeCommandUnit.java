@@ -24,6 +24,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHelper;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 
@@ -37,7 +38,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
   @Inject @Transient private transient AwsClusterService awsClusterService;
   @Inject @Transient private transient AwsHelperService awsHelperService;
   @Inject @Transient private transient AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingService;
-  @Inject @Transient private transient EcsCommandUnitHelper ecsCommandUnitHelper;
+  @Inject @Transient private transient EcsCommandTaskHelper ecsCommandTaskHelper;
 
   public ResizeCommandUnit() {
     super(CommandUnitType.RESIZE);
@@ -125,7 +126,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
     }
 
     String resourceId =
-        ecsCommandUnitHelper.getResourceIdForEcsService(containerServiceData.getName(), resizeParams.getClusterName());
+        ecsCommandTaskHelper.getResourceIdForEcsService(containerServiceData.getName(), resizeParams.getClusterName());
 
     AwsConfig awsConfig = (AwsConfig) contextData.settingAttribute.getValue();
     executionLogCallback.saveExecutionLog(
@@ -135,14 +136,14 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
         ScalableTarget scalableTarget =
             awsAppAutoScalingService.getScalableTargetFromJson(awsAutoScalarConfig.getScalableTargetJson());
         scalableTarget.withResourceId(resourceId);
-        ecsCommandUnitHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
+        ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
             awsConfig, contextData.encryptedDataDetails, executionLogCallback, scalableTarget);
 
         if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
           executionLogCallback.saveExecutionLog(
               "Creating Auto Scaling Policies for Service: " + containerServiceData.getName());
           for (String policyJson : awsAutoScalarConfig.getScalingPolicyJson()) {
-            ecsCommandUnitHelper.upsertScalingPolicyIfRequired(policyJson, resourceId,
+            ecsCommandTaskHelper.upsertScalingPolicyIfRequired(policyJson, resourceId,
                 scalableTarget.getScalableDimension(), resizeParams.getRegion(), awsConfig, awsAppAutoScalingService,
                 contextData.encryptedDataDetails, executionLogCallback);
           }
@@ -193,12 +194,12 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
                 .withServiceNamespace(ServiceNamespace.Ecs));
 
         if (isEmpty(result.getScalableTargets())) {
-          ecsCommandUnitHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
+          ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
               awsConfig, contextData.encryptedDataDetails, executionLogCallback, scalableTarget);
 
           if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
             for (String policyJson : awsAutoScalarConfig.getScalingPolicyJson()) {
-              ecsCommandUnitHelper.upsertScalingPolicyIfRequired(policyJson, scalableTarget.getResourceId(),
+              ecsCommandTaskHelper.upsertScalingPolicyIfRequired(policyJson, scalableTarget.getResourceId(),
                   scalableTarget.getScalableDimension(), resizeParams.getRegion(), awsConfig, awsAppAutoScalingService,
                   contextData.encryptedDataDetails, executionLogCallback);
             }
@@ -217,7 +218,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
     EcsResizeParams resizeParams = (EcsResizeParams) contextData.resizeParams;
     AwsConfig awsConfig = (AwsConfig) contextData.settingAttribute.getValue();
     String serviceName = resizeParams.getContainerServiceName();
-    String resourceId = ecsCommandUnitHelper.getResourceIdForEcsService(serviceName, resizeParams.getClusterName());
+    String resourceId = ecsCommandTaskHelper.getResourceIdForEcsService(serviceName, resizeParams.getClusterName());
 
     DescribeScalableTargetsResult targetsResult = awsAppAutoScalingService.listScalableTargets(resizeParams.getRegion(),
         awsConfig, contextData.encryptedDataDetails,

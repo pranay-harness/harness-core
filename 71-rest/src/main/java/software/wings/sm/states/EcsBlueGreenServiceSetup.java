@@ -1,11 +1,12 @@
 package software.wings.sm.states;
 
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
-import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
+import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -20,32 +21,31 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupParams;
-import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.sm.ExecutionContext;
 
-import java.util.List;
-
 /**
  * Created by peeyushaggarwal on 2/3/17.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EcsServiceSetup extends ContainerServiceSetup {
+public class EcsBlueGreenServiceSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/ECSLoadBalancerModal.js
 
-  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsServiceSetup.class);
+  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsBlueGreenServiceSetup.class);
 
   private String ecsServiceName;
   private boolean useLoadBalancer;
   private String loadBalancerName;
-  private String targetGroupArn;
+  @Attributes(title = "Stage TargetGroup Arn", required = false) private String targetGroupArn;
   private String roleArn;
+  @Attributes(title = "Prod Listener ARN", required = true) private String prodListenerArn;
+  @Attributes(title = "Stage Listener ARN", required = true) private String stageListenerArn;
   private String targetContainerName;
   private String targetPort;
+  @Attributes(title = "Stage Listener Port", required = false) private String stageListenerPort;
   private String commandName = "Setup Service Cluster";
-  private List<AwsAutoScalarConfig> awsAutoScalarConfigs;
   @Inject EcsStateHelper ecsStateHelper;
 
   /**
@@ -53,41 +53,44 @@ public class EcsServiceSetup extends ContainerServiceSetup {
    *
    * @param name the name
    */
-  public EcsServiceSetup(String name) {
-    super(name, ECS_SERVICE_SETUP.name());
+  public EcsBlueGreenServiceSetup(String name) {
+    super(name, ECS_DAEMON_SERVICE_SETUP.name());
   }
 
   @Override
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, Service service,
       ContainerInfrastructureMapping infrastructureMapping, ContainerTask containerTask, String clusterName) {
-    EcsServiceSpecification serviceSpecification =
-        serviceResourceService.getEcsServiceSpecification(app.getUuid(), service.getUuid());
-
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
 
+    EcsServiceSpecification serviceSpecification =
+        serviceResourceService.getEcsServiceSpecification(app.getUuid(), service.getUuid());
     return ecsStateHelper.buildContainerSetupParams(context,
         EcsSetupStateConfig.builder()
-            .service(service)
             .app(app)
             .env(env)
+            .service(service)
             .infrastructureMapping(infrastructureMapping)
             .clusterName(clusterName)
             .containerTask(containerTask)
-            .roleArn(roleArn)
             .ecsServiceName(ecsServiceName)
             .imageDetails(imageDetails)
             .loadBalancerName(loadBalancerName)
+            .roleArn(roleArn)
             .serviceSteadyStateTimeout(serviceSteadyStateTimeout)
             .targetContainerName(targetContainerName)
-            .serviceName(serviceName)
-            .targetGroupArn(targetGroupArn)
+            .stageListenerArn(stageListenerArn)
+            .prodListenerArn(prodListenerArn)
+            .stageListenerArn(stageListenerArn)
+            .stageListenerPort(stageListenerPort)
+            .blueGreen(true)
             .targetPort(targetPort)
-            .useLoadBalancer(useLoadBalancer)
+            .useLoadBalancer(true)
+            .serviceName(serviceName)
             .ecsServiceSpecification(serviceSpecification)
             .isDaemonSchedulingStrategy(false)
-            .awsAutoScalarConfigs(awsAutoScalarConfigs)
+            .targetGroupArn(targetGroupArn)
             .build());
   }
 
@@ -100,11 +103,6 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   }
 
   @Override
-  protected boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping) {
-    return infrastructureMapping instanceof EcsInfrastructureMapping;
-  }
-
-  @Override
   protected String getDeploymentType() {
     return DeploymentType.ECS.name();
   }
@@ -114,82 +112,79 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     return commandName;
   }
 
-  public void setCommandName(String commandName) {
-    this.commandName = commandName;
+  @Override
+  protected boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping) {
+    return infrastructureMapping instanceof EcsInfrastructureMapping;
   }
 
   protected String getClusterNameFromContextElement(ExecutionContext context) {
     return super.getClusterNameFromContextElement(context).split("/")[1];
   }
 
-  /**
-   * Gets load balancer setting id.
-   *
-   * @return the load balancer setting id
-   */
-  public String getLoadBalancerName() {
-    return loadBalancerName;
+  public void setCommandName(String commandName) {
+    this.commandName = commandName;
   }
 
-  /**
-   * Sets load balancer setting id.
-   *
-   * @param loadBalancerName the load balancer setting id
-   */
   public void setLoadBalancerName(String loadBalancerName) {
     this.loadBalancerName = loadBalancerName;
   }
 
-  /**
-   * Getter for property 'targetGroupArn'.
-   *
-   * @return Value for property 'targetGroupArn'.
-   */
+  public String getLoadBalancerName() {
+    return loadBalancerName;
+  }
+
+  public void setTargetGroupArn(String stageTargetGroupArn) {
+    this.targetGroupArn = stageTargetGroupArn;
+  }
+
   public String getTargetGroupArn() {
     return targetGroupArn;
   }
 
-  /**
-   * Setter for property 'targetGroupArn'.
-   *
-   * @param targetGroupArn Value to set for property 'targetGroupArn'.
-   */
-  public void setTargetGroupArn(String targetGroupArn) {
-    this.targetGroupArn = targetGroupArn;
+  public String getProdListenerArn() {
+    return prodListenerArn;
   }
 
-  /**
-   * Getter for property 'roleArn'.
-   *
-   * @return Value for property 'roleArn'.
-   */
-  public String getRoleArn() {
-    return roleArn;
+  public void setProdListenerArn(String prodListenerArn) {
+    this.prodListenerArn = prodListenerArn;
   }
 
-  /**
-   * Setter for property 'roleArn'.
-   *
-   * @param roleArn Value to set for property 'roleArn'.
-   */
+  public String getStageListenerArn() {
+    return stageListenerArn;
+  }
+
+  public void setStageListenerArn(String stageListenerArn) {
+    this.stageListenerArn = stageListenerArn;
+  }
+
+  public String getStageListenerPort() {
+    return stageListenerPort;
+  }
+
+  public void setStageListenerPort(String stageListenerPort) {
+    this.stageListenerPort = stageListenerPort;
+  }
+
   public void setRoleArn(String roleArn) {
     this.roleArn = roleArn;
   }
 
-  /**
-   * Getter for property 'useLoadBalancer'.
-   *
-   * @return Value for property 'useLoadBalancer'.
-   */
+  public String getRoleArn() {
+    return roleArn;
+  }
+
+  public void setTargetContainerName(String targetContainerName) {
+    this.targetContainerName = targetContainerName;
+  }
+
+  public String getTargetContainerName() {
+    return targetContainerName;
+  }
+
   public boolean isUseLoadBalancer() {
     return useLoadBalancer;
   }
 
-  /**
-   * Setter for property 'useLoadBalancer'.
-   *
-   * @param useLoadBalancer Value to set for property 'useLoadBalancer'.
-   */
   public void setUseLoadBalancer(boolean useLoadBalancer) {
     this.useLoadBalancer = useLoadBalancer;
   }
@@ -202,27 +197,11 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     this.ecsServiceName = ecsServiceName;
   }
 
-  public String getTargetContainerName() {
-    return targetContainerName;
-  }
-
-  public void setTargetContainerName(String targetContainerName) {
-    this.targetContainerName = targetContainerName;
-  }
-
   public String getTargetPort() {
     return targetPort;
   }
 
   public void setTargetPort(String targetPort) {
     this.targetPort = targetPort;
-  }
-
-  public List<AwsAutoScalarConfig> getAwsAutoScalarConfigs() {
-    return awsAutoScalarConfigs;
-  }
-
-  public void setAwsAutoScalarConfigs(List<AwsAutoScalarConfig> awsAutoScalarConfigs) {
-    this.awsAutoScalarConfigs = awsAutoScalarConfigs;
   }
 }

@@ -303,6 +303,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         // We don't need to pass something unnecessarily.
         return emptyList();
       }
+      case ECS_UPDATE_LISTENER_BG: {
+        // All the data required is already there on the service setup element.
+        // We don't need to pass something unnecessarily.
+        return emptyList();
+      }
       case K8S_PHASE_STEP: {
         {
           Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()

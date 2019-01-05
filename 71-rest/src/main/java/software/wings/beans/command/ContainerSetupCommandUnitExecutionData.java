@@ -29,4 +29,14 @@ public class ContainerSetupCommandUnitExecutionData extends CommandExecutionData
   private List<Label> lookupLabels;
   private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
   private String loadBalancer;
+  // Only to be used by ECS BG
+  private boolean ecsBlueGreen;
+  private String prodEcsListener;
+  private String stageEcsListener;
+  // This is Target Group associated with Service,
+  private String targetGroupForNewService;
+  private String targetGroupForExistingService;
+  private String ecsRegion;
+  private String ecsServiceToBeDownsized;
+  private int countToBeDownsizedForOldService;
 }

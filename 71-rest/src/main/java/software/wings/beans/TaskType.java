@@ -44,6 +44,7 @@ import software.wings.delegatetasks.aws.AwsEcsTask;
 import software.wings.delegatetasks.aws.AwsElbTask;
 import software.wings.delegatetasks.aws.AwsIamTask;
 import software.wings.delegatetasks.aws.AwsLambdaTask;
+import software.wings.delegatetasks.aws.ecs.EcsCommandTask;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
@@ -254,6 +255,7 @@ public enum TaskType {
   KUBERNETES_STEADY_STATE_CHECK_TASK(
       TaskGroup.CONTAINER, KubernetesSteadyStateCheckTask.class, KubernetesSteadyStateCheckValidation.class),
   PCF_COMMAND_TASK(TaskGroup.PCF, PcfCommandTask.class, PCFCommandValidation.class),
+  ECS_COMMAND_TASK(TaskGroup.AWS, EcsCommandTask.class, AwsConnectionValidation.class),
   COLLABORATION_PROVIDER_TASK(
       TaskGroup.COLLABORATION_PROVIDER, CollaborationProviderTask.class, CollaborationProviderTaskValidation.class),
   PROMETHEUS_VALIDATE_CONFIGURATION_TASK(

@@ -17,6 +17,7 @@ import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
@@ -31,6 +32,8 @@ import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.common.Constants.AWS_CODE_DEPLOY;
 import static software.wings.common.Constants.AWS_LAMBDA;
 import static software.wings.common.Constants.DE_PROVISION_CLOUD_FORMATION;
+import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS;
+import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS_ROLLBACK;
 import static software.wings.common.Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK;
 import static software.wings.common.Constants.KUBERNETES_SERVICE_SETUP;
 import static software.wings.common.Constants.PCF_UNMAP_ROUT;
@@ -104,6 +107,9 @@ import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.DynatraceState;
+import software.wings.sm.states.EcsBGUpdateListnerRollbackState;
+import software.wings.sm.states.EcsBGUpdateListnerState;
+import software.wings.sm.states.EcsBlueGreenServiceSetup;
 import software.wings.sm.states.EcsDaemonServiceSetup;
 import software.wings.sm.states.EcsServiceDeploy;
 import software.wings.sm.states.EcsServiceRollback;
@@ -427,11 +433,22 @@ public enum StateType implements StateTypeDescriptor {
   ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, CLOUD, Constants.ECS_DAEMON_SERVICE_SETUP,
       Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
+  ECS_BG_SERVICE_SETUP(EcsBlueGreenServiceSetup.class, CLOUD, Constants.ECS_BG_SERVICE_SETUP,
+      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+
   ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, UPGRADE_CONTAINERS,
       Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, ROLLBACK_CONTAINERS,
       Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+
+  ECS_LISTENER_UPDATE(EcsBGUpdateListnerState.class, FLOW_CONTROLS, ECS_SWAP_TARGET_GROUPS,
+      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), singletonList(ECS_UPDATE_LISTENER_BG),
+      ORCHESTRATION_STENCILS),
+
+  ECS_LISTENER_UPDATE_ROLLBACK(EcsBGUpdateListnerRollbackState.class, FLOW_CONTROLS, ECS_SWAP_TARGET_GROUPS_ROLLBACK,
+      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), singletonList(ECS_UPDATE_LISTENER_BG),
+      ORCHESTRATION_STENCILS),
 
   KUBERNETES_SETUP(KubernetesSetup.class, CLOUD, KUBERNETES_SERVICE_SETUP,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
@@ -485,6 +502,7 @@ public enum StateType implements StateTypeDescriptor {
 
   PCF_MAP_ROUTE(MapRouteState.class, FLOW_CONTROLS, Constants.PCF_MAP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
+
   PCF_UNMAP_ROUTE(UnmapRouteState.class, FLOW_CONTROLS, PCF_UNMAP_ROUT,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
   PCF_BG_MAP_ROUTE(PcfSwitchBlueGreenRoutes.class, FLOW_CONTROLS, Constants.PCF_BG_MAP_ROUTE,

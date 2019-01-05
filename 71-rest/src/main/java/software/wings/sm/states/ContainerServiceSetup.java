@@ -31,6 +31,7 @@ import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
+import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -47,6 +48,7 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
+import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
@@ -299,6 +301,23 @@ public abstract class ContainerServiceSetup extends State {
 
         containerServiceElement.setPreviousAwsAutoScalarConfigs(setupExecutionData.getPreviousAwsAutoScalarConfigs());
         containerServiceElement.setNewEcsServiceName(setupExecutionData.getContainerServiceName());
+        containerServiceElement.setEcsRegion(setupExecutionData.getEcsRegion());
+        containerServiceElement.setTargetGroupForNewService(setupExecutionData.getTargetGroupForNewService());
+        containerServiceElement.setTargetGroupForExistingService(setupExecutionData.getTargetGroupForExistingService());
+
+        if (containesEcsBGSetupParams(executionData)) {
+          EcsSetupParams ecsSetupParams = (EcsSetupParams) executionData.getContainerSetupParams();
+          containerServiceElement.setEcsBGSetupData(
+              EcsBGSetupData.builder()
+                  .prodEcsListener(ecsSetupParams.getProdListenerArn())
+                  .stageEcsListener(setupExecutionData.getStageEcsListener())
+                  .ecsBGTargetGroup1(ecsSetupParams.getTargetGroupArn())
+                  .ecsBGTargetGroup2(ecsSetupParams.getTargetGroupArn2())
+                  .ecsBlueGreen(true)
+                  .downsizedServiceName(setupExecutionData.getEcsServiceToBeDownsized())
+                  .downsizedServiceCount(setupExecutionData.getCountToBeDownsizedForOldService())
+                  .build());
+        }
       }
       executionData.setDelegateMetaInfo(executionResult.getDelegateMetaInfo());
     }
@@ -311,6 +330,15 @@ public abstract class ContainerServiceSetup extends State {
         .addNotifyElement(containerServiceElement)
         .addNotifyElement(instanceElementListParam)
         .build();
+  }
+
+  private boolean containesEcsBGSetupParams(CommandStateExecutionData executionData) {
+    if (!(executionData.getContainerSetupParams() instanceof EcsSetupParams)) {
+      return false;
+    }
+
+    EcsSetupParams ecsSetupParams = (EcsSetupParams) executionData.getContainerSetupParams();
+    return ecsSetupParams.isBlueGreen();
   }
 
   public String getDesiredInstanceCount() {

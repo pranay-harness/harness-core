@@ -5,6 +5,7 @@ import static software.wings.sm.ContextElementType.CONTAINER_SERVICE;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
+import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.Label;
@@ -50,6 +51,11 @@ public class ContainerServiceElement implements ContextElement {
   private String newEcsServiceName;
   private boolean prevAutoscalarsAlreadyRemoved;
   private String loadBalancer;
+  private String targetGroupForNewService;
+  private String targetGroupForExistingService;
+  private String ecsRegion;
+  // Only to be used by ECS BG
+  private EcsBGSetupData ecsBGSetupData;
 
   @Override
   public ContextElementType getElementType() {

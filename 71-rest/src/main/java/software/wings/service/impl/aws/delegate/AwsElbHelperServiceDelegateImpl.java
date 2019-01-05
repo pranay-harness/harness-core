@@ -30,6 +30,10 @@ import com.amazonaws.services.elasticloadbalancing.model.InstanceState;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancing;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
+import com.amazonaws.services.elasticloadbalancingv2.model.Action;
+import com.amazonaws.services.elasticloadbalancingv2.model.ActionTypeEnum;
+import com.amazonaws.services.elasticloadbalancingv2.model.CreateListenerRequest;
+import com.amazonaws.services.elasticloadbalancingv2.model.CreateListenerResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.CreateTargetGroupRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.CreateTargetGroupResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersRequest;
@@ -43,6 +47,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthR
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroupNotFoundException;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.protocol.AwsElbListener;
@@ -243,15 +248,15 @@ public class AwsElbHelperServiceDelegateImpl
   }
 
   @Override
-  public Optional<TargetGroup> getTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      String region, String targetGroupName, String loadBalancerName) {
+  public Optional<TargetGroup> getTargetGroupByName(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupName) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
           getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
               awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
-          new DescribeTargetGroupsRequest().withNames(targetGroupName).withLoadBalancerArn(loadBalancerName);
+          new DescribeTargetGroupsRequest().withNames(targetGroupName);
       DescribeTargetGroupsResult describeTargetGroupsResult =
           amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest);
 
@@ -259,6 +264,10 @@ public class AwsElbHelperServiceDelegateImpl
         return Optional.of(describeTargetGroupsResult.getTargetGroups().get(0));
       }
     } catch (AmazonServiceException amazonServiceException) {
+      // Aws throws this exception if mentioned target group is not found
+      if (amazonServiceException instanceof TargetGroupNotFoundException) {
+        return Optional.empty();
+      }
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
@@ -580,7 +589,7 @@ public class AwsElbHelperServiceDelegateImpl
       TargetGroup sourceTargetGroup = targetGroups.get(0);
       CreateTargetGroupRequest createTargetGroupRequest =
           new CreateTargetGroupRequest()
-              .withName(format("Harness-Stage-TargetGroupClone-%s", sourceTargetGroup.getTargetGroupName()))
+              .withName(newTargetGroupName)
               .withTargetType(sourceTargetGroup.getTargetType())
               .withHealthCheckPath(sourceTargetGroup.getHealthCheckPath())
               .withHealthCheckPort(sourceTargetGroup.getHealthCheckPort())
@@ -593,6 +602,7 @@ public class AwsElbHelperServiceDelegateImpl
               .withTargetType(sourceTargetGroup.getTargetType())
               .withVpcId(sourceTargetGroup.getVpcId())
               .withUnhealthyThresholdCount(sourceTargetGroup.getUnhealthyThresholdCount());
+
       CreateTargetGroupResult createTargetGroupResult = client.createTargetGroup(createTargetGroupRequest);
       return createTargetGroupResult.getTargetGroups().get(0);
     } catch (AmazonServiceException amazonServiceException) {
@@ -602,5 +612,29 @@ public class AwsElbHelperServiceDelegateImpl
     }
 
     return null;
+  }
+
+  @Override
+  public Listener createStageListener(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String listenerArn, Integer port, String targetGroupArn) {
+    Listener prodListener = getElbListener(awsConfig, encryptionDetails, region, listenerArn);
+
+    CreateListenerRequest createListenerRequest = new CreateListenerRequest();
+    createListenerRequest.withProtocol(prodListener.getProtocol())
+        .withPort(port)
+        .withLoadBalancerArn(prodListener.getLoadBalancerArn())
+        .withCertificates(prodListener.getCertificates())
+        .withSslPolicy(prodListener.getSslPolicy());
+
+    createListenerRequest.withDefaultActions(
+        new Action().withType(ActionTypeEnum.Forward).withTargetGroupArn(targetGroupArn));
+
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
+        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+
+    CreateListenerResult result = client.createListener(createListenerRequest);
+    return result.getListeners().get(0);
   }
 }

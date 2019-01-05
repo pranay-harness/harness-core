@@ -16,6 +16,9 @@ public class EcsSetupParams extends ContainerSetupParams {
   private boolean useLoadBalancer;
   private String roleArn;
   private String targetGroupArn;
+  private String targetGroupArn2;
+  private String prodListenerArn;
+  private String stageListenerArn;
   private String loadBalancerName;
   private String region;
   private String vpcId;
@@ -33,6 +36,8 @@ public class EcsSetupParams extends ContainerSetupParams {
   private boolean isDaemonSchedulingStrategy;
   private List<AwsAutoScalarConfig> newAwsAutoScalarConfigList;
   private List<AwsAutoScalarConfig> previousAutoScalarConfigList;
+  private boolean blueGreen;
+  private String stageListenerPort;
 
   public static final class EcsSetupParamsBuilder {
     private String taskFamily;
@@ -64,6 +69,11 @@ public class EcsSetupParams extends ContainerSetupParams {
     private boolean isDaemonSchedulingStrategy;
     private List<AwsAutoScalarConfig> newAwsAutoScalarConfigList;
     private List<AwsAutoScalarConfig> previousAutoScalarConfigList;
+    private boolean blueGreen;
+    private String targetGroupArn2;
+    private String prodListenerArn;
+    private String stageListenerArn;
+    private String stageListenerPort;
 
     private EcsSetupParamsBuilder() {}
 
@@ -217,6 +227,31 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public EcsSetupParamsBuilder withBlueGreen(boolean blueGreen) {
+      this.blueGreen = blueGreen;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withProdListenerArn(String prodListenerArn) {
+      this.prodListenerArn = prodListenerArn;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withStageListenerArn(String stageListenerArn) {
+      this.stageListenerArn = stageListenerArn;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withTargetGroupArn2(String targetGroupArn2) {
+      this.targetGroupArn2 = targetGroupArn2;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withStageListenerPort(String stageListenerPort) {
+      this.stageListenerPort = stageListenerPort;
+      return this;
+    }
+
     public EcsSetupParams build() {
       EcsSetupParams ecsSetupParams = new EcsSetupParams();
       ecsSetupParams.setTaskFamily(taskFamily);
@@ -248,6 +283,11 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setDaemonSchedulingStrategy(isDaemonSchedulingStrategy);
       ecsSetupParams.setNewAwsAutoScalarConfigList(newAwsAutoScalarConfigList);
       ecsSetupParams.setPreviousAutoScalarConfigList(previousAutoScalarConfigList);
+      ecsSetupParams.setBlueGreen(blueGreen);
+      ecsSetupParams.setTargetGroupArn2(targetGroupArn2);
+      ecsSetupParams.setProdListenerArn(prodListenerArn);
+      ecsSetupParams.setStageListenerArn(stageListenerArn);
+      ecsSetupParams.setStageListenerPort(stageListenerPort);
       return ecsSetupParams;
     }
   }

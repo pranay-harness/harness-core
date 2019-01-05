@@ -1002,13 +1002,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                                   .withDesiredStatus(DesiredStatus.RUNNING))
                                           .getTaskArns();
       if (desiredCount != previousCount) {
-        UpdateServiceRequest updateServiceRequest =
-            new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
-        UpdateServiceResult updateServiceResult =
-            awsHelperService.updateService(region, awsConfig, encryptedDataDetails, updateServiceRequest);
-
-        waitForServiceUpdateToComplete(updateServiceResult, region, awsConfig, encryptedDataDetails, clusterName,
-            serviceName, desiredCount, executionLogCallback);
+        updateServiceCount(
+            region, encryptedDataDetails, clusterName, serviceName, desiredCount, executionLogCallback, awsConfig);
         executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
         waitForTasksToBeInRunningStateButDontThrowException(
             region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback, desiredCount);
@@ -1023,6 +1018,17 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (Exception ex) {
       throw new InvalidRequestException(Misc.getMessage(ex), ex);
     }
+  }
+
+  public void updateServiceCount(String region, List<EncryptedDataDetail> encryptedDataDetails, String clusterName,
+      String serviceName, int desiredCount, ExecutionLogCallback executionLogCallback, AwsConfig awsConfig) {
+    UpdateServiceRequest updateServiceRequest =
+        new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
+    UpdateServiceResult updateServiceResult =
+        awsHelperService.updateService(region, awsConfig, encryptedDataDetails, updateServiceRequest);
+
+    waitForServiceUpdateToComplete(updateServiceResult, region, awsConfig, encryptedDataDetails, clusterName,
+        serviceName, desiredCount, executionLogCallback);
   }
 
   @Override

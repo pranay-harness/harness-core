@@ -131,7 +131,13 @@ import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionResult;
+import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.ServiceField;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
+import com.amazonaws.services.ecs.model.TagResourceRequest;
+import com.amazonaws.services.ecs.model.TagResourceResult;
+import com.amazonaws.services.ecs.model.UntagResourceRequest;
+import com.amazonaws.services.ecs.model.UntagResourceResult;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClientBuilder;
@@ -877,6 +883,29 @@ public class AwsHelperService {
     return new DescribeServicesResult();
   }
 
+  public List<Service> getServiceForCluster(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String cluster, String region) {
+    ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster(cluster);
+    ListServicesResult listServicesResult = listServices(region, awsConfig, encryptionDetails, listServicesRequest);
+
+    List<Service> services = new ArrayList<>();
+
+    if (isNotEmpty(listServicesResult.getServiceArns())) {
+      do {
+        services.addAll(describeServices(region, awsConfig, encryptionDetails,
+            new DescribeServicesRequest()
+                .withCluster(cluster)
+                .withServices(listServicesResult.getServiceArns())
+                .withInclude(ServiceField.TAGS))
+                            .getServices());
+
+        listServicesRequest.setNextToken(listServicesResult.getNextToken());
+      } while (listServicesResult.getNextToken() != null && listServicesResult.getServiceArns().size() == 10);
+    }
+
+    return services;
+  }
+
   public CreateServiceResult createService(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, CreateServiceRequest createServiceRequest) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
@@ -1567,5 +1596,21 @@ public class AwsHelperService {
 
   public DescribeInstancesRequest getDescribeInstancesRequestWithRunningFilter() {
     return new DescribeInstancesRequest().withFilters(getAwsFiltersForRunningState());
+  }
+
+  public TagResourceResult tagService(String region, List<EncryptedDataDetail> encryptedDataDetails,
+      TagResourceRequest tagResourceRequest, AwsConfig awsConfig) {
+    encryptionService.decrypt(awsConfig, encryptedDataDetails);
+    return getAmazonEcsClient(
+        region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+        .tagResource(tagResourceRequest);
+  }
+
+  public UntagResourceResult untagService(String region, List<EncryptedDataDetail> encryptedDataDetails,
+      UntagResourceRequest untagResourceRequest, AwsConfig awsConfig) {
+    encryptionService.decrypt(awsConfig, encryptedDataDetails);
+    return getAmazonEcsClient(
+        region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+        .untagResource(untagResourceRequest);
   }
 }

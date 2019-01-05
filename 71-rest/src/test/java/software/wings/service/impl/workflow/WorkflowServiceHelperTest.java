@@ -10,7 +10,9 @@ import static org.mockito.Mockito.doReturn;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.ECS_DAEMON_SCHEDULING_STRATEGY;
 import static software.wings.common.Constants.ECS_REPLICA_SCHEDULING_STRATEGY;
+import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
+import static software.wings.sm.StateType.ECS_LISTENER_UPDATE;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
@@ -20,6 +22,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.data.structure.EmptyPredicate;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -32,6 +35,7 @@ import software.wings.beans.Service;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.sm.StateType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -145,6 +149,26 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  public void testGenerateNewWorkflowPhaseStepsForECS_BG() throws Exception {
+    doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
+        .when(serviceResourceService)
+        .get(anyString(), anyString());
+
+    EcsServiceSpecification specification = EcsServiceSpecification.builder().build();
+    specification.setServiceSpecJson(null);
+    specification.setSchedulingStrategy(ECS_REPLICA_SCHEDULING_STRATEGY);
+    doReturn(specification).when(serviceResourceService).getEcsServiceSpecification(anyString(), anyString());
+
+    WorkflowPhase workflowPhase = aWorkflowPhase().withServiceId(SERVICE_ID).build();
+
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreen(APP_ID, workflowPhase, true);
+    verifyPhase(workflowPhase,
+        Arrays.asList(
+            new String[] {ECS_BG_SERVICE_SETUP.name(), ECS_SERVICE_DEPLOY.name(), null, ECS_LISTENER_UPDATE.name()}),
+        5);
+  }
+
+  @Test
   public void testGenerateNewWorkflowPhaseStepsForECS_DaemonStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
@@ -168,6 +192,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         APP_ID, workflowPhase, true, OrchestrationWorkflowType.BASIC);
     verifyPhase(workflowPhase, Arrays.asList(new String[] {ECS_DAEMON_SERVICE_SETUP.name()}), 3);
   }
+
   @Test
   public void testGenerateRollbackWorkflowPhaseForEcs_ReplicaStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
@@ -205,6 +230,25 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  public void testGenerateRollbackWorkflowPhaseForEcs_BG() throws Exception {
+    doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
+        .when(serviceResourceService)
+        .get(anyString(), anyString());
+
+    EcsServiceSpecification serviceSpecification = EcsServiceSpecification.builder().build();
+    serviceSpecification.setServiceSpecJson(null);
+    serviceSpecification.setSchedulingStrategy(ECS_REPLICA_SCHEDULING_STRATEGY);
+    doReturn(serviceSpecification).when(serviceResourceService).getEcsServiceSpecification(anyString(), anyString());
+
+    WorkflowPhase workflowPhase = aWorkflowPhase().withServiceId(SERVICE_ID).build();
+
+    WorkflowPhase rollbackPhase = workflowServiceHelper.generateRollbackWorkflowPhaseForEcsBlueGreen(
+        APP_ID, workflowPhase, OrchestrationWorkflowType.BASIC);
+    verifyPhase(rollbackPhase,
+        Arrays.asList(new String[] {StateType.ECS_LISTENER_UPDATE_ROLLBACK.name(), ECS_SERVICE_ROLLBACK.name()}), 4);
+  }
+
+  @Test
   public void testGenerateRollbackWorkflowPhaseForEcs_DaemonStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
         .when(serviceResourceService)
@@ -236,10 +280,12 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     assertEquals(stepCount, phaseStepList.size());
 
     for (int index = 0; index < expectedNames.size(); index++) {
-      PhaseStep phaseStep = phaseStepList.get(index);
-      assertNotNull(phaseStep.getSteps());
-      assertEquals(1, phaseStep.getSteps().size());
-      assertEquals(expectedNames.get(index), phaseStep.getSteps().get(0).getType());
+      if (EmptyPredicate.isNotEmpty(expectedNames.get(index))) {
+        PhaseStep phaseStep = phaseStepList.get(index);
+        assertNotNull(phaseStep.getSteps());
+        assertEquals(1, phaseStep.getSteps().size());
+        assertEquals(expectedNames.get(index), phaseStep.getSteps().get(0).getType());
+      }
     }
   }
 }
