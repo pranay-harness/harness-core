@@ -74,7 +74,7 @@ public class PersistentLockCleanupJob implements Job {
 
   private void executeInternal() {
     int total = 0;
-    int deleted = 0;
+    int destroyed = 0;
     try (AcquiredLock lock = persistentLocker.acquireLock(PersistentLocker.class, NAME, Duration.ofMinutes(10))) {
       OffsetDateTime startTime = OffsetDateTime.now().minusWeeks(1);
       final DBCursor locks = queryOldLocks(startTime);
@@ -82,7 +82,7 @@ public class PersistentLockCleanupJob implements Job {
       while (locks.hasNext()) {
         total++;
         if (delete(locks.next().get("_id"))) {
-          deleted++;
+          destroyed++;
         }
       }
     } catch (WingsException exception) {
@@ -90,7 +90,7 @@ public class PersistentLockCleanupJob implements Job {
     } catch (RuntimeException exception) {
       logger.error("Error seen in the PersistentLockCleanupJob execute call", exception);
     }
-    logger.info("Destroyed {} locks out of {} outdated", deleted, total);
+    logger.info("Destroyed {} locks out of {} outdated", destroyed, total);
   }
 
   private boolean delete(Object lock) {
@@ -99,13 +99,14 @@ public class PersistentLockCleanupJob implements Job {
     //
     // The lock needs to be deleted only if successfully acquired
 
+    boolean destroyed = false;
     try (AcquiredLock lk = persistentLocker.acquireLock(lock.toString(), Duration.ofSeconds(10))) {
+      destroyed = true;
       persistentLocker.destroy(lk);
-      return true;
     } catch (WingsException exception) {
       // Nothing to do. If we did not get the lock or we succeeded to destroy it - either way move to the
       // next one.
     }
-    return false;
+    return destroyed;
   }
 }
