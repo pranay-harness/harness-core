@@ -9,7 +9,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -34,6 +33,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.InvalidRequestException;
+import io.harness.queue.Queue;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -49,8 +49,9 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.dl.WingsPersistence;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.scheduler.ArtifactCollectionJob;
-import software.wings.scheduler.PruneEntityJob;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -84,7 +85,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler backgroundJobScheduler;
+  @Inject private Queue<PruneEvent> pruneQueue;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private BuildSourceService buildSourceService;
@@ -249,9 +250,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private boolean pruneArtifactStream(String appId, String artifactStreamId) {
-    PruneEntityJob.addDefaultJob(
-        backgroundJobScheduler, ArtifactStream.class, appId, artifactStreamId, ofSeconds(20), ofSeconds(120));
-
+    pruneQueue.send(new PruneEvent(ArtifactStream.class, appId, artifactStreamId));
     return wingsPersistence.delete(ArtifactStream.class, appId, artifactStreamId);
   }
 
@@ -259,7 +258,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String artifactStreamId) {
     List<OwnedByArtifactStream> services =
         ServiceClassLocator.descendingServices(this, ArtifactStreamServiceImpl.class, OwnedByArtifactStream.class);
-    PruneEntityJob.pruneDescendingEntities(
+    PruneEntityListener.pruneDescendingEntities(
         services, descending -> descending.pruneByArtifactStream(appId, artifactStreamId));
   }
 

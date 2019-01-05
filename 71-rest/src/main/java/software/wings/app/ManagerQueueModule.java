@@ -13,6 +13,8 @@ import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.collect.CollectEvent;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.notification.EmailNotificationListener;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.service.impl.DelayEvent;
 import software.wings.service.impl.DelayEventListener;
 import software.wings.service.impl.ExecutionEvent;
@@ -26,6 +28,7 @@ public class ManagerQueueModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    bind(new TypeLiteral<Queue<PruneEvent>>() {}).toInstance(new MongoQueue<>(PruneEvent.class));
     bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueue<>(EmailData.class));
     bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueue<>(CollectEvent.class));
     bind(new TypeLiteral<Queue<DeploymentEvent>>() {}).toInstance(new MongoQueue<>(DeploymentEvent.class, 60, true));
@@ -34,6 +37,7 @@ public class ManagerQueueModule extends AbstractModule {
     bind(new TypeLiteral<Queue<DelayEvent>>() {}).toInstance(new MongoQueue<>(DelayEvent.class, 5, true));
     bind(new TypeLiteral<Queue<QueableEvent>>() {}).toInstance(new MongoQueue<>(QueableEvent.class, 60, true));
 
+    bind(new TypeLiteral<QueueListener<PruneEvent>>() {}).to(PruneEntityListener.class);
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<QueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
     bind(new TypeLiteral<QueueListener<KmsTransitionEvent>>() {}).to(KmsTransitionEventListener.class);

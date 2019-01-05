@@ -46,7 +46,7 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
   }
 
   @Override
-  protected void onMessage(ExecutionEvent message) {
+  public void onMessage(ExecutionEvent message) {
     String lockId = message.getWorkflowId()
         + (isNotEmpty(message.getInfraMappingIds())
                   ? "|" + Joiner.on("|").join(Ordering.natural().sortedCopy(message.getInfraMappingIds()))

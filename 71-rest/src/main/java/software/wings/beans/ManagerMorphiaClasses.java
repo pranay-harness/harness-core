@@ -63,6 +63,7 @@ import software.wings.beans.trigger.TriggerExecution;
 import software.wings.collect.CollectEvent;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.prune.PruneEvent;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
@@ -161,5 +162,5 @@ public class ManagerMorphiaClasses {
       Principal.class, PrometheusCVServiceConfiguration.class, EncryptedData.class,
       NewRelicCVServiceConfiguration.class, ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class,
       YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class,
-      ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class);
+      ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class);
 }

@@ -10,7 +10,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -44,7 +43,6 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
@@ -57,7 +55,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
-import io.harness.scheduler.PersistentScheduler;
+import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -112,7 +110,8 @@ import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.HelmHelper;
-import software.wings.scheduler.PruneEntityJob;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.service.ServiceHelper;
 import software.wings.service.impl.command.CommandHelper;
 import software.wings.service.impl.template.SshCommandTemplateProcessor;
@@ -205,7 +204,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private WorkflowService workflowService;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private ServiceHelper serviceHelper;
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private CommandHelper commandHelper;
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;
@@ -215,6 +213,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private PipelineService pipelineService;
   @Inject private SshCommandTemplateProcessor sshCommandTemplateProcessor;
   @Inject private ApplicationManifestService applicationManifestService;
+
+  @Inject private Queue<PruneEvent> pruneQueue;
 
   /**
    * {@inheritDoc}
@@ -632,9 +632,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String accountId = appService.getAccountIdByAppId(service.getAppId());
     yamlPushService.pushYamlChangeSet(accountId, service, null, Type.DELETE, syncFromGit, false);
 
-    // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneEntityJob.addDefaultJob(
-        jobScheduler, Service.class, service.getAppId(), service.getUuid(), ofSeconds(5), ofSeconds(15));
+    pruneQueue.send(new PruneEvent(Service.class, service.getAppId(), service.getUuid()));
 
     // safe to delete
     if (wingsPersistence.delete(Service.class, service.getUuid())) {
@@ -646,7 +644,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId) {
     List<OwnedByService> services =
         ServiceClassLocator.descendingServices(this, ServiceResourceServiceImpl.class, OwnedByService.class);
-    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByService(appId, serviceId));
+    PruneEntityListener.pruneDescendingEntities(services, descending -> descending.pruneByService(appId, serviceId));
   }
 
   private void ensureServiceSafeToDelete(Service service) {

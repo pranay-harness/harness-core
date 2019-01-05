@@ -87,6 +87,7 @@ import software.wings.jersey.JsonViews;
 import software.wings.jersey.KryoFeature;
 import software.wings.licensing.LicenseService;
 import software.wings.notification.EmailNotificationListener;
+import software.wings.prune.PruneEntityListener;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.AdministrativeJob;
 import software.wings.scheduler.BarrierBackupJob;
@@ -108,6 +109,7 @@ import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.instance.DeploymentEventListener;
+import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
@@ -413,12 +415,14 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(Key.get(EventListener.class, Names.named("GenericEventListener")));
     queueListenerController.register((QueueListener) genericEventListener, 1);
 
-    queueListenerController.register(injector.getInstance(ExecutionEventListener.class), 3);
-    queueListenerController.register(injector.getInstance(DeploymentEventListener.class), 2);
     queueListenerController.register(injector.getInstance(ArtifactCollectEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(NotifyEventListener.class), 5);
-    queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(DeploymentEventListener.class), 2);
+    queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
+    queueListenerController.register(injector.getInstance(ExecutionEventListener.class), 3);
+    queueListenerController.register(injector.getInstance(KmsTransitionEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
   }
 
   private void scheduleJobs(Injector injector) {

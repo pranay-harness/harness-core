@@ -19,7 +19,6 @@ import static io.harness.k8s.manifest.ManifestHelper.primaryServiceNameExpressio
 import static io.harness.k8s.manifest.ManifestHelper.stageServiceNameExpression;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -87,7 +86,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -101,7 +99,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Rejection;
 import io.harness.persistence.HIterator;
-import io.harness.scheduler.PersistentScheduler;
+import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.apache.commons.collections.CollectionUtils;
@@ -162,7 +160,8 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.scheduler.PruneEntityJob;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -277,7 +276,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private YamlPushService yamlPushService;
   @Inject private EventPublishHelper eventPublishHelper;
 
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject private Queue<PruneEvent> pruneQueue;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -1183,8 +1182,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private boolean pruneWorkflow(String appId, String workflowId) {
-    PruneEntityJob.addDefaultJob(jobScheduler, Workflow.class, appId, workflowId, ofSeconds(5), ofSeconds(15));
-
+    pruneQueue.send(new PruneEvent(Workflow.class, appId, workflowId));
     if (!wingsPersistence.delete(Workflow.class, appId, workflowId)) {
       return false;
     }
@@ -1474,7 +1472,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public void pruneDescendingEntities(String appId, String workflowId) {
     List<OwnedByWorkflow> services =
         ServiceClassLocator.descendingServices(this, WorkflowServiceImpl.class, OwnedByWorkflow.class);
-    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByWorkflow(appId, workflowId));
+    PruneEntityListener.pruneDescendingEntities(services, descending -> descending.pruneByWorkflow(appId, workflowId));
   }
 
   @Override

@@ -22,7 +22,7 @@ public class EmailNotificationListener extends QueueListener<EmailData> {
    * @see software.wings.core.queue.QueueListener#onMessage(software.wings.core.queue.Queuable)
    */
   @Override
-  protected void onMessage(EmailData message) {
+  public void onMessage(EmailData message) {
     emailNotificationService.send(message);
   }
 }

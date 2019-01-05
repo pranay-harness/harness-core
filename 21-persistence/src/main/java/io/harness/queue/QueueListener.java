@@ -59,7 +59,6 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     } while (!runOnce && !shouldStop.get());
   }
 
-  @SuppressWarnings("PMD")
   public boolean execute() {
     T message = null;
     try {
@@ -73,10 +72,35 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       logger.error(format("Exception happened while fetching message from queue %s", queue.name()), exception);
     }
 
-    if (message == null) {
-      return true;
+    if (message != null) {
+      processMessage(message);
     }
+    return true;
+  }
 
+  public void pumpAll() {
+    while (true) {
+      T message = null;
+      try {
+        logger.trace("Waiting for message");
+        message = queue.get(0);
+      } catch (Exception exception) {
+        if (exception.getCause() instanceof InterruptedException) {
+          logger.info("Thread interrupted, shutting down for queue {}", queue.name());
+          return;
+        }
+        logger.error(format("Exception happened while fetching message from queue %s", queue.name()), exception);
+      }
+
+      if (message == null) {
+        break;
+      }
+      processMessage(message);
+    }
+  }
+
+  @SuppressWarnings("PMD")
+  private void processMessage(T message) {
     if (logger.isTraceEnabled()) {
       logger.trace("got message {}", message);
     }
@@ -110,15 +134,13 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
         future.cancel(true);
       }
     }
-    return true;
   }
 
-  /**
-   * On message.
-   *
-   * @param message the message
-   */
-  protected abstract void onMessage(T message);
+  public abstract void onMessage(T message);
+
+  protected void requeue(T message) {
+    queue.requeue(message.getId(), message.getRetries() - 1);
+  }
 
   /**
    * On exception.
@@ -133,7 +155,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       logger.error("Exception happened while processing message " + message, exception);
     }
     if (message.getRetries() > 0) {
-      queue.requeue(message.getId(), message.getRetries() - 1);
+      requeue(message);
     }
   }
 

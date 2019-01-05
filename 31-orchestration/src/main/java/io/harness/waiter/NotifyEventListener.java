@@ -52,7 +52,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
    * {@inheritDoc}
    */
   @Override
-  protected void onMessage(NotifyEvent message) {
+  public void onMessage(NotifyEvent message) {
     if (logger.isTraceEnabled()) {
       logger.trace("Processing message {}", message);
     }

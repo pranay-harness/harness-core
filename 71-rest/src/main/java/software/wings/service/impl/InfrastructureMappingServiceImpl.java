@@ -7,7 +7,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.allChecks;
 import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -43,7 +42,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
@@ -57,7 +55,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery.QueryChecks;
-import io.harness.scheduler.PersistentScheduler;
+import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -106,7 +104,8 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.scheduler.PruneEntityJob;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -185,11 +184,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private YamlPushService yamlPushService;
   @Inject private AzureHelperService azureHelperService;
   @Inject private TriggerService triggerService;
   @Inject private PipelineService pipelineService;
+
+  @Inject private Queue<PruneEvent> pruneQueue;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -853,9 +853,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void prune(String appId, String infraMappingId) {
-    PruneEntityJob.addDefaultJob(
-        jobScheduler, InfrastructureMapping.class, appId, infraMappingId, ofSeconds(5), ofSeconds(15));
-
+    pruneQueue.send(new PruneEvent(InfrastructureMapping.class, appId, infraMappingId));
     wingsPersistence.delete(InfrastructureMapping.class, appId, infraMappingId);
   }
 
@@ -886,7 +884,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraMappingId) {
     List<OwnedByInfrastructureMapping> services = ServiceClassLocator.descendingServices(
         this, InfrastructureMappingServiceImpl.class, OwnedByInfrastructureMapping.class);
-    PruneEntityJob.pruneDescendingEntities(
+    PruneEntityListener.pruneDescendingEntities(
         services, descending -> descending.pruneByInfrastructureMapping(appId, infraMappingId));
   }
 

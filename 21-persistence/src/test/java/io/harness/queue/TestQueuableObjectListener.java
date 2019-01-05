@@ -20,7 +20,7 @@ public class TestQueuableObjectListener extends QueueListener<TestQueuableObject
   }
 
   @Override
-  protected void onMessage(TestQueuableObject message) {
+  public void onMessage(TestQueuableObject message) {
     if (throwException) {
       throw new RuntimeException("Expected Exception In Test.");
     }
