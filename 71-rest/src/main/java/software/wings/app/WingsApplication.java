@@ -57,6 +57,7 @@ import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.waiter.Notifier;
 import io.harness.waiter.NotifierScheduledExecutorService;
+import io.harness.waiter.NotifyEventListener;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -71,6 +72,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.beans.User;
+import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.common.Constants;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
@@ -84,6 +86,7 @@ import software.wings.health.WingsHealthCheck;
 import software.wings.jersey.JsonViews;
 import software.wings.jersey.KryoFeature;
 import software.wings.licensing.LicenseService;
+import software.wings.notification.EmailNotificationListener;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.AdministrativeJob;
 import software.wings.scheduler.BarrierBackupJob;
@@ -99,10 +102,12 @@ import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.service.impl.DelayEventListener;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
-import software.wings.service.impl.event.GenericEventListener;
+import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
@@ -402,25 +407,18 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerQueueListeners(Injector injector) {
     logger.info("Initializing queue listeners...");
-    Reflections reflections = new Reflections("software.wings", "io.harness");
 
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    Set<Class<? extends QueueListener>> queueListeners = reflections.getSubTypesOf(QueueListener.class);
+    EventListener genericEventListener =
+        injector.getInstance(Key.get(EventListener.class, Names.named("GenericEventListener")));
+    queueListenerController.register((QueueListener) genericEventListener, 1);
 
-    for (Class<? extends QueueListener> queueListener : queueListeners) {
-      QueueListener listener;
-
-      if (GenericEventListener.class.getSimpleName().equals(queueListener.getSimpleName())) {
-        EventListener genericEventListener =
-            injector.getInstance(Key.get(EventListener.class, Names.named("GenericEventListener")));
-        listener = (QueueListener) genericEventListener;
-      } else {
-        listener = injector.getInstance(queueListener);
-      }
-
-      logger.info("Registering queue listener for queue {}", listener.getQueue().name());
-      queueListenerController.register(listener, 5);
-    }
+    queueListenerController.register(injector.getInstance(ExecutionEventListener.class), 3);
+    queueListenerController.register(injector.getInstance(DeploymentEventListener.class), 2);
+    queueListenerController.register(injector.getInstance(ArtifactCollectEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
+    queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
   }
 
   private void scheduleJobs(Injector injector) {
