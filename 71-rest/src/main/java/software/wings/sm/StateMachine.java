@@ -315,7 +315,6 @@ public class StateMachine extends Base {
       if (node.getProperties() != null) {
         MapperUtils.mapObject(node.getProperties(), state);
       }
-
       state.resolveProperties();
 
       if (isNotEmpty(node.getVariableOverrides()) && state instanceof SubWorkflowState) {

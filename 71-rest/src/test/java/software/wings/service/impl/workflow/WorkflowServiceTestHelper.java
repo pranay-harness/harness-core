@@ -98,7 +98,12 @@ public class WorkflowServiceTestHelper {
   public static Workflow constructCustomWorkflow() {
     Graph graph = aGraph()
                       .addNodes(aGraphNode().id("n1").name("stop").type(ENV_STATE.name()).origin(true).build(),
-                          aGraphNode().id("n2").name("wait").type(WAIT.name()).addProperty("duration", 1l).build(),
+                          aGraphNode()
+                              .id("n2")
+                              .name("wait")
+                              .type(WAIT.name())
+                              .properties(ImmutableMap.<String, Object>builder().put("duration", 1l).build())
+                              .build(),
                           aGraphNode().id("n3").name("start").type(ENV_STATE.name()).build())
                       .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
                       .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
@@ -213,7 +218,11 @@ public class WorkflowServiceTestHelper {
   }
 
   private static GraphNode constructHttpStep() {
-    return aGraphNode().type("HTTP").name("http").addProperty("url", "http://www.google.com").build();
+    return aGraphNode()
+        .type("HTTP")
+        .name("http")
+        .properties(ImmutableMap.<String, Object>builder().put("url", "http://www.google.com").build())
+        .build();
   }
 
   public static Workflow constructBasicWorkflow() {
@@ -711,16 +720,20 @@ public class WorkflowServiceTestHelper {
     verifyPhaseStep.getSteps().add(aGraphNode()
                                        .type("APP_DYNAMICS")
                                        .name("APP_DYNAMICS")
-                                       .addProperty("analysisServerConfigId", "analysisServerConfigId")
-                                       .addProperty("applicationId", "applicagionId")
-                                       .addProperty("tierId", "tierId")
+                                       .properties(ImmutableMap.<String, Object>builder()
+                                                       .put("analysisServerConfigId", "analysisServerConfigId")
+                                                       .put("applicationId", "applicationId")
+                                                       .put("tierId", "tierId")
+                                                       .build())
                                        .build());
 
     verifyPhaseStep.getSteps().add(aGraphNode()
                                        .type("ELK")
                                        .name("ELK")
-                                       .addProperty("analysisServerConfigId", "analysisServerConfigId")
-                                       .addProperty("indices", "indices")
+                                       .properties(ImmutableMap.<String, Object>builder()
+                                                       .put("analysisServerConfigId", "analysisServerConfigId")
+                                                       .put("indices", "indices")
+                                                       .build())
                                        .build());
     return verifyPhaseStep;
   }

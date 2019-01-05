@@ -11,6 +11,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.sm.StateType.PHASE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.persistence.UuidAware;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -212,14 +213,16 @@ public class WorkflowPhase implements UuidAware {
         .id(uuid)
         .name(name)
         .type(PHASE.name())
-        .addProperty("serviceId", serviceId)
         .rollback(rollback)
-        .addProperty("deploymentType", deploymentType)
-        .addProperty("computeProviderId", computeProviderId)
-        .addProperty("infraMappingName", infraMappingName)
-        .addProperty("infraMappingId", infraMappingId)
-        .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
-        .addProperty("phaseNameForRollback", phaseNameForRollback)
+        .properties(NullSafeImmutableMap.builder()
+                        .putIfNotNull("serviceId", serviceId)
+                        .putIfNotNull("deploymentType", deploymentType)
+                        .putIfNotNull("computeProviderId", computeProviderId)
+                        .putIfNotNull("infraMappingName", infraMappingName)
+                        .putIfNotNull("infraMappingId", infraMappingId)
+                        .putIfNotNull(Constants.SUB_WORKFLOW_ID, uuid)
+                        .putIfNotNull("phaseNameForRollback", phaseNameForRollback)
+                        .build())
         .templateExpressions(templateExpressions)
         .variableOverrides(variableOverrides)
         .build();

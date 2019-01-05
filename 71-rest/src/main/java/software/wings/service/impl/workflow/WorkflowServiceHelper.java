@@ -93,6 +93,7 @@ import static software.wings.sm.states.ElasticLoadBalancerState.Operation.Disabl
 import static software.wings.sm.states.ElasticLoadBalancerState.Operation.Enable;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -479,16 +480,19 @@ public class WorkflowServiceHelper {
     Map<String, String> stateDefaults = getStateDefaults(appId, service.getUuid(), AWS_CODEDEPLOY_STATE);
     GraphNodeBuilder node =
         aGraphNode().id(generateUuid()).type(AWS_CODEDEPLOY_STATE.name()).name(Constants.AWS_CODE_DEPLOY);
+
     if (isNotEmpty(stateDefaults)) {
+      Map<String, Object> properties = new HashMap<>();
       if (isNotBlank(stateDefaults.get("bucket"))) {
-        node.addProperty("bucket", stateDefaults.get("bucket"));
+        properties.put("bucket", stateDefaults.get("bucket"));
       }
       if (isNotBlank(stateDefaults.get("key"))) {
-        node.addProperty("key", stateDefaults.get("key"));
+        properties.put("key", stateDefaults.get("key"));
       }
       if (isNotBlank(stateDefaults.get("bundleType"))) {
-        node.addProperty("bundleType", stateDefaults.get("bundleType"));
+        properties.put("bundleType", stateDefaults.get("bundleType"));
       }
+      node.properties(properties);
     }
     workflowPhase.addPhaseStep(
         aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE).addStep(node.build()).build());
@@ -949,9 +953,11 @@ public class WorkflowServiceHelper {
     infrastructurePhaseStepBuilder.addStep(aGraphNode()
                                                .type(stateType.name())
                                                .name(Constants.SELECT_NODE_NAME)
-                                               .addProperty("specificHosts", false)
-                                               .addProperty("instanceCount", 1)
-                                               .addProperty("excludeSelectedHostsFromFuturePhases", true)
+                                               .properties(ImmutableMap.<String, Object>builder()
+                                                               .put("specificHosts", false)
+                                                               .put("instanceCount", 1)
+                                                               .put("excludeSelectedHostsFromFuturePhases", true)
+                                                               .build())
                                                .build());
 
     workflowPhase.addPhaseStep(infrastructurePhaseStepBuilder.build());
@@ -963,12 +969,12 @@ public class WorkflowServiceHelper {
       disableServiceSteps.add(aGraphNode()
                                   .type(ELASTIC_LOAD_BALANCER.name())
                                   .name("Elastic Load Balancer")
-                                  .addProperty("operation", Disable)
+                                  .properties(ImmutableMap.<String, Object>builder().put("operation", Disable).build())
                                   .build());
       enableServiceSteps.add(aGraphNode()
                                  .type(ELASTIC_LOAD_BALANCER.name())
                                  .name("Elastic Load Balancer")
-                                 .addProperty("operation", Enable)
+                                 .properties(ImmutableMap.<String, Object>builder().put("operation", Enable).build())
                                  .build());
     }
 
@@ -1297,13 +1303,13 @@ public class WorkflowServiceHelper {
       disableServiceSteps.add(aGraphNode()
                                   .type(ELASTIC_LOAD_BALANCER.name())
                                   .name("Elastic Load Balancer")
-                                  .addProperty("operation", Disable)
+                                  .properties(ImmutableMap.<String, Object>builder().put("operation", Disable).build())
                                   .rollback(true)
                                   .build());
       enableServiceSteps.add(aGraphNode()
                                  .type(ELASTIC_LOAD_BALANCER.name())
                                  .name("Elastic Load Balancer")
-                                 .addProperty("operation", Enable)
+                                 .properties(ImmutableMap.<String, Object>builder().put("operation", Enable).build())
                                  .rollback(true)
                                  .build());
     }
@@ -1525,7 +1531,7 @@ public class WorkflowServiceHelper {
                     .id(generateUuid())
                     .type(COMMAND.name())
                     .name(command.getName())
-                    .addProperty("commandName", command.getName())
+                    .properties(ImmutableMap.<String, Object>builder().put("commandName", command.getName()).build())
                     .rollback(rollback)
                     .build());
     }

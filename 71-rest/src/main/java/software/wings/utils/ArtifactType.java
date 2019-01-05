@@ -27,7 +27,10 @@ import static software.wings.common.Constants.PCF_RESIZE;
 import static software.wings.common.Constants.PCF_SETUP;
 import static software.wings.utils.PowerShellScriptsLoader.psScriptMap;
 
+import com.google.common.collect.ImmutableMap;
+
 import io.harness.data.structure.UUIDGenerator;
+import software.wings.beans.GraphNode;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
@@ -66,41 +69,36 @@ public enum ArtifactType {
     private Command getStartCommand() {
       return aCommand()
           .withCommandType(CommandType.START)
-          .withGraph(
-              aGraph()
-                  .withGraphName("Start")
-                  .addNodes(aGraphNode()
-                                .origin(true)
-                                .id(UUIDGenerator.graphIdGenerator("node"))
-                                .type(EXEC.name())
-                                .name("Start Service")
-                                .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                .addProperty("commandString", "java -jar \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"")
-                                .build(),
-                      aGraphNode()
-                          .id(UUIDGenerator.graphIdGenerator("node"))
-                          .name("Process Running")
-                          .type(PROCESS_CHECK_RUNNING.name())
-                          .addProperty("commandString",
-                              "set -x\n"
-                                  + "i=0\n"
-                                  + "while [ \"$i\" -lt 30 ]\n"
-                                  + "do\n"
-                                  + "  pgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"\n"
-                                  + "  rc=$?\n"
-                                  + "  if [ \"$rc\" -eq 0 ]\n"
-                                  + "  then\n"
-                                  + "    exit 0\n"
-                                  + "    sleep 1\n"
-                                  + "    i=$((i+1))\n"
-                                  + "  else\n"
-                                  + "    sleep 1\n"
-                                  + "    i=$((i+1))\n"
-                                  + "  fi\n"
-                                  + "done\n"
-                                  + "exit 1")
-                          .build())
-                  .buildPipeline())
+          .withGraph(aGraph()
+                         .withGraphName("Start")
+                         .addNodes(getStartServiceNode("java -jar \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\""),
+                             aGraphNode()
+                                 .id(UUIDGenerator.graphIdGenerator("node"))
+                                 .name("Process Running")
+                                 .type(PROCESS_CHECK_RUNNING.name())
+                                 .properties(ImmutableMap.<String, Object>builder()
+                                                 .put("commandString",
+                                                     "set -x\n"
+                                                         + "i=0\n"
+                                                         + "while [ \"$i\" -lt 30 ]\n"
+                                                         + "do\n"
+                                                         + "  pgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"\n"
+                                                         + "  rc=$?\n"
+                                                         + "  if [ \"$rc\" -eq 0 ]\n"
+                                                         + "  then\n"
+                                                         + "    exit 0\n"
+                                                         + "    sleep 1\n"
+                                                         + "    i=$((i+1))\n"
+                                                         + "  else\n"
+                                                         + "    sleep 1\n"
+                                                         + "    i=$((i+1))\n"
+                                                         + "  fi\n"
+                                                         + "done\n"
+                                                         + "exit 1")
+                                                 .build())
+
+                                 .build())
+                         .buildPipeline())
           .build();
     }
 
@@ -112,39 +110,33 @@ public enum ArtifactType {
     private Command getStopCommand() {
       return aCommand()
           .withCommandType(CommandType.STOP)
-          .withGraph(
-              aGraph()
-                  .withGraphName("Stop")
-                  .addNodes(aGraphNode()
-                                .origin(true)
-                                .id(UUIDGenerator.graphIdGenerator("node"))
-                                .type(EXEC.name())
-                                .name("Stop Service")
-                                .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                .addProperty("commandString",
-                                    "\npgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\" | xargs kill  || true")
-                                .build(),
-                      aGraphNode()
-                          .id(UUIDGenerator.graphIdGenerator("node"))
-                          .name("Process Stopped")
-                          .type(PROCESS_CHECK_STOPPED.name())
-                          .addProperty("commandString",
-                              "i=0\n"
-                                  + "while [ \"$i\" -lt 30 ]\n"
-                                  + "do\n"
-                                  + "  pgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"\n"
-                                  + "  rc=$?\n"
-                                  + "  if [ \"$rc\" -eq 0 ]\n"
-                                  + "  then\n"
-                                  + "    sleep 1\n"
-                                  + "    i=$((i+1))\n"
-                                  + "  else\n"
-                                  + "    exit 0\n"
-                                  + "  fi\n"
-                                  + "done\n"
-                                  + "exit 1")
-                          .build())
-                  .buildPipeline())
+          .withGraph(aGraph()
+                         .withGraphName("Stop")
+                         .addNodes(getStopServiceNode(
+                                       "\npgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\" | xargs kill  || true"),
+                             aGraphNode()
+                                 .id(UUIDGenerator.graphIdGenerator("node"))
+                                 .name("Process Stopped")
+                                 .type(PROCESS_CHECK_STOPPED.name())
+                                 .properties(ImmutableMap.<String, Object>builder()
+                                                 .put("commandString",
+                                                     "i=0\n"
+                                                         + "while [ \"$i\" -lt 30 ]\n"
+                                                         + "do\n"
+                                                         + "  pgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"\n"
+                                                         + "  rc=$?\n"
+                                                         + "  if [ \"$rc\" -eq 0 ]\n"
+                                                         + "  then\n"
+                                                         + "    sleep 1\n"
+                                                         + "    i=$((i+1))\n"
+                                                         + "  else\n"
+                                                         + "    exit 0\n"
+                                                         + "  fi\n"
+                                                         + "done\n"
+                                                         + "exit 1")
+                                                 .build())
+                                 .build())
+                         .buildPipeline())
           .build();
     }
 
@@ -158,37 +150,19 @@ public enum ArtifactType {
           .withCommandType(CommandType.INSTALL)
           .withGraph(aGraph()
                          .withGraphName("Install")
-                         .addNodes(aGraphNode()
-                                       .origin(true)
-                                       .id(UUIDGenerator.graphIdGenerator("node"))
-                                       .name("Setup Runtime Paths")
-                                       .type(SETUP_ENV.name())
-                                       .addProperty("commandString", SetupEnvCommandUnit.SETUP_ENV_COMMAND_STRING)
-                                       .build(),
+                         .addNodes(getSetupRuntimePathsNode(),
                              aGraphNode()
                                  .id(UUIDGenerator.graphIdGenerator("node"))
                                  .name("Stop")
                                  .type(COMMAND.name())
-                                 .addProperty("referenceId", "Stop")
+                                 .properties(ImmutableMap.<String, Object>builder().put("referenceId", "Stop").build())
                                  .build(),
-                             aGraphNode()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
-                                 .name("Copy Artifact")
-                                 .type(SCP.name())
-                                 .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
-                                 .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
-                                 .build(),
-                             aGraphNode()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
-                                 .name("Copy Configs")
-                                 .type(COPY_CONFIGS.name())
-                                 .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
-                                 .build(),
+                             getCopyArtifactNode(), getCopyConfigsNode(),
                              aGraphNode()
                                  .id(UUIDGenerator.graphIdGenerator("node"))
                                  .name("Start")
                                  .type(COMMAND.name())
-                                 .addProperty("referenceId", "Start")
+                                 .properties(ImmutableMap.<String, Object>builder().put("referenceId", "Start").build())
                                  .build())
                          .buildPipeline())
           .build();
@@ -212,26 +186,7 @@ public enum ArtifactType {
               .withCommandType(CommandType.INSTALL)
               .withGraph(aGraph()
                              .withGraphName("Install")
-                             .addNodes(aGraphNode()
-                                           .origin(true)
-                                           .id(UUIDGenerator.graphIdGenerator("node"))
-                                           .name("Setup Runtime Paths")
-                                           .type(SETUP_ENV.name())
-                                           .addProperty("commandString", SetupEnvCommandUnit.SETUP_ENV_COMMAND_STRING)
-                                           .build(),
-                                 aGraphNode()
-                                     .id(UUIDGenerator.graphIdGenerator("node"))
-                                     .name("Copy Artifact")
-                                     .type(SCP.name())
-                                     .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
-                                     .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
-                                     .build(),
-                                 aGraphNode()
-                                     .id(UUIDGenerator.graphIdGenerator("node"))
-                                     .name("Copy Configs")
-                                     .type(COPY_CONFIGS.name())
-                                     .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
-                                     .build())
+                             .addNodes(getSetupRuntimePathsNode(), getCopyArtifactNode(), getCopyConfigsNode())
                              .buildPipeline())
               .build());
     }
@@ -260,24 +215,11 @@ public enum ArtifactType {
     private Command getStartCommand() {
       return aCommand()
           .withCommandType(CommandType.START)
-          .withGraph(
-              aGraph()
-                  .withGraphName("Start")
-                  .addNodes(aGraphNode()
-                                .origin(true)
-                                .id(UUIDGenerator.graphIdGenerator("node"))
-                                .type(EXEC.name())
-                                .name("Start Service")
-                                .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                .addProperty("commandString", "echo \"service start script should be added here\"")
-                                .build(),
-                      aGraphNode()
-                          .id(UUIDGenerator.graphIdGenerator("node"))
-                          .name("Service Running")
-                          .type(PROCESS_CHECK_RUNNING.name())
-                          .addProperty("commandString", "echo \"service running check should be added here\"")
-                          .build())
-                  .buildPipeline())
+          .withGraph(aGraph()
+                         .withGraphName("Start")
+                         .addNodes(getStartServiceNode("echo \"service start script should be added here\""),
+                             getServiceRunningNode())
+                         .buildPipeline())
           .build();
     }
 
@@ -292,19 +234,14 @@ public enum ArtifactType {
           .withGraph(
               aGraph()
                   .withGraphName("Stop")
-                  .addNodes(aGraphNode()
-                                .origin(true)
-                                .id(UUIDGenerator.graphIdGenerator("node"))
-                                .type(EXEC.name())
-                                .name("Stop Service")
-                                .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                .addProperty("commandString", "echo \"service stop script should be added here\"")
-                                .build(),
+                  .addNodes(getStopServiceNode("echo \"service stop script should be added here\""),
                       aGraphNode()
                           .id(UUIDGenerator.graphIdGenerator("node"))
                           .name("Service Stopped")
                           .type(PROCESS_CHECK_STOPPED.name())
-                          .addProperty("commandString", "echo \"service stopped check should be added here\"")
+                          .properties(ImmutableMap.<String, Object>builder()
+                                          .put("commandString", "echo \"service stopped check should be added here\"")
+                                          .build())
                           .build())
                   .buildPipeline())
           .build();
@@ -319,33 +256,17 @@ public enum ArtifactType {
           .withCommandType(CommandType.INSTALL)
           .withGraph(aGraph()
                          .withGraphName("Install")
-                         .addNodes(aGraphNode()
-                                       .origin(true)
-                                       .id(UUIDGenerator.graphIdGenerator("node"))
-                                       .name("Setup Runtime Paths")
-                                       .type(SETUP_ENV.name())
-                                       .addProperty("commandString", SetupEnvCommandUnit.SETUP_ENV_COMMAND_STRING)
-                                       .build(),
-                             aGraphNode()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
-                                 .name("Copy Artifact")
-                                 .type(SCP.name())
-                                 .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
-                                 .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
-                                 .build(),
+                         .addNodes(getSetupRuntimePathsNode(), getCopyArtifactNode(),
                              aGraphNode()
                                  .id(UUIDGenerator.graphIdGenerator("node"))
                                  .name("Expand Artifact")
                                  .type(EXEC.name())
-                                 .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                 .addProperty("commandString", "tar -xvzf \"$ARTIFACT_FILE_NAME\"")
+                                 .properties(ImmutableMap.<String, Object>builder()
+                                                 .put("commandPath", "$WINGS_RUNTIME_PATH")
+                                                 .put("commandString", "tar -xvzf \"$ARTIFACT_FILE_NAME\"")
+                                                 .build())
                                  .build(),
-                             aGraphNode()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
-                                 .name("Copy Configs")
-                                 .type(COPY_CONFIGS.name())
-                                 .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
-                                 .build())
+                             getCopyConfigsNode())
                          .buildPipeline())
           .build();
     }
@@ -374,24 +295,11 @@ public enum ArtifactType {
     private Command getStartCommand() {
       return aCommand()
           .withCommandType(CommandType.START)
-          .withGraph(
-              aGraph()
-                  .withGraphName("Start")
-                  .addNodes(aGraphNode()
-                                .origin(true)
-                                .id(UUIDGenerator.graphIdGenerator("node"))
-                                .type(EXEC.name())
-                                .name("Start Service")
-                                .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                .addProperty("commandString", "echo \"service start script should be added here\"")
-                                .build(),
-                      aGraphNode()
-                          .id(UUIDGenerator.graphIdGenerator("node"))
-                          .name("Service Running")
-                          .type(PROCESS_CHECK_RUNNING.name())
-                          .addProperty("commandString", "echo \"service running check should be added here\"")
-                          .build())
-                  .buildPipeline())
+          .withGraph(aGraph()
+                         .withGraphName("Start")
+                         .addNodes(getStartServiceNode("echo \"service start script should be added here\""),
+                             getServiceRunningNode())
+                         .buildPipeline())
           .build();
     }
 
@@ -406,19 +314,14 @@ public enum ArtifactType {
           .withGraph(
               aGraph()
                   .withGraphName("Stop")
-                  .addNodes(aGraphNode()
-                                .origin(true)
-                                .id(UUIDGenerator.graphIdGenerator("node"))
-                                .type(EXEC.name())
-                                .name("Stop Service")
-                                .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                .addProperty("commandString", "echo \"service stop script should be added here\"")
-                                .build(),
+                  .addNodes(getStopServiceNode("echo \"service stop script should be added here\""),
                       aGraphNode()
                           .id(UUIDGenerator.graphIdGenerator("node"))
                           .name("Service Stopped")
                           .type(PROCESS_CHECK_STOPPED.name())
-                          .addProperty("commandString", "echo \"service stopped check should be added here\"")
+                          .properties(ImmutableMap.<String, Object>builder()
+                                          .put("commandString", "echo \"service stopped check should be added here\"")
+                                          .build())
                           .build())
                   .buildPipeline())
           .build();
@@ -433,33 +336,17 @@ public enum ArtifactType {
           .withCommandType(CommandType.START)
           .withGraph(aGraph()
                          .withGraphName("Install")
-                         .addNodes(aGraphNode()
-                                       .origin(true)
-                                       .id(UUIDGenerator.graphIdGenerator("node"))
-                                       .name("Setup Runtime Paths")
-                                       .type(SETUP_ENV.name())
-                                       .addProperty("commandString", SetupEnvCommandUnit.SETUP_ENV_COMMAND_STRING)
-                                       .build(),
-                             aGraphNode()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
-                                 .name("Copy Artifact")
-                                 .type(SCP.name())
-                                 .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
-                                 .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
-                                 .build(),
+                         .addNodes(getSetupRuntimePathsNode(), getCopyArtifactNode(),
                              aGraphNode()
                                  .id(UUIDGenerator.graphIdGenerator("node"))
                                  .name("Expand Artifact")
                                  .type(EXEC.name())
-                                 .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                 .addProperty("commandString", "unzip \"$ARTIFACT_FILE_NAME\"")
+                                 .properties(ImmutableMap.<String, Object>builder()
+                                                 .put("commandPath", "$WINGS_RUNTIME_PATH")
+                                                 .put("commandString", "unzip \"$ARTIFACT_FILE_NAME\"")
+                                                 .build())
                                  .build(),
-                             aGraphNode()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
-                                 .name("Copy Configs")
-                                 .type(COPY_CONFIGS.name())
-                                 .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
-                                 .build())
+                             getCopyConfigsNode())
                          .buildPipeline())
           .build();
     }
@@ -551,24 +438,11 @@ public enum ArtifactType {
     private Command getStartCommand() {
       return aCommand()
           .withCommandType(CommandType.START)
-          .withGraph(
-              aGraph()
-                  .withGraphName("Start")
-                  .addNodes(aGraphNode()
-                                .origin(true)
-                                .id(UUIDGenerator.graphIdGenerator("node"))
-                                .type(EXEC.name())
-                                .name("Start Service")
-                                .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                .addProperty("commandString", "echo \"service start script should be added here\"")
-                                .build(),
-                      aGraphNode()
-                          .id(UUIDGenerator.graphIdGenerator("node"))
-                          .name("Service Running")
-                          .type(PROCESS_CHECK_RUNNING.name())
-                          .addProperty("commandString", "echo \"service running check should be added here\"")
-                          .build())
-                  .buildPipeline())
+          .withGraph(aGraph()
+                         .withGraphName("Start")
+                         .addNodes(getStartServiceNode("echo \"service start script should be added here\""),
+                             getServiceRunningNode())
+                         .buildPipeline())
           .build();
     }
 
@@ -583,19 +457,14 @@ public enum ArtifactType {
           .withGraph(
               aGraph()
                   .withGraphName("Stop")
-                  .addNodes(aGraphNode()
-                                .origin(true)
-                                .id(UUIDGenerator.graphIdGenerator("node"))
-                                .type(EXEC.name())
-                                .name("Stop Service")
-                                .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                .addProperty("commandString", "echo \"service stop script should be added here\"")
-                                .build(),
+                  .addNodes(getStopServiceNode("echo \"service stop script should be added here\""),
                       aGraphNode()
                           .id(UUIDGenerator.graphIdGenerator("node"))
                           .name("Service Stopped")
                           .type(PROCESS_CHECK_STOPPED.name())
-                          .addProperty("commandString", "echo \"service stopped check should be added here\"")
+                          .properties(ImmutableMap.<String, Object>builder()
+                                          .put("commandString", "echo \"service stopped check should be added here\"")
+                                          .build())
                           .build())
                   .buildPipeline())
           .build();
@@ -606,32 +475,15 @@ public enum ArtifactType {
           .withCommandType(CommandType.INSTALL)
           .withGraph(aGraph()
                          .withGraphName("Install")
-                         .addNodes(aGraphNode()
-                                       .origin(true)
-                                       .id(UUIDGenerator.graphIdGenerator("node"))
-                                       .name("Setup Runtime Paths")
-                                       .type(SETUP_ENV.name())
-                                       .addProperty("commandString", SetupEnvCommandUnit.SETUP_ENV_COMMAND_STRING)
-                                       .build(),
-                             aGraphNode()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
-                                 .name("Copy Artifact")
-                                 .type(SCP.name())
-                                 .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
-                                 .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
-                                 .build(),
-                             aGraphNode()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
-                                 .name("Copy Configs")
-                                 .type(COPY_CONFIGS.name())
-                                 .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
-                                 .build(),
+                         .addNodes(getSetupRuntimePathsNode(), getCopyArtifactNode(), getCopyConfigsNode(),
                              aGraphNode()
                                  .id(UUIDGenerator.graphIdGenerator("node"))
                                  .name("Install")
                                  .type(EXEC.name())
-                                 .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                                 .addProperty("commandString", "sudo yum install -y \"$ARTIFACT_FILE_NAME\"")
+                                 .properties(ImmutableMap.<String, Object>builder()
+                                                 .put("commandPath", "$WINGS_RUNTIME_PATH")
+                                                 .put("commandString", "sudo yum install -y \"$ARTIFACT_FILE_NAME\"")
+                                                 .build())
                                  .build())
                          .buildPipeline())
           .build();
@@ -937,6 +789,76 @@ public enum ArtifactType {
           .build();
     }
   };
+
+  private static GraphNode getSetupRuntimePathsNode() {
+    return aGraphNode()
+        .origin(true)
+        .id(UUIDGenerator.graphIdGenerator("node"))
+        .name("Setup Runtime Paths")
+        .type(SETUP_ENV.name())
+        .properties(ImmutableMap.<String, Object>builder()
+                        .put("commandString", SetupEnvCommandUnit.SETUP_ENV_COMMAND_STRING)
+                        .build())
+        .build();
+  }
+
+  private static GraphNode getCopyConfigsNode() {
+    return aGraphNode()
+        .id(UUIDGenerator.graphIdGenerator("node"))
+        .name("Copy Configs")
+        .type(COPY_CONFIGS.name())
+        .properties(ImmutableMap.<String, Object>builder().put("destinationParentPath", "$WINGS_RUNTIME_PATH").build())
+        .build();
+  }
+
+  private static GraphNode getCopyArtifactNode() {
+    return aGraphNode()
+        .id(UUIDGenerator.graphIdGenerator("node"))
+        .name("Copy Artifact")
+        .type(SCP.name())
+        .properties(ImmutableMap.<String, Object>builder()
+                        .put("fileCategory", ScpFileCategory.ARTIFACTS)
+                        .put("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
+                        .build())
+        .build();
+  }
+
+  private static GraphNode getStartServiceNode(String commandString) {
+    return aGraphNode()
+        .origin(true)
+        .id(UUIDGenerator.graphIdGenerator("node"))
+        .type(EXEC.name())
+        .name("Start Service")
+        .properties(ImmutableMap.<String, Object>builder()
+                        .put("commandPath", "$WINGS_RUNTIME_PATH")
+                        .put("commandString", "java -jar \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"")
+                        .build())
+        .build();
+  }
+
+  private static GraphNode getStopServiceNode(String commandString) {
+    return aGraphNode()
+        .origin(true)
+        .id(UUIDGenerator.graphIdGenerator("node"))
+        .type(EXEC.name())
+        .name("Stop Service")
+        .properties(ImmutableMap.<String, Object>builder()
+                        .put("commandPath", "$WINGS_RUNTIME_PATH")
+                        .put("commandString", commandString)
+                        .build())
+        .build();
+  }
+
+  private static GraphNode getServiceRunningNode() {
+    return aGraphNode()
+        .id(UUIDGenerator.graphIdGenerator("node"))
+        .name("Service Running")
+        .type(PROCESS_CHECK_RUNNING.name())
+        .properties(ImmutableMap.<String, Object>builder()
+                        .put("commandString", "echo \"service running check should be added here\"")
+                        .build())
+        .build();
+  }
 
   /**
    * Gets default commands.
