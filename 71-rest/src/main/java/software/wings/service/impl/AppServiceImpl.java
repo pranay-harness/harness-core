@@ -6,7 +6,6 @@ import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
@@ -39,6 +38,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
+import io.harness.queue.Queue;
 import io.harness.scheduler.PersistentScheduler;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
@@ -55,8 +55,9 @@ import software.wings.beans.Service;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.scheduler.InstanceSyncJob;
-import software.wings.scheduler.PruneEntityJob;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -120,7 +121,7 @@ public class AppServiceImpl implements AppService {
   @Inject private YamlGitService yamlGitService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
 
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler backgroundJobScheduler;
+  @Inject private Queue<PruneEvent> pruneQueue;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
 
   private void validateAppName(Application app) {
@@ -357,9 +358,7 @@ public class AppServiceImpl implements AppService {
 
       yamlPushService.pushYamlChangeSet(application.getAccountId(), application, null, Type.DELETE, syncFromGit, false);
 
-      // First lets make sure that we have persisted a job that will prone the descendant objects
-      PruneEntityJob.addDefaultJob(
-          backgroundJobScheduler, Application.class, appId, appId, ofSeconds(5), ofSeconds(15));
+      pruneQueue.send(new PruneEvent(Application.class, appId, appId));
 
       // Do not add too much between these too calls (on top and bottom). We need to persist the job
       // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
@@ -395,7 +394,7 @@ public class AppServiceImpl implements AppService {
   public void pruneDescendingEntities(@NotEmpty String appId) {
     List<OwnedByApplication> services =
         ServiceClassLocator.descendingServices(this, AppServiceImpl.class, OwnedByApplication.class);
-    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByApplication(appId));
+    PruneEntityListener.pruneDescendingEntities(services, descending -> descending.pruneByApplication(appId));
   }
 
   @Override

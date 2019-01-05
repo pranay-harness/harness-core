@@ -66,25 +66,16 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     this.filterWithVersion = filterWithVersion;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#get()
-   */
   @Override
   public T get() {
     return get(3000, 1000);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#get(int)
-   */
   @Override
   public T get(final int waitDuration) {
     return get(waitDuration, 1000);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#get(int, long)
-   */
   @Override
   public T get(final int waitDuration, long pollDuration) {
     final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
@@ -125,9 +116,6 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     }
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#updateResetDuration(java.lang.Object)
-   */
   @Override
   public void updateResetDuration(T message) {
     final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
@@ -152,9 +140,6 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     }
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#count(boolean)
-   */
   @Override
   public long count(final Filter filter) {
     final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
@@ -172,9 +157,6 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     throw new RuntimeException(format("Unknown filter type %s", filter));
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#ack(java.lang.Object)
-   */
   @Override
   public void ack(final T message) {
     Objects.requireNonNull(message);
@@ -183,17 +165,11 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     persistence.getDatastore(klass, ReadPref.CRITICAL).delete(klass, id);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#requeue(java.lang.Object)
-   */
   @Override
   public void requeue(final String id, int retries) {
     requeue(id, retries, new Date());
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#requeue(java.lang.Object, java.util.Date)
-   */
   @Override
   public void requeue(final String id, final int retries, final Date earliestGet) {
     Objects.requireNonNull(id);
@@ -206,9 +182,6 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
             .set(Queuable.EARLIEST_GET_KEY, earliestGet));
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#send(java.lang.Object)
-   */
   @Override
   public void send(final T payload) {
     Objects.requireNonNull(payload);
@@ -217,17 +190,11 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     persistence.getDatastore(klass, ReadPref.CRITICAL).save(payload);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#resetDurationMillis()
-   */
   @Override
   public long resetDurationMillis() {
     return TimeUnit.SECONDS.toMillis(resetDurationInSeconds);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#name()
-   */
   @Override
   public String name() {
     final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);

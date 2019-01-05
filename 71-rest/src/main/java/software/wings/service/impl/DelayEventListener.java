@@ -17,7 +17,7 @@ public class DelayEventListener extends QueueListener<DelayEvent> {
   }
 
   @Override
-  protected void onMessage(DelayEvent message) {
+  public void onMessage(DelayEvent message) {
     logger.info("Notifying for DelayEvent with resumeId {}", message.getResumeId());
 
     waitNotifyEngine.notify(

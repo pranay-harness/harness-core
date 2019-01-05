@@ -22,7 +22,7 @@ public class KmsTransitionEventListener extends QueueListener<KmsTransitionEvent
   }
 
   @Override
-  protected void onMessage(KmsTransitionEvent message) {
+  public void onMessage(KmsTransitionEvent message) {
     try {
       logger.info("Processing secret manager transition event with entityId: {}", message.getEntityId());
       secretManager.changeSecretManager(message.getAccountId(), message.getEntityId(), message.getFromEncryptionType(),

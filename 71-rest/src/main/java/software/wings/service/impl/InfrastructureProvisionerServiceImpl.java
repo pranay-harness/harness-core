@@ -6,14 +6,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -25,7 +23,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
-import io.harness.scheduler.PersistentScheduler;
+import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import io.harness.waiter.ErrorNotifyResponseData;
@@ -57,7 +55,7 @@ import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.scheduler.PruneEntityJob;
+import software.wings.prune.PruneEvent;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -100,7 +98,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Inject private WingsPersistence wingsPersistence;
 
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject private Queue<PruneEvent> pruneQueue;
 
   @Override
   @ValidationGroups(Create.class)
@@ -275,9 +273,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   public void pruneDescendingEntities(String appId, String infrastructureProvisionerId) {}
 
   private void prune(String appId, String infraProvisionerId) {
-    PruneEntityJob.addDefaultJob(
-        jobScheduler, InfrastructureProvisioner.class, appId, infraProvisionerId, ofSeconds(5), ofSeconds(15));
-
+    pruneQueue.send(new PruneEvent(InfrastructureProvisioner.class, appId, infraProvisionerId));
     delete(appId, infraProvisionerId);
   }
 

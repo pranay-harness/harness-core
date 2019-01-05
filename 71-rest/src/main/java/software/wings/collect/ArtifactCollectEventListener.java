@@ -71,7 +71,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
    * @see software.wings.core.queue.QueueListener#onMessage(software.wings.core.queue.Queuable)
    */
   @Override
-  protected void onMessage(CollectEvent message) {
+  public void onMessage(CollectEvent message) {
     Artifact artifact = message.getArtifact();
     try {
       logger.info("Received artifact collection event for artifactId {} and of appId {}", artifact.getUuid(),

@@ -12,7 +12,6 @@ import static io.harness.eraro.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -31,7 +30,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import de.danielbechler.util.Collections;
 import io.harness.beans.ExecutionStatus;
@@ -45,7 +43,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.persistence.HIterator;
-import io.harness.scheduler.PersistentScheduler;
+import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -71,7 +69,8 @@ import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.PruneEntityJob;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -117,7 +116,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private EnvironmentService environmentService;
   @Inject private LimitCheckerFactory limitCheckerFactory;
 
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject private Queue<PruneEvent> pruneQueue;
 
   /**
    * {@inheritDoc}
@@ -322,7 +321,7 @@ public class PipelineServiceImpl implements PipelineService {
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String pipelineId) {
     List<OwnedByPipeline> services =
         ServiceClassLocator.descendingServices(this, PipelineServiceImpl.class, OwnedByPipeline.class);
-    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByPipeline(appId, pipelineId));
+    PruneEntityListener.pruneDescendingEntities(services, descending -> descending.pruneByPipeline(appId, pipelineId));
   }
 
   @Override
@@ -869,7 +868,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   private boolean prunePipeline(String appId, String pipelineId) {
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneEntityJob.addDefaultJob(jobScheduler, Pipeline.class, appId, pipelineId, ofSeconds(5), ofSeconds(15));
+    pruneQueue.send(new PruneEvent(Pipeline.class, appId, pipelineId));
     return wingsPersistence.delete(Pipeline.class, appId, pipelineId);
   }
 }

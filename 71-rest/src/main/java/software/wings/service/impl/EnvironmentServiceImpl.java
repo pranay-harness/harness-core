@@ -39,7 +39,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -47,7 +46,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import io.harness.scheduler.PersistentScheduler;
+import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -73,7 +72,8 @@ import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.PruneEntityJob;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ConfigService;
@@ -129,10 +129,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private PersistentLocker persistentLocker;
   @Inject private WorkflowService workflowService;
   @Inject private TriggerService triggerService;
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private YamlPushService yamlPushService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private ApplicationManifestService applicationManifestService;
+
+  @Inject private Queue<PruneEvent> pruneQueue;
 
   /**
    * {@inheritDoc}
@@ -441,9 +442,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     String accountId = appService.getAccountIdByAppId(environment.getAppId());
     yamlPushService.pushYamlChangeSet(accountId, environment, null, Type.DELETE, environment.isSyncFromGit(), false);
 
-    // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneEntityJob.addDefaultJob(
-        jobScheduler, Environment.class, environment.getAppId(), environment.getUuid(), ofSeconds(5), ofSeconds(15));
+    pruneQueue.send(new PruneEvent(Environment.class, environment.getAppId(), environment.getUuid()));
 
     // Do not add too much between these too calls (on top and bottom). We need to persist the job
     // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
@@ -467,7 +466,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String envId) {
     List<OwnedByEnvironment> services =
         ServiceClassLocator.descendingServices(this, EnvironmentServiceImpl.class, OwnedByEnvironment.class);
-    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByEnvironment(appId, envId));
+    PruneEntityListener.pruneDescendingEntities(services, descending -> descending.pruneByEnvironment(appId, envId));
   }
 
   @Override

@@ -1,18 +1,16 @@
 package software.wings.service.impl;
 
-import static java.time.Duration.ofSeconds;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.scheduler.PersistentScheduler;
+import io.harness.queue.Queue;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
@@ -22,7 +20,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.PruneEntityJob;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
@@ -52,7 +51,7 @@ public class HostServiceImpl implements HostService {
   @Inject private ExecutorService executorService;
   @Inject private ServiceInstanceService serviceInstanceService;
 
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject private Queue<PruneEvent> pruneQueue;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -164,16 +163,14 @@ public class HostServiceImpl implements HostService {
     if (host == null) {
       return true;
     }
-
-    PruneEntityJob.addDefaultJob(
-        jobScheduler, Host.class, host.getAppId(), host.getUuid(), ofSeconds(5), ofSeconds(15));
+    pruneQueue.send(new PruneEvent(Host.class, host.getAppId(), host.getUuid()));
     return wingsPersistence.delete(host);
   }
 
   @Override
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String hostId) {
     List<OwnedByHost> services = ServiceClassLocator.descendingServices(this, HostServiceImpl.class, OwnedByHost.class);
-    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByHost(appId, hostId));
+    PruneEntityListener.pruneDescendingEntities(services, descending -> descending.pruneByHost(appId, hostId));
   }
 
   @Override

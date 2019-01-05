@@ -2,20 +2,18 @@ package software.wings.service.impl;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ADMIN;
-import static java.time.Duration.ofSeconds;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Event.Builder.anEvent;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
-import io.harness.scheduler.PersistentScheduler;
+import io.harness.queue.Queue;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -31,7 +29,8 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.PruneEntityJob;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
@@ -56,7 +55,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private EventEmitter eventEmitter;
   private static final Logger logger = LoggerFactory.getLogger(ActivityServiceImpl.class);
 
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject private Queue<PruneEvent> pruneQueue;
 
   @Override
   public PageResponse<Activity> list(PageRequest<Activity> pageRequest) {
@@ -168,7 +167,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public boolean delete(String appId, String activityId) {
-    PruneEntityJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId, ofSeconds(5), ofSeconds(15));
+    pruneQueue.send(new PruneEvent(Activity.class, appId, activityId));
 
     return wingsPersistence.delete(
         wingsPersistence.createQuery(Activity.class).filter(Activity.APP_ID_KEY, appId).filter(ID_KEY, activityId));
@@ -178,7 +177,7 @@ public class ActivityServiceImpl implements ActivityService {
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String activityId) {
     List<OwnedByActivity> services =
         ServiceClassLocator.descendingServices(this, ActivityServiceImpl.class, OwnedByActivity.class);
-    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByActivity(appId, activityId));
+    PruneEntityListener.pruneDescendingEntities(services, descending -> descending.pruneByActivity(appId, activityId));
   }
 
   @Override
