@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.doReturn;
@@ -127,7 +128,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
         "No baseline was set for the workflow. Workflow running with auto baseline. No previous execution found. This will be the baseline run",
         response.getErrorMessage());
 
-    List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class).asList();
+    List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
     assertEquals(1, tasks.size());
     DelegateTask task = tasks.get(0);
     assertEquals(TaskType.DYNA_TRACE_METRIC_DATA_COLLECTION_TASK.name(), task.getTaskType());

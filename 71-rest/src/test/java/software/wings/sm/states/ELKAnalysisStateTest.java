@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -211,7 +212,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     assertEquals(ExecutionStatus.RUNNING, response.getExecutionStatus());
     assertEquals("Log Verification running.", response.getErrorMessage());
 
-    List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class).asList();
+    List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
     assertEquals(1, tasks.size());
     DelegateTask task = tasks.get(0);
     assertEquals(TaskType.ELK_COLLECT_LOG_DATA.name(), task.getTaskType());

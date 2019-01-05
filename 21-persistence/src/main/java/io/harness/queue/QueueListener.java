@@ -133,8 +133,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       logger.error("Exception happened while processing message " + message, exception);
     }
     if (message.getRetries() > 0) {
-      message.setRetries(message.getRetries() - 1);
-      queue.requeue(message);
+      queue.requeue(message.getId(), message.getRetries() - 1);
     }
   }
 

@@ -292,60 +292,6 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   /**
-   * Should replace message keeping same id on ack send.
-   */
-  @Test
-  public void shouldReplaceMessageKeepingSameIdOnAckSend() {
-    TestQueuableObject message = new TestQueuableObject(0);
-
-    queue.send(message);
-
-    assertThat(getDatastore().getCount(TestQueuableObject.class)).isEqualTo(1);
-
-    TestQueuableObject resultOne = queue.get();
-
-    Date expectedEarliestGet = new Date();
-    double expectedPriority = 0.8;
-    Date timeBeforeAckSend = new Date();
-    TestQueuableObject toBeSent = new TestQueuableObject(1);
-    toBeSent.setEarliestGet(expectedEarliestGet);
-    toBeSent.setPriority(expectedPriority);
-    queue.ackSend(resultOne, toBeSent);
-
-    assertThat(getDatastore().getCount(TestQueuableObject.class)).isEqualTo(1);
-
-    TestQueuableObject actual = getDatastore().find(TestQueuableObject.class).get();
-
-    Date actualCreated = actual.getCreated();
-    assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeAckSend).isBeforeOrEqualsTo(new Date());
-
-    TestQueuableObject expected = new TestQueuableObject(1);
-    expected.setEarliestGet(expectedEarliestGet);
-    expected.setPriority(expectedPriority);
-    expected.setCreated(actualCreated);
-
-    assertThat(actual).isEqualToIgnoringGivenFields(expected, "id");
-  }
-
-  /**
-   * Should throw npe when ack send is called with null message.
-   */
-  @Test
-  public void shouldThrowNpeWhenAckSendIsCalledWithNullMessage() {
-    assertThatExceptionOfType(NullPointerException.class)
-        .isThrownBy(() -> queue.ackSend(null, new TestQueuableObject(1)));
-  }
-
-  /**
-   * Should throw npe when ack send is called with null replacement message.
-   */
-  @Test
-  public void shouldThrowNpeWhenAckSendIsCalledWithNullReplacementMessage() {
-    assertThatExceptionOfType(NullPointerException.class)
-        .isThrownBy(() -> queue.ackSend(new TestQueuableObject(1), null));
-  }
-
-  /**
    * Should requeue message.
    */
   @Test
@@ -357,41 +303,19 @@ public class MongoQueueTest extends PersistenceTest {
     TestQueuableObject resultOne = queue.get();
 
     Date expectedEarliestGet = new Date();
-    double expectedPriority = 0.8;
     Date timeBeforeRequeue = new Date();
-    queue.requeue(resultOne, expectedEarliestGet, expectedPriority);
+    queue.requeue(resultOne.getId(), 0, expectedEarliestGet);
 
     assertThat(getDatastore().getCount(TestQueuableObject.class)).isEqualTo(1);
 
     TestQueuableObject actual = getDatastore().find(TestQueuableObject.class).get();
 
-    Date actualCreated = actual.getCreated();
-    assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeRequeue).isBeforeOrEqualsTo(new Date());
-
     TestQueuableObject expected = new TestQueuableObject(0);
     expected.setVersion(versionInfoManager.getVersionInfo().getVersion());
     expected.setEarliestGet(expectedEarliestGet);
-    expected.setPriority(expectedPriority);
-    expected.setCreated(actualCreated);
+    expected.setCreated(message.getCreated());
 
-    assertThat(actual).isEqualToIgnoringGivenFields(expected, "id");
-  }
-
-  /**
-   * Should throw illegal argument exception when requeued with priority na n.
-   */
-  @Test
-  public void shouldThrowIllegalArgumentExceptionWhenRequeuedWithPriorityNaN() {
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> queue.requeue(new TestQueuableObject(1), new Date(), Double.NaN));
-  }
-
-  /**
-   * Should throw npe when requeue null message.
-   */
-  @Test
-  public void shouldThrowNpeWhenRequeueNullMessage() {
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(null));
+    assertThat(actual).isEqualToIgnoringGivenFields(expected, "id", "resetTimestamp");
   }
 
   /**
@@ -399,8 +323,7 @@ public class MongoQueueTest extends PersistenceTest {
    */
   @Test
   public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() {
-    assertThatExceptionOfType(NullPointerException.class)
-        .isThrownBy(() -> queue.requeue(new TestQueuableObject(1), null));
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue("id", 0, null));
   }
 
   /**

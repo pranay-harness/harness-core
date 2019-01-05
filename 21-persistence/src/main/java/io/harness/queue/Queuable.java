@@ -24,11 +24,13 @@ import java.util.Date;
       @Index(options = @IndexOptions(name = "count"), fields = { @Field("running") }),
 })
 public abstract class Queuable implements PersistentEntity {
-  public static final String RUNNING_KEY = "running";
-  public static final String RESET_TIMESTAMP_KEY = "resetTimestamp";
-  public static final String EARLIEST_GET_KEY = "earliestGet";
-  public static final String PRIORITY_KEY = "priority";
   public static final String CREATED_KEY = "created";
+  public static final String EARLIEST_GET_KEY = "earliestGet";
+  public static final String ID_KEY = "id";
+  public static final String PRIORITY_KEY = "priority";
+  public static final String RESET_TIMESTAMP_KEY = "resetTimestamp";
+  public static final String RETRIES_KEY = "retries";
+  public static final String RUNNING_KEY = "running";
   public static final String VERSION_KEY = "version";
 
   @Id private String id;
