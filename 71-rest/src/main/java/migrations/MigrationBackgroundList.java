@@ -21,8 +21,9 @@ public class MigrationBackgroundList {
         .add(Pair.of(1, AddValidUntilToCommandLog.class))
         .add(Pair.of(2, BaseMigration.class))
         .add(Pair.of(3, SetLastLoginTimeToAllUsers.class))
-        .add(Pair.of(4, NewRelicMetricDataBackupMigration.class))
+        .add(Pair.of(4, BaseMigration.class))
         .add(Pair.of(5, TimeSeriesRiskSummaryMigration.class))
+        .add(Pair.of(6, NewRelicMetricDataBackupMigration.class))
         .build();
   }
 }

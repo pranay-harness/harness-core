@@ -39,11 +39,11 @@ public class NewRelicMetricDataBackupMigration implements Migration {
       logger.info("google data store not enabled, returning....");
       return;
     }
-    long maxTime = 0;
+    long minTime = Long.MAX_VALUE;
     EntityQuery query = Query.newEntityQueryBuilder()
                             .setKind(NewRelicMetricDataRecord.class.getAnnotation(Entity.class).value())
                             .setLimit(1)
-                            .setOrderBy(OrderBy.desc("timeStamp"))
+                            .setOrderBy(OrderBy.asc("timeStamp"))
                             .build();
     Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
     QueryResults<com.google.cloud.datastore.Entity> results = datastore.run(query);
@@ -53,20 +53,20 @@ public class NewRelicMetricDataBackupMigration implements Migration {
         NewRelicMetricDataRecord record =
             (NewRelicMetricDataRecord) NewRelicMetricDataRecord.class.newInstance().readFromCloudStorageEntity(
                 results.next());
-        maxTime = record.getTimeStamp();
+        minTime = record.getTimeStamp();
       } catch (Exception e) {
         logger.info("error reading record ", e);
         return;
       }
     }
 
-    logger.info("Move NewRelicMetricDataRecord to google data store from time {}", maxTime);
+    logger.info("Move NewRelicMetricDataRecord to google data store from time {}", minTime);
     PageRequest<NewRelicMetricDataRecord> pageRequest =
         aPageRequest()
-            .addFilter("timeStamp", Operator.GE, maxTime)
+            .addFilter("timeStamp", Operator.LT_EQ, minTime)
             .withLimit("5000")
             .withOffset("0")
-            .addOrder(NewRelicMetricDataRecord.CREATED_AT_KEY, OrderType.ASC)
+            .addOrder(NewRelicMetricDataRecord.CREATED_AT_KEY, OrderType.DESC)
             .build();
 
     int previousOffSet = 0;
