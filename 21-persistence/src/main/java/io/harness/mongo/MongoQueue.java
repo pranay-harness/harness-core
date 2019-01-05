@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.Objects;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class MongoQueue<T extends Queuable> implements Queue<T> {
@@ -29,6 +30,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   private int resetDurationInSeconds;
   private final boolean filterWithVersion;
 
+  private Semaphore semaphore = new Semaphore(1);
   @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
 
@@ -78,15 +80,25 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
 
   @Override
   public T get(final int waitDuration, long pollDuration) {
+    long endTime = System.currentTimeMillis() + waitDuration;
+
+    boolean acquired = false;
+    try {
+      if (acquired = semaphore.tryAcquire(waitDuration, TimeUnit.MILLISECONDS)) {
+        return getUnderLock(endTime, pollDuration);
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } finally {
+      if (acquired) {
+        semaphore.release();
+      }
+    }
+    return null;
+  }
+
+  private T getUnderLock(long endTime, long pollDuration) {
     final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
-
-    Query<T> query = createQuery();
-    query.or(query.criteria(Queuable.RUNNING_KEY).equal(false),
-        query.criteria(Queuable.RESET_TIMESTAMP_KEY).lessThanOrEq(new Date()));
-
-    query.field(Queuable.EARLIEST_GET_KEY)
-        .lessThanOrEq(new Date())
-        .order(Sort.descending(Queuable.PRIORITY_KEY), Sort.ascending(Queuable.CREATED_KEY));
 
     Date resetTimestamp = new Date(System.currentTimeMillis() + resetDurationMillis());
 
@@ -94,9 +106,16 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
                                                .set(Queuable.RUNNING_KEY, true)
                                                .set(Queuable.RESET_TIMESTAMP_KEY, resetTimestamp);
 
-    long endTime = System.currentTimeMillis() + waitDuration;
-
     while (true) {
+      final Date now = new Date();
+
+      Query<T> query = createQuery();
+      query.or(query.criteria(Queuable.RUNNING_KEY).equal(false),
+          query.criteria(Queuable.RESET_TIMESTAMP_KEY).lessThanOrEq(now));
+      query.field(Queuable.EARLIEST_GET_KEY)
+          .lessThanOrEq(now)
+          .order(Sort.descending(Queuable.PRIORITY_KEY), Sort.ascending(Queuable.CREATED_KEY));
+
       T message = datastore.findAndModify(query, updateOperations);
       if (message != null) {
         return message;
@@ -110,6 +129,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
         Thread.sleep(pollDuration);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
+        return null;
       } catch (final IllegalArgumentException ex) {
         pollDuration = 0;
       }
