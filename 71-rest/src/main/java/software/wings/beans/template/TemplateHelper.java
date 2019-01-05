@@ -50,6 +50,7 @@ public class TemplateHelper {
       case SSH:
         return ServiceCommand.class;
       case HTTP:
+      case SHELL_SCRIPT:
         return Workflow.class;
       default:
         unhandled(templateType);
@@ -62,6 +63,7 @@ public class TemplateHelper {
       case SSH:
         return SERVICE;
       case HTTP:
+      case SHELL_SCRIPT:
         return WORKFLOW;
       default:
         unhandled(templateType);
@@ -73,11 +75,17 @@ public class TemplateHelper {
     if (isEmpty(templateUuids)) {
       return false;
     }
-    long size = wingsPersistence.createQuery(lookupEntityClass(templateType))
-                    .field(lookupLinkedTemplateField(templateType))
-                    .in(templateUuids)
-                    .count(new CountOptions().limit(1));
-    return size != 0;
+    long templatesOfType = wingsPersistence.createQuery(Template.class)
+                               .field(TYPE_KEY)
+                               .equal(templateType.name())
+                               .field(Template.ID_KEY)
+                               .in(templateUuids)
+                               .count(new CountOptions().limit(1));
+    long linkedTemplates = wingsPersistence.createQuery(lookupEntityClass(templateType))
+                               .field(lookupLinkedTemplateField(templateType))
+                               .in(templateUuids)
+                               .count(new CountOptions().limit(1));
+    return templatesOfType != 0 && linkedTemplates != 0;
   }
 
   private String lookupLinkedTemplateField(TemplateType templateType) {
@@ -85,6 +93,7 @@ public class TemplateHelper {
       case SSH:
         return TEMPATE_UUID_KEY;
       case HTTP:
+      case SHELL_SCRIPT:
         return LINKED_TEMPLATE_UUIDS_KEY;
       default:
         unhandled(templateType);

@@ -6,6 +6,7 @@ import com.google.inject.multibindings.MapBinder;
 import software.wings.beans.template.TemplateType;
 import software.wings.service.impl.template.AbstractTemplateProcessor;
 import software.wings.service.impl.template.HttpTemplateProcessor;
+import software.wings.service.impl.template.ShellScriptTemplateProcessor;
 import software.wings.service.impl.template.SshCommandTemplateProcessor;
 import software.wings.service.impl.template.TemplateFolderServiceImpl;
 import software.wings.service.impl.template.TemplateGalleryServiceImpl;
@@ -29,5 +30,6 @@ public class TemplateModule extends AbstractModule {
 
     templateServiceBinder.addBinding(TemplateType.SSH.name()).to(SshCommandTemplateProcessor.class);
     templateServiceBinder.addBinding(TemplateType.HTTP.name()).to(HttpTemplateProcessor.class);
+    templateServiceBinder.addBinding(TemplateType.SHELL_SCRIPT.name()).to(ShellScriptTemplateProcessor.class);
   }
 }

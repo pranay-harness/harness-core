@@ -35,6 +35,9 @@ public interface TemplateConstants {
 
   String HTTP_HEALTH_CHECK = HTTP_PATH + "HealthCheck.yaml";
 
+  String SHELL_SCRIPT_PATH = "templategalleries/harness/shellscript/";
+  String SHELL_SCRIPT_EXAMPLE = SHELL_SCRIPT_PATH + "ShellScript.yaml";
+
   /**
    * Template Folder Constants
    */
@@ -45,4 +48,5 @@ public interface TemplateConstants {
   String POWER_SHELL_COMMANDS = "Power Shell Commands";
   String GENERIC_COMMANDS = "Generic Commands";
   String HTTP_VERIFICATION = "HTTP Verifications";
+  String SHELL_SCRIPTS = "Shell Scripts";
 }

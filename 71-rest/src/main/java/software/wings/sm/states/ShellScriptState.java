@@ -8,6 +8,7 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
+import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -191,10 +192,8 @@ public class ShellScriptState extends State {
           ((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
               .getSweepingOutputEnvVariables();
 
-      ScriptStateExecutionData scriptStateExecutionData = ScriptStateExecutionData.builder()
-                                                              .activityId(activityId)
-                                                              .sweepingOutputEnvVariables(sweepingOutputEnvVariables)
-                                                              .build();
+      ScriptStateExecutionData scriptStateExecutionData = (ScriptStateExecutionData) context.getStateExecutionData();
+      scriptStateExecutionData.setSweepingOutputEnvVariables(sweepingOutputEnvVariables);
       executionResponse.setStateExecutionData(scriptStateExecutionData);
     } else if (data instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData executionData = (ErrorNotifyResponseData) data;
@@ -225,6 +224,9 @@ public class ShellScriptState extends State {
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
+    ScriptStateExecutionData scriptStateExecutionData =
+        ScriptStateExecutionData.builder().activityId(activityId).build();
+    scriptStateExecutionData.setTemplateVariable(convertToVariableMap(getTemplateVariables()));
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
 
@@ -350,10 +352,10 @@ public class ShellScriptState extends State {
       delegateTask.setTimeout(getTimeoutMillis());
     }
 
-    String delegateTaskId = scheduleDelegateTask(context, delegateTask);
+    String delegateTaskId = scheduleDelegateTask(context, delegateTask, scriptStateExecutionData);
     return anExecutionResponse()
         .withAsync(true)
-        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
+        .withStateExecutionData(scriptStateExecutionData)
         .withCorrelationIds(Collections.singletonList(activityId))
         .withDelegateTaskId(delegateTaskId)
         .build();

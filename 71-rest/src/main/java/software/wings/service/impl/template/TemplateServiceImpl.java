@@ -20,6 +20,7 @@ import static software.wings.beans.template.TemplateHelper.mappedEntity;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
 import static software.wings.beans.template.TemplateType.HTTP;
+import static software.wings.beans.template.TemplateType.SHELL_SCRIPT;
 import static software.wings.beans.template.TemplateType.SSH;
 import static software.wings.beans.template.TemplateVersion.ChangeType.CREATED;
 import static software.wings.beans.template.TemplateVersion.TEMPLATE_UUID_KEY;
@@ -59,6 +60,7 @@ import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.VersionedTemplate;
 import software.wings.beans.template.command.HttpTemplate;
+import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateFolderService;
@@ -265,7 +267,8 @@ public class TemplateServiceImpl implements TemplateService {
     if (templateHelper.templatesLinked(templateType, Collections.singletonList(templateUuid))) {
       throw new WingsException(TEMPLATES_LINKED, USER)
           .addParam("message", String.format("Template : [%s] couldn't be deleted", template.getName()))
-          .addParam("type", mappedEntity(templateType));
+          .addParam("templateType", templateType.name())
+          .addParam("entityType", mappedEntity(templateType));
     }
     boolean templateDeleted = wingsPersistence.delete(template);
     if (templateDeleted) {
@@ -325,10 +328,13 @@ public class TemplateServiceImpl implements TemplateService {
     logger.info("To be deleted linked template uuids {}", templateUuids);
     // Verify if Service Commands contains the given ids
     if (templateHelper.templatesLinked(SSH, templateUuids)) {
-      throwException(templateFolder, SERVICE);
+      throwException(templateFolder, SSH, SERVICE);
     }
     if (templateHelper.templatesLinked(HTTP, templateUuids)) {
-      throwException(templateFolder, WORKFLOW);
+      throwException(templateFolder, HTTP, WORKFLOW);
+    }
+    if (templateHelper.templatesLinked(SHELL_SCRIPT, templateUuids)) {
+      throwException(templateFolder, SHELL_SCRIPT, WORKFLOW);
     }
     // Delete templates
     return wingsPersistence.delete(wingsPersistence.createQuery(Template.class)
@@ -388,10 +394,11 @@ public class TemplateServiceImpl implements TemplateService {
     return template.getUuid();
   }
 
-  private void throwException(TemplateFolder templateFolder, EntityType entityType) {
+  private void throwException(TemplateFolder templateFolder, TemplateType templateType, EntityType entityType) {
     throw new WingsException(TEMPLATES_LINKED, USER)
         .addParam("message", String.format("Template Folder : [%s] couldn't be deleted", templateFolder.getName()))
-        .addParam("type", entityType.name());
+        .addParam("templateType", templateType.name())
+        .addParam("entityType", entityType.name());
   }
 
   private AbstractTemplateProcessor getAbstractTemplateProcessor(Template template) {
@@ -416,6 +423,8 @@ public class TemplateServiceImpl implements TemplateService {
       return SSH;
     } else if (templateObject instanceof HttpTemplate) {
       return HTTP;
+    } else if (templateObject instanceof ShellScriptTemplate) {
+      return SHELL_SCRIPT;
     }
     throw new InvalidRequestException("Template Type not yet supported", USER);
   }

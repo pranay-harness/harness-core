@@ -152,6 +152,18 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   }
 
   @Override
+  public TemplateFolder getRootLevelFolder(String accountId, String galleryId) {
+    return wingsPersistence.createQuery(TemplateFolder.class)
+        .field(GALLERY_ID_KEY)
+        .equal(galleryId)
+        .field(TemplateFolder.ACCOUNT_ID_KEY)
+        .equal(accountId)
+        .field(TemplateFolder.PARENT_ID_KEY)
+        .doesNotExist()
+        .get();
+  }
+
+  @Override
   public void loadDefaultTemplateFolders() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     Validator.notNullCheck("Harness Template gallery was deleted", templateGallery, SRE);
@@ -180,6 +192,9 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
 
     // Http Verifications
     save(constructTemplateBuilder(harnessFolder, HTTP_VERIFICATION));
+
+    // Shell Script commands folder
+    //    save(constructTemplateBuilder(harnessFolder, SHELL_SCRIPTS));
   }
 
   private TemplateFolder constructTemplateBuilder(TemplateFolder parentFolder, String folderName) {

@@ -38,6 +38,7 @@ public class TemplateFolder extends Base {
   public static final String PATH_ID_KEY = "pathId";
   public static final String NAME_KEY = "name";
   public static final String GALLERY_ID_KEY = "galleryId";
+  public static final String PARENT_ID_KEY = "parentId";
 
   @NotEmpty private String accountId;
   @NotEmpty @EntityName(groups = {Create.class, Update.class}) String name;

@@ -6,7 +6,8 @@ public enum TemplateType {
   SERVICE("Service"),
   SERVICE_INFRA("Service Infrastructure"),
   WORKFLOW("Workflow"),
-  PIPELINE("Pipeline");
+  PIPELINE("Pipeline"),
+  SHELL_SCRIPT("Shell Script");
 
   String displayName;
 

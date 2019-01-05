@@ -123,8 +123,9 @@ public class WorkflowServiceTemplateHelper {
               PhaseStep oldPhaseStep =
                   oldWorkflowPhase.getPhaseSteps()
                       .stream()
-                      .filter(
-                          phaseStep1 -> phaseStep.getUuid() != null && phaseStep.getUuid().equals(phaseStep1.getUuid()))
+                      .filter(phaseStep1
+                          -> phaseStep.getPhaseStepType() != null
+                              && phaseStep.getPhaseStepType().equals(phaseStep1.getPhaseStepType()))
                       .findFirst()
                       .orElse(null);
               updateLinkedPhaseStepTemplate(phaseStep, oldPhaseStep);

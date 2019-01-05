@@ -8,11 +8,13 @@ import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
+import java.util.List;
 import javax.validation.Valid;
 
 public interface TemplateGalleryService extends OwnedByAccount {
   /**
    * List template galleries, User can supply the filters
+   *
    * @param pageRequest
    * @return
    */
@@ -26,6 +28,7 @@ public interface TemplateGalleryService extends OwnedByAccount {
 
   /**
    * Gets gallery by Account Name  and Gallery Name
+   *
    * @param accountId
    * @param galleryName
    * @return
@@ -34,6 +37,7 @@ public interface TemplateGalleryService extends OwnedByAccount {
 
   /**
    * Gets Template Gallery by uuid
+   *
    * @param uuid
    * @return
    */
@@ -41,6 +45,7 @@ public interface TemplateGalleryService extends OwnedByAccount {
 
   /**
    * Get template galleries by accountId
+   *
    * @param accountId
    * @return
    */
@@ -58,6 +63,7 @@ public interface TemplateGalleryService extends OwnedByAccount {
 
   /**
    * Saves Harness gallery
+   *
    * @return
    */
   TemplateGallery saveHarnessGallery();
@@ -75,4 +81,7 @@ public interface TemplateGalleryService extends OwnedByAccount {
       String yamlFilePath, String accountId, String accountName);
 
   void copyNewVersionFromGlobalToAllAccounts(Template template, String keyword);
+
+  void copyNewFolderAndTemplatesFromGlobalToAccounts(
+      String sourceFolderPath, TemplateType templateType, List<String> yamlFilePaths);
 }
