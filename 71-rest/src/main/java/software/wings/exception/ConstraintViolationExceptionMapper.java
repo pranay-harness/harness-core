@@ -11,7 +11,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.validation.ValidationMethod;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
@@ -185,9 +184,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
     return ResponseMessage.builder().code(INVALID_ARGUMENT).level(Level.ERROR).message(s).build();
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   private String processMessage(ConstraintViolation<?> v, String message) {
-    ConstraintDescriptor constraintDescriptor = v.getConstraintDescriptor();
     boolean replaceArg = false;
     for (Path.Node node : v.getPropertyPath()) {
       switch (node.getKind()) {

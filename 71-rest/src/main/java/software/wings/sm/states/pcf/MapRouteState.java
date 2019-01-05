@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toList;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
@@ -108,7 +107,6 @@ public class MapRouteState extends State {
     }
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);

@@ -11,7 +11,6 @@ import static software.wings.sm.ContextElementType.CLOUD_FORMATION_ROLLBACK;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
@@ -74,7 +73,6 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
     throw new WingsException("Method should not be called");
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   protected List<CloudFormationElement> handleResponse(
       CloudFormationCommandResponse commandResponse, ExecutionContext context) {
     CloudFormationRollbackInfoElement stackElement = context.getContextElement(CLOUD_FORMATION_ROLLBACK);

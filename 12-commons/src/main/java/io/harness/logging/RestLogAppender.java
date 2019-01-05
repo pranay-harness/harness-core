@@ -11,14 +11,12 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
-import com.fasterxml.jackson.databind.JsonNode;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.Http;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -67,7 +65,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
     this.key = key;
   }
 
-  @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "IS2_INCONSISTENT_SYNC"})
+  @SuppressFBWarnings({"IS2_INCONSISTENT_SYNC"})
   private void submitLogs() {
     try {
       int batchSize = 0;
@@ -85,8 +83,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
         return;
       }
 
-      Response<JsonNode> execute =
-          retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute();
+      retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute();
     } catch (Exception ex) {
       logger.error("", ex);
     }
