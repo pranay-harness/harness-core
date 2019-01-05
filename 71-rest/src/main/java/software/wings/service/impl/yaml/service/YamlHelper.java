@@ -14,6 +14,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
@@ -109,12 +110,22 @@ public class YamlHelper {
 
   public Service getServiceOverrideFromAppManifestPath(String appId, String yamlFilePath) {
     String serviceOverrideName = extractParentEntityName(
-        YamlType.APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+        YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
     if (isNotBlank(serviceOverrideName)) {
       return serviceResourceService.getServiceByName(appId, serviceOverrideName, false);
     }
 
     return null;
+  }
+
+  public AppManifestKind getAppManifestKindFromPath(String yamlFilePath) {
+    String kind = extractParentEntityName(
+        YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    if (isNotBlank(kind)) {
+      return AppManifestKind.VALUES;
+    }
+
+    return AppManifestKind.K8S_MANIFEST;
   }
 
   public ApplicationManifest getApplicationManifest(String appId, String yamlFilePath) {
@@ -132,11 +143,12 @@ public class YamlHelper {
         service = getServiceOverrideFromAppManifestPath(appId, yamlFilePath);
       }
     }
+    AppManifestKind kind = getAppManifestKindFromPath(yamlFilePath);
 
     String serviceId = (service == null) ? null : service.getUuid();
     String envId = (environment == null) ? null : environment.getUuid();
 
-    return applicationManifestService.getAppManifest(appId, envId, serviceId);
+    return applicationManifestService.getAppManifest(appId, envId, serviceId, kind);
   }
 
   public ManifestFile getManifestFile(String appId, String yamlFilePath, String fileName) {

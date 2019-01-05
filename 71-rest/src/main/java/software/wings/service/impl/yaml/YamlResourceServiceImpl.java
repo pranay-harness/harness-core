@@ -8,8 +8,8 @@ import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
-import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_ENV_OVERRIDE;
-import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -624,9 +624,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case SERVICE:
         return APPLICATION_MANIFEST;
       case ENV:
-        return APPLICATION_MANIFEST_ENV_OVERRIDE;
+        return APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
       case ENV_SERVICE:
-        return APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE;
+        return APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
       default:
         unhandled(appManifestType);
         throw new WingsException("Unhandled app manifest type");

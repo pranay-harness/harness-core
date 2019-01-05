@@ -141,9 +141,9 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
       case SERVICE:
         return YamlType.MANIFEST_FILE;
       case ENV:
-        return YamlType.MANIFEST_FILE_ENV_OVERRIDE;
+        return YamlType.MANIFEST_FILE_VALUES_ENV_OVERRIDE;
       case ENV_SERVICE:
-        return YamlType.MANIFEST_FILE_ENV_SERVICE_OVERRIDE;
+        return YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE;
       default:
         unhandled(appManifestType);
         throw new WingsException("Unhandled app manifest type");

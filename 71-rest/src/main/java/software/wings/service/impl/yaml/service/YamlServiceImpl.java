@@ -15,8 +15,8 @@ import static software.wings.beans.yaml.YamlType.ACCOUNT_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
-import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_ENV_OVERRIDE;
-import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_STREAM;
 import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER;
@@ -31,8 +31,8 @@ import static software.wings.beans.yaml.YamlType.ENVIRONMENT;
 import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
 import static software.wings.beans.yaml.YamlType.LOADBALANCER_PROVIDER;
 import static software.wings.beans.yaml.YamlType.MANIFEST_FILE;
-import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_ENV_OVERRIDE;
-import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_ENV_SERVICE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_VALUES_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.NOTIFICATION_GROUP;
 import static software.wings.beans.yaml.YamlType.PIPELINE;
 import static software.wings.beans.yaml.YamlType.PROVISIONER;
@@ -137,8 +137,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         LOADBALANCER_PROVIDER, VERIFICATION_PROVIDER, NOTIFICATION_GROUP, APPLICATION, APPLICATION_DEFAULTS, SERVICE,
         PROVISIONER, ARTIFACT_STREAM, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE,
         APPLICATION_MANIFEST, MANIFEST_FILE, ENVIRONMENT, INFRA_MAPPING, CONFIG_FILE_OVERRIDE_CONTENT,
-        CONFIG_FILE_OVERRIDE, APPLICATION_MANIFEST_ENV_OVERRIDE, APPLICATION_MANIFEST_ENV_SERVICE_OVERRIDE,
-        MANIFEST_FILE_ENV_OVERRIDE, MANIFEST_FILE_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE);
+        CONFIG_FILE_OVERRIDE, APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE,
+        APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_VALUES_ENV_OVERRIDE,
+        MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE);
   }
 
   @Override
@@ -308,15 +309,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
       return changeContextBuilder.build();
     } else if (yamlFilePath.contains(YamlConstants.VALUES_FOLDER + YamlConstants.PATH_DELIMITER + VALUES_YAML_KEY)) {
-      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_ENV_OVERRIDE)
-          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_ENV_OVERRIDE));
+      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_VALUES_ENV_OVERRIDE)
+          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_VALUES_ENV_OVERRIDE));
 
       return changeContextBuilder.build();
     } else if (yamlFilePath.contains(
                    YamlConstants.VALUES_FOLDER + YamlConstants.PATH_DELIMITER + YamlConstants.SERVICES_FOLDER)
         && yamlFilePath.contains(VALUES_YAML_KEY)) {
-      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_ENV_SERVICE_OVERRIDE)
-          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_ENV_SERVICE_OVERRIDE));
+      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE)
+          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE));
 
       return changeContextBuilder.build();
     }

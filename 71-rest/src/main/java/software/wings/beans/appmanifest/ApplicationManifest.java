@@ -1,6 +1,9 @@
 package software.wings.beans.appmanifest;
 
+import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -15,18 +18,20 @@ import software.wings.beans.GitFileConfig;
 import software.wings.yaml.BaseEntityYaml;
 
 @Entity("applicationManifests")
-@Indexes(@Index(
-    options = @IndexOptions(name = "appManifestIdx", unique = true), fields = { @Field("envId")
-                                                                                , @Field("serviceId") }))
+@Indexes(@Index(options = @IndexOptions(name = "appManifestIdx", unique = true),
+    fields = { @Field("appId")
+               , @Field("envId"), @Field("serviceId"), @Field("kind") }))
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
 public class ApplicationManifest extends Base {
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENV_ID_KEY = "envId";
+  public static final String KIND_KEY = "kind";
 
   private String serviceId;
   private String envId;
+  @NonNull @Default private AppManifestKind kind = K8S_MANIFEST;
   @NonNull StoreType storeType;
   GitFileConfig gitFileConfig;
 
@@ -36,6 +41,7 @@ public class ApplicationManifest extends Base {
                                        .envId(this.envId)
                                        .storeType(this.storeType)
                                        .gitFileConfig(this.gitFileConfig)
+                                       .kind(this.kind)
                                        .build();
     manifest.setAppId(this.appId);
     return manifest;
@@ -51,7 +57,7 @@ public class ApplicationManifest extends Base {
     private GitFileConfig gitFileConfig;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig) {
+    public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig, String kind) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;

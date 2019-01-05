@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -37,11 +38,11 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   DirectoryNode getManifestFilesFromGit(String appId, String appManifestId);
 
-  ApplicationManifest getByEnvId(String appId, String envId);
+  ApplicationManifest getByEnvId(String appId, String envId, AppManifestKind kind);
 
-  ApplicationManifest getByEnvAndServiceId(String appId, String envId, String serviceId);
+  ApplicationManifest getByEnvAndServiceId(String appId, String envId, String serviceId, AppManifestKind kind);
 
-  ApplicationManifest getAppManifest(String appId, String envId, String serviceId);
+  ApplicationManifest getAppManifest(String appId, String envId, String serviceId, AppManifestKind kind);
 
   AppManifestType getAppManifestType(ApplicationManifest applicationManifest);
 
@@ -52,4 +53,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   void pruneByEnvironment(String appId, String envId);
 
   void deleteAppManifest(ApplicationManifest applicationManifest);
+
+  List<ApplicationManifest> getAllByEnvIdAndKind(String appId, String envId, AppManifestKind kind);
 }

@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.security.PermissionAttribute.Action;
@@ -44,6 +45,7 @@ public class ApplicationManifestResource {
       @QueryParam("serviceId") String serviceId, ApplicationManifest applicationManifest) {
     applicationManifest.setAppId(appId);
     applicationManifest.setServiceId(serviceId);
+    applicationManifest.setKind(AppManifestKind.K8S_MANIFEST);
     return new RestResponse<>(applicationManifestService.create(applicationManifest));
   }
 

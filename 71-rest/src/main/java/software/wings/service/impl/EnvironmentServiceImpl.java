@@ -64,6 +64,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
@@ -906,10 +907,15 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public ManifestFile createValues(String appId, String envId, String serviceId, ManifestFile manifestFile) {
     validateEnvAndServiceExists(appId, envId, serviceId);
 
-    ApplicationManifest applicationManifest = applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId);
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId, AppManifestKind.VALUES);
     if (applicationManifest == null) {
-      applicationManifest =
-          ApplicationManifest.builder().storeType(StoreType.Local).envId(envId).serviceId(serviceId).build();
+      applicationManifest = ApplicationManifest.builder()
+                                .storeType(StoreType.Local)
+                                .envId(envId)
+                                .serviceId(serviceId)
+                                .kind(AppManifestKind.VALUES)
+                                .build();
       applicationManifest.setAppId(appId);
       applicationManifest = applicationManifestService.create(applicationManifest);
     }
@@ -926,7 +932,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public ManifestFile updateValues(String appId, String envId, String serviceId, ManifestFile manifestFile) {
     validateEnvAndServiceExists(appId, envId, serviceId);
 
-    ApplicationManifest appManifest = getAppManifest(appId, envId, serviceId);
+    ApplicationManifest appManifest = getAppManifest(appId, envId, serviceId, AppManifestKind.VALUES);
     if (appManifest == null) {
       throw new InvalidRequestException(
           format("Application manifest doesn't exist for environment: %s and service: %s", envId, serviceId));
@@ -949,11 +955,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
   }
 
-  private ApplicationManifest getAppManifest(String appId, String envId, String serviceId) {
+  private ApplicationManifest getAppManifest(String appId, String envId, String serviceId, AppManifestKind kind) {
     if (isNotBlank(envId) && isNotBlank(serviceId)) {
-      return applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId);
+      return applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId, kind);
     } else if (isBlank(serviceId)) {
-      return applicationManifestService.getByEnvId(appId, envId);
+      return applicationManifestService.getByEnvId(appId, envId, kind);
     } else {
       throw new InvalidRequestException(
           format("No valid application manifest exists for environment: %s and service: %s", envId, serviceId));

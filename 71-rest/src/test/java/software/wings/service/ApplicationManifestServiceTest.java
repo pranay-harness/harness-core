@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
@@ -42,8 +43,11 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     manifestFile.setAppId(APP_ID);
   }
 
-  private static ApplicationManifest applicationManifest =
-      ApplicationManifest.builder().serviceId(SERVICE_ID).storeType(StoreType.Local).build();
+  private static ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                               .serviceId(SERVICE_ID)
+                                                               .storeType(StoreType.Local)
+                                                               .kind(AppManifestKind.VALUES)
+                                                               .build();
 
   private static ManifestFile manifestFile =
       ManifestFile.builder().fileName("deploy.yaml").fileContent("deployment spec").build();
