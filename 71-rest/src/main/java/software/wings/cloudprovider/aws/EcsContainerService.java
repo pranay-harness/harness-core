@@ -87,4 +87,7 @@ public interface EcsContainerService {
   List<ContainerInfo> waitForDaemonServiceToReachSteadyState(String region, SettingAttribute connectorConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
+
+  void updateServiceCount(String region, List<EncryptedDataDetail> encryptedDataDetails, String clusterName,
+      String serviceName, int desiredCount, ExecutionLogCallback executionLogCallback, AwsConfig awsConfig);
 }

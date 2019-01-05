@@ -2108,8 +2108,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       boolean serviceRepeat, OrchestrationWorkflowType orchestrationWorkflowType) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
     if (deploymentType == ECS) {
-      workflowServiceHelper.generateNewWorkflowPhaseStepsForECS(
-          appId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreen(appId, workflowPhase, !serviceRepeat);
+      } else {
+        workflowServiceHelper.generateNewWorkflowPhaseStepsForECS(
+            appId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
+      }
     } else if (deploymentType == KUBERNETES) {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
         workflowServiceHelper.generateNewWorkflowPhaseStepsForKubernetesBlueGreen(appId, workflowPhase, !serviceRepeat);
@@ -2145,7 +2149,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
     if (deploymentType == ECS) {
-      return workflowServiceHelper.generateRollbackWorkflowPhaseForEcs(appId, workflowPhase, orchestrationWorkflowType);
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        return workflowServiceHelper.generateRollbackWorkflowPhaseForEcsBlueGreen(
+            appId, workflowPhase, orchestrationWorkflowType);
+      } else {
+        return workflowServiceHelper.generateRollbackWorkflowPhaseForEcs(
+            appId, workflowPhase, orchestrationWorkflowType);
+      }
     } else if (deploymentType == KUBERNETES) {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
         return workflowServiceHelper.generateRollbackWorkflowPhaseForKubernetesBlueGreen(
@@ -2275,7 +2285,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 || InfrastructureMappingType.GCP_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
                 || InfrastructureMappingType.AZURE_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
                 || InfrastructureMappingType.PCF_PCF.name().equals(infrastructureMapping.getInfraMappingType())
-                || InfrastructureMappingType.AWS_AMI.name().equals(infrastructureMapping.getInfraMappingType()))) {
+                || InfrastructureMappingType.AWS_AMI.name().equals(infrastructureMapping.getInfraMappingType())
+                || InfrastructureMappingType.AWS_ECS.name().equals(infrastructureMapping.getInfraMappingType()))) {
           throw new InvalidRequestException(
               "Requested Infrastructure Type is not supported using Blue/Green Deployment", USER);
         }

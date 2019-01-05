@@ -206,6 +206,8 @@ public interface Constants {
 
   String ECS_DAEMON_SERVICE_SETUP = "ECS Daemon Service Setup";
 
+  String ECS_BG_SERVICE_SETUP = "ECS Blue Green Service Setup";
+
   String ECS_DAEMON_SCHEDULING_STRATEGY = "DAEMON";
 
   String ECS_REPLICA_SCHEDULING_STRATEGY = "REPLICA";
@@ -233,6 +235,10 @@ public interface Constants {
   String PCF_ROLLBACK = "App Rollback";
 
   String PCF_MAP_ROUTE = "Map Route";
+
+  String ECS_SWAP_TARGET_GROUPS = "Swap Target Groups";
+
+  String ECS_SWAP_TARGET_GROUPS_ROLLBACK = "Rollback Swap Target Groups";
 
   String PCF_BG_MAP_ROUTE = "Update Route";
 
@@ -945,4 +951,8 @@ public interface Constants {
   String ACCOUNT_ID = "ACCOUNT_ID";
 
   String VALUES_YAML_KEY = "values.yaml";
+
+  String BG_VERSION = "BG_VERSION";
+  String BG_GREEN = "GREEN";
+  String BG_BLUE = "BLUE";
 }

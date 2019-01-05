@@ -33,14 +33,16 @@ public interface AwsElbHelperServiceDelegate {
       String region, String classicLB, String asgName, int timeout, ExecutionLogCallback logCallback);
   TargetGroup cloneTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String targetGroupArn, String newTargetGroupName);
-  List<AwsElbListener> getElbListenersForLoadBalaner(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName);
   Listener getElbListener(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String listenerArn);
+  List<AwsElbListener> getElbListenersForLoadBalaner(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName);
+  Listener createStageListener(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String listenerArn, Integer port, String targetGroupArn);
   Optional<TargetGroup> getTargetGroup(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupArn);
-  Optional<TargetGroup> getTargetGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      String targetGroupName, String loadBalancerName);
+  Optional<TargetGroup> getTargetGroupByName(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupName);
   Optional<LoadBalancer> getLoadBalancer(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName);
 }

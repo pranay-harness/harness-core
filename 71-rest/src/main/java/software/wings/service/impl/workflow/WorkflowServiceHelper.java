@@ -34,6 +34,7 @@ import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.PCF_RESIZE;
@@ -46,6 +47,8 @@ import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.ECS_DAEMON_SCHEDULING_STRATEGY;
+import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS;
+import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS_ROLLBACK;
 import static software.wings.common.Constants.PRIMARY_SERVICE_NAME_EXPRESSION;
 import static software.wings.common.Constants.ROLLBACK_AUTOSCALING_GROUP_ROUTE;
 import static software.wings.common.Constants.ROLLBACK_SERVICE;
@@ -67,7 +70,9 @@ import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
+import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
+import static software.wings.sm.StateType.ECS_LISTENER_UPDATE;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
@@ -549,6 +554,59 @@ public class WorkflowServiceHelper {
 
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+  }
+
+  public void generateNewWorkflowPhaseStepsForECSBlueGreen(
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    if (serviceSetupRequired) {
+      Map<String, Object> defaultSetupProperties = newHashMap();
+      defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
+      defaultSetupProperties.put("useLoadBalancer", true);
+
+      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                                     .addStep(aGraphNode()
+                                                  .id(generateUuid())
+                                                  .type(ECS_BG_SERVICE_SETUP.name())
+                                                  .name(Constants.ECS_BG_SERVICE_SETUP)
+                                                  .properties(defaultSetupProperties)
+                                                  .build())
+                                     .build());
+    }
+
+    Map<String, Object> defaultDeployProperties = newHashMap();
+    defaultDeployProperties.put("instanceUnitType", "PERCENTAGE");
+    defaultDeployProperties.put("instanceCount", 100);
+    defaultDeployProperties.put("downsizeInstanceUnitType", "PERCENTAGE");
+    defaultDeployProperties.put("downsizeInstanceCount", 100);
+
+    workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                                   .addStep(aGraphNode()
+                                                .id(generateUuid())
+                                                .type(ECS_SERVICE_DEPLOY.name())
+                                                .name(Constants.UPGRADE_CONTAINERS)
+                                                .properties(defaultDeployProperties)
+                                                .build())
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                                   .build());
+
+    Map<String, Object> defaultDataSwitchRoutes = newHashMap();
+    defaultDataSwitchRoutes.put("downsizeOldService", true);
+    workflowPhase.addPhaseStep(aPhaseStep(ECS_UPDATE_LISTENER_BG, ECS_SWAP_TARGET_GROUPS)
+                                   .addStep(aGraphNode()
+                                                .id(generateUuid())
+                                                .type(ECS_LISTENER_UPDATE.name())
+                                                .name(ECS_SWAP_TARGET_GROUPS)
+                                                .properties(defaultDataSwitchRoutes)
+                                                .build())
                                    .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
@@ -1133,6 +1191,54 @@ public class WorkflowServiceHelper {
                                     .withRollback(true)
                                     .build());
     }
+
+    // Verification
+    phaseBuilder
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build());
+
+    return phaseBuilder.build();
+  }
+
+  public WorkflowPhase generateRollbackWorkflowPhaseForEcsBlueGreen(
+      String appId, WorkflowPhase workflowPhase, OrchestrationWorkflowType orchestrationWorkflowType) {
+    WorkflowPhaseBuilder phaseBuilder = aWorkflowPhase()
+                                            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+                                            .withRollback(true)
+                                            .withServiceId(workflowPhase.getServiceId())
+                                            .withComputeProviderId(workflowPhase.getComputeProviderId())
+                                            .withInfraMappingName(workflowPhase.getInfraMappingName())
+                                            .withPhaseNameForRollback(workflowPhase.getName())
+                                            .withDeploymentType(workflowPhase.getDeploymentType())
+                                            .withInfraMappingId(workflowPhase.getInfraMappingId());
+
+    phaseBuilder.addPhaseStep(aPhaseStep(ECS_UPDATE_LISTENER_BG, ECS_SWAP_TARGET_GROUPS)
+                                  .addStep(aGraphNode()
+                                               .id(generateUuid())
+                                               .type(StateType.ECS_LISTENER_UPDATE_ROLLBACK.name())
+                                               .name(ECS_SWAP_TARGET_GROUPS_ROLLBACK)
+                                               .rollback(true)
+                                               .build())
+                                  .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                                  .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                  .withRollback(true)
+                                  .build());
+
+    phaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                                  .addStep(aGraphNode()
+                                               .id(generateUuid())
+                                               .type(ECS_SERVICE_ROLLBACK.name())
+                                               .name(Constants.ROLLBACK_CONTAINERS)
+                                               .rollback(true)
+                                               .build())
+                                  .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                                  .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                  .withRollback(true)
+                                  .build());
 
     // Verification
     phaseBuilder

@@ -28,6 +28,12 @@ public class EcsSetupStateConfig {
   private boolean useLoadBalancer;
   private String loadBalancerName;
   private String targetGroupArn;
+  // Only to be used for ECS BG
+  private String targetGroupArn2;
+  private String prodListenerArn;
+  private String stageListenerArn;
+  private String stageListenerPort;
+  private boolean blueGreen;
   private String roleArn;
   private String targetContainerName;
   private String targetPort;
