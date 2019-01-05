@@ -2,6 +2,7 @@ package migrations.all;
 
 import com.google.inject.Inject;
 
+import com.mongodb.DuplicateKeyException;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,15 +26,19 @@ public class AppDTemplateMigration implements Migration {
     logger.info("Adding metric templates for {} APP_DYNAMICS cvConfigurations", cvConfigurationList.size());
 
     cvConfigurationList.forEach(cvConfiguration -> {
-      TimeSeriesMetricTemplates metricTemplate =
-          TimeSeriesMetricTemplates.builder()
-              .stateType(cvConfiguration.getStateType())
-              .metricTemplates(NewRelicMetricValueDefinition.APP_DYNAMICS_24X7_VALUES_TO_ANALYZE)
-              .cvConfigId(cvConfiguration.getUuid())
-              .build();
-      metricTemplate.setAppId(cvConfiguration.getAppId());
-      metricTemplate.setAccountId(cvConfiguration.getAccountId());
-      wingsPersistence.save(metricTemplate);
+      try {
+        TimeSeriesMetricTemplates metricTemplate =
+            TimeSeriesMetricTemplates.builder()
+                .stateType(cvConfiguration.getStateType())
+                .metricTemplates(NewRelicMetricValueDefinition.APP_DYNAMICS_24X7_VALUES_TO_ANALYZE)
+                .cvConfigId(cvConfiguration.getUuid())
+                .build();
+        metricTemplate.setAppId(cvConfiguration.getAppId());
+        metricTemplate.setAccountId(cvConfiguration.getAccountId());
+        wingsPersistence.save(metricTemplate);
+      } catch (DuplicateKeyException ex) {
+        logger.info("Swallowing the DuplicateKeyException for cvConfig: {}", cvConfiguration.getUuid());
+      }
     });
   }
 }
