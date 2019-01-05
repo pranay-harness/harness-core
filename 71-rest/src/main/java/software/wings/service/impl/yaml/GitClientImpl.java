@@ -874,7 +874,6 @@ public class GitClientImpl implements GitClient {
    *
    * @param gitConfig the git config
    */
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   public synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
     File repoDir = new File(gitClientHelper.getRepoDirectory(gitConfig));
     boolean executionFailed = false;

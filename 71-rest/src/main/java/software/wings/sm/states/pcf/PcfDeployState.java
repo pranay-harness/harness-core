@@ -7,7 +7,6 @@ import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
@@ -17,7 +16,6 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
-import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.beans.Activity;
@@ -134,14 +132,12 @@ public class PcfDeployState extends State {
     }
   }
 
-  @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "DLS_DEAD_LOCAL_STORE"})
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     Application app = appService.get(context.getAppId());
     Environment env = workflowStandardParams.getEnv();
-    ServiceElement serviceElement = phaseElement.getServiceElement();
 
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());

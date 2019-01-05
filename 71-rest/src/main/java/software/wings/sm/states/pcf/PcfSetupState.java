@@ -10,7 +10,6 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.protocol.ResponseData;
@@ -170,7 +169,6 @@ public class PcfSetupState extends State {
     }
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE") // TODO
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -275,7 +273,7 @@ public class PcfSetupState extends State {
         pcfStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.PCF_COMMAND_TASK, activity.getUuid(),
             env.getUuid(), pcfInfrastructureMapping.getUuid(), new Object[] {commandRequest, encryptedDataDetails}, 5);
 
-    String delegateTaskId = delegateService.queueTask(delegateTask);
+    delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.Builder.anExecutionResponse()
         .withCorrelationIds(Arrays.asList(activity.getUuid()))
