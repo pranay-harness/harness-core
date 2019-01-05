@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.BaseFile;
+import software.wings.beans.ChecksumType;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.GcsFileMetadata;
 import software.wings.dl.WingsPersistence;
@@ -185,6 +186,19 @@ public class GoogleCloudFileServiceImpl implements FileService {
       throw new WingsException(
           " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
     } else {
+      // Old 'gcsFileMetadata' doesn't have the file length field set. It has to be read from GCS bucket entries'
+      // metadata.
+      if (gcsFileMetadata.getFileLength() == 0) {
+        Blob blob = getStorage().get(blobId);
+        if (blob == null) {
+          throw new WingsException(
+              " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+        } else {
+          gcsFileMetadata.setFileLength(blob.getSize());
+          gcsFileMetadata.setChecksum(blob.getMd5());
+          gcsFileMetadata.setChecksumType(ChecksumType.MD5);
+        }
+      }
       return FileMetadata.builder()
           .fileName(gcsFileMetadata.getFileName())
           .fileLength(gcsFileMetadata.getFileLength())
@@ -270,6 +284,53 @@ public class GoogleCloudFileServiceImpl implements FileService {
     createFileBucketsInGCS();
 
     logger.info("Google cloud storage based file service has been initialized.");
+  }
+
+  void saveGcsFileMetadata(BaseFile baseFile, FileBucket fileBucket, String mongoFileId, String gcsFileId) {
+    GoogleCloudFileIdComponent component = parseGoogleCloudFileId(gcsFileId);
+    BlobId blobId = BlobId.of(getBucketName(fileBucket), component.filePath);
+    Blob blob = getStorage().get(blobId);
+    if (blob == null) {
+      throw new WingsException(
+          " File with id " + gcsFileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+    }
+
+    GcsFileMetadata gcsFileMetadata = GcsFileMetadata.builder()
+                                          .accountId(baseFile.getAccountId())
+                                          .fileId(mongoFileId)
+                                          .gcsFileId(gcsFileId)
+                                          .fileName(baseFile.getFileName())
+                                          .fileLength(blob.getSize())
+                                          .checksum(blob.getMd5())
+                                          .checksumType(ChecksumType.MD5)
+                                          .mimeType(baseFile.getMimeType())
+                                          .fileBucket(fileBucket)
+                                          .build();
+    wingsPersistence.save(gcsFileMetadata);
+  }
+
+  void saveGcsFileMetadata(FileMetadata fileMetadata, FileBucket fileBucket, String mongoFileId, String gcsFileId) {
+    GoogleCloudFileIdComponent component = parseGoogleCloudFileId(gcsFileId);
+    BlobId blobId = BlobId.of(getBucketName(fileBucket), component.filePath);
+    Blob blob = getStorage().get(blobId);
+    if (blob == null) {
+      throw new WingsException(
+          " File with id " + gcsFileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+    }
+
+    GcsFileMetadata gcsFileMetadata = GcsFileMetadata.builder()
+                                          .accountId(fileMetadata.getAccountId())
+                                          .fileId(mongoFileId)
+                                          .gcsFileId(gcsFileId)
+                                          .fileName(fileMetadata.getFileName())
+                                          .fileLength(blob.getSize())
+                                          .checksum(blob.getMd5())
+                                          .checksumType(ChecksumType.MD5)
+                                          .mimeType(fileMetadata.getMimeType())
+                                          .others(fileMetadata.getMetadata())
+                                          .fileBucket(fileBucket)
+                                          .build();
+    wingsPersistence.save(gcsFileMetadata);
   }
 
   /**

@@ -69,19 +69,7 @@ public class FileServiceImpl implements FileService {
     if (gcsStorageEnabled) {
       InputStream inputStreamFromMongo = mongoFileService.openDownloadStream(mongoFileId, fileBucket);
       gcsFileId = googleCloudFileService.saveFile(fileMetadata, inputStreamFromMongo, fileBucket);
-      GcsFileMetadata gcsFileMetadata = GcsFileMetadata.builder()
-                                            .accountId(accountId)
-                                            .fileId(mongoFileId)
-                                            .gcsFileId(gcsFileId)
-                                            .fileName(fileMetadata.getFileName())
-                                            .fileLength(fileMetadata.getFileLength())
-                                            .checksum(fileMetadata.getChecksum())
-                                            .checksumType(fileMetadata.getChecksumType())
-                                            .mimeType(fileMetadata.getMimeType())
-                                            .others(fileMetadata.getMetadata())
-                                            .fileBucket(fileBucket)
-                                            .build();
-      wingsPersistence.save(gcsFileMetadata);
+      googleCloudFileService.saveGcsFileMetadata(fileMetadata, fileBucket, mongoFileId, gcsFileId);
     }
 
     if (isNotEmpty(gcsFileId) && featureFlagService.isEnabled(FeatureName.GCS_STORAGE, accountId)) {
@@ -122,18 +110,7 @@ public class FileServiceImpl implements FileService {
     if (gcsStorageEnabled) {
       InputStream inputStreamFromMongo = mongoFileService.openDownloadStream(mongoFileId, fileBucket);
       gcsFileId = googleCloudFileService.saveFile(baseFile, inputStreamFromMongo, fileBucket);
-      GcsFileMetadata gcsFileMetadata = GcsFileMetadata.builder()
-                                            .accountId(accountId)
-                                            .fileId(mongoFileId)
-                                            .gcsFileId(gcsFileId)
-                                            .fileName(baseFile.getFileName())
-                                            .fileLength(baseFile.getSize())
-                                            .checksum(baseFile.getChecksum())
-                                            .checksumType(baseFile.getChecksumType())
-                                            .mimeType(baseFile.getMimeType())
-                                            .fileBucket(fileBucket)
-                                            .build();
-      wingsPersistence.save(gcsFileMetadata);
+      googleCloudFileService.saveGcsFileMetadata(baseFile, fileBucket, mongoFileId, gcsFileId);
     }
 
     if (isNotEmpty(gcsFileId) && featureFlagService.isEnabled(FeatureName.GCS_STORAGE, accountId)) {
