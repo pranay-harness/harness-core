@@ -1,5 +1,9 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,6 +18,8 @@ import software.wings.beans.Base;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.sm.StateType;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -27,7 +33,6 @@ import java.util.Map;
 })
 @Data
 @EqualsAndHashCode(callSuper = false)
-@Builder
 public class TimeSeriesMetricTemplates extends Base {
   @NotEmpty private StateType stateType;
 
@@ -38,4 +43,17 @@ public class TimeSeriesMetricTemplates extends Base {
   private String accountId;
 
   @NotEmpty private Map<String, TimeSeriesMetricDefinition> metricTemplates;
+
+  @SchemaIgnore @JsonIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
+
+  @Builder
+  public TimeSeriesMetricTemplates(StateType stateType, String stateExecutionId, String cvConfigId, String accountId,
+      Map<String, TimeSeriesMetricDefinition> metricTemplates) {
+    this.stateType = stateType;
+    this.stateExecutionId = stateExecutionId;
+    this.cvConfigId = cvConfigId;
+    this.accountId = accountId;
+    this.metricTemplates = metricTemplates;
+    this.validUntil = isEmpty(stateExecutionId) ? null : Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  }
 }

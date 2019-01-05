@@ -360,6 +360,8 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     timeSeriesMLAnalysisRecord.setAnalysisMinute(
         (int) (currentMinute - CRON_POLL_INTERVAL_IN_MINUTES * (numOfUnitsToBeAnalyized - 1)));
     wingsPersistence.save(timeSeriesMLAnalysisRecord);
+    analysisTask.setExecutionStatus(ExecutionStatus.SUCCESS);
+    wingsPersistence.save(analysisTask);
 
     continuousVerificationService.triggerDataAnalysis(accountId);
 
