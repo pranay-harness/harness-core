@@ -57,37 +57,21 @@ public interface Queue<T> {
   void ack(T message);
 
   /**
-   * Ack message and send payload to queue, atomically, with earliestGet as Now and 0.0 priority
+   * Requeue message with id.
    *
-   * @param message message to ack received from get(). Should not be null
-   * @param payload payload to send. Should not be null
+   * @param id the message id
+   * @param retries the retries left
    */
-  void ackSend(T message, T payload);
+  void requeue(String id, int retries);
 
   /**
-   * Requeue message with earliestGet as Now and 0.0 priority. Same as ackSend() with the same
-   * message.
+   * Requeue message with id.
    *
-   * @param message message to requeue received from get(). Should not be null
-   */
-  void requeue(T message);
-
-  /**
-   * Requeue message with 0.0 priority. Same as ackSend() with the same message.
-   *
-   * @param message     message to requeue received from get(). Should not be null
+   * @param id the message id
+   * @param retries the retries left
    * @param earliestGet earliest instant that a call to get() can return message. Should not be null
    */
-  void requeue(T message, Date earliestGet);
-
-  /**
-   * Requeue message. Same as ackSend() with the same message.
-   *
-   * @param message     message to requeue received from get(). Should not be null
-   * @param earliestGet earliest instant that a call to get() can return message. Should not be null
-   * @param priority    priority for order out of get(). 0 is higher priority than 1. Should not be NaN
-   */
-  void requeue(T message, Date earliestGet, double priority);
+  void requeue(String id, int retries, Date earliestGet);
 
   /**
    * Send message to queue with earliestGet as Now and 0.0 priority

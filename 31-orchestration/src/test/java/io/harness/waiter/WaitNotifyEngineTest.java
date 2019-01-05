@@ -18,7 +18,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
 import io.harness.queue.QueueListenerController;
-import io.harness.serializer.KryoUtils;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Puller;
 import org.junit.Before;
@@ -53,11 +52,6 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
     callCount = new AtomicInteger(0);
     responseMap = new HashMap<>();
     queueListenerController.register(notifyEventListener, 1);
-  }
-
-  @Test
-  public void shouldClone() {
-    KryoUtils.clone(new NotifyEvent());
   }
 
   /**

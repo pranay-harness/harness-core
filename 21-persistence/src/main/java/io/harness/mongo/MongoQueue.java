@@ -1,6 +1,7 @@
 package io.harness.mongo;
 
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -9,7 +10,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
-import io.harness.serializer.KryoUtils;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
@@ -184,55 +184,26 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#ackSend(java.lang.Object, java.lang.Object)
-   */
-  @Override
-  public void ackSend(final T message, final T payload) {
-    Objects.requireNonNull(message);
-    Objects.requireNonNull(payload);
-
-    String id = message.getId();
-
-    payload.setId(id);
-    payload.setRunning(false);
-    payload.setResetTimestamp(new Date(Long.MAX_VALUE));
-    payload.setCreated(new Date());
-
-    persistence.getDatastore(klass, ReadPref.CRITICAL).save(payload);
-  }
-
-  /* (non-Javadoc)
    * @see software.wings.core.queue.Queue#requeue(java.lang.Object)
    */
   @Override
-  public void requeue(final T message) {
-    requeue(message, new Date());
+  public void requeue(final String id, int retries) {
+    requeue(id, retries, new Date());
   }
 
   /* (non-Javadoc)
    * @see software.wings.core.queue.Queue#requeue(java.lang.Object, java.util.Date)
    */
   @Override
-  public void requeue(final T message, final Date earliestGet) {
-    requeue(message, earliestGet, 0.0);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#requeue(java.lang.Object, java.util.Date, double)
-   */
-  @Override
-  public void requeue(final T message, final Date earliestGet, final double priority) {
-    Objects.requireNonNull(message);
+  public void requeue(final String id, final int retries, final Date earliestGet) {
+    Objects.requireNonNull(id);
     Objects.requireNonNull(earliestGet);
-    if (Double.isNaN(priority)) {
-      throw new IllegalArgumentException("priority was NaN");
-    }
 
-    T forRequeue = KryoUtils.clone(message);
-    forRequeue.setId(null);
-    forRequeue.setPriority(priority);
-    forRequeue.setEarliestGet(earliestGet);
-    ackSend(message, forRequeue);
+    persistence.update(persistence.createQuery(klass, excludeAuthority).filter(Queuable.ID_KEY, id),
+        persistence.createUpdateOperations(klass)
+            .set(Queuable.RUNNING_KEY, false)
+            .set(Queuable.RETRIES_KEY, retries)
+            .set(Queuable.EARLIEST_GET_KEY, earliestGet));
   }
 
   /* (non-Javadoc)
