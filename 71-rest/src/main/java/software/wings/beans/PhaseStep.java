@@ -14,9 +14,12 @@ import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.PCF_SETUP;
 import static software.wings.sm.StateType.FORK;
 
+import com.google.common.collect.ImmutableMap;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.MapUtils;
+import io.harness.data.structure.NullSafeImmutableMap;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -188,13 +191,15 @@ public class PhaseStep {
         .name(getName())
         .type(StateType.PHASE_STEP.name())
         .rollback(rollback)
-        .addProperty("phaseStepType", phaseStepType)
-        .addProperty("stepsInParallel", stepsInParallel)
-        .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
-        .addProperty("phaseStepNameForRollback", phaseStepNameForRollback)
-        .addProperty("statusForRollback", statusForRollback)
-        .addProperty("waitInterval", waitInterval)
-        .addProperty("artifactNeeded", artifactNeeded)
+        .properties(NullSafeImmutableMap.<String, Object>builder()
+                        .put(Constants.SUB_WORKFLOW_ID, uuid)
+                        .putIfNotNull("phaseStepType", phaseStepType)
+                        .putIfNotNull("stepsInParallel", stepsInParallel)
+                        .putIfNotNull("artifactNeeded", artifactNeeded)
+                        .putIfNotNull("waitInterval", waitInterval)
+                        .putIfNotNull("phaseStepNameForRollback", phaseStepNameForRollback)
+                        .putIfNotNull("statusForRollback", statusForRollback)
+                        .build())
         .build();
   }
 
@@ -221,7 +226,7 @@ public class PhaseStep {
                                .id(generateUuid())
                                .type(FORK.name())
                                .name(name + "-FORK")
-                               .addProperty("parentId", getUuid())
+                               .properties(ImmutableMap.<String, Object>builder().put("parentId", getUuid()).build())
                                .build();
       graphBuilder.addNodes(forkNode);
       for (GraphNode step : steps) {

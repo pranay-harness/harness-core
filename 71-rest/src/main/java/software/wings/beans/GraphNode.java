@@ -224,14 +224,6 @@ public class GraphNode {
       return this;
     }
 
-    public GraphNodeBuilder addProperty(String name, Object property) {
-      if (properties == null) {
-        properties = new HashMap<>();
-      }
-      properties.put(name, property);
-      return this;
-    }
-
     public GraphNodeBuilder properties(Map<String, Object> properties) {
       this.properties = properties;
       return this;
