@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
@@ -13,16 +14,19 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.protocol.AwsElbListener;
+import io.harness.exception.InvalidRequestException;
 import io.swagger.annotations.Api;
 import software.wings.api.DeploymentType;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Service;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
@@ -51,6 +55,7 @@ import javax.ws.rs.QueryParam;
 public class InfrastructureMappingResource {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private AppService appService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @GET
   @Timed
@@ -70,6 +75,7 @@ public class InfrastructureMappingResource {
     infrastructureMapping.setAppId(appId);
     infrastructureMapping.setEnvId(envId);
     infrastructureMapping.setAccountId(appService.getAccountIdByAppId(appId));
+    populateDeploymentTypeIfRequired(appId, infrastructureMapping);
     return new RestResponse<>(infrastructureMappingService.save(infrastructureMapping));
   }
 
@@ -473,5 +479,16 @@ public class InfrastructureMappingResource {
   public RestResponse<List<String>> getRoutesForPcf(@QueryParam("appId") String appId, @QueryParam("org") String org,
       @QueryParam("space") String space, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.lisRouteMapsForPcf(appId, computeProviderId, org, space));
+  }
+
+  private void populateDeploymentTypeIfRequired(String appId, InfrastructureMapping infrastructureMapping) {
+    if (isBlank(infrastructureMapping.getDeploymentType())) {
+      Service service = serviceResourceService.get(appId, infrastructureMapping.getServiceId());
+      if (service == null || service.getDeploymentType() == null) {
+        throw new InvalidRequestException("Deployment type cannot be empty");
+      }
+
+      infrastructureMapping.setDeploymentType(service.getDeploymentType().name());
+    }
   }
 }
