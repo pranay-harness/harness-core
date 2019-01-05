@@ -64,6 +64,7 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitSyncErrorAlert;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -1146,7 +1147,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode generateEnvValuesFolder(String accountId, Environment env, DirectoryPath envPath) {
     List<ApplicationManifest> applicationManifests =
-        applicationManifestService.getAllByEnvId(env.getAppId(), env.getUuid());
+        applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), AppManifestKind.VALUES);
 
     if (isEmpty(applicationManifests)) {
       return null;
@@ -1155,7 +1156,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     DirectoryPath valuesPath = envPath.clone().add(VALUES_FOLDER);
     FolderNode valuesFolder = new FolderNode(
         accountId, VALUES_FOLDER, ApplicationManifest.class, valuesPath, env.getAppId(), yamlGitSyncService);
-    ApplicationManifest applicationManifest = applicationManifestService.getByEnvId(env.getAppId(), env.getUuid());
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByEnvId(env.getAppId(), env.getUuid(), AppManifestKind.VALUES);
     addValuesFolderFiles(accountId, env, valuesPath, valuesFolder, applicationManifest);
 
     // Fetch service specific environment value overrides
@@ -1170,7 +1172,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private FolderNode generateEnvServiceSpecificValuesFolder(
       String accountId, Environment env, DirectoryPath valuesPath) {
     List<ApplicationManifest> applicationManifests =
-        applicationManifestService.getAllByEnvId(env.getAppId(), env.getUuid());
+        applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), AppManifestKind.VALUES);
 
     if (isEmpty(applicationManifests)) {
       return null;

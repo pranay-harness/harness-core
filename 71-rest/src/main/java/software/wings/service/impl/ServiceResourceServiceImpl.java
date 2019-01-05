@@ -85,6 +85,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
@@ -1822,8 +1823,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return;
     }
 
-    ApplicationManifest applicationManifest =
-        ApplicationManifest.builder().serviceId(service.getUuid()).storeType(StoreType.Local).build();
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .serviceId(service.getUuid())
+                                                  .storeType(StoreType.Local)
+                                                  .kind(AppManifestKind.K8S_MANIFEST)
+                                                  .build();
     applicationManifest.setAppId(service.getAppId());
 
     applicationManifestService.create(applicationManifest);

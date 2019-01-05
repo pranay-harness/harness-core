@@ -33,6 +33,7 @@ import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -121,10 +122,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
-  public ApplicationManifest getByEnvId(String appId, String envId) {
+  public ApplicationManifest getByEnvId(String appId, String envId, AppManifestKind kind) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
                                            .filter(ApplicationManifest.ENV_ID_KEY, envId)
+                                           .filter(ApplicationManifest.KIND_KEY, kind)
                                            .filter(ApplicationManifest.SERVICE_ID_KEY, null);
     return query.get();
   }
@@ -138,11 +140,21 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
-  public ApplicationManifest getByEnvAndServiceId(String appId, String envId, String serviceId) {
+  public List<ApplicationManifest> getAllByEnvIdAndKind(String appId, String envId, AppManifestKind kind) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)
                                            .filter(ApplicationManifest.ENV_ID_KEY, envId)
-                                           .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId);
+                                           .filter(ApplicationManifest.KIND_KEY, kind);
+    return query.asList();
+  }
+
+  @Override
+  public ApplicationManifest getByEnvAndServiceId(String appId, String envId, String serviceId, AppManifestKind kind) {
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
+                                           .filter(ApplicationManifest.APP_ID_KEY, appId)
+                                           .filter(ApplicationManifest.ENV_ID_KEY, envId)
+                                           .filter(ApplicationManifest.SERVICE_ID_KEY, serviceId)
+                                           .filter(ApplicationManifest.KIND_KEY, kind);
     return query.get();
   }
 
@@ -180,6 +192,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   private ApplicationManifest upsertApplicationManifest(ApplicationManifest applicationManifest, boolean isCreate) {
     validateApplicationManifest(applicationManifest);
+    validateDeploymentTypeChanged(applicationManifest, isCreate);
 
     ApplicationManifest savedApplicationManifest =
         wingsPersistence.saveAndGet(ApplicationManifest.class, applicationManifest);
@@ -192,6 +205,15 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         type, applicationManifest.isSyncFromGit(), false);
 
     return savedApplicationManifest;
+  }
+
+  private void validateDeploymentTypeChanged(ApplicationManifest applicationManifest, boolean isCreate) {
+    if (!isCreate) {
+      ApplicationManifest savedAppManifest = getById(applicationManifest.getAppId(), applicationManifest.getUuid());
+      if (!savedAppManifest.getKind().equals(applicationManifest.getKind())) {
+        throw new InvalidRequestException("Application manifest kind cannot be changed in update");
+      }
+    }
   }
 
   private void validateManifestFileName(ManifestFile manifestFile) {
@@ -398,16 +420,16 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
-  public ApplicationManifest getAppManifest(String appId, String envId, String serviceId) {
+  public ApplicationManifest getAppManifest(String appId, String envId, String serviceId, AppManifestKind kind) {
     AppManifestType appManifestType = getAppManifestType(envId, serviceId);
 
     switch (appManifestType) {
       case SERVICE:
         return getByServiceId(appId, serviceId);
       case ENV:
-        return getByEnvId(appId, envId);
+        return getByEnvId(appId, envId, kind);
       case ENV_SERVICE:
-        return getByEnvAndServiceId(appId, envId, serviceId);
+        return getByEnvAndServiceId(appId, envId, serviceId, kind);
       default:
         unhandled(appManifestType);
         throw new WingsException("Invalid application manifest type");

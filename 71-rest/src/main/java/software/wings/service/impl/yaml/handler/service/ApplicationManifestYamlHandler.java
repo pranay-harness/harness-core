@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.Yaml;
 import software.wings.beans.appmanifest.StoreType;
@@ -83,6 +84,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     }
 
     StoreType storeType = Enum.valueOf(StoreType.class, yaml.getStoreType());
+    AppManifestKind kind = yamlHelper.getAppManifestKindFromPath(filePath);
     GitFileConfig gitFileConfig = getGitFileConfigFromYaml(accountId, appId, yaml, storeType);
 
     ApplicationManifest manifest = ApplicationManifest.builder()
@@ -90,6 +92,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
                                        .envId(envId)
                                        .storeType(storeType)
                                        .gitFileConfig(gitFileConfig)
+                                       .kind(kind)
                                        .build();
 
     manifest.setAppId(appId);

@@ -23,6 +23,7 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Builder;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.ChangeContext;
@@ -74,8 +75,11 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
 
   @Before
   public void setUp() {
-    localApplicationManifest =
-        ApplicationManifest.builder().serviceId(WingsTestConstants.SERVICE_ID).storeType(StoreType.Local).build();
+    localApplicationManifest = ApplicationManifest.builder()
+                                   .serviceId(WingsTestConstants.SERVICE_ID)
+                                   .storeType(StoreType.Local)
+                                   .kind(AppManifestKind.VALUES)
+                                   .build();
     remoteApplicationManifest = ApplicationManifest.builder()
                                     .serviceId(WingsTestConstants.SERVICE_ID)
                                     .storeType(StoreType.Remote)
@@ -85,6 +89,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
                                                        .useBranch(true)
                                                        .connectorId(CONNECTOR_ID)
                                                        .build())
+                                    .kind(AppManifestKind.VALUES)
                                     .build();
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
