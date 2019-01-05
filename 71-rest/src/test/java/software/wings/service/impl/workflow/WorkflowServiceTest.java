@@ -2155,7 +2155,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                     .collect(toList())
                                     .get(0);
 
-    deployPhaseStep.getSteps().add(aGraphNode().type("HTTP").name("http").addProperty("url", "www.google.com").build());
+    deployPhaseStep.getSteps().add(
+        aGraphNode()
+            .type("HTTP")
+            .name("http")
+            .properties(ImmutableMap.<String, Object>builder().put("url", "www.google.com").build())
+            .build());
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase);
 
@@ -2949,7 +2954,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                      .id(generateUuid())
                      .type(JENKINS.getName())
                      .name(UPGRADE_CONTAINERS)
-                     .addProperty(JENKINS.getName(), uuid)
+                     .properties(ImmutableMap.<String, Object>builder().put(JENKINS.getName(), uuid).build())
                      .build())
         .build();
   }

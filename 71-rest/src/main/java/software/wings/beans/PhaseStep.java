@@ -16,6 +16,7 @@ import static software.wings.sm.StateType.FORK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.structure.MapUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -210,7 +211,7 @@ public class PhaseStep {
       return graphBuilder.build();
     }
     for (GraphNode step : getSteps()) {
-      step.getProperties().put("parentId", getUuid());
+      step.setProperties(MapUtils.putToImmutable("parentId", getUuid(), step.getProperties()));
     }
 
     GraphNode originNode = null;

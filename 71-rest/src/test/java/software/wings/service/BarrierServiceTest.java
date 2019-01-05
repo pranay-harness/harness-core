@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
@@ -72,18 +73,21 @@ public class BarrierServiceTest extends WingsBaseTest {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-            .addWorkflowPhase(aWorkflowPhase()
-                                  .withServiceId(SERVICE_ID)
-                                  .withInfraMappingId(INFRA_MAPPING_ID)
-                                  .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                    .addStep(aGraphNode()
-                                                                 .id(generateUuid())
-                                                                 .type(BARRIER.name())
-                                                                 .name("Barrier")
-                                                                 .addProperty("identifier", "deploy")
-                                                                 .build())
-                                                    .build())
-                                  .build())
+            .addWorkflowPhase(
+                aWorkflowPhase()
+                    .withServiceId(SERVICE_ID)
+                    .withInfraMappingId(INFRA_MAPPING_ID)
+                    .addPhaseStep(
+                        aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
+                            .addStep(aGraphNode()
+                                         .id(generateUuid())
+                                         .type(BARRIER.name())
+                                         .name("Barrier")
+                                         .properties(
+                                             ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
+                                         .build())
+                            .build())
+                    .build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
 
@@ -102,36 +106,42 @@ public class BarrierServiceTest extends WingsBaseTest {
     final CanaryOrchestrationWorkflow orchestrationWorkflow1 =
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-            .addWorkflowPhase(aWorkflowPhase()
-                                  .withServiceId(SERVICE_ID)
-                                  .withInfraMappingId(INFRA_MAPPING_ID)
-                                  .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                    .addStep(aGraphNode()
-                                                                 .id(generateUuid())
-                                                                 .type(BARRIER.name())
-                                                                 .name("Barrier")
-                                                                 .addProperty("identifier", "deploy")
-                                                                 .build())
-                                                    .build())
-                                  .build())
+            .addWorkflowPhase(
+                aWorkflowPhase()
+                    .withServiceId(SERVICE_ID)
+                    .withInfraMappingId(INFRA_MAPPING_ID)
+                    .addPhaseStep(
+                        aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
+                            .addStep(aGraphNode()
+                                         .id(generateUuid())
+                                         .type(BARRIER.name())
+                                         .name("Barrier")
+                                         .properties(
+                                             ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
+                                         .build())
+                            .build())
+                    .build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
 
     final CanaryOrchestrationWorkflow orchestrationWorkflow2 =
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-            .addWorkflowPhase(aWorkflowPhase()
-                                  .withServiceId(SERVICE_ID)
-                                  .withInfraMappingId(INFRA_MAPPING_ID)
-                                  .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                    .addStep(aGraphNode()
-                                                                 .id(generateUuid())
-                                                                 .type(BARRIER.name())
-                                                                 .name("Barrier")
-                                                                 .addProperty("identifier", "deploy")
-                                                                 .build())
-                                                    .build())
-                                  .build())
+            .addWorkflowPhase(
+                aWorkflowPhase()
+                    .withServiceId(SERVICE_ID)
+                    .withInfraMappingId(INFRA_MAPPING_ID)
+                    .addPhaseStep(
+                        aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
+                            .addStep(aGraphNode()
+                                         .id(generateUuid())
+                                         .type(BARRIER.name())
+                                         .name("Barrier")
+                                         .properties(
+                                             ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
+                                         .build())
+                            .build())
+                    .build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
 
@@ -153,32 +163,7 @@ public class BarrierServiceTest extends WingsBaseTest {
     assertThat(barrierInstances.get(0).getPipeline().getExecutionId()).isEqualTo(pipelineExecution);
   }
 
-  @Test
-  public void testObtainInstancesWithTwoBarriersInTheSamePhaseStep() {
-    final CanaryOrchestrationWorkflow orchestrationWorkflow =
-        aCanaryOrchestrationWorkflow()
-            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-            .addWorkflowPhase(aWorkflowPhase()
-                                  .withServiceId(SERVICE_ID)
-                                  .withInfraMappingId(INFRA_MAPPING_ID)
-                                  .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                    .addStep(aGraphNode()
-                                                                 .id(generateUuid())
-                                                                 .type(BARRIER.name())
-                                                                 .name("Barrier")
-                                                                 .addProperty("identifier", "deploy")
-                                                                 .build())
-                                                    .addStep(aGraphNode()
-                                                                 .id(generateUuid())
-                                                                 .type(BARRIER.name())
-                                                                 .name("Barrier")
-                                                                 .addProperty("identifier", "deploy")
-                                                                 .build())
-                                                    .build())
-                                  .build())
-            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-            .build();
-
+  private void assertThrowsNotRunningConcurrently(CanaryOrchestrationWorkflow orchestrationWorkflow) {
     assertThatThrownBy(()
                            -> barrierService.obtainInstances(APP_ID,
                                asList(OrchestrationWorkflowInfo.builder()
@@ -189,6 +174,39 @@ public class BarrierServiceTest extends WingsBaseTest {
                                generateUuid()))
         .isInstanceOf(WingsException.class)
         .matches(ex -> ((WingsException) ex).getCode() == BARRIERS_NOT_RUNNING_CONCURRENTLY);
+  }
+
+  @Test
+  public void testObtainInstancesWithTwoBarriersInTheSamePhaseStep() {
+    final CanaryOrchestrationWorkflow orchestrationWorkflow =
+        aCanaryOrchestrationWorkflow()
+            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+            .addWorkflowPhase(
+                aWorkflowPhase()
+                    .withServiceId(SERVICE_ID)
+                    .withInfraMappingId(INFRA_MAPPING_ID)
+                    .addPhaseStep(
+                        aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
+                            .addStep(aGraphNode()
+                                         .id(generateUuid())
+                                         .type(BARRIER.name())
+                                         .name("Barrier")
+                                         .properties(
+                                             ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
+                                         .build())
+                            .addStep(aGraphNode()
+                                         .id(generateUuid())
+                                         .type(BARRIER.name())
+                                         .name("Barrier")
+                                         .properties(
+                                             ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
+                                         .build())
+                            .build())
+                    .build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+            .build();
+
+    assertThrowsNotRunningConcurrently(orchestrationWorkflow);
   }
 
   @Test
@@ -196,39 +214,35 @@ public class BarrierServiceTest extends WingsBaseTest {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-            .addWorkflowPhase(aWorkflowPhase()
-                                  .withServiceId(SERVICE_ID)
-                                  .withInfraMappingId(INFRA_MAPPING_ID)
-                                  .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                    .addStep(aGraphNode()
-                                                                 .id(generateUuid())
-                                                                 .type(BARRIER.name())
-                                                                 .name("Barrier")
-                                                                 .addProperty("identifier", "deploy")
-                                                                 .build())
-                                                    .build())
-                                  .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                    .addStep(aGraphNode()
-                                                                 .id(generateUuid())
-                                                                 .type(BARRIER.name())
-                                                                 .name("Barrier")
-                                                                 .addProperty("identifier", "deploy")
-                                                                 .build())
-                                                    .build())
-                                  .build())
+            .addWorkflowPhase(
+                aWorkflowPhase()
+                    .withServiceId(SERVICE_ID)
+                    .withInfraMappingId(INFRA_MAPPING_ID)
+                    .addPhaseStep(
+                        aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
+                            .addStep(aGraphNode()
+                                         .id(generateUuid())
+                                         .type(BARRIER.name())
+                                         .name("Barrier")
+                                         .properties(
+                                             ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
+                                         .build())
+                            .build())
+                    .addPhaseStep(
+                        aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
+                            .addStep(aGraphNode()
+                                         .id(generateUuid())
+                                         .type(BARRIER.name())
+                                         .name("Barrier")
+                                         .properties(
+                                             ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
+                                         .build())
+                            .build())
+                    .build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
 
-    assertThatThrownBy(()
-                           -> barrierService.obtainInstances(APP_ID,
-                               asList(OrchestrationWorkflowInfo.builder()
-                                          .workflowId("foo1")
-                                          .pipelineStateId("bar1")
-                                          .orchestrationWorkflow(orchestrationWorkflow)
-                                          .build()),
-                               generateUuid()))
-        .isInstanceOf(WingsException.class)
-        .matches(ex -> ((WingsException) ex).getCode() == BARRIERS_NOT_RUNNING_CONCURRENTLY);
+    assertThrowsNotRunningConcurrently(orchestrationWorkflow);
   }
 
   @Test
@@ -236,26 +250,33 @@ public class BarrierServiceTest extends WingsBaseTest {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-            .addWorkflowPhase(aWorkflowPhase()
-                                  .withServiceId(SERVICE_ID)
-                                  .withInfraMappingId(INFRA_MAPPING_ID)
-                                  .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                    .addStep(aGraphNode()
-                                                                 .id(generateUuid())
-                                                                 .type(BARRIER.name())
-                                                                 .name("Barrier")
-                                                                 .addProperty("identifier", "deploy1")
-                                                                 .build())
-                                                    .build())
-                                  .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                    .addStep(aGraphNode()
-                                                                 .id(generateUuid())
-                                                                 .type(BARRIER.name())
-                                                                 .name("Barrier")
-                                                                 .addProperty("identifier", "deploy2")
-                                                                 .build())
-                                                    .build())
-                                  .build())
+            .addWorkflowPhase(
+                aWorkflowPhase()
+                    .withServiceId(SERVICE_ID)
+                    .withInfraMappingId(INFRA_MAPPING_ID)
+                    .addPhaseStep(
+                        aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
+                            .addStep(
+                                aGraphNode()
+                                    .id(generateUuid())
+                                    .type(BARRIER.name())
+                                    .name("Barrier")
+                                    .properties(
+                                        ImmutableMap.<String, Object>builder().put("identifier", "deploy1").build())
+                                    .build())
+                            .build())
+                    .addPhaseStep(
+                        aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
+                            .addStep(
+                                aGraphNode()
+                                    .id(generateUuid())
+                                    .type(BARRIER.name())
+                                    .name("Barrier")
+                                    .properties(
+                                        ImmutableMap.<String, Object>builder().put("identifier", "deploy2").build())
+                                    .build())
+                            .build())
+                    .build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
 
