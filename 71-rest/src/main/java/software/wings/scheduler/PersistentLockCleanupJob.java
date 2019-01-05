@@ -35,7 +35,7 @@ public class PersistentLockCleanupJob implements Job {
   public static final String NAME = "MAINTENANCE";
   public static final String GROUP = "PERSISTENT_LOCK_CRON_GROUP";
 
-  private static final int POLL_INTERVAL = 60 * 60;
+  private static final int POLL_INTERVAL = 20 * 60;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
@@ -73,34 +73,39 @@ public class PersistentLockCleanupJob implements Job {
   }
 
   private void executeInternal() {
-    try (AcquiredLock lock = persistentLocker.acquireLock(PersistentLocker.class, NAME, Duration.ofMinutes(1))) {
+    int total = 0;
+    int deleted = 0;
+    try (AcquiredLock lock = persistentLocker.acquireLock(PersistentLocker.class, NAME, Duration.ofMinutes(10))) {
       OffsetDateTime startTime = OffsetDateTime.now().minusWeeks(1);
       final DBCursor locks = queryOldLocks(startTime);
 
       while (locks.hasNext()) {
-        delete(locks.next().get("_id"));
+        total++;
+        if (delete(locks.next().get("_id"))) {
+          deleted++;
+        }
       }
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error("Error seen in the PersistentLockCleanupJob execute call", exception);
     }
+    logger.info("Destroyed {} locks out of {} outdated", deleted, total);
   }
 
-  private void delete(Object lock) {
+  private boolean delete(Object lock) {
     // Do not delete the lock willy-nilly. We are in race between the query for unlocked state, the deleting
     // and some other process attempting to lock the same locks.
     //
     // The lock needs to be deleted only if successfully acquired
 
     try (AcquiredLock lk = persistentLocker.acquireLock(lock.toString(), Duration.ofSeconds(10))) {
-      if (logger.isInfoEnabled()) {
-        logger.info("Destroy outdated lock " + lock.toString());
-      }
       persistentLocker.destroy(lk);
+      return true;
     } catch (WingsException exception) {
       // Nothing to do. If we did not get the lock or we succeeded to destroy it - either way move to the
       // next one.
     }
+    return false;
   }
 }
