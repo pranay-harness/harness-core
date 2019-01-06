@@ -15,16 +15,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
+import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -49,33 +57,27 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(
         delegateLogService, taskParams.getAccountId(), taskParams.getAppId(), taskParams.getActivityId(), FetchFiles);
-    executionLogCallback.saveExecutionLog("Fetching files from git\n");
+    executionLogCallback.saveExecutionLog("Fetching files from git");
 
     try {
-      encryptionService.decrypt(taskParams.getGitConfig(), taskParams.getEncryptedDataDetails());
+      Map<String, GitFetchFilesResult> filesFromMultipleRepo = new HashMap<>();
 
-      GitFileConfig gitFileConfig = taskParams.getGitFileConfig();
+      for (Entry<String, GitFetchFilesConfig> entry : taskParams.getGitFetchFilesConfigMap().entrySet()) {
+        GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
 
-      executionLogCallback.saveExecutionLog("Git connector Url: " + taskParams.getGitConfig().getRepoUrl());
-      if (gitFileConfig.isUseBranch()) {
-        executionLogCallback.saveExecutionLog("Branch: " + gitFileConfig.getBranch());
-      } else {
-        executionLogCallback.saveExecutionLog("CommitId: " + gitFileConfig.getCommitId());
+        GitFetchFilesResult gitFetchFilesResult = fetchFilesFromRepo(gitFetchFileConfig.getGitFileConfig(),
+            gitFetchFileConfig.getGitConfig(), gitFetchFileConfig.getEncryptedDataDetails(), executionLogCallback);
+
+        filesFromMultipleRepo.put(entry.getKey(), gitFetchFilesResult);
       }
-      executionLogCallback.saveExecutionLog("\nFetching " + gitFileConfig.getFilePath());
-
-      String filePath = isBlank(gitFileConfig.getFilePath()) ? "" : gitFileConfig.getFilePath();
-      GitFetchFilesResult gitFetchFilesResult =
-          gitService.fetchFilesByPath(taskParams.getGitConfig(), gitFileConfig.getConnectorId(),
-              gitFileConfig.getCommitId(), gitFileConfig.getBranch(), asList(filePath), gitFileConfig.isUseBranch());
-      executionLogCallback.saveExecutionLog("Successfully fetched " + gitFileConfig.getFilePath());
 
       if (taskParams.isFinalState()) {
         executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       }
 
       return GitCommandExecutionResponse.builder()
-          .gitCommandResult(gitFetchFilesResult)
+          .gitCommandResult(
+              GitFetchFilesFromMultipleRepoResult.builder().filesFromMultipleRepo(filesFromMultipleRepo).build())
           .gitCommandStatus(GitCommandStatus.SUCCESS)
           .build();
     } catch (Exception ex) {
@@ -86,6 +88,26 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
           .gitCommandStatus(GitCommandStatus.FAILURE)
           .build();
     }
+  }
+
+  private GitFetchFilesResult fetchFilesFromRepo(GitFileConfig gitFileConfig, GitConfig gitConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
+    encryptionService.decrypt(gitConfig, encryptedDataDetails);
+
+    executionLogCallback.saveExecutionLog("\nGit connector Url: " + gitConfig.getRepoUrl());
+    if (gitFileConfig.isUseBranch()) {
+      executionLogCallback.saveExecutionLog("Branch: " + gitFileConfig.getBranch());
+    } else {
+      executionLogCallback.saveExecutionLog("CommitId: " + gitFileConfig.getCommitId());
+    }
+    executionLogCallback.saveExecutionLog("\nFetching " + gitFileConfig.getFilePath());
+
+    String filePath = isBlank(gitFileConfig.getFilePath()) ? "" : gitFileConfig.getFilePath();
+    GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
+        gitFileConfig.getCommitId(), gitFileConfig.getBranch(), asList(filePath), gitFileConfig.isUseBranch());
+    executionLogCallback.saveExecutionLog("Successfully fetched " + gitFileConfig.getFilePath());
+
+    return gitFetchFilesResult;
   }
 
   @Override
