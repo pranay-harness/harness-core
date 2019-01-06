@@ -851,7 +851,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<String> linkedTemplateUuids = new ArrayList<>();
     if (orchestrationWorkflow != null) {
       if (StringUtils.isNotEmpty(workflow.getServiceId())
-          && isK8sService(workflow.getAppId(), workflow.getServiceId())) {
+          && isK8sV2Service(workflow.getAppId(), workflow.getServiceId())) {
         createK8sWorkflow(workflow);
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)
           || orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
@@ -938,9 +938,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return containerTask != null && containerTask.checkStatefulSet();
   }
 
-  private boolean isK8sService(String appId, String serviceId) {
+  private boolean isK8sV2Service(String appId, String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId);
-    return service != null && service.getDeploymentType() == DeploymentType.KUBERNETES;
+    return service != null && service.isK8sV2();
   }
 
   private void addLinkedPreOrPostDeploymentSteps(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
@@ -1503,7 +1503,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         || orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
 
-      if (isK8sService(workflow.getAppId(), workflowPhase.getServiceId())) {
+      if (isK8sV2Service(workflow.getAppId(), workflowPhase.getServiceId())) {
         addK8sCanaryWorkflowPhaseSteps(workflowPhase);
         workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
         canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
