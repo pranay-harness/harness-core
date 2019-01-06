@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
@@ -41,9 +42,11 @@ import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
+import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
@@ -54,7 +57,9 @@ import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.validation.executable.ValidateOnExecution;
@@ -374,8 +379,20 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public DirectoryNode getManifestFilesFromGit(String appId, String appManifestId) {
     Application app = appService.get(appId);
     ApplicationManifest appManifest = getById(appId, appManifestId);
+    if (appManifest == null) {
+      throw new InvalidRequestException("Application manifest doesn't exist with id " + appManifestId, USER);
+    }
 
-    GitFetchFilesTaskParams fetchFilesTaskParams = k8sStateHelper.createGitFetchFilesTaskParams(app, appManifest);
+    if (StoreType.Local.equals(appManifest.getStoreType())) {
+      throw new InvalidRequestException(
+          "Manifest files from git should only be requested when store type is remote", USER);
+    }
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    appManifestMap.put(K8sValuesLocation.Service, appManifest);
+
+    GitFetchFilesTaskParams fetchFilesTaskParams = k8sStateHelper.createGitFetchFilesTaskParams(app, appManifestMap);
+    fetchFilesTaskParams.setActivityId(generateUuid());
 
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(app.getAccountId())
@@ -409,9 +426,16 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException(executionResponse.getErrorMessage());
     }
 
-    List<ManifestFile> manifestFiles =
-        manifestFilesFromGitFetchFilesResult((GitFetchFilesResult) executionResponse.getGitCommandResult(),
-            fetchFilesTaskParams.getGitFileConfig().getFilePath());
+    String prefixPath = fetchFilesTaskParams.getGitFetchFilesConfigMap()
+                            .get(K8sValuesLocation.Service.name())
+                            .getGitFileConfig()
+                            .getFilePath();
+    GitFetchFilesFromMultipleRepoResult filesFromMultipleGitResult =
+        (GitFetchFilesFromMultipleRepoResult) executionResponse.getGitCommandResult();
+    GitFetchFilesResult gitFetchFilesResult =
+        filesFromMultipleGitResult.getFilesFromMultipleRepo().get(K8sValuesLocation.Service.name());
+
+    List<ManifestFile> manifestFiles = manifestFilesFromGitFetchFilesResult(gitFetchFilesResult, prefixPath);
 
     Service service = serviceResourceService.get(appId, appManifest.getServiceId());
     return yamlDirectoryService.generateManifestFileFolderNode(

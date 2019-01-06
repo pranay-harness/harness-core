@@ -17,7 +17,6 @@ import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
@@ -85,7 +84,7 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
 
   public ExecutionResponse executeK8sTask(
       ExecutionContext context, String activityId, Map<K8sValuesLocation, String> valuesFiles) {
-    ApplicationManifest applicationManifest = k8sStateHelper.getApplicationManifest(context);
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateHelper.getApplicationManifests(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
     K8sTaskParameters k8sTaskParameters =
@@ -95,8 +94,9 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
             .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .timeoutIntervalInMin(10)
-            .k8sDelegateManifestConfig(k8sStateHelper.createDelegateManifestConfig(applicationManifest))
-            .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(applicationManifest, context, valuesFiles))
+            .k8sDelegateManifestConfig(
+                k8sStateHelper.createDelegateManifestConfig(appManifestMap.get(K8sValuesLocation.Service)))
+            .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context, valuesFiles))
             .build();
 
     return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
@@ -138,10 +138,10 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
   public void handleAbortEvent(ExecutionContext context) {}
 
   @Override
-  public List<CommandUnit> commandUnitList(StoreType storeType) {
+  public List<CommandUnit> commandUnitList(boolean remoteStoreType) {
     List<CommandUnit> rollingDeployCommandUnits = new ArrayList<>();
 
-    if (StoreType.Remote.equals(storeType)) {
+    if (remoteStoreType) {
       rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.FetchFiles));
     }
 
