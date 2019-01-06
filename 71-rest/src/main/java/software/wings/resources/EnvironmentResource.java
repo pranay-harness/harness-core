@@ -17,6 +17,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.container.KubernetesPayload;
@@ -420,6 +421,7 @@ public class EnvironmentResource {
       @QueryParam("appId") String appId, @PathParam("envId") String envId, ApplicationManifest applicationManifest) {
     applicationManifest.setAppId(appId);
     applicationManifest.setEnvId(envId);
+    applicationManifest.setKind(AppManifestKind.VALUES);
     return new RestResponse<>(applicationManifestService.create(applicationManifest));
   }
 
@@ -469,6 +471,7 @@ public class EnvironmentResource {
     applicationManifest.setAppId(appId);
     applicationManifest.setEnvId(envId);
     applicationManifest.setServiceId(serviceId);
+    applicationManifest.setKind(AppManifestKind.VALUES);
     return new RestResponse<>(applicationManifestService.create(applicationManifest));
   }
 
@@ -508,5 +511,25 @@ public class EnvironmentResource {
       @PathParam("appManifestId") String appManifestId) {
     applicationManifestService.deleteAppManifest(appId, appManifestId);
     return new RestResponse();
+  }
+
+  @GET
+  @Path("{envId}/values-app-manifest")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
+  public RestResponse<ApplicationManifest> getValuesAppManifest(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId) {
+    return new RestResponse<>(applicationManifestService.getByEnvId(appId, envId, AppManifestKind.VALUES));
+  }
+
+  @GET
+  @Path("{envId}/values-manifest-file")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
+  public RestResponse<ManifestFile> getValuesManifestFile(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId) {
+    return new RestResponse<>(applicationManifestService.getManifestFileByEnvId(appId, envId, AppManifestKind.VALUES));
   }
 }
