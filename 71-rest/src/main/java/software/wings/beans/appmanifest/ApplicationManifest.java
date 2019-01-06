@@ -1,9 +1,6 @@
 package software.wings.beans.appmanifest;
 
-import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
-
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -31,7 +28,7 @@ public class ApplicationManifest extends Base {
 
   private String serviceId;
   private String envId;
-  @NonNull @Default private AppManifestKind kind = K8S_MANIFEST;
+  private AppManifestKind kind;
   @NonNull StoreType storeType;
   GitFileConfig gitFileConfig;
 
