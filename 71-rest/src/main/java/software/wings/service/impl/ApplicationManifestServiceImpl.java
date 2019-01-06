@@ -204,7 +204,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   private ApplicationManifest upsertApplicationManifest(ApplicationManifest applicationManifest, boolean isCreate) {
     validateApplicationManifest(applicationManifest);
-    validateDeploymentTypeChanged(applicationManifest, isCreate);
+    if (!isCreate) {
+      resetReadOnlyProperties(applicationManifest);
+    }
 
     ApplicationManifest savedApplicationManifest =
         wingsPersistence.saveAndGet(ApplicationManifest.class, applicationManifest);
@@ -219,13 +221,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     return savedApplicationManifest;
   }
 
-  private void validateDeploymentTypeChanged(ApplicationManifest applicationManifest, boolean isCreate) {
-    if (!isCreate) {
-      ApplicationManifest savedAppManifest = getById(applicationManifest.getAppId(), applicationManifest.getUuid());
-      if (!savedAppManifest.getKind().equals(applicationManifest.getKind())) {
-        throw new InvalidRequestException("Application manifest kind cannot be changed in update");
-      }
-    }
+  private void resetReadOnlyProperties(ApplicationManifest applicationManifest) {
+    ApplicationManifest savedAppManifest = getById(applicationManifest.getAppId(), applicationManifest.getUuid());
+    applicationManifest.setKind(savedAppManifest.getKind());
   }
 
   private void validateManifestFileName(ManifestFile manifestFile) {
