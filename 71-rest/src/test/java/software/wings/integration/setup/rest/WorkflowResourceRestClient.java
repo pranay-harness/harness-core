@@ -5,7 +5,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.integration.SeedData.randomText;
@@ -204,7 +203,7 @@ public class WorkflowResourceRestClient {
       if (steps != null) {
         ArrayList<GraphNode> newSteps = new ArrayList<>();
         for (int i = 0; i < steps.size(); i++) {
-          newSteps.add(aGraphNode()
+          newSteps.add(GraphNode.builder()
                            .type(StateType.HTTP.name())
                            .rollback(rollback)
                            .name("Http-" + System.currentTimeMillis() + "-" + i)

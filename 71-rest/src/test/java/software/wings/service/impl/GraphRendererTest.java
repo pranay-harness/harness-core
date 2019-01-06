@@ -21,7 +21,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.HostElement.Builder.aHostElement;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.PHASE;
@@ -175,7 +174,7 @@ public class GraphRendererTest extends WingsBaseTest {
     GraphRenderer.adjustInfrastructureNode((GraphGroup) null);
 
     {
-      GraphNode node = aGraphNode().build();
+      GraphNode node = GraphNode.builder().build();
       GraphRenderer.adjustInfrastructureNode(node);
     }
 
@@ -183,7 +182,7 @@ public class GraphRendererTest extends WingsBaseTest {
       GraphNode infrastructureNode = getInfrastructureNode();
       final GraphNode element = infrastructureNode.getGroup().getElements().get(0);
 
-      GraphNode node = aGraphNode().build();
+      GraphNode node = GraphNode.builder().build();
       node.setNext(infrastructureNode);
 
       GraphRenderer.adjustInfrastructureNode(node);
@@ -192,7 +191,7 @@ public class GraphRendererTest extends WingsBaseTest {
 
     {
       GraphNode infrastructureNode = getInfrastructureNode();
-      GraphNode next = aGraphNode().name("next").build();
+      GraphNode next = GraphNode.builder().name("next").build();
       infrastructureNode.setNext(next);
 
       final GraphNode element = infrastructureNode.getGroup().getElements().get(0);

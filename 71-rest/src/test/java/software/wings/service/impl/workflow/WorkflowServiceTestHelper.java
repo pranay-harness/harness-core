@@ -18,7 +18,6 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.InfrastructureMappingType.AWS_AMI;
 import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
 import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
@@ -97,14 +96,14 @@ import java.util.Map;
 public class WorkflowServiceTestHelper {
   public static Workflow constructCustomWorkflow() {
     Graph graph = aGraph()
-                      .addNodes(aGraphNode().id("n1").name("stop").type(ENV_STATE.name()).origin(true).build(),
-                          aGraphNode()
+                      .addNodes(GraphNode.builder().id("n1").name("stop").type(ENV_STATE.name()).origin(true).build(),
+                          GraphNode.builder()
                               .id("n2")
                               .name("wait")
                               .type(WAIT.name())
                               .properties(ImmutableMap.<String, Object>builder().put("duration", 1l).build())
                               .build(),
-                          aGraphNode().id("n3").name("start").type(ENV_STATE.name()).build())
+                          GraphNode.builder().id("n3").name("start").type(ENV_STATE.name()).build())
                       .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
                       .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
                       .build();
@@ -218,7 +217,7 @@ public class WorkflowServiceTestHelper {
   }
 
   private static GraphNode constructHttpStep() {
-    return aGraphNode()
+    return GraphNode.builder()
         .type("HTTP")
         .name("http")
         .properties(ImmutableMap.<String, Object>builder().put("url", "http://www.google.com").build())
@@ -475,7 +474,7 @@ public class WorkflowServiceTestHelper {
                                       .withServiceId(SERVICE_ID)
                                       .withInfraMappingId(INFRA_MAPPING_ID)
                                       .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                        .addStep(aGraphNode()
+                                                        .addStep(GraphNode.builder()
                                                                      .id(generateUuid())
                                                                      .type(ECS_SERVICE_DEPLOY.name())
                                                                      .name(UPGRADE_CONTAINERS)
@@ -500,7 +499,7 @@ public class WorkflowServiceTestHelper {
                                       .withInfraMappingId(INFRA_MAPPING_ID)
                                       .withDeploymentType(DeploymentType.HELM)
                                       .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                        .addStep(aGraphNode()
+                                                        .addStep(GraphNode.builder()
                                                                      .id(generateUuid())
                                                                      .type(HELM_DEPLOY.name())
                                                                      .name(UPGRADE_CONTAINERS)
@@ -717,7 +716,7 @@ public class WorkflowServiceTestHelper {
                                     .collect(toList())
                                     .get(0);
 
-    verifyPhaseStep.getSteps().add(aGraphNode()
+    verifyPhaseStep.getSteps().add(GraphNode.builder()
                                        .type("APP_DYNAMICS")
                                        .name("APP_DYNAMICS")
                                        .properties(ImmutableMap.<String, Object>builder()
@@ -727,7 +726,7 @@ public class WorkflowServiceTestHelper {
                                                        .build())
                                        .build());
 
-    verifyPhaseStep.getSteps().add(aGraphNode()
+    verifyPhaseStep.getSteps().add(GraphNode.builder()
                                        .type("ELK")
                                        .name("ELK")
                                        .properties(ImmutableMap.<String, Object>builder()
@@ -763,7 +762,7 @@ public class WorkflowServiceTestHelper {
   }
 
   public static GraphNode constructHttpTemplateStep() {
-    return aGraphNode()
+    return GraphNode.builder()
         .type(StateType.HTTP.name())
         .templateUuid(TEMPLATE_ID)
         .properties(constructHttpProperties())

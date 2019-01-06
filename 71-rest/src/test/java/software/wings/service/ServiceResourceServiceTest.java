@@ -33,7 +33,6 @@ import static software.wings.beans.CommandCategory.Type.VERIFICATIONS;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -106,6 +105,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.Graph;
+import software.wings.beans.GraphNode;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.Notification;
@@ -573,7 +573,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   private Graph getGraph() {
     return aGraph()
         .withGraphName("START")
-        .addNodes(aGraphNode()
+        .addNodes(GraphNode.builder()
                       .id("1")
                       .origin(true)
                       .type("EXEC")
@@ -597,7 +597,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     Graph commandGraph = aGraph()
                              .withGraphName("START")
-                             .addNodes(aGraphNode()
+                             .addNodes(GraphNode.builder()
                                            .id("1")
                                            .origin(true)
                                            .type("EXEC")
@@ -646,7 +646,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     Graph commandGraph = aGraph()
                              .withGraphName("START")
-                             .addNodes(aGraphNode()
+                             .addNodes(GraphNode.builder()
                                            .id("1")
                                            .origin(true)
                                            .type("EXEC")
@@ -757,7 +757,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldUpdateCommandWhenNameChanged() {
     Graph oldCommandGraph = aGraph()
                                 .withGraphName("START")
-                                .addNodes(aGraphNode()
+                                .addNodes(GraphNode.builder()
                                               .id("1")
                                               .origin(true)
                                               .type("EXEC")
@@ -788,7 +788,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     Graph commandGraph = aGraph()
                              .withGraphName("START2")
-                             .addNodes(aGraphNode()
+                             .addNodes(GraphNode.builder()
                                            .id("1")
                                            .origin(true)
                                            .type("EXEC")
@@ -875,7 +875,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldUpdateCommandWhenCommandUnitsOrderChanged() {
     Graph oldCommandGraph = aGraph()
                                 .withGraphName("START")
-                                .addNodes(aGraphNode()
+                                .addNodes(GraphNode.builder()
                                               .id("1")
                                               .origin(true)
                                               .name("Exec")
@@ -885,7 +885,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                               .put("commandString", "bin/startup.sh")
                                                               .build())
                                               .build(),
-                                    aGraphNode()
+                                    GraphNode.builder()
                                         .id("2")
                                         .origin(true)
                                         .name("Exec2")
@@ -915,7 +915,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     Graph commandGraph = aGraph()
                              .withGraphName("START")
 
-                             .addNodes(aGraphNode()
+                             .addNodes(GraphNode.builder()
                                            .id("2")
                                            .origin(true)
                                            .name("Exec2")
@@ -925,7 +925,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                            .put("commandString", "bin/startup.sh")
                                                            .build())
                                            .build(),
-                                 aGraphNode()
+                                 GraphNode.builder()
                                      .id("1")
                                      .origin(true)
                                      .type("EXEC")
@@ -1020,7 +1020,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldNotUpdateCommandWhenCommandUnitsOrderNotChanged() {
     Graph oldCommandGraph = aGraph()
                                 .withGraphName("START")
-                                .addNodes(aGraphNode()
+                                .addNodes(GraphNode.builder()
                                               .id("1")
                                               .origin(true)
                                               .name("EXEC")
@@ -1048,7 +1048,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     Graph commandGraph = aGraph()
                              .withGraphName("START")
-                             .addNodes(aGraphNode()
+                             .addNodes(GraphNode.builder()
                                            .id("1")
                                            .name("EXEC")
                                            .origin(true)
@@ -1227,7 +1227,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldUpdateCommandsOrder() {
     Graph oldCommandGraph = aGraph()
                                 .withGraphName("START")
-                                .addNodes(aGraphNode()
+                                .addNodes(GraphNode.builder()
                                               .id("1")
                                               .origin(true)
                                               .type("EXEC")
@@ -1246,7 +1246,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     Graph commandGraph = aGraph()
                              .withGraphName("START")
-                             .addNodes(aGraphNode()
+                             .addNodes(GraphNode.builder()
                                            .id("1")
                                            .origin(true)
                                            .type("EXEC")
@@ -1375,7 +1375,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                 .withServiceId(SERVICE_ID)
                                                 .addPhaseStep(
                                                     aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
-                                                        .addStep(aGraphNode()
+                                                        .addStep(GraphNode.builder()
                                                                      .type("COMMAND")
                                                                      .properties(ImmutableMap.<String, Object>builder()
                                                                                      .put("commandName", "START")
@@ -1414,7 +1414,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                 .withServiceId(SERVICE_ID_CHANGED)
                                                 .addPhaseStep(
                                                     aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
-                                                        .addStep(aGraphNode()
+                                                        .addStep(GraphNode.builder()
                                                                      .type("SSH")
                                                                      .properties(ImmutableMap.<String, Object>builder()
                                                                                      .put("commandName", "START")

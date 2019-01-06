@@ -7,7 +7,6 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
@@ -186,7 +185,7 @@ public class PhaseStep {
     // TODO: removing failure strategy as part of Node due to mongo driver limitation - we can try with later version
     // CodecConfigurationException: Can't find a codec for class software.wings.beans.FailureStrategy
 
-    return aGraphNode()
+    return GraphNode.builder()
         .id(uuid)
         .name(getName())
         .type(StateType.PHASE_STEP.name())
@@ -222,7 +221,7 @@ public class PhaseStep {
     GraphNode originNode = null;
 
     if (stepsInParallel && steps.size() > 1) {
-      GraphNode forkNode = aGraphNode()
+      GraphNode forkNode = GraphNode.builder()
                                .id(generateUuid())
                                .type(FORK.name())
                                .name(name + "-FORK")
@@ -255,7 +254,7 @@ public class PhaseStep {
           continue;
         }
         if (i < steps.size() - 1 && isExecuteWithPreviousSteps(steps.get(i + 1))) {
-          forkNode = aGraphNode().id(generateUuid()).type(FORK.name()).name("Fork-" + step.getName()).build();
+          forkNode = GraphNode.builder().id(generateUuid()).type(FORK.name()).name("Fork-" + step.getName()).build();
           graphBuilder.addNodes(forkNode);
           graphBuilder.addLinks(
               aLink().withFrom(forkNode.getId()).withTo(step.getId()).withType(TransitionType.FORK.name()).build());

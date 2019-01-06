@@ -32,7 +32,6 @@ import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.GraphLink.Builder.aLink;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -523,7 +522,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Graph graph2 =
         JsonUtils.clone(((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(), Graph.class);
-    graph2.addNode(aGraphNode().id("n5").name("http").type(HTTP.name()).build());
+    graph2.addNode(GraphNode.builder().id("n5").name("http").type(HTTP.name()).build());
     graph2.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n5").withType("success").build());
 
     Workflow updatedWorkflow = workflowService.updateWorkflow(workflow);
@@ -2156,7 +2155,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                     .get(0);
 
     deployPhaseStep.getSteps().add(
-        aGraphNode()
+        GraphNode.builder()
             .type("HTTP")
             .name("http")
             .properties(ImmutableMap.<String, Object>builder().put("url", "www.google.com").build())
@@ -2950,7 +2949,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   private PhaseStep createPhaseStep(String uuid) {
     return aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-        .addStep(aGraphNode()
+        .addStep(GraphNode.builder()
                      .id(generateUuid())
                      .type(JENKINS.getName())
                      .name(UPGRADE_CONTAINERS)
@@ -3199,7 +3198,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   private Workflow createLinkedTemplateWorkflow() {
-    GraphNode step = aGraphNode()
+    GraphNode step = GraphNode.builder()
                          .templateUuid(TEMPLATE_ID)
                          .templateVersion(LATEST_TAG)
                          .name("Ping Response")
