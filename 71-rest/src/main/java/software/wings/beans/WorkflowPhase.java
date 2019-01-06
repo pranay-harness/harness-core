@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.sm.StateType.PHASE;
 
@@ -209,7 +208,7 @@ public class WorkflowPhase implements UuidAware {
   }
 
   public GraphNode generatePhaseNode() {
-    return aGraphNode()
+    return GraphNode.builder()
         .id(uuid)
         .name(name)
         .type(PHASE.name())

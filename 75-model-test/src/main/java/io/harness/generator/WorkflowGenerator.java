@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -182,7 +181,7 @@ public class WorkflowGenerator {
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(
                         aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
-                            .addStep(aGraphNode()
+                            .addStep(GraphNode.builder()
                                          .type(TERRAFORM_PROVISION.name())
                                          .name("Provision infra")
                                          .properties(
@@ -199,7 +198,7 @@ public class WorkflowGenerator {
                             .build())
                     .withPostDeploymentSteps(
                         aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT)
-                            .addStep(aGraphNode()
+                            .addStep(GraphNode.builder()
                                          .type(TERRAFORM_DESTROY.name())
                                          .name("Deprovision infra")
                                          .properties(ImmutableMap.<String, Object>builder()
@@ -227,7 +226,7 @@ public class WorkflowGenerator {
                 aBasicOrchestrationWorkflow()
                     .withPreDeploymentSteps(
                         aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
-                            .addStep(aGraphNode()
+                            .addStep(GraphNode.builder()
                                          .type(RESOURCE_CONSTRAINT.name())
                                          .name(asapResourceConstraint.getName() + " 1")
                                          .properties(ImmutableMap.<String, Object>builder()
@@ -236,7 +235,7 @@ public class WorkflowGenerator {
                                                          .put("holdingScope", HoldingScope.WORKFLOW.name())
                                                          .build())
                                          .build())
-                            .addStep(aGraphNode()
+                            .addStep(GraphNode.builder()
                                          .type(RESOURCE_CONSTRAINT.name())
                                          .name(asapResourceConstraint.getName() + " 2")
                                          .properties(ImmutableMap.<String, Object>builder()
@@ -264,7 +263,7 @@ public class WorkflowGenerator {
 
     workflowPhaseBuilder.addPhaseStep(
         aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
-            .addStep(aGraphNode()
+            .addStep(GraphNode.builder()
                          .id(generateUuid())
                          .type(JENKINS.name())
                          .name("Jenkins - pipeline")
@@ -275,7 +274,7 @@ public class WorkflowGenerator {
                                          .put(JenkinsState.SWEEPING_OUTPUT_SCOPE_KEY, PIPELINE)
                                          .build())
                          .build())
-            .addStep(aGraphNode()
+            .addStep(GraphNode.builder()
                          .id(generateUuid())
                          .type(JENKINS.name())
                          .name("Jenkins - workflow")
@@ -286,7 +285,7 @@ public class WorkflowGenerator {
                                          .put(JenkinsState.SWEEPING_OUTPUT_SCOPE_KEY, WORKFLOW)
                                          .build())
                          .build())
-            .addStep(aGraphNode()
+            .addStep(GraphNode.builder()
                          .id(generateUuid())
                          .type(JENKINS.name())
                          .name("Jenkins - phase")
@@ -322,7 +321,7 @@ public class WorkflowGenerator {
   }
 
   private GraphNode getHTTPNode(String scope) {
-    return aGraphNode()
+    return GraphNode.builder()
         .id(generateUuid())
         .type(HTTP.name())
         .name("HTTP - " + scope)

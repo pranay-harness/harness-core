@@ -6,7 +6,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -25,6 +24,7 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BarrierInstance;
 import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
 import software.wings.service.intfc.BarrierService;
@@ -79,7 +79,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                     .withInfraMappingId(INFRA_MAPPING_ID)
                     .addPhaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                            .addStep(aGraphNode()
+                            .addStep(GraphNode.builder()
                                          .id(generateUuid())
                                          .type(BARRIER.name())
                                          .name("Barrier")
@@ -112,7 +112,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                     .withInfraMappingId(INFRA_MAPPING_ID)
                     .addPhaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                            .addStep(aGraphNode()
+                            .addStep(GraphNode.builder()
                                          .id(generateUuid())
                                          .type(BARRIER.name())
                                          .name("Barrier")
@@ -133,7 +133,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                     .withInfraMappingId(INFRA_MAPPING_ID)
                     .addPhaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                            .addStep(aGraphNode()
+                            .addStep(GraphNode.builder()
                                          .id(generateUuid())
                                          .type(BARRIER.name())
                                          .name("Barrier")
@@ -187,14 +187,14 @@ public class BarrierServiceTest extends WingsBaseTest {
                     .withInfraMappingId(INFRA_MAPPING_ID)
                     .addPhaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                            .addStep(aGraphNode()
+                            .addStep(GraphNode.builder()
                                          .id(generateUuid())
                                          .type(BARRIER.name())
                                          .name("Barrier")
                                          .properties(
                                              ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
                                          .build())
-                            .addStep(aGraphNode()
+                            .addStep(GraphNode.builder()
                                          .id(generateUuid())
                                          .type(BARRIER.name())
                                          .name("Barrier")
@@ -220,7 +220,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                     .withInfraMappingId(INFRA_MAPPING_ID)
                     .addPhaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                            .addStep(aGraphNode()
+                            .addStep(GraphNode.builder()
                                          .id(generateUuid())
                                          .type(BARRIER.name())
                                          .name("Barrier")
@@ -230,7 +230,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                             .build())
                     .addPhaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                            .addStep(aGraphNode()
+                            .addStep(GraphNode.builder()
                                          .id(generateUuid())
                                          .type(BARRIER.name())
                                          .name("Barrier")
@@ -257,7 +257,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                     .addPhaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(
-                                aGraphNode()
+                                GraphNode.builder()
                                     .id(generateUuid())
                                     .type(BARRIER.name())
                                     .name("Barrier")
@@ -268,7 +268,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                     .addPhaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(
-                                aGraphNode()
+                                GraphNode.builder()
                                     .id(generateUuid())
                                     .type(BARRIER.name())
                                     .name("Barrier")

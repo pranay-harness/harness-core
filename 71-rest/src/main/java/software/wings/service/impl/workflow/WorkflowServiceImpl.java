@@ -39,7 +39,6 @@ import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.WORKFLOW;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.beans.OrchestrationWorkflowType.BLUE_GREEN;
@@ -606,7 +605,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Map<String, Object> defaultSetupProperties = new HashMap<>();
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
-                                   .addStep(aGraphNode()
+                                   .addStep(GraphNode.builder()
                                                 .id(generateUuid())
                                                 .type(K8S_DEPLOYMENT_ROLLING.name())
                                                 .name(Constants.K8S_DEPLOYMENT_ROLLING)
@@ -624,7 +623,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     WorkflowPhase rollbackPhase = createRollbackPhase(workflowPhase);
 
     rollbackPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
-                                   .addStep(aGraphNode()
+                                   .addStep(GraphNode.builder()
                                                 .id(generateUuid())
                                                 .type(K8S_DEPLOYMENT_ROLLING_ROLLBACK.name())
                                                 .name(Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK)
@@ -658,7 +657,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Map<String, Object> defaultSetupProperties = new HashMap<>();
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
-                                   .addStep(aGraphNode()
+                                   .addStep(GraphNode.builder()
                                                 .id(generateUuid())
                                                 .type(K8S_BLUE_GREEN_DEPLOY.name())
                                                 .name(Constants.K8S_BLUE_GREEN_DEPLOY)
@@ -672,7 +671,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     defaultRouteUpdateProperties.put("service1", primaryServiceNameExpression);
     defaultRouteUpdateProperties.put("service2", stageServiceNameExpression);
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.ROUTE_UPDATE)
-                                   .addStep(aGraphNode()
+                                   .addStep(GraphNode.builder()
                                                 .id(generateUuid())
                                                 .type(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
                                                 .name(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
@@ -750,7 +749,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     defaultSetupProperties.put("preferExistingInstanceCount", true);
 
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SETUP)
-                                   .addStep(aGraphNode()
+                                   .addStep(GraphNode.builder()
                                                 .id(generateUuid())
                                                 .type(K8S_CANARY_SETUP.name())
                                                 .name(Constants.K8S_CANARY_SETUP)
@@ -771,13 +770,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     defaultScaleDownOld1Properties.put("skipSteadyStateCheck", false);
 
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SCALE + " 1")
-                                   .addStep(aGraphNode()
+                                   .addStep(GraphNode.builder()
                                                 .id(generateUuid())
                                                 .type(K8S_SCALE.name())
                                                 .name("Scale Up New")
                                                 .properties(defaultScaleUpNew1Properties)
                                                 .build())
-                                   .addStep(aGraphNode()
+                                   .addStep(GraphNode.builder()
                                                 .id(generateUuid())
                                                 .type(K8S_SCALE.name())
                                                 .name("Scale Down Old")
@@ -800,13 +799,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     defaultScaleDownOld2Properties.put("skipSteadyStateCheck", false);
 
     workflowPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SCALE + " 2")
-                                   .addStep(aGraphNode()
+                                   .addStep(GraphNode.builder()
                                                 .id(generateUuid())
                                                 .type(K8S_SCALE.name())
                                                 .name("Scale Up New")
                                                 .properties(defaultScaleUpNew2Properties)
                                                 .build())
-                                   .addStep(aGraphNode()
+                                   .addStep(GraphNode.builder()
                                                 .id(generateUuid())
                                                 .type(K8S_SCALE.name())
                                                 .name("Scale Down Old")
@@ -819,7 +818,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void addK8sCanaryRollbackWorkflowPhaseSteps(WorkflowPhase rollbackPhase) {
     rollbackPhase.addPhaseStep(aPhaseStep(K8S_PHASE_STEP, Constants.SETUP)
-                                   .addStep(aGraphNode()
+                                   .addStep(GraphNode.builder()
                                                 .id(generateUuid())
                                                 .type(K8S_CANARY_ROLLBACK.name())
                                                 .name(Constants.K8S_CANARY_ROLLBACK)
@@ -1129,7 +1128,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
 
     workflowPhase.addPhaseStep(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
-                                   .addStep(aGraphNode()
+                                   .addStep(GraphNode.builder()
                                                 .id(generateUuid())
                                                 .type(ARTIFACT_COLLECTION.name())
                                                 .name(Constants.ARTIFACT_COLLECTION)
@@ -1332,7 +1331,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       Map<String, Object> propertiesMap = Maps.newHashMap();
       propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
       propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
-      rollbackProvisionerNodes.add(aGraphNode()
+      rollbackProvisionerNodes.add(GraphNode.builder()
                                        .type(getCorrespondingRollbackState(step).name())
                                        .rollback(true)
                                        .name("Rollback " + step.getName())

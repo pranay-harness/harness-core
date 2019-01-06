@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
-
 import com.google.common.collect.Maps;
 
 import io.harness.data.structure.UUIDGenerator;
@@ -29,7 +27,7 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
 
   protected GraphNode getGraphNode(ChangeContext<Y> changeContext, GraphNode previousNode) {
     Y yaml = changeContext.getYaml();
-    return aGraphNode()
+    return GraphNode.builder()
         .name(yaml.getName())
         .type(yaml.getCommandUnitType())
         .properties(getNodeProperties(changeContext))

@@ -8,7 +8,6 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -31,6 +30,7 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.WorkflowGenerator.PostProcessInfo;
 import io.harness.generator.WorkflowGenerator.Workflows;
 import software.wings.beans.Application;
+import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
@@ -167,7 +167,7 @@ public class PipelineGenerator {
                       .withPreDeploymentSteps(
                           aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
                               .addStep(
-                                  aGraphNode()
+                                  GraphNode.builder()
                                       .type(RESOURCE_CONSTRAINT.name())
                                       .name(asapResourceConstraint.getName())
                                       .properties(ImmutableMap.<String, Object>builder()

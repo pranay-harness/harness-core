@@ -18,7 +18,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.SUB_WORKFLOW;
@@ -298,7 +297,8 @@ public class GraphRenderer {
         return;
       }
 
-      GraphNode elementNode = aGraphNode().id(instance.getUuid() + "-" + element).name(element).type("ELEMENT").build();
+      GraphNode elementNode =
+          GraphNode.builder().id(instance.getUuid() + "-" + element).name(element).type("ELEMENT").build();
 
       group.getElements().add(elementNode);
 
@@ -321,7 +321,7 @@ public class GraphRenderer {
       String name = provideAggregatedNodes ? aggregateNodeName(provideAggregatedNodes, elements.size(), hasExpanded)
                                            : "" + total + " instances";
 
-      GraphNode elementNode = aGraphNode()
+      GraphNode elementNode = GraphNode.builder()
                                   .id(instance.getUuid() + "-aggregate")
                                   .name(name)
                                   .type("ELEMENTS")
@@ -415,7 +415,7 @@ public class GraphRenderer {
   }
 
   GraphNode convertToNode(StateExecutionInstance instance) {
-    GraphNodeBuilder builder = aGraphNode()
+    GraphNodeBuilder builder = GraphNode.builder()
                                    .id(instance.getUuid())
                                    .name(instance.getDisplayName())
                                    .type(instance.getStateType())
@@ -506,7 +506,7 @@ public class GraphRenderer {
       }
     }
 
-    GraphNodeBuilder builder = aGraphNode()
+    GraphNodeBuilder builder = GraphNode.builder()
                                    .id(generateUuid())
                                    .name(instance.getDisplayName())
                                    .type(instance.getStateType())

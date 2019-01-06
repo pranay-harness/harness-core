@@ -3,7 +3,6 @@ package software.wings.service.impl.template;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static software.wings.beans.Base.LINKED_TEMPLATE_UUIDS_KEY;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 
 import com.google.inject.Inject;
 
@@ -97,7 +96,7 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
   public GraphNode constructEntityFromTemplate(Template template) {
     Map<String, Object> properties = new HashMap<>();
     transform(template, properties);
-    return aGraphNode()
+    return GraphNode.builder()
         .templateVariables(template.getVariables())
         .properties(properties)
         .templateUuid(template.getUuid())

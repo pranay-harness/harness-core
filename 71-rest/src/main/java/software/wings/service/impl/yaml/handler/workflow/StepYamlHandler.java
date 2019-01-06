@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.template.TemplateHelper.convertToEntityVariables;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateVersion;
 import static software.wings.utils.Validator.notNullCheck;
@@ -105,7 +104,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);
       templateVersion = obtainTemplateVersion(templateUri);
     }
-    return aGraphNode()
+    return GraphNode.builder()
         .name(stepYaml.getName())
         .type(stepYaml.getType())
         .templateExpressions(templateExpressions)

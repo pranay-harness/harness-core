@@ -1,6 +1,7 @@
 package software.wings.prune;
 
 import io.harness.queue.Queuable;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -9,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Value
+@EqualsAndHashCode(callSuper = true)
 @Entity(value = "pruneQueue", noClassnameStored = true)
 public class PruneEvent extends Queuable {
   public static final Duration DELAY = Duration.ofSeconds(5);

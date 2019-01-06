@@ -4,7 +4,6 @@ import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.UUIDGenerator.graphIdGenerator;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
@@ -50,7 +49,7 @@ public enum ContainerFamily {
           aGraph()
               .withGraphName("Start")
               .addNodes(
-                  aGraphNode()
+                  GraphNode.builder()
                       .origin(true)
                       .id(graphIdGenerator("node"))
                       .type(EXEC.name())
@@ -65,7 +64,7 @@ public enum ContainerFamily {
                                       .put("commandType", CommandType.START)
                                       .build())
                       .build(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .name("Process Running")
                       .type(PROCESS_CHECK_RUNNING.name())
@@ -90,7 +89,7 @@ public enum ContainerFamily {
                                               + "exit 1")
                                       .build())
                       .build(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .type(PORT_CHECK_LISTENING.name())
                       .name("Port Listening")
@@ -119,7 +118,7 @@ public enum ContainerFamily {
       Graph graph =
           aGraph()
               .withGraphName("Stop")
-              .addNodes(aGraphNode()
+              .addNodes(GraphNode.builder()
                             .origin(true)
                             .id(graphIdGenerator("node"))
                             .type(EXEC.name())
@@ -130,7 +129,7 @@ public enum ContainerFamily {
                                             .put("commandType", CommandType.STOP)
                                             .build())
                             .build(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .name("Process Stopped")
                       .type(PROCESS_CHECK_STOPPED.name())
@@ -152,7 +151,7 @@ public enum ContainerFamily {
                                               + "exit 1")
                                       .build())
                       .build(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .type(PORT_CHECK_CLEARED.name())
                       .name("Port Cleared")
@@ -185,7 +184,7 @@ public enum ContainerFamily {
           aGraph()
               .withGraphName("Install")
               .addNodes(getSetupRuntimePathsNode(), getStopNode(), getCopyAppStackNode(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .name("Expand App Stack")
                       .type(EXEC.name())
@@ -202,7 +201,7 @@ public enum ContainerFamily {
                                       + "\nchmod +x tomcat/bin/*")
                               .build())
                       .build(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .name("Copy Artifact")
                       .type(SCP.name())
@@ -233,7 +232,7 @@ public enum ContainerFamily {
       Graph graph =
           aGraph()
               .withGraphName("Start")
-              .addNodes(aGraphNode()
+              .addNodes(GraphNode.builder()
                             .origin(true)
                             .id(graphIdGenerator("node"))
                             .type(EXEC.name())
@@ -246,7 +245,7 @@ public enum ContainerFamily {
                                                 singletonList(of("filePath", "nohup.out", "pattern", "started in")))
                                             .build())
                             .build(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .name("Process Running")
                       .type(PROCESS_CHECK_RUNNING.name())
@@ -271,7 +270,7 @@ public enum ContainerFamily {
                                               + "exit 1")
                                       .build())
                       .build(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .type(PORT_CHECK_LISTENING.name())
                       .name("Port Listening")
@@ -301,7 +300,7 @@ public enum ContainerFamily {
           aGraph()
               .withGraphName("Stop")
               .addNodes(
-                  aGraphNode()
+                  GraphNode.builder()
                       .origin(true)
                       .id(graphIdGenerator("node"))
                       .type(EXEC.name())
@@ -312,7 +311,7 @@ public enum ContainerFamily {
                                           "pgrep -f \"\\-Djboss.home.dir=$WINGS_RUNTIME_PATH/jboss\" | xargs kill")
                                       .build())
                       .build(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .name("Process Stopped")
                       .type(PROCESS_CHECK_STOPPED.name())
@@ -334,7 +333,7 @@ public enum ContainerFamily {
                                               + "exit 1")
                                       .build())
                       .build(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .type(PORT_CHECK_CLEARED.name())
                       .name("Port Cleared")
@@ -367,7 +366,7 @@ public enum ContainerFamily {
           aGraph()
               .withGraphName("Install")
               .addNodes(getSetupRuntimePathsNode(), getStopNode(), getCopyAppStackNode(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .name("Expand App Stack")
                       .type(EXEC.name())
@@ -384,7 +383,7 @@ public enum ContainerFamily {
                                       + "\nchmod +x jboss/bin/*")
                               .build())
                       .build(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .name("Copy Artifact")
                       .type(SCP.name())
@@ -393,7 +392,7 @@ public enum ContainerFamily {
                                       .put("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
                                       .build())
                       .build(),
-                  aGraphNode()
+                  GraphNode.builder()
                       .id(graphIdGenerator("node"))
                       .name("Expand Artifact")
                       .type(EXEC.name())
@@ -414,7 +413,7 @@ public enum ContainerFamily {
   };
 
   private static GraphNode getStartNode() {
-    return aGraphNode()
+    return GraphNode.builder()
         .id(graphIdGenerator("node"))
         .name("Start")
         .type(COMMAND.name())
@@ -423,7 +422,7 @@ public enum ContainerFamily {
   }
 
   private static GraphNode getCopyConfigsNode() {
-    return aGraphNode()
+    return GraphNode.builder()
         .id(graphIdGenerator("node"))
         .name("Copy Configs")
         .type(COPY_CONFIGS.name())
@@ -432,7 +431,7 @@ public enum ContainerFamily {
   }
 
   private static GraphNode getCopyAppStackNode() {
-    return aGraphNode()
+    return GraphNode.builder()
         .id(graphIdGenerator("node"))
         .name("Copy App Stack")
         .type(SCP.name())
@@ -444,7 +443,7 @@ public enum ContainerFamily {
   }
 
   private static GraphNode getStopNode() {
-    return aGraphNode()
+    return GraphNode.builder()
         .id(graphIdGenerator("node"))
         .name("Stop")
         .type(COMMAND.name())
@@ -453,7 +452,7 @@ public enum ContainerFamily {
   }
 
   private static GraphNode getSetupRuntimePathsNode() {
-    return aGraphNode()
+    return GraphNode.builder()
         .origin(true)
         .id(graphIdGenerator("node"))
         .name("Setup Runtime Paths")
