@@ -37,8 +37,12 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
@@ -77,6 +81,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private HostService hostService;
   @Inject private AppService appService;
+  @Inject private ApplicationManifestService applicationManifestService;
   @Transient @Inject private transient SecretManager secretManager;
 
   @Transient @Inject private transient ManagerDecryptionService managerDecryptionService;
@@ -116,6 +121,18 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         } catch (Exception e) {
           logger.error("Failed to populate the service and override helm value yamls for service template {} ",
               serviceTemplate, e);
+        }
+        try {
+          populateServiceAndOverrideValuesAppManifest(serviceTemplate);
+        } catch (Exception e) {
+          logger.error("Failed to populate the service and override application manifest for service template {} ",
+              serviceTemplate, e);
+        }
+        try {
+          populateServiceAndOverrideValuesManifestFile(serviceTemplate);
+        } catch (Exception e) {
+          logger.error(
+              "Failed to populate the service and override manifest file for service template {} ", serviceTemplate, e);
         }
       });
     }
@@ -188,6 +205,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         populateServiceAndOverrideServiceVariables(serviceTemplate, encryptedFieldMode);
         populateServiceAndOverrideConfigMapYamls(serviceTemplate);
         populateServiceAndOverrideHelmValueYamls(serviceTemplate);
+        populateServiceAndOverrideValuesAppManifest(serviceTemplate);
+        populateServiceAndOverrideValuesManifestFile(serviceTemplate);
       }
     }
     return serviceTemplate;
@@ -296,6 +315,27 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (isNotEmpty(envHelmValues) && isNotBlank(envHelmValues.get(template.getUuid()))) {
       template.setHelmValueYamlOverride(envHelmValues.get(template.getUuid()));
     }
+  }
+
+  private void populateServiceAndOverrideValuesAppManifest(ServiceTemplate template) {
+    template.setValuesOverrideAppManifest(applicationManifestService.getAppManifest(
+        template.getAppId(), template.getEnvId(), template.getServiceId(), AppManifestKind.VALUES));
+  }
+
+  private void populateServiceAndOverrideValuesManifestFile(ServiceTemplate template) {
+    ApplicationManifest appManifest = applicationManifestService.getAppManifest(
+        template.getAppId(), template.getEnvId(), template.getServiceId(), AppManifestKind.VALUES);
+    if (appManifest == null) {
+      return;
+    }
+
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(template.getAppId(), appManifest.getUuid());
+    if (isEmpty(manifestFiles)) {
+      return;
+    }
+
+    template.setValuesOverrideManifestFile(manifestFiles.get(0));
   }
 
   /* (non-Javadoc)

@@ -5,6 +5,8 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import com.google.common.base.MoreObjects;
 
 import io.harness.beans.EmbeddedUser;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -12,6 +14,8 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.utils.ArtifactType;
 
 import java.util.ArrayList;
@@ -41,6 +45,9 @@ public class ServiceTemplate extends Base {
   @Transient private String configMapYamlOverride;
   @Transient private String helmValueYamlOverride;
   @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
+  @Getter @Setter private transient ApplicationManifest valuesOverrideAppManifest;
+  @Getter @Setter private transient ManifestFile valuesOverrideManifestFile;
+
   private boolean defaultServiceTemplate;
 
   public ServiceTemplate cloneInternal() {
@@ -257,6 +264,8 @@ public class ServiceTemplate extends Base {
         && Objects.equals(this.serviceVariablesOverrides, other.serviceVariablesOverrides)
         && Objects.equals(this.configMapYamlOverride, other.configMapYamlOverride)
         && Objects.equals(this.helmValueYamlOverride, other.helmValueYamlOverride)
+        && Objects.equals(this.valuesOverrideAppManifest, other.valuesOverrideAppManifest)
+        && Objects.equals(this.valuesOverrideManifestFile, other.valuesOverrideManifestFile)
         && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate);
   }
 
@@ -271,6 +280,8 @@ public class ServiceTemplate extends Base {
         .add("serviceVariablesOverrides", serviceVariablesOverrides)
         .add("configMapYamlOverride", configMapYamlOverride)
         .add("helmValueYamlOverride", helmValueYamlOverride)
+        .add("valuesOverrideAppManifest", valuesOverrideAppManifest)
+        .add("valuesOverrideManifestFile", valuesOverrideManifestFile)
         .add("defaultServiceTemplate", defaultServiceTemplate)
         .toString();
   }
@@ -325,6 +336,8 @@ public class ServiceTemplate extends Base {
     private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
     private String configMapYamlOverride;
     private String helmValueYamlOverride;
+    private ApplicationManifest valuesOverrideAppManifest;
+    private ManifestFile valuesOverrideManifestFile;
     private String uuid;
     private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
     private String appId;
@@ -443,6 +456,16 @@ public class ServiceTemplate extends Base {
       return this;
     }
 
+    public Builder withValuesOverrideAppManifest(ApplicationManifest valuesOverrideAppManifest) {
+      this.valuesOverrideAppManifest = valuesOverrideAppManifest;
+      return this;
+    }
+
+    public Builder withValuesOverrideManifestFile(ManifestFile valuesOverrideManifestFile) {
+      this.valuesOverrideManifestFile = valuesOverrideManifestFile;
+      return this;
+    }
+
     /**
      * With uuid builder.
      *
@@ -548,6 +571,8 @@ public class ServiceTemplate extends Base {
           .withServiceVariablesOverrides(serviceVariablesOverrides)
           .withConfigMapYamlOverride(configMapYamlOverride)
           .withHelmValueYamlOverride(helmValueYamlOverride)
+          .withValuesOverrideAppManifest(valuesOverrideAppManifest)
+          .withValuesOverrideManifestFile(valuesOverrideManifestFile)
           .withUuid(uuid)
           .withInfrastructureMappings(infrastructureMappings)
           .withAppId(appId)
@@ -575,6 +600,8 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setServiceVariablesOverrides(serviceVariablesOverrides);
       serviceTemplate.setConfigMapYamlOverride(configMapYamlOverride);
       serviceTemplate.setHelmValueYamlOverride(helmValueYamlOverride);
+      serviceTemplate.setValuesOverrideManifestFile(valuesOverrideManifestFile);
+      serviceTemplate.setValuesOverrideAppManifest(valuesOverrideAppManifest);
       serviceTemplate.setUuid(uuid);
       serviceTemplate.setInfrastructureMappings(infrastructureMappings);
       serviceTemplate.setAppId(appId);

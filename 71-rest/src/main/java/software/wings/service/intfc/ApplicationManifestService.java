@@ -55,4 +55,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   void deleteAppManifest(ApplicationManifest applicationManifest);
 
   List<ApplicationManifest> getAllByEnvIdAndKind(String appId, String envId, AppManifestKind kind);
+
+  ManifestFile getManifestFileByEnvId(String appId, String envId, AppManifestKind kind);
 }

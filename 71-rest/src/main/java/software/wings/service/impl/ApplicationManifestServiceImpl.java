@@ -11,6 +11,7 @@ import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.appmanifest.ManifestFile.FILE_NAME_KEY;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
+import static software.wings.common.Constants.VALUES_YAML_KEY;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.manifestFilesFromGitFetchFilesResult;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
@@ -180,6 +181,12 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
                                     .filter(ApplicationManifest.APP_ID_KEY, appId)
                                     .filter(ApplicationManifest.ID_KEY, id);
     return query.get();
+  }
+
+  @Override
+  public ManifestFile getManifestFileByEnvId(String appId, String envId, AppManifestKind kind) {
+    ApplicationManifest appManifest = getByEnvId(appId, envId, kind);
+    return getManifestFileByFileName(appManifest.getUuid(), VALUES_YAML_KEY);
   }
 
   @Override
