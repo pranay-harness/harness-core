@@ -63,13 +63,15 @@ public class Service extends Base {
   @Transient private Activity lastProdDeploymentActivity;
   @Transient private Setup setup;
 
+  private boolean isK8sV2;
+
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name, String description,
       ArtifactType artifactType, DeploymentType deploymentType, String configMapYaml, String helmValueYaml,
       long version, AppContainer appContainer, List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables,
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
-      Activity lastProdDeploymentActivity, Setup setup) {
+      Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -86,6 +88,7 @@ public class Service extends Base {
     this.lastDeploymentActivity = lastDeploymentActivity;
     this.lastProdDeploymentActivity = lastProdDeploymentActivity;
     this.setup = setup;
+    this.isK8sV2 = isK8sV2;
   }
 
   public Service cloneInternal() {
@@ -98,6 +101,7 @@ public class Service extends Base {
         .configMapYaml(configMapYaml)
         .helmValueYaml(helmValueYaml)
         .appContainer(appContainer)
+        .isK8sV2(isK8sV2)
         .build();
   }
 

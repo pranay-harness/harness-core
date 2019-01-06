@@ -64,7 +64,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.api.DeploymentType;
 import software.wings.beans.Activity;
 import software.wings.beans.AppContainer;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -1815,7 +1814,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void createDefaultK8sManifests(Service service, boolean createdFromGit) {
-    if (createdFromGit || service.getDeploymentType() != DeploymentType.KUBERNETES) {
+    if (createdFromGit || !service.isK8sV2()) {
       return;
     }
 
