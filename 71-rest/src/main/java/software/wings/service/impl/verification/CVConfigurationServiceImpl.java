@@ -32,6 +32,7 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
+import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
@@ -76,6 +77,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
       case CLOUD_WATCH:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), CloudWatchCVServiceConfiguration.class);
+        break;
+
+      case ELK:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), ElkCVConfiguration.class);
         break;
 
       default:
@@ -139,6 +144,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case CLOUD_WATCH:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), CloudWatchCVServiceConfiguration.class);
         break;
+      case ELK:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), ElkCVConfiguration.class);
+        break;
       default:
         throw new WingsException("No matching state type found - " + stateType)
             .addParam("accountId", accountId)
@@ -172,7 +180,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
               .filter("cvConfigId", serviceConfigurationId)
               .filter("accountId", accountId)
               .get();
-      wingsPersistence.delete(TimeSeriesMetricTemplates.class, timeSeriesMetricTemplates.getUuid());
+      if (timeSeriesMetricTemplates != null) {
+        wingsPersistence.delete(TimeSeriesMetricTemplates.class, timeSeriesMetricTemplates.getUuid());
+      }
     }
   }
 
@@ -224,6 +234,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         updateOperations
             .set("loadBalancerMetrics", ((CloudWatchCVServiceConfiguration) cvConfiguration).getLoadBalancerMetrics())
             .set("region", ((CloudWatchCVServiceConfiguration) cvConfiguration).getRegion());
+        break;
+      case ELK:
+        updateOperations.set("query", ((ElkCVConfiguration) cvConfiguration).getQuery())
+            .set("formattedQuery", ((ElkCVConfiguration) cvConfiguration).isFormattedQuery())
+            .set("queryType", ((ElkCVConfiguration) cvConfiguration).getQueryType())
+            .set("indices", ((ElkCVConfiguration) cvConfiguration).getIndices())
+            .set("messageField", ((ElkCVConfiguration) cvConfiguration).getMessageField())
+            .set("timestampField", ((ElkCVConfiguration) cvConfiguration).getTimestampField())
+            .set("timestampFormat", ((ElkCVConfiguration) cvConfiguration).getTimestampFormat());
         break;
       default:
         throw new IllegalStateException("Invalid state type: " + stateType);
@@ -295,6 +314,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                              .cvConfigId(cvConfiguration.getUuid())
                              .build();
         break;
+
+      case ELK:
+        return;
 
       default:
         throw new WingsException("No matching state type found " + stateType);

@@ -11,6 +11,7 @@ import static software.wings.sm.StateType.APP_DYNAMICS;
 import static software.wings.sm.StateType.CLOUD_WATCH;
 import static software.wings.sm.StateType.DATA_DOG;
 import static software.wings.sm.StateType.DYNA_TRACE;
+import static software.wings.sm.StateType.ELK;
 import static software.wings.sm.StateType.NEW_RELIC;
 import static software.wings.sm.StateType.PROMETHEUS;
 import static software.wings.utils.WingsTestConstants.mockChecker;
@@ -40,6 +41,7 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
+import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
@@ -70,6 +72,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   private PrometheusCVServiceConfiguration prometheusCVServiceConfiguration;
   private DatadogCVServiceConfiguration datadogCVServiceConfiguration;
   private CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration;
+  private ElkCVConfiguration elkCVConfiguration;
 
   private SettingAttribute settingAttribute;
   private String settingAttributeId;
@@ -103,6 +106,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     createPrometheusConfig();
     createDatadogConfig();
     createCloudWatchConfig();
+    createElkCVConfig(true);
   }
 
   private void createCloudWatchConfig() {
@@ -204,6 +208,25 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     datadogCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
     datadogCVServiceConfiguration.setDatadogServiceName(generateUuid());
     datadogCVServiceConfiguration.setMetrics("trace.servlet.request.errors, system.mem.used, system.cpu.iowait");
+  }
+
+  private void createElkCVConfig(boolean enabled24x7) {
+    elkCVConfiguration = new ElkCVConfiguration();
+    elkCVConfiguration.setName("Config 1");
+    elkCVConfiguration.setAppId(appId);
+    elkCVConfiguration.setEnvId(envId);
+    elkCVConfiguration.setServiceId(serviceId);
+    elkCVConfiguration.setEnabled24x7(enabled24x7);
+    elkCVConfiguration.setConnectorId(settingAttributeId);
+    elkCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+
+    elkCVConfiguration.setQuery("query1");
+    elkCVConfiguration.setFormattedQuery(true);
+    elkCVConfiguration.setQueryType("TERM");
+    elkCVConfiguration.setIndices("index1");
+    elkCVConfiguration.setMessageField("message1");
+    elkCVConfiguration.setTimestampField("timestamp1");
+    elkCVConfiguration.setTimestampFormat("timestamp_format1");
   }
 
   @Test
@@ -472,6 +495,109 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
       assertEquals(CLOUD_WATCH, obj.getStateType());
       assertEquals(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics(), obj.getLoadBalancerMetrics());
     }
+  }
+
+  @Test
+  public <T extends CVConfiguration> void testElkConfiguration() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + ELK;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(elkCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+    RestResponse<ElkCVConfiguration> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<ElkCVConfiguration>>() {});
+    ElkCVConfiguration fetchedObject = getRequestResponse.getResource();
+
+    ElkCVConfiguration elkCVServiceConfiguration = fetchedObject;
+    assertEquals(savedObjectUuid, fetchedObject.getUuid());
+    assertEquals(accountId, fetchedObject.getAccountId());
+    assertEquals(appId, fetchedObject.getAppId());
+    assertEquals(envId, fetchedObject.getEnvId());
+    assertEquals(serviceId, fetchedObject.getServiceId());
+    assertEquals(ELK, fetchedObject.getStateType());
+    assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
+    assertEquals("someSettingAttributeName", elkCVServiceConfiguration.getConnectorName());
+    assertEquals("someServiceName", elkCVServiceConfiguration.getServiceName());
+
+    assertEquals("query1", fetchedObject.getQuery());
+    assertEquals(true, fetchedObject.isFormattedQuery());
+    assertEquals("TERM", fetchedObject.getQueryType());
+    assertEquals("index1", fetchedObject.getIndices());
+    assertEquals("message1", fetchedObject.getMessageField());
+    assertEquals("timestamp1", fetchedObject.getTimestampField());
+    assertEquals("timestamp_format1", fetchedObject.getTimestampFormat());
+
+    url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId;
+    target = client.target(url);
+
+    RestResponse<List<Object>> allConfigResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
+    List<Object> allConifgs = allConfigResponse.getResource();
+
+    assertEquals(1, allConifgs.size());
+
+    NewRelicCVServiceConfiguration obj =
+        JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), NewRelicCVServiceConfiguration.class);
+
+    assertEquals(savedObjectUuid, obj.getUuid());
+    assertEquals(accountId, obj.getAccountId());
+    assertEquals(appId, obj.getAppId());
+    assertEquals(envId, obj.getEnvId());
+    assertEquals(serviceId, obj.getServiceId());
+    assertEquals(ELK, obj.getStateType());
+    assertEquals(AnalysisTolerance.MEDIUM, obj.getAnalysisTolerance());
+    assertEquals("Config 1", obj.getName());
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
+        + "&stateType=" + ELK + "&serviceConfigurationId=" + savedObjectUuid;
+    target = client.target(url);
+    elkCVServiceConfiguration.setName("Config 2");
+    elkCVServiceConfiguration.setEnabled24x7(false);
+
+    elkCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
+    elkCVServiceConfiguration.setQuery("query2");
+    elkCVServiceConfiguration.setFormattedQuery(false);
+    elkCVServiceConfiguration.setQueryType("MATCH");
+    elkCVServiceConfiguration.setIndices("index2");
+    elkCVServiceConfiguration.setMessageField("message2");
+    elkCVServiceConfiguration.setTimestampField("timestamp2");
+    elkCVServiceConfiguration.setTimestampFormat("timestamp_format2");
+
+    getRequestBuilderWithAuthHeader(target).put(
+        entity(elkCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<ElkCVConfiguration>>() {});
+    fetchedObject = getRequestResponse.getResource();
+    assertFalse(fetchedObject.isEnabled24x7());
+    assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
+    assertEquals("Config 2", fetchedObject.getName());
+    assertEquals("query2", fetchedObject.getQuery());
+    assertEquals(false, fetchedObject.isFormattedQuery());
+    assertEquals("MATCH", fetchedObject.getQueryType());
+    assertEquals("index2", fetchedObject.getIndices());
+    assertEquals("message2", fetchedObject.getMessageField());
+    assertEquals("timestamp2", fetchedObject.getTimestampField());
+    assertEquals("timestamp_format2", fetchedObject.getTimestampFormat());
+
+    String delete_url =
+        API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;
+    target = client.target(delete_url);
+    RestResponse<Boolean> response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
+    assertEquals(true, response.getResource());
+
+    delete_url =
+        API_BASE + "/cv-configuration/" + UUID.randomUUID().toString() + "?accountId=" + accountId + "&appId=" + appId;
+    target = client.target(delete_url);
+    response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
+    assertEquals(false, response.getResource());
   }
 
   @Test
