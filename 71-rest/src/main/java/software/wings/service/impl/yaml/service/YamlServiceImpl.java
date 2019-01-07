@@ -42,6 +42,7 @@ import static software.wings.beans.yaml.YamlType.WORKFLOW;
 import static software.wings.common.Constants.VALUES_YAML_KEY;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -162,7 +163,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     return changeContextList;
   }
 
-  private List<Change> filterInvalidFilePaths(List<Change> changeList) {
+  @VisibleForTesting
+  List<Change> filterInvalidFilePaths(List<Change> changeList) {
     return changeList.stream().filter(change -> change.getFilePath().startsWith(SETUP_FOLDER_PATH)).collect(toList());
   }
 

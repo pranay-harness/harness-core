@@ -9,7 +9,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -58,8 +57,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
     List<GitFileChange> gitFileChange = new ArrayList<>();
     gitFileChange.add(aGitFileChange().withAccountId(ACCOUNT_ID).withFilePath("temp.yaml").build());
 
-    List<GitFileChange> filteredGitFileChange =
-        (List<GitFileChange>) MethodUtils.invokeMethod(yamlService, true, "filterInvalidFilePaths", gitFileChange);
+    List<GitFileChange> filteredGitFileChange = yamlService.filterInvalidFilePaths(gitFileChange);
     assertNotNull(filteredGitFileChange);
     assertEquals(0, filteredGitFileChange.size());
 
@@ -67,16 +65,14 @@ public class YamlServiceImplTest extends WingsBaseTest {
     gitFileChange.add(aGitFileChange().withAccountId(ACCOUNT_ID).withFilePath(validFilePath).build());
     assertEquals(2, gitFileChange.size());
 
-    filteredGitFileChange =
-        (List<GitFileChange>) MethodUtils.invokeMethod(yamlService, true, "filterInvalidFilePaths", gitFileChange);
+    filteredGitFileChange = yamlService.filterInvalidFilePaths(gitFileChange);
     assertNotNull(filteredGitFileChange);
     assertEquals(1, filteredGitFileChange.size());
     assertEquals(validFilePath, filteredGitFileChange.get(0).getFilePath());
 
     gitFileChange.clear();
     gitFileChange.add(aGitFileChange().withAccountId(ACCOUNT_ID).withFilePath(validFilePath).build());
-    filteredGitFileChange =
-        (List<GitFileChange>) MethodUtils.invokeMethod(yamlService, true, "filterInvalidFilePaths", gitFileChange);
+    filteredGitFileChange = yamlService.filterInvalidFilePaths(gitFileChange);
     assertNotNull(filteredGitFileChange);
     assertEquals(1, filteredGitFileChange.size());
     assertEquals(validFilePath, filteredGitFileChange.get(0).getFilePath());

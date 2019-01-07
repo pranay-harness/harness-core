@@ -402,7 +402,8 @@ public class AwsAmiHelperServiceDelegateImpl
     }
   }
 
-  private void resizeAsgs(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+  @VisibleForTesting
+  void resizeAsgs(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, List<AwsAmiResizeData> oldAsgsDesiredCounts,
       ExecutionLogCallback executionLogCallback, boolean resizeNewFirst, Integer autoScalingSteadyStateTimeout,
       int maxInstances, int minInstances, AwsAmiPreDeploymentData preDeploymentData, List<String> targetGroupsArns,
@@ -498,7 +499,8 @@ public class AwsAmiHelperServiceDelegateImpl
     }
   }
 
-  private void populatePreDeploymentData(
+  @VisibleForTesting
+  void populatePreDeploymentData(
       List<AutoScalingGroup> harnessManagedAutoScalingGroups, AwsAmiServiceSetupResponseBuilder builder) {
     Map<String, Integer> minCapacityMap = Maps.newHashMap();
     Map<String, Integer> desiredCapacityMap = Maps.newHashMap();
@@ -547,7 +549,8 @@ public class AwsAmiHelperServiceDelegateImpl
     }
   }
 
-  private CreateAutoScalingGroupRequest createNewAutoScalingGroupRequest(String infraMappingId,
+  @VisibleForTesting
+  CreateAutoScalingGroupRequest createNewAutoScalingGroupRequest(String infraMappingId,
       List<String> infraMappingClassisLbs, List<String> infraMappingTargetGroupArns, String newAutoScalingGroupName,
       AutoScalingGroup baseAutoScalingGroup, Integer harnessRevision, Integer maxInstances) {
     List<Tag> tags =
@@ -610,8 +613,9 @@ public class AwsAmiHelperServiceDelegateImpl
     return createAutoScalingGroupRequest;
   }
 
-  private List<BlockDeviceMapping> getBlockDeviceMappings(AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String region, LaunchConfiguration baseLaunchConfiguration) {
+  @VisibleForTesting
+  List<BlockDeviceMapping> getBlockDeviceMappings(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String region, LaunchConfiguration baseLaunchConfiguration) {
     Set<String> deviceNamesInBaseAmi = awsEc2HelperServiceDelegate.listBlockDeviceNamesOfAmi(
         awsConfig, encryptedDataDetails, region, baseLaunchConfiguration.getImageId());
     List<BlockDeviceMapping> baseMappings = baseLaunchConfiguration.getBlockDeviceMappings();
@@ -623,7 +627,8 @@ public class AwsAmiHelperServiceDelegateImpl
     return emptyList();
   }
 
-  private CreateLaunchConfigurationRequest createNewLaunchConfigurationRequest(AwsConfig awsConfig,
+  @VisibleForTesting
+  CreateLaunchConfigurationRequest createNewLaunchConfigurationRequest(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String region, String artifactRevision,
       LaunchConfiguration cloneBaseLaunchConfiguration, String newAutoScalingGroupName, String userData) {
     CreateLaunchConfigurationRequest createLaunchConfigurationRequest =
@@ -668,7 +673,8 @@ public class AwsAmiHelperServiceDelegateImpl
     return createLaunchConfigurationRequest;
   }
 
-  private Integer getNewHarnessVersion(List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
+  @VisibleForTesting
+  Integer getNewHarnessVersion(List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
     Integer harnessRevision = 1;
     if (isNotEmpty(harnessManagedAutoScalingGroups)) {
       harnessRevision = harnessManagedAutoScalingGroups.stream()
@@ -682,7 +688,8 @@ public class AwsAmiHelperServiceDelegateImpl
     return harnessRevision;
   }
 
-  private String getLastDeployedAsgNameWithNonZeroCapacity(List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
+  @VisibleForTesting
+  String getLastDeployedAsgNameWithNonZeroCapacity(List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
     String oldAutoScalingGroupName = null;
     if (isNotEmpty(harnessManagedAutoScalingGroups)) {
       oldAutoScalingGroupName = harnessManagedAutoScalingGroups.stream()
@@ -695,7 +702,8 @@ public class AwsAmiHelperServiceDelegateImpl
     return oldAutoScalingGroupName;
   }
 
-  private List<AutoScalingGroup> listAllHarnessManagedAsgs(
+  @VisibleForTesting
+  List<AutoScalingGroup> listAllHarnessManagedAsgs(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String infraMappingId) {
     List<AutoScalingGroup> scalingGroups =
         awsAsgHelperServiceDelegate.listAllAsgs(awsConfig, encryptionDetails, region);
@@ -712,7 +720,8 @@ public class AwsAmiHelperServiceDelegateImpl
         && tagDescription.getValue().startsWith(infraMappingId);
   }
 
-  private LaunchConfiguration ensureAndGetBaseLaunchConfiguration(AwsConfig awsConfig,
+  @VisibleForTesting
+  LaunchConfiguration ensureAndGetBaseLaunchConfiguration(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName,
       AutoScalingGroup baseAutoScalingGroup, ExecutionLogCallback logCallback) {
     LaunchConfiguration baseAutoScalingGroupLaunchConfiguration = awsAsgHelperServiceDelegate.getLaunchConfiguration(
@@ -728,9 +737,9 @@ public class AwsAmiHelperServiceDelegateImpl
     return baseAutoScalingGroupLaunchConfiguration;
   }
 
-  private AutoScalingGroup ensureAndGetBaseAutoScalingGroup(AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptionDetails, String region, String baseAutoScalingGroupName,
-      ExecutionLogCallback logCallback) {
+  @VisibleForTesting
+  AutoScalingGroup ensureAndGetBaseAutoScalingGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String baseAutoScalingGroupName, ExecutionLogCallback logCallback) {
     AutoScalingGroup baseAutoScalingGroup =
         awsAsgHelperServiceDelegate.getAutoScalingGroup(awsConfig, encryptionDetails, region, baseAutoScalingGroupName);
     if (baseAutoScalingGroup == null) {

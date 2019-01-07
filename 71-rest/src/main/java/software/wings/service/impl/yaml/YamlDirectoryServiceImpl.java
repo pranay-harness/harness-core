@@ -34,6 +34,7 @@ import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOL
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -714,7 +715,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
-  private FolderNode doApplications(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
+  @VisibleForTesting
+  FolderNode doApplications(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
       Map<String, AppPermissionSummary> appPermissionSummaryMap) {
     FolderNode applicationsFolder = new FolderNode(
         accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);

@@ -4,9 +4,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.reflect.MethodUtils.invokeMethod;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -48,7 +46,6 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -157,14 +154,9 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         .when(mockAwsAsgHelperServiceDelegate)
         .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
             any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt());
-    try {
-      invokeMethod(awsAmiHelperServiceDelegate, true, "resizeAsgs",
-          new Object[] {"us-east-1", AwsConfig.builder().build(), emptyList(), "newName", 2,
-              singletonList(AwsAmiResizeData.builder().asgName("oldName").desiredCount(0).build()), mockCallback, true,
-              10, 2, 0, AwsAmiPreDeploymentData.builder().build(), emptyList(), emptyList(), false});
-    } catch (Exception ex) {
-      fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    awsAmiHelperServiceDelegate.resizeAsgs("us-east-1", AwsConfig.builder().build(), emptyList(), "newName", 2,
+        singletonList(AwsAmiResizeData.builder().asgName("oldName").desiredCount(0).build()), mockCallback, true, 10, 2,
+        0, AwsAmiPreDeploymentData.builder().build(), emptyList(), emptyList(), false);
     verify(mockAwsAsgHelperServiceDelegate, times(2))
         .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
             any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt());
@@ -188,14 +180,8 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
             .withHealthCheckGracePeriod(13)
             .withPlacementGroup("pGroup")
             .withVPCZoneIdentifier("vpcI");
-    CreateAutoScalingGroupRequest request = null;
-    try {
-      request = (CreateAutoScalingGroupRequest) invokeMethod(awsAmiHelperServiceDelegate, true,
-          "createNewAutoScalingGroupRequest",
-          new Object[] {"id", asList("lb1", "lb2"), asList("a1", "a2"), "newName", baseAutoScalingGroup, 2, 10});
-    } catch (Exception ex) {
-      fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    CreateAutoScalingGroupRequest request = awsAmiHelperServiceDelegate.createNewAutoScalingGroupRequest(
+        "id", asList("lb1", "lb2"), asList("a1", "a2"), "newName", baseAutoScalingGroup, 2, 10);
     assertThat(request).isNotNull();
     assertThat(request.getTags().size()).isEqualTo(4);
     assertThat(request.getAutoScalingGroupName()).isEqualTo("newName");
@@ -222,13 +208,8 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(ImmutableSet.of("name1"))
         .when(mockAwsEc2HelperServiceDelegate)
         .listBlockDeviceNamesOfAmi(any(), anyList(), anyString(), anyString());
-    List<BlockDeviceMapping> result = null;
-    try {
-      result = (List<BlockDeviceMapping>) invokeMethod(awsAmiHelperServiceDelegate, true, "getBlockDeviceMappings",
-          new Object[] {AwsConfig.builder().build(), emptyList(), "us-east-1", baseLC});
-    } catch (Exception ex) {
-      fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    List<BlockDeviceMapping> result = awsAmiHelperServiceDelegate.getBlockDeviceMappings(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", baseLC);
     assertThat(result).isNotNull();
     assertThat(result.size()).isEqualTo(1);
     assertThat(result.get(0).getDeviceName()).isEqualTo("name0");
@@ -251,23 +232,15 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
             .withIamInstanceProfile("iAmProfile")
             .withPlacementTenancy("pTency")
             .withKeyName("key");
-    CreateLaunchConfigurationRequest request = null;
-    try {
-      request = (CreateLaunchConfigurationRequest) invokeMethod(awsAmiHelperServiceDelegate, true,
-          "createNewLaunchConfigurationRequest",
-          new Object[] {AwsConfig.builder().build(), emptyList(), "us-east-1", "aRev", cloneBaseLaunchConfiguration,
-              "newName", "userData"});
-    } catch (Exception ex) {
-      fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    CreateLaunchConfigurationRequest request =
+        awsAmiHelperServiceDelegate.createNewLaunchConfigurationRequest(AwsConfig.builder().build(), emptyList(),
+            "us-east-1", "aRev", cloneBaseLaunchConfiguration, "newName", "userData");
     assertThat(request).isNotNull();
     assertThat(request.getLaunchConfigurationName()).isEqualTo("newName");
     assertThat(request.getImageId()).isEqualTo("aRev");
     assertThat(request.getSecurityGroups()).isEqualTo(asList("sg1", "sg2"));
     assertThat(request.getClassicLinkVPCId()).isEqualTo("cLVI");
     assertThat(request.getEbsOptimized()).isEqualTo(true);
-    // assertThat(request.getBlockDeviceMappings().size()).isEqualTo(0);
-    // assertThat(request.getBlockDeviceMappings().get(0).getDeviceName()).isEqualTo("name0");
     assertThat(request.getAssociatePublicIpAddress()).isEqualTo(true);
     assertThat(request.getUserData()).isEqualTo("userData");
     assertThat(request.getInstanceType()).isEqualTo("iType");
@@ -286,14 +259,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         new AutoScalingGroup().withTags(new TagDescription().withKey(HARNESS_AUTOSCALING_GROUP_TAG).withValue("id__1")),
         new AutoScalingGroup().withTags(
             new TagDescription().withKey(HARNESS_AUTOSCALING_GROUP_TAG).withValue("id__2")));
-    Integer nextRev = null;
-    try {
-      nextRev =
-          (Integer) invokeMethod(awsAmiHelperServiceDelegate, true, "getNewHarnessVersion", new Object[] {groups});
-
-    } catch (Exception ex) {
-      fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    Integer nextRev = awsAmiHelperServiceDelegate.getNewHarnessVersion(groups);
     assertThat(nextRev).isNotNull();
     assertThat(nextRev).isEqualTo(3);
   }
@@ -303,13 +269,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     List<AutoScalingGroup> groups =
         asList(new AutoScalingGroup().withDesiredCapacity(1).withAutoScalingGroupName("name1"),
             new AutoScalingGroup().withDesiredCapacity(0).withAutoScalingGroupName("name0"));
-    String groupName = null;
-    try {
-      groupName = (String) invokeMethod(
-          awsAmiHelperServiceDelegate, true, "getLastDeployedAsgNameWithNonZeroCapacity", new Object[] {groups});
-    } catch (Exception ex) {
-      fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    String groupName = awsAmiHelperServiceDelegate.getLastDeployedAsgNameWithNonZeroCapacity(groups);
     assertThat(groupName).isNotNull();
     assertThat(groupName).isEqualTo("name1");
   }
@@ -326,13 +286,8 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
             .withTags(new TagDescription().withKey(HARNESS_AUTOSCALING_GROUP_TAG).withValue("idBar"))
             .withCreatedTime(new Date(20)));
     doReturn(groups).when(mockAwsAsgHelperServiceDelegate).listAllAsgs(any(), anyList(), anyString());
-    List<AutoScalingGroup> result = null;
-    try {
-      result = (List<AutoScalingGroup>) invokeMethod(awsAmiHelperServiceDelegate, true, "listAllHarnessManagedAsgs",
-          new Object[] {AwsConfig.builder().build(), emptyList(), "us-east-1", "id"});
-    } catch (Exception ex) {
-      fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    List<AutoScalingGroup> result = awsAmiHelperServiceDelegate.listAllHarnessManagedAsgs(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "id");
     assertThat(result).isNotNull();
     assertThat(result.size()).isEqualTo(2);
     assertThat(result.get(0).getAutoScalingGroupName()).isEqualTo("bar");
@@ -347,12 +302,11 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         .when(mockAwsAsgHelperServiceDelegate)
         .getLaunchConfiguration(any(), anyList(), anyString(), anyString());
     try {
-      invokeMethod(awsAmiHelperServiceDelegate, true, "ensureAndGetBaseLaunchConfiguration",
-          new Object[] {AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", new AutoScalingGroup(),
-              mockLogCallback});
+      awsAmiHelperServiceDelegate.ensureAndGetBaseLaunchConfiguration(
+          AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", new AutoScalingGroup(), mockLogCallback);
       fail("Exception should have been thrown");
-    } catch (InvocationTargetException ex) {
-      assertTrue(ex.getTargetException() instanceof InvalidRequestException);
+    } catch (InvalidRequestException ex) {
+      // Expected
     } catch (Exception ex) {
       fail(format("Exception: [%s]", ex.getMessage()));
     }
@@ -366,11 +320,11 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         .when(mockAwsAsgHelperServiceDelegate)
         .getAutoScalingGroup(any(), anyList(), anyString(), anyString());
     try {
-      invokeMethod(awsAmiHelperServiceDelegate, true, "ensureAndGetBaseAutoScalingGroup",
-          new Object[] {AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", mockLogCallback});
+      awsAmiHelperServiceDelegate.ensureAndGetBaseAutoScalingGroup(
+          AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", mockLogCallback);
       fail("Exception should have been thrown");
-    } catch (InvocationTargetException ex) {
-      assertTrue(ex.getTargetException() instanceof InvalidRequestException);
+    } catch (InvalidRequestException ex) {
+      // Expected
     } catch (Exception ex) {
       fail(format("Exception: [%s]", ex.getMessage()));
     }
@@ -382,13 +336,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         asList(new AutoScalingGroup().withAutoScalingGroupName("name_2").withDesiredCapacity(3).withMinSize(2),
             new AutoScalingGroup().withAutoScalingGroupName("name_1").withDesiredCapacity(5).withMinSize(4));
     AwsAmiServiceSetupResponseBuilder builder = AwsAmiServiceSetupResponse.builder();
-    try {
-      invokeMethod(
-          awsAmiHelperServiceDelegate, true, "populatePreDeploymentData", new Object[] {scalingGroups, builder});
-    } catch (Exception ex) {
-      fail(format("Exception: [%s]", ex.getMessage()));
-    }
-
+    awsAmiHelperServiceDelegate.populatePreDeploymentData(scalingGroups, builder);
     AwsAmiServiceSetupResponse response = builder.build();
     List<String> oldAsgNames = response.getOldAsgNames();
     assertThat(oldAsgNames).isNotEmpty();

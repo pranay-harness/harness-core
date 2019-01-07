@@ -1,9 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
-import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.reflect.MethodUtils.invokeMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -27,7 +25,6 @@ import com.amazonaws.services.elasticloadbalancingv2.model.TargetDescription;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealth;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
-import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -163,16 +160,12 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
         .when(mockClassicClient)
         .describeInstanceHealth(any());
     doNothing().when(mockCallback).saveExecutionLog(anyString());
-    try {
-      boolean result = (boolean) invokeMethod(awsElbHelperServiceDelegate, true, "allInstancesRegistered",
-          new Object[] {mockClassicClient, singletonList("id"), "classicLb", mockCallback});
-      assertThat(result).isFalse();
-      result = (boolean) invokeMethod(awsElbHelperServiceDelegate, true, "allInstancesRegistered",
-          new Object[] {mockClassicClient, singletonList("id"), "classicLb", mockCallback});
-      assertThat(result).isTrue();
-    } catch (Exception ex) {
-      Assert.fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    boolean result = awsElbHelperServiceDelegate.allInstancesRegistered(
+        mockClassicClient, singletonList("id"), "classicLb", mockCallback);
+    assertThat(result).isFalse();
+    result = awsElbHelperServiceDelegate.allInstancesRegistered(
+        mockClassicClient, singletonList("id"), "classicLb", mockCallback);
+    assertThat(result).isTrue();
   }
 
   @Test
@@ -190,16 +183,12 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
                 .withTarget(new TargetDescription().withId("id"))))
         .when(mockV2Client)
         .describeTargetHealth(any());
-    try {
-      boolean result = (boolean) invokeMethod(awsElbHelperServiceDelegate, true, "allTargetsRegistered",
-          new Object[] {mockV2Client, singletonList("id"), "targetGroup", mockCallback});
-      assertThat(result).isFalse();
-      result = (boolean) invokeMethod(awsElbHelperServiceDelegate, true, "allTargetsRegistered",
-          new Object[] {mockV2Client, singletonList("id"), "targetGroup", mockCallback});
-      assertThat(result).isTrue();
-    } catch (Exception ex) {
-      Assert.fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    boolean result = awsElbHelperServiceDelegate.allTargetsRegistered(
+        mockV2Client, singletonList("id"), "targetGroup", mockCallback);
+    assertThat(result).isFalse();
+    result = awsElbHelperServiceDelegate.allTargetsRegistered(
+        mockV2Client, singletonList("id"), "targetGroup", mockCallback);
+    assertThat(result).isTrue();
   }
 
   @Test
@@ -214,16 +203,12 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
         .doReturn(new DescribeTargetHealthResult())
         .when(mockV2Client)
         .describeTargetHealth(any());
-    try {
-      boolean result = (boolean) invokeMethod(awsElbHelperServiceDelegate, true, "allTargetsDeRegistered",
-          new Object[] {mockV2Client, singletonList("id"), "targetGroup", mockCallback});
-      assertThat(result).isFalse();
-      result = (boolean) invokeMethod(awsElbHelperServiceDelegate, true, "allTargetsDeRegistered",
-          new Object[] {mockV2Client, singletonList("id"), "targetGroup", mockCallback});
-      assertThat(result).isTrue();
-    } catch (Exception ex) {
-      Assert.fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    boolean result = awsElbHelperServiceDelegate.allTargetsDeRegistered(
+        mockV2Client, singletonList("id"), "targetGroup", mockCallback);
+    assertThat(result).isFalse();
+    result = awsElbHelperServiceDelegate.allTargetsDeRegistered(
+        mockV2Client, singletonList("id"), "targetGroup", mockCallback);
+    assertThat(result).isTrue();
   }
 
   @Test
@@ -237,16 +222,12 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
         .when(mockClassicClient)
         .describeInstanceHealth(any());
     doNothing().when(mockCallback).saveExecutionLog(anyString());
-    try {
-      boolean result = (boolean) invokeMethod(awsElbHelperServiceDelegate, true, "allInstancesDeRegistered",
-          new Object[] {mockClassicClient, singletonList("id"), "classicLb", mockCallback});
-      assertThat(result).isFalse();
-      result = (boolean) invokeMethod(awsElbHelperServiceDelegate, true, "allInstancesDeRegistered",
-          new Object[] {mockClassicClient, singletonList("id"), "classicLb", mockCallback});
-      assertThat(result).isTrue();
-    } catch (Exception ex) {
-      Assert.fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    boolean result = awsElbHelperServiceDelegate.allInstancesDeRegistered(
+        mockClassicClient, singletonList("id"), "classicLb", mockCallback);
+    assertThat(result).isFalse();
+    result = awsElbHelperServiceDelegate.allInstancesDeRegistered(
+        mockClassicClient, singletonList("id"), "classicLb", mockCallback);
+    assertThat(result).isTrue();
   }
 
   @Test

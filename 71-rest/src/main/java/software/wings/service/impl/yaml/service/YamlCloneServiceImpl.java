@@ -7,6 +7,7 @@ import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -204,7 +205,8 @@ public class YamlCloneServiceImpl implements YamlCloneService {
    * @param includeFiles
    * @param errorMessages
    */
-  private void traverseDirectory(List<GitFileChange> gitFileChanges, String accountId, FolderNode fn, String path,
+  @VisibleForTesting
+  void traverseDirectory(List<GitFileChange> gitFileChanges, String accountId, FolderNode fn, String path,
       boolean includeFiles, Optional<List<String>> errorMessages) {
     path = path + "/" + fn.getName();
 
