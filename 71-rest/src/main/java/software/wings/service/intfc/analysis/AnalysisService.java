@@ -74,4 +74,6 @@ public interface AnalysisService {
 
   Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId);
   List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
+  LogMLAnalysisSummary getExperimentalAnalysisSummary(
+      String stateExecutionId, String appId, StateType stateType, String expName);
 }

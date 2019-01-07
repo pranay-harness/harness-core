@@ -21,6 +21,7 @@ import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute.Builder;
@@ -73,6 +74,7 @@ public class DynaTraceResourceIntegrationTest extends BaseIntegrationTest {
                               .build());
   }
 
+  @Ignore
   @Test
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   public void testGetLogRecords() {
