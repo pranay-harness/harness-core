@@ -18,6 +18,7 @@ import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.common.Constants.HARNESS_IO_KEY_;
 import static software.wings.common.Constants.HARNESS_SUPPORT_EMAIL_KEY;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.jcraft.jsch.JSch;
@@ -237,8 +238,9 @@ public class GitClientImpl implements GitClient {
     return gitFiles;
   }
 
-  private void addToGitDiffResult(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId,
-      GitConfig gitConfig, Repository repository) throws IOException {
+  @VisibleForTesting
+  void addToGitDiffResult(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId, GitConfig gitConfig,
+      Repository repository) throws IOException {
     logger.info(GIT_YAML_LOG_PREFIX + "Total diff entries found : " + diffs.size());
     for (DiffEntry entry : diffs) {
       String content = null;

@@ -331,7 +331,8 @@ public class AwsElbHelperServiceDelegateImpl
     }
   }
 
-  private boolean allInstancesDeRegistered(
+  @VisibleForTesting
+  boolean allInstancesDeRegistered(
       com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> instanceIds, String classicLB, ExecutionLogCallback logCallback) {
     if (isEmpty(instanceIds)) {
@@ -380,7 +381,8 @@ public class AwsElbHelperServiceDelegateImpl
     }
   }
 
-  private boolean allInstancesRegistered(
+  @VisibleForTesting
+  boolean allInstancesRegistered(
       com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> instanceIds, String classicLB, ExecutionLogCallback logCallback) {
     if (isEmpty(instanceIds)) {
@@ -432,7 +434,8 @@ public class AwsElbHelperServiceDelegateImpl
     }
   }
 
-  private boolean allTargetsDeRegistered(AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
+  @VisibleForTesting
+  boolean allTargetsDeRegistered(AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> targetIds, String targetGroupARN, ExecutionLogCallback logCallback) {
     if (isEmpty(targetIds)) {
       return true;
@@ -482,7 +485,8 @@ public class AwsElbHelperServiceDelegateImpl
     }
   }
 
-  private boolean allTargetsRegistered(AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
+  @VisibleForTesting
+  boolean allTargetsRegistered(AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> targetIds, String targetGroupARN, ExecutionLogCallback logCallback) {
     if (isEmpty(targetIds)) {
       return true;

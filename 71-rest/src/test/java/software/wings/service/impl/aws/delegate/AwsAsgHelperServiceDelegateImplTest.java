@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.reflect.MethodUtils.invokeMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -31,7 +30,6 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
-import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -271,16 +269,12 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
         .listEc2Instances(any(), anyList(), anyList(), anyString());
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
-    try {
-      boolean result = (boolean) invokeMethod(awsAsgHelperServiceDelegate, true, "allInstanceInReadyState",
-          new Object[] {AwsConfig.builder().build(), emptyList(), "us-east-1", singletonList("id"), mockCallback});
-      assertThat(result).isFalse();
-      result = (boolean) invokeMethod(awsAsgHelperServiceDelegate, true, "allInstanceInReadyState",
-          new Object[] {AwsConfig.builder().build(), emptyList(), "us-east-1", singletonList("id"), mockCallback});
-      assertThat(result).isTrue();
-    } catch (Exception ex) {
-      Assert.fail(format("Exception: [%s]", ex.getMessage()));
-    }
+    boolean result = awsAsgHelperServiceDelegate.allInstanceInReadyState(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", singletonList("id"), mockCallback);
+    assertThat(result).isFalse();
+    result = awsAsgHelperServiceDelegate.allInstanceInReadyState(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", singletonList("id"), mockCallback);
+    assertThat(result).isTrue();
   }
 
   @Test

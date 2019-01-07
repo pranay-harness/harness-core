@@ -24,7 +24,6 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import com.google.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -134,10 +133,8 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
         .getGitFileChange(any(), anyString(), anyString(), anyBoolean(), any(), anyBoolean(), any(), anyBoolean());
 
     Optional<List<String>> errorMessages = Optional.of(new ArrayList<>());
-    MethodUtils.invokeMethod(yamlCloneServiceImpl, true, "traverseDirectory",
-        new Object[] {gitFileChangeList, ACCOUNT_ID, workflowsFolder, workflowsFolder.getDirectoryPath().getPath(),
-            false, errorMessages});
-
+    yamlCloneServiceImpl.traverseDirectory(gitFileChangeList, ACCOUNT_ID, workflowsFolder,
+        workflowsFolder.getDirectoryPath().getPath(), false, errorMessages);
     assertEquals(1, gitFileChangeList.size());
     assertEquals(ACCOUNT_ID, gitFileChangeList.get(0).getAccountId());
     assertEquals(NEW_PATH_FOR_WORKFLOW, gitFileChangeList.get(0).getFilePath());

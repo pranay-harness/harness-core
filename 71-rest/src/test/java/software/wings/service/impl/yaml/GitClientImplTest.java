@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -13,7 +14,6 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import io.harness.data.structure.UUIDGenerator;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -39,11 +39,9 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.core.ssh.executors.SshSessionConfig;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class GitClientImplTest extends WingsBaseTest {
   public static final String oldObjectIdString = "0000000000000000000000000000000000000000";
@@ -192,9 +190,7 @@ public class GitClientImplTest extends WingsBaseTest {
                                    .repoName(gitConfig.getRepoUrl())
                                    .gitFileChanges(new ArrayList<>())
                                    .build();
-
-    MethodUtils.invokeMethod(gitClient, true, "addToGitDiffResult",
-        new Object[] {Collections.singletonList(entry), diffResult, headCommitId, gitConfig, repository});
+    gitClient.addToGitDiffResult(singletonList(entry), diffResult, headCommitId, gitConfig, repository);
     assertEquals(1, diffResult.getGitFileChanges().size());
     GitFileChange gitFileChange = diffResult.getGitFileChanges().iterator().next();
     assertEquals(oldObjectIdString, gitFileChange.getObjectId());
@@ -203,8 +199,7 @@ public class GitClientImplTest extends WingsBaseTest {
 
     diffResult.getGitFileChanges().clear();
 
-    MethodUtils.invokeMethod(gitClient, true, "addToGitDiffResult",
-        new Object[] {Collections.singletonList(entry), diffResult, headCommitId, gitConfig, repository});
+    gitClient.addToGitDiffResult(singletonList(entry), diffResult, headCommitId, gitConfig, repository);
     assertEquals(1, diffResult.getGitFileChanges().size());
     gitFileChange = diffResult.getGitFileChanges().iterator().next();
     assertEquals(newObjectIdString, gitFileChange.getObjectId());
@@ -212,27 +207,7 @@ public class GitClientImplTest extends WingsBaseTest {
     assertEquals(content, gitFileChange.getFileContent());
   }
 
-  private char[] getSSHKey(String path) {
-    byte[] priKeyBytes = null;
-    try {
-      File filePrivateKey = new File(path);
-      FileInputStream fis = new FileInputStream(path);
-      priKeyBytes = new byte[(int) filePrivateKey.length()];
-      fis.read(priKeyBytes);
-      fis.close();
-    } catch (IOException ex) {
-      logger.error("", ex);
-    }
-
-    StringBuilder sb = new StringBuilder();
-    for (byte b : priKeyBytes) {
-      sb.append(b);
-    }
-
-    return sb.toString().toCharArray();
-  }
-
-  public Git gitSyncCloneRepository() throws IOException, GitAPIException {
+  private Git gitSyncCloneRepository() throws IOException, GitAPIException {
     SshSessionFactory sshSessionFactory = new JschConfigSessionFactory() {
       @Override
       protected void configure(OpenSshConfig.Host host, Session session) {

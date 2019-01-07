@@ -29,7 +29,6 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -54,7 +53,6 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.directory.AppLevelYamlNode;
 import software.wings.yaml.directory.DirectoryNode;
@@ -80,7 +78,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
   @Mock private InfrastructureProvisionerService provisionerService;
-  @Inject @InjectMocks private YamlDirectoryService yamlDirectoryService;
+  @Inject @InjectMocks private YamlDirectoryServiceImpl yamlDirectoryService;
 
   @Test
   public void testDoApplications() throws Exception {
@@ -88,10 +86,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     Map<String, AppPermissionSummary> appPermissionSummaryMap = new HashMap<>();
     appPermissionSummaryMap.put(APP_ID, null);
     performMocking();
-
-    DirectoryNode directoryNode = (DirectoryNode) MethodUtils.invokeMethod(yamlDirectoryService, true, "doApplications",
-        new Object[] {ACCOUNT_ID, directoryPath, false, appPermissionSummaryMap});
-
+    DirectoryNode directoryNode =
+        (DirectoryNode) yamlDirectoryService.doApplications(ACCOUNT_ID, directoryPath, false, appPermissionSummaryMap);
     assertNotNull(directoryNode);
     FolderNode folderNode = (FolderNode) directoryNode;
     assertNotNull(folderNode.getChildren());

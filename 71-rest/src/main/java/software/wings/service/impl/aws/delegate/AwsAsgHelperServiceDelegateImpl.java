@@ -515,8 +515,9 @@ public class AwsAsgHelperServiceDelegateImpl
     logCallback.saveExecutionLog("AutoScaling group reached steady state");
   }
 
-  private boolean allInstanceInReadyState(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      String region, List<String> instanceIds, ExecutionLogCallback logCallback) {
+  @VisibleForTesting
+  boolean allInstanceInReadyState(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      List<String> instanceIds, ExecutionLogCallback logCallback) {
     List<Instance> instances =
         awsEc2HelperServiceDelegate.listEc2Instances(awsConfig, encryptionDetails, instanceIds, region);
     boolean allRunning = instanceIds.isEmpty()

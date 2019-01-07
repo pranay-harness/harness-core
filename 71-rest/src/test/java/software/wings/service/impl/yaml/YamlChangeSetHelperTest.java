@@ -9,7 +9,6 @@ import static software.wings.utils.WingsTestConstants.USER_ID;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -89,9 +88,7 @@ public class YamlChangeSetHelperTest {
     InfrastructureMapping newValue =
         AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().withName(NEW).build();
 
-    MethodUtils.invokeMethod(
-        yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, newValue, true});
-
+    yamlChangeSetHelper.entityUpdateYamlChange(ACCOUNTID, oldValue, newValue, true);
     ArgumentCaptor<List> gitFileChangesCaptor = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<Base> entityCaptor = ArgumentCaptor.forClass(Base.class);
@@ -129,9 +126,7 @@ public class YamlChangeSetHelperTest {
     InfrastructureMapping oldValue =
         AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().withName(OLD).build();
 
-    MethodUtils.invokeMethod(
-        yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, oldValue, false});
-
+    yamlChangeSetHelper.entityUpdateYamlChange(ACCOUNTID, oldValue, oldValue, false);
     ArgumentCaptor<List> fileChangesCaptor = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<Base> entityCaptor = ArgumentCaptor.forClass(Base.class);
@@ -173,8 +168,7 @@ public class YamlChangeSetHelperTest {
     ArtifactStream newValue = new DockerArtifactStream();
     oldValue.setName(NEW);
 
-    MethodUtils.invokeMethod(
-        yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, newValue, true});
+    yamlChangeSetHelper.entityUpdateYamlChange(ACCOUNTID, oldValue, newValue, true);
 
     ArgumentCaptor<List> gitFileChangesCaptorForAS = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
@@ -209,8 +203,7 @@ public class YamlChangeSetHelperTest {
     when(yamlChangeSetService.saveChangeSet(any(), any(), any())).thenReturn(null);
     ArtifactStream oldValue = new DockerArtifactStream();
     oldValue.setName(OLD);
-    MethodUtils.invokeMethod(
-        yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, oldValue, false});
+    yamlChangeSetHelper.entityUpdateYamlChange(ACCOUNTID, oldValue, oldValue, false);
 
     ArgumentCaptor<List> fileChangesCaptorForAS = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
