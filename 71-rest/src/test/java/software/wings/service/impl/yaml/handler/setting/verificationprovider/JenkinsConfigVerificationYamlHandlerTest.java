@@ -1,4 +1,4 @@
-package software.wings.yaml.handler.connectors.configyamlhandlers;
+package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -11,7 +11,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -23,10 +22,10 @@ import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
-import software.wings.service.impl.yaml.handler.setting.verificationprovider.JenkinsConfigVerificationYamlHandler;
+import software.wings.yaml.handler.connectors.configyamlhandlers.BaseSettingValueConfigYamlHandlerTest;
+import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 
 public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
@@ -68,11 +67,10 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
             .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
             .build();
     try {
-      MethodUtils.invokeMethod(yamlHandler, true, "toBean",
-          new Object[] {aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST});
+      yamlHandler.toBean(aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(((InvocationTargetException) e).getTargetException() instanceof HarnessException);
+      assertTrue(e instanceof HarnessException);
     }
 
     changeContext = aChangeContext()
@@ -80,11 +78,10 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
                         .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
                         .build();
     try {
-      MethodUtils.invokeMethod(yamlHandler, true, "toBean",
-          new Object[] {aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST});
+      yamlHandler.toBean(aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(((InvocationTargetException) e).getTargetException() instanceof HarnessException);
+      assertTrue(e instanceof HarnessException);
     }
 
     changeContext = aChangeContext()
@@ -92,11 +89,10 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
                         .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
                         .build();
     try {
-      MethodUtils.invokeMethod(yamlHandler, true, "toBean",
-          new Object[] {aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST});
+      yamlHandler.toBean(aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(((InvocationTargetException) e).getTargetException() instanceof HarnessException);
+      assertTrue(e instanceof HarnessException);
     }
 
     changeContext = aChangeContext()
@@ -104,11 +100,10 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
                         .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
                         .build();
     try {
-      MethodUtils.invokeMethod(yamlHandler, true, "toBean",
-          new Object[] {aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST});
+      yamlHandler.toBean(aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(((InvocationTargetException) e).getTargetException() instanceof HarnessException);
+      assertTrue(e instanceof HarnessException);
     }
   }
 

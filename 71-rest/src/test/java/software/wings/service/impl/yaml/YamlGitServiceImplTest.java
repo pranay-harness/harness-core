@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service.impl.yaml;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -13,7 +13,6 @@ import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.exception.WingsException;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -21,14 +20,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Account;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.service.impl.yaml.YamlGitServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -67,17 +64,16 @@ public class YamlGitServiceImplTest {
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange().withFilePath("Setup/Applications/app1/Services").build());
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange().withFilePath("Setup/Verification Providers").build());
 
-    MethodUtils.invokeMethod(yamlGitService, true, "checkForValidNameSyntax", gitFileChanges);
-
+    yamlGitService.checkForValidNameSyntax(gitFileChanges);
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange()
                            .withFilePath("Setup/Applications/app1/Services/service/1/Index.yaml")
                            .build());
     try {
-      MethodUtils.invokeMethod(yamlGitService, true, "checkForValidNameSyntax", gitFileChanges);
+      yamlGitService.checkForValidNameSyntax(gitFileChanges);
       assertTrue(false);
-    } catch (InvocationTargetException ex) {
-      assertTrue(ex.getTargetException() instanceof WingsException);
-      assertTrue(ex.getTargetException().getMessage().contains(
+    } catch (Exception ex) {
+      assertTrue(ex instanceof WingsException);
+      assertTrue(ex.getMessage().contains(
           "Invalid entity name, entity can not contain / in the name. Caused invalid file path:"));
     }
   }

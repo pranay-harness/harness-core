@@ -37,6 +37,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -570,7 +571,8 @@ public class YamlGitServiceImpl implements YamlGitService {
    *
    * @param gitFileChanges
    */
-  private void checkForValidNameSyntax(List<GitFileChange> gitFileChanges) {
+  @VisibleForTesting
+  void checkForValidNameSyntax(List<GitFileChange> gitFileChanges) {
     // Get all yamlTypes having non-empty filepath prefixes (these yaml types represent different file paths)
     List<YamlType> folderYamlTypes =
         Arrays.stream(YamlType.values()).filter(yamlType -> isNotEmpty(yamlType.getPathExpression())).collect(toList());

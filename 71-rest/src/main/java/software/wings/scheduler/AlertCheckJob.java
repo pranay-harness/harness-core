@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -78,7 +79,8 @@ public class AlertCheckJob implements Job {
         () -> executeInternal((String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID)));
   }
 
-  private void executeInternal(String accountId) {
+  @VisibleForTesting
+  void executeInternal(String accountId) {
     logger.info("Checking account " + accountId + " for alert conditions.");
     List<Delegate> delegates = getDelegatesForAccount(accountId);
 
@@ -110,7 +112,8 @@ public class AlertCheckJob implements Job {
     return wingsPersistence.createQuery(Delegate.class).filter(Delegate.ACCOUNT_ID_KEY, accountId).asList();
   }
 
-  private void checkForInvalidValidSMTP(String accountId) {
+  @VisibleForTesting
+  void checkForInvalidValidSMTP(String accountId) {
     if (!emailHelperUtil.isSmtpConfigValid(mainConfiguration.getSmtpConfig())
         && !emailHelperUtil.isSmtpConfigValid(emailHelperUtil.getSmtpConfig(accountId))) {
       alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.INVALID_SMTP_CONFIGURATION,

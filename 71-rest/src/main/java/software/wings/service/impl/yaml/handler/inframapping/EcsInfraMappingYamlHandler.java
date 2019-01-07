@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.LaunchType;
@@ -96,7 +97,8 @@ public class EcsInfraMappingYamlHandler
     return asList(idArr);
   }
 
-  private static void validateNetworkParameters(Yaml yaml, EcsInfrastructureMapping bean) {
+  @VisibleForTesting
+  static void validateNetworkParameters(Yaml yaml, EcsInfrastructureMapping bean) {
     if (isBlank(yaml.getVpcId()) || isBlank(yaml.getSubnetIds()) || isBlank(yaml.getSecurityGroupIds())) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
           .addParam("args",

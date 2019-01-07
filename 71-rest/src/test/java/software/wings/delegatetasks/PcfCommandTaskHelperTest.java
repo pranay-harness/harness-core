@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -61,13 +60,10 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
 
   @Test
   public void testGetRevisionFromReleaseName() throws Exception {
-    Integer revision =
-        (Integer) MethodUtils.invokeMethod(pcfCommandTaskHelper, true, "getRevisionFromReleaseName", "app_serv_env__1");
-
+    Integer revision = PcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__1");
     assertTrue(1 == revision);
 
-    revision =
-        (Integer) MethodUtils.invokeMethod(pcfCommandTaskHelper, true, "getRevisionFromReleaseName", "app_serv_env__2");
+    revision = PcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__2");
     assertTrue(2 == revision);
   }
 

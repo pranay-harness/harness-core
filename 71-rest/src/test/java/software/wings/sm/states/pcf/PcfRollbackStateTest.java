@@ -1,4 +1,4 @@
-package software.wings.sm.states.pcfstates;
+package software.wings.sm.states.pcf;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -53,7 +53,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.pcf.PcfRollbackState;
 
 import java.util.Arrays;
 

@@ -44,6 +44,7 @@ import static software.wings.utils.KubernetesConvention.getPrimaryServiceName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getStageServiceName;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -519,7 +520,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private void validateBlueGreenConfig(KubernetesSetupParams setupParams) {
+  @VisibleForTesting
+  void validateBlueGreenConfig(KubernetesSetupParams setupParams) {
     if (setupParams.getServiceType() != null && setupParams.getServiceType() != None) {
       throw new InvalidRequestException("Service cannot be specified for Blue/Green deployment setup");
     }
@@ -1077,7 +1079,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
-  private HorizontalPodAutoscaler createAutoscaler(String name, String kind, String apiVersion, String namespace,
+  @VisibleForTesting
+  HorizontalPodAutoscaler createAutoscaler(String name, String kind, String apiVersion, String namespace,
       Map<String, String> serviceLabels, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     HorizontalPodAutoscaler horizontalPodAutoscaler;
 

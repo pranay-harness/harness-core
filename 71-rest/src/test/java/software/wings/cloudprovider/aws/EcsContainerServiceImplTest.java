@@ -1,7 +1,6 @@
 package software.wings.cloudprovider.aws;
 
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.reflect.MethodUtils.invokeMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -174,22 +173,22 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     EcsContainerServiceImpl ecsContainerServiceImpl = (EcsContainerServiceImpl) ecsContainerService;
 
     Service service = new Service().withDeployments(new Deployment(), new Deployment());
-    boolean ret =
-        (boolean) invokeMethod(ecsContainerServiceImpl, true, "hasServiceReachedSteadyState", new Object[] {service});
+    boolean ret = ecsContainerServiceImpl.hasServiceReachedSteadyState(service);
+
     assertFalse(ret);
 
     service =
         new Service()
             .withDeployments(new Deployment().withUpdatedAt(new Date(10)))
             .withEvents(new ServiceEvent().withMessage("Foo has reached a steady state.").withCreatedAt(new Date(5)));
-    ret = (boolean) invokeMethod(ecsContainerServiceImpl, true, "hasServiceReachedSteadyState", new Object[] {service});
+    ret = ecsContainerServiceImpl.hasServiceReachedSteadyState(service);
     assertFalse(ret);
 
     service =
         new Service()
             .withDeployments(new Deployment().withUpdatedAt(new Date(10)))
             .withEvents(new ServiceEvent().withMessage("Foo has reached a steady state.").withCreatedAt(new Date(15)));
-    ret = (boolean) invokeMethod(ecsContainerServiceImpl, true, "hasServiceReachedSteadyState", new Object[] {service});
+    ret = ecsContainerServiceImpl.hasServiceReachedSteadyState(service);
     assertTrue(ret);
   }
 }

@@ -4,6 +4,7 @@ import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -201,6 +202,7 @@ public class PcfDeployState extends State {
         pcfSetupContextElement.getMaxInstanceCount(), instanceCount, instanceUnitType, true);
   }
 
+  @VisibleForTesting
   protected Integer getDownsizeUpdateCount(Integer updateCount, PcfSetupContextElement pcfSetupContextElement) {
     // if downsizeInstanceCount is not set, use same updateCount as upsize
     Integer downsizeUpdateCount = updateCount;

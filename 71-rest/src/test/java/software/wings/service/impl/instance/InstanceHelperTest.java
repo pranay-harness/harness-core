@@ -22,7 +22,6 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.queue.Queue;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -673,22 +672,14 @@ public class InstanceHelperTest extends WingsBaseTest {
 
   @Test
   public void testIsSupported() throws Exception {
-    assertFalse((Boolean) MethodUtils.invokeMethod(
-        instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH}));
-    assertFalse((Boolean) MethodUtils.invokeMethod(
-        instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM}));
-    assertFalse((Boolean) MethodUtils.invokeMethod(
-        instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.AWS_AWS_LAMBDA}));
-    assertTrue((Boolean) MethodUtils.invokeMethod(
-        instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.AWS_ECS}));
-    assertTrue((Boolean) MethodUtils.invokeMethod(
-        instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.AWS_AMI}));
-    assertTrue((Boolean) MethodUtils.invokeMethod(
-        instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.AWS_AWS_CODEDEPLOY}));
-    assertTrue((Boolean) MethodUtils.invokeMethod(
-        instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.GCP_KUBERNETES}));
-    assertTrue((Boolean) MethodUtils.invokeMethod(
-        instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.AWS_SSH}));
+    assertFalse(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH));
+    assertFalse(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM));
+    assertFalse(instanceHelper.isSupported(InfrastructureMappingType.AWS_AWS_LAMBDA));
+    assertTrue(instanceHelper.isSupported(InfrastructureMappingType.AWS_ECS));
+    assertTrue(instanceHelper.isSupported(InfrastructureMappingType.AWS_AMI));
+    assertTrue(instanceHelper.isSupported(InfrastructureMappingType.AWS_AWS_CODEDEPLOY));
+    assertTrue(instanceHelper.isSupported(InfrastructureMappingType.GCP_KUBERNETES));
+    assertTrue(instanceHelper.isSupported(InfrastructureMappingType.AWS_SSH));
   }
 
   @Test
@@ -696,28 +687,27 @@ public class InstanceHelperTest extends WingsBaseTest {
     String privateDnsName = "ip-172-31-11-6.ec2.internal";
 
     // privateDnsName is nonNull and contains .
-    String name =
-        (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
+    String name = instanceHelper.getPrivateDnsName(privateDnsName);
     assertEquals("ip-172-31-11-6", name);
 
     // privateDnsName is nonNull and does not contains . (not sure if this can happen, but good to handle)
     privateDnsName = "ip-172-31-11-6ec2_internal";
-    name = (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
+    name = instanceHelper.getPrivateDnsName(privateDnsName);
     assertEquals(privateDnsName, name);
 
     // privateDnsName is nonNull and empty
     privateDnsName = "";
-    name = (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
+    name = instanceHelper.getPrivateDnsName(privateDnsName);
     assertEquals(StringUtils.EMPTY, name);
 
     // privateDnsName is nonNull and contains spaces
     privateDnsName = "  ";
-    name = (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
+    name = instanceHelper.getPrivateDnsName(privateDnsName);
     assertEquals(StringUtils.EMPTY, name);
 
     // privateDnsName is null
     privateDnsName = null;
-    name = (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
+    name = instanceHelper.getPrivateDnsName(privateDnsName);
     assertEquals(StringUtils.EMPTY, name);
   }
 
