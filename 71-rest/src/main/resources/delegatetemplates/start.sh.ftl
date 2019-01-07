@@ -8,7 +8,7 @@ if [[ "$(ulimit -n)" == "unlimited" || $(ulimit -n) -lt 10000 ]]; then
   exit 1
 fi
 
-if [[ "$OSTYPE" == "darwin" ]]; then
+if [[ "$OSTYPE" == darwin* ]]; then
   if [[ $(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2 | cut -d 'G' -f 1) -lt 6 ]]; then
     echo "Not enough memory ($(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2)). Minimum 6 GB required."
     exit 1
