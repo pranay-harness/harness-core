@@ -379,10 +379,8 @@ public class AccountServiceImpl implements AccountService {
         .project(ID_KEY, true)
         .project(ACCOUNT_NAME_KEY, true)
         .project(COMPANY_NAME_KEY, true)
-        .asList()
-        .stream()
-        .filter(account -> !account.getUuid().equals(GLOBAL_ACCOUNT_ID))
-        .collect(Collectors.toList());
+        .filter(APP_ID_KEY, GLOBAL_APP_ID)
+        .asList();
   }
 
   @Override
