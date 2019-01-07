@@ -26,6 +26,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicConfig;
@@ -36,6 +37,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
+import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.intfc.DelegateService;
@@ -43,6 +45,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
@@ -331,5 +334,35 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     assertEquals(dataCollectionInfo.getCollectionTime(), 15);
     assertEquals(dataCollectionInfo.getStartTime(), 1540419553000l);
     assertEquals(dataCollectionInfo.getTimeSeriesMlAnalysisType(), TimeSeriesMlAnalysisType.PREDICTIVE);
+  }
+
+  @Test
+  public void testCreate24x7TaskCloudWatch() {
+    AwsConfig awsConfig = AwsConfig.builder().build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(awsConfig);
+    CloudWatchCVServiceConfiguration config = CloudWatchCVServiceConfiguration.builder().build();
+    config.setConnectorId("connectorId");
+    config.setUuid("cvConfigId");
+    config.setAppId("appId");
+    config.setServiceId("serviceId");
+    wingsPersistence.save(config);
+    when(mockSettingsService.get(anyString())).thenReturn(attribute);
+    when(mockWaitNotifyEngine.waitForAll(anyObject(), anyString())).thenReturn("waitId");
+    when(mockSecretManager.getEncryptionDetails(awsConfig, "appId", null)).thenReturn(new ArrayList<>());
+    // execute behavior
+    boolean response = service.collect247Data("cvConfigId", StateType.CLOUD_WATCH, 1540419553000l, 1540420454000l);
+    // verify
+    assertTrue(response);
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
+    verify(mockDelegateService).queueTask(taskCaptor.capture());
+    assertEquals("Task type should match", taskCaptor.getValue().getTaskType(),
+        TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA.name());
+    CloudWatchDataCollectionInfo dataCollectionInfo =
+        (CloudWatchDataCollectionInfo) taskCaptor.getValue().getParameters()[0];
+    assertEquals(dataCollectionInfo.getCollectionTime(), 15);
+    assertEquals(dataCollectionInfo.getStartTime(), 1540419553000l);
+    assertEquals(dataCollectionInfo.getAnalysisComparisonStrategy(), AnalysisComparisonStrategy.PREDICTIVE);
   }
 }

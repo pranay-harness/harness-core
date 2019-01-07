@@ -23,6 +23,7 @@ public class CloudWatchDataCollectionInfo {
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
+  private String cvConfigId;
   private long startTime;
   private int collectionTime;
   private int dataCollectionMinute;

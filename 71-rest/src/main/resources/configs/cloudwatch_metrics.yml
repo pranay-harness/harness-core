@@ -97,3 +97,40 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: THROUGHPUT
       enabledDefault: true
+
+    - metricName: EstimatedProcessedBytes
+      displayName: Estimated Processed Bytes
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: VALUE
+      enabledDefault: true
+
+    - metricName: EstimatedALBNewConnectionCount
+      displayName: Estimated ALB New Connection Count
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: THROUGHPUT
+      enabledDefault: true
+
+    - metricName: EstimatedALBActiveConnectionCount
+      displayName: Estimated ALB Active Connection Count
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: THROUGHPUT
+      enabledDefault: true
+
+    - metricName: UnHealthyHostCount
+      displayName: UnHealthy Host Count
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: THROUGHPUT
+      enabledDefault: true
+
+    - metricName: HealthyHostCount
+      displayName: Healthy Host Count
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: THROUGHPUT
+      enabledDefault: true
+
+

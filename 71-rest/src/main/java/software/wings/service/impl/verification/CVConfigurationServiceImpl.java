@@ -223,7 +223,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case CLOUD_WATCH:
         updateOperations
             .set("loadBalancerMetrics", ((CloudWatchCVServiceConfiguration) cvConfiguration).getLoadBalancerMetrics())
-            .set("ec2Metrics", ((CloudWatchCVServiceConfiguration) cvConfiguration).getEc2Metrics())
             .set("region", ((CloudWatchCVServiceConfiguration) cvConfiguration).getRegion());
         break;
       default:

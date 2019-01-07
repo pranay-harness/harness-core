@@ -1,7 +1,12 @@
 package software.wings.service.impl.cloudwatch;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
+import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
@@ -44,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -85,10 +91,10 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
                         DEFAULT_GROUP_NAME,
                         CloudWatchDataCollectionInfo.builder()
                             .awsConfig(config)
-                            .analysisComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+                            .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
                             .build(),
                         setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(),
-                        apiCallLogWithDummyStateExecution(config.getAccountId())));
+                        apiCallLogWithDummyStateExecution(config.getAccountId()), false, new HashMap<>()));
           }));
     }
 
@@ -110,10 +116,10 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
                       NewRelicMetricDataRecord.DEFAULT_GROUP_NAME,
                       CloudWatchDataCollectionInfo.builder()
                           .awsConfig(config)
-                          .analysisComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+                          .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
                           .build(),
                       setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(),
-                      apiCallLogWithDummyStateExecution(config.getAccountId()))));
+                      apiCallLogWithDummyStateExecution(config.getAccountId()), false, new HashMap<>())));
     }
 
     List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> hostMetricsResults =
@@ -138,31 +144,49 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
   public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricDataRecords(AwsNameSpace awsNameSpace,
       AmazonCloudWatchClient cloudWatchClient, CloudWatchMetric cloudWatchMetric, String dimensionValue,
       String groupName, CloudWatchDataCollectionInfo dataCollectionInfo, String appId, long startTime, long endTime,
-      ThirdPartyApiCallLog apiCallLog) {
+      ThirdPartyApiCallLog apiCallLog, boolean is247Task, Map<String, Long> hostStartTimeMap) {
     TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
     switch (dataCollectionInfo.getAnalysisComparisonStrategy()) {
       case COMPARE_WITH_PREVIOUS:
         fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, groupName,
-            startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog);
+            startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog, COMPARE_WITH_PREVIOUS, is247Task,
+            hostStartTimeMap);
         break;
-
       case COMPARE_WITH_CURRENT:
         switch (awsNameSpace) {
           case EC2:
             fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, groupName,
-                startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog);
+                startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog, COMPARE_WITH_CURRENT, is247Task,
+                hostStartTimeMap);
             break;
           case ELB:
             for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
               String hostName = i == 0 ? TEST_HOST_NAME : CONTROL_HOST_NAME + "-" + i;
               endTime = endTime - TimeUnit.DAYS.toMillis(i);
               startTime = startTime - TimeUnit.DAYS.toMillis(i);
+              hostStartTimeMap.put(hostName, startTime);
               fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, hostName, groupName,
-                  startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog);
+                  startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog, COMPARE_WITH_CURRENT, is247Task,
+                  hostStartTimeMap);
             }
             break;
           default:
             throw new WingsException("Invalid name space " + awsNameSpace);
+        }
+        break;
+      case PREDICTIVE:
+        if (is247Task) {
+          long startTimeStamp = dataCollectionInfo.getStartTime();
+          long endTimeStamp =
+              dataCollectionInfo.getStartTime() + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime());
+
+          fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, groupName,
+              startTimeStamp, endTimeStamp, appId, dataCollectionInfo, rv, apiCallLog, PREDICTIVE, is247Task,
+              hostStartTimeMap);
+        } else {
+          fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, groupName,
+              endTime - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES), endTime, appId,
+              dataCollectionInfo, rv, apiCallLog, PREDICTIVE, is247Task, hostStartTimeMap);
         }
         break;
       default:
@@ -174,9 +198,8 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
   private void fetchMetrics(AwsNameSpace awsNameSpace, AmazonCloudWatchClient cloudWatchClient,
       CloudWatchMetric cloudWatchMetric, String dimensionValue, String host, String groupName, long startTime,
       long endTime, String appId, CloudWatchDataCollectionInfo dataCollectionInfo,
-      TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv,
-
-      ThirdPartyApiCallLog apiCallLog) {
+      TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv, ThirdPartyApiCallLog apiCallLog,
+      AnalysisComparisonStrategy analysisComparisonStrategy, boolean is247Task, Map<String, Long> hostStartTimeMap) {
     apiCallLog.setTitle("Fetching metric data from " + cloudWatchClient.getServiceName());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     GetMetricStatisticsRequest metricStatisticsRequest = new GetMetricStatisticsRequest();
@@ -218,9 +241,12 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
               .workflowId(dataCollectionInfo.getWorkflowId())
               .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
               .serviceId(dataCollectionInfo.getServiceId())
+              .cvConfigId(dataCollectionInfo.getCvConfigId())
               .stateExecutionId(dataCollectionInfo.getStateExecutionId())
               .timeStamp(datapoint.getTimestamp().getTime())
-              .dataCollectionMinute(dataCollectionInfo.getDataCollectionMinute())
+              .dataCollectionMinute(getCollectionMinute(datapoint.getTimestamp().getTime(), analysisComparisonStrategy,
+                  false, is247Task, startTime, dataCollectionInfo.getDataCollectionMinute(),
+                  dataCollectionInfo.getCollectionTime(), host, hostStartTimeMap))
               .host(host)
               .groupName(groupName)
               .tag(awsNameSpace.name())
@@ -230,5 +256,39 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
 
       rv.put(dimensionValue, datapoint.getTimestamp().getTime(), newRelicMetricDataRecord);
     });
+  }
+
+  public int getCollectionMinute(final long metricTimeStamp, AnalysisComparisonStrategy analysisComparisonStrategy,
+      boolean isHeartbeat, boolean is247Task, long startTime, int dataCollectionMinute, int collectionTime, String host,
+      Map<String, Long> hostStartTimeMap) {
+    boolean isPredictiveAnalysis = analysisComparisonStrategy.equals(PREDICTIVE);
+    int collectionMinute;
+    if (isHeartbeat) {
+      if (is247Task) {
+        collectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime) + collectionTime;
+      } else if (isPredictiveAnalysis) {
+        collectionMinute = dataCollectionMinute + PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
+      } else {
+        collectionMinute = dataCollectionMinute;
+      }
+    } else {
+      if (is247Task) {
+        collectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp);
+      } else {
+        long collectionStartTime;
+        if (isPredictiveAnalysis) {
+          collectionStartTime = startTime - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES);
+        } else {
+          // This condition is needed as in case of COMPARE_WITH_CURRENT we keep track of startTime for each host.
+          if (hostStartTimeMap.containsKey(host)) {
+            collectionStartTime = hostStartTimeMap.get(host);
+          } else {
+            collectionStartTime = startTime;
+          }
+        }
+        collectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - collectionStartTime));
+      }
+    }
+    return collectionMinute;
   }
 }
