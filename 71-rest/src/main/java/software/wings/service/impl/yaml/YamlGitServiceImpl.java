@@ -6,6 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.persistence.HPersistence.UPSERT_RETURN_NEW_OPTIONS;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -46,6 +47,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.lang3.StringUtils;
@@ -968,10 +970,24 @@ public class YamlGitServiceImpl implements YamlGitService {
       return null;
     }
   }
+  @Override
+  public void asyncFullSyncForEntireAccount(String accountId) {
+    logger.info(format(GIT_YAML_LOG_PREFIX + "Triggered async full git sync for account %s", accountId));
+    executorService.submit(() -> {
+      try {
+        fullSyncForEntireAccount(accountId);
+      } catch (WingsException ex) {
+        ex.addContext(Account.class, accountId);
+        ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
+      } catch (Exception e) {
+        logger.error(format("Exception while performing async full git sync for account %s", accountId), e);
+      }
+    });
+  }
 
   @Override
   public void fullSyncForEntireAccount(String accountId) {
-    logger.info(format(GIT_YAML_LOG_PREFIX + "Performing fullsync from migration service for account %s", accountId));
+    logger.info(format(GIT_YAML_LOG_PREFIX + "Performing full sync for account %s", accountId));
 
     // Perform fullsync for account level entities
     fullSync(accountId, accountId, EntityType.ACCOUNT, false);
@@ -983,7 +999,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         fullSync(accountId, application.getUuid(), EntityType.APPLICATION, false);
       }
     }
-    logger.info(format(GIT_YAML_LOG_PREFIX + "Performed fullsync from migration service for account %s", accountId));
+    logger.info(format(GIT_YAML_LOG_PREFIX + "Performed full sync for account %s", accountId));
   }
 
   private GitCommit fetchLastProcessedGitCommitId(String accountId, String yamlGitConfigId) {

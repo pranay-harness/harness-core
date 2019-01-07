@@ -199,4 +199,6 @@ public interface YamlGitService {
   YamlGitConfig save(YamlGitConfig ygs, boolean performFullSync);
 
   void fullSyncForEntireAccount(String accountId);
+
+  void asyncFullSyncForEntireAccount(String accountId);
 }
