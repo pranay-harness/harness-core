@@ -1011,4 +1011,13 @@ public class YamlResource {
       @QueryParam("newEntityName") String newEntityName) {
     return yamlCloneService.cloneEntityUsingYaml(accountId, appId, false, entityType, entityId, newEntityName);
   }
+
+  @POST
+  @Path("full-sync-account")
+  @Timed
+  @ExceptionMetered
+  public RestResponse fullSyncAccount(@QueryParam("accountId") String accountId) {
+    yamlGitService.asyncFullSyncForEntireAccount(accountId);
+    return new RestResponse<>("Triggered async full git sync");
+  }
 }
