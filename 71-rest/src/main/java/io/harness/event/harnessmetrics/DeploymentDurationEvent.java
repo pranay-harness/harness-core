@@ -32,7 +32,7 @@ public class DeploymentDurationEvent implements HarnessMetricsEvent {
 
   @Override
   public void handleEvent(HarnessMetricRegistry registry, Event event) {
-    registry.recordHistorgram(
+    registry.recordHistogram(
         getEventType().name(), getLabelValues(event.getEventData()), event.getEventData().getValue());
   }
 

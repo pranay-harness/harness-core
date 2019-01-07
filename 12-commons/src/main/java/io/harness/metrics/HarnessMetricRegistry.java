@@ -66,17 +66,6 @@ public class HarnessMetricRegistry {
     namesToCollectors.put(name, metric);
   }
 
-  public void recordCounterInc(String metricName, String[] labelValues) {
-    Counter metric = (Counter) namesToCollectors.get(getAbsoluteMetricName(metricName));
-    if (metric != null) {
-      if (labelValues != null) {
-        metric.labels(labelValues).inc();
-      } else {
-        metric.inc();
-      }
-    }
-  }
-
   public void registerGaugeMetric(String metricName, String[] labels, String doc) {
     String name = getAbsoluteMetricName(metricName);
     Gauge.Builder builder = Gauge.build().name(name).help(doc);
@@ -124,12 +113,25 @@ public class HarnessMetricRegistry {
     namesToCollectors.put(name, metric);
   }
 
-  public void recordHistorgram(String metricName, String[] labelValues, double amount) {
+  public void recordCounterInc(String metricName, String[] labelValues) {
+    Counter metric = (Counter) namesToCollectors.get(getAbsoluteMetricName(metricName));
+    if (metric != null) {
+      if (labelValues != null) {
+        metric.labels(labelValues).inc();
+      } else {
+        metric.inc();
+      }
+    }
+  }
+
+  public void recordHistogram(String metricName, String[] labelValues, double amount) {
     Histogram metric = (Histogram) namesToCollectors.get(getAbsoluteMetricName(metricName));
-    if (labelValues != null) {
-      metric.labels(labelValues).observe(amount);
-    } else {
-      metric.observe(amount);
+    if (metric != null) {
+      if (labelValues != null) {
+        metric.labels(labelValues).observe(amount);
+      } else {
+        metric.observe(amount);
+      }
     }
   }
 
