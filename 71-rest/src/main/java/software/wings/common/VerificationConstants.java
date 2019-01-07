@@ -1,5 +1,6 @@
 package software.wings.common;
 
+import io.harness.event.model.EventConstants;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.sm.StateType;
@@ -57,6 +58,8 @@ public class VerificationConstants {
 
   public static final String DATA_COLLECTION_TASKS_PER_MINUTE = "data_collection_tasks_per_min";
   public static final String DATA_ANALYSIS_TASKS_PER_MINUTE = "data_analysis_tasks_per_min";
+  public static final String IGNORED_ERRORS_METRIC_NAME = "ignored_errors";
+
   public static final String HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";
 
   public static final String APPDYNAMICS_DEEPLINK_FORMAT =
@@ -101,5 +104,12 @@ public class VerificationConstants {
 
   public static String getNewRelicMetricsYamlUrl() {
     return NEWRELIC_METRICS_YAML_URL;
+  }
+
+  public static final String[] IGNORED_ERRORS_METRIC_LABELS = new String[] {EventConstants.LOG_ML_FEEDBACKTYPE,
+      EventConstants.VERIFICATION_STATE_TYPE, EventConstants.APPLICATIONID, EventConstants.WORKFLOWID};
+
+  public static String getIgnoredErrorsMetricHelpDocument() {
+    return "This metric is used to track the Ignored Errors";
   }
 }

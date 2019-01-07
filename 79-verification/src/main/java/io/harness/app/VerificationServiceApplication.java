@@ -7,6 +7,9 @@ import static java.time.Duration.ofSeconds;
 import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
 import static software.wings.common.VerificationConstants.DATA_ANALYSIS_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
+import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_LABELS;
+import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
+import static software.wings.common.VerificationConstants.getIgnoredErrorsMetricHelpDocument;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
@@ -196,6 +199,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
   private void initMetrics() {
     harnessMetricRegistry.registerGaugeMetric(DATA_ANALYSIS_TASKS_PER_MINUTE, null, null);
     harnessMetricRegistry.registerGaugeMetric(DATA_COLLECTION_TASKS_PER_MINUTE, null, null);
+    harnessMetricRegistry.registerGaugeMetric(
+        IGNORED_ERRORS_METRIC_NAME, IGNORED_ERRORS_METRIC_LABELS, getIgnoredErrorsMetricHelpDocument());
   }
 
   private void registerStores(VerificationServiceConfiguration configuration, Injector injector) {

@@ -1023,6 +1023,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setWorkflowId(workflowId);
     stateExecutionInstance.setStatus(ExecutionStatus.ABORTED);
     stateExecutionInstance.getContextElements().push(
         PhaseElementBuilder.aPhaseElement()

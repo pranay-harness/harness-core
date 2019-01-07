@@ -14,6 +14,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
+import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
@@ -27,6 +28,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.metrics.HarnessMetricRegistry;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
@@ -111,6 +113,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject protected DelegateServiceImpl delegateService;
   @Inject protected SecretManager secretManager;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private HarnessMetricRegistry metricRegistry;
 
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
@@ -304,6 +307,9 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                .build();
 
     wingsPersistence.save(mlFeedbackRecord);
+    metricRegistry.recordGaugeInc(IGNORED_ERRORS_METRIC_NAME,
+        new String[] {feedback.getLogMLFeedbackType().toString(), stateType.toString(), feedback.getAppId(),
+            stateExecutionInstance.getWorkflowId()});
 
     return true;
   }

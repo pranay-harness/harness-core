@@ -68,10 +68,12 @@ public class HarnessMetricRegistry {
 
   public void recordCounterInc(String metricName, String[] labelValues) {
     Counter metric = (Counter) namesToCollectors.get(getAbsoluteMetricName(metricName));
-    if (labelValues != null) {
-      metric.labels(labelValues).inc();
-    } else {
-      metric.inc();
+    if (metric != null) {
+      if (labelValues != null) {
+        metric.labels(labelValues).inc();
+      } else {
+        metric.inc();
+      }
     }
   }
 
@@ -133,28 +135,34 @@ public class HarnessMetricRegistry {
 
   public void recordGaugeInc(String metricName, String[] labelValues) {
     Gauge metric = (Gauge) namesToCollectors.get(getAbsoluteMetricName(metricName));
-    if (labelValues != null) {
-      metric.labels(labelValues).inc();
-    } else {
-      metric.inc();
+    if (metric != null) {
+      if (labelValues != null) {
+        metric.labels(labelValues).inc();
+      } else {
+        metric.inc();
+      }
     }
   }
 
   public void recordGaugeValue(String metricName, String[] labelValues, double value) {
     Gauge metric = (Gauge) namesToCollectors.get(getAbsoluteMetricName(metricName));
-    if (labelValues != null) {
-      metric.labels(labelValues).set(value);
-    } else {
-      metric.set(value);
+    if (metric != null) {
+      if (labelValues != null) {
+        metric.labels(labelValues).set(value);
+      } else {
+        metric.set(value);
+      }
     }
   }
 
   public void recordGaugeDec(String metricName, String[] labelValues) {
     Gauge metric = (Gauge) namesToCollectors.get(getAbsoluteMetricName(metricName));
-    if (labelValues != null) {
-      metric.labels(labelValues).dec();
-    } else {
-      metric.dec();
+    if (metric != null) {
+      if (labelValues != null) {
+        metric.labels(labelValues).dec();
+      } else {
+        metric.dec();
+      }
     }
   }
 
