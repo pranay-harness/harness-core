@@ -2722,7 +2722,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public WorkflowExecution getWorkflowExecutionSummaryForMetrics(String appId, String workflowExecutionId) {
+  public WorkflowExecution getWorkflowExecutionSummary(String appId, String workflowExecutionId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
         .project(WorkflowExecution.SERVICE_EXECUTION_SUMMARIES, false)
         .project(WorkflowExecution.EXECUTION_ARGS, false)

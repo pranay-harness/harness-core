@@ -39,6 +39,7 @@ import javax.ws.rs.core.Response;
 /**
  * Created by Pranjal on 09/13/2018
  */
+@Ignore
 public class DynaTraceResourceIntegrationTest extends BaseIntegrationTest {
   public static final String url = "https://bdv73347.live.dynatrace.com";
   @Inject private ScmSecret scmSecret;
