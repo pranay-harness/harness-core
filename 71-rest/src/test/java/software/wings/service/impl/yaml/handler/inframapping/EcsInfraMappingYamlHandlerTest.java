@@ -1,4 +1,4 @@
-package software.wings.yaml.handler.inframappings;
+package software.wings.service.impl.yaml.handler.inframapping;
 
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static java.util.Arrays.asList;
@@ -29,7 +29,6 @@ import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -53,7 +52,6 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.handler.inframapping.EcsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -68,7 +66,6 @@ import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 
 public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected SettingsService settingsService;
@@ -159,10 +156,10 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
         anEcsInfrastructureMapping().withAppId(APP_ID).withName("name").build();
 
     try {
-      MethodUtils.invokeMethod(yamlHandler, true, "validateNetworkParameters", yaml, ecsInfrastructureMapping);
+      EcsInfraMappingYamlHandler.validateNetworkParameters(yaml, ecsInfrastructureMapping);
       fail();
     } catch (Exception e) {
-      WingsException wingsException = (WingsException) ((InvocationTargetException) e).getTargetException();
+      WingsException wingsException = (WingsException) e;
       assertEquals("Invalid argument(s): Failed to parse yaml for EcsInfraMapping: name, App: " + APP_ID
               + ", For Fargate Launch type, VpcId  -  SubnetIds  - SecurityGroupIds are required, can not be blank",
           ExceptionLogger.getResponseMessageList(wingsException, REST_API).get(0).getMessage());

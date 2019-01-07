@@ -1,4 +1,4 @@
-package software.wings.sm.states.pcfstates;
+package software.wings.sm.states.pcf;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -101,9 +101,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.pcf.MapRouteState;
-import software.wings.sm.states.pcf.PcfStateHelper;
-import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 
 import java.util.Arrays;
 import java.util.Collections;

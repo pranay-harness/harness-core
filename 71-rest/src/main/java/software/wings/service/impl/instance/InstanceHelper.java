@@ -11,6 +11,7 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -326,7 +327,8 @@ public class InstanceHelper {
     builder.instanceInfo(instanceInfo);
   }
 
-  private String getPrivateDnsName(String privateDnsNameWithSuffix) {
+  @VisibleForTesting
+  String getPrivateDnsName(String privateDnsNameWithSuffix) {
     // e.g. null, "", "   "
     if (StringUtils.isEmpty(privateDnsNameWithSuffix) || StringUtils.isBlank(privateDnsNameWithSuffix)) {
       return StringUtils.EMPTY;
@@ -483,7 +485,8 @@ public class InstanceHelper {
     return Optional.empty();
   }
 
-  private boolean isSupported(InfrastructureMappingType infrastructureMappingType) {
+  @VisibleForTesting
+  boolean isSupported(InfrastructureMappingType infrastructureMappingType) {
     if (AWS_AWS_LAMBDA.equals(infrastructureMappingType) || PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)
         || PHYSICAL_DATA_CENTER_WINRM.equals(infrastructureMappingType)) {
       return false;

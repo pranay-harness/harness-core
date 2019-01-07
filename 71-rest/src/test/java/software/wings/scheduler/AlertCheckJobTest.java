@@ -12,7 +12,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -60,7 +59,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   public void testExecuteInternal_noAlert() throws Exception {
     doReturn(asList(getDelegate("host1", 2))).when(alertCheckJob).getDelegatesForAccount(ACCOUNT_ID);
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
-    MethodUtils.invokeMethod(alertCheckJob, true, "executeInternal", ACCOUNT_ID);
+    alertCheckJob.executeInternal(ACCOUNT_ID);
     verify(alertService, times(1)).closeAlert(any(), any(), any(), any());
   }
 
@@ -76,7 +75,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
     doReturn(null).when(alertService).openAlert(any(), any(), any(), any());
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
     doNothing().when(delegateService).sendAlertNotificationsForNoActiveDelegates(any());
-    MethodUtils.invokeMethod(alertCheckJob, true, "executeInternal", ACCOUNT_ID);
+    alertCheckJob.executeInternal(ACCOUNT_ID);
     verify(alertService, times(1)).openAlert(any(), any(), any(), any());
 
     ArgumentCaptor<AlertType> captor = ArgumentCaptor.forClass(AlertType.class);
@@ -99,7 +98,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
     doNothing().when(delegateService).sendAlertNotificationsForDownDelegates(any(), any());
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
 
-    MethodUtils.invokeMethod(alertCheckJob, true, "executeInternal", ACCOUNT_ID);
+    alertCheckJob.executeInternal(ACCOUNT_ID);
     verify(alertService, times(1)).closeAlert(any(), any(), any(), any());
     verify(delegateService, times(1)).sendAlertNotificationsForDownDelegates(any(), any());
 
@@ -125,8 +124,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
     when(mainConfiguration.getSmtpConfig()).thenReturn(null);
     when(emailHelperUtil.isSmtpConfigValid(any(SmtpConfig.class))).thenReturn(false);
 
-    MethodUtils.invokeMethod(alertCheckJob, true, "checkForInvalidValidSMTP", ACCOUNT_ID);
-
+    alertCheckJob.checkForInvalidValidSMTP(ACCOUNT_ID);
     verify(alertService, times(1)).openAlert(any(), any(), any(), any());
 
     ArgumentCaptor<AlertType> captor = ArgumentCaptor.forClass(AlertType.class);

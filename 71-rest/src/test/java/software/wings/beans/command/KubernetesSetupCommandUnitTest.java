@@ -32,7 +32,6 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.harness.exception.InvalidRequestException;
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -52,7 +51,6 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.utils.KubernetesConvention;
 
-import java.lang.reflect.InvocationTargetException;
 import java.time.Clock;
 import java.util.Arrays;
 import java.util.Date;
@@ -242,10 +240,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                             .withCustomMetricYamlConfig(yamlForHPAWithCustomMetric)
                                             .build();
 
-    HorizontalPodAutoscaler horizontalPodAutoscaler =
-        (HorizontalPodAutoscaler) MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "createAutoscaler",
-            new Object[] {"autoScalerName", "Deployment", "extensions/v1beta1", "default", labels, setupParams,
-                executionLogCallback});
+    HorizontalPodAutoscaler horizontalPodAutoscaler = kubernetesSetupCommandUnit.createAutoscaler(
+        "autoScalerName", "Deployment", "extensions/v1beta1", "default", labels, setupParams, executionLogCallback);
 
     assertEquals("autoscaling/v2beta1", horizontalPodAutoscaler.getApiVersion());
     assertNotNull(horizontalPodAutoscaler.getSpec());
@@ -285,9 +281,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                             .build();
 
     HorizontalPodAutoscaler horizontalPodAutoscaler =
-        (HorizontalPodAutoscaler) MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "createAutoscaler",
-            new Object[] {"abaris.hpanormal.prod.0", "Deployment", "extensions/v1beta1", "default", labels, setupParams,
-                executionLogCallback});
+        kubernetesSetupCommandUnit.createAutoscaler("abaris.hpanormal.prod.0", "Deployment", "extensions/v1beta1",
+            "default", labels, setupParams, executionLogCallback);
 
     assertEquals("autoscaling/v1", horizontalPodAutoscaler.getApiVersion());
     assertNotNull(horizontalPodAutoscaler.getSpec());
@@ -314,10 +309,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                       .withTargetCpuUtilizationPercentage(30)
                       .build();
 
-    horizontalPodAutoscaler =
-        (HorizontalPodAutoscaler) MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "createAutoscaler",
-            new Object[] {"abaris.hpanormal.prod-0", "Deployment", "extensions/v1beta1", "default", labels, setupParams,
-                executionLogCallback});
+    horizontalPodAutoscaler = kubernetesSetupCommandUnit.createAutoscaler("abaris.hpanormal.prod-0", "Deployment",
+        "extensions/v1beta1", "default", labels, setupParams, executionLogCallback);
 
     assertEquals("autoscaling/v1", horizontalPodAutoscaler.getApiVersion());
     assertNotNull(horizontalPodAutoscaler.getSpec());
@@ -347,10 +340,10 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                             .build();
 
     try {
-      MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "validateBlueGreenConfig", new Object[] {setupParams});
+      kubernetesSetupCommandUnit.validateBlueGreenConfig(setupParams);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(((InvocationTargetException) e).getTargetException() instanceof InvalidRequestException);
+      assertTrue(e instanceof InvalidRequestException);
     }
   }
 
@@ -366,10 +359,10 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                       .build();
 
     try {
-      MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "validateBlueGreenConfig", new Object[] {setupParams});
+      kubernetesSetupCommandUnit.validateBlueGreenConfig(setupParams);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(((InvocationTargetException) e).getTargetException() instanceof InvalidRequestException);
+      assertTrue(e instanceof InvalidRequestException);
     }
   }
 
@@ -389,10 +382,10 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                       .build();
 
     try {
-      MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "validateBlueGreenConfig", new Object[] {setupParams});
+      kubernetesSetupCommandUnit.validateBlueGreenConfig(setupParams);
       fail("Exception expected");
     } catch (Exception e) {
-      assertTrue(((InvocationTargetException) e).getTargetException() instanceof InvalidRequestException);
+      assertTrue(e instanceof InvalidRequestException);
     }
   }
 
@@ -411,8 +404,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                       .withBlueGreen(true)
                       .withBlueGreenConfig(blueGreenConfig)
                       .build();
-
-    MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "validateBlueGreenConfig", new Object[] {setupParams});
+    kubernetesSetupCommandUnit.validateBlueGreenConfig(setupParams);
   }
 
   @Test

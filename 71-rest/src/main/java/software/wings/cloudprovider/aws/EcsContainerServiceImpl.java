@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -1252,7 +1253,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * Look at the deployments. If there are more that one deployments, no steady state.
    * else, the deployment.getUpdatedAt() >= last message with "has reached steady state."
    */
-  private boolean hasServiceReachedSteadyState(Service service) {
+  @VisibleForTesting
+  boolean hasServiceReachedSteadyState(Service service) {
     List<Deployment> deployments = service.getDeployments();
     if (deployments.size() != 1) {
       return false;

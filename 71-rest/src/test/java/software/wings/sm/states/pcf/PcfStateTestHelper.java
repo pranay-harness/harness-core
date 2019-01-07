@@ -1,4 +1,4 @@
-package software.wings.sm.states.pcfstates;
+package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;

@@ -1,4 +1,4 @@
-package software.wings.sm.states.pcfstates;
+package software.wings.sm.states.pcf;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -26,8 +26,8 @@ import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.URL;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.MASKED;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
-import static software.wings.sm.states.pcfstates.PcfStateTestHelper.ORG;
-import static software.wings.sm.states.pcfstates.PcfStateTestHelper.SPACE;
+import static software.wings.sm.states.pcf.PcfStateTestHelper.ORG;
+import static software.wings.sm.states.pcf.PcfStateTestHelper.SPACE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -99,8 +99,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.pcf.PcfSetupState;
-import software.wings.sm.states.pcf.PcfStateHelper;
 
 import java.util.Arrays;
 import java.util.Collections;
