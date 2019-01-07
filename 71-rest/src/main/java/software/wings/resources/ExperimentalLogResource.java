@@ -9,8 +9,10 @@ import software.wings.beans.RestResponse;
 import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
@@ -33,5 +35,16 @@ public class ExperimentalLogResource {
   public RestResponse<List<LogMLExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId)
       throws IOException {
     return new RestResponse<>(analysisService.getExpAnalysisInfoList());
+  }
+
+  @GET
+  @Path(VerificationConstants.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
+      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("stateType") StateType stateType, @QueryParam("expName") String expName) throws IOException {
+    return new RestResponse<>(
+        analysisService.getExperimentalAnalysisSummary(stateExecutionId, applicationId, stateType, expName));
   }
 }
