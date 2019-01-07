@@ -2552,7 +2552,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public WorkflowExecution getWorkflowExecutionForStateExecutionId(final String appId, final String stateExecutionId) {
     StateExecutionInstance stateExecutionData = workflowExecutionService.getStateExecutionData(appId, stateExecutionId);
-    return workflowExecutionService.getWorkflowExecution(appId, stateExecutionData.getExecutionUuid());
+    return workflowExecutionService.getWorkflowExecutionSummary(appId, stateExecutionData.getExecutionUuid());
   }
 
   @Override

@@ -167,7 +167,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       alertService.deploymentCompleted(appId, context.getWorkflowExecutionId());
       try {
         WorkflowExecution workflowExecution =
-            workflowExecutionService.getWorkflowExecutionSummaryForMetrics(appId, workflowExecutionId);
+            workflowExecutionService.getWorkflowExecutionSummary(appId, workflowExecutionId);
         alertService.deploymentCompleted(appId, context.getWorkflowExecutionId());
         if (workflowExecution == null) {
           logger.warn("No workflowExecutiod for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId);
