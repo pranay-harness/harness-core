@@ -9,6 +9,9 @@ import static software.wings.common.VerificationConstants.DATA_ANALYSIS_TASKS_PE
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
+import static software.wings.common.VerificationConstants.dataCollectionMetricLabels;
+import static software.wings.common.VerificationConstants.getDataAnalysisMetricHelpDocument;
+import static software.wings.common.VerificationConstants.getDataCollectionMetricHelpDocument;
 import static software.wings.common.VerificationConstants.getIgnoredErrorsMetricHelpDocument;
 
 import com.google.common.collect.ImmutableSet;
@@ -197,8 +200,10 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   private void initMetrics() {
-    harnessMetricRegistry.registerGaugeMetric(DATA_ANALYSIS_TASKS_PER_MINUTE, null, null);
-    harnessMetricRegistry.registerGaugeMetric(DATA_COLLECTION_TASKS_PER_MINUTE, null, null);
+    harnessMetricRegistry.registerGaugeMetric(
+        DATA_ANALYSIS_TASKS_PER_MINUTE, null, getDataAnalysisMetricHelpDocument());
+    harnessMetricRegistry.registerGaugeMetric(
+        DATA_COLLECTION_TASKS_PER_MINUTE, dataCollectionMetricLabels, getDataCollectionMetricHelpDocument());
     harnessMetricRegistry.registerGaugeMetric(
         IGNORED_ERRORS_METRIC_NAME, IGNORED_ERRORS_METRIC_LABELS, getIgnoredErrorsMetricHelpDocument());
   }

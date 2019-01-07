@@ -106,8 +106,19 @@ public class VerificationConstants {
     return NEWRELIC_METRICS_YAML_URL;
   }
 
+  public static final String[] dataCollectionMetricLabels = new String[] {
+      EventConstants.ACCOUNTID, EventConstants.VERIFICATION_TYPE, EventConstants.VERIFICATION_247_CONFIGURED};
+
   public static final String[] IGNORED_ERRORS_METRIC_LABELS = new String[] {EventConstants.LOG_ML_FEEDBACKTYPE,
       EventConstants.VERIFICATION_STATE_TYPE, EventConstants.APPLICATIONID, EventConstants.WORKFLOWID};
+
+  public static String getDataCollectionMetricHelpDocument() {
+    return "This metric is used to track the Verification data Collection per account";
+  }
+
+  public static String getDataAnalysisMetricHelpDocument() {
+    return "This metric is used to track the Verification data analysis per account";
+  }
 
   public static String getIgnoredErrorsMetricHelpDocument() {
     return "This metric is used to track the Ignored Errors";
