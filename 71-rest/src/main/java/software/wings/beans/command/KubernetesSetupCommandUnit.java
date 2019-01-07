@@ -354,8 +354,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               kubernetesConfig, encryptedDataDetails, containerServiceName);
         }
 
-        trafficWeights =
-            kubernetesContainerService.getTrafficWeights(kubernetesConfig, encryptedDataDetails, containerServiceName);
+        if (setupParams.isUseIstioRouteRule()) {
+          trafficWeights = kubernetesContainerService.getTrafficWeights(
+              kubernetesConfig, encryptedDataDetails, containerServiceName);
+        }
 
         List<String> activeControllers = new ArrayList<>(activeServiceCounts.keySet());
         // Find most recent active controller to get the last autoscaler
