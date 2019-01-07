@@ -24,6 +24,7 @@ import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegateTask;
@@ -40,6 +41,7 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.Ve
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
+import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.datadog.DataDogFetchConfig;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
@@ -57,6 +59,7 @@ import software.wings.sm.states.DynatraceState;
 import software.wings.utils.Misc;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -202,6 +205,13 @@ public class APMVerificationServiceImpl implements APMVerificationService {
       case DATA_DOG:
         DatadogCVServiceConfiguration ddConfig = (DatadogCVServiceConfiguration) cvConfiguration;
         task = createDatadogDelegateTask(ddConfig, waitId, startTime, endTime);
+        break;
+      case CLOUD_WATCH:
+        CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration =
+            (CloudWatchCVServiceConfiguration) wingsPersistence.createQuery(CVConfiguration.class)
+                .filter("_id", cvConfigId)
+                .get();
+        task = createCloudWatchDelegateTask(cloudWatchCVServiceConfiguration, waitId, startTime, endTime);
         break;
       default:
         logger.error("Calling collect 24x7 data for an unsupported state");
@@ -353,6 +363,30 @@ public class APMVerificationServiceImpl implements APMVerificationService {
             .build();
     return createDelegateTask(
         config, waitId, new Object[] {dataCollectionInfo}, timeDuration, TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK);
+  }
+
+  private DelegateTask createCloudWatchDelegateTask(
+      CloudWatchCVServiceConfiguration config, String waitId, long startTime, long endTime) {
+    AwsConfig awsConfig = (AwsConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    final CloudWatchDataCollectionInfo dataCollectionInfo =
+        CloudWatchDataCollectionInfo.builder()
+            .awsConfig(awsConfig)
+            .applicationId(config.getAppId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .serviceId(config.getServiceId())
+            .cvConfigId(config.getUuid())
+            .startTime(startTime)
+            .collectionTime(timeDuration)
+            .hosts(new HashMap<>())
+            .encryptedDataDetails(secretManager.getEncryptionDetails(awsConfig, config.getAppId(), null))
+            .analysisComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE)
+            .loadBalancerMetrics(config.getLoadBalancerMetrics())
+            .region(config.getRegion())
+            .dataCollectionMinute(0)
+            .build();
+    return createDelegateTask(
+        config, waitId, new Object[] {dataCollectionInfo}, timeDuration, TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA);
   }
 
   private DelegateTask createDelegateTask(

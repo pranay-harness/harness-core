@@ -24,7 +24,5 @@ import java.util.Map;
 public class CloudWatchCVServiceConfiguration extends CVConfiguration {
   @Attributes(title = "ELB Metrics") private Map<String, List<CloudWatchMetric>> loadBalancerMetrics;
 
-  @Attributes(title = "EC2 Metrics") private List<CloudWatchMetric> ec2Metrics;
-
   @Attributes(title = "Region") private String region;
 }

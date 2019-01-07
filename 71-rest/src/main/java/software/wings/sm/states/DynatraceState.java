@@ -103,7 +103,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-    Preconditions.checkNotNull(settingAttribute, "No new relic setting with id: " + analysisServerConfigId + " found");
+    Preconditions.checkNotNull(settingAttribute, "No dynatrace setting with id: " + analysisServerConfigId + " found");
 
     final DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
 

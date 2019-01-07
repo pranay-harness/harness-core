@@ -126,7 +126,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         new CloudWatchMetric("CPUUtilization", "CPU Usage", "InstanceId", "Host name expression", "VALUE", true));
 
     cloudWatchCVServiceConfiguration.setLoadBalancerMetrics(loadBalancerMetricsByLoadBalancer);
-    cloudWatchCVServiceConfiguration.setEc2Metrics(ec2Metrics);
     cloudWatchCVServiceConfiguration.setRegion("us-east-2");
   }
 
