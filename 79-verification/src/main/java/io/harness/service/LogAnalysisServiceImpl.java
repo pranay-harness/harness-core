@@ -11,6 +11,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
+import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -21,6 +22,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -91,6 +93,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Inject private LearningEngineService learningEngineService;
   @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private VerificationManagerClient managerClient;
+  @Inject private HarnessMetricRegistry metricRegistry;
 
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
@@ -357,6 +360,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                .build();
 
     wingsPersistence.save(mlFeedbackRecord);
+    metricRegistry.recordGaugeInc(IGNORED_ERRORS_METRIC_NAME,
+        new String[] {feedback.getLogMLFeedbackType().toString(), stateType.toString(), feedback.getAppId(),
+            stateExecutionInstance.getWorkflowId()});
 
     return true;
   }
