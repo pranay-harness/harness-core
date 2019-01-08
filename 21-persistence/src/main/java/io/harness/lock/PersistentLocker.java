@@ -15,6 +15,8 @@ import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
 import io.harness.exception.WingsException;
+import io.harness.lock.AcquiredDistributedLock.AcquiredDistributedLockBuilder;
+import io.harness.lock.AcquiredDistributedLock.CloseAction;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
@@ -36,6 +38,16 @@ public class PersistentLocker implements Locker {
 
   @Override
   public AcquiredLock acquireLock(String name, Duration timeout) {
+    return acquireLock(name, timeout, AcquiredDistributedLock.builder().closeAction(CloseAction.RELEASE));
+  }
+
+  @Override
+  public AcquiredLock acquireEphemeralLock(String name, Duration timeout) {
+    return acquireLock(
+        name, timeout, AcquiredDistributedLock.builder().closeAction(CloseAction.DESTROY).persistence(persistence));
+  }
+
+  public AcquiredLock acquireLock(String name, Duration timeout, AcquiredDistributedLockBuilder builder) {
     DistributedLockOptions options = new DistributedLockOptions();
     options.setInactiveLockTimeout((int) timeout.toMillis());
 
@@ -44,7 +56,7 @@ public class PersistentLocker implements Locker {
     // measure the time before obtaining the lock
     long start = AcquiredDistributedLock.monotonicTimestamp();
     if (lock.tryLock()) {
-      return AcquiredDistributedLock.builder().lock(lock).startTimestamp(start).build();
+      return builder.lock(lock).startTimestamp(start).build();
     }
 
     throw new WingsException(GENERAL_ERROR, NOBODY)
@@ -62,9 +74,23 @@ public class PersistentLocker implements Locker {
   }
 
   @Override
+  public AcquiredLock tryToAcquireEphemeralLock(Class entityClass, String entityId, Duration timeout) {
+    return tryToAcquireEphemeralLock(entityClass.getName() + "-" + entityId, timeout);
+  }
+
+  @Override
   public AcquiredLock tryToAcquireLock(String name, Duration timeout) {
     try {
       return acquireLock(name, timeout);
+    } catch (WingsException exception) {
+      return null;
+    }
+  }
+
+  @Override
+  public AcquiredLock tryToAcquireEphemeralLock(String name, Duration timeout) {
+    try {
+      return acquireEphemeralLock(name, timeout);
     } catch (WingsException exception) {
       return null;
     }

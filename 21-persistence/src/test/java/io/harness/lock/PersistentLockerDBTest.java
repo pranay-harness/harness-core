@@ -1,5 +1,6 @@
 package io.harness.lock;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,20 +36,22 @@ public class PersistentLockerDBTest extends PersistenceTest {
   @Inject private HPersistence persistence;
   @Inject private PersistentLocker persistentLocker;
 
+  private DBObject getDbLock(String uuid) {
+    final DBCollection locks = persistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks");
+    return locks.findOne(new BasicDBObject().append("_id", uuid));
+  }
+
   @Test
   public void testAcquireLockDoLock() {
-    try (AcquiredLock lock = persistentLocker.acquireLock("foo", Duration.ofSeconds(1))) {
+    String uuid = generateUuid();
+    try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
     }
 
-    final BasicDBObject filter = new BasicDBObject().append("_id", "foo");
-
-    final DBCollection locks = persistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks");
-
-    DBObject dbLock = locks.findOne(filter);
+    DBObject dbLock = getDbLock(uuid);
     assertNotNull(dbLock);
 
     boolean damage = false;
-    try (AcquiredLock lock = persistentLocker.acquireLock("foo", Duration.ofSeconds(1))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
       persistentLocker.destroy(lock);
       damage = true;
     } catch (WingsException exception) {
@@ -57,27 +60,49 @@ public class PersistentLockerDBTest extends PersistenceTest {
 
     assertFalse(damage);
 
-    dbLock = locks.findOne(filter);
+    dbLock = getDbLock(uuid);
+    assertNull(dbLock);
+  }
+
+  @Test
+  public void testAcquireEphemeralLock() {
+    String uuid = generateUuid();
+    try (AcquiredLock lock = persistentLocker.acquireEphemeralLock(uuid, Duration.ofSeconds(1))) {
+    } catch (WingsException exception) {
+      // Do nothing. This is just to suppress the exception
+    }
+
+    DBObject dbLock = getDbLock(uuid);
     assertNull(dbLock);
   }
 
   @Test
   public void testAcquireLockAfterDestroy() {
-    try (AcquiredLock lock = persistentLocker.acquireLock("foo", Duration.ofSeconds(1))) {
+    String uuid = generateUuid();
+    try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
       persistentLocker.destroy(lock);
     } catch (WingsException exception) {
       // Do nothing. This is just to suppress the exception
     }
 
-    try (AcquiredLock lock = persistentLocker.acquireLock("foo", Duration.ofSeconds(1))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
+    }
+  }
+
+  @Test
+  public void testTryToAcquireEphemeralLock() {
+    String uuid = generateUuid();
+    try (AcquiredLock outer =
+             persistentLocker.tryToAcquireEphemeralLock(AcquiredLock.class, "foo", Duration.ofSeconds(1))) {
     }
   }
 
   @Test
   public void testTryToAcquireLock() {
-    try (AcquiredLock outer = persistentLocker.tryToAcquireLock(AcquiredLock.class, "foo", Duration.ofSeconds(1))) {
+    String uuid = generateUuid();
+    try (AcquiredLock outer = persistentLocker.tryToAcquireLock(AcquiredLock.class, uuid, Duration.ofSeconds(1))) {
       assertThat(outer).isNotNull();
-      try (AcquiredLock inner = persistentLocker.tryToAcquireLock(AcquiredLock.class, "foo", Duration.ofSeconds(1))) {
+      try (AcquiredLock inner = persistentLocker.tryToAcquireLock(AcquiredLock.class, uuid, Duration.ofSeconds(1))) {
         assertThat(inner).isNull();
       }
     }

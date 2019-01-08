@@ -134,7 +134,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
     boolean isError = notifyResponses.stream().filter(NotifyResponse::isError).findFirst().isPresent();
 
     try (AcquiredLock lock =
-             persistentLocker.tryToAcquireLock(WaitInstance.class, waitInstanceId, Duration.ofMinutes(1))) {
+             persistentLocker.tryToAcquireEphemeralLock(WaitInstance.class, waitInstanceId, Duration.ofMinutes(1))) {
       if (lock == null) {
         return;
       }
