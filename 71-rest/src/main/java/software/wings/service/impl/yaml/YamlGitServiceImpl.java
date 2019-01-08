@@ -656,7 +656,8 @@ public class YamlGitServiceImpl implements YamlGitService {
       }
 
       YamlGitConfig yamlGitConfig = yamlGitConfigs.get(0);
-      GitCommit gitCommit = fetchLastProcessedGitCommitId(accountId, yamlGitConfig.getUuid());
+      List<String> yamlGitConfigIds = yamlGitConfigs.stream().map(YamlGitConfig::getUuid).collect(toList());
+      GitCommit gitCommit = fetchLastProcessedGitCommitId(accountId, yamlGitConfigIds);
 
       String processedCommit = gitCommit == null ? null : gitCommit.getCommitId();
 
@@ -1004,14 +1005,14 @@ public class YamlGitServiceImpl implements YamlGitService {
     logger.info(format(GIT_YAML_LOG_PREFIX + "Performed full sync for account %s", accountId));
   }
 
-  private GitCommit fetchLastProcessedGitCommitId(String accountId, String yamlGitConfigId) {
+  private GitCommit fetchLastProcessedGitCommitId(String accountId, List<String> yamlGitConfigIds) {
     // After MultiGit support gitCommit record would have list of yamlGitConfigs.
 
     GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
                               .filter(ACCOUNT_ID_KEY, accountId)
                               .filter(STATUS_KEY, Status.COMPLETED)
                               .field(YAML_GIT_CONFIG_IDS_KEY)
-                              .contains(yamlGitConfigId)
+                              .hasAnyOf(yamlGitConfigIds)
                               .order("-lastUpdatedAt")
                               .get();
 
@@ -1019,7 +1020,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     if (gitCommit == null) {
       gitCommit = wingsPersistence.createQuery(GitCommit.class)
                       .filter(ACCOUNT_ID_KEY, accountId)
-                      .filter(YAML_GIT_CONFIG_ID_KEY, yamlGitConfigId)
+                      .filter(YAML_GIT_CONFIG_ID_KEY, yamlGitConfigIds.get(0))
                       .filter(STATUS_KEY, Status.COMPLETED)
                       .order("-lastUpdatedAt")
                       .get();
