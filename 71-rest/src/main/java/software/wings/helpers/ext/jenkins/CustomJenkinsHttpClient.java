@@ -6,7 +6,6 @@ import com.offbytwo.jenkins.client.JenkinsHttpClient;
 import com.offbytwo.jenkins.client.PreemptiveAuth;
 import io.harness.network.Http;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -47,7 +46,7 @@ public class CustomJenkinsHttpClient extends JenkinsHttpClient {
       HttpClientBuilder builder, URI uri, String username, String password) {
     CredentialsProvider credsProvider = new BasicCredentialsProvider();
 
-    setProxyAuthForClient(builder, credsProvider);
+    setProxyAuthForClient(uri.getHost(), builder, credsProvider);
     if (isNotEmpty(username)) {
       AuthScope scope = new AuthScope(uri.getHost(), uri.getPort());
       UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(username, password);
@@ -59,14 +58,12 @@ public class CustomJenkinsHttpClient extends JenkinsHttpClient {
     return builder;
   }
 
-  private static void setProxyAuthForClient(HttpClientBuilder builder, CredentialsProvider credsProvider) {
-    if (Http.getHttpProxyHost() != null) {
-      builder.setProxy(new HttpHost(Http.getProxyHostName(), Integer.parseInt(Http.getProxyPort())));
-      if (isNotEmpty(Http.getProxyUserName())) {
-        builder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
-        credsProvider.setCredentials(new AuthScope(Http.getProxyHostName(), Integer.parseInt(Http.getProxyPort())),
-            new UsernamePasswordCredentials(Http.getProxyUserName(), Http.getProxyPassword()));
-      }
+  private static void setProxyAuthForClient(String host, HttpClientBuilder builder, CredentialsProvider credsProvider) {
+    builder.setProxy(Http.getHttpProxyHost(host));
+    if (isNotEmpty(Http.getProxyUserName())) {
+      builder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
+      credsProvider.setCredentials(new AuthScope(Http.getProxyHostName(), Integer.parseInt(Http.getProxyPort())),
+          new UsernamePasswordCredentials(Http.getProxyUserName(), Http.getProxyPassword()));
     }
   }
 }
