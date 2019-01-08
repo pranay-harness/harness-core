@@ -10,6 +10,7 @@ import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrati
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
 import static software.wings.beans.EntityType.APPDYNAMICS_TIERID;
+import static software.wings.beans.EntityType.CF_AWS_CONFIG_ID;
 import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -340,6 +341,10 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       if (entityVariables != null) {
         // Environment, Service and Infra Variables
         addEnvServiceInfraVariables(reorderVariables, entityVariables);
+
+        // Add Cloud formation variables
+        addCloudFormationUserVariables(reorderVariables, entityVariables);
+
         // AppDynamic state user variables
         addAppDUserVariables(reorderVariables, entityVariables);
         // NewRelic state user variables
@@ -444,6 +449,14 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   private void addSumoLogicUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
       if (variable.getEntityType().equals(SUMOLOGIC_CONFIGID)) {
+        reorderVariables.add(variable);
+      }
+    }
+  }
+
+  private void addCloudFormationUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (variable.getEntityType().equals(CF_AWS_CONFIG_ID)) {
         reorderVariables.add(variable);
       }
     }

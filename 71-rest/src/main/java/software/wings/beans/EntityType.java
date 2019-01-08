@@ -160,5 +160,7 @@ public enum EntityType {
 
   APPLICATION_MANIFEST,
 
-  USER_GROUP
+  USER_GROUP,
+
+  CF_AWS_CONFIG_ID
 }

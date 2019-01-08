@@ -97,7 +97,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
           CloudFormationRollbackInfoElement.builder()
               .stackExisted(existingStackInfo.isStackExisted())
               .provisionerId(provisionerId)
-              .awsConfigId(awsConfigId)
+              .awsConfigId(fetchResolvedAwsConfigId(context))
               .region(region)
               .stackNameSuffix(getStackNameSuffix((ExecutionContextImpl) context, provisionerId))
               .oldStackBody(existingStackInfo.getOldStackBody())

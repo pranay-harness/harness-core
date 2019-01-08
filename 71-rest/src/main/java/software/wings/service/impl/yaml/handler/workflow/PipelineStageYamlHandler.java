@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.workflow;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.EntityType.CF_AWS_CONFIG_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
@@ -26,6 +27,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.Change;
@@ -36,7 +38,9 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
@@ -57,6 +61,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
   @Inject EnvironmentService environmentService;
   @Inject ServiceResourceService serviceResourceService;
   @Inject InfrastructureMappingService infrastructureMappingService;
+  @Inject SettingsService settingsService;
 
   private PipelineStage toBean(ChangeContext<Yaml> context) {
     Yaml yaml = context.getYaml();
@@ -136,8 +141,21 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
                 notNullCheck("Service Infrastructure [" + variableValue + "] does not exist for the environment",
                     infrastructureMapping, USER);
               }
+            } else if (CF_AWS_CONFIG_ID.name().equals(entityType)) {
+              if (matchesVariablePattern(variableValue)) {
+                workflowVariables.put(variableName, variableValue);
+                return;
+              }
+              SettingAttribute settingAttribute = settingsService.fetchSettingAttributeByName(
+                  change.getAccountId(), variableValue, SettingVariableTypes.AWS);
+              if (settingAttribute != null) {
+                workflowVariables.put(variableName, settingAttribute.getUuid());
+              } else {
+                notNullCheck(
+                    "Aws Cloud Provider [" + variableValue + "] associated to the Cloud Formation State does not exist",
+                    settingAttribute, USER);
+              }
             } else {
-              // TODO: Other entity variables verification states
               workflowVariables.put(variableName, variableValue);
             }
           } else {
@@ -235,6 +253,12 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
             InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, entryValue);
             if (infrastructureMapping != null) {
               workflowVariable.setValue(infrastructureMapping.getName());
+              pipelineStageVariables.add(workflowVariable);
+            }
+          } else if (CF_AWS_CONFIG_ID.equals(entityType)) {
+            SettingAttribute settingAttribute = settingsService.get(entryValue);
+            if (settingAttribute != null) {
+              workflowVariable.setValue(settingAttribute.getName());
               pipelineStageVariables.add(workflowVariable);
             }
           } else {

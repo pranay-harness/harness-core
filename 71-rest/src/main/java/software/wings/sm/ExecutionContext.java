@@ -64,6 +64,8 @@ public interface ExecutionContext {
 
   String getAppId();
 
+  String getAccountId();
+
   String getStateExecutionInstanceName();
 
   Map<String, String> getServiceVariables();

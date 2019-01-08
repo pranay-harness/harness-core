@@ -185,6 +185,7 @@ public abstract class OrchestrationWorkflow {
           relatedField = (String) metadata.get(RELATED_FIELD);
         }
       }
+
       String expression = templateExpression.getExpression();
       Matcher matcher = ManagerExpressionEvaluator.wingsVariablePattern.matcher(expression);
       if (relatedField != null) {

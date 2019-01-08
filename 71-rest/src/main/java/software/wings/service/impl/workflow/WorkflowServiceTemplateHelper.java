@@ -3,14 +3,9 @@ package software.wings.service.impl.workflow;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.api.DeploymentType.AMI;
-import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
-import static software.wings.api.DeploymentType.AWS_LAMBDA;
-import static software.wings.api.DeploymentType.ECS;
-import static software.wings.api.DeploymentType.KUBERNETES;
-import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
@@ -19,6 +14,7 @@ import static software.wings.common.Constants.APPD_APP_VAR_DESC;
 import static software.wings.common.Constants.APPD_SERVER_VAR_DESC;
 import static software.wings.common.Constants.APPD_TIER_VAR_DESC;
 import static software.wings.common.Constants.ARTIFACT_TYPE;
+import static software.wings.common.Constants.CF_AWSCONFIG_VAR_DESC;
 import static software.wings.common.Constants.ELK_INDICES_VAR_DESC;
 import static software.wings.common.Constants.ELK_SERVER_VAR_DESC;
 import static software.wings.common.Constants.ENTITY_TYPE;
@@ -232,19 +228,27 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public static String getInframappingExpressionName(DeploymentType deploymentType, String expression) {
-    // TODO: Handle all other deployment types
-    if (SSH.equals(deploymentType)) {
-      expression = expression + "_SSH";
-    } else if (AWS_CODEDEPLOY.equals(deploymentType)) {
-      expression = expression + "_AWS_CodeDeploy";
-    } else if (ECS.equals(deploymentType)) {
-      expression = expression + "_ECS";
-    } else if (KUBERNETES.equals(deploymentType)) {
-      expression = expression + "_Kubernetes";
-    } else if (AWS_LAMBDA.equals(deploymentType)) {
-      expression = expression + "_AWS_Lambda";
-    } else if (AMI.equals(deploymentType)) {
-      expression = expression + "_AMI";
+    switch (deploymentType) {
+      case SSH:
+        return expression + "_SSH";
+      case KUBERNETES:
+        return expression + "_Kubernetes";
+      case ECS:
+        return expression + "_ECS";
+      case AWS_LAMBDA:
+        return expression + "_AWS_Lambda";
+      case AMI:
+        return expression + "_AMI";
+      case AWS_CODEDEPLOY:
+        return expression + "_AWS_CodeDeploy";
+      case HELM:
+        return expression + "_HELM";
+      case WINRM:
+        return expression + "_WINRM";
+      case PCF:
+        return expression + "_PCF";
+      default:
+        unhandled(deploymentType);
     }
     return expression;
   }
@@ -371,26 +375,31 @@ public class WorkflowServiceTemplateHelper {
 
   public static String getVariableDescription(
       EntityType entityType, OrchestrationWorkflowType orchestrationWorkflowType, String stateName) {
-    switch (entityType) {
-      case ENVIRONMENT:
-        return ENV_VAR_DESC;
-      case SERVICE:
-        return BASIC == orchestrationWorkflowType ? SERVICE_VAR_DESC : SERVICE_VAR_DESC + " in " + stateName;
-      case INFRASTRUCTURE_MAPPING:
-        return BASIC == orchestrationWorkflowType ? SERVICE_INFRA_VAR_DESC
-                                                  : SERVICE_INFRA_VAR_DESC + " in " + stateName;
-      case APPDYNAMICS_CONFIGID:
-        return APPD_SERVER_VAR_DESC + " in " + stateName;
-      case APPDYNAMICS_APPID:
-        return APPD_APP_VAR_DESC + " in " + stateName;
-      case APPDYNAMICS_TIERID:
-        return APPD_TIER_VAR_DESC + " in " + stateName;
-      case ELK_CONFIGID:
-        return ELK_SERVER_VAR_DESC + " in " + stateName;
-      case ELK_INDICES:
-        return ELK_INDICES_VAR_DESC + " in " + stateName;
-      default:
-        return "";
+    if (entityType != null) {
+      switch (entityType) {
+        case ENVIRONMENT:
+          return ENV_VAR_DESC;
+        case SERVICE:
+          return BASIC == orchestrationWorkflowType ? SERVICE_VAR_DESC : SERVICE_VAR_DESC + " in " + stateName;
+        case INFRASTRUCTURE_MAPPING:
+          return BASIC == orchestrationWorkflowType ? SERVICE_INFRA_VAR_DESC
+                                                    : SERVICE_INFRA_VAR_DESC + " in " + stateName;
+        case APPDYNAMICS_CONFIGID:
+          return APPD_SERVER_VAR_DESC + " in " + stateName;
+        case APPDYNAMICS_APPID:
+          return APPD_APP_VAR_DESC + " in " + stateName;
+        case APPDYNAMICS_TIERID:
+          return APPD_TIER_VAR_DESC + " in " + stateName;
+        case ELK_CONFIGID:
+          return ELK_SERVER_VAR_DESC + " in " + stateName;
+        case ELK_INDICES:
+          return ELK_INDICES_VAR_DESC + " in " + stateName;
+        case CF_AWS_CONFIG_ID:
+          return CF_AWSCONFIG_VAR_DESC + " in " + stateName;
+        default:
+          return "";
+      }
     }
+    return "";
   }
 }

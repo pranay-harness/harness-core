@@ -560,6 +560,18 @@ public class SettingsServiceImpl implements SettingsService {
         .get();
   }
 
+  @Override
+  public SettingAttribute fetchSettingAttributeByName(
+      String accountId, String attributeName, SettingVariableTypes settingVariableTypes) {
+    return wingsPersistence.createQuery(SettingAttribute.class)
+        .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
+        .filter(SettingAttribute.APP_ID_KEY, GLOBAL_APP_ID)
+        .filter(SettingAttribute.ENV_ID_KEY, GLOBAL_ENV_ID)
+        .filter(SettingAttribute.NAME_KEY, attributeName)
+        .filter(SettingAttribute.VALUE_TYPE_KEY, settingVariableTypes.name())
+        .get();
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#createDefaultApplicationSettings(java.lang.String)
    */
