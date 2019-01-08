@@ -3,6 +3,7 @@ package io.harness.logging;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
 import com.google.common.collect.Queues;
@@ -11,7 +12,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.flow.Flow;
 import io.harness.network.Http;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -65,7 +66,6 @@ public class RestLogAppender<E> extends AppenderBase<E> {
     this.key = key;
   }
 
-  @SuppressFBWarnings({"IS2_INCONSISTENT_SYNC"})
   private void submitLogs() {
     try {
       int batchSize = 0;
@@ -83,7 +83,8 @@ public class RestLogAppender<E> extends AppenderBase<E> {
         return;
       }
 
-      retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute();
+      Flow.retry(10, ofSeconds(3),
+          () -> retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute());
     } catch (Exception ex) {
       logger.error("", ex);
     }

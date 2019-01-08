@@ -79,7 +79,7 @@ public class Http {
       HttpURLConnection connection = getHttpsURLConnection(url);
       // Changed to GET as some providers like artifactory SAAS is not accepting HEAD requests
       connection.setRequestMethod("GET");
-      connection.setConnectTimeout(15000); // 20ms otherwise delegate times out
+      connection.setConnectTimeout(15000);
       connection.setReadTimeout(15000);
 
       int responseCode = connection.getResponseCode();
@@ -144,8 +144,8 @@ public class Http {
       OkHttpClient.Builder builder = getOkHttpClientBuilder()
                                          .sslSocketFactory(Http.getSslContext().getSocketFactory())
                                          .hostnameVerifier((s, sslSession) -> true)
-                                         .connectTimeout(15000, TimeUnit.SECONDS)
-                                         .readTimeout(15000, TimeUnit.SECONDS);
+                                         .connectTimeout(15, TimeUnit.SECONDS)
+                                         .readTimeout(15, TimeUnit.SECONDS);
 
       Proxy proxy = checkAndGetNonProxyIfApplicable(url);
       if (proxy != null) {
