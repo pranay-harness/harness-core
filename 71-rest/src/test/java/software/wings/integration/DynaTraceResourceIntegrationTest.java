@@ -76,7 +76,6 @@ public class DynaTraceResourceIntegrationTest extends BaseIntegrationTest {
                               .build());
   }
 
-  @Ignore
   @Test
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Owner(emails = "pranjal@harness.io")

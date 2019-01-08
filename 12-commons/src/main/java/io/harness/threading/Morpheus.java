@@ -10,6 +10,7 @@ public class Morpheus {
    *
    * @param delay sleep interval in millis.
    */
+  // TODO: this is dangerous method. It should not be used in loops
   public static void quietSleep(Duration delay) {
     try {
       Thread.sleep(delay.toMillis());
