@@ -2,7 +2,6 @@ package software.wings.beans.jira;
 
 import lombok.Builder;
 import lombok.Data;
-import net.rcarz.jiraclient.Priority;
 import software.wings.beans.JiraConfig;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -18,7 +17,7 @@ public class JiraTaskParameters {
   private String summary;
   private String description;
   private String issueType;
-  private Priority priority;
+  private String priority;
   private List<String> labels;
   private String assignee;
 

@@ -258,6 +258,10 @@ public interface WingsTestConstants {
   String CV_CONFIG_ID = "CV_CONFIG_ID";
   String WHITELIST_ID = "WHITELIST_ID";
 
+  String JIRA_CONNECTOR_ID = "JIRA_CONNECTOR_ID";
+  String JIRA_ISSUE_ID = "JIRA_ISSUE_ID";
+  String APPROVAL_EXECUTION_ID = "APPROVAL_EXECUTION_ID";
+
   static StaticLimitCheckerWithDecrement mockChecker() {
     return new StaticLimitCheckerWithDecrement() {
       @Override

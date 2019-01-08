@@ -69,7 +69,6 @@ public class JiraHelperService {
 
   /**
    * Validate credential.
-   *
    */
   public void validateCredential(JiraConfig jiraConfig) {
     BasicCredentials creds = new BasicCredentials(jiraConfig.getUsername(), new String(jiraConfig.getPassword()));
@@ -250,19 +249,47 @@ public class JiraHelperService {
       String email = jiraUser.getString("emailAddress");
 
       EmbeddedUser user = new EmbeddedUser(null, username, email);
-
-      ApprovalDetails approvalDetails = new ApprovalDetails();
-      approvalDetails.setAction(action);
-      approvalDetails.setApprovalId(approvalId);
-      approvalDetails.setApprovedBy(user);
-      ApprovalStateExecutionData executionData =
-          workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
-              appId, workflowExecutionId, null, approvalDetails);
-      executionData.setStatus(approvalStatus);
-      executionData.setApprovedOn(System.currentTimeMillis());
-      executionData.setApprovedBy(user);
-      waitNotifyEngine.notify(approvalId, executionData);
+      approveWorkflow(action, approvalId, user, appId, workflowExecutionId, approvalStatus);
     }
     return approvalStatus;
+  }
+
+  public void approveWorkflow(Action action, String approvalId, EmbeddedUser user, String appId,
+      String workflowExecutionId, ExecutionStatus approvalStatus) {
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setAction(action);
+    approvalDetails.setApprovalId(approvalId);
+
+    if (user != null) {
+      approvalDetails.setApprovedBy(user);
+    }
+    ApprovalStateExecutionData executionData =
+        workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
+            appId, workflowExecutionId, null, approvalDetails);
+    executionData.setStatus(approvalStatus);
+    executionData.setApprovedOn(System.currentTimeMillis());
+    if (user != null) {
+      executionData.setApprovedBy(user);
+    }
+    waitNotifyEngine.notify(approvalId, executionData);
+  }
+
+  public ExecutionStatus getApprovalStatus(String connectorId, String accountId, String appId, String issueId,
+      String approvalField, String approvalValue, String rejectionField, String rejectionValue) {
+    JiraTaskParameters jiraTaskParameters = JiraTaskParameters.builder()
+                                                .accountId(accountId)
+                                                .issueId(issueId)
+                                                .jiraAction(JiraAction.CHECK_APPROVAL)
+                                                .approvalField(approvalField)
+                                                .approvalValue(approvalValue)
+                                                .rejectionField(rejectionField)
+                                                .rejectionValue(rejectionValue)
+                                                .build();
+    JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
+
+    return jiraExecutionData
+        .getExecutionStatus(); // jiraExecutionData.getApprovedOn() != 0 && jiraExecutionData.getApprovedBy() != null;
+    // TODO: Swagat: Fix above logic to clearly deduce Jira status. Error line ticket not found or ticket rejected
+    // should be handled as well
   }
 }

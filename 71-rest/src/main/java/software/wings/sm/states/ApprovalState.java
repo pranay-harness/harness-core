@@ -20,11 +20,13 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.scheduler.PersistentScheduler;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.ApprovalStateExecutionData;
@@ -41,6 +43,7 @@ import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.scheduler.JiraPollingJob;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.AlertService;
@@ -62,6 +65,7 @@ import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -80,6 +84,7 @@ public class ApprovalState extends State {
   @Inject private UserGroupService userGroupService;
   @Inject private UserService userService;
   @Inject private JiraHelperService jiraHelperService;
+  @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
 
   @Getter @Setter ApprovalStateParams approvalStateParams;
   @Getter @Setter ApprovalStateType approvalStateType;
@@ -142,10 +147,14 @@ public class ApprovalState extends State {
       ExecutionContext context, ApprovalStateExecutionData executionData, String approvalId) {
     JiraApprovalParams jiraApprovalParams = approvalStateParams.getJiraApprovalParams();
     jiraApprovalParams.setIssueId(context.renderExpression(jiraApprovalParams.getIssueId()));
-
     Application app = ((ExecutionContextImpl) context).getApp();
-    JiraExecutionData jiraExecutionData = jiraHelperService.createWebhook(approvalStateParams.getJiraApprovalParams(),
-        app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
+
+    // Create a cron job which polls JIRA for approval status
+    JiraPollingJob.doPollingJob(serviceJobScheduler, jiraApprovalParams, executionData.getApprovalId(),
+        app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId());
+
+    JiraExecutionData jiraExecutionData = jiraHelperService.createWebhook(
+        jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
     // issue Url on which approval is waiting in case of jira.
     executionData.setIssueUrl(jiraExecutionData.getIssueUrl());
     executionData.setWebhookUrl(jiraExecutionData.getWebhookUrl());
@@ -189,8 +198,11 @@ public class ApprovalState extends State {
     populateApprovalAlert(approvalNeededAlert, context);
     alertService.closeAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded, approvalNeededAlert);
 
-    Map<String, String> placeholderValues = getPlaceholderValues(
-        context, approvalNotifyResponse.getApprovedBy().getName(), approvalNotifyResponse.getStatus());
+    Map<String, String> placeholderValues = new HashMap<>();
+    if (approvalNotifyResponse.getApprovedBy() != null) {
+      placeholderValues = getPlaceholderValues(
+          context, approvalNotifyResponse.getApprovedBy().getName(), approvalNotifyResponse.getStatus());
+    }
     sendApprovalNotification(app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
     if (approvalStateType == null) {
       // required for backward compatibility and avoiding migration

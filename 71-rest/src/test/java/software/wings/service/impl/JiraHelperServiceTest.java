@@ -96,4 +96,7 @@ public class JiraHelperServiceTest extends WingsBaseTest {
     }
     return newMap;
   }
+
+  @Test
+  public void getApprovalStatusTest() {}
 }
