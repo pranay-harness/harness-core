@@ -35,9 +35,11 @@ import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
@@ -49,6 +51,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -74,6 +77,7 @@ public abstract class CloudFormationState extends State {
   @Inject @Transient protected transient SecretManager secretManager;
   @Inject @Transient protected transient InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @Transient protected transient LogService logService;
+  @Transient @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
 
   @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
   @Attributes(title = "Region") @DefaultValue("us-east-1") @Getter @Setter protected String region = "us-east-1";
@@ -83,6 +87,7 @@ public abstract class CloudFormationState extends State {
   private static final int IDSIZE = 8;
   private static final Set<Character> ALLOWED_CHARS =
       Sets.newHashSet(Lists.charactersOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"));
+  public static final String AWS_CONFIG_ID_KEY = "awsConfigId";
 
   public CloudFormationState(String name, String stateType) {
     super(name, stateType);
@@ -147,7 +152,7 @@ public abstract class CloudFormationState extends State {
     SettingAttribute awsSettingAttribute = settingsService.get(awsConfigId);
     Validator.notNullCheck("awsSettingAttribute", awsSettingAttribute);
     if (!(awsSettingAttribute.getValue() instanceof AwsConfig)) {
-      throw new InvalidRequestException("");
+      throw new InvalidRequestException("Setting attribute is of AwsConfig");
     }
     return (AwsConfig) awsSettingAttribute.getValue();
   }
@@ -156,8 +161,25 @@ public abstract class CloudFormationState extends State {
     CloudFormationInfrastructureProvisioner cloudFormationInfrastructureProvisioner = getProvisioner(context);
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
-    DelegateTask delegateTask = getDelegateTask(
-        executionContext, cloudFormationInfrastructureProvisioner, getAwsConfig(awsConfigId), activityId);
+
+    AwsConfig awsConfig;
+    final List<TemplateExpression> templateExpressions = getTemplateExpressions();
+    if (isNotEmpty(templateExpressions)) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(templateExpressions, "awsConfigId");
+      if (configIdExpression != null) {
+        SettingAttribute settingAttribute = templateExpressionProcessor.resolveSettingAttributeByNameOrId(
+            context, configIdExpression, SettingVariableTypes.AWS);
+        awsConfig = (AwsConfig) settingAttribute.getValue();
+      } else {
+        awsConfig = getAwsConfig(awsConfigId);
+      }
+    } else {
+      awsConfig = getAwsConfig(awsConfigId);
+    }
+
+    DelegateTask delegateTask =
+        getDelegateTask(executionContext, cloudFormationInfrastructureProvisioner, awsConfig, activityId);
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
     }
@@ -256,6 +278,21 @@ public abstract class CloudFormationState extends State {
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     Environment env = workflowStandardParams.getEnv();
     return getNormalizedId(env.getUuid()) + getNormalizedId(provisionerId);
+  }
+
+  protected String fetchResolvedAwsConfigId(ExecutionContext context) {
+    if (isNotEmpty(getTemplateExpressions())) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "awsConfigId");
+      if (configIdExpression != null) {
+        SettingAttribute settingAttribute = templateExpressionProcessor.resolveSettingAttributeByNameOrId(
+            context, configIdExpression, SettingVariableTypes.AWS);
+        return settingAttribute.getUuid();
+      } else {
+        return awsConfigId;
+      }
+    }
+    return awsConfigId;
   }
 
   private String getNormalizedId(String id) {

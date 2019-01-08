@@ -7,6 +7,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -15,6 +18,7 @@ import software.wings.beans.TemplateExpression;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 
 import java.util.List;
@@ -22,6 +26,8 @@ import java.util.regex.Matcher;
 
 @Singleton
 public class TemplateExpressionProcessor {
+  private static final Logger logger = LoggerFactory.getLogger(TemplateExpressionProcessor.class);
+
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private SettingsService settingsService;
@@ -78,17 +84,45 @@ public class TemplateExpressionProcessor {
 
   public SettingAttribute resolveSettingAttribute(ExecutionContext context, TemplateExpression templateExpression) {
     String settingId = resolveTemplateExpression(context, templateExpression);
+    if (settingId == null) {
+      throw new WingsException("No value provided for template expression [" + templateExpression.getExpression() + "]",
+          WingsException.USER);
+    }
     SettingAttribute settingAttribute = settingsService.get(settingId);
+    return validateSettingAttribute(templateExpression, settingId, settingAttribute);
+  }
+
+  @NotNull
+  private SettingAttribute validateSettingAttribute(
+      TemplateExpression templateExpression, String settingId, SettingAttribute settingAttribute) {
     if (settingAttribute == null) {
       if (matchesVariablePattern(settingId)) {
         throw new WingsException(
-            "No value provided for templated Setting workflow variable [" + templateExpression.getExpression() + "]",
+            "No value provided for template expression  [" + templateExpression.getExpression() + "]",
             WingsException.USER);
       }
       throw new WingsException("Setting expression " + templateExpression.getExpression() + " resolved as [" + settingId
-          + "]. However, no Connector found with id : " + settingId);
+              + "]. However, no Connector/Cloud Provider found with id : " + settingId,
+          WingsException.USER);
     }
     return settingAttribute;
+  }
+
+  public SettingAttribute resolveSettingAttributeByNameOrId(
+      ExecutionContext context, TemplateExpression templateExpression, SettingVariableTypes settingVariableTypes) {
+    String settingIdOrName = resolveTemplateExpression(context, templateExpression);
+    if (settingIdOrName == null) {
+      throw new WingsException("No value provided for template expression [" + templateExpression.getExpression() + "]",
+          WingsException.USER);
+    }
+    logger.info("Checking  Setting attribute can be found by id {} first.", settingIdOrName);
+    SettingAttribute settingAttribute = settingsService.get(settingIdOrName);
+    if (settingAttribute == null) {
+      logger.info("Setting attribute not found by id. Verifying if it does exist by Name {} ", settingIdOrName);
+      settingAttribute =
+          settingsService.fetchSettingAttributeByName(context.getAccountId(), settingIdOrName, settingVariableTypes);
+    }
+    return validateSettingAttribute(templateExpression, settingIdOrName, settingAttribute);
   }
 
   public String resolveTemplateExpression(ExecutionContext context, TemplateExpression templateExpression) {

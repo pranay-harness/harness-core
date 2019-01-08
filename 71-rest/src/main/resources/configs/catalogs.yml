@@ -343,6 +343,8 @@ FORM_FIELD_TO_ENTITY_TYPE:
       value: NEWRELIC_MARKER_CONFIGID
     - name: applicationId
       value: NEWRELIC_MARKER_APPID
+    - name: awsConfigId
+      value: CF_AWS_CONFIG_ID
 
 
 

@@ -15,6 +15,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -78,6 +79,7 @@ public class DynaTraceResourceIntegrationTest extends BaseIntegrationTest {
   @Ignore
   @Test
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Owner(emails = "pranjal@harness.io")
   public void testGetLogRecords() {
     DynaTraceSetupTestNodeData testNodedata = getSampledata();
     WebTarget target = client.target(API_BASE + "/"

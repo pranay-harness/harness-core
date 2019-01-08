@@ -4,17 +4,20 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ValidationResult;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 public interface SettingsService extends OwnedByAccount {
   /**
@@ -59,6 +62,9 @@ public interface SettingsService extends OwnedByAccount {
   SettingAttribute getByName(String accountId, String appId, String attributeName);
 
   SettingAttribute getByName(String accountId, String appId, String envId, String attributeName);
+
+  SettingAttribute fetchSettingAttributeByName(
+      @NotEmpty String accountId, @NotEmpty String attributeName, @NotNull SettingVariableTypes settingVariableTypes);
 
   void createDefaultApplicationSettings(String appId, String accountId, boolean syncFromGit);
 

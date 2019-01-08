@@ -311,6 +311,22 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     verify(spyQuery).get();
   }
 
+  @Test
+  public void shouldGetByNameAndValueType() {
+    when(spyQuery.get()).thenReturn(aSettingAttribute().build());
+
+    final SettingAttribute settingAttribute =
+        settingsService.fetchSettingAttributeByName(ACCOUNT_ID, "AWS Cloud Provider", SettingVariableTypes.AWS);
+
+    assertThat(settingAttribute).isNotNull();
+    verify(mockWingsPersistence).createQuery(eq(SettingAttribute.class));
+    verify(spyQuery).filter("accountId", ACCOUNT_ID);
+    verify(spyQuery).filter("appId", GLOBAL_APP_ID);
+    verify(spyQuery).filter(SettingAttribute.NAME_KEY, "AWS Cloud Provider");
+    verify(spyQuery).filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.AWS.name());
+    verify(spyQuery, times(2)).get();
+  }
+
   /**
    * Should list connection attributes.
    */

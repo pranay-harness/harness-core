@@ -645,6 +645,15 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
+  public String getAccountId() {
+    final ContextElement contextElement = getContextElement(ContextElementType.STANDARD);
+    if (!(contextElement instanceof WorkflowStandardParams)) {
+      return null;
+    }
+    return ((WorkflowStandardParams) contextElement).getApp().getAccountId();
+  }
+
+  @Override
   public String getStateExecutionInstanceName() {
     return stateExecutionInstance.getDisplayName();
   }

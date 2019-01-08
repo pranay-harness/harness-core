@@ -9,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -43,10 +42,12 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PCF_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
@@ -60,6 +61,7 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
@@ -67,6 +69,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.NameValuePair;
@@ -74,11 +77,13 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest.CloudFormationCommandType;
@@ -99,6 +104,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -106,6 +112,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.provision.CloudFormationCreateStackState;
 import software.wings.sm.states.provision.CloudFormationDeleteStackState;
+import software.wings.sm.states.provision.CloudFormationState;
 
 import java.util.Arrays;
 import java.util.List;
@@ -129,10 +136,11 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private VariableProcessor variableProcessor;
-  @Mock private ManagerExpressionEvaluator evaluator;
+  @Inject private ManagerExpressionEvaluator evaluator;
   @Mock private ServiceHelper serviceHelper;
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private AccountService accountService;
+  @Inject @InjectMocks private TemplateExpressionProcessor templateExpressionProcessor;
 
   @InjectMocks
   private CloudFormationCreateStackState cloudFormationCreateStackState = new CloudFormationCreateStackState("name");
@@ -143,11 +151,14 @@ public class CloudFormationStateTest extends WingsBaseTest {
 
   private ExecutionContext context;
 
-  private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
-                                                              .withAppId(APP_ID)
-                                                              .withEnvId(ENV_ID)
-                                                              .withArtifactIds(Lists.newArrayList(ARTIFACT_ID))
-                                                              .build();
+  private WorkflowStandardParams workflowStandardParams =
+      aWorkflowStandardParams()
+          .withAppId(APP_ID)
+          .withEnvId(ENV_ID)
+          .withArtifactIds(Lists.newArrayList(ARTIFACT_ID))
+          .withWorkflowElement(
+              WorkflowElement.builder().variables(ImmutableMap.of("CF_AWS_Config", SETTING_ID)).build())
+          .build();
 
   private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
 
@@ -250,13 +261,16 @@ public class CloudFormationStateTest extends WingsBaseTest {
     when(settingsService.get(any())).thenReturn(awsConfig);
 
     setInternalState(cloudFormationCreateStackState, "secretManager", secretManager);
+    setInternalState(cloudFormationCreateStackState, "templateExpressionProcessor", templateExpressionProcessor);
+    setInternalState(cloudFormationDeleteStackState, "templateExpressionProcessor", templateExpressionProcessor);
+
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
-    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
+    //    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
@@ -267,6 +281,30 @@ public class CloudFormationStateTest extends WingsBaseTest {
   public void testExecute_createStackState() {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
     cloudFormationCreateStackState.setTimeoutMillis(1000);
+    verifyCreateStackRequest();
+  }
+
+  @Test
+  public void testExecute_createStackStateWithAwsTemplatized() {
+    cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
+    cloudFormationCreateStackState.setTimeoutMillis(1000);
+
+    cloudFormationCreateStackState.setTemplateExpressions(
+        asList(TemplateExpression.builder()
+                   .fieldName(CloudFormationState.AWS_CONFIG_ID_KEY)
+                   .expression("${CF_AWS_Config}")
+                   .metadata(ImmutableMap.of("entityType", EntityType.CF_AWS_CONFIG_ID))
+                   .build()));
+
+    when(settingsService.get(SETTING_ID)).thenReturn(null);
+    when(settingsService.fetchSettingAttributeByName(ACCOUNT_ID, SETTING_ID, SettingVariableTypes.AWS))
+        .thenReturn(awsConfig);
+
+    verifyCreateStackRequest();
+    verify(settingsService).fetchSettingAttributeByName(ACCOUNT_ID, SETTING_ID, SettingVariableTypes.AWS);
+  }
+
+  private void verifyCreateStackRequest() {
     ExecutionResponse executionResponse = cloudFormationCreateStackState.execute(context);
     assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
 
@@ -292,6 +330,32 @@ public class CloudFormationStateTest extends WingsBaseTest {
   public void testExecute_deleteStackState() {
     cloudFormationDeleteStackState.setRegion(Regions.US_EAST_1.name());
     cloudFormationDeleteStackState.setTimeoutMillis(1000);
+
+    verifyDeleteStackRequest();
+  }
+
+  @Test
+  public void testExecute_deleteStackStateAwsTempaltized() {
+    cloudFormationDeleteStackState.setRegion(Regions.US_EAST_1.name());
+    cloudFormationDeleteStackState.setTimeoutMillis(1000);
+
+    cloudFormationDeleteStackState.setTemplateExpressions(
+        asList(TemplateExpression.builder()
+                   .fieldName(CloudFormationState.AWS_CONFIG_ID_KEY)
+                   .expression("${CF_AWS_Config}")
+                   .metadata(ImmutableMap.of("entityType", EntityType.CF_AWS_CONFIG_ID))
+                   .build()));
+
+    when(settingsService.get(SETTING_ID)).thenReturn(null);
+    when(settingsService.fetchSettingAttributeByName(ACCOUNT_ID, SETTING_ID, SettingVariableTypes.AWS))
+        .thenReturn(awsConfig);
+
+    verifyDeleteStackRequest();
+
+    verify(settingsService).fetchSettingAttributeByName(ACCOUNT_ID, SETTING_ID, SettingVariableTypes.AWS);
+  }
+
+  private void verifyDeleteStackRequest() {
     ExecutionResponse executionResponse = cloudFormationDeleteStackState.execute(context);
     assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
 

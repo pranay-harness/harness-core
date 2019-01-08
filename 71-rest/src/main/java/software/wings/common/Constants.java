@@ -896,6 +896,7 @@ public interface Constants {
   String APPD_TIER_VAR_DESC = "Variable for AppDynamics Tier entity";
   String ELK_SERVER_VAR_DESC = "Variable for Elastic Search Server entity";
   String ELK_INDICES_VAR_DESC = "Variable for Elastic Search Indices entity";
+  String CF_AWSCONFIG_VAR_DESC = "Variable for CloudFormation AWS Config entity";
 
   String HARNESS_KUBERNETES_MANAGED_LABEL_KEY = "harness.io/managed";
   String HARNESS_KUBERNETES_APP_LABEL_KEY = "harness.io/application";
