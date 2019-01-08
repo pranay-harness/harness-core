@@ -2730,4 +2730,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
         .get();
   }
+
+  @Override
+  public WorkflowExecution getWorkflowExecutionForVerificationService(String appId, String workflowExecutionId) {
+    return wingsPersistence.createQuery(WorkflowExecution.class)
+        .project(WorkflowExecution.UUID_KEY, true)
+        .project(WorkflowExecution.ENV_ID_KEY, true)
+        .filter(WorkflowExecution.APP_ID_KEY, appId)
+        .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
+        .get();
+  }
 }
