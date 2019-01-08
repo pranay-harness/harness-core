@@ -33,12 +33,12 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
     String accountId = "some-account-id";
     long percentLimit = 90L;
 
-    when(limitChecker.isWithinLimit(accountId, percentLimit)).thenReturn(false);
+    when(limitChecker.isWithinLimit(accountId, percentLimit, 10D)).thenReturn(false);
     when(alertService.findExistingAlert(eq(accountId), eq(Base.GLOBAL_APP_ID),
              eq(AlertType.INSTANCE_USAGE_APPROACHING_LIMIT), any(InstanceUsageLimitAlert.class)))
         .thenReturn(Optional.empty());
 
-    usageLimitExcessHandler.handle(accountId);
+    usageLimitExcessHandler.handle(accountId, 10D);
 
     Optional<Alert> alert = Optional.of(sampleAlert(accountId));
 
@@ -47,7 +47,7 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
              eq(AlertType.INSTANCE_USAGE_APPROACHING_LIMIT), any(InstanceUsageLimitAlert.class)))
         .thenReturn(alert);
 
-    usageLimitExcessHandler.handle(accountId);
+    usageLimitExcessHandler.handle(accountId, 10D);
     verify(alertService, times(1))
         .openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT,
             InstanceUsageLimitExcessHandlerImpl.createAlertData(accountId, percentLimit));
@@ -58,13 +58,13 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
     String accountId = "some-account-id";
     long percentLimit = 90L;
 
-    when(limitChecker.isWithinLimit(accountId, percentLimit)).thenReturn(false);
+    when(limitChecker.isWithinLimit(accountId, percentLimit, 10D)).thenReturn(false);
 
     when(alertService.findExistingAlert(eq(accountId), eq(Base.GLOBAL_APP_ID),
              eq(AlertType.INSTANCE_USAGE_APPROACHING_LIMIT), any(InstanceUsageLimitAlert.class)))
         .thenReturn(Optional.of(sampleAlert(accountId)));
 
-    usageLimitExcessHandler.handle(accountId);
+    usageLimitExcessHandler.handle(accountId, 10D);
     verify(alertService, times(0))
         .openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT,
             InstanceUsageLimitExcessHandlerImpl.createAlertData(accountId, percentLimit));
@@ -75,8 +75,8 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
     String accountId = "some-account-id";
     long percentLimit = 90L;
 
-    when(limitChecker.isWithinLimit(accountId, percentLimit)).thenReturn(true);
-    usageLimitExcessHandler.handle(accountId);
+    when(limitChecker.isWithinLimit(accountId, percentLimit, 10D)).thenReturn(true);
+    usageLimitExcessHandler.handle(accountId, 10D);
     verify(alertService)
         .closeAlert(accountId, Base.GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT,
             InstanceUsageLimitExcessHandlerImpl.createAlertData(accountId, percentLimit));

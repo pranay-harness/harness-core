@@ -33,9 +33,9 @@ public class InstanceUsageLimitExcessHandlerImpl implements InstanceUsageLimitEx
       "{}% of allowed instance limits has been consumed. Please contact Harness support to increase limits.";
 
   @Override
-  public void handle(String accountId) {
+  public void handle(String accountId, double actualUsage) {
     long percentLimit = 90L;
-    boolean withinLimit = limitChecker.isWithinLimit(accountId, percentLimit);
+    boolean withinLimit = limitChecker.isWithinLimit(accountId, percentLimit, actualUsage);
     AlertData alertData = createAlertData(accountId, percentLimit);
 
     if (!withinLimit) {

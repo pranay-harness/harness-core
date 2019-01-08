@@ -13,5 +13,5 @@ public interface InstanceUsageLimitChecker {
    * @param accountId account Id for which to check limits
    * @return whether usage is within limits or not
    */
-  boolean isWithinLimit(String accountId, long percentLimit);
+  boolean isWithinLimit(String accountId, long percentLimit, double actualUsage);
 }
