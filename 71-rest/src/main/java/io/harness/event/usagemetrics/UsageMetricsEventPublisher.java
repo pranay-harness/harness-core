@@ -101,6 +101,23 @@ public class UsageMetricsEventPublisher {
     publishEvent(Event.builder().eventType(EventType.SETUP_DATA).eventData(eventData).build());
   }
 
+  /**
+   *
+   * @param accountId
+   * @param accountName
+   * @param instanceCount
+   * @param  instanceCountyType
+   */
+  public void publishInstanceMetric(
+      String accountId, String accountName, double instanceCount, String instanceCountyType) {
+    Map properties = new HashMap();
+    properties.put(EventConstants.ACCOUNTID, accountId);
+    properties.put(EventConstants.ACCOUNTNAME, accountName);
+    properties.put(EventConstants.INSTANCE_COUNT_TYPE, instanceCountyType);
+    EventData eventData = EventData.builder().properties(properties).value(instanceCount).build();
+    publishEvent(Event.builder().eventType(EventType.INSTANCE_COUNT).eventData(eventData).build());
+  }
+
   private void publishEvent(Event event) {
     executorService.submit(() -> {
       try {

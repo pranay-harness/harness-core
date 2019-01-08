@@ -7,5 +7,5 @@ public interface InstanceUsageLimitExcessHandler {
    *
    * @param accountId
    */
-  void handle(String accountId);
+  void handle(String accountId, double actualUsage);
 }
