@@ -6,7 +6,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
@@ -24,20 +27,35 @@ import java.util.List;
 @Entity(value = "instance", noClassnameStored = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@Indexes({
+  @Index(fields = { @Field("appId")
+                    , @Field("isDeleted"), @Field("deletedAt") },
+      options = @IndexOptions(name = "instance_index1", background = true))
+  ,
+      @Index(fields = {
+        @Field("appId"), @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt")
+      }, options = @IndexOptions(name = "instance_index2"), background = true), @Index(fields = {
+        @Field("accountId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
+      }, options = @IndexOptions(name = "instance_index3", background = true)), @Index(fields = {
+        @Field("appId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
+      }, options = @IndexOptions(name = "instance_index4", background = true)), @Index(fields = {
+        @Field("appId"), @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
+      }, options = @IndexOptions(name = "instance_index5", background = true))
+})
 public class Instance extends Base {
   @NotEmpty private InstanceType instanceType;
   private HostInstanceKey hostInstanceKey;
   private ContainerInstanceKey containerInstanceKey;
   private PcfInstanceKey pcfInstanceKey;
-  @Indexed private String envId;
+  private String envId;
   private String envName;
   private EnvironmentType envType;
-  @Indexed private String accountId;
-  @Indexed private String serviceId;
+  private String accountId;
+  private String serviceId;
   private String serviceName;
   private String appName;
 
-  @Indexed private String infraMappingId;
+  private String infraMappingId;
   private String infraMappingType;
 
   private String computeProviderId;
@@ -48,7 +66,7 @@ public class Instance extends Base {
   private String lastArtifactId;
   private String lastArtifactName;
   private String lastArtifactSourceName;
-  @Indexed private String lastArtifactBuildNum;
+  private String lastArtifactBuildNum;
 
   private String lastDeployedById;
   private String lastDeployedByName;

@@ -6,13 +6,16 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.instance.dashboard.InstanceStatsByEnvironment;
 import software.wings.beans.instance.dashboard.InstanceStatsByService;
 import software.wings.beans.instance.dashboard.InstanceSummaryStats;
+import software.wings.beans.instance.dashboard.InstanceSummaryStatsByService;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.resources.stats.model.InstanceTimeline;
 import software.wings.resources.stats.model.TimeRange;
@@ -33,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -99,6 +103,38 @@ public class DashboardStatisticsResource {
   public RestResponse<List<InstanceStatsByService>> getAppInstanceStats(@QueryParam("accountId") String accountId,
       @QueryParam("appId") List<String> appIds, @QueryParam("timestamp") long timestamp) {
     return new RestResponse<>(dashboardStatsService.getAppInstanceStatsByService(accountId, appIds, timestamp));
+  }
+
+  /**
+   * Get instance stats for the given service
+   *
+   * @return the rest response
+   */
+  @GET
+  @Path("service-instance-stats")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<InstanceStatsByEnvironment>> getServiceInstanceStats(
+      @QueryParam("accountId") String accountId, @QueryParam("serviceId") String serviceId,
+      @QueryParam("timestamp") long timestamp) {
+    return new RestResponse<>(dashboardStatsService.getServiceInstances(accountId, serviceId, timestamp));
+  }
+
+  /**
+   * Get instance stats by given applications and group the results by the given entity types
+   *
+   * @return the rest response
+   */
+  @GET
+  @Path("app-instance-count-stats")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<InstanceSummaryStatsByService>> getAppInstanceCountStats(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") List<String> appIds,
+      @QueryParam("timestamp") long timestamp, @QueryParam("offset") @DefaultValue("-1") int offset,
+      @QueryParam("limit") @DefaultValue("-1") int limit) {
+    return new RestResponse<>(
+        dashboardStatsService.getAppInstanceSummaryStatsByService(accountId, appIds, timestamp, offset, limit));
   }
 
   /**

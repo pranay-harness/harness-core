@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
@@ -37,6 +38,7 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
@@ -47,6 +49,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -65,8 +68,10 @@ import software.wings.beans.instance.dashboard.EnvironmentSummary.EnvironmentSum
 import software.wings.beans.instance.dashboard.InstanceStats;
 import software.wings.beans.instance.dashboard.InstanceStatsByArtifact;
 import software.wings.beans.instance.dashboard.InstanceStatsByEnvironment;
+import software.wings.beans.instance.dashboard.InstanceStatsByEnvironment.InstanceStatsByEnvironmentBuilder;
 import software.wings.beans.instance.dashboard.InstanceStatsByService;
 import software.wings.beans.instance.dashboard.InstanceSummaryStats;
+import software.wings.beans.instance.dashboard.InstanceSummaryStatsByService;
 import software.wings.beans.instance.dashboard.ServiceSummary;
 import software.wings.beans.instance.dashboard.ServiceSummary.ServiceSummaryBuilder;
 import software.wings.beans.instance.dashboard.service.CurrentActiveInstances;
@@ -77,8 +82,7 @@ import software.wings.exception.HarnessException;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.AggregationInfo.ArtifactInfo;
-import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.AggregationInfo.EnvInfo;
+import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.ServiceInstanceCount.EnvType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -238,8 +242,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     }
 
     Query<Instance> query;
+    List<String> appIds = null;
     try {
-      query = getInstanceQueryAtTime(accountId, null, timestamp);
+      query = getInstanceQueryAtTime(accountId, appIds, timestamp);
     } catch (HarnessException e) {
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
     } catch (Exception e) {
@@ -350,13 +355,16 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return instance.getCreatedAt();
   }
 
+  private PageResponse getEmptyPageResponse() {
+    return aPageResponse().withResponse(Collections.emptyList()).build();
+  }
+
   @Override
   public List<InstanceStatsByService> getAppInstanceStatsByService(
       String accountId, List<String> appIds, long timestamp) {
     if (timestamp == 0) {
       timestamp = System.currentTimeMillis();
     }
-
     Query<Instance> query;
     try {
       query = getInstanceQueryAtTime(accountId, appIds, timestamp);
@@ -395,6 +403,100 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return constructInstanceStatsByService(instanceInfoList);
   }
 
+  @Override
+  public List<InstanceStatsByEnvironment> getServiceInstances(String accountId, String serviceId, long timestamp) {
+    if (timestamp == 0) {
+      timestamp = System.currentTimeMillis();
+    }
+
+    Query<Instance> query;
+    try {
+      query = getInstanceQueryAtTime(accountId, serviceId, timestamp);
+    } catch (Exception e) {
+      logger.error("Error while compiling query for instance stats by service");
+      return Collections.emptyList();
+    }
+
+    List<ServiceAggregationInfo> serviceAggregationInfoList = new ArrayList<>();
+    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
+        .createAggregation(Instance.class)
+        .match(query)
+        .group(Group.id(grouping("envId"), grouping("lastArtifactId")), grouping("count", accumulator("$sum", 1)),
+            grouping("appInfo", grouping("$first", projection("id", "appId"), projection("name", "appName"))),
+            grouping("envInfo",
+                grouping(
+                    "$first", projection("id", "envId"), projection("name", "envName"), projection("type", "envType"))),
+            grouping("artifactInfo",
+                grouping("$first", projection("id", "lastArtifactId"), projection("name", "lastArtifactName"),
+                    projection("buildNo", "lastArtifactBuildNum"), projection("streamId", "lastArtifactStreamId"),
+                    projection("deployedAt", "lastDeployedAt"), projection("sourceName", "lastArtifactSourceName"))),
+            grouping(
+                "instanceInfoList", grouping("$addToSet", projection("id", "_id"), projection("name", "hostName"))))
+        .sort(ascending("_id.envId"), descending("count"))
+        .aggregate(ServiceAggregationInfo.class)
+        .forEachRemaining(serviceAggregationInfo -> { serviceAggregationInfoList.add(serviceAggregationInfo); });
+
+    return constructInstanceStatsForService(serviceId, serviceAggregationInfoList);
+  }
+
+  @Override
+  public PageResponse<InstanceSummaryStatsByService> getAppInstanceSummaryStatsByService(
+      String accountId, List<String> appIds, long timestamp, int offset, int limit) {
+    if (timestamp == 0) {
+      timestamp = System.currentTimeMillis();
+    }
+
+    Query<Instance> query;
+    try {
+      query = getInstanceQueryAtTime(accountId, appIds, timestamp);
+    } catch (HarnessException e) {
+      return getEmptyPageResponse();
+    } catch (Exception e) {
+      logger.error("Error while compiling query for instance stats by service");
+      return getEmptyPageResponse();
+    }
+
+    long count = query.count();
+
+    List<ServiceInstanceCount> instanceInfoList = new ArrayList<>();
+    AggregationPipeline aggregationPipeline =
+        wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
+            .createAggregation(Instance.class)
+            .match(query)
+            .group(Group.id(grouping("serviceId")), grouping("count", accumulator("$sum", 1)),
+                grouping("appInfo", grouping("$first", projection("id", "appId"), projection("name", "appName"))),
+                grouping("serviceInfo",
+                    grouping("$first", projection("id", "serviceId"), projection("name", "serviceName"))),
+                grouping("envTypeList", grouping("$push", projection("type", "envType"))))
+            .sort(descending("count"));
+    aggregationPipeline.skip(offset);
+    aggregationPipeline.limit(limit);
+
+    aggregationPipeline.aggregate(ServiceInstanceCount.class)
+        .forEachRemaining(serviceInstanceCount -> instanceInfoList.add(serviceInstanceCount));
+    return constructInstanceSummaryStatsByService(instanceInfoList, (int) count, offset, limit);
+  }
+
+  private PageResponse<InstanceSummaryStatsByService> constructInstanceSummaryStatsByService(
+      List<ServiceInstanceCount> serviceInstanceCountList, int totalSize, int offset, int limit) {
+    List<InstanceSummaryStatsByService> instanceSummaryStatsByServiceList =
+        serviceInstanceCountList.stream().map(s -> getInstanceSummaryStatsByService(s)).collect(toList());
+    return aPageResponse()
+        .withResponse(instanceSummaryStatsByServiceList)
+        .withTotal(totalSize)
+        .withOffset(Integer.toString(offset + serviceInstanceCountList.size()))
+        .withLimit(Integer.toString(limit))
+        .build();
+  }
+
+  private Query<Instance> getInstanceQueryAtTime(String accountId, String serviceId, long timestamp) {
+    Query<Instance> query = getInstanceQuery(accountId, serviceId, true);
+    query.field(Instance.CREATED_AT_KEY).lessThanOrEq(timestamp);
+    query.and(
+        query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
+    return query;
+  }
+
   private Query<Instance> getInstanceQueryAtTime(String accountId, List<String> appIds, long timestamp)
       throws HarnessException {
     Query<Instance> query = getInstanceQuery(accountId, appIds, true, timestamp);
@@ -402,6 +504,52 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     query.and(
         query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
     return query;
+  }
+
+  private List<InstanceStatsByEnvironment> constructInstanceStatsForService(
+      String serviceId, List<ServiceAggregationInfo> serviceAggregationInfoList) {
+    if (isEmpty(serviceAggregationInfoList)) {
+      return Lists.newArrayList();
+    }
+
+    String appId = serviceAggregationInfoList.get(0).getAppInfo().getId();
+
+    InstanceStatsByEnvironment currentEnv = null;
+    InstanceStatsByArtifact currentArtifact;
+
+    List<InstanceStatsByEnvironment> currentEnvList = Lists.newArrayList();
+    List<InstanceStatsByArtifact> currentArtifactList = Lists.newArrayList();
+
+    for (ServiceAggregationInfo serviceAggregationInfo : serviceAggregationInfoList) {
+      int size = serviceAggregationInfo.getInstanceInfoList().size();
+      List<EntitySummary> instanceList = Lists.newArrayListWithExpectedSize(size);
+      for (EntitySummary instanceSummary : serviceAggregationInfo.getInstanceInfoList()) {
+        // We have to clone the entity summary because type is not present in database.
+        EntitySummary newInstanceSummary = EntitySummary.builder()
+                                               .name(instanceSummary.getName())
+                                               .id(instanceSummary.getId())
+                                               .type(EntityType.INSTANCE.name())
+                                               .build();
+        instanceList.add(newInstanceSummary);
+      }
+
+      InstanceStats instanceStats = InstanceStats.Builder.anInstanceSummaryStats()
+                                        .withEntitySummaryList(instanceList)
+                                        .withTotalCount(size)
+                                        .build();
+
+      if (currentEnv == null || !compareEnvironment(currentEnv, serviceAggregationInfo.getEnvInfo())) {
+        currentArtifactList = Lists.newArrayList();
+        currentEnv =
+            getInstanceStatsByEnvironment(appId, serviceId, serviceAggregationInfo.getEnvInfo(), currentArtifactList);
+        currentEnvList.add(currentEnv);
+      }
+
+      currentArtifact = getInstanceStatsByArtifact(serviceAggregationInfo.getArtifactInfo(), instanceStats);
+      currentArtifactList.add(currentArtifact);
+    }
+
+    return currentEnvList;
   }
 
   private List<InstanceStatsByService> constructInstanceStatsByService(List<AggregationInfo> aggregationInfoList) {
@@ -448,11 +596,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       if (currentEnv == null || !compareEnvironment(currentEnv, aggregationInfo.getEnvInfo())) {
         currentArtifactList = Lists.newArrayList();
         currentEnv = getInstanceStatsByEnvironment(currentService.getServiceSummary().getAppSummary().getId(),
-            currentService.getServiceSummary().getId(), aggregationInfo, currentArtifactList);
+            currentService.getServiceSummary().getId(), aggregationInfo.getEnvInfo(), currentArtifactList);
         currentEnvList.add(currentEnv);
       }
 
-      currentArtifact = getInstanceStatsByArtifact(aggregationInfo, instanceStats);
+      currentArtifact = getInstanceStatsByArtifact(aggregationInfo.getArtifactInfo(), instanceStats);
       currentArtifactList.add(currentArtifact);
       totalInstanceCountForService.addAndGet(size);
     }
@@ -467,15 +615,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return instanceStatsByServiceList;
   }
 
-  private InstanceStatsByArtifact getInstanceStatsByArtifact(
-      AggregationInfo instanceInfo, InstanceStats instanceStats) {
-    ArtifactInfo newArtifactInfo = instanceInfo.getArtifactInfo();
+  private InstanceStatsByArtifact getInstanceStatsByArtifact(ArtifactInfo artifactInfo, InstanceStats instanceStats) {
     ArtifactSummaryBuilder builder = ArtifactSummary.builder();
-    builder.buildNo(newArtifactInfo.buildNo)
-        .artifactSourceName(newArtifactInfo.sourceName)
-        .name(newArtifactInfo.getName())
+    builder.buildNo(artifactInfo.buildNo)
+        .artifactSourceName(artifactInfo.sourceName)
+        .name(artifactInfo.getName())
         .type(ARTIFACT.name())
-        .id(newArtifactInfo.getId());
+        .id(artifactInfo.getId());
     ArtifactSummary artifactSummary = builder.build();
 
     InstanceStatsByArtifact.Builder artifactBuilder = InstanceStatsByArtifact.Builder.anInstanceStatsByArtifact();
@@ -485,16 +631,15 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private InstanceStatsByEnvironment getInstanceStatsByEnvironment(
-      String appId, String serviceId, AggregationInfo instanceInfo, List<InstanceStatsByArtifact> currentArtifactList) {
+      String appId, String serviceId, EnvInfo envInfo, List<InstanceStatsByArtifact> currentArtifactList) {
     EnvironmentSummaryBuilder builder = EnvironmentSummary.builder();
-    AggregationInfo.EnvInfo envInfo = instanceInfo.getEnvInfo();
     builder.prod("PROD".equals(envInfo.getType()))
         .id(envInfo.getId())
         .type(EntityType.ENVIRONMENT.name())
         .name(envInfo.getName());
     List<SyncStatus> syncStatusList = instanceService.getSyncStatus(appId, serviceId, envInfo.getId());
-    InstanceStatsByEnvironment.Builder instanceStatsByEnvironmentBuilder =
-        InstanceStatsByEnvironment.Builder.anInstanceStatsByEnvironment()
+    InstanceStatsByEnvironmentBuilder instanceStatsByEnvironmentBuilder =
+        InstanceStatsByEnvironment.builder()
             .environmentSummary(builder.build())
             .instanceStatsByArtifactList(currentArtifactList);
     if (isNotEmpty(syncStatusList)) {
@@ -524,14 +669,46 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .type(EntityType.SERVICE.name())
         .name(serviceInfo.getName());
 
-    return InstanceStatsByService.Builder.anInstanceStatsByService()
-        .withServiceSummary(serviceBuilder.build())
-        .withTotalCount(totalInstanceCountForService.get())
-        .withInstanceStatsByEnvList(currentEnvList)
+    return InstanceStatsByService.builder()
+        .serviceSummary(serviceBuilder.build())
+        .totalCount(totalInstanceCountForService.get())
+        .instanceStatsByEnvList(currentEnvList)
         .build();
   }
 
-  private boolean compareEnvironment(InstanceStatsByEnvironment currentEnv, AggregationInfo.EnvInfo envInfo) {
+  private InstanceSummaryStatsByService getInstanceSummaryStatsByService(ServiceInstanceCount serviceInstanceCount) {
+    ServiceSummaryBuilder serviceBuilder = ServiceSummary.builder();
+    EntitySummary serviceInfo = serviceInstanceCount.getServiceInfo();
+    EntitySummary appInfo = serviceInstanceCount.getAppInfo();
+    EntitySummary appSummary =
+        EntitySummary.builder().name(appInfo.getName()).id(appInfo.getId()).type(APPLICATION.name()).build();
+
+    serviceBuilder.appSummary(appSummary)
+        .id(serviceInfo.getId())
+        .type(EntityType.SERVICE.name())
+        .name(serviceInfo.getName());
+
+    long prodCount = 0;
+    long nonprodCount = 0;
+
+    List<EnvType> envTypeList = serviceInstanceCount.envTypeList;
+    for (EnvType envType : envTypeList) {
+      if (EnvironmentType.PROD.name().equals(envType.getType())) {
+        ++prodCount;
+      } else {
+        ++nonprodCount;
+      }
+    }
+
+    return InstanceSummaryStatsByService.builder()
+        .serviceSummary(serviceBuilder.build())
+        .totalCount(serviceInstanceCount.getCount())
+        .prodCount(prodCount)
+        .nonprodCount(nonprodCount)
+        .build();
+  }
+
+  private boolean compareEnvironment(InstanceStatsByEnvironment currentEnv, EnvInfo envInfo) {
     return currentEnv != null && envInfo != null && envInfo.getId().equals(currentEnv.getEnvironmentSummary().getId());
   }
 
@@ -899,6 +1076,70 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return query;
   }
 
+  private Query<Instance> getInstanceQuery(String accountId, String serviceId, boolean includeDeleted) {
+    Query query = wingsPersistence.createQuery(Instance.class);
+    if (!includeDeleted) {
+      query.filter("isDeleted", false);
+    }
+    query.filter("accountId", accountId);
+    query.filter("serviceId", serviceId);
+    return query;
+  }
+
+  @Data
+  @NoArgsConstructor
+  public static final class ServiceInstanceCount {
+    @Id private String serviceId;
+    private long count;
+    private List<EnvType> envTypeList;
+    private EntitySummary appInfo;
+    private EntitySummary serviceInfo;
+
+    @Data
+    @NoArgsConstructor
+    public static final class EnvType {
+      private String type;
+    }
+  }
+
+  @Data
+  @NoArgsConstructor
+  public static final class ServiceAggregationInfo {
+    @Id private ID _id;
+    private EntitySummary appInfo;
+    private EntitySummary infraMappingInfo;
+    private EnvInfo envInfo;
+    private ArtifactInfo artifactInfo;
+    private List<EntitySummary> instanceInfoList;
+
+    @Data
+    @NoArgsConstructor
+    public static final class ID {
+      private String envId;
+      private String lastArtifactId;
+    }
+  }
+
+  @Data
+  @NoArgsConstructor
+  protected static final class EnvInfo {
+    private String id;
+    private String name;
+    private String type;
+  }
+
+  @Data
+  @NoArgsConstructor
+  protected static final class ArtifactInfo {
+    private String id;
+    private String name;
+    private String buildNo;
+    private String streamId;
+    private String streamName;
+    private long deployedAt;
+    private String sourceName;
+  }
+
   @Data
   @NoArgsConstructor
   public static final class AggregationInfo {
@@ -910,26 +1151,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     private EnvInfo envInfo;
     private ArtifactInfo artifactInfo;
     private List<EntitySummary> instanceInfoList;
-
-    @Data
-    @NoArgsConstructor
-    protected static final class EnvInfo {
-      private String id;
-      private String name;
-      private String type;
-    }
-
-    @Data
-    @NoArgsConstructor
-    protected static final class ArtifactInfo {
-      private String id;
-      private String name;
-      private String buildNo;
-      private String streamId;
-      private String streamName;
-      private long deployedAt;
-      private String sourceName;
-    }
 
     @Data
     @NoArgsConstructor
