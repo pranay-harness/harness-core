@@ -137,9 +137,11 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                          .field("status")
                                          .in(asList(NEW, QUEUED, STARTING, RUNNING));
 
+    final long currentTime = System.currentTimeMillis();
+
     UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                         .set("status", status)
-                                                        .set("endTs", System.currentTimeMillis());
+                                                        .set("endTs", currentTime);
     wingsPersistence.update(query, updateOps);
 
     handlePostExecution(context);
@@ -176,8 +178,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         eventPublishHelper.handleDeploymentCompleted(workflowExecution);
         String accountID = getApplicationDataForReporting(appId).getAccountId();
         String accountName = accountService.getFromCache(accountID).getAccountName();
-        long executionDuration =
-            TimeUnit.MILLISECONDS.toSeconds(workflowExecution.getEndTs() - workflowExecution.getStartTs());
+        long executionDuration = TimeUnit.MILLISECONDS.toSeconds(currentTime - workflowExecution.getStartTs());
         /**
          * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is manual
          */
