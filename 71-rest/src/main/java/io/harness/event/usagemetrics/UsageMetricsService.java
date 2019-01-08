@@ -12,6 +12,8 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.model.EventConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
@@ -38,22 +40,31 @@ public class UsageMetricsService {
   @Inject private TriggerService triggerService;
   @Inject private UsageMetricsEventPublisher publisher;
   @Inject private EnvironmentService environmentService;
+  private static final Logger logger = LoggerFactory.getLogger(UsageMetricsService.class);
 
   public void checkUsageMetrics() {
     getAllAccounts().forEach(account -> {
-      List<String> appIds = getAppIds(account.getUuid());
-      publisher.publishSetupDataMetric(
-          account.getUuid(), account.getAccountName(), appIds.size(), EventConstants.NUMBER_OF_APPLICATIONS);
-      publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-          getNumberOfServicesPerAccount(appIds), EventConstants.NUMBER_OF_SERVICES);
-      publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-          getNumberOfPipelinesPerAccount(appIds), EventConstants.NUMBER_OF_PIPELINES);
-      publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-          getNumberOfTriggersPerAccount(appIds), EventConstants.NUMBER_OF_TRIGGERS);
-      publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-          getNumberOfEnvironmentsPerAccount(appIds), EventConstants.NUMBER_OF_ENVIRONMENTS);
-      publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-          getNumberOfWorkflowsForAccount(account.getUuid()), EventConstants.NUMBER_OF_WORKFLOWS);
+      try {
+        logger.info(
+            "Checking Usage metrics for accountId:[{}], accountName:[{}]", account.getUuid(), account.getAccountName());
+        List<String> appIds = getAppIds(account.getUuid());
+        logger.info("Detected [{}] apps for account [{}]", appIds.size(), account.getAccountName());
+        publisher.publishSetupDataMetric(
+            account.getUuid(), account.getAccountName(), appIds.size(), EventConstants.NUMBER_OF_APPLICATIONS);
+        publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
+            getNumberOfServicesPerAccount(appIds), EventConstants.NUMBER_OF_SERVICES);
+        publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
+            getNumberOfPipelinesPerAccount(appIds), EventConstants.NUMBER_OF_PIPELINES);
+        publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
+            getNumberOfTriggersPerAccount(appIds), EventConstants.NUMBER_OF_TRIGGERS);
+        publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
+            getNumberOfEnvironmentsPerAccount(appIds), EventConstants.NUMBER_OF_ENVIRONMENTS);
+        publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
+            getNumberOfWorkflowsForAccount(account.getUuid()), EventConstants.NUMBER_OF_WORKFLOWS);
+      } catch (Exception e) {
+        logger.warn("Failed to get Usage metrics for for accountId:[{}], accountName:[{}]", account.getUuid(),
+            account.getAccountName(), e);
+      }
     });
   }
 
