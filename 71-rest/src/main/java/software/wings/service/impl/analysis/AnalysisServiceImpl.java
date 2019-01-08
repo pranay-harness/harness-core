@@ -1005,6 +1005,8 @@ public class AnalysisServiceImpl implements AnalysisService {
         analysisRecord.getTest_clusters(), logMLClusterScores.getTest(), AnalysisServiceImpl.CLUSTER_TYPE.TEST));
     analysisSummary.setUnknownClusters(computeCluster(analysisRecord.getUnknown_clusters(),
         logMLClusterScores.getUnknown(), AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN));
+    analysisSummary.setIgnoreClusters(
+        computeCluster(analysisRecord.getIgnore_clusters(), Collections.emptyMap(), CLUSTER_TYPE.IGNORE));
 
     if (!analysisRecord.isBaseLineCreated()) {
       analysisSummary.setTestClusters(analysisSummary.getControlClusters());
