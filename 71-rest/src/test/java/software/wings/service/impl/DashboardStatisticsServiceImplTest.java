@@ -114,7 +114,9 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.instance.dashboard.EntitySummary;
+import software.wings.beans.instance.dashboard.InstanceStatsByEnvironment;
 import software.wings.beans.instance.dashboard.InstanceStatsByService;
+import software.wings.beans.instance.dashboard.InstanceSummaryStatsByService;
 import software.wings.beans.instance.dashboard.service.DeploymentHistory;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.dl.WingsPersistence;
@@ -368,6 +370,51 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
 
       instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_2_ID, currentTime - 30000);
       assertEquals(2, instancesAtTime.size());
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @RealMongo
+  public void shallGetAppInstanceSummaryStatsByService() {
+    try {
+      List<String> appIdList = asList(APP_1_ID, APP_2_ID, APP_3_ID, APP_4_ID, APP_5_ID);
+
+      PageResponse<InstanceSummaryStatsByService> currentAppInstanceStatsByService =
+          dashboardService.getAppInstanceSummaryStatsByService(
+              ACCOUNT_1_ID, appIdList, System.currentTimeMillis(), 0, 5);
+      assertEquals(5, currentAppInstanceStatsByService.getResponse().size());
+
+      currentAppInstanceStatsByService = dashboardService.getAppInstanceSummaryStatsByService(
+          ACCOUNT_1_ID, appIdList, System.currentTimeMillis(), 5, 10);
+      assertEquals(2, currentAppInstanceStatsByService.getResponse().size());
+
+      currentAppInstanceStatsByService = dashboardService.getAppInstanceSummaryStatsByService(
+          ACCOUNT_1_ID, appIdList, System.currentTimeMillis(), 0, 10);
+      assertEquals(7, currentAppInstanceStatsByService.getResponse().size());
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @RealMongo
+  public void shallGetServiceInstanceStats() {
+    try {
+      List<InstanceStatsByEnvironment> serviceInstances;
+
+      serviceInstances = dashboardService.getServiceInstances(ACCOUNT_1_ID, SERVICE_2_ID, System.currentTimeMillis());
+      assertEquals(1, serviceInstances.size());
+
+      serviceInstances = dashboardService.getServiceInstances(ACCOUNT_1_ID, SERVICE_1_ID, System.currentTimeMillis());
+      assertEquals(1, serviceInstances.size());
+
+      serviceInstances = dashboardService.getServiceInstances(ACCOUNT_1_ID, SERVICE_7_ID, currentTime - 100000);
+      assertEquals(1, serviceInstances.size());
+      assertEquals(1, serviceInstances.get(0).getInstanceStatsByArtifactList().size());
+      assertEquals(
+          2, serviceInstances.get(0).getInstanceStatsByArtifactList().get(0).getInstanceStats().getTotalCount());
     } finally {
       UserThreadLocal.unset();
     }

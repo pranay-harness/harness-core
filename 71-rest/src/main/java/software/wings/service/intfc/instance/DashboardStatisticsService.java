@@ -1,9 +1,12 @@
 package software.wings.service.intfc.instance;
 
+import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.instance.dashboard.InstanceStatsByEnvironment;
 import software.wings.beans.instance.dashboard.InstanceStatsByService;
 import software.wings.beans.instance.dashboard.InstanceSummaryStats;
+import software.wings.beans.instance.dashboard.InstanceSummaryStatsByService;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 
 import java.util.List;
@@ -58,6 +61,11 @@ public interface DashboardStatisticsService {
    * @return set of instances
    */
   @Nonnull List<Instance> getAppInstancesForAccount(@NotEmpty String accountId, long timestamp);
+
+  List<InstanceStatsByEnvironment> getServiceInstances(String accountId, String serviceId, long timestamp);
+
+  PageResponse<InstanceSummaryStatsByService> getAppInstanceSummaryStatsByService(
+      String accountId, List<String> appIds, long timestamp, int offset, int limit);
 
   /**
    * Gets the detailed information about the instances provisioned, deployments and pipelines for the given service.
