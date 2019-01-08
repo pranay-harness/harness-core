@@ -105,6 +105,7 @@ public class JiraCreateUpdate extends State {
                                         .description(description)
                                         .labels(labels)
                                         .comment(comment)
+                                        .priority(priority)
                                         .encryptionDetails(secretManager.getEncryptionDetails(jiraConfig,
                                             executionContext.getAppId(), executionContext.getWorkflowExecutionId()))
                                         .accountId(((ExecutionContextImpl) context).getApp().getAccountId())

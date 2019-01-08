@@ -52,6 +52,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
 
+  private static final String JIRA_APPROVAL_FIELD_KEY = "name";
   private static final String WEBHOOK_CREATION_URL = "/rest/webhooks/1.0/webhook/";
 
   private static final Logger logger = LoggerFactory.getLogger(JiraTask.class);
@@ -256,6 +257,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
                   .field(Field.DESCRIPTION, parameters.getDescription())
                   .field(Field.ASSIGNEE, parameters.getAssignee())
                   .field(Field.LABELS, parameters.getLabels())
+                  .field(Field.PRIORITY, parameters.getPriority())
                   .execute();
 
       if (isNotBlank(parameters.getStatus())) {
@@ -301,15 +303,30 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       logger.error(errorMessage, e);
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
     }
-    String approvalFieldValue = issue.getField(parameters.getApprovalField()).toString();
-    String rejectionFieldValue = issue.getField(parameters.getApprovalField()).toString();
 
-    if (StringUtils.equals(approvalFieldValue, parameters.getApprovalValue())) {
+    String approvalFieldValue = null;
+    if (EmptyPredicate.isNotEmpty(parameters.getApprovalField())) {
+      Map<String, String> fieldMap = (Map<String, String>) issue.getField(parameters.getApprovalField());
+      approvalFieldValue = fieldMap.get(JIRA_APPROVAL_FIELD_KEY);
+    }
+
+    String rejectionFieldValue = null;
+    if (EmptyPredicate.isNotEmpty(parameters.getRejectionField())) {
+      Map<String, String> fieldMap = (Map<String, String>) issue.getField(parameters.getRejectionField());
+      rejectionFieldValue = fieldMap.get(JIRA_APPROVAL_FIELD_KEY);
+    }
+
+    if (EmptyPredicate.isNotEmpty(approvalFieldValue)
+        && StringUtils.equals(approvalFieldValue, parameters.getApprovalValue())) {
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
-    } else if (StringUtils.equals(rejectionFieldValue, parameters.getRejectionValue())) {
+    }
+
+    if (EmptyPredicate.isNotEmpty(rejectionFieldValue)
+        && StringUtils.equals(rejectionFieldValue, parameters.getRejectionValue())) {
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.REJECTED).build();
     }
-    return JiraExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
+
+    return JiraExecutionData.builder().executionStatus(ExecutionStatus.RUNNING).build();
   }
 
   private String getIssueUrl(JiraConfig jiraConfig, Issue issue) {
