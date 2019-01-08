@@ -188,8 +188,9 @@ public class EncryptedData extends Base {
     if (isNotEmpty(collection)) {
       collection.remove(key);
     }
-    int refCount = searchTags.get(searchTag).decrementAndGet();
-    if (refCount == 0) {
+
+    if (isNotEmpty(searchTags) && searchTags.containsKey(searchTag)
+        && searchTags.get(searchTag).decrementAndGet() == 0) {
       searchTags.remove(searchTag);
       if (getKeywords() != null) {
         getKeywords().remove(searchTag);
