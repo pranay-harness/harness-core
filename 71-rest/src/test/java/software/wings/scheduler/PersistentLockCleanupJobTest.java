@@ -47,10 +47,12 @@ public class PersistentLockCleanupJobTest extends WingsBaseTest {
       while (dbObjects.hasNext()) {
         final DBObject object = dbObjects.next();
         final Object id = object.get("_id");
-        if (id.equals(PersistentLockCleanupJob.class.getName() + "-bar1")) {
+        if (id.equals(PersistentLockCleanupJob.class.getName() + "-bar1")
+            && object.get("lockState").equals("unlocked")) {
           fooBar1 = true;
         }
-        if (id.equals(PersistentLockCleanupJob.class.getName() + "-bar2")) {
+        if (id.equals(PersistentLockCleanupJob.class.getName() + "-bar2")
+            && object.get("lockState").equals("unlocked")) {
           fooBar2 = true;
         }
       }

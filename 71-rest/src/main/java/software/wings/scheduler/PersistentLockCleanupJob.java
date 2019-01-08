@@ -58,11 +58,16 @@ public class PersistentLockCleanupJob implements Job {
     jobScheduler.scheduleJob(job, trigger);
   }
 
-  public DBCursor queryOldLocks(OffsetDateTime date) {
+  public void deleteOld(OffsetDateTime date) {
     final BasicDBObject filter = new BasicDBObject()
                                      .append("lockState", "unlocked")
                                      .append("lastUpdated", new BasicDBObject("$lt", Date.from(date.toInstant())));
+    wingsPersistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks").remove(filter);
+  }
 
+  public DBCursor queryOldLocks(OffsetDateTime date) {
+    final BasicDBObject filter =
+        new BasicDBObject().append("lastUpdated", new BasicDBObject("$lt", Date.from(date.toInstant())));
     return wingsPersistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks").find(filter).limit(1000);
   }
 
@@ -77,6 +82,8 @@ public class PersistentLockCleanupJob implements Job {
     int destroyed = 0;
     try (AcquiredLock lock = persistentLocker.acquireLock(PersistentLocker.class, NAME, Duration.ofMinutes(10))) {
       OffsetDateTime startTime = OffsetDateTime.now().minusWeeks(1);
+      deleteOld(startTime);
+
       final DBCursor locks = queryOldLocks(startTime);
 
       while (locks.hasNext()) {
