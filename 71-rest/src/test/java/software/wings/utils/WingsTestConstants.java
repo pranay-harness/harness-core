@@ -125,6 +125,8 @@ public interface WingsTestConstants {
 
   String ACCOUNT_NAME = "ACCOUNT_NAME";
 
+  String ILLEGAL_ACCOUNT_NAME = "/@[]{} Inc.";
+
   char[] PASSWORD = "PASSWORD".toCharArray();
 
   char[] USER_PASSWORD = "USER_PASSWORD".toCharArray();
