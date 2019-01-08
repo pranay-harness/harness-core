@@ -9,6 +9,11 @@ public class PersistentNoopLocker implements Locker {
   }
 
   @Override
+  public AcquiredLock acquireEphemeralLock(String name, Duration timeout) {
+    return new AcquiredNoopLock();
+  }
+
+  @Override
   public AcquiredLock acquireLock(Class entityClass, String entityId, Duration timeout) {
     return new AcquiredNoopLock();
   }
@@ -19,7 +24,17 @@ public class PersistentNoopLocker implements Locker {
   }
 
   @Override
+  public AcquiredLock tryToAcquireEphemeralLock(Class entityClass, String entityId, Duration timeout) {
+    return new AcquiredNoopLock();
+  }
+
+  @Override
   public AcquiredLock tryToAcquireLock(String name, Duration timeout) {
+    return new AcquiredNoopLock();
+  }
+
+  @Override
+  public AcquiredLock tryToAcquireEphemeralLock(String name, Duration timeout) {
     return new AcquiredNoopLock();
   }
 
