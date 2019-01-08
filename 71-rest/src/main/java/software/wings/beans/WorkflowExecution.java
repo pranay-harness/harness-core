@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -41,6 +42,7 @@ import java.util.Map;
 @Indexes(@Index(options = @IndexOptions(name = "search"), fields = { @Field("workflowId")
                                                                      , @Field("status") }))
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowExecution extends Base {
   public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";
   public static final String DEPLOYMENT_TRIGGERED_ID_KEY = "deploymentTriggerId";
@@ -55,6 +57,7 @@ public class WorkflowExecution extends Base {
   public static final String UUID_KEY = "uuid";
   public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
+  public static final String ENV_ID_KEY = "envId";
   public static final String WORKFLOW_TYPE_ID_KEY = "workflowType";
   public static final String EXECUTION_ARGS = "executionArgs";
   public static final String SERVICE_EXECUTION_SUMMARIES = "serviceExecutionSummaries";

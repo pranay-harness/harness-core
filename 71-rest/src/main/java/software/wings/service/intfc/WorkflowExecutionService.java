@@ -147,4 +147,5 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   ApprovalAuthorization getApprovalAuthorization(String appId, List<String> userGroupIds);
 
   WorkflowExecution getWorkflowExecutionSummary(String appId, String workflowExecutionId);
+  WorkflowExecution getWorkflowExecutionForVerificationService(String appId, String workflowExecutionId);
 }
