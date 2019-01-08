@@ -3,7 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import migrations.seedata.IISInstallCommandMigration;
-import migrations.seedata.IISInstallCommandV3Migration;
+import migrations.seedata.IISInstallCommandV4Migration;
 import migrations.seedata.TemplateGalleryDefaultTemplatesMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -18,7 +18,8 @@ public class SeedDataMigrationList {
         .add(Pair.of(4, IISInstallCommandMigration.class))
         .add(Pair.of(5, BaseSeedDataMigration.class))
         .add(Pair.of(6, BaseSeedDataMigration.class))
-        .add(Pair.of(7, IISInstallCommandV3Migration.class))
+        .add(Pair.of(7, BaseSeedDataMigration.class))
+        .add(Pair.of(8, IISInstallCommandV4Migration.class))
         .build();
   }
 }

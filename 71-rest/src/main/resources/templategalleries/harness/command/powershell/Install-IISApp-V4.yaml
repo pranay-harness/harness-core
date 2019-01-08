@@ -71,6 +71,10 @@ templateObject:
       $virtualDirectoryName="${service.Name}"
       $appPhysicalDirectory="${AppPhysicalDirectory}" + "\Artifacts\" + $virtualDirectoryName + "\release-" + $releaseId
 
+      # Copy configs to application directory
+      $userProfile = "$env:userprofile"
+      Copy-Item -Path "$userProfile\\${app.name}\\${service.name}\\${env.name}\\runtime\\*.config" -Destination $appPhysicalDirectory -Force
+
       Write-Host "Creating Virtual Directory" $virtualDirectoryName ".."
       $VirtualDirPath = 'IIS:\Sites\' + $siteName + '\' + $virtualDirectoryName
       New-Item -Path $VirtualDirPath -Type VirtualDirectory -PhysicalPath $appPhysicalDirectory -Force
