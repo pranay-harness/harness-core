@@ -100,12 +100,6 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   private T getUnderLock(long endTime, long pollDuration) {
     final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
 
-    Date resetTimestamp = new Date(System.currentTimeMillis() + resetDurationMillis());
-
-    UpdateOperations<T> updateOperations = datastore.createUpdateOperations(klass)
-                                               .set(Queuable.RUNNING_KEY, true)
-                                               .set(Queuable.RESET_TIMESTAMP_KEY, resetTimestamp);
-
     while (true) {
       final Date now = new Date();
 
@@ -115,6 +109,11 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
       query.field(Queuable.EARLIEST_GET_KEY)
           .lessThanOrEq(now)
           .order(Sort.descending(Queuable.PRIORITY_KEY), Sort.ascending(Queuable.CREATED_KEY));
+
+      UpdateOperations<T> updateOperations =
+          datastore.createUpdateOperations(klass)
+              .set(Queuable.RUNNING_KEY, true)
+              .set(Queuable.RESET_TIMESTAMP_KEY, new Date(now.getTime() + resetDurationMillis()));
 
       T message = datastore.findAndModify(query, updateOperations);
       if (message != null) {

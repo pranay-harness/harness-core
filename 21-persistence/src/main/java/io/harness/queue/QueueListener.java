@@ -110,13 +110,17 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       logger.debug("Started timer thread for message {} every {} ms", message, timerInterval);
     }
 
-    ScheduledFuture<?> future = null;
     try {
       final T finalizedMessage = message;
-      future = timer.scheduleAtFixedRate(
-          () -> queue.updateResetDuration(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
 
-      onMessage(message);
+      ScheduledFuture<?> future = timer.scheduleAtFixedRate(
+          () -> queue.updateResetDuration(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
+      try {
+        onMessage(message);
+      } finally {
+        future.cancel(true);
+      }
+
       queue.ack(message);
     } catch (Throwable exception) {
       logger.error(format("Exception happened in onMessage %s", queue.name()), exception);
@@ -128,10 +132,6 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       } else {
         // we have already logged Throwable exception above. no-op here.
         noop();
-      }
-    } finally {
-      if (future != null) {
-        future.cancel(true);
       }
     }
   }
