@@ -168,6 +168,7 @@ public class JenkinsImpl implements Jenkins {
         }
       }, 120L, TimeUnit.SECONDS, true);
     } catch (Exception e) {
+      logger.warn("Failure in fetching job: [{}]", e.getMessage());
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
     }
   }
