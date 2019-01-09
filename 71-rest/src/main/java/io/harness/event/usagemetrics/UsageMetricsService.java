@@ -78,46 +78,64 @@ public class UsageMetricsService {
 
   protected long getNumberOfWorkflowsForAccount(String accountId) {
     List<String> appIds = appService.getAppIdsByAccountId(accountId);
-
-    PageRequest<Workflow> pageRequest =
-        aPageRequest().addFilter("appId", Operator.IN, appIds.toArray()).addFieldsIncluded("_id").build();
-    final PageResponse<Workflow> workflowsList = workflowService.listWorkflows(pageRequest);
-    return isEmpty(workflowsList) ? 0 : workflowsList.getTotal();
+    if (appIds.size() > 0) {
+      PageRequest<Workflow> pageRequest =
+          aPageRequest().addFilter("appId", Operator.IN, appIds.toArray()).addFieldsIncluded("_id").build();
+      final PageResponse<Workflow> workflowsList = workflowService.listWorkflows(pageRequest);
+      return isEmpty(workflowsList) ? 0 : workflowsList.getTotal();
+    }
+    return 0;
   }
 
   protected long getNumberOfServicesPerAccount(List<String> apps) {
-    PageRequest<Service> svcPageRequest = aPageRequest()
-                                              .withLimit(UNLIMITED)
-                                              .addFilter("appId", Operator.IN, apps.toArray())
-                                              .addFieldsIncluded(ID_KEY)
-                                              .build();
-    return serviceResourceService.list(svcPageRequest, false, false).getTotal();
+    if (apps.size() > 0) {
+      PageRequest<Service> svcPageRequest = aPageRequest()
+                                                .withLimit(UNLIMITED)
+                                                .addFilter("appId", Operator.IN, apps.toArray())
+                                                .addFieldsIncluded(ID_KEY)
+                                                .build();
+      return serviceResourceService.list(svcPageRequest, false, false).getTotal();
+    } else {
+      return 0;
+    }
   }
 
   protected long getNumberOfPipelinesPerAccount(List<String> appIds) {
-    PageRequest<Pipeline> pageRequest = aPageRequest()
-                                            .withLimit(UNLIMITED)
-                                            .addFilter("appId", Operator.IN, appIds.toArray())
-                                            .addFieldsIncluded("_id")
-                                            .build();
-    return pipelineService.listPipelines(pageRequest).getTotal();
+    if (appIds.size() > 0) {
+      PageRequest<Pipeline> pageRequest = aPageRequest()
+                                              .withLimit(UNLIMITED)
+                                              .addFilter("appId", Operator.IN, appIds.toArray())
+                                              .addFieldsIncluded("_id")
+                                              .build();
+      return pipelineService.listPipelines(pageRequest).getTotal();
+    } else {
+      return 0;
+    }
   }
 
   protected long getNumberOfTriggersPerAccount(List<String> appIds) {
-    PageRequest<Trigger> pageRequest = aPageRequest()
-                                           .withLimit(UNLIMITED)
-                                           .addFilter("appId", Operator.IN, appIds.toArray())
-                                           .addFieldsIncluded("_id")
-                                           .build();
-    return triggerService.list(pageRequest).getTotal();
+    if (appIds.size() > 0) {
+      PageRequest<Trigger> pageRequest = aPageRequest()
+                                             .withLimit(UNLIMITED)
+                                             .addFilter("appId", Operator.IN, appIds.toArray())
+                                             .addFieldsIncluded("_id")
+                                             .build();
+      return triggerService.list(pageRequest).getTotal();
+    } else {
+      return 0;
+    }
   }
 
   protected long getNumberOfEnvironmentsPerAccount(List<String> appIds) {
-    PageRequest<Environment> pageRequest = aPageRequest()
-                                               .withLimit(UNLIMITED)
-                                               .addFilter("appId", Operator.IN, appIds.toArray())
-                                               .addFieldsIncluded("_id")
-                                               .build();
-    return environmentService.list(pageRequest, false).getTotal();
+    if (appIds.size() > 0) {
+      PageRequest<Environment> pageRequest = aPageRequest()
+                                                 .withLimit(UNLIMITED)
+                                                 .addFilter("appId", Operator.IN, appIds.toArray())
+                                                 .addFieldsIncluded("_id")
+                                                 .build();
+      return environmentService.list(pageRequest, false).getTotal();
+    } else {
+      return 0;
+    }
   }
 }
