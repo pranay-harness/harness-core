@@ -20,7 +20,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ShellScriptState;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +98,7 @@ public class ShellScriptParameters implements TaskParameters {
         .useSSL(winrmConnectionAttributes.isUseSSL())
         .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())
         .workingDirectory(workingDirectory)
-        .environment(environment == null ? Collections.emptyMap() : environment)
+        .environment(getResolvedEnvironmentVariables())
         .build();
   }
 

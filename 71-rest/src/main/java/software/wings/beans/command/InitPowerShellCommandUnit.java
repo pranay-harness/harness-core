@@ -1,7 +1,6 @@
 package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.utils.Util.escapifyString;
 
 import com.google.common.collect.Maps;
 
@@ -59,9 +58,7 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
     activityId = context.getActivityId();
 
     Validator.notNullCheck("Service Variables", context.getServiceVariables());
-    for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
-      envVariables.put(entry.getKey(), escapifyString(entry.getValue()));
-    }
+    envVariables.putAll(context.getServiceVariables());
 
     if (isNotEmpty(context.getArtifactFiles())) {
       String name = context.getArtifactFiles().get(0).getName();
@@ -76,9 +73,7 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
     }
 
     Validator.notNullCheck("Safe Display Service Variables", context.getSafeDisplayServiceVariables());
-    for (Map.Entry<String, String> entry : context.getSafeDisplayServiceVariables().entrySet()) {
-      safeDisplayEnvVariables.put(entry.getKey(), escapifyString(entry.getValue()));
-    }
+    safeDisplayEnvVariables.putAll(context.getSafeDisplayServiceVariables());
 
     createPreparedCommands(command);
     context.addEnvVariables(envVariables);
