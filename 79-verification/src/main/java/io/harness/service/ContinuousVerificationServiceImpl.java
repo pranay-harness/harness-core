@@ -195,6 +195,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .min_rpm(MIN_REQUESTS_PER_MINUTE)
             .comparison_unit_window(COMPARISON_WINDOW)
             .parallel_processes(PARALLEL_PROCESSES)
+            .is24x7Task(true)
             .build();
     learningEngineAnalysisTask.setAppId(cvConfiguration.getAppId());
     learningEngineAnalysisTask.setUuid(learningTaskId);

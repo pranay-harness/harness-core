@@ -11,6 +11,7 @@ import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.intfc.analysis.ClusterLevel;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by rsingh on 1/9/18.
@@ -20,7 +21,8 @@ public interface LearningEngineService {
   boolean addLearningEngineAnalysisTask(LearningEngineAnalysisTask analysisTask);
   boolean addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask analysisTask);
 
-  LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(ServiceApiVersion serviceApiVersion);
+  LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(
+      ServiceApiVersion serviceApiVersion, Optional<Boolean> is24x7Task);
   LearningEngineExperimentalAnalysisTask getNextLearningEngineExperimentalAnalysisTask(
       String experimentName, ServiceApiVersion serviceApiVersion);
 

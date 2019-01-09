@@ -58,6 +58,7 @@ import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -116,9 +117,9 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
 
     for (int i = 1; i <= numOfTasks; i++) {
-      LearningEngineAnalysisTask analysisTask =
-          learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1);
-      assertEquals(ExecutionStatus.RUNNING, analysisTask.getExecutionStatus());
+      LearningEngineAnalysisTask leTask =
+          learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.of(false));
+      assertEquals(ExecutionStatus.RUNNING, leTask.getExecutionStatus());
 
       assertEquals(numOfTasks - i,
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
@@ -134,7 +135,72 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
               .size());
     }
 
-    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1));
+    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.of(false)));
+  }
+
+  @Test
+  public void testQueueWithStatus24x7Task() {
+    int numOfTasks = 100;
+    for (int i = 0; i < numOfTasks; i++) {
+      workflowExecutionId = UUID.randomUUID().toString();
+      stateExecutionId = UUID.randomUUID().toString();
+      LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
+                                                                  .state_execution_id(stateExecutionId)
+                                                                  .workflow_execution_id(workflowExecutionId)
+                                                                  .executionStatus(ExecutionStatus.QUEUED)
+                                                                  .is24x7Task(true)
+                                                                  .build();
+      learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+    }
+
+    assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
+
+    for (int i = 1; i <= numOfTasks; i++) {
+      LearningEngineAnalysisTask task =
+          learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.of(true));
+      assertEquals(ExecutionStatus.RUNNING, task.getExecutionStatus());
+
+      assertEquals(numOfTasks - i,
+          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+              .filter("executionStatus", ExecutionStatus.QUEUED)
+              .filter("retry", 0)
+              .asList()
+              .size());
+    }
+
+    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.of(true)));
+  }
+
+  @Test
+  public void testQueueWithStatus24x7TaskTrue() {
+    int numOfTasks = 100;
+    for (int i = 0; i < numOfTasks; i++) {
+      workflowExecutionId = UUID.randomUUID().toString();
+      stateExecutionId = UUID.randomUUID().toString();
+      LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
+                                                                  .state_execution_id(stateExecutionId)
+                                                                  .workflow_execution_id(workflowExecutionId)
+                                                                  .executionStatus(ExecutionStatus.QUEUED)
+                                                                  .build();
+      learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+    }
+
+    assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
+
+    for (int i = 1; i <= numOfTasks; i++) {
+      LearningEngineAnalysisTask analysisTask =
+          learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.of(true));
+      assertNull(analysisTask);
+
+      assertEquals(numOfTasks,
+          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+              .filter("executionStatus", ExecutionStatus.QUEUED)
+              .filter("retry", 0)
+              .asList()
+              .size());
+    }
+
+    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.of(true)));
   }
 
   @Test
@@ -190,7 +256,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
                                                                 .build();
     wingsPersistence.updateField(LearningEngineAnalysisTask.class, learningEngineAnalysisTask.getUuid(), "retry",
         LearningEngineAnalysisTask.RETRIES);
-    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1));
+    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.empty()));
   }
 
   @Test
@@ -214,7 +280,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
 
     for (int i = 1; i <= numOfTasks; i++) {
       LearningEngineAnalysisTask analysisTask =
-          learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1);
+          learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.empty());
       assertEquals(ExecutionStatus.RUNNING, analysisTask.getExecutionStatus());
 
       assertEquals(numOfTasks - i,
@@ -233,7 +299,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
               .size());
     }
 
-    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1));
+    assertNull(learningEngineService.getNextLearningEngineAnalysisTask(ServiceApiVersion.V1, Optional.empty()));
   }
 
   @Test

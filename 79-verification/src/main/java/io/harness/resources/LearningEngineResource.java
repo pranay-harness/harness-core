@@ -15,6 +15,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 
+import java.util.Optional;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
@@ -44,7 +45,25 @@ public class LearningEngineResource {
   @LearningEngineAuth
   @Produces({"application/json", "application/v1+json"})
   public RestResponse<LearningEngineAnalysisTask> getNextTask(@HeaderParam("Accept") String acceptHeaders) {
-    return new RestResponse<>(learningEngineService.getNextLearningEngineAnalysisTask(parseApisVersion(acceptHeaders)));
+    return new RestResponse<>(
+        learningEngineService.getNextLearningEngineAnalysisTask(parseApisVersion(acceptHeaders), Optional.empty()));
+  }
+
+  /**
+   * API to fetch next available task.
+   * @param acceptHeaders
+   * @return
+   */
+  @GET
+  @Path("/get-next-cv-task")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @Produces({"application/json", "application/v1+json"})
+  public RestResponse<LearningEngineAnalysisTask> getNext24x7Task(
+      @HeaderParam("Accept") String acceptHeaders, @QueryParam("is24x7") boolean is24x7) {
+    return new RestResponse<>(
+        learningEngineService.getNextLearningEngineAnalysisTask(parseApisVersion(acceptHeaders), Optional.of(is24x7)));
   }
 
   /**
