@@ -225,7 +225,8 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean trialSignup(String email) {
     if (!configuration.isTrialRegistrationAllowed()) {
-      throw new WingsException(GENERAL_ERROR).addParam("message", "Trial user/account registration is disabled.");
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam("message", "Trial registration is not allowed in this cluster.");
     }
 
     final String emailAddress = email.trim().toLowerCase();

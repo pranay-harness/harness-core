@@ -143,10 +143,15 @@ fi
 if [[ -v "FILE_STORAGE" ]]; then
     sed -i "s|fileStorageMode: MONGO|fileStorageMode: ${FILE_STORAGE}|" /opt/harness/config.yml
 fi
- if [[ -v "CLUSTER_NAME" ]]; then
+
+if [[ -v "CLUSTER_NAME" ]]; then
     sed -i "s|clusterName:|clusterName: ${CLUSTER_NAME}|" /opt/harness/config.yml
 fi
 
 if [[ -v "BACKGROUND_SCHEDULER_CLUSTERED" ]]; then
     sed -i "s|clustered: true #backgroundScheduler|clustered: ${BACKGROUND_SCHEDULER_CLUSTERED}|" /opt/harness/config.yml
+fi
+
+if [[ -v "ALLOW_TRIAL_REGISTRATION" ]]; then
+    sed -i "s|trialRegistrationAllowed: true|trialRegistrationAllowed: ${ALLOW_TRIAL_REGISTRATION}|" /opt/harness/config.yml
 fi
