@@ -1,10 +1,12 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.yaml.GitCommand.GitCommandType.COMMIT_AND_PUSH;
 import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
@@ -56,14 +58,14 @@ import java.util.stream.Collectors;
 public class GitCommandCallback implements NotifyCallback {
   private String accountId;
   private String changeSetId;
-  private String yamlGitConfigId;
+  private GitCommandType gitCommandType;
 
   public GitCommandCallback() {}
 
-  public GitCommandCallback(String accountId, String changeSetId, String yamlGitConfigId) {
+  public GitCommandCallback(String accountId, String changeSetId, GitCommandType gitCommandType) {
     this.accountId = accountId;
     this.changeSetId = changeSetId;
-    this.yamlGitConfigId = yamlGitConfigId;
+    this.gitCommandType = gitCommandType;
   }
 
   @Transient private static final transient Logger logger = LoggerFactory.getLogger(GitCommandCallback.class);
@@ -106,7 +108,7 @@ public class GitCommandCallback implements NotifyCallback {
       logger.info("Git command [type: {}] request completed with status [{}] for account {}",
           gitCommandResult.getGitCommandType(), gitCommandExecutionResponse.getGitCommandStatus(), accountId);
 
-      if (gitCommandResult.getGitCommandType().equals(GitCommandType.COMMIT_AND_PUSH)) {
+      if (gitCommandResult.getGitCommandType().equals(COMMIT_AND_PUSH)) {
         GitCommitAndPushResult gitCommitAndPushResult = (GitCommitAndPushResult) gitCommandResult;
         YamlChangeSet yamlChangeSet = yamlChangeSetService.get(accountId, changeSetId);
         if (yamlChangeSet != null) {
@@ -171,7 +173,7 @@ public class GitCommandCallback implements NotifyCallback {
     } else {
       logger.warn("Unexpected notify response data: [{}] for changeSetId [{}] for account {}", notifyResponseData,
           changeSetId, accountId);
-      yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+      updateChangeSetFailureStatusSafely();
     }
   }
 
@@ -221,8 +223,15 @@ public class GitCommandCallback implements NotifyCallback {
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
-    logger.warn("Git request failed [{}] for changeSetId [{}] for account {}", response, changeSetId, accountId);
-    yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+    logger.warn("Git request failed for command:[{}], changeSetId:[{}], account:[{}], response:[{}]", gitCommandType,
+        changeSetId, accountId, response);
+    updateChangeSetFailureStatusSafely();
+  }
+
+  protected void updateChangeSetFailureStatusSafely() {
+    if (isNotEmpty(changeSetId) && COMMIT_AND_PUSH.equals(gitCommandType)) {
+      yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+    }
   }
 
   private void applySyncFromGit(List<GitFileChange> gitFileChangeList) {

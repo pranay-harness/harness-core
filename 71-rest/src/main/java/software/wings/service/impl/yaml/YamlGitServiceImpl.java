@@ -539,7 +539,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                     .build();
 
     waitNotifyEngine.waitForAll(
-        new GitCommandCallback(accountId, mostRecentYamlChangesetId, yamlGitConfig.getUuid()), waitId);
+        new GitCommandCallback(accountId, mostRecentYamlChangesetId, GitCommandType.COMMIT_AND_PUSH), waitId);
     delegateService.queueTask(delegateTask);
     return true;
   }
@@ -674,7 +674,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                   GitDiffRequest.builder().lastProcessedCommitId(processedCommit).yamlGitConfig(yamlGitConfig).build()})
               .build();
 
-      waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, yamlGitConfig.getUuid()), waitId);
+      waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, GitCommandType.DIFF), waitId);
       delegateService.queueTask(delegateTask);
 
     } catch (Exception ex) {

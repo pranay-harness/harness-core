@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
@@ -27,7 +28,8 @@ import java.util.Map;
 public class GitCommandCallbackTest {
   @Mock private YamlChangeSetService yamlChangeSetService;
   @Mock private YamlGitService yamlGitService;
-  @InjectMocks private GitCommandCallback commandCallback = new GitCommandCallback("111", "222", "333");
+  @InjectMocks
+  private GitCommandCallback commandCallback = new GitCommandCallback("111", "222", GitCommandType.COMMIT_AND_PUSH);
 
   @Before
   public void setup() {
