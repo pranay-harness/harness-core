@@ -82,7 +82,7 @@ public class WorkflowSampleDataProvider {
     WorkflowPhase workflowPhase = workflowService.createWorkflowPhase(appId, savedWorkflow.getUuid(),
         aWorkflowPhase().withServiceId(serviceId).withInfraMappingId(infraMappingId).build());
 
-    setK8sSetupContainer(workflowPhase, "1");
+    setK8sSetupContainer(workflowPhase, "2");
     setK8sUpgradeContainer(workflowPhase, "50");
 
     workflowService.updateWorkflowPhase(appId, savedWorkflow.getUuid(), workflowPhase);
