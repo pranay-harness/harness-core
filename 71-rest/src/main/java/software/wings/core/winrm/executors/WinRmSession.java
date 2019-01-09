@@ -1,5 +1,6 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.windows.CmdUtils.escapeEnvValueSpecialChars;
 import static java.lang.String.format;
 
 import io.cloudsoft.winrm4j.client.ShellCommand;
@@ -7,6 +8,9 @@ import io.cloudsoft.winrm4j.client.WinRmClient;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 
 import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class WinRmSession implements AutoCloseable {
   private static final int operationTimeout = 30 * 60 * 1000;
@@ -15,12 +19,19 @@ public class WinRmSession implements AutoCloseable {
   private final ShellCommand shell;
 
   public WinRmSession(WinRmSessionConfig config) {
+    Map<String, String> processedEnvironmentMap = new HashMap<>();
+    if (config.getEnvironment() != null) {
+      for (Entry<String, String> entry : config.getEnvironment().entrySet()) {
+        processedEnvironmentMap.put(entry.getKey(), escapeEnvValueSpecialChars(entry.getValue()));
+      }
+    }
+
     WinRmClient client = WinRmClient.builder(getEndpoint(config.getHostname(), config.getPort(), config.isUseSSL()))
                              .disableCertificateChecks(config.isSkipCertChecks())
                              .authenticationScheme(getAuthSchemeString(config.getAuthenticationScheme()))
                              .credentials(config.getDomain(), config.getUsername(), config.getPassword())
                              .workingDirectory(config.getWorkingDirectory())
-                             .environment(config.getEnvironment())
+                             .environment(processedEnvironmentMap)
                              .retriesForConnectionFailures(retryCount)
                              .operationTimeout(operationTimeout)
                              .build();
