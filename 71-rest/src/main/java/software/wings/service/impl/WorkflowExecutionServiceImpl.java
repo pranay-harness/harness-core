@@ -1329,7 +1329,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       stdParams.getWorkflowElement().setDisplayName(workflowExecution.getDisplayName());
       stdParams.getWorkflowElement().setReleaseNo(workflowExecution.getReleaseNo());
     }
-    stdParams.getWorkflowElement().setPipelineDeploymentUuid(workflowExecution.getPipelineExecutionId());
+    stdParams.getWorkflowElement().setPipelineDeploymentUuid(workflowExecution.getWorkflowType() == PIPELINE
+            ? workflowExecution.getUuid()
+            : workflowExecution.getPipelineExecutionId());
     lastGoodReleaseInfo(stdParams.getWorkflowElement(), workflowExecution);
     stdParams.getWorkflowElement().setDescription(workflow != null ? workflow.getDescription() : null);
 
