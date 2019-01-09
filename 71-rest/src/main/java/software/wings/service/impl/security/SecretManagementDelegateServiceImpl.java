@@ -70,8 +70,6 @@ import javax.crypto.spec.SecretKeySpec;
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(SecretManagementDelegateServiceImpl.class);
 
-  public static final int NUM_OF_RETRIES = 3;
-
   @Inject private TimeLimiter timeLimiter;
 
   private boolean isRetryable(Exception e) {

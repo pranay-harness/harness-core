@@ -14,6 +14,8 @@ import java.util.List;
  * Created by rsingh on 10/2/17.
  */
 public interface SecretManagementDelegateService {
+  int NUM_OF_RETRIES = 3;
+
   /**
    * Encrypt the value of the specified account against using KMS. The {@link EncryptedData} will be returned.
    */
