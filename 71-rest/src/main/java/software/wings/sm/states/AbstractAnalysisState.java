@@ -476,7 +476,7 @@ public abstract class AbstractAnalysisState extends State {
     }
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    if (isEmpty(workflowStandardParams.getInstances())) {
+    if (isAwsLambdaState(context) || isEmpty(workflowStandardParams.getInstances())) {
       getLogger().warn(
           "No test nodes found for state: {}, id: {} ", getStateType(), context.getStateExecutionInstanceId());
       return rv;
@@ -512,6 +512,11 @@ public abstract class AbstractAnalysisState extends State {
       }
     });
     return rv;
+  }
+
+  protected boolean isAwsLambdaState(ExecutionContext context) {
+    return getStateType().equals(StateType.CLOUD_WATCH.getName())
+        && getDeploymentType(context).equals(DeploymentType.AWS_LAMBDA);
   }
 
   protected String getPcfHostName(PcfInstanceElement pcfInstanceElement, boolean includePrevious) {

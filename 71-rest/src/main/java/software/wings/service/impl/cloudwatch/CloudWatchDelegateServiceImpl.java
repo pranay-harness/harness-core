@@ -28,6 +28,7 @@ import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
+import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -232,6 +233,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     delegateLogService.save(dataCollectionInfo.getAwsConfig().getAccountId(), apiCallLog);
     List<Datapoint> datapoints = metricStatistics.getDatapoints();
     String metricName = awsNameSpace == AwsNameSpace.EC2 ? "EC2 Metrics" : dimensionValue;
+    String hostNameForRecord = awsNameSpace == AwsNameSpace.LAMBDA ? VerificationConstants.LAMBDA_HOST_NAME : host;
     datapoints.forEach(datapoint -> {
       NewRelicMetricDataRecord newRelicMetricDataRecord =
           NewRelicMetricDataRecord.builder()
@@ -247,7 +249,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
               .dataCollectionMinute(getCollectionMinute(datapoint.getTimestamp().getTime(), analysisComparisonStrategy,
                   false, is247Task, startTime, dataCollectionInfo.getDataCollectionMinute(),
                   dataCollectionInfo.getCollectionTime(), host, hostStartTimeMap))
-              .host(host)
+              .host(hostNameForRecord)
               .groupName(groupName)
               .tag(awsNameSpace.name())
               .values(new HashMap<>())

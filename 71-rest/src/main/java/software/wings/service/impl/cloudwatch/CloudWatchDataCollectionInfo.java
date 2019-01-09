@@ -33,6 +33,8 @@ public class CloudWatchDataCollectionInfo {
 
   @Builder.Default private Map<String, String> hosts = new HashMap<>();
 
+  @Builder.Default private Map<String, List<CloudWatchMetric>> lambdaFunctionNames = new HashMap<>();
+
   @Builder.Default private Map<String, List<CloudWatchMetric>> loadBalancerMetrics = new HashMap<>();
   @Builder.Default private List<CloudWatchMetric> ec2Metrics = new ArrayList<>();
 }

@@ -19,6 +19,8 @@ import lombok.Builder;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.AwsLambdaContextElement;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask;
@@ -51,6 +53,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -69,6 +72,8 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   @SchemaIgnore @Builder.Default private Map<String, List<CloudWatchMetric>> loadBalancerMetrics = new HashMap<>();
 
   @SchemaIgnore @Builder.Default private List<CloudWatchMetric> ec2Metrics = new ArrayList<>();
+
+  @SchemaIgnore private boolean shouldDoLambdaVerification;
 
   /**
    * Instantiates a new state.
@@ -128,6 +133,15 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
+    Map<String, String> lambdaFunctions = new HashMap<>();
+    if (shouldDoLambdaVerification && getDeploymentType(context).equals(DeploymentType.AWS_LAMBDA)) {
+      AwsLambdaContextElement elements = context.getContextElement(ContextElementType.PARAM);
+      elements.getFunctionArns().forEach(contextElement -> {
+        lambdaFunctions.put(contextElement.getFunctionName(), contextElement.getFunctionArn());
+      });
+    }
+
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 
     SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
@@ -160,6 +174,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
             .region(getRegion())
             .loadBalancerMetrics(loadBalancerMetrics)
             .ec2Metrics(ec2Metrics)
+            .lambdaFunctionNames(createLambdaMetrics(lambdaFunctions.keySet(), cloudWatchMetrics))
             .build();
 
     analysisContext.getTestNodes().put(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
@@ -204,6 +219,16 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     return rv;
   }
 
+  private Map<String, List<CloudWatchMetric>> createLambdaMetrics(
+      Set<String> functionNames, Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics) {
+    if (isEmpty(functionNames)) {
+      return null;
+    }
+    Map<String, List<CloudWatchMetric>> lambdaMetrics = new HashMap<>();
+    functionNames.forEach(function -> { lambdaMetrics.put(function, cloudWatchMetrics.get(AwsNameSpace.LAMBDA)); });
+    return lambdaMetrics;
+  }
+
   @Attributes(required = false, title = "Expression for Host/Container name")
   public String getHostnameTemplate() {
     if (isEmpty(hostnameTemplate)) {
@@ -237,6 +262,14 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
 
   public List<CloudWatchMetric> getEc2Metrics() {
     return ec2Metrics;
+  }
+
+  public boolean getShouldDoLambdaVerification() {
+    return shouldDoLambdaVerification;
+  }
+
+  public void setShouldDoLambdaVerification(boolean shouldDoLambdaVerification) {
+    this.shouldDoLambdaVerification = shouldDoLambdaVerification;
   }
 
   public void setEc2Metrics(List<CloudWatchMetric> ec2Metrics) {
