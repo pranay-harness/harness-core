@@ -90,6 +90,16 @@ public class LogMLResource {
 
   @GET
   @Produces({"application/json", "application/v1+json"})
+  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK_BY_WORKFLOW)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<LogMLFeedbackRecord>> getFeedbackForDashboard(
+      @QueryParam("accountId") String accountId, @QueryParam("workflowId") String workflowId) {
+    return new RestResponse<>(analysisService.getMLFeedback(accountId, workflowId));
+  }
+
+  @GET
+  @Produces({"application/json", "application/v1+json"})
   @Path(LogAnalysisResource.LAST_EXECUTION_NODES)
   @Timed
   @ExceptionMetered
