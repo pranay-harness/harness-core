@@ -121,7 +121,7 @@ public abstract class OrchestrationWorkflow {
     if (isEmpty(userVariables)) {
       return false;
     }
-    return userVariables.stream().anyMatch(variable -> !variable.isFixed());
+    return userVariables.stream().anyMatch(variable -> variable.getEntityType() != null);
   }
 
   @JsonIgnore

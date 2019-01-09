@@ -52,7 +52,7 @@ public class WebhookParameters {
   public static final String GIT_LAB_PUSH_REPOSITORY_NAME = "${repository.name}";
   public static final String GIT_LAB_PUSH_REPOSITORY_ID = "${repository.id}";
 
-  public List<String> bitBucketPullRequestExpressions() {
+  public static List<String> bitBucketPullRequestExpressions() {
     List<String> prSuggestions = new ArrayList<>();
     prSuggestions.add(PULL_REQUEST_ID);
     prSuggestions.add(PULL_REQUEST_TITLE);
@@ -67,7 +67,7 @@ public class WebhookParameters {
     return prSuggestions;
   }
 
-  public List<String> gitHubPullRequestExpressions() {
+  public static List<String> gitHubPullRequestExpressions() {
     List<String> prSuggestions = new ArrayList<>();
     prSuggestions.add(GH_PR_ID);
     prSuggestions.add(GH_PR_NUMBER);
@@ -76,7 +76,7 @@ public class WebhookParameters {
     return prSuggestions;
   }
 
-  public List<String> gitHubPushEventExpressions() {
+  public static List<String> gitHubPushEventExpressions() {
     List<String> pushSuggestions = new ArrayList<>();
     pushSuggestions.add(GH_PUSH_REF);
     pushSuggestions.add(GH_PUSH_REF_BRANCH);
@@ -87,7 +87,7 @@ public class WebhookParameters {
     return pushSuggestions;
   }
 
-  public List<String> gitLabPushEventExpressions() {
+  public static List<String> gitLabPushEventExpressions() {
     List<String> pushSuggestions = new ArrayList<>();
     pushSuggestions.add(GIT_LAB_PUSH_REF);
     pushSuggestions.add(GIT_LAB_PUSH_REF_BRANCH);
@@ -96,9 +96,9 @@ public class WebhookParameters {
     pushSuggestions.add(GIT_LAB_PUSH_REPOSITORY_ID);
     return pushSuggestions;
   }
-  public List<String> suggestExpressions(WebhookSource webhookSource, WebhookEventType eventType) {
+  public static List<String> suggestExpressions(WebhookSource webhookSource, WebhookEventType eventType) {
     if (webhookSource == null || eventType == null) {
-      return bitBucketPullRequestExpressions();
+      return new ArrayList<>();
     }
     if (WebhookSource.BITBUCKET.equals(webhookSource)) {
       if (WebhookEventType.PULL_REQUEST.equals(eventType)) {

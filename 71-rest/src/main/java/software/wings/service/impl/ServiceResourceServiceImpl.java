@@ -735,6 +735,29 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         != null;
   }
 
+  @Override
+  public List<String> fetchServiceNamesByUuids(String appId, List<String> serviceUuids) {
+    if (isNotEmpty(serviceUuids)) {
+      List<Service> services = wingsPersistence.createQuery(Service.class)
+                                   .project(Service.NAME_KEY, true)
+                                   .project(Service.APP_ID_KEY, true)
+                                   .filter("appId", appId)
+                                   .field("uuid")
+                                   .in(serviceUuids)
+                                   .asList();
+
+      List<String> orderedServices = new ArrayList<>();
+      Map<String, String> servicesMap = services.stream().collect(Collectors.toMap(Service::getUuid, Service::getName));
+      for (String serviceId : serviceUuids) {
+        if (servicesMap.containsKey(serviceId)) {
+          orderedServices.add(servicesMap.get(serviceId));
+        }
+      }
+      return orderedServices;
+    }
+    return new ArrayList<>();
+  }
+
   private Service deleteCommand(String appId, String serviceId, String commandId, boolean syncFromGit) {
     Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("service", service);

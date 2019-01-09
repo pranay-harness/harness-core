@@ -452,4 +452,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   String fetchServiceName(@NotEmpty String appId, @NotEmpty String serviceId);
 
   boolean exists(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  List<String> fetchServiceNamesByUuids(String appId, List<String> serviceUuids);
 }

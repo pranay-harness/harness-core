@@ -1974,15 +1974,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return requiredEntityTypes;
     }
 
-    String serviceId = workflowPhase.getServiceId();
-    if (isNotEmpty(workflowVaraibles)) {
-      // TODO: this check has to be removed once backward compatible change implemented
-      if (workflowPhase.checkServiceTemplatized()) {
-        String serviceTemplatizedName = workflowPhase.fetchServiceTemplatizedName();
-        if (serviceTemplatizedName != null) {
-          serviceId = workflowVaraibles.get(serviceTemplatizedName);
-        }
+    String serviceId = null;
+    if (workflowPhase.checkServiceTemplatized()) {
+      String serviceTemplatizedName = workflowPhase.fetchServiceTemplatizedName();
+      if (serviceTemplatizedName != null) {
+        serviceId = isEmpty(workflowVaraibles) ? null : workflowVaraibles.get(serviceTemplatizedName);
       }
+    } else {
+      serviceId = workflowPhase.getServiceId();
     }
 
     if (serviceId != null) {
@@ -2031,12 +2030,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if ("COMMAND".equals(step.getType())) {
         if (serviceId != null) {
           boolean serviceExists = serviceResourceService.exists(appId, serviceId);
-          if (!serviceExists) { // TODO: This check has to be removed once UI migrated to new API
-            artifactNeeded = true;
-          } else {
+          if (serviceExists) {
             ServiceCommand command = serviceResourceService.getCommandByName(
                 appId, serviceId, (String) step.getProperties().get("commandName"));
-
             if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
               artifactNeeded = true;
               break;
@@ -2073,20 +2069,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         break;
       } else if (workflowPhase != null && HELM.equals(workflowPhase.getDeploymentType())
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
-        String infraMappingId = workflowPhase.getInfraMappingId();
-        if (isNotEmpty(workflowVaraibles)) {
-          if (workflowPhase.checkInfraTemplatized()) {
-            String infraTemplatizedName = workflowPhase.fetchInfraMappingTemplatizedName();
-            if (infraTemplatizedName != null) {
-              infraMappingId = workflowVaraibles.get(infraTemplatizedName);
-            }
+        String infraMappingId = null;
+        if (workflowPhase.checkInfraTemplatized()) {
+          String infraTemplatizedName = workflowPhase.fetchInfraMappingTemplatizedName();
+          if (infraTemplatizedName != null) {
+            infraMappingId = isEmpty(workflowVaraibles) ? null : workflowVaraibles.get(infraTemplatizedName);
           }
+        } else {
+          infraMappingId = workflowPhase.getInfraMappingId();
         }
-        InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-        if (infrastructureMapping != null) {
-          if (serviceResourceService.checkArtifactNeededForHelm(appId, infrastructureMapping.getServiceTemplateId())) {
-            artifactNeeded = true;
-            break;
+        if (infraMappingId != null) {
+          InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+          if (infrastructureMapping != null) {
+            if (serviceResourceService.checkArtifactNeededForHelm(
+                    appId, infrastructureMapping.getServiceTemplateId())) {
+              artifactNeeded = true;
+              break;
+            }
           }
         }
       }
