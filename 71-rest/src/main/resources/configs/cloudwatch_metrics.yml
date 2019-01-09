@@ -133,4 +133,31 @@ ELB:
       metricType: THROUGHPUT
       enabledDefault: true
 
+LAMBDA:
+    - metricName: Invocations
+      displayName: Invocations Sum
+      dimension: FunctionName
+      dimensionDisplay: Lambda Function Name
+      metricType: THROUGHPUT
+      enabledDefault: true
 
+    - metricName: Errors
+      displayName: Errors Sum
+      dimension: FunctionName
+      dimensionDisplay: Lambda Function Name
+      metricType: ERROR
+      enabledDefault: true
+
+    - metricName: Throttles
+      displayName: Throttles Sum
+      dimension: FunctionName
+      dimensionDisplay: Lambda Function Name
+      metricType: ERROR
+      enabledDefault: true
+
+    - metricName: Duration
+      displayName: Duration Average
+      dimension: FunctionName
+      dimensionDisplay: Lambda Function Name
+      metricType: THROUGHPUT
+      enabledDefault: true

@@ -41,6 +41,7 @@ public class VerificationConstants {
   public static final String ANALYSIS_STATE_GET_EXP_ANALYSIS_INFO_URL = "/get-exp-analysis-info";
   public static final String ANALYSIS_STATE_RE_QUEUE_TASK = "/experimentalTask";
   public static final String LEARNING_EXP_URL = "learning-exp";
+  public static final String LAMBDA_HOST_NAME = "LAMBDA_HOST";
 
   public static final Double HIGH_RISK_CUTOFF = 0.5;
   public static final Double MEDIUM_RISK_CUTOFF = 0.3;

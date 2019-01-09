@@ -5,7 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
-import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
+import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -95,14 +97,17 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       }
 
       Map<String, String> canaryNewHostNames = analysisContext.getTestNodes();
-      if (isEmpty(canaryNewHostNames)) {
+      if (isAwsLambdaState(context)) {
+        canaryNewHostNames.put(LAMBDA_HOST_NAME, DEFAULT_GROUP_NAME);
+      }
+      if (isEmpty(canaryNewHostNames) && !isAwsLambdaState(context)) {
         getLogger().warn(
             "id: {}, Could not find test nodes to compare the data", context.getStateExecutionInstanceId());
         return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Could not find nodes to analyze!");
       }
 
       Map<String, String> lastExecutionNodes = analysisContext.getControlNodes();
-      if (isEmpty(lastExecutionNodes)) {
+      if (isEmpty(lastExecutionNodes) && !isAwsLambdaState(context)) {
         if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
           getLogger().info("id: {}, No nodes with older version found to compare the logs. Skipping analysis",
               context.getStateExecutionInstanceId());
@@ -145,6 +150,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         }
         analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
       }
+
       int timeDurationInt = Integer.parseInt(getTimeDuration());
       executionData =
           MetricAnalysisExecutionData.builder()
@@ -164,6 +170,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       Map<String, String> hostsToCollect = new HashMap<>();
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
         hostsToCollect.putAll(canaryNewHostNames);
+
       } else {
         hostsToCollect.putAll(canaryNewHostNames);
         hostsToCollect.putAll(lastExecutionNodes);

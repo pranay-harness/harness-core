@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
@@ -189,27 +190,40 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                       String.valueOf(dataCollectionInfo.getAwsConfig().getSecretKey()))))
               .build();
 
-      dataCollectionInfo.getLoadBalancerMetrics().forEach(
-          (loadBalancerName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
-            callables.add(
-                ()
-                    -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.ELB, cloudWatchClient,
-                        cloudWatchMetric, loadBalancerName, DEFAULT_GROUP_NAME, dataCollectionInfo, getAppId(),
-                        endTimeForCollection - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES), endTimeForCollection,
-                        createApiCallLog(dataCollectionInfo.getStateExecutionId()), is247Task, hostStartTimeMap));
-          }));
+      if (isNotEmpty(dataCollectionInfo.getLambdaFunctionNames())) {
+        dataCollectionInfo.getLambdaFunctionNames().forEach(
+            (functionName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
+              callables.add(
+                  ()
+                      -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.LAMBDA, cloudWatchClient,
+                          cloudWatchMetric, functionName, DEFAULT_GROUP_NAME, dataCollectionInfo, getAppId(),
+                          System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
+                          System.currentTimeMillis(), createApiCallLog(dataCollectionInfo.getStateExecutionId()),
+                          is247Task, hostStartTimeMap));
+            }));
+      } else {
+        dataCollectionInfo.getLoadBalancerMetrics().forEach(
+            (loadBalancerName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
+              callables.add(
+                  ()
+                      -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.ELB, cloudWatchClient,
+                          cloudWatchMetric, loadBalancerName, DEFAULT_GROUP_NAME, dataCollectionInfo, getAppId(),
+                          endTimeForCollection - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
+                          endTimeForCollection, createApiCallLog(dataCollectionInfo.getStateExecutionId()), is247Task,
+                          hostStartTimeMap));
+            }));
 
-      dataCollectionInfo.getHosts().forEach(
-          (host, groupName)
-              -> dataCollectionInfo.getEc2Metrics().forEach(cloudWatchMetric
-                  -> callables.add(
-                      ()
-                          -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient,
-                              cloudWatchMetric, host, groupName, dataCollectionInfo, getAppId(),
-                              endTimeForCollection - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
-                              endTimeForCollection, createApiCallLog(dataCollectionInfo.getStateExecutionId()),
-                              is247Task, hostStartTimeMap))));
-
+        dataCollectionInfo.getHosts().forEach(
+            (host, groupName)
+                -> dataCollectionInfo.getEc2Metrics().forEach(cloudWatchMetric
+                    -> callables.add(
+                        ()
+                            -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient,
+                                cloudWatchMetric, host, groupName, dataCollectionInfo, getAppId(),
+                                endTimeForCollection - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
+                                endTimeForCollection, createApiCallLog(dataCollectionInfo.getStateExecutionId()),
+                                is247Task, hostStartTimeMap))));
+      }
       logger.info("fetching cloud watch metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
           dataCollectionMinute);
