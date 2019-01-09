@@ -2027,6 +2027,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     boolean artifactNeeded = false;
 
     for (GraphNode step : phaseStep.getSteps()) {
+      if (step.getTemplateUuid() != null) {
+        if (isNotEmpty(step.getTemplateVariables())) {
+          List<String> values = step.getTemplateVariables()
+                                    .stream()
+                                    .filter(variable -> isNotEmpty(variable.getValue()))
+                                    .map(Variable::getValue)
+                                    .collect(toList());
+          if (isNotEmpty(values)) {
+            if (isArtifactNeeded(values.toArray())) {
+              artifactNeeded = true;
+              break;
+            }
+          }
+        }
+      }
+
       if ("COMMAND".equals(step.getType())) {
         if (serviceId != null) {
           boolean serviceExists = serviceResourceService.exists(appId, serviceId);

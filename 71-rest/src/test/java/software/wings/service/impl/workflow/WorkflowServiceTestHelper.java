@@ -765,9 +765,22 @@ public class WorkflowServiceTestHelper {
     return GraphNode.builder()
         .type(StateType.HTTP.name())
         .templateUuid(TEMPLATE_ID)
+        .templateVersion(LATEST_TAG)
         .properties(constructHttpProperties())
         .templateVariables(
-            asList(aVariable().withName("url").withValue("https://harness.io").build(), aVariable().build()))
+            asList(aVariable().withName("url").withValue("https://harness.io?q=${artifact.name}").build(),
+                aVariable().build()))
+        .build();
+  }
+
+  public static GraphNode constructShellScriptTemplateStep() {
+    return GraphNode.builder()
+        .type(StateType.SHELL_SCRIPT.name())
+        .templateUuid(TEMPLATE_ID)
+        .properties(constructShellScriptProperties())
+        .templateVersion(LATEST_TAG)
+        .templateVariables(
+            asList(aVariable().withName("name").withValue("${artifact.name}").build(), aVariable().build()))
         .build();
   }
 
@@ -776,6 +789,14 @@ public class WorkflowServiceTestHelper {
     properties.put("url", "${url}");
     properties.put("method", "GET");
     properties.put("assertion", "${assertion}");
+    return properties;
+  }
+
+  private static Map<String, Object> constructShellScriptProperties() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("scriptType", "BASH");
+    properties.put("scriptString", "echo \"Executing\" ${name}\n export A=\"aaa\"");
+    properties.put("outputVars", "A");
     return properties;
   }
 
@@ -799,7 +820,7 @@ public class WorkflowServiceTestHelper {
     assertThat(updatedPreStep.getTemplateVariables())
         .isNotEmpty()
         .extracting(Variable::getValue)
-        .contains("https://harness.io");
+        .contains("https://harness.io?q=${artifact.name}");
     assertThat(updatedPreStep.getTemplateVariables())
         .isNotEmpty()
         .extracting(Variable::getValue)
@@ -876,35 +897,31 @@ public class WorkflowServiceTestHelper {
     assertThat(updatedPhaseNode.getTemplateVariables())
         .isNotEmpty()
         .extracting(Variable::getValue)
-        .contains("https://harness.io");
+        .contains("https://harness.io?q=${artifact.name}");
     assertThat(updatedPhaseNode.getTemplateVariables())
         .isNotEmpty()
         .extracting(Variable::getValue)
         .doesNotContain("200 OK");
   }
 
-  public static void assertWorkflowPhaseTemplateStep(
-      GraphNode preDeploymentStep, GraphNode postDeploymentStep, GraphNode phaseNode) {
+  public static void assertWorkflowPhaseTemplateStep(GraphNode phaseNode) {
     assertThat(phaseNode).isNotNull();
     assertThat(phaseNode.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
+  }
+
+  public static void assertPostDeployTemplateStep(GraphNode postDeploymentStep) {
+    assertThat(postDeploymentStep).isNotNull();
+    assertThat(postDeploymentStep.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
     assertThat(postDeploymentStep.getTemplateVersion()).isNotEmpty().isEqualTo(LATEST_TAG);
+  }
+
+  public static void assertPreDeployTemplateStep(GraphNode preDeploymentStep) {
+    assertThat(preDeploymentStep).isNotNull();
     assertThat(preDeploymentStep.getTemplateVariables()).isNotEmpty().extracting(Variable::getName).contains("url");
     assertThat(preDeploymentStep.getTemplateVariables())
         .isNotEmpty()
         .extracting(Variable::getValue)
-        .contains("https://harness.io");
+        .contains("https://harness.io?q=${artifact.name}");
     assertThat(preDeploymentStep.getProperties()).isNotEmpty().containsKeys("url", "method", "assertion");
-  }
-
-  public static void assertPostDeployTemplateStep(GraphNode preDeploymentStep, GraphNode postDeploymentStep) {
-    assertThat(postDeploymentStep).isNotNull();
-    assertThat(postDeploymentStep.getTemplateUuid()).isNotEmpty().isEqualTo(TEMPLATE_ID);
-    assertThat(postDeploymentStep.getTemplateVersion()).isNotEmpty().isEqualTo(LATEST_TAG);
-    assertThat(preDeploymentStep.getTemplateVariables()).isNotEmpty().extracting(Variable::getName).contains("url");
-    assertThat(preDeploymentStep.getProperties()).isNotEmpty().containsKeys("url", "method", "assertion");
-  }
-
-  public static void assertPreDeployTemplateStep(GraphNode preDeploymentStep) {
-    assertWorkflowPhaseTemplateStep(preDeploymentStep, preDeploymentStep, preDeploymentStep);
   }
 }

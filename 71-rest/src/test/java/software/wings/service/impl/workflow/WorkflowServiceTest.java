@@ -112,6 +112,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructPhysicalInfraMapping;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructPipeline;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructServiceCommand;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructShellScriptTemplateStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructTemplatizedCanaryWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructWorkflowWithParam;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getEnvTemplateExpression;
@@ -224,6 +225,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.stats.CloneMetadata;
+import software.wings.beans.template.TemplateType;
 import software.wings.common.Constants;
 import software.wings.common.TemplateConstants;
 import software.wings.dl.WingsPersistence;
@@ -3012,15 +3014,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PhaseStep postPhaseStep = canaryOrchestrationWorkflow.getPostDeploymentSteps();
     assertThat(postPhaseStep).isNotNull();
     GraphNode postDeploymentStep = phaseStep.getSteps().stream().findFirst().orElse(null);
-    assertPostDeployTemplateStep(preDeploymentStep, postDeploymentStep);
+    assertPostDeployTemplateStep(postDeploymentStep);
 
     WorkflowPhase workflowPhase = canaryOrchestrationWorkflow.getWorkflowPhases().get(0);
     assertThat(workflowPhase.getPhaseSteps()).isNotEmpty();
 
     PhaseStep phaseStep1 = workflowPhase.getPhaseSteps().stream().findFirst().orElse(null);
     assertThat(phaseStep1).isNotNull();
-    GraphNode phaseNode = phaseStep.getSteps().stream().findFirst().orElse(null);
-    assertWorkflowPhaseTemplateStep(preDeploymentStep, postDeploymentStep, phaseNode);
+    GraphNode phaseNode = phaseStep1.getSteps().stream().findFirst().orElse(null);
+    assertWorkflowPhaseTemplateStep(phaseNode);
   }
 
   @Test
@@ -3279,5 +3281,37 @@ public class WorkflowServiceTest extends WingsBaseTest {
         workflowService.obtainWorkflowNamesReferencedByServiceInfrastructure(workflow.getAppId(), INFRA_MAPPING_ID))
         .isNotEmpty()
         .contains(workflow.getName());
+  }
+
+  @Test
+  public void shouldGetDeploymentMetadataForLinkedHttpWorkflow() {
+    Workflow workflow = createLinkedWorkflow(TemplateType.HTTP);
+    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null)
+                   .getArtifactRequiredServiceIds()
+                   .contains(SERVICE_ID));
+  }
+
+  @Test
+  public void shouldGetDeploymentMetadataForLinkedShellScriptWorkflow() {
+    Workflow workflow = createLinkedWorkflow(TemplateType.SHELL_SCRIPT);
+    assertThat(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null)
+                   .getArtifactRequiredServiceIds()
+                   .contains(SERVICE_ID));
+  }
+
+  private Workflow createLinkedWorkflow(TemplateType templateType) {
+    GraphNode templateStep = null;
+
+    if (templateType.equals(TemplateType.HTTP)) {
+      templateStep = constructHttpTemplateStep();
+    } else if (templateType.equals(TemplateType.SHELL_SCRIPT)) {
+      templateStep = constructShellScriptTemplateStep();
+    }
+    when(templateService.constructEntityFromTemplate(TEMPLATE_ID, TemplateConstants.LATEST_TAG))
+        .thenReturn(templateStep);
+
+    Workflow workflow = constructLinkedTemplate(templateStep);
+
+    return workflowService.createWorkflow(workflow);
   }
 }
