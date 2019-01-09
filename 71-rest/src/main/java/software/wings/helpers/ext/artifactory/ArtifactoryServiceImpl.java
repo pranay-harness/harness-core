@@ -15,12 +15,15 @@ import static org.jfrog.artifactory.client.ArtifactoryRequest.Method.POST;
 import static org.jfrog.artifactory.client.model.PackageType.docker;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
+import static software.wings.common.Constants.IMAGE;
+import static software.wings.common.Constants.TAG;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import groovyx.net.http.HttpResponseException;
+import io.harness.artifact.ArtifactUtilities;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
@@ -41,6 +44,7 @@ import org.jfrog.artifactory.client.model.Repository;
 import org.jfrog.artifactory.client.model.repository.settings.RepositorySettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.AlphanumComparator;
 import software.wings.common.Constants;
@@ -188,7 +192,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   @Override
   public List<BuildDetails> getBuilds(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoKey, String imageName, int maxNumberOfBuilds) {
+      ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds) {
+    String repoKey = artifactStreamAttributes.getJobName();
+    String imageName = artifactStreamAttributes.getImageName();
     logger.info("Retrieving docker tags for repoKey {} imageName {} ", repoKey, imageName);
     List<BuildDetails> buildDetails = new ArrayList<>();
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
@@ -205,9 +211,18 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           return buildDetails;
         }
         String tagUrl = getBaseUrl(artifactoryConfig) + repoKey + "/" + imageName + "/";
-        buildDetails = tags.stream()
-                           .map(tag -> aBuildDetails().withNumber(tag).withBuildUrl(tagUrl + tag).build())
-                           .collect(toList());
+        String repoName = ArtifactUtilities.getArtifactoryRepositoryName(artifactoryConfig.getArtifactoryUrl(),
+            artifactStreamAttributes.getArtifactoryDockerRepositoryServer(), artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getImageName());
+        buildDetails =
+            tags.stream()
+                .map(tag -> {
+                  Map<String, String> metadata = new HashMap();
+                  metadata.put(IMAGE, repoName + ":" + tag);
+                  metadata.put(TAG, tag);
+                  return aBuildDetails().withNumber(tag).withBuildUrl(tagUrl + tag).withMetadata(metadata).build();
+                })
+                .collect(toList());
         logger.info(
             "Retrieving docker tags for repoKey {} imageName {} success. Retrieved tags {}", repoKey, imageName, tags);
       }

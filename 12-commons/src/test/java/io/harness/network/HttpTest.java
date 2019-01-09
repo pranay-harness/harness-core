@@ -49,6 +49,16 @@ public class HttpTest {
   }
 
   @Test
+  public void testGetDomainWithPort() {
+    assertEquals("localhost.com", Http.getDomainWithPort("http://localhost.com/temp"));
+    assertEquals("localhost.com", Http.getDomainWithPort("http://localhost.com/"));
+    assertEquals("localhost.com", Http.getDomainWithPort("https://localhost.com/temp"));
+    assertEquals("localhost.com:5000", Http.getDomainWithPort("http://localhost.com:5000/temp"));
+    assertEquals("localhost.com:8080", Http.getDomainWithPort("localhost.com:8080/temp"));
+    assertEquals("localhost.com:8080", Http.getDomainWithPort("localhost.com:8080"));
+  }
+
+  @Test
   public void concurrencyTest() {
     Concurrent.test(5, i -> { final OkHttpClient client = Http.getUnsafeOkHttpClient("https://harness.io"); });
   }

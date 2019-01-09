@@ -82,6 +82,7 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
+import software.wings.service.impl.artifact.ArtifactCollectionUtil;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -125,6 +126,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Mock private SettingsService settingsService;
   @Mock private GitConfigHelperService gitConfigHelperService;
+  @Mock private ArtifactCollectionUtil artifactCollectionUtil;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
 
@@ -199,7 +201,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
         .thenReturn(aWorkflowExecution().build());
     when(containerDeploymentHelper.getContainerServiceParams(any(), any(), any()))
         .thenReturn(ContainerServiceParams.builder().build());
-    when(containerDeploymentHelper.fetchArtifactDetails(any(), anyString(), any()))
+    when(artifactCollectionUtil.fetchContainerImageDetails(any(), anyString(), any()))
         .thenReturn(ImageDetails.builder().build());
 
     when(delegateService.executeTask(any()))

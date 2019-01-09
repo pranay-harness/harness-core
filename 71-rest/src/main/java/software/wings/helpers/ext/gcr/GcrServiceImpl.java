@@ -6,6 +6,8 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.common.Constants.IMAGE;
+import static software.wings.common.Constants.TAG;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -30,6 +32,7 @@ import software.wings.service.impl.GcpHelperService;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -78,7 +81,7 @@ public class GcrServiceImpl implements GcrService {
               .listImageTags(getBasicAuthHeader(gcpConfig, encryptionDetails), imageName)
               .execute();
       checkValidImage(imageName, response);
-      return processBuildResponse(response.body());
+      return processBuildResponse(artifactStreamAttributes, response.body());
     } catch (IOException e) {
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", Misc.getMessage(e));
     }
@@ -91,11 +94,18 @@ public class GcrServiceImpl implements GcrService {
     }
   }
 
-  private List<BuildDetails> processBuildResponse(GcrImageTagResponse dockerImageTagResponse) {
+  private List<BuildDetails> processBuildResponse(
+      ArtifactStreamAttributes artifactStreamAttributes, GcrImageTagResponse dockerImageTagResponse) {
     if (dockerImageTagResponse != null && dockerImageTagResponse.getTags() != null) {
+      String imageName = artifactStreamAttributes.getRegistryHostName() + "/" + artifactStreamAttributes.getImageName();
       return dockerImageTagResponse.getTags()
           .stream()
-          .map(tag -> aBuildDetails().withNumber(tag).build())
+          .map(tag -> {
+            Map<String, String> metadata = new HashMap();
+            metadata.put(IMAGE, imageName + ":" + tag);
+            metadata.put(TAG, tag);
+            return aBuildDetails().withNumber(tag).withMetadata(metadata).build();
+          })
           .collect(toList());
     }
     return emptyList();

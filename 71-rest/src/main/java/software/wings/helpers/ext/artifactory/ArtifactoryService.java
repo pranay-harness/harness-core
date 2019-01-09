@@ -2,6 +2,7 @@ package software.wings.helpers.ext.artifactory;
 
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -15,17 +16,8 @@ import java.util.Map;
  * Created by sgurubelli on 6/27/17.
  */
 public interface ArtifactoryService {
-  /**
-   * Gets docker images
-   *
-   * @param artifactoryConfig  the artifactory config
-   * @param repoKey     the repo key
-   * @param imageName the image name
-   * @param maxNumberOfBuilds the max number of builds
-   * @return the builds
-   */
   List<BuildDetails> getBuilds(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoKey, String imageName, int maxNumberOfBuilds);
+      ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds);
 
   /**
    *

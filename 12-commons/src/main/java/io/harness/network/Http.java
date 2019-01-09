@@ -2,6 +2,7 @@ package io.harness.network;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import com.google.common.base.Splitter;
 
@@ -26,6 +27,8 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -236,24 +239,34 @@ public class Http {
   }
 
   public static String getDomain(String url) {
-    String domain = url;
-    if (domain.toLowerCase().startsWith("http://")) {
-      domain = domain.substring(7);
-    } else if (domain.toLowerCase().startsWith("https://")) {
-      domain = domain.substring(8);
+    try {
+      URI uri = getNormalizedURI(url);
+      return uri.getHost();
+    } catch (Exception e) {
+      logger.warn("Bad URI syntax", e);
+      return null;
     }
+  }
 
-    int index = domain.indexOf('/');
-    if (index != -1) {
-      domain = domain.substring(0, index);
+  public static String getDomainWithPort(String url) {
+    try {
+      URI uri = getNormalizedURI(url);
+      String hostName = uri.getHost();
+      if (isNotEmpty(hostName) && uri.getPort() > 0) {
+        hostName += ":" + uri.getPort();
+      }
+      return hostName;
+    } catch (Exception e) {
+      logger.warn("Bad URI syntax", e);
+      return null;
     }
+  }
 
-    index = domain.indexOf(':');
-    if (index != -1) {
-      domain = domain.substring(0, index);
+  private static URI getNormalizedURI(String url) throws URISyntaxException {
+    if (!startsWith(url, "http")) {
+      return new URI("http://" + url);
     }
-
-    return domain;
+    return new URI(url);
   }
 
   private static boolean checkPattern(String pattern, String domain) {

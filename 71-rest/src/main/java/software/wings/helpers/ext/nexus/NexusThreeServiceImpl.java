@@ -3,6 +3,8 @@ package software.wings.helpers.ext.nexus;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.common.Constants.IMAGE;
+import static software.wings.common.Constants.TAG;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
@@ -11,11 +13,13 @@ import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.artifact.ArtifactUtilities;
 import okhttp3.Credentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.nexus.model.DockerImageResponse;
@@ -28,6 +32,7 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -101,7 +106,11 @@ public class NexusThreeServiceImpl {
   }
 
   public List<BuildDetails> getDockerTags(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoKey, String imageName) throws IOException {
+      ArtifactStreamAttributes artifactStreamAttributes) throws IOException {
+    String repoKey = artifactStreamAttributes.getJobName();
+    String imageName = artifactStreamAttributes.getImageName();
+    String repoName = ArtifactUtilities.getNexusRepositoryName(nexusConfig.getNexusUrl(),
+        artifactStreamAttributes.getNexusDockerPort(), artifactStreamAttributes.getImageName());
     logger.info("Retrieving docker tags for repository {} imageName {} ", repoKey, imageName);
     List<BuildDetails> buildDetails = new ArrayList<>();
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
@@ -112,7 +121,16 @@ public class NexusThreeServiceImpl {
             .execute();
     if (isSuccessful(response)) {
       if (response.body() != null && response.body().getTags() != null) {
-        return response.body().getTags().stream().map(tag -> aBuildDetails().withNumber(tag).build()).collect(toList());
+        return response.body()
+            .getTags()
+            .stream()
+            .map(tag -> {
+              Map<String, String> metadata = new HashMap();
+              metadata.put(IMAGE, repoName + ":" + tag);
+              metadata.put(TAG, tag);
+              return aBuildDetails().withNumber(tag).withMetadata(metadata).build();
+            })
+            .collect(toList());
       }
     } else {
       logger.warn("Failed to fetch the repositories as request is not success");

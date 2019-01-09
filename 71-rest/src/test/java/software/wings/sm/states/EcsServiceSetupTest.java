@@ -99,6 +99,7 @@ import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
+import software.wings.service.impl.artifact.ArtifactCollectionUtil;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -141,6 +142,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Mock private AwsCommandHelper mockAwsCommandHelper;
+  @Mock private ArtifactCollectionUtil artifactCollectionUtil;
 
   @InjectMocks private EcsServiceSetup ecsServiceSetup = new EcsServiceSetup("name");
 
@@ -279,7 +281,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Test
   public void shouldExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
-    when(containerDeploymentHelper.fetchArtifactDetails(artifact, app.getUuid(), context.getWorkflowExecutionId()))
+    when(artifactCollectionUtil.fetchContainerImageDetails(artifact, app.getUuid(), context.getWorkflowExecutionId()))
         .thenReturn(ImageDetails.builder().name(artifactStream.getSourceName()).tag(artifact.getBuildNo()).build());
 
     ecsServiceSetup.execute(context);

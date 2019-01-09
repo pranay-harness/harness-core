@@ -2,6 +2,7 @@ package software.wings.helpers.ext.nexus;
 
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -105,13 +106,12 @@ public interface NexusService {
    *
    * @param nexusConfig
    * @param encryptionDetails
-   * @param repoKey
-   * @param imageName
+   * @param artifactStreamAttributes
    * @param maxNumberOfBuilds
    * @return
    */
-  List<BuildDetails> getBuilds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoKey,
-      String imageName, int maxNumberOfBuilds);
+  List<BuildDetails> getBuilds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds);
 
   /**
    *  Checks if it is connectable and valid credentials

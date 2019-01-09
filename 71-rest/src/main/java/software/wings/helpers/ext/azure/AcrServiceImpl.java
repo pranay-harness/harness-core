@@ -4,6 +4,8 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
+import static software.wings.common.Constants.IMAGE;
+import static software.wings.common.Constants.TAG;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
@@ -18,7 +20,9 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class AcrServiceImpl implements AcrService {
@@ -45,11 +49,21 @@ public class AcrServiceImpl implements AcrService {
   public List<BuildDetails> getBuilds(AzureConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds) {
     try {
+      String loginServer = azureHelperService.getLoginServerForRegistry(config, encryptionDetails,
+          artifactStreamAttributes.getSubscriptionId(), artifactStreamAttributes.getRegistryName());
+
+      String repository = loginServer + "/" + artifactStreamAttributes.getRepositoryName();
+
       return azureHelperService
           .listRepositoryTags(config, encryptionDetails, artifactStreamAttributes.getSubscriptionId(),
               artifactStreamAttributes.getRegistryName(), artifactStreamAttributes.getRepositoryName())
           .stream()
-          .map(tag -> aBuildDetails().withNumber(tag).build())
+          .map(tag -> {
+            Map<String, String> metadata = new HashMap();
+            metadata.put(IMAGE, repository + ":" + tag);
+            metadata.put(TAG, tag);
+            return aBuildDetails().withNumber(tag).withMetadata(metadata).build();
+          })
           .collect(toList());
     } catch (Exception e) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));

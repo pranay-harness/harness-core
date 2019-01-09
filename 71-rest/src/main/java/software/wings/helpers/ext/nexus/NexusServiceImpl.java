@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -230,12 +231,13 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public List<BuildDetails> getBuilds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoKey, String imageName, int maxNumberOfBuilds) {
+      ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds) {
     try {
-      return nexusThreeService.getDockerTags(nexusConfig, encryptionDetails, repoKey, imageName);
+      return nexusThreeService.getDockerTags(nexusConfig, encryptionDetails, artifactStreamAttributes);
     } catch (IOException e) {
       logger.error(format("Error occurred while retrieving tags from Nexus server %s for repository %s under image %s",
-                       nexusConfig.getNexusUrl(), repoKey, imageName),
+                       nexusConfig.getNexusUrl(), artifactStreamAttributes.getJobName(),
+                       artifactStreamAttributes.getImageName()),
           e);
       handleException(e);
     }

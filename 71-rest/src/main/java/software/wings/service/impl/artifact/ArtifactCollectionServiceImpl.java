@@ -24,7 +24,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.common.Constants.BUILD_NO;
-import static software.wings.service.impl.artifact.ArtifactCollectionUtil.getArtifact;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -72,6 +71,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   @Inject private ArtifactService artifactService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ArtifactCollectionUtil artifactCollectionUtil;
 
   public static final Duration timeout = Duration.ofMinutes(10);
 
@@ -84,7 +84,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     if (artifactStream == null) {
       throw new WingsException("Artifact Stream was deleted", USER);
     }
-    return artifactService.create(getArtifact(artifactStream, buildDetails));
+    return artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails));
   }
 
   @Override
@@ -123,7 +123,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
           logger.info("New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. "
                   + "Add entry in Artifact collection",
               buildDetails1.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
-          Artifact newArtifact = getArtifact(artifactStream, buildDetails1);
+          Artifact newArtifact = artifactCollectionUtil.getArtifact(artifactStream, buildDetails1);
           newArtifacts.add(artifactService.create(newArtifact));
         }
       });
@@ -142,7 +142,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     if (lastSuccessfulBuild != null && parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
       logger.info("Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",
           buildNo, lastSuccessfulBuild.getNumber(), artifactStream.getUuid());
-      newArtifacts.add(artifactService.create(getArtifact(artifactStream, lastSuccessfulBuild)));
+      newArtifacts.add(artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, lastSuccessfulBuild)));
     }
   }
 
@@ -170,7 +170,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
       Set<String> newArtifactPaths = getNewArtifactPaths(artifactStream, builds);
       builds.forEach(buildDetails -> {
         if (newArtifactPaths.contains(buildDetails.getArtifactPath())) {
-          newArtifacts.add(artifactService.create(getArtifact(artifactStream, buildDetails)));
+          newArtifacts.add(artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails)));
         }
       });
     }
