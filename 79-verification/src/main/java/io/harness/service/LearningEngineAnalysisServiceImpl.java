@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -143,11 +144,15 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   }
 
   @Override
-  public LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(ServiceApiVersion serviceApiVersion) {
+  public LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(
+      ServiceApiVersion serviceApiVersion, Optional<Boolean> is24x7Task) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                                   .filter("version", serviceApiVersion)
                                                   .field("retry")
                                                   .lessThanOrEq(LearningEngineAnalysisTask.RETRIES);
+    if (is24x7Task.isPresent()) {
+      query.filter("is24x7Task", is24x7Task.get());
+    }
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
             query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
