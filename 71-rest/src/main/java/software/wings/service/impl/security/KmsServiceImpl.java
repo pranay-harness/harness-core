@@ -11,8 +11,8 @@ import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
-import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
+import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

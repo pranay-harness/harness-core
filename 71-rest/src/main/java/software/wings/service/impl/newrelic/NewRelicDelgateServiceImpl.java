@@ -9,7 +9,7 @@ import static java.time.Duration.ofMillis;
 import static software.wings.common.Constants.PAYLOAD;
 import static software.wings.common.Constants.URL_STRING;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
-import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
+import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
