@@ -278,7 +278,6 @@ public class ExecutionResource {
   @Path("deployment-metadata")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
   public RestResponse<DeploymentMetadata> getDeploymentMetadata(
       @QueryParam("appId") String appId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowExecutionService.fetchDeploymentMetadata(appId, executionArgs));

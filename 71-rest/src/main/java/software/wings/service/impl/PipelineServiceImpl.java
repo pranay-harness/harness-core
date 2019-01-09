@@ -604,6 +604,7 @@ public class PipelineServiceImpl implements PipelineService {
               pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
           Validator.notNullCheck("Workflow does not exist", workflow, USER);
           Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
+
           if (!hasBuildWorkflow) {
             hasBuildWorkflow = BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
           }

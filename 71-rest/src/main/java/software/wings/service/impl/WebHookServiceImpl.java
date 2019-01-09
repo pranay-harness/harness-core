@@ -114,7 +114,7 @@ public class WebHookServiceImpl implements WebHookService {
         return response;
       }
       WorkflowExecution workflowExecution = triggerService.triggerExecutionByWebHook(
-          appId, token, serviceBuildNumbers, webHookRequest.getParameters(), null);
+          appId, token, serviceBuildNumbers, webHookRequest.getParameters(), TriggerExecution.builder().build());
 
       return constructSuccessResponse(appId, app, workflowExecution);
     } catch (WingsException ex) {

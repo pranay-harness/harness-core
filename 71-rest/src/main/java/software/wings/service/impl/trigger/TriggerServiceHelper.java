@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -31,11 +32,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.quartz.CronScheduleBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
@@ -53,9 +57,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Singleton
@@ -242,20 +249,83 @@ public class TriggerServiceHelper {
     Validator.notNullCheck("Orchestration workflow was deleted", workflow.getOrchestrationWorkflow(), USER);
   }
 
-  public static void addParameter(List<String> parameters, Workflow workflow, boolean includeEntityType) {
-    List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    if (isEmpty(userVariables)) {
+  public static void addParameter(List<String> parameters, List<Variable> variables, boolean includeEntityType) {
+    if (isEmpty(variables)) {
       return;
     }
-    userVariables = includeEntityType
-        ? userVariables
-        : userVariables.stream().filter(variable -> !variable.getType().equals(VariableType.ENTITY)).collect(toList());
 
-    userVariables.forEach(userVariable -> {
+    List<Variable> filteredVariables = includeEntityType
+        ? variables
+        : variables.stream().filter(variable -> !variable.getType().equals(VariableType.ENTITY)).collect(toList());
+
+    for (Variable userVariable : filteredVariables) {
       if (!parameters.contains(userVariable.getName())) {
         parameters.add(userVariable.getName());
       }
-    });
+    }
+  }
+
+  public static List<String> obtainCollectedArtifactServiceIds(ExecutionArgs executionArgs) {
+    List<String> artifactServiceIds = new ArrayList<>();
+    final List<Artifact> artifacts = executionArgs.getArtifacts();
+    if (isEmpty(artifacts)) {
+      return new ArrayList<>();
+    }
+    artifacts.stream()
+        .filter(artifact -> isNotEmpty(artifact.getServiceIds()))
+        .map(Artifact::getServiceIds)
+        .forEach(artifactServiceIds::addAll);
+    return artifactServiceIds;
+  }
+
+  public static Map<String, String> overrideTriggerVariables(Trigger trigger, ExecutionArgs executionArgs) {
+    // Workflow variables come from Webhook
+    Map<String, String> webhookVariableValues =
+        executionArgs.getWorkflowVariables() == null ? new HashMap<>() : executionArgs.getWorkflowVariables();
+
+    // Workflow variables associated with the trigger
+    Map<String, String> triggerWorkflowVariableValues =
+        trigger.getWorkflowVariables() == null ? new HashMap<>() : trigger.getWorkflowVariables();
+
+    for (Entry<String, String> entry : webhookVariableValues.entrySet()) {
+      if (isNotEmpty(entry.getValue())) {
+        triggerWorkflowVariableValues.put(entry.getKey(), entry.getValue());
+      }
+    }
+    triggerWorkflowVariableValues = triggerWorkflowVariableValues.entrySet()
+                                        .stream()
+                                        .filter(variableEntry -> isNotEmpty(variableEntry.getValue()))
+                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    return triggerWorkflowVariableValues;
+  }
+
+  public boolean checkArtifactMatchesArtifactFilter(Artifact artifact, String artifactFilter, boolean isRegEx) {
+    Pattern pattern;
+    if (isRegEx) {
+      pattern = compile(artifactFilter);
+    } else {
+      pattern = compile(artifactFilter.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+    }
+    if (isEmpty(artifact.getArtifactFiles())) {
+      if (pattern.matcher(artifact.getBuildNo()).find()) {
+        logger.info(
+            "Artifact filter {} matching with artifact name/ tag / buildNo {}", artifactFilter, artifact.getBuildNo());
+        return true;
+      }
+    } else {
+      logger.info("Comparing artifact file name matches with the given artifact filter");
+      List<ArtifactFile> artifactFiles = artifact.getArtifactFiles()
+                                             .stream()
+                                             .filter(artifactFile -> pattern.matcher(artifactFile.getName()).find())
+                                             .collect(toList());
+      if (isNotEmpty(artifactFiles)) {
+        logger.info("Artifact file names matches with the given artifact filter");
+        artifact.setArtifactFiles(artifactFiles);
+        return true;
+      }
+    }
+    return false;
   }
 
   public <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {

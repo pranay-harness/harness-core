@@ -1729,13 +1729,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
       DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
           appId, workflow, executionArgs.getWorkflowVariables(), null, null, null);
-
       // Set Services
       deploymentMetadata.setArtifactRequiredServices(
           serviceResourceService.fetchServicesByUuids(appId, deploymentMetadata.getArtifactRequiredServiceIds()));
 
       deploymentMetadata.setEnvSummaries(
           environmentService.obtainEnvironmentSummaries(appId, deploymentMetadata.getEnvIds()));
+
       return deploymentMetadata;
     }
     return DeploymentMetadata.builder().build();

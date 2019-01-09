@@ -110,6 +110,17 @@ public class TriggerServiceTestHelper {
         .build();
   }
 
+  public static Trigger buildWorkflowScheduledCondTrigger() {
+    return Trigger.builder()
+        .workflowId(WORKFLOW_ID)
+        .uuid(TRIGGER_ID)
+        .appId(APP_ID)
+        .workflowType(ORCHESTRATION)
+        .name(TRIGGER_NAME)
+        .condition(ScheduledTriggerCondition.builder().cronExpression("* * * * ?").build())
+        .build();
+  }
+
   public static Trigger buildWebhookCondTrigger() {
     return Trigger.builder()
         .workflowId(PIPELINE_ID)
@@ -139,8 +150,7 @@ public class TriggerServiceTestHelper {
     return Pipeline.builder()
         .appId(APP_ID)
         .uuid(PIPELINE_ID)
-        .services(asList(Service.builder().uuid(SERVICE_ID).name("Catalog").build(),
-            Service.builder().uuid(SERVICE_ID_CHANGED).name("Order").build()))
+        .services(asList(Service.builder().uuid(SERVICE_ID).name("Catalog").build()))
         .build();
   }
 
