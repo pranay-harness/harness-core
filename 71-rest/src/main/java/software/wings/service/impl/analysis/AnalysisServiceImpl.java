@@ -43,6 +43,7 @@ import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
@@ -51,6 +52,7 @@ import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
+import software.wings.resources.AccountResource;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
@@ -113,6 +115,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject protected DelegateServiceImpl delegateService;
   @Inject protected SecretManager secretManager;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private AccountResource accountResource;
   @Inject private HarnessMetricRegistry metricRegistry;
 
   @Override
@@ -230,6 +233,17 @@ public class AnalysisServiceImpl implements AnalysisService {
         query.criteria("workflowExecutionId").equal(workflowExecutionId));
 
     return query.asList();
+  }
+
+  @Override
+  public List<LogMLFeedbackRecord> getMLFeedback(String accountId, String workflowId) {
+    List<LogMLFeedbackRecord> feedbackRecords = null;
+    if (accountResource.isFeatureEnabled(FeatureName.GLOBAL_CV_DASH, accountId).getResource()) {
+      Query<LogMLFeedbackRecord> query =
+          wingsPersistence.createQuery(LogMLFeedbackRecord.class).filter("workflowId", workflowId);
+      feedbackRecords = query.asList();
+    }
+    return feedbackRecords;
   }
 
   @Override

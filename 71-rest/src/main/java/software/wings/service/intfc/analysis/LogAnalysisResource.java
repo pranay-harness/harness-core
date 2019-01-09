@@ -60,6 +60,11 @@ public interface LogAnalysisResource {
   String ANALYSIS_USER_FEEDBACK = "/user-feedback";
 
   /**
+   * Url for UI to fetch User Feedbacks by workflow id
+   */
+  String ANALYSIS_USER_FEEDBACK_BY_WORKFLOW = "/user-feedback-by-workflow";
+
+  /**
    * Validate query
    */
   String VALIDATE_QUERY = "/validate-query";
