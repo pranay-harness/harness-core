@@ -39,8 +39,7 @@ import java.util.List;
 import java.util.Set;
 
 public class GoogleDataStoreServiceImpl implements DataStoreService {
-  private static int INSERT_BATCH_SIZE = 500;
-  private static int PURGE_BATCH_SIZE = 10000;
+  private static int DATA_STORE_BATCH_SIZE = 500;
   private static final Logger logger = LoggerFactory.getLogger(GoogleDataStoreServiceImpl.class);
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
   private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
@@ -60,7 +59,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     if (isEmpty(records)) {
       return;
     }
-    List<List<T>> batches = Lists.partition(records, INSERT_BATCH_SIZE);
+    List<List<T>> batches = Lists.partition(records, DATA_STORE_BATCH_SIZE);
     batches.forEach(batch -> {
       List<Entity> logList = new ArrayList<>();
       batch.forEach(record -> logList.add(record.convertToCloudStorageEntity(datastore)));
@@ -130,7 +129,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
       List<Key> keysToDelete = new ArrayList<>();
       datastore.run(query).forEachRemaining(key -> keysToDelete.add(key));
       logger.info("Total keys to delete {} for {}", keysToDelete.size(), collectionName);
-      final List<List<Key>> keyBatches = batchKeysToDelete(keysToDelete);
+      final List<List<Key>> keyBatches = Lists.partition(keysToDelete, DATA_STORE_BATCH_SIZE);
       keyBatches.forEach(keys -> {
         logger.info("purging {} records from {}", keys.size(), collectionName);
         datastore.delete(keys.stream().toArray(Key[] ::new));
@@ -255,23 +254,5 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     }
 
     builder.set(key, StringValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
-  }
-
-  private List<List<Key>> batchKeysToDelete(List<Key> keys) {
-    List<List<Key>> keyBatches = new ArrayList<>();
-    List<Key> keyBatch = new ArrayList<>();
-    for (Key key : keys) {
-      keyBatch.add(key);
-      if (keyBatch.size() >= PURGE_BATCH_SIZE) {
-        keyBatches.add(keyBatch);
-        keyBatch = new ArrayList<>();
-      }
-    }
-
-    if (!keyBatch.isEmpty()) {
-      keyBatches.add(keyBatch);
-    }
-
-    return keyBatches;
   }
 }
