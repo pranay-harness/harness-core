@@ -91,7 +91,9 @@ public class GoogleCloudFileServiceImpl implements FileService {
                             .build();
     try {
       getStorage().create(blobInfo, IOUtils.toByteArray(in));
-      return generateFileId(blobId);
+      String gcsFileId = generateFileId(blobId);
+      saveGcsFileMetadata(fileMetadata, fileBucket, null, gcsFileId);
+      return gcsFileId;
     } catch (IOException e) {
       throw new WingsException(ErrorCode.SAVE_FILE_INTO_GCP_STORAGE_FAILED, e);
     }
@@ -111,15 +113,14 @@ public class GoogleCloudFileServiceImpl implements FileService {
                             .setMd5(baseFile.getChecksum())
                             .setMetadata(metadata)
                             .build();
-    final String fileId;
     try {
       getStorage().create(blobInfo, IOUtils.toByteArray(uploadedInputStream));
-      fileId = generateFileId(blobId);
+      String gcsFileId = generateFileId(blobId);
+      saveGcsFileMetadata(baseFile, fileBucket, null, gcsFileId);
+      return gcsFileId;
     } catch (IOException e) {
       throw new WingsException(ErrorCode.SAVE_FILE_INTO_GCP_STORAGE_FAILED);
     }
-
-    return fileId;
   }
 
   @Override

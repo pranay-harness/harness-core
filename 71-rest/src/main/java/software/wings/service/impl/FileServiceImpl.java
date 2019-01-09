@@ -10,11 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.DataStorageMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.BaseFile;
-import software.wings.beans.FeatureName;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.GcsFileMetadata;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.utils.BoundedInputStream;
 
@@ -39,19 +37,16 @@ public class FileServiceImpl implements FileService {
   private WingsPersistence wingsPersistence;
   private MongoFileServiceImpl mongoFileService;
   private GoogleCloudFileServiceImpl googleCloudFileService;
-  private FeatureFlagService featureFlagService;
   private MainConfiguration configuration;
 
   private boolean gcsStorageEnabled;
 
   @Inject
   public FileServiceImpl(WingsPersistence wingsPersistence, MongoFileServiceImpl mongoFileService,
-      GoogleCloudFileServiceImpl googleCloudFileService, FeatureFlagService featureFlagService,
-      MainConfiguration configuration) {
+      GoogleCloudFileServiceImpl googleCloudFileService, MainConfiguration configuration) {
     this.wingsPersistence = wingsPersistence;
     this.mongoFileService = mongoFileService;
     this.googleCloudFileService = googleCloudFileService;
-    this.featureFlagService = featureFlagService;
     this.configuration = configuration;
 
     if (configuration.getFileStorageMode() == DataStorageMode.GOOGLE_CLOUD_STORAGE) {
@@ -63,19 +58,10 @@ public class FileServiceImpl implements FileService {
 
   @Override
   public String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket) {
-    String accountId = fileMetadata.getAccountId();
-    String mongoFileId = mongoFileService.saveFile(fileMetadata, in, fileBucket);
-    String gcsFileId = null;
     if (gcsStorageEnabled) {
-      InputStream inputStreamFromMongo = mongoFileService.openDownloadStream(mongoFileId, fileBucket);
-      gcsFileId = googleCloudFileService.saveFile(fileMetadata, inputStreamFromMongo, fileBucket);
-      googleCloudFileService.saveGcsFileMetadata(fileMetadata, fileBucket, mongoFileId, gcsFileId);
-    }
-
-    if (isNotEmpty(gcsFileId) && featureFlagService.isEnabled(FeatureName.GCS_STORAGE, accountId)) {
-      return gcsFileId;
+      return googleCloudFileService.saveFile(fileMetadata, in, fileBucket);
     } else {
-      return mongoFileId;
+      return mongoFileService.saveFile(fileMetadata, in, fileBucket);
     }
   }
 
@@ -93,30 +79,21 @@ public class FileServiceImpl implements FileService {
       gcsFileId = fileId;
       mongoFileId = getMongoFileIdByGcsFileId(gcsFileId);
     }
-    boolean updated = mongoFileService.updateParentEntityIdAndVersion(
-        entityClass, entityId, version, mongoFileId, others, fileBucket);
     if (gcsStorageEnabled) {
-      updated = googleCloudFileService.updateParentEntityIdAndVersion(
+      return googleCloudFileService.updateParentEntityIdAndVersion(
           entityClass, entityId, version, gcsFileId, others, fileBucket);
+    } else {
+      return mongoFileService.updateParentEntityIdAndVersion(
+          entityClass, entityId, version, mongoFileId, others, fileBucket);
     }
-    return updated;
   }
 
   @Override
   public String saveFile(BaseFile baseFile, InputStream in, FileBucket fileBucket) {
-    String accountId = baseFile.getAccountId();
-    String mongoFileId = mongoFileService.saveFile(baseFile, in, fileBucket);
-    String gcsFileId = null;
     if (gcsStorageEnabled) {
-      InputStream inputStreamFromMongo = mongoFileService.openDownloadStream(mongoFileId, fileBucket);
-      gcsFileId = googleCloudFileService.saveFile(baseFile, inputStreamFromMongo, fileBucket);
-      googleCloudFileService.saveGcsFileMetadata(baseFile, fileBucket, mongoFileId, gcsFileId);
-    }
-
-    if (isNotEmpty(gcsFileId) && featureFlagService.isEnabled(FeatureName.GCS_STORAGE, accountId)) {
-      return gcsFileId;
+      return googleCloudFileService.saveFile(baseFile, in, fileBucket);
     } else {
-      return mongoFileId;
+      return mongoFileService.saveFile(baseFile, in, fileBucket);
     }
   }
 
