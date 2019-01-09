@@ -56,6 +56,7 @@ import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.artifact.ArtifactCollectionUtil;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
@@ -107,6 +108,7 @@ public abstract class ContainerServiceSetup extends State {
   @Inject @Transient protected transient DelegateService delegateService;
   @Inject @Transient protected transient ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
+  @Inject @Transient private ArtifactCollectionUtil artifactCollectionUtil;
 
   ContainerServiceSetup(String name, String type) {
     super(name, type);
@@ -124,7 +126,7 @@ public abstract class ContainerServiceSetup extends State {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
       }
 
-      ImageDetails imageDetails = containerDeploymentHelper.fetchArtifactDetails(
+      ImageDetails imageDetails = artifactCollectionUtil.fetchContainerImageDetails(
           artifact, context.getAppId(), context.getWorkflowExecutionId());
 
       Application app = workflowStandardParams.getApp();
@@ -269,8 +271,8 @@ public abstract class ContainerServiceSetup extends State {
     if (artifact == null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
     }
-    ImageDetails imageDetails =
-        containerDeploymentHelper.fetchArtifactDetails(artifact, context.getAppId(), context.getWorkflowExecutionId());
+    ImageDetails imageDetails = artifactCollectionUtil.fetchContainerImageDetails(
+        artifact, context.getAppId(), context.getWorkflowExecutionId());
 
     ContainerServiceElement containerServiceElement =
         buildContainerServiceElement(context, executionResult, status, imageDetails);

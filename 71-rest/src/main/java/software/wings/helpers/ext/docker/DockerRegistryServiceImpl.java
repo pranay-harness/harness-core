@@ -5,6 +5,8 @@ import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
+import static software.wings.common.Constants.IMAGE;
+import static software.wings.common.Constants.TAG;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
@@ -33,6 +35,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -139,9 +142,17 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     String tagUrl = dockerConfig.getDockerRegistryUrl().endsWith("/")
         ? dockerConfig.getDockerRegistryUrl() + imageName + "/tags/"
         : dockerConfig.getDockerRegistryUrl() + "/" + imageName + "/tags/";
+
+    String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
+
     return dockerImageTagResponse.getTags()
         .stream()
-        .map(tag -> aBuildDetails().withNumber(tag).withBuildUrl(tagUrl + tag).build())
+        .map(tag -> {
+          Map<String, String> metadata = new HashMap();
+          metadata.put(IMAGE, domainName + "/" + imageName + ":" + tag);
+          metadata.put(TAG, tag);
+          return aBuildDetails().withNumber(tag).withBuildUrl(tagUrl + tag).withMetadata(metadata).build();
+        })
         .collect(toList());
   }
 

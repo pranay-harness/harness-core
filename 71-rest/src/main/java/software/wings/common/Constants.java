@@ -525,6 +525,10 @@ public interface Constants {
    */
   String BUILD_NO = "buildNo";
 
+  String TAG = "tag";
+
+  String IMAGE = "image";
+
   String BUILD_FULL_DISPLAY_NAME = "buildFullDisplayName";
 
   /**

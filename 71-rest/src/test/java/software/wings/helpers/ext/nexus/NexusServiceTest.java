@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
+import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.utils.ArtifactType.DOCKER;
 
 import com.google.inject.Inject;
@@ -19,6 +20,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
@@ -576,7 +578,15 @@ public class NexusServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDockerTags() {
-    assertThat(nexusService.getBuilds(nexusThreeConfig, null, "docker-group", "wingsplugins/todolist", 10))
+    assertThat(nexusService.getBuilds(nexusThreeConfig, null,
+                   anArtifactStreamAttributes()
+                       .withArtifactStreamType(ArtifactStreamType.NEXUS.name())
+                       .withMetadataOnly(true)
+                       .withJobName("docker-group")
+                       .withImageName("wingsplugins/todolist")
+                       .withNexusDockerPort("5000")
+                       .build(),
+                   10))
         .hasSize(3)
         .extracting(buildDetails -> buildDetails.getNumber())
         .contains("latest");

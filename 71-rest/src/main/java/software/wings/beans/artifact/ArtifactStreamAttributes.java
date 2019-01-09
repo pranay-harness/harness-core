@@ -36,6 +36,8 @@ public class ArtifactStreamAttributes {
   private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
   private Map<String, String> metadata = Maps.newHashMap();
   private boolean copyArtifactEnabledForArtifactory;
+  private String artifactoryDockerRepositoryServer;
+  private String nexusDockerPort;
 
   /**
    * Gets job name.
@@ -292,6 +294,22 @@ public class ArtifactStreamAttributes {
     this.copyArtifactEnabledForArtifactory = copyArtifactEnabledForArtifactory;
   }
 
+  public String getArtifactoryDockerRepositoryServer() {
+    return artifactoryDockerRepositoryServer;
+  }
+
+  public void setArtifactoryDockerRepositoryServer(String artifactoryDockerRepositoryServer) {
+    this.artifactoryDockerRepositoryServer = artifactoryDockerRepositoryServer;
+  }
+
+  public String getNexusDockerPort() {
+    return nexusDockerPort;
+  }
+
+  public void setNexusDockerPort(String nexusDockerPort) {
+    this.nexusDockerPort = nexusDockerPort;
+  }
+
   /**
    * The type Builder.
    */
@@ -318,6 +336,8 @@ public class ArtifactStreamAttributes {
     private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
     private Map<String, String> metadata = Maps.newHashMap();
     private boolean copyArtifactEnabledForArtifactory;
+    private String artifactoryDockerRepositoryServer;
+    private String nexusDockerPort;
 
     private Builder() {}
 
@@ -486,6 +506,16 @@ public class ArtifactStreamAttributes {
       return this;
     }
 
+    public Builder withArtifactoryDockerRepositoryServer(String artifactoryDockerRepositoryServer) {
+      this.artifactoryDockerRepositoryServer = artifactoryDockerRepositoryServer;
+      return this;
+    }
+
+    public Builder withNexusDockerPort(String nexusDockerPort) {
+      this.nexusDockerPort = nexusDockerPort;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -514,7 +544,9 @@ public class ArtifactStreamAttributes {
           .withFilters(filters)
           .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails)
           .withMetadata(metadata)
-          .withCopyArtifactEnabledForArtifactory(copyArtifactEnabledForArtifactory);
+          .withCopyArtifactEnabledForArtifactory(copyArtifactEnabledForArtifactory)
+          .withArtifactoryDockerRepositoryServer(artifactoryDockerRepositoryServer)
+          .withNexusDockerPort(nexusDockerPort);
     }
 
     /**
@@ -546,6 +578,8 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails);
       artifactStreamAttributes.setMetadata(metadata);
       artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(copyArtifactEnabledForArtifactory);
+      artifactStreamAttributes.setArtifactoryDockerRepositoryServer(artifactoryDockerRepositoryServer);
+      artifactStreamAttributes.setNexusDockerPort(nexusDockerPort);
       return artifactStreamAttributes;
     }
   }

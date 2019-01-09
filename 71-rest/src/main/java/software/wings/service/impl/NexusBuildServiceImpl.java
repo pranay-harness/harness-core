@@ -50,8 +50,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
     if (artifactStreamAttributes.getArtifactType() != null
         && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
-      return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes.getJobName(),
-          artifactStreamAttributes.getImageName(), 50);
+      return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes, 50);
     } else {
       return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());

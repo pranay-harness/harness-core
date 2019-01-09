@@ -16,6 +16,7 @@ public class BuildDetails {
   private String buildFullDisplayName;
   private String artifactFileSize;
   private Map<String, String> buildParameters = new HashMap<>();
+  private Map<String, String> metadata = new HashMap<>();
 
   public String getBuildDisplayName() {
     return buildDisplayName;
@@ -151,13 +152,16 @@ public class BuildDetails {
     return buildParameters;
   }
 
-  /**
-   * Sets build parameters.
-   *
-   * @param buildParameters the build parameters
-   */
   public void setBuildParameters(Map<String, String> buildParameters) {
     this.buildParameters = buildParameters;
+  }
+
+  public Map<String, String> getMetadata() {
+    return metadata;
+  }
+
+  public void setMetadata(Map<String, String> metadata) {
+    this.metadata = metadata;
   }
 
   /**
@@ -173,6 +177,7 @@ public class BuildDetails {
     private String buildDisplayName;
     private String buildFullDisplayName;
     private String artifactFileSize;
+    private Map<String, String> metadata = new HashMap<>();
 
     private Builder() {}
 
@@ -257,6 +262,11 @@ public class BuildDetails {
       return this;
     }
 
+    public Builder withMetadata(Map<String, String> metadata) {
+      this.metadata = metadata;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -272,7 +282,8 @@ public class BuildDetails {
           .withBuildUrl(buildUrl)
           .withBuildDisplayName(buildDisplayName)
           .withBuildFullDisplayName(buildFullDisplayName)
-          .withArtifactFileSize(artifactFileSize);
+          .withArtifactFileSize(artifactFileSize)
+          .withMetadata(metadata);
     }
 
     /**
@@ -291,6 +302,7 @@ public class BuildDetails {
       buildDetails.setBuildDisplayName(buildDisplayName);
       buildDetails.setBuildFullDisplayName(buildFullDisplayName);
       buildDetails.setArtifactFileSize(artifactFileSize);
+      buildDetails.setMetadata(metadata);
       return buildDetails;
     }
   }

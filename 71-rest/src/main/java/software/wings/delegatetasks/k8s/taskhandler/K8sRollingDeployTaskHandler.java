@@ -152,27 +152,27 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
-    String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-        kubernetesConfig, Collections.emptyList(), request.getReleaseName());
-
-    releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
-                                                               : ReleaseHistory.createFromData(releaseHistoryData);
-
     try {
+      String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
+          kubernetesConfig, Collections.emptyList(), request.getReleaseName());
+
+      releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
+                                                                 : ReleaseHistory.createFromData(releaseHistoryData);
+
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
           request.getK8sDelegateManifestConfig().getManifestFiles(), request.getValuesYamlList(), executionLogCallback);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
+
+      executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
+
+      executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));
+
+      executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
-
-    executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
-
-    executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));
-
-    executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
 
     return true;
   }

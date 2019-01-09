@@ -132,9 +132,9 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
-import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.EventEmitter.Channel;
+import software.wings.service.impl.artifact.ArtifactCollectionUtil;
 import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
@@ -221,7 +221,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private ConfigService configService;
   @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Inject private ArtifactCollectionUtil artifactCollectionUtil;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -1394,7 +1394,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (delegateTask != null) {
       final ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
           new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
-              delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), containerDeploymentHelper,
+              delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtil,
               delegateTask.getArtifactStreamId());
       if (delegateTask.getParameters().length == 1 && delegateTask.getParameters()[0] instanceof TaskParameters) {
         ExpressionReflectionUtils.applyExpression(delegateTask.getParameters()[0],

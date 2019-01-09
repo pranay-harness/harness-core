@@ -88,6 +88,7 @@ public class NexusArtifactStream extends ArtifactStream {
         .withGroupId(groupId)
         .withImageName(imageName)
         .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))
+        .withNexusDockerPort(dockerPort)
         .build();
   }
 

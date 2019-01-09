@@ -2,6 +2,7 @@ package software.wings.helpers.ext.artifactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.utils.ArtifactType.RPM;
@@ -19,12 +20,14 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,8 +94,16 @@ public class ArtifactoryServiceTest {
 
   @Test
   public void shouldGetDockerTags() {
-    List<BuildDetails> builds =
-        artifactoryService.getBuilds(artifactoryConfig, null, "docker", "wingsplugins/todolist", 50);
+    List<BuildDetails> builds = artifactoryService.getBuilds(artifactoryConfig, null,
+        anArtifactStreamAttributes()
+            .withArtifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+            .withMetadataOnly(true)
+            .withJobName("docker")
+            .withImageName("wingsplugins/todolist")
+            .withArtifactoryDockerRepositoryServer("harness.jfrog.com")
+            .withArtifactServerEncryptedDataDetails(Collections.emptyList())
+            .build(),
+        50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(buildDetails -> buildDetails.getNumber()).contains("latest");
   }

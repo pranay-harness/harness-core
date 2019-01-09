@@ -93,6 +93,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))
         .withRepositoryType(repositoryType)
         .withMetadataOnly(isMetadataOnly())
+        .withArtifactoryDockerRepositoryServer(dockerRepositoryServer)
         .build();
   }
 

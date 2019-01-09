@@ -1,10 +1,17 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
@@ -19,29 +26,84 @@ import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.KEY;
 import static software.wings.common.Constants.URL;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
+import io.harness.artifact.ArtifactUtilities;
+import io.harness.exception.InvalidRequestException;
+import io.harness.network.Http;
+import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.EcrConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.EcrArtifactStream;
+import software.wings.beans.artifact.GcrArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
+import software.wings.beans.container.ImageDetails;
+import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
+import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.helpers.ext.azure.AzureHelperService;
+import software.wings.helpers.ext.ecr.EcrClassicService;
+import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
+import software.wings.service.intfc.security.ManagerDecryptionService;
+import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.util.List;
 import java.util.Map;
 
+@Singleton
 public class ArtifactCollectionUtil {
-  public static Artifact getArtifact(ArtifactStream artifactStream, BuildDetails buildDetails) {
+  @Inject private SettingsService settingsService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ManagerDecryptionService managerDecryptionService;
+  @Inject private SecretManager secretManager;
+  @Inject private AwsHelperService awsHelperService;
+  @Inject private AzureHelperService azureHelperService;
+  @Inject private EcrService ecrService;
+  @Inject private EcrClassicService ecrClassicService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private DelegateProxyFactory delegateProxyFactory;
+  @Inject private AwsEcrHelperServiceManager awsEcrHelperServiceManager;
+
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionUtil.class);
+
+  @Transient
+  private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
+      "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
+
+  public Artifact getArtifact(ArtifactStream artifactStream, BuildDetails buildDetails) {
     return anArtifact()
         .withAppId(artifactStream.getAppId())
         .withArtifactStreamId(artifactStream.getUuid())
         .withArtifactSourceName(artifactStream.getSourceName())
         .withDisplayName(getDisplayName(artifactStream, buildDetails))
         .withDescription(buildDetails.getDescription())
-        .withMetadata(getMetadata(artifactStream.getArtifactStreamType(), buildDetails))
+        .withMetadata(getMetadata(artifactStream, buildDetails))
         .withRevision(buildDetails.getRevision())
         .build();
   }
 
-  public static String getDisplayName(ArtifactStream artifactStream, BuildDetails buildDetails) {
+  private String getDisplayName(ArtifactStream artifactStream, BuildDetails buildDetails) {
     if (isNotEmpty(buildDetails.getBuildDisplayName())) {
       return buildDetails.getBuildDisplayName();
     }
@@ -56,8 +118,10 @@ public class ArtifactCollectionUtil {
     return artifactStream.getArtifactDisplayName(buildDetails.getNumber());
   }
 
-  public static Map<String, String> getMetadata(String artifactStreamType, BuildDetails buildDetails) {
-    Map<String, String> metadata = Maps.newHashMap();
+  private Map<String, String> getMetadata(ArtifactStream artifactStream, BuildDetails buildDetails) {
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+
+    Map<String, String> metadata = buildDetails.getMetadata();
     if (artifactStreamType.equals(ARTIFACTORY.name())) {
       if (buildDetails.getArtifactPath() != null) {
         metadata.put(ARTIFACT_PATH, buildDetails.getArtifactPath());
@@ -83,13 +147,13 @@ public class ArtifactCollectionUtil {
       metadata.put(ARTIFACT_FILE_SIZE, buildParameters.get(ARTIFACT_FILE_SIZE));
       return metadata;
     } else if (artifactStreamType.equals(JENKINS.name()) || artifactStreamType.equals(BAMBOO.name())) {
-      metadata = buildDetails.getBuildParameters();
+      metadata.putAll(buildDetails.getBuildParameters());
       metadata.put(BUILD_NO, buildDetails.getNumber());
       metadata.put(BUILD_FULL_DISPLAY_NAME, buildDetails.getBuildFullDisplayName());
       metadata.put(URL, buildDetails.getBuildUrl());
       return metadata;
     } else if (artifactStreamType.equals(SMB.name()) || artifactStreamType.equals(SFTP.name())) {
-      metadata = buildDetails.getBuildParameters();
+      metadata.putAll(buildDetails.getBuildParameters());
       metadata.put(BUILD_NO, buildDetails.getNumber());
       metadata.put(ARTIFACT_PATH, metadata.get(ARTIFACT_PATH));
       metadata.put(BUILD_FULL_DISPLAY_NAME, buildDetails.getBuildFullDisplayName());
@@ -102,6 +166,172 @@ public class ArtifactCollectionUtil {
       }
       return metadata;
     }
-    return ImmutableMap.of(BUILD_NO, buildDetails.getNumber());
+
+    metadata.put(BUILD_NO, buildDetails.getNumber());
+    return metadata;
+  }
+
+  public ImageDetails fetchContainerImageDetails(Artifact artifact, String appId, String workflowExecutionId) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+    if (artifactStream == null) {
+      throw new InvalidRequestException("Artifact Stream [" + artifact.getArtifactSourceName() + "] was deleted");
+    }
+
+    ImageDetails imageDetails = getDockerImageDetailsInternal(artifactStream, workflowExecutionId);
+    imageDetails.setTag(artifact.getBuildNo());
+    return imageDetails;
+  }
+
+  public String getDockerConfig(String appId, String artifactStreamId) {
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    if (artifactStream == null) {
+      return "";
+    }
+
+    ImageDetails imageDetails = getDockerImageDetailsInternal(artifactStream, null);
+
+    if (isNotBlank(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsername())
+        && isNotBlank(imageDetails.getPassword())) {
+      return encodeBase64(format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
+          imageDetails.getUsername(), imageDetails.getPassword()));
+    }
+    return "";
+  }
+
+  private ImageDetails getDockerImageDetailsInternal(ArtifactStream artifactStream, String workflowExecutionId) {
+    ImageDetailsBuilder imageDetailsBuilder = ImageDetails.builder();
+    String appId = artifactStream.getAppId();
+    String settingId = artifactStream.getSettingId();
+    if (artifactStream.getArtifactStreamType().equals(DOCKER.name())) {
+      DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
+      DockerConfig dockerConfig = (DockerConfig) settingsService.get(settingId).getValue();
+      managerDecryptionService.decrypt(
+          dockerConfig, secretManager.getEncryptionDetails(dockerConfig, appId, workflowExecutionId));
+
+      String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
+      String imageName = dockerArtifactStream.getImageName();
+
+      if (dockerConfig.hasCredentials()) {
+        imageDetailsBuilder.name(imageName)
+            .sourceName(dockerArtifactStream.getSourceName())
+            .registryUrl(dockerConfig.getDockerRegistryUrl())
+            .username(dockerConfig.getUsername())
+            .password(new String(dockerConfig.getPassword()))
+            .domainName(domainName);
+      } else {
+        imageDetailsBuilder.name(imageName)
+            .sourceName(dockerArtifactStream.getSourceName())
+            .registryUrl(dockerConfig.getDockerRegistryUrl())
+            .domainName(domainName);
+      }
+    } else if (artifactStream.getArtifactStreamType().equals(ECR.name())) {
+      EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
+      String imageUrl = getImageUrl(ecrArtifactStream, workflowExecutionId, appId);
+      // name should be 830767422336.dkr.ecr.us-east-1.amazonaws.com/todolist
+      // sourceName should be todolist
+      // registryUrl should be https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
+      imageDetailsBuilder.name(imageUrl)
+          .sourceName(ecrArtifactStream.getSourceName())
+          .registryUrl("https://" + imageUrl + (imageUrl.endsWith("/") ? "" : "/"))
+          .username("AWS");
+      SettingValue settingValue = settingsService.get(settingId).getValue();
+
+      // All the new ECR artifact streams use cloud provider AWS settings for accesskey and secret
+      if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
+        AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
+        imageDetailsBuilder.password(
+            getAmazonEcrAuthToken(awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, workflowExecutionId),
+                imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion(), appId));
+      } else {
+        // There is a point when old ECR artifact streams would be using the old ECR Artifact Server definition until
+        // migration happens. The deployment code handles both the cases.
+        EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
+        imageDetailsBuilder.password(awsHelperService.getAmazonEcrAuthToken(
+            ecrConfig, secretManager.getEncryptionDetails(ecrConfig, appId, workflowExecutionId)));
+      }
+    } else if (artifactStream.getArtifactStreamType().equals(GCR.name())) {
+      GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
+      String imageName = gcrArtifactStream.getRegistryHostName() + "/" + gcrArtifactStream.getDockerImageName();
+      imageDetailsBuilder.name(imageName).sourceName(imageName).registryUrl(imageName);
+    } else if (artifactStream.getArtifactStreamType().equals(ACR.name())) {
+      AcrArtifactStream acrArtifactStream = (AcrArtifactStream) artifactStream;
+      AzureConfig azureConfig = (AzureConfig) settingsService.get(settingId).getValue();
+      String loginServer = azureHelperService.getLoginServerForRegistry(azureConfig,
+          secretManager.getEncryptionDetails(azureConfig, appId, workflowExecutionId),
+          acrArtifactStream.getSubscriptionId(), acrArtifactStream.getRegistryName());
+
+      imageDetailsBuilder.registryUrl(azureHelperService.getUrl(loginServer))
+          .sourceName(acrArtifactStream.getRepositoryName())
+          .name(loginServer + "/" + acrArtifactStream.getRepositoryName())
+          .username(azureConfig.getClientId())
+          .password(new String(azureConfig.getKey()));
+    } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
+      ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
+      ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
+      managerDecryptionService.decrypt(
+          artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, appId, workflowExecutionId));
+      String registryUrl = ArtifactUtilities.getArtifactoryRegistryUrl(artifactoryConfig.getArtifactoryUrl(),
+          artifactoryArtifactStream.getDockerRepositoryServer(), artifactoryArtifactStream.getJobname());
+      String repositoryName = ArtifactUtilities.getArtifactoryRepositoryName(artifactoryConfig.getArtifactoryUrl(),
+          artifactoryArtifactStream.getDockerRepositoryServer(), artifactoryArtifactStream.getJobname(),
+          artifactoryArtifactStream.getImageName());
+
+      if (artifactoryConfig.hasCredentials()) {
+        imageDetailsBuilder.name(repositoryName)
+            .sourceName(artifactoryArtifactStream.getSourceName())
+            .registryUrl(registryUrl)
+            .username(artifactoryConfig.getUsername())
+            .password(new String(artifactoryConfig.getPassword()));
+      } else {
+        imageDetailsBuilder.name(repositoryName)
+            .sourceName(artifactoryArtifactStream.getSourceName())
+            .registryUrl(registryUrl);
+      }
+    } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
+      NexusArtifactStream nexusArtifactStream = (NexusArtifactStream) artifactStream;
+      NexusConfig nexusConfig = (NexusConfig) settingsService.get(settingId).getValue();
+      managerDecryptionService.decrypt(
+          nexusConfig, secretManager.getEncryptionDetails(nexusConfig, appId, workflowExecutionId));
+
+      String registryUrl =
+          ArtifactUtilities.getNexusRegistryUrl(nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort());
+      String repositoryName = ArtifactUtilities.getNexusRepositoryName(
+          nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort(), nexusArtifactStream.getImageName());
+      logger.info("Nexus Registry url: " + registryUrl);
+      imageDetailsBuilder.name(repositoryName)
+          .sourceName(nexusArtifactStream.getSourceName())
+          .registryUrl(registryUrl)
+          .username(nexusConfig.getUsername())
+          .password(new String(nexusConfig.getPassword()));
+    } else {
+      throw new InvalidRequestException(
+          artifactStream.getArtifactStreamType() + " artifact source can't be used for containers");
+    }
+    return imageDetailsBuilder.build();
+  }
+
+  private String getImageUrl(EcrArtifactStream ecrArtifactStream, String workflowExecutionId, String appId) {
+    SettingAttribute settingAttribute = settingsService.get(ecrArtifactStream.getSettingId());
+    SettingValue value = settingAttribute.getValue();
+    if (SettingVariableTypes.AWS.name().equals(value.getType())) {
+      AwsConfig awsConfig = (AwsConfig) value;
+      return getEcrImageUrl(awsConfig,
+          secretManager.getEncryptionDetails(awsConfig, ecrArtifactStream.getAppId(), workflowExecutionId),
+          ecrArtifactStream.getRegion(), ecrArtifactStream, appId);
+    } else {
+      EcrConfig ecrConfig = (EcrConfig) value;
+      return ecrClassicService.getEcrImageUrl(ecrConfig, ecrArtifactStream);
+    }
+  }
+
+  private String getEcrImageUrl(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      EcrArtifactStream ecrArtifactStream, String appId) {
+    return awsEcrHelperServiceManager.getEcrImageUrl(
+        awsConfig, encryptionDetails, region, ecrArtifactStream.getImageName(), appId);
+  }
+
+  private String getAmazonEcrAuthToken(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String awsAccount, String region, String appId) {
+    return awsEcrHelperServiceManager.getAmazonEcrAuthToken(awsConfig, encryptionDetails, awsAccount, region, appId);
   }
 }

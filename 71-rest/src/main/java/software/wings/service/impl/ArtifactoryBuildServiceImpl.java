@@ -51,8 +51,8 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
     if (artifactStreamAttributes.getArtifactType().equals(DOCKER)) {
-      return artifactoryService.getBuilds(artifactoryConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
-          artifactStreamAttributes.getImageName(), limit == -1 ? 1000 : limit);
+      return artifactoryService.getBuilds(
+          artifactoryConfig, encryptionDetails, artifactStreamAttributes, limit == -1 ? 1000 : limit);
     } else {
       return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
           artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
