@@ -2,10 +2,10 @@ KEYS=`git log --pretty=oneline --abbrev-commit | awk "/${PREVIOUS_CUT_COMMIT_MES
 
 if [ "${PURPOSE}" = "saas" ]
 then
-    FIELD_ID="customfield_10634"
+    FIELD_ID="customfield_10644"
 elif [ "${PURPOSE}" = "on-prem" ]
 then
-    FIELD_ID="customfield_10636"
+    FIELD_ID="customfield_10646"
 else
    echo "Unknown purpose ${PURPOSE}"
    exit 1
