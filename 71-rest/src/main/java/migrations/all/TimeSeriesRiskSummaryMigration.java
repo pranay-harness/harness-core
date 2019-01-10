@@ -1,11 +1,14 @@
 package migrations.all;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -27,9 +30,10 @@ import java.util.List;
  * Created by Praveen
  */
 public class TimeSeriesRiskSummaryMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(CleanUpDatadogCallLogMigration.class);
+  private static final Logger logger = LoggerFactory.getLogger(TimeSeriesRiskSummaryMigration.class);
 
   @Inject private WingsPersistence wingsPersistence;
+  private int completedCount;
 
   @Override
   public void migrate() {
@@ -46,13 +50,17 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
               .build();
 
       PageResponse<TimeSeriesMLAnalysisRecord> response =
-          wingsPersistence.query(TimeSeriesMLAnalysisRecord.class, recordPageRequest);
+          wingsPersistence.query(TimeSeriesMLAnalysisRecord.class, recordPageRequest, excludeAuthority);
 
+      logger.info("The total number of records for cvConfigId {} is {}", config.getUuid(), response.getTotal());
+      int previousOffSet = 0;
       while (!response.isEmpty()) {
         List<TimeSeriesMLAnalysisRecord> records = response.getResponse();
+        logger.info("Currently Migrating for cvConfigId {} and batchsize {}", config.getUuid(), records.size());
         saveRiskSummaries(records);
-        recordPageRequest.setOffset(response.getOffset());
-        response = wingsPersistence.query(TimeSeriesMLAnalysisRecord.class, recordPageRequest);
+        previousOffSet += response.size();
+        recordPageRequest.setOffset(String.valueOf(previousOffSet));
+        response = wingsPersistence.query(TimeSeriesMLAnalysisRecord.class, recordPageRequest, excludeAuthority);
       }
       sleep(ofMillis(1000));
     }
@@ -60,7 +68,9 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
 
   private void saveRiskSummaries(List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords) {
     List<TimeSeriesRiskSummary> riskSummaries = new ArrayList<>();
+
     timeSeriesMLAnalysisRecords.forEach(mlAnalysisResponse -> {
+      mlAnalysisResponse.decompressTransactions();
       TimeSeriesRiskSummary riskSummary = TimeSeriesRiskSummary.builder()
                                               .analysisMinute(mlAnalysisResponse.getAnalysisMinute())
                                               .cvConfigId(mlAnalysisResponse.getCvConfigId())
@@ -69,12 +79,16 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
       riskSummary.setAppId(mlAnalysisResponse.getAppId());
       TreeBasedTable<String, String, Integer> risks = TreeBasedTable.create();
       TreeBasedTable<String, String, Integer> longTermPatterns = TreeBasedTable.create();
-      for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
-        for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
-          if (mlMetricSummary.getResults() != null) {
-            risks.put(txnSummary.getTxn_name(), mlMetricSummary.getMetric_name(), mlMetricSummary.getMax_risk());
-            longTermPatterns.put(
-                txnSummary.getTxn_name(), mlMetricSummary.getMetric_name(), mlMetricSummary.getLong_term_pattern());
+      if (isNotEmpty(mlAnalysisResponse.getTransactions())) {
+        for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
+          if (isNotEmpty(txnSummary.getMetrics())) {
+            for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
+              if (mlMetricSummary.getResults() != null) {
+                risks.put(txnSummary.getTxn_name(), mlMetricSummary.getMetric_name(), mlMetricSummary.getMax_risk());
+                longTermPatterns.put(
+                    txnSummary.getTxn_name(), mlMetricSummary.getMetric_name(), mlMetricSummary.getLong_term_pattern());
+              }
+            }
           }
         }
       }
@@ -85,6 +99,12 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
       riskSummaries.add(riskSummary);
     });
 
-    wingsPersistence.save(riskSummaries);
+    try {
+      wingsPersistence.save(riskSummaries);
+    } catch (DuplicateKeyException ex) {
+      logger.info("Swallowing duplicate key exception during migration.");
+    }
+    completedCount += timeSeriesMLAnalysisRecords.size();
+    logger.info("So far, Completed Migrating {} records", completedCount);
   }
 }
