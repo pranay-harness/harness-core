@@ -20,6 +20,7 @@ public interface ContextElement {
   String PCF_INSTANCE = "pcfinstance";
   String ARTIFACT = "artifact";
   String SERVICE_VARIABLE = "serviceVariable";
+  String ENVIRONMENT_VARIABLE = "environmentVariable";
   String SAFE_DISPLAY_SERVICE_VARIABLE = "safeDisplayServiceVariable";
   String TIMESTAMP_ID = "timestampId";
   String PIPELINE = "pipeline";
