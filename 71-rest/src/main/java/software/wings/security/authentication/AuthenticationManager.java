@@ -91,14 +91,14 @@ public class AuthenticationManager {
      */
     try {
       User user = authenticationUtil.getUser(userName, USER);
-      if (!user.isEmailVerified()) {
-        // HAR-7984: Return 401 http code if user email not verified yet.
-        throw new WingsException(EMAIL_NOT_VERIFIED, USER);
-      }
-
       AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user);
-
       switch (authenticationMechanism) {
+        case USER_PASSWORD:
+          if (!user.isEmailVerified()) {
+            // HAR-7984: Return 401 http code if user email not verified yet.
+            throw new WingsException(EMAIL_NOT_VERIFIED, USER);
+          }
+          break;
         case SAML:
           SamlRequest samlRequest = samlClientService.generateSamlRequest(user);
           builder.samlRequest(samlRequest);
