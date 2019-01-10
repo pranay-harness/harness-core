@@ -423,15 +423,6 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public Artifact getArtifactByBuildNumber(String appId, String artifactStreamId, String buildNumber) {
-    return wingsPersistence.createQuery(Artifact.class)
-        .filter("appId", appId)
-        .filter("artifactStreamId", artifactStreamId)
-        .filter("metadata.buildNo", buildNumber)
-        .get();
-  }
-
-  @Override
   public Artifact getArtifactByBuildNumber(
       String appId, String artifactStreamId, String artifactSource, String buildNumber, boolean regex) {
     return wingsPersistence.createQuery(Artifact.class)

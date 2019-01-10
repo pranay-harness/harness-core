@@ -64,6 +64,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -97,6 +98,7 @@ public class YamlResource {
   private HarnessUserGroupService harnessUserGroupService;
   @Inject private MainConfiguration configuration;
   @Inject private YamlCloneService yamlCloneService;
+  @Inject private ExecutorService executorService;
 
   /**
    * Instantiates a new service resource.

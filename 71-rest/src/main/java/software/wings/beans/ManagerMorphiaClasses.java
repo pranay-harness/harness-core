@@ -165,5 +165,5 @@ public class ManagerMorphiaClasses {
       NewRelicCVServiceConfiguration.class, ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class,
       YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class,
       ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class,
-      AbstractLogsCVConfiguration.class, ElkCVConfiguration.class);
+      AbstractLogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class);
 }

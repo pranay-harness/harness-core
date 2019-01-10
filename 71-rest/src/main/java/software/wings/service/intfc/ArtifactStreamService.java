@@ -108,5 +108,7 @@ public interface ArtifactStreamService extends OwnedByService {
 
   boolean deleteByYamlGit(String appId, String artifactStreamId, boolean syncFromGit);
 
+  boolean updateFailedCronAttempts(String appId, String artifactStreamId, int counter);
+
   List<ArtifactStream> listBySettingId(String settingId);
 }

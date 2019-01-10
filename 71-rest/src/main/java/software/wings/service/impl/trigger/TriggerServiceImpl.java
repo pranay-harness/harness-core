@@ -61,6 +61,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
@@ -92,10 +93,12 @@ import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededRespon
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -104,6 +107,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.utils.Misc;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -126,7 +130,10 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject ArtifactCollectionService artifactCollectionService;
+  @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
+  @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private AppService appService;
   @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
@@ -1108,22 +1115,41 @@ public class TriggerServiceImpl implements TriggerService {
                     + " do not match with the trigger services " + services.values(),
                 USER);
           } else {
-            artifact = fetchMatchedArtifact(trigger, artifactSelection, buildNumber);
-            if (artifact == null) {
-              triggerCollectionAndCollect(trigger, artifacts, artifactSelection, buildNumber);
-            } else {
+            artifact = getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
+                trigger.getAppId(), artifactSelection, buildNumber);
+            if (artifact != null) {
               artifacts.add(artifact);
             }
           }
         });
   }
 
-  private Artifact fetchMatchedArtifact(Trigger trigger, ArtifactSelection artifactSelection, String buildNumber) {
-    ArtifactStream artifactStream =
-        artifactStreamService.get(trigger.getAppId(), artifactSelection.getArtifactStreamId());
-    notNullCheck("Artifact stream was deleted", artifactStream, USER);
-    return artifactService.getArtifactByBuildNumber(trigger.getAppId(), artifactSelection.getArtifactStreamId(),
-        artifactStream.getSourceName(), buildNumber, artifactSelection.isRegex());
+  private Artifact getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
+      String appId, ArtifactSelection artifactSelection, String buildNumber) {
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactSelection.getArtifactStreamId());
+    Validator.notNullCheck("Artifact Source doesn't exist", artifactStream, USER);
+    Artifact collectedArtifactForBuildNumber = artifactService.getArtifactByBuildNumber(
+        appId, artifactSelection.getArtifactStreamId(), artifactStream.getSourceName(), buildNumber, false);
+
+    return collectedArtifactForBuildNumber != null
+        ? collectedArtifactForBuildNumber
+        : collectNewArtifactForBuildNumber(appId, artifactStream, buildNumber);
+  }
+
+  private Artifact collectNewArtifactForBuildNumber(String appId, ArtifactStream artifactStream, String buildNumber) {
+    boolean featureFlagEnabled =
+        featureFlagService.isEnabled(FeatureName.ASYNC_ARTIFACT_COLLECTION, appService.getAccountIdByAppId(appId));
+    Artifact artifact = featureFlagEnabled
+        ? artifactCollectionServiceAsync.collectNewArtifacts(appId, artifactStream, buildNumber)
+        : artifactCollectionService.collectNewArtifacts(appId, artifactStream, buildNumber);
+    if (artifact != null) {
+      logger.info("Artifact collected for the build number {} of stream id {}", buildNumber, artifactStream.getUuid());
+    } else {
+      logger.warn(
+          "Artifact collection invoked. However, Artifact not yet collected for the build number {} of stream id {}",
+          buildNumber, artifactStream.getUuid());
+    }
+    return artifact;
   }
 
   private void addArtifactsFromVersionsOfWebHook(
@@ -1150,24 +1176,5 @@ public class TriggerServiceImpl implements TriggerService {
     }
     return isEmpty(workflowServices) ? new HashMap<>()
                                      : workflowServices.stream().collect(toMap(Base::getUuid, Service::getName));
-  }
-
-  private void triggerCollectionAndCollect(
-      Trigger trigger, List<Artifact> artifacts, ArtifactSelection artifactSelection, String buildNumber) {
-    // Initiate the artifact collection. Right now, it is sync call. If changed to async
-    artifactCollectionService.collectNewArtifacts(trigger.getAppId(), artifactSelection.getArtifactStreamId());
-    Artifact artifact = fetchMatchedArtifact(trigger, artifactSelection, buildNumber);
-    if (artifact == null) {
-      logger.info(
-          "Artifact collection invoked. However, Artifact not yet collected for the build number {} of stream id {}",
-          buildNumber, artifactSelection.getArtifactStreamId());
-      throw new WingsException("Artifact [" + buildNumber + "] does not exist for the artifact source + ["
-              + artifactSelection.getArtifactSourceName()
-              + "]. Please make sure artifact exists in the artifact server",
-          USER);
-    }
-    logger.info("Artifact collected for the build number {} of stream id {}", buildNumber,
-        artifactSelection.getArtifactStreamId());
-    artifacts.add(artifact);
   }
 }

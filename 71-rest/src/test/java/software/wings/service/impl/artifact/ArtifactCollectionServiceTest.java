@@ -15,6 +15,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.beans.EmbeddedUser;
 import org.junit.Before;
@@ -45,12 +46,12 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ArtifactCollectionServiceTest extends WingsBaseTest {
+  public static final String LATEST_BUILD_NUMBER = "latest";
   @Inject @Spy private WingsPersistence wingsPersistence;
-  @InjectMocks @Inject private ArtifactCollectionService artifactCollectionService;
+  @InjectMocks @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
   @Inject @Transient private ArtifactCollectionUtil artifactCollectionUtil;
 
   @Mock ArtifactStreamService artifactStreamService;
@@ -123,7 +124,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCollectNewArtifactsDocker() {
-    BuildDetails dockerBuildDetails = aBuildDetails().withNumber("latest").build();
+    BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
                                                     .uuid(ARTIFACT_STREAM_ID)
                                                     .appId(APP_ID)
@@ -138,16 +139,15 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact =
+        artifactCollectionService.collectNewArtifacts(APP_ID, dockerArtifactStream, LATEST_BUILD_NUMBER);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("latest");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(LATEST_BUILD_NUMBER);
   }
 
   @Test
   public void shouldCollectNewArtifactsEcr() {
-    BuildDetails dockerBuildDetails = aBuildDetails().withNumber("latest").build();
+    BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     EcrArtifactStream ecrArtifactStream = EcrArtifactStream.builder()
                                               .uuid(ARTIFACT_STREAM_ID)
                                               .appId(APP_ID)
@@ -162,16 +162,15 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact =
+        artifactCollectionService.collectNewArtifacts(APP_ID, ecrArtifactStream, LATEST_BUILD_NUMBER);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("latest");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(LATEST_BUILD_NUMBER);
   }
 
   @Test
   public void shouldCollectNewArtifactsGcr() {
-    BuildDetails dockerBuildDetails = aBuildDetails().withNumber("latest").build();
+    BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
                                               .uuid(ARTIFACT_STREAM_ID)
                                               .appId(APP_ID)
@@ -185,16 +184,15 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact =
+        artifactCollectionService.collectNewArtifacts(APP_ID, gcrArtifactStream, LATEST_BUILD_NUMBER);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("latest");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(LATEST_BUILD_NUMBER);
   }
 
   @Test
   public void shouldCollectNewArtifactsAcr() {
-    BuildDetails dockerBuildDetails = aBuildDetails().withNumber("latest").build();
+    BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
                                               .uuid(ARTIFACT_STREAM_ID)
                                               .appId(APP_ID)
@@ -208,16 +206,16 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact =
+        artifactCollectionService.collectNewArtifacts(APP_ID, acrArtifactStream, LATEST_BUILD_NUMBER);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("latest");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(LATEST_BUILD_NUMBER);
   }
 
   @Test
   public void shouldCollectNewArtifactsAmi() {
-    BuildDetails amiBuildDetails = aBuildDetails().withNumber("AMI-Image").withRevision("ImageId").build();
+    String buildNumber = "AMI-Image";
+    BuildDetails amiBuildDetails = aBuildDetails().withNumber(buildNumber).withRevision("ImageId").build();
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
                                                     .uuid(ARTIFACT_STREAM_ID)
                                                     .appId(APP_ID)
@@ -231,16 +229,15 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(amiBuildDetails));
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact =
+        artifactCollectionService.collectNewArtifacts(APP_ID, dockerArtifactStream, buildNumber);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("AMI-Image");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(buildNumber);
   }
 
   @Test
   public void shouldCollectNewArtifactsNexusDocker() {
-    BuildDetails dockerBuildDetails = aBuildDetails().withNumber("latest").build();
+    BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
                                                   .uuid(ARTIFACT_STREAM_ID)
                                                   .appId(APP_ID)
@@ -254,16 +251,16 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact =
+        artifactCollectionService.collectNewArtifacts(APP_ID, nexusArtifactStream, LATEST_BUILD_NUMBER);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("latest");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(LATEST_BUILD_NUMBER);
   }
 
   @Test
   public void shouldCollectNewArtifactsNexus() {
-    BuildDetails dockerBuildDetails = aBuildDetails().withNumber("1.1").withRevision("1.1").build();
+    String buildNUmber = "1.1";
+    BuildDetails dockerBuildDetails = aBuildDetails().withNumber(buildNUmber).withRevision(buildNUmber).build();
     NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
                                                   .uuid(ARTIFACT_STREAM_ID)
                                                   .appId(APP_ID)
@@ -277,17 +274,16 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact =
+        artifactCollectionService.collectNewArtifacts(APP_ID, nexusArtifactStream, buildNUmber);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("1.1");
-    assertThat(collectedArtifact.getRevision()).isEqualTo("1.1");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(buildNUmber);
+    assertThat(collectedArtifact.getRevision()).isEqualTo(buildNUmber);
   }
 
   @Test
   public void shouldCollectNewArtifactsArtifactoryDocker() {
-    BuildDetails dockerBuildDetails = aBuildDetails().withNumber("latest").build();
+    BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
     ArtifactoryArtifactStream artifactoryArtifactStream = getArtifactoryArtifactStream();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(artifactoryArtifactStream);
 
@@ -298,17 +294,17 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(dockerBuildDetails));
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact =
+        artifactCollectionService.collectNewArtifacts(APP_ID, artifactoryArtifactStream, LATEST_BUILD_NUMBER);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("latest");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(LATEST_BUILD_NUMBER);
   }
 
   @Test
   public void shouldCollectNewArtifactsArtifactoryGeneric() {
+    String buildNumber = "todolist.rpm";
     BuildDetails artifactoryBuilds =
-        aBuildDetails().withNumber("todolist.rpm").withArtifactPath("harness-rpm/todolist.rpm").build();
+        aBuildDetails().withNumber(buildNumber).withArtifactPath("harness-rpm/todolist.rpm").build();
     ArtifactoryArtifactStream artifactoryArtifactStream = getArtifactoryArtifactStream();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(artifactoryArtifactStream);
 
@@ -317,20 +313,19 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
 
     Artifact newArtifact = artifactCollectionUtil.getArtifact(artifactoryArtifactStream, artifactoryBuilds);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
-    when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID, 25))
-        .thenReturn(asList(artifactoryBuilds));
+    when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(artifactoryBuilds));
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact =
+        artifactCollectionService.collectNewArtifacts(APP_ID, artifactoryArtifactStream, buildNumber);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("todolist.rpm");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(buildNumber);
     assertThat(collectedArtifact.getArtifactPath()).isEqualTo("harness-rpm/todolist.rpm");
   }
 
   @Test
   public void shouldCollectNewArtifactsS3() {
     BuildDetails s3BuildDetails = getS3BuildDetails();
+    String buildNumber = s3BuildDetails.getNumber();
     AmazonS3ArtifactStream s3ArtifactStream = getS3ArtifactStream();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(s3ArtifactStream);
 
@@ -338,16 +333,15 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
     when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(s3BuildDetails));
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact = artifactCollectionService.collectNewArtifacts(APP_ID, s3ArtifactStream, buildNumber);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("appstack/apache-tomcat-8.5.15.tar.gz");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(buildNumber);
   }
 
   @Test
   public void shouldCollectNewArtifactsJenkins() {
     BuildDetails jenkinsBuildDetails = getJenkinsBuildDetails();
+    String buildNUmber = jenkinsBuildDetails.getNumber();
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsArtifactStream();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
 
@@ -358,16 +352,16 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     when(buildSourceService.getLastSuccessfulBuild(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID))
         .thenReturn(jenkinsBuildDetails);
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact =
+        artifactCollectionService.collectNewArtifacts(APP_ID, jenkinsArtifactStream, buildNUmber);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("3594");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(buildNUmber);
   }
 
   @Test
   public void shouldCollectNewArtifactsBamboo() {
-    BuildDetails bambooBuildDetails = aBuildDetails().withNumber("20").build();
+    String buildNumber = "20";
+    BuildDetails bambooBuildDetails = aBuildDetails().withNumber(buildNumber).build();
     BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
                                                     .uuid(ARTIFACT_STREAM_ID)
                                                     .appId(APP_ID)
@@ -379,14 +373,12 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
 
     Artifact newArtifact = artifactCollectionUtil.getArtifact(bambooArtifactStream, bambooBuildDetails);
     when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
-    when(buildSourceService.getLastSuccessfulBuild(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID))
-        .thenReturn(bambooBuildDetails);
+    when(buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID)).thenReturn(asList(bambooBuildDetails));
 
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
+    Artifact collectedArtifact =
+        artifactCollectionService.collectNewArtifacts(APP_ID, bambooArtifactStream, buildNumber);
     assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("20");
+    assertThat(collectedArtifact.getBuildNo()).isEqualTo(buildNumber);
   }
 
   private AmazonS3ArtifactStream getS3ArtifactStream() {

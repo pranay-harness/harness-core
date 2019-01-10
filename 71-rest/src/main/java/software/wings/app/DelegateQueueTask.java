@@ -7,7 +7,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.DelegateTask.Status.ERROR;
 import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.beans.DelegateTask.Status.STARTED;
 import static software.wings.service.impl.DelegateServiceImpl.VALIDATION_TIMEOUT;
@@ -23,8 +22,8 @@ import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.mongodb.morphia.query.WhereCriteria;
 import org.slf4j.Logger;
@@ -114,23 +113,29 @@ public class DelegateQueueTask implements Runnable {
   }
 
   private void markTasksAsFailed(List<String> taskIds) {
-    Query<DelegateTask> updateQuery =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).field(ID_KEY).in(taskIds);
-    UpdateOperations<DelegateTask> updateOperations =
-        wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ERROR);
-    wingsPersistence.update(updateQuery, updateOperations);
+    List<DelegateTask> delegateTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                           .field(ID_KEY)
+                                           .in(taskIds)
+                                           .project(ID_KEY, true)
+                                           .project("delegateId", true)
+                                           .project("waitId", true)
+                                           .project("tags", true)
+                                           .project("accountId", true)
+                                           .project("taskType", true)
+                                           .asList();
 
-    List<DelegateTask> delegateTasks =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).field(ID_KEY).in(taskIds).asList();
-
-    delegateTasks.forEach(delegateTask -> {
-      if (isNotBlank(delegateTask.getWaitId())) {
-        String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
-        logger.info("Marking task as failed - {}: {}", delegateTask.getUuid(), errorMessage);
-        waitNotifyEngine.notify(
-            delegateTask.getWaitId(), ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
-      }
-    });
+    boolean deleted = wingsPersistence.delete(
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).field(Mapper.ID_KEY).in(taskIds));
+    if (deleted) {
+      delegateTasks.forEach(delegateTask -> {
+        if (isNotBlank(delegateTask.getWaitId())) {
+          String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
+          logger.info("Marking task as failed - {}: {}", delegateTask.getUuid(), errorMessage);
+          waitNotifyEngine.notify(
+              delegateTask.getWaitId(), ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
+        }
+      });
+    }
   }
 
   private void rebroadcastUnassignedTasks() {
