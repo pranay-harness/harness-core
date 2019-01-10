@@ -81,6 +81,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   int primaryRevision;
   int stageRevision;
   private K8sBlueGreenDeployResponse k8sBlueGreenDeployResponse;
+  private String releaseName;
 
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
@@ -91,6 +92,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters =
         (K8sBlueGreenDeployTaskParameters) k8sTaskParameters;
+
+    releaseName = k8sBlueGreenDeployTaskParameters.getReleaseName();
 
     k8sBlueGreenDeployResponse = K8sBlueGreenDeployResponse.builder().build();
 
@@ -274,7 +277,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
       addRevisionNumber(resources, currentRelease.getNumber(), true);
       managedWorkload = getManagedWorkload(resources);
-      managedWorkload.addRevisionLabelInDeployment(currentRelease.getNumber(), false);
+      managedWorkload.addReleaseLabelsInPodSpec(releaseName, currentRelease.getNumber());
+      managedWorkload.addRevisionNumberInDeploymentSelector(currentRelease.getNumber(), false);
 
       if (currentRelease.getNumber() == 1) {
         primaryService.get().addRevisionSelectorInService(currentRelease.getNumber());

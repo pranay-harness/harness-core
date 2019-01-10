@@ -66,7 +66,7 @@ public class KubernetesResource {
     return this;
   }
 
-  public KubernetesResource addRevisionLabelInDeployment(int revisionNumber, boolean isCanary) {
+  public KubernetesResource addRevisionNumberInDeploymentSelector(int revisionNumber, boolean isCanary) {
     HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
     Deployment deployment = (Deployment) resource;
 
@@ -92,15 +92,6 @@ public class KubernetesResource {
     if (isCanary) {
       deploymentSpec.setReplicas(0);
     }
-
-    PodTemplateSpec podTemplateSpec = deploymentSpec.getTemplate();
-    Map<String, String> podLabels = podTemplateSpec.getMetadata().getLabels();
-    if (podLabels == null) {
-      podLabels = new HashMap<>();
-    }
-
-    podLabels.put(HarnessLabels.revision, String.valueOf(revisionNumber));
-    podTemplateSpec.getMetadata().setLabels(podLabels);
 
     try {
       this.spec = KubernetesHelper.toYaml(resource);
@@ -144,6 +135,30 @@ public class KubernetesResource {
     this.resourceId.setName(newName);
     try {
       this.spec = KubernetesHelper.toYaml(output.get(0));
+      this.value = readYaml(this.spec).get(0);
+    } catch (IOException e) {
+      // do nothing
+      noop();
+    }
+    return this;
+  }
+
+  public KubernetesResource addReleaseLabelsInPodSpec(String releaseName, int revisionNumber) {
+    HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
+
+    PodTemplateSpec podTemplateSpec = getPodTemplateSpec(resource);
+
+    Map<String, String> podLabels = podTemplateSpec.getMetadata().getLabels();
+    if (podLabels == null) {
+      podLabels = new HashMap<>();
+    }
+
+    podLabels.put(HarnessLabels.releaseName, String.valueOf(releaseName));
+    podLabels.put(HarnessLabels.revision, String.valueOf(revisionNumber));
+    podTemplateSpec.getMetadata().setLabels(podLabels);
+
+    try {
+      this.spec = KubernetesHelper.toYaml(resource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
       // do nothing
@@ -197,6 +212,22 @@ public class KubernetesResource {
       noop();
     }
     return result;
+  }
+
+  private PodTemplateSpec getPodTemplateSpec(HasMetadata resource) {
+    switch (resource.getKind()) {
+      case "Deployment":
+        return ((Deployment) resource).getSpec().getTemplate();
+      case "DaemonSet":
+        return ((DaemonSet) resource).getSpec().getTemplate();
+      case "StatefulSet":
+        return ((StatefulSet) resource).getSpec().getTemplate();
+      case "Job":
+        return ((Job) resource).getSpec().getTemplate();
+      default:
+        unhandled(resource.getKind());
+    }
+    return null;
   }
 
   private PodSpec getPodSpec(HasMetadata resource) {

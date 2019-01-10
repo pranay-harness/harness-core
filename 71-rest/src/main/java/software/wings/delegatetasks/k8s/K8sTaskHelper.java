@@ -21,6 +21,7 @@ import static software.wings.beans.Log.color;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.KubernetesYamlException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.DeleteCommand;
@@ -396,6 +397,14 @@ public class K8sTaskHelper {
       if (isValidManifestFile(manifestFile.getFileName())) {
         try {
           result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
+        } catch (KubernetesYamlException e) {
+          executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
+          String message = Misc.getMessage(e);
+          if (e.getCause() != null) {
+            message += e.getCause().getMessage();
+          }
+          executionLogCallback.saveExecutionLog(message, ERROR);
+          throw e;
         } catch (Exception e) {
           executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
           executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
