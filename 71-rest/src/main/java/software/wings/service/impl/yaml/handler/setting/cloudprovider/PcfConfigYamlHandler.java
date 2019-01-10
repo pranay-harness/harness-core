@@ -15,13 +15,15 @@ public class PcfConfigYamlHandler extends CloudProviderYamlHandler<Yaml, PcfConf
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .username(pcfConfig.getUsername())
-        .endpointUrl(pcfConfig.getEndpointUrl())
-        .password(getEncryptedValue(pcfConfig, "password", false))
-        .type(pcfConfig.getType())
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .username(pcfConfig.getUsername())
+                    .endpointUrl(pcfConfig.getEndpointUrl())
+                    .password(getEncryptedValue(pcfConfig, "password", false))
+                    .type(pcfConfig.getType())
+                    .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

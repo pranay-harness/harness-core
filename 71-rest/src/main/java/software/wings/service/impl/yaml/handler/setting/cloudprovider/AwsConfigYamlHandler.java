@@ -18,14 +18,16 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .accessKey(awsConfig.getAccessKey())
-        .secretKey(getEncryptedValue(awsConfig, "secretKey", false))
-        .type(awsConfig.getType())
-        .useEc2IamCredentials(awsConfig.isUseEc2IamCredentials())
-        .tag(awsConfig.getTag())
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .accessKey(awsConfig.getAccessKey())
+                    .secretKey(getEncryptedValue(awsConfig, "secretKey", false))
+                    .type(awsConfig.getType())
+                    .useEc2IamCredentials(awsConfig.isUseEc2IamCredentials())
+                    .tag(awsConfig.getTag())
+                    .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

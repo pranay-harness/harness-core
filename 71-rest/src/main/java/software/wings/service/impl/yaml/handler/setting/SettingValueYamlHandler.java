@@ -14,11 +14,14 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
+import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
+import software.wings.settings.UsageRestrictions.Yaml;
 
 import java.util.List;
 
@@ -31,6 +34,7 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
 
   @Inject protected SecretManager secretManager;
   @Inject private SettingsService settingsService;
+  @Inject private UsageRestrictionsYamlHandler usageRestrictionsYamlHandler;
   @Inject protected EncryptionService encryptionService;
   @Inject protected YamlHelper yamlHelper;
 
@@ -40,6 +44,13 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
     SettingAttribute previous = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     SettingAttribute settingAttribute = toBean(previous, changeContext, changeSetContext);
     settingAttribute.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+
+    ChangeContext.Builder clonedContextBuilder =
+        cloneFileChangeContext(changeContext, changeContext.getYaml().getUsageRestrictions());
+    ChangeContext clonedContext = clonedContextBuilder.build();
+
+    UsageRestrictions usageRestrictions = usageRestrictionsYamlHandler.upsertFromYaml(clonedContext, changeSetContext);
+    settingAttribute.setUsageRestrictions(usageRestrictions);
 
     if (previous != null) {
       settingAttribute.setUuid(previous.getUuid());
@@ -61,6 +72,11 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
       logger.warn("Invalid " + fieldName + ". Should be a valid url to a secret");
       throw new WingsException(e);
     }
+  }
+
+  protected void toYaml(Y yaml, SettingAttribute settingAttribute, String appId) {
+    Yaml usageRestrictionsYaml = usageRestrictionsYamlHandler.toYaml(settingAttribute.getUsageRestrictions(), appId);
+    yaml.setUsageRestrictions(usageRestrictionsYaml);
   }
 
   @Override

@@ -80,7 +80,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String region, String loadBalancerName, String accessKey,
-        String secretKey, UsageRestrictions usageRestrictions, boolean useEc2IamCredentials) {
+        String secretKey, UsageRestrictions.Yaml usageRestrictions, boolean useEc2IamCredentials) {
       super(type, harnessApiVersion, usageRestrictions);
       this.region = region;
       this.loadBalancerName = loadBalancerName;

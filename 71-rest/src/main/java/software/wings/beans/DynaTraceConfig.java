@@ -60,7 +60,7 @@ public class DynaTraceConfig extends SettingValue implements EncryptableSetting 
 
     @Builder
     public DynaTraceYaml(String type, String harnessApiVersion, String dynaTraceUrl, String apiToken,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.dynaTraceUrl = dynaTraceUrl;
       this.apiToken = apiToken;

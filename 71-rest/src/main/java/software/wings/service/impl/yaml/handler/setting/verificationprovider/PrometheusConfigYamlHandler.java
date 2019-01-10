@@ -16,11 +16,13 @@ public class PrometheusConfigYamlHandler extends VerificationProviderYamlHandler
   public PrometheusYaml toYaml(SettingAttribute settingAttribute, String appId) {
     PrometheusConfig config = (PrometheusConfig) settingAttribute.getValue();
 
-    return PrometheusYaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(config.getType())
-        .prometheusUrl(config.getUrl())
-        .build();
+    PrometheusYaml yaml = PrometheusYaml.builder()
+                              .harnessApiVersion(getHarnessApiVersion())
+                              .type(config.getType())
+                              .prometheusUrl(config.getUrl())
+                              .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   @Override

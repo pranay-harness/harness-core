@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.DatadogConfig.DatadogYaml;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
@@ -14,13 +15,15 @@ public class DatadogConfigYamlHandler
   public DatadogConfig.DatadogYaml toYaml(SettingAttribute settingAttribute, String appId) {
     DatadogConfig config = (DatadogConfig) settingAttribute.getValue();
 
-    return DatadogConfig.DatadogYaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(config.getType())
-        .url(config.getUrl())
-        .apiKey(new String(config.getApiKey()))
-        .applicationKey(new String(config.getApplicationKey()))
-        .build();
+    DatadogYaml yaml = DatadogYaml.builder()
+                           .harnessApiVersion(getHarnessApiVersion())
+                           .type(config.getType())
+                           .url(config.getUrl())
+                           .apiKey(new String(config.getApiKey()))
+                           .applicationKey(new String(config.getApplicationKey()))
+                           .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   @Override

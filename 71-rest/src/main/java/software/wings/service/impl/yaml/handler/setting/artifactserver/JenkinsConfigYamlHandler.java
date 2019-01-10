@@ -22,15 +22,18 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
 
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(jenkinsConfig.getType())
-        .url(jenkinsConfig.getJenkinsUrl())
-        .username(jenkinsConfig.getUsername())
-        .password(getEncryptedValue(jenkinsConfig, "password", true))
-        .token(jenkinsConfig.getEncryptedToken() != null ? getEncryptedValue(jenkinsConfig, "token", true) : null)
-        .authMechanism(jenkinsConfig.getAuthMechanism())
-        .build();
+    Yaml yaml =
+        Yaml.builder()
+            .harnessApiVersion(getHarnessApiVersion())
+            .type(jenkinsConfig.getType())
+            .url(jenkinsConfig.getJenkinsUrl())
+            .username(jenkinsConfig.getUsername())
+            .password(getEncryptedValue(jenkinsConfig, "password", true))
+            .token(jenkinsConfig.getEncryptedToken() != null ? getEncryptedValue(jenkinsConfig, "token", true) : null)
+            .authMechanism(jenkinsConfig.getAuthMechanism())
+            .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

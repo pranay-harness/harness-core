@@ -94,7 +94,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch,
-        String reference, UsageRestrictions usageRestrictions, boolean keyAuth, String sshSettingId,
+        String reference, UsageRestrictions.Yaml usageRestrictions, boolean keyAuth, String sshSettingId,
         String description) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.branch = branch;

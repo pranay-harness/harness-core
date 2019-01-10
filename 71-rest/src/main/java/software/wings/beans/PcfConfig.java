@@ -57,7 +57,7 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String endpointUrl, String username, String password,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.endpointUrl = endpointUrl;
       this.username = username;

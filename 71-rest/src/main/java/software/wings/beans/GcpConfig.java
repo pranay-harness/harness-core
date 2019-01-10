@@ -54,7 +54,7 @@ public class GcpConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
     }

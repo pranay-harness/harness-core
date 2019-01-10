@@ -19,16 +19,18 @@ public class SmtpConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     SmtpConfig smtpConfig = (SmtpConfig) settingAttribute.getValue();
 
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(smtpConfig.getType())
-        .host(smtpConfig.getHost())
-        .port(smtpConfig.getPort())
-        .fromAddress(smtpConfig.getFromAddress())
-        .useSSL(smtpConfig.isUseSSL())
-        .username(smtpConfig.getUsername())
-        .password(getEncryptedValue(smtpConfig, "password", false))
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .type(smtpConfig.getType())
+                    .host(smtpConfig.getHost())
+                    .port(smtpConfig.getPort())
+                    .fromAddress(smtpConfig.getFromAddress())
+                    .useSSL(smtpConfig.isUseSSL())
+                    .username(smtpConfig.getUsername())
+                    .password(getEncryptedValue(smtpConfig, "password", false))
+                    .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

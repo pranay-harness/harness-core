@@ -10,7 +10,7 @@ import software.wings.settings.UsageRestrictions;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public abstract class VerificationProviderYaml extends SettingValue.Yaml {
-  public VerificationProviderYaml(String type, String harnessApiVersion, UsageRestrictions usageRestrictions) {
+  public VerificationProviderYaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
   }
 }

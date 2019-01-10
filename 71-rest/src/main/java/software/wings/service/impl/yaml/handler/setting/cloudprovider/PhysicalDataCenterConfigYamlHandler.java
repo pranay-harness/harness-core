@@ -18,7 +18,10 @@ public class PhysicalDataCenterConfigYamlHandler extends CloudProviderYamlHandle
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     PhysicalDataCenterConfig physicalDataCenterConfig = (PhysicalDataCenterConfig) settingAttribute.getValue();
 
-    return Yaml.builder().harnessApiVersion(getHarnessApiVersion()).type(physicalDataCenterConfig.getType()).build();
+    Yaml yaml =
+        Yaml.builder().harnessApiVersion(getHarnessApiVersion()).type(physicalDataCenterConfig.getType()).build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(

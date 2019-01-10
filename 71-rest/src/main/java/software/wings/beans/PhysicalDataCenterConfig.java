@@ -74,7 +74,7 @@ public class PhysicalDataCenterConfig extends SettingValue {
   @NoArgsConstructor
   public static final class Yaml extends CloudProviderYaml {
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, UsageRestrictions usageRestrictions) {
+    public Yaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
     }
   }

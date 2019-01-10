@@ -16,13 +16,15 @@ public class AzureConfigYamlHandler extends CloudProviderYamlHandler<Yaml, Azure
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     AzureConfig azureConfig = (AzureConfig) settingAttribute.getValue();
 
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(azureConfig.getType())
-        .clientId(azureConfig.getClientId())
-        .tenantId(azureConfig.getTenantId())
-        .key(getEncryptedValue(azureConfig, "key", false))
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .type(azureConfig.getType())
+                    .clientId(azureConfig.getClientId())
+                    .tenantId(azureConfig.getTenantId())
+                    .key(getEncryptedValue(azureConfig, "key", false))
+                    .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

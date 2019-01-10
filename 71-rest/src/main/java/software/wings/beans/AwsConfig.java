@@ -66,7 +66,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String accessKey, String secretKey,
-        UsageRestrictions usageRestrictions, boolean useEc2IamCredentials, String tag) {
+        UsageRestrictions.Yaml usageRestrictions, boolean useEc2IamCredentials, String tag) {
       super(type, harnessApiVersion, usageRestrictions);
       this.accessKey = accessKey;
       this.secretKey = secretKey;

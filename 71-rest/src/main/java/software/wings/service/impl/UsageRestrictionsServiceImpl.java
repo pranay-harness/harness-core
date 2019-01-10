@@ -1280,6 +1280,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         if (appFilter == null || appFilter.getFilterType() == null) {
           throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
         }
+
+        String filterType = appFilter.getFilterType();
+        if (!GenericEntityFilter.FilterType.isValidFilterType(filterType)) {
+          throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
+        }
+
         if (appFilter.getFilterType().equals(GenericEntityFilter.FilterType.SELECTED)) {
           if (isEmpty(appFilter.getIds())) {
             throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
@@ -1296,6 +1302,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         Set<String> envFilterTypes = envFilter.getFilterTypes();
         if (envFilter == null || isEmpty(envFilterTypes)) {
           throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
+        }
+
+        for (String envFilterType : envFilterTypes) {
+          if (!EnvFilter.FilterType.isValidFilterType(envFilterType)) {
+            throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
+          }
         }
 
         if (envFilterTypes.contains(FilterType.SELECTED)) {

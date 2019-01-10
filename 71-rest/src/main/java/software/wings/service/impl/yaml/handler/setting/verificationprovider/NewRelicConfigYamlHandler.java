@@ -20,12 +20,13 @@ public class NewRelicConfigYamlHandler extends VerificationProviderYamlHandler<Y
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     NewRelicConfig config = (NewRelicConfig) settingAttribute.getValue();
-
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(config.getType())
-        .apiKey(getEncryptedValue(config, "apiKey", false))
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .type(config.getType())
+                    .apiKey(getEncryptedValue(config, "apiKey", false))
+                    .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

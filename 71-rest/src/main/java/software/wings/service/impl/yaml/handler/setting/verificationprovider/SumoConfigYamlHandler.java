@@ -18,13 +18,15 @@ public class SumoConfigYamlHandler extends VerificationProviderYamlHandler<Yaml,
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     SumoConfig config = (SumoConfig) settingAttribute.getValue();
-    return Yaml.builder()
-        .type(config.getType())
-        .harnessApiVersion(getHarnessApiVersion())
-        .sumoUrl(config.getSumoUrl())
-        .accessId(getEncryptedValue(config, "accessId", true))
-        .accessKey(getEncryptedValue(config, "accessKey", true))
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .type(config.getType())
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .sumoUrl(config.getSumoUrl())
+                    .accessId(getEncryptedValue(config, "accessId", true))
+                    .accessKey(getEncryptedValue(config, "accessKey", true))
+                    .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

@@ -20,15 +20,17 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     ElasticLoadBalancerConfig config = (ElasticLoadBalancerConfig) settingAttribute.getValue();
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(config.getType())
-        .region(config.getRegion().name())
-        .loadBalancerName(config.getLoadBalancerName())
-        .accessKey(config.getAccessKey())
-        .secretKey(getEncryptedValue(config, "secretKey", false))
-        .useEc2IamCredentials(config.isUseEc2IamCredentials())
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .type(config.getType())
+                    .region(config.getRegion().name())
+                    .loadBalancerName(config.getLoadBalancerName())
+                    .accessKey(config.getAccessKey())
+                    .secretKey(getEncryptedValue(config, "secretKey", false))
+                    .useEc2IamCredentials(config.isUseEc2IamCredentials())
+                    .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

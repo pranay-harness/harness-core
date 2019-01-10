@@ -19,11 +19,13 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     GcpConfig gcpConfig = (GcpConfig) settingAttribute.getValue();
 
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(gcpConfig.getType())
-        .serviceAccountKeyFileContent(getEncryptedValue(gcpConfig, "serviceAccountKeyFileContent", false))
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .type(gcpConfig.getType())
+                    .serviceAccountKeyFileContent(getEncryptedValue(gcpConfig, "serviceAccountKeyFileContent", false))
+                    .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

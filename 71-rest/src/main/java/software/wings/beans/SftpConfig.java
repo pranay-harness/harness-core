@@ -54,7 +54,7 @@ public class SftpConfig extends SettingValue implements EncryptableSetting {
     String domain;
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String domain, String username, String password,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.domain = domain;
     }
