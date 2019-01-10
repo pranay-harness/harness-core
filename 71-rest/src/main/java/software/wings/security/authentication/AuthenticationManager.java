@@ -2,6 +2,7 @@ package software.wings.security.authentication;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
@@ -90,6 +91,11 @@ public class AuthenticationManager {
      */
     try {
       User user = authenticationUtil.getUser(userName, USER);
+      if (!user.isEmailVerified()) {
+        // HAR-7984: Return 401 http code if user email not verified yet.
+        throw new WingsException(EMAIL_NOT_VERIFIED, USER);
+      }
+
       AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user);
 
       switch (authenticationMechanism) {
