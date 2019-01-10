@@ -9,6 +9,7 @@ import static software.wings.common.Constants.ARTIFACT_FILE_NAME_VARIABLE;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.ContextElement.ARTIFACT;
+import static software.wings.sm.ContextElement.ENVIRONMENT_VARIABLE;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 
@@ -47,6 +48,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
@@ -85,6 +87,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient ManagerExpressionEvaluator evaluator;
   @Inject private transient SecretManager secretManager;
   @Inject private transient ServiceTemplateService serviceTemplateService;
+  @Inject private transient ServiceVariableService serviceVariableService;
   @Inject private transient SettingsService settingsService;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private transient VariableProcessor variableProcessor;
@@ -498,6 +501,23 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
   }
 
+  private void prepareVariables(
+      EncryptedFieldMode encryptedFieldMode, ServiceVariable serviceVariable, Map<String, Object> variables) {
+    final String variableName = renderExpression(serviceVariable.getName());
+
+    if (!variables.containsKey(variableName)) {
+      if (serviceVariable.getType() == TEXT || encryptedFieldMode == MASKED) {
+        variables.put(variableName, renderExpression(new String(serviceVariable.getValue())));
+      } else {
+        if (isEmpty(serviceVariable.getAccountId())) {
+          serviceVariable.setAccountId(getApp().getAccountId());
+        }
+        variables.put(variableName,
+            ServiceEncryptedVariable.builder().serviceVariable(serviceVariable).executionContext(this).build());
+      }
+    }
+  }
+
   @Builder
   static class ServiceVariables implements LateBindingValue {
     private EncryptedFieldMode encryptedFieldMode;
@@ -520,26 +540,38 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
           encryptedFieldMode == MASKED ? EncryptedFieldComputeMode.MASKED : EncryptedFieldComputeMode.OBTAIN_META);
 
       if (isNotEmpty(serviceVariables)) {
-        serviceVariables.forEach(serviceVariable -> {
-          final String variableName = executionContext.renderExpression(serviceVariable.getName());
-
-          if (!variables.containsKey(variableName)) {
-            if (serviceVariable.getType() == TEXT || encryptedFieldMode == MASKED) {
-              variables.put(variableName, executionContext.renderExpression(new String(serviceVariable.getValue())));
-            } else {
-              if (isEmpty(serviceVariable.getAccountId())) {
-                serviceVariable.setAccountId(executionContext.getApp().getAccountId());
-              }
-              variables.put(variableName,
-                  ServiceEncryptedVariable.builder()
-                      .serviceVariable(serviceVariable)
-                      .executionContext(executionContext)
-                      .build());
-            }
-          }
-        });
+        serviceVariables.forEach(
+            serviceVariable -> { executionContext.prepareVariables(encryptedFieldMode, serviceVariable, variables); });
       }
       executionContext.contextMap.put(key, variables);
+      return variables;
+    }
+  }
+
+  @Builder
+  static class EnvironmentVariables implements LateBindingValue {
+    private ExecutionContextImpl executionContext;
+    private ServiceVariableService serviceVariableService;
+    private ManagerDecryptionService managerDecryptionService;
+    private SecretManager secretManager;
+
+    @Override
+    public Object bind() {
+      executionContext.contextMap.remove(ENVIRONMENT_VARIABLE);
+
+      Map<String, Object> variables = new HashMap<>();
+
+      final List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
+          executionContext.getAppId(), executionContext.getEnv().getUuid(), OBTAIN_VALUE);
+
+      executionContext.prepareServiceVariables(EncryptedFieldComputeMode.OBTAIN_META);
+
+      if (isNotEmpty(serviceVariables)) {
+        serviceVariables.forEach(serviceVariable -> {
+          executionContext.prepareVariables(EncryptedFieldMode.OBTAIN_VALUE, serviceVariable, variables);
+        });
+      }
+      executionContext.contextMap.put(ENVIRONMENT_VARIABLE, variables);
       return variables;
     }
   }
@@ -571,6 +603,15 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     context.put(SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(OBTAIN_VALUE).build());
     context.put(SAFE_DISPLAY_SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(MASKED).build());
+
+    final EnvironmentVariables environmentVariables = EnvironmentVariables.builder()
+                                                          .executionContext(this)
+                                                          .serviceVariableService(serviceVariableService)
+                                                          .managerDecryptionService(managerDecryptionService)
+                                                          .secretManager(secretManager)
+                                                          .build();
+
+    context.put(ENVIRONMENT_VARIABLE, environmentVariables);
 
     String workflowExecutionId = getWorkflowExecutionId();
 
