@@ -71,6 +71,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   Release release;
   KubernetesResource managedWorkload;
   List<KubernetesResource> resources;
+  private String releaseName;
 
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
@@ -79,33 +80,39 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
           Pair.of("k8sTaskParameters", "Must be instance of K8sRollingDeployTaskParameters"));
     }
 
-    K8sRollingDeployTaskParameters request = (K8sRollingDeployTaskParameters) k8sTaskParameters;
+    K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters = (K8sRollingDeployTaskParameters) k8sTaskParameters;
 
-    List<ManifestFile> manifestFiles = k8sTaskHelper.fetchManifestFiles(request.getK8sDelegateManifestConfig(),
-        k8sTaskHelper.getExecutionLogCallback(request, FetchFiles), gitService, encryptionService);
+    releaseName = k8sRollingDeployTaskParameters.getReleaseName();
+
+    List<ManifestFile> manifestFiles =
+        k8sTaskHelper.fetchManifestFiles(k8sRollingDeployTaskParameters.getK8sDelegateManifestConfig(),
+            k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, FetchFiles), gitService,
+            encryptionService);
     if (manifestFiles == null) {
-      return getFailureResponse(request.getActivityId());
+      return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
     }
-    request.getK8sDelegateManifestConfig().setManifestFiles(manifestFiles);
+    k8sRollingDeployTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFiles);
 
-    boolean success = init(request, k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(request, Init));
+    boolean success = init(k8sRollingDeployTaskParameters, k8sDelegateTaskParams,
+        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Init));
     if (!success) {
-      return getFailureResponse(request.getActivityId());
-    }
-
-    success = prepareForRolling(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(request, Prepare));
-    if (!success) {
-      return getFailureResponse(request.getActivityId());
+      return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
     }
 
-    success = k8sTaskHelper.applyManifests(
-        client, resources, k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(request, Apply));
+    success = prepareForRolling(
+        k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Prepare));
     if (!success) {
-      return getFailureResponse(request.getActivityId());
+      return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
+    }
+
+    success = k8sTaskHelper.applyManifests(client, resources, k8sDelegateTaskParams,
+        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply));
+    if (!success) {
+      return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
     }
 
     if (managedWorkload == null) {
-      k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState)
+      k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState)
           .saveExecutionLog("Skipping Status Check since there is no Managed Workload.", INFO, SUCCESS);
     } else {
       release.setManagedWorkload(managedWorkload.getResourceId());
@@ -113,20 +120,20 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
           k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
 
       success = k8sTaskHelper.doStatusCheck(client, managedWorkload.getResourceId(), k8sDelegateTaskParams,
-          k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState));
+          k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState));
       if (!success) {
         releaseHistory.setReleaseStatus(Status.Failed);
-        kubernetesContainerService.saveReleaseHistory(
-            kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
-        return getFailureResponse(request.getActivityId());
+        kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+            k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+        return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
       }
     }
 
-    wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(request, WrapUp));
+    wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WrapUp));
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    kubernetesContainerService.saveReleaseHistory(
-        kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
+    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+        k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder().releaseNumber(release.getNumber()).build();
@@ -195,15 +202,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         return false;
       }
 
-      managedWorkload = getManagedWorkload(resources);
-
-      if (managedWorkload == null) {
-        executionLogCallback.saveExecutionLog(color("\nNo Managed Workload found.", Yellow, Bold));
-      } else {
-        executionLogCallback.saveExecutionLog(
-            "\nManaged Workload is: " + color(managedWorkload.getResourceId().kindNameRef(), Cyan, Bold));
-      }
-
       release = releaseHistory.createNewRelease(
           resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));
 
@@ -211,10 +209,19 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       k8sTaskHelper.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 
-      executionLogCallback.saveExecutionLog("\nVersioning resources.");
+      managedWorkload = getManagedWorkload(resources);
 
-      addRevisionNumber(resources, release.getNumber());
+      if (managedWorkload == null) {
+        executionLogCallback.saveExecutionLog(color("\nNo Managed Workload found.", Yellow, Bold));
+      } else {
+        executionLogCallback.saveExecutionLog(
+            "\nManaged Workload is: " + color(managedWorkload.getResourceId().kindNameRef(), Cyan, Bold));
 
+        executionLogCallback.saveExecutionLog("\nVersioning resources.");
+
+        addRevisionNumber(resources, release.getNumber());
+        managedWorkload.addReleaseLabelsInPodSpec(releaseName, release.getNumber());
+      }
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return false;

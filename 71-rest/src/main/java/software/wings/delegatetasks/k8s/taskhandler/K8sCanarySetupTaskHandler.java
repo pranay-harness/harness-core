@@ -71,6 +71,7 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
   private List<KubernetesResource> resources;
   private Integer currentInstances;
   private KubernetesResourceId previousManagedWorkload;
+  private String releaseName;
 
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
@@ -80,6 +81,8 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
     }
 
     K8sCanarySetupTaskParameters k8sCanarySetupTaskParameters = (K8sCanarySetupTaskParameters) k8sTaskParameters;
+
+    releaseName = k8sCanarySetupTaskParameters.getReleaseName();
 
     List<ManifestFile> manifestFiles =
         k8sTaskHelper.fetchManifestFiles(k8sCanarySetupTaskParameters.getK8sDelegateManifestConfig(),
@@ -213,7 +216,8 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
 
       addRevisionNumber(resources, currentRelease.getNumber(), true);
       managedWorkload = getManagedWorkload(resources);
-      managedWorkload.addRevisionLabelInDeployment(currentRelease.getNumber(), true);
+      managedWorkload.addReleaseLabelsInPodSpec(releaseName, currentRelease.getNumber());
+      managedWorkload.addRevisionNumberInDeploymentSelector(currentRelease.getNumber(), true);
 
       executionLogCallback.saveExecutionLog(
           "\nManaged Workload is: " + color(managedWorkload.getResourceId().kindNameRef(), LogColor.Cyan, Bold));
