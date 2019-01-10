@@ -19,6 +19,7 @@ public class JiraExecutionData extends StateExecutionData implements ResponseDat
   private String errorMessage;
   private JiraAction jiraAction;
   private String issueId;
+  private String issueKey;
   private String issueUrl;
 
   private JSONArray projects;

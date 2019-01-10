@@ -243,6 +243,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         .executionStatus(ExecutionStatus.SUCCESS)
         .errorMessage("Updated JIRA ticket " + issue.getKey())
         .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
+        .issueId(issue.getId())
+        .issueKey(issue.getKey())
         .build();
   }
 
@@ -284,6 +286,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         .jiraAction(JiraAction.CREATE_TICKET)
         .errorMessage("Created JIRA ticket " + issue.getKey())
         .issueId(issue.getId())
+        .issueKey(issue.getKey())
         .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
         .build();
   }
