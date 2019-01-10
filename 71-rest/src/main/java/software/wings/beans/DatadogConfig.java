@@ -87,7 +87,7 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public DatadogYaml(String type, String harnessApiVersion, String url, String apiKey, String applicationKey,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.url = url;
       this.apiKey = apiKey;

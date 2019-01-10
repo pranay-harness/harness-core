@@ -345,9 +345,9 @@ public abstract class SettingValue implements ExtensionPoint {
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   public abstract static class Yaml extends BaseEntityYaml {
-    private UsageRestrictions usageRestrictions;
+    private UsageRestrictions.Yaml usageRestrictions;
 
-    public Yaml(String type, String harnessApiVersion, UsageRestrictions usageRestrictions) {
+    public Yaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion);
       this.usageRestrictions = usageRestrictions;
     }

@@ -70,6 +70,8 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
 
       yaml.setClientKeyAlgo(kubernetesClusterConfig.getClientKeyAlgo());
 
+      toYaml(yaml, settingAttribute, appId);
+
     } catch (IllegalAccessException e) {
       logger.warn("Invalid " + fieldName + ". Should be a valid url to a secret");
       throw new WingsException(e);

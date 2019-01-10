@@ -62,7 +62,7 @@ public class SplunkConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String splunkUrl, String username, String password,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.splunkUrl = splunkUrl;
       this.username = username;

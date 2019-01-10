@@ -18,14 +18,16 @@ public class AppDynamicsConfigYamlHandler extends VerificationProviderYamlHandle
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     AppDynamicsConfig config = (AppDynamicsConfig) settingAttribute.getValue();
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(config.getType())
-        .username(config.getUsername())
-        .password(getEncryptedValue(config, "password", false))
-        .accountName(config.getAccountname())
-        .controllerUrl(config.getControllerUrl())
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .type(config.getType())
+                    .username(config.getUsername())
+                    .password(getEncryptedValue(config, "password", false))
+                    .accountName(config.getAccountname())
+                    .controllerUrl(config.getControllerUrl())
+                    .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

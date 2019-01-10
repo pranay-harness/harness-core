@@ -72,7 +72,7 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, AuthenticationScheme authenticationScheme, String domain,
         String userName, String password, boolean useSSL, int port, boolean skipCertChecks,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.authenticationScheme = authenticationScheme;
       this.domain = domain;

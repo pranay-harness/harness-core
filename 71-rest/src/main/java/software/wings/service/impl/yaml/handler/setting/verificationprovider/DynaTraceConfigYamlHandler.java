@@ -16,12 +16,14 @@ public class DynaTraceConfigYamlHandler extends VerificationProviderYamlHandler<
   public DynaTraceYaml toYaml(SettingAttribute settingAttribute, String appId) {
     DynaTraceConfig config = (DynaTraceConfig) settingAttribute.getValue();
 
-    return DynaTraceYaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(config.getType())
-        .apiToken(getEncryptedValue(config, "apiToken", false))
-        .dynaTraceUrl(config.getDynaTraceUrl())
-        .build();
+    DynaTraceYaml yaml = DynaTraceYaml.builder()
+                             .harnessApiVersion(getHarnessApiVersion())
+                             .type(config.getType())
+                             .apiToken(getEncryptedValue(config, "apiToken", false))
+                             .dynaTraceUrl(config.getDynaTraceUrl())
+                             .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   @Override

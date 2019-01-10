@@ -61,7 +61,7 @@ public class AzureConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String clientId, String tenantId, String key,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.clientId = clientId;
       this.tenantId = tenantId;

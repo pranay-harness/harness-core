@@ -13,7 +13,7 @@ import software.wings.settings.UsageRestrictions;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public abstract class LoadBalancerProviderYaml extends SettingValue.Yaml {
-  public LoadBalancerProviderYaml(String type, String harnessApiVersion, UsageRestrictions usageRestrictions) {
+  public LoadBalancerProviderYaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
   }
 }

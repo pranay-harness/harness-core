@@ -87,7 +87,7 @@ public class JenkinsConfig extends SettingValue implements EncryptableSetting, A
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String token,
-        String authMechanism, UsageRestrictions usageRestrictions) {
+        String authMechanism, UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.token = token;
       this.authMechanism = authMechanism;
@@ -106,7 +106,7 @@ public class JenkinsConfig extends SettingValue implements EncryptableSetting, A
 
     @Builder
     public VerificationYaml(String type, String harnessApiVersion, String url, String username, String password,
-        String token, String authMechanism, UsageRestrictions usageRestrictions) {
+        String token, String authMechanism, UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.url = url;
       this.username = username;

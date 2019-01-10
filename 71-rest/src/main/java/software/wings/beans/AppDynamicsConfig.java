@@ -71,7 +71,7 @@ public class AppDynamicsConfig extends SettingValue implements EncryptableSettin
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String username, String password, String accountName,
-        String controllerUrl, UsageRestrictions usageRestrictions) {
+        String controllerUrl, UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.username = username;
       this.password = password;

@@ -166,7 +166,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     public Yaml(boolean useKubernetesDelegate, String delegateName, String type, String harnessApiVersion,
         String masterUrl, String username, String password, String caCert, String clientCert, String clientKey,
         String clientKeyPassphrase, String serviceAccountToken, String clientKeyAlgo, boolean skipValidation,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.useKubernetesDelegate = useKubernetesDelegate;
       this.delegateName = delegateName;

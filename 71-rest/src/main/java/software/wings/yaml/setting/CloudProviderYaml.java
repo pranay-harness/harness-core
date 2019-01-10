@@ -13,7 +13,7 @@ import software.wings.settings.UsageRestrictions;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public abstract class CloudProviderYaml extends SettingValue.Yaml {
-  public CloudProviderYaml(String type, String harnessApiVersion, UsageRestrictions usageRestrictions) {
+  public CloudProviderYaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
   }
 }

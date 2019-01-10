@@ -23,13 +23,15 @@ public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml
       encryptedPassword = getEncryptedValue(artifactoryConfig, "password", false);
     }
 
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(artifactoryConfig.getType())
-        .url(artifactoryConfig.getArtifactoryUrl())
-        .username(artifactoryConfig.getUsername())
-        .password(encryptedPassword)
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .type(artifactoryConfig.getType())
+                    .url(artifactoryConfig.getArtifactoryUrl())
+                    .username(artifactoryConfig.getUsername())
+                    .password(encryptedPassword)
+                    .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,

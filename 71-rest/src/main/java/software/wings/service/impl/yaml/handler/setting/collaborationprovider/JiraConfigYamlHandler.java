@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting.collaborationprovider;
 import com.google.inject.Singleton;
 
-import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.JiraConfig.Yaml;
 import software.wings.beans.SettingAttribute;
@@ -37,13 +36,15 @@ public class JiraConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml
   @Override
   public Yaml toYaml(final SettingAttribute settingAttribute, final String appId) {
     final JiraConfig jiraConfig = (JiraConfig) settingAttribute.getValue();
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(jiraConfig.getType())
-        .baseUrl(jiraConfig.getBaseUrl())
-        .username(jiraConfig.getUsername())
-        .password(getEncryptedValue((EncryptableSetting) jiraConfig, "password", false))
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .type(jiraConfig.getType())
+                    .baseUrl(jiraConfig.getBaseUrl())
+                    .username(jiraConfig.getUsername())
+                    .password(getEncryptedValue(jiraConfig, "password", false))
+                    .build();
+    toYaml(yaml, settingAttribute, appId);
+    return yaml;
   }
 
   @Override

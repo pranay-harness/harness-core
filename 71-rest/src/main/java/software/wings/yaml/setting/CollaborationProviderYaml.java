@@ -13,7 +13,7 @@ import software.wings.settings.UsageRestrictions;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public abstract class CollaborationProviderYaml extends SettingValue.Yaml {
-  public CollaborationProviderYaml(String type, String harnessApiVersion, UsageRestrictions usageRestrictions) {
+  public CollaborationProviderYaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
   }
 }

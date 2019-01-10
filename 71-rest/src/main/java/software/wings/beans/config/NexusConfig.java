@@ -73,7 +73,7 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   public static final class Yaml extends ArtifactServerYaml {
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
     }
   }

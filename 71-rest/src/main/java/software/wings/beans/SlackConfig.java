@@ -99,7 +99,8 @@ public class SlackConfig extends SettingValue {
     private String outgoingWebhookUrl;
 
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String outgoingWebhookUrl, UsageRestrictions usageRestrictions) {
+    public Yaml(
+        String type, String harnessApiVersion, String outgoingWebhookUrl, UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.outgoingWebhookUrl = outgoingWebhookUrl;
     }

@@ -66,6 +66,7 @@ import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.defaults.Defaults;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 
 /**
  * @author rktummala on 10/17/17
@@ -218,7 +219,8 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, DEFAULTS_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY), Defaults.class),
   ACCOUNT_DEFAULTS(ObjectType.ACCOUNT_DEFAULTS, generatePath(PATH_DELIMITER, false, SETUP_FOLDER, DEFAULTS_YAML),
-      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), Defaults.class);
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), Defaults.class),
+  USAGE_RESTRICTIONS(ObjectType.USAGE_RESTRICTIONS, "", "", UsageRestrictions.class);
 
   private String entityType;
   private String pathExpression;

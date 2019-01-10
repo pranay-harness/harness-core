@@ -84,14 +84,14 @@ public class NewRelicConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String apiKey, String newRelicAccountId,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.apiKey = apiKey;
       this.newRelicAccountId = newRelicAccountId;
     }
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String apiKey, UsageRestrictions usageRestrictions) {
+    public Yaml(String type, String harnessApiVersion, String apiKey, UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.apiKey = apiKey;
       this.newRelicAccountId = "";

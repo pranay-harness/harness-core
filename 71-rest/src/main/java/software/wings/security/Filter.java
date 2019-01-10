@@ -8,7 +8,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.yaml.BaseYaml;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,5 +29,16 @@ public abstract class Filter {
 
   public Filter(Set<String> ids) {
     this.ids = ids;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends BaseYaml {
+    private List<String> entityNames;
+
+    public Yaml(List<String> entityNames) {
+      this.entityNames = entityNames;
+    }
   }
 }

@@ -62,6 +62,7 @@ import software.wings.service.impl.yaml.handler.setting.collaborationprovider.Co
 import software.wings.service.impl.yaml.handler.setting.loadbalancer.ElasticLoadBalancerConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
+import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
 import software.wings.service.impl.yaml.handler.variable.VariableYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.FailureStrategyYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.PhaseStepYamlHandler;
@@ -126,6 +127,7 @@ public class YamlHandlerFactory {
   @Inject private DefaultVariablesYamlHandler defaultsYamlHandler;
   @Inject private ApplicationManifestYamlHandler applicationManifestYamlHandler;
   @Inject private ManifestFileYamlHandler manifestFileYamlHandler;
+  @Inject private UsageRestrictionsYamlHandler usageRestrictionsYamlHandler;
 
   public <T extends BaseYamlHandler> T getYamlHandler(YamlType yamlType) {
     return getYamlHandler(yamlType, null);
