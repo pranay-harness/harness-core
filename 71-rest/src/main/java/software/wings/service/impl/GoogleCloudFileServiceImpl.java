@@ -93,6 +93,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
       getStorage().create(blobInfo, IOUtils.toByteArray(in));
       String gcsFileId = generateFileId(blobId);
       saveGcsFileMetadata(fileMetadata, fileBucket, null, gcsFileId);
+      logger.info("File '{}' of type {} is saved in GCS with id {}", fileMetadata.getFileName(), fileBucket, gcsFileId);
       return gcsFileId;
     } catch (IOException e) {
       throw new WingsException(ErrorCode.SAVE_FILE_INTO_GCP_STORAGE_FAILED, e);
@@ -117,6 +118,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
       getStorage().create(blobInfo, IOUtils.toByteArray(uploadedInputStream));
       String gcsFileId = generateFileId(blobId);
       saveGcsFileMetadata(baseFile, fileBucket, null, gcsFileId);
+      logger.info("File '{}' of type {} is saved in GCS with id {}", baseFile.getFileName(), fileBucket, gcsFileId);
       return gcsFileId;
     } catch (IOException e) {
       throw new WingsException(ErrorCode.SAVE_FILE_INTO_GCP_STORAGE_FAILED);
@@ -386,8 +388,15 @@ public class GoogleCloudFileServiceImpl implements FileService {
 
   private boolean updateGcsFileMetadata(
       String gcsFileId, String entityId, Integer version, Map<String, Object> others) {
+    logger.info("Updating GCS file '{}' with parent entity '{}' and version '{}' with {} other metadata entries.",
+        gcsFileId, entityId, version, others == null ? 0 : others.size());
     GcsFileMetadata gcsFileMetadata =
         wingsPersistence.createQuery(GcsFileMetadata.class).filter("gcsFileId", gcsFileId).get();
+    if (gcsFileMetadata == null) {
+      logger.warn(
+          "Can't update GCS file metadata since no corresponding entry is found for file with id '{}'", gcsFileId);
+      return false;
+    }
 
     UpdateOperations<GcsFileMetadata> updateOperations = wingsPersistence.createUpdateOperations(GcsFileMetadata.class);
     if (entityId != null) {
