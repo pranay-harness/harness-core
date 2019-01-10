@@ -108,10 +108,10 @@ public class VerificationConstants {
   }
 
   public static final String[] dataCollectionMetricLabels = new String[] {
-      EventConstants.ACCOUNTID, EventConstants.VERIFICATION_TYPE, EventConstants.VERIFICATION_247_CONFIGURED};
+      EventConstants.ACCOUNT_ID, EventConstants.VERIFICATION_TYPE, EventConstants.VERIFICATION_247_CONFIGURED};
 
   public static final String[] IGNORED_ERRORS_METRIC_LABELS = new String[] {EventConstants.LOG_ML_FEEDBACKTYPE,
-      EventConstants.VERIFICATION_STATE_TYPE, EventConstants.APPLICATIONID, EventConstants.WORKFLOWID};
+      EventConstants.VERIFICATION_STATE_TYPE, EventConstants.APPLICATION_ID, EventConstants.WORKFLOW_ID};
 
   public static String getDataCollectionMetricHelpDocument() {
     return "This metric is used to track the Verification data Collection per account";

@@ -7,8 +7,10 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.Collector.Type;
 
 public class DeploymentMetadataEvent implements HarnessMetricsEvent {
-  private static final String[] deploymentMetadataLabels = new String[] {EventConstants.ACCOUNTID,
-      EventConstants.ACCOUNTNAME, EventConstants.WORKFLOW_EXECUTION_STATUS, EventConstants.WORKFLOW_TYPE};
+  private static final String[] deploymentMetadataLabels =
+      new String[] {EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME, EventConstants.WORKFLOW_EXECUTION_STATUS,
+          EventConstants.WORKFLOW_TYPE, EventConstants.WORKFLOW_ID, EventConstants.WORKFLOW_NAME,
+          EventConstants.APPLICATION_ID, EventConstants.APPLICATION_NAME};
 
   @Override
   public String[] getLabelNames() {

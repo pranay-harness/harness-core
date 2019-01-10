@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class LoggedInUserMetric implements HarnessMetricsEvent {
   private static final String[] loggedInUserMetricLabels =
-      new String[] {EventConstants.ACCOUNTID, EventConstants.ACCOUNTNAME};
+      new String[] {EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME};
 
   @Override
   public String[] getLabelNames() {
