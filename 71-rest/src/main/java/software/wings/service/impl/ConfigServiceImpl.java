@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -115,11 +116,14 @@ public class ConfigServiceImpl implements ConfigService {
     configFile.setEnvId(envId);
     configFile.setRelativeFilePath(validateAndResolveFilePath(configFile.getRelativeFilePath()));
     configFile.setDefaultVersion(1);
-    String fileId;
+    String fileId = null;
     if (configFile.isEncrypted()) {
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
       Preconditions.checkNotNull(encryptedData, "No encrypted record found " + configFile);
-      fileId = String.valueOf(encryptedData.getEncryptedValue());
+      // HAR-7996: Only KMS encrypted record it's encrypted value is the file ID.
+      if (encryptedData.getEncryptionType() == EncryptionType.KMS) {
+        fileId = String.valueOf(encryptedData.getEncryptedValue());
+      }
       configFile.setSize(encryptedData.getFileSize());
     } else {
       fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
@@ -130,7 +134,7 @@ public class ConfigServiceImpl implements ConfigService {
     entityVersionService.newEntityVersion(configFile.getAppId(), EntityType.CONFIG, configFile.getUuid(),
         configFile.getEntityId(), configFile.getFileName(), ChangeType.CREATED, configFile.getNotes());
 
-    if (secretManager.getEncryptionType(configFile.getAccountId()) != EncryptionType.VAULT) {
+    if (isNotEmpty(fileId)) {
       fileService.updateParentEntityIdAndVersion(null, id, 1, fileId, null, CONFIGS);
     }
 
