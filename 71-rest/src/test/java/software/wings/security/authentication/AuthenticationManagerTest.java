@@ -1,6 +1,7 @@
 package software.wings.security.authentication;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -81,6 +82,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
 
     when(FEATURE_FLAG_SERVICE.isEnabled(LOGIN_PROMPT_WHEN_NO_USER, GLOBAL_ACCOUNT_ID)).thenReturn(true);
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
+    when(mockUser.isEmailVerified()).thenReturn(true);
     when(AUTHENTICATION_UTL.getUser(Matchers.same(NON_EXISTING_USER), any(EnumSet.class)))
         .thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
     LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse(NON_EXISTING_USER);
@@ -112,6 +114,23 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     assertThat(loginTypeResponse.getSamlRequest()).isNotNull();
     SamlRequest receivedRequest = loginTypeResponse.getSamlRequest();
     assertThat(receivedRequest.getIdpRedirectUrl()).isEqualTo("TestURL");
+  }
+
+  @Test
+  public void testGetLoginType_emailUnverified_shouldFail() {
+    User mockUser = mock(User.class);
+    Account account1 = mock(Account.class);
+
+    when(FEATURE_FLAG_SERVICE.isEnabled(LOGIN_PROMPT_WHEN_NO_USER, GLOBAL_ACCOUNT_ID)).thenReturn(false);
+    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
+
+    when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), any(EnumSet.class))).thenReturn(mockUser);
+    try {
+      authenticationManager.getLoginTypeResponse("testUser");
+      fail("Exception is expected if the user email is not verified.");
+    } catch (WingsException e) {
+      // Exception expected.
+    }
   }
 
   @Test
