@@ -16,6 +16,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateExecutionData;
+import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,8 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
   private String workflowId;
   private String appId;
 
+  private ApprovalStateType approvalStateType;
+
   /** User group Approval */
   private List<String> userGroups;
 
@@ -56,6 +59,8 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+    putNotNull(executionDetails, "approvalStateType",
+        ExecutionDataValue.builder().displayName("approvalStateType").value(approvalStateType).build());
     return setExecutionData(executionDetails);
   }
 

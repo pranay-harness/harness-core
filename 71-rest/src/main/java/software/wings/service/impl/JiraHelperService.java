@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 import com.auth0.jwt.interfaces.Claim;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.waiter.WaitNotifyEngine;
@@ -125,8 +126,12 @@ public class JiraHelperService {
     claimsMap.put(APPROVAL_FIELD_KEY, approvalField);
     claimsMap.put(APPROVAL_VALUE_KEY, approvalValue);
     claimsMap.put(APPROVAL_ID_KEY, approvalId);
-    claimsMap.put(REJECTION_FIELD_KEY, rejectionFiled);
-    claimsMap.put(REJECTION_VALUE_KEY, rejectionValue);
+    if (EmptyPredicate.isNotEmpty(rejectionFiled)) {
+      claimsMap.put(REJECTION_FIELD_KEY, rejectionFiled);
+    }
+    if (EmptyPredicate.isNotEmpty(rejectionValue)) {
+      claimsMap.put(REJECTION_VALUE_KEY, rejectionValue);
+    }
 
     return secretManagerForToken.generateJWTToken(ImmutableMap.copyOf(claimsMap), JWT_CATEGORY.JIRA_SERVICE_SECRET);
   }
@@ -219,9 +224,15 @@ public class JiraHelperService {
     String workflowExecutionId = claimMap.get(WORKFLOW_EXECUTION_ID_KEY).asString();
     String approvalField = claimMap.get(APPROVAL_FIELD_KEY).asString().toLowerCase();
     String approvalValue = claimMap.get(APPROVAL_VALUE_KEY).asString().toLowerCase();
-    String rejectionField = claimMap.get(REJECTION_FIELD_KEY).asString().toLowerCase();
-    String rejectionValue = claimMap.get(REJECTION_VALUE_KEY).asString().toLowerCase();
     String approvalId = claimMap.get(APPROVAL_ID_KEY).asString();
+    String rejectionField = null;
+    String rejectionValue = null;
+    if (claimMap.containsKey(REJECTION_FIELD_KEY)) {
+      rejectionField = claimMap.get(REJECTION_FIELD_KEY).asString().toLowerCase();
+    }
+    if (claimMap.containsKey(REJECTION_VALUE_KEY)) {
+      rejectionValue = claimMap.get(REJECTION_VALUE_KEY).asString().toLowerCase();
+    }
 
     JSONObject jsonObject = JSONObject.fromObject(respJson);
     JSONObject changeLog = jsonObject.getJSONObject("changelog");
@@ -236,10 +247,12 @@ public class JiraHelperService {
         approvalStatus = ExecutionStatus.SUCCESS;
         action = Action.APPROVE;
       }
-      if (Objects.equals(item.getString("field").toLowerCase(), rejectionField)
-          && Objects.equals(item.getString("toString").toLowerCase(), rejectionValue)) {
-        approvalStatus = ExecutionStatus.REJECTED;
-        action = Action.REJECT;
+      if (EmptyPredicate.isNotEmpty(rejectionField) && EmptyPredicate.isNotEmpty(rejectionValue)) {
+        if (Objects.equals(item.getString("field").toLowerCase(), rejectionField)
+            && Objects.equals(item.getString("toString").toLowerCase(), rejectionValue)) {
+          approvalStatus = ExecutionStatus.REJECTED;
+          action = Action.REJECT;
+        }
       }
     }
 

@@ -371,7 +371,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     try {
       issue = jira.getIssue(parameters.getIssueId());
     } catch (JiraException e) {
-      String error = "Not deleting webhook as unable to fetch Jira for id: " + parameters.getIssueId();
+      String error = "Unable to fetch Jira for id: " + parameters.getIssueId();
       logger.error(error, e);
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
       saveExecutionLog(
@@ -379,7 +379,15 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(error).build();
     }
-
+    String message = "Approval/Rejection provided on ticket: " + issue.getKey();
+    JiraExecutionData jiraExecutionData = JiraExecutionData.builder()
+                                              .issueUrl(getIssueUrl(jiraConfig, issue))
+                                              .executionStatus(ExecutionStatus.SUCCESS)
+                                              .errorMessage(message)
+                                              .build();
+    if (parameters.getWebhookUrl() == null) {
+      return jiraExecutionData;
+    }
     try {
       jira.getRestClient().delete(new URI(parameters.getWebhookUrl()));
     } catch (IOException | URISyntaxException | RestException e) {
@@ -388,20 +396,13 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       saveExecutionLog(
           parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
 
-      return JiraExecutionData.builder()
-          .executionStatus(ExecutionStatus.FAILED)
-          .errorMessage("Unable to delete the JIRA webhook " + parameters.getIssueId())
-          .build();
+      return jiraExecutionData;
     }
     commandExecutionStatus = CommandExecutionStatus.SUCCESS;
     saveExecutionLog(
         parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
 
-    return JiraExecutionData.builder()
-        .executionStatus(ExecutionStatus.SUCCESS)
-        .errorMessage("Approval provided on ticket: " + issue.getKey())
-        .issueUrl(getIssueUrl(jiraConfig, issue))
-        .build();
+    return jiraExecutionData;
   }
 
   private ResponseData createWebhook(JiraTaskParameters parameters) {
@@ -413,7 +414,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     try {
       issue = jira.getIssue(parameters.getIssueId());
     } catch (JiraException e) {
-      String error = "Not creating webhook as unable to fetch Jira for id: " + parameters.getIssueId();
+      String error = "Unable to fetch Jira for id: " + parameters.getIssueId();
       logger.error(error, e);
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
       saveExecutionLog(
@@ -424,13 +425,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     List<String> events = new ArrayList<>();
     events.add("jira:issue_updated");
-
     Map<String, String> filters = new HashMap<>();
     filters.put("issue-related-events-section", "issue = " + parameters.getIssueId());
     String url = parameters.getCallbackUrl();
-
-    // Todo: Replace hardcoded url after checking the Url from config
-
+    String message = "Waiting for Approval on ticket: " + issue.getKey();
     JiraWebhookParameters jiraWebhookParameters = JiraWebhookParameters.builder()
                                                       .name("webhook for issue = " + issue.getKey())
                                                       .events(events)
@@ -444,6 +442,11 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     JSONObject json = JSONObject.fromObject(jiraWebhookParameters);
 
     String webhookUrl;
+    JiraExecutionData jiraExecutionData = JiraExecutionData.builder()
+                                              .executionStatus(ExecutionStatus.PAUSED)
+                                              .issueUrl(getIssueUrl(jiraConfig, issue))
+                                              .errorMessage(message)
+                                              .build();
     try {
       JSON resp = jira.getRestClient().post(new URI(jiraConfig.getBaseUrl() + WEBHOOK_CREATION_URL), json);
       JSONObject object = JSONObject.fromObject(resp);
@@ -456,18 +459,14 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       saveExecutionLog(
           parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
 
-      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(error).build();
+      return jiraExecutionData;
     }
 
     commandExecutionStatus = CommandExecutionStatus.SUCCESS;
     saveExecutionLog(
         parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
 
-    return JiraExecutionData.builder()
-        .executionStatus(ExecutionStatus.SUCCESS)
-        .webhookUrl(webhookUrl)
-        .errorMessage("Waiting for Approval on ticket: " + issue.getKey())
-        .issueUrl(getIssueUrl(jiraConfig, issue))
-        .build();
+    jiraExecutionData.setWebhookUrl(webhookUrl);
+    return jiraExecutionData;
   }
 }

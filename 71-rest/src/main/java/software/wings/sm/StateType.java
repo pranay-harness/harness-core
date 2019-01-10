@@ -568,7 +568,7 @@ public enum StateType implements StateTypeDescriptor {
   JIRA_CREATE_UPDATE(JiraCreateUpdate.class, COLLABORATION, 1, "Jira",
       asList(PRE_DEPLOYMENT, POST_DEPLOYMENT, START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE,
           DISABLE_SERVICE, CONTAINER_SETUP, CONTAINER_DEPLOY, WRAP_UP),
-      ORCHESTRATION_STENCILS);
+      ORCHESTRATION_STENCILS, COMMON);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
