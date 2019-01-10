@@ -51,7 +51,9 @@ import javax.validation.constraints.NotNull;
 
 public class JiraCreateUpdate extends State {
   private static final long JIRA_TASK_TIMEOUT_MILLIS = 60 * 1000;
-  private static final String JIRA_ISSUE_ID_KEY = "issueId";
+  private static final String JIRA_ISSUE_ID = "issueId";
+  private static final String JIRA_ISSUE_KEY = "issueKey";
+
   @Inject @Transient private ActivityService activityService;
   @Inject @Transient private transient WingsPersistence wingsPersistence;
   @Inject @Transient private DelegateServiceImpl delegateService;
@@ -187,9 +189,9 @@ public class JiraCreateUpdate extends State {
     jiraExecutionData.setActivityId(activityId);
     Map<String, String> sweepingOutputMap = new HashMap<>();
 
-    if (jiraExecutionData.getExecutionStatus() == ExecutionStatus.SUCCESS
-        && jiraExecutionData.getJiraAction() == JiraAction.CREATE_TICKET && isNotEmpty(sweepingOutputName)) {
-      sweepingOutputMap.put(JIRA_ISSUE_ID_KEY, jiraExecutionData.getIssueId());
+    if (jiraExecutionData.getExecutionStatus() == ExecutionStatus.SUCCESS && isNotEmpty(sweepingOutputName)) {
+      sweepingOutputMap.put(JIRA_ISSUE_ID, jiraExecutionData.getIssueId());
+      sweepingOutputMap.put(JIRA_ISSUE_KEY, jiraExecutionData.getIssueKey());
 
       final SweepingOutput sweepingOutput = context.prepareSweepingOutputBuilder(sweepingOutputScope)
                                                 .name(sweepingOutputName)
