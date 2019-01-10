@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -87,7 +88,7 @@ public class ApprovalState extends State {
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
 
   @Getter @Setter ApprovalStateParams approvalStateParams;
-  @Getter @Setter ApprovalStateType approvalStateType;
+  @Getter @Setter ApprovalStateType approvalStateType = ApprovalStateType.USER_GROUP;
 
   public enum ApprovalStateType { JIRA, USER_GROUP }
 
@@ -98,7 +99,8 @@ public class ApprovalState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String approvalId = generateUuid();
-    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder().approvalId(approvalId).build();
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalId(approvalId).approvalStateType(approvalStateType).build();
 
     if (disable) {
       return anExecutionResponse()
@@ -129,15 +131,11 @@ public class ApprovalState extends State {
       }
     }
     executionData.setAppId(app.getAppId());
-    if (approvalStateType == null) {
-      return executeUserGroupApproval(userGroups, app.getAccountId(), placeholderValues, approvalId, executionData);
-    }
     switch (approvalStateType) {
       case JIRA:
         return executeJiraApproval(context, executionData, approvalId);
       case USER_GROUP:
-        return executeUserGroupApproval(approvalStateParams.getUserGroupApprovalParams().getUserGroups(),
-            app.getAccountId(), placeholderValues, approvalId, executionData);
+        return executeUserGroupApproval(userGroups, app.getAccountId(), placeholderValues, approvalId, executionData);
       default:
         throw new WingsException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
     }
@@ -155,6 +153,13 @@ public class ApprovalState extends State {
 
     JiraExecutionData jiraExecutionData = jiraHelperService.createWebhook(
         jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
+    if (jiraExecutionData.getExecutionStatus().equals(FAILED)) {
+      return anExecutionResponse()
+          .withExecutionStatus(jiraExecutionData.getExecutionStatus())
+          .withErrorMessage(jiraExecutionData.getErrorMessage())
+          .withStateExecutionData(executionData)
+          .build();
+    }
     // issue Url on which approval is waiting in case of jira.
     executionData.setIssueUrl(jiraExecutionData.getIssueUrl());
     executionData.setWebhookUrl(jiraExecutionData.getWebhookUrl());
@@ -204,16 +209,11 @@ public class ApprovalState extends State {
           context, approvalNotifyResponse.getApprovedBy().getName(), approvalNotifyResponse.getStatus());
     }
     sendApprovalNotification(app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
-    if (approvalStateType == null) {
-      // required for backward compatibility and avoiding migration
-      return handleAsyncUserGroup(userGroups, placeholderValues, context, executionData, approvalNotifyResponse);
-    }
     switch (approvalStateType) {
       case JIRA:
         return handleAsyncJira(context, executionData, approvalNotifyResponse);
       case USER_GROUP:
-        return handleAsyncUserGroup(approvalStateParams.getUserGroupApprovalParams().getUserGroups(), placeholderValues,
-            context, executionData, approvalNotifyResponse);
+        return handleAsyncUserGroup(userGroups, placeholderValues, context, executionData, approvalNotifyResponse);
       default:
         throw new WingsException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
     }
@@ -295,12 +295,23 @@ public class ApprovalState extends State {
     }
 
     context.getStateExecutionData().setErrorMsg(errorMsg);
-    if (approvalStateType == null) {
-      sendEmailToUserGroupMembers(userGroups, app.getAccountId(), notificationMessageType, placeholderValues);
-    } else if (approvalStateType.equals(ApprovalStateType.USER_GROUP)) {
-      sendEmailToUserGroupMembers(approvalStateParams.getUserGroupApprovalParams().getUserGroups(), app.getAccountId(),
-          notificationMessageType, placeholderValues);
+
+    switch (approvalStateType) {
+      case JIRA:
+        handleAbortEventJira(context, app);
+        return;
+      case USER_GROUP:
+        sendEmailToUserGroupMembers(userGroups, app.getAccountId(), notificationMessageType, placeholderValues);
+        return;
+      default:
+        throw new WingsException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
     }
+  }
+
+  private void handleAbortEventJira(ExecutionContext context, Application app) {
+    ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
+    jiraHelperService.deleteWebhook(
+        approvalStateParams.getJiraApprovalParams(), executionData.getWebhookUrl(), app.getAppId(), app.getAccountId());
   }
 
   @Override

@@ -139,10 +139,13 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     map.put(ENV, getEnv());
     map.put(TIMESTAMP_ID, timestampId);
 
-    map.put(DEPLOYMENT_URL,
-        buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(),
-            BUILD.equals(context.getOrchestrationWorkflowType()) ? "build" : env.getUuid(),
-            context.getWorkflowExecutionId())));
+    if (env != null) {
+      map.put(DEPLOYMENT_URL,
+          buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(),
+              BUILD.equals(context.getOrchestrationWorkflowType()) ? "build" : env.getUuid(),
+              context.getWorkflowExecutionId())));
+    }
+
     if (currentUser != null) {
       map.put(DEPLOYMENT_TRIGGERED_BY, currentUser.getName());
     }

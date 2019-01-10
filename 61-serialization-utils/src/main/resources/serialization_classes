@@ -668,3 +668,4 @@ software.wings.helpers.ext.ecs.response.EcsListenerUpdateCommandResponse, 5613
 software.wings.api.ecs.EcsListenerUpdateStateExecutionData, 5614
 software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult, 5615
 software.wings.beans.GitFetchFilesConfig, 5616
+software.wings.sm.states.ApprovalState$ApprovalStateType, 5617

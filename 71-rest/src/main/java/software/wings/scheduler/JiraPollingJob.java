@@ -17,9 +17,13 @@ import software.wings.beans.ApprovalDetails;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.service.impl.JiraHelperService;
 
+import java.util.Calendar;
+import java.util.Date;
+
 public class JiraPollingJob implements Job {
   public static final String GROUP = "JIRA_POLLING_CRON_JOB";
   private static final int POLL_INTERVAL_SECONDS = 10;
+  private static final int DELAY_START_SECONDS = 30;
   private static final String CONNECTOR_ID = "connectorId";
   private static final String ACCOUNT_ID = "accountId";
   private static final String APP_ID = "appId";
@@ -48,9 +52,13 @@ public class JiraPollingJob implements Job {
                         .usingJobData(WORKFLOW_EXECUTION_ID, workflowExecutionId)
                         .build();
 
+    Calendar cal = Calendar.getInstance();
+    cal.add(Calendar.SECOND, DELAY_START_SECONDS);
+    Date delay_start = cal.getTime();
+
     Trigger trigger = TriggerBuilder.newTrigger()
                           .withIdentity(approvalExecutionId, GROUP)
-                          .startNow()
+                          .startAt(delay_start)
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                                             .withIntervalInSeconds(POLL_INTERVAL_SECONDS)
                                             .repeatForever()

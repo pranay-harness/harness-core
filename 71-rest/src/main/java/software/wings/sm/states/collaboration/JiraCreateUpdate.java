@@ -27,7 +27,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SweepingOutput;
-import software.wings.beans.SweepingOutput.Scope;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.dl.WingsPersistence;
@@ -52,7 +51,6 @@ import javax.validation.constraints.NotNull;
 
 public class JiraCreateUpdate extends State {
   private static final long JIRA_TASK_TIMEOUT_MILLIS = 60 * 1000;
-  private static final String JIRA_SWEEPING_OUTPUT_NAME = "JIRA";
   private static final String JIRA_ISSUE_ID_KEY = "issueId";
   @Inject @Transient private ActivityService activityService;
   @Inject @Transient private transient WingsPersistence wingsPersistence;
@@ -77,9 +75,6 @@ public class JiraCreateUpdate extends State {
 
   public JiraCreateUpdate(String name) {
     super(name, StateType.JIRA_CREATE_UPDATE.getName());
-
-    sweepingOutputName = name;
-    sweepingOutputScope = Scope.PIPELINE;
   }
 
   @Override
@@ -196,7 +191,7 @@ public class JiraCreateUpdate extends State {
         && jiraExecutionData.getJiraAction() == JiraAction.CREATE_TICKET && isNotEmpty(sweepingOutputName)) {
       sweepingOutputMap.put(JIRA_ISSUE_ID_KEY, jiraExecutionData.getIssueId());
 
-      final SweepingOutput sweepingOutput = context.prepareSweepingOutputBuilder(Scope.PIPELINE)
+      final SweepingOutput sweepingOutput = context.prepareSweepingOutputBuilder(sweepingOutputScope)
                                                 .name(sweepingOutputName)
                                                 .output(KryoUtils.asDeflatedBytes(sweepingOutputMap))
                                                 .build();

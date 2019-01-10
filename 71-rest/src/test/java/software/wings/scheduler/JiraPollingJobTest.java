@@ -67,7 +67,7 @@ public class JiraPollingJobTest extends WingsBaseTest {
 
     JiraPollingJob.doPollingJob(
         jobScheduler, jiraApprovalParams, APPROVAL_EXECUTION_ID, ACCOUNT_ID, APP_ID, WORKFLOW_EXECUTION_ID);
-    listener.waitToSatisfy(ofSeconds(5));
+    listener.waitToSatisfy(ofSeconds(35));
     assertThat(jobScheduler.deleteJob(APPROVAL_EXECUTION_ID, JiraPollingJob.GROUP)).isFalse();
   }
 
@@ -87,7 +87,7 @@ public class JiraPollingJobTest extends WingsBaseTest {
 
     JiraPollingJob.doPollingJob(
         jobScheduler, jiraApprovalParams, APPROVAL_EXECUTION_ID, ACCOUNT_ID, APP_ID, WORKFLOW_EXECUTION_ID);
-    listener.waitToSatisfy(ofSeconds(5));
+    listener.waitToSatisfy(ofSeconds(35));
     assertThat(jobScheduler.deleteJob(APPROVAL_EXECUTION_ID, JiraPollingJob.GROUP)).isFalse();
   }
 
@@ -107,7 +107,7 @@ public class JiraPollingJobTest extends WingsBaseTest {
 
     JiraPollingJob.doPollingJob(
         jobScheduler, jiraApprovalParams, APPROVAL_EXECUTION_ID, ACCOUNT_ID, APP_ID, WORKFLOW_EXECUTION_ID);
-    listener.waitToSatisfy(ofSeconds(5));
+    listener.waitToSatisfy(ofSeconds(35));
     assertThat(jobScheduler.deleteJob(APPROVAL_EXECUTION_ID, JiraPollingJob.GROUP)).isFalse();
   }
 
@@ -127,7 +127,7 @@ public class JiraPollingJobTest extends WingsBaseTest {
 
     JiraPollingJob.doPollingJob(
         jobScheduler, jiraApprovalParams, APPROVAL_EXECUTION_ID, ACCOUNT_ID, APP_ID, WORKFLOW_EXECUTION_ID);
-    listener.waitToSatisfy(ofSeconds(5));
+    listener.waitToSatisfy(ofSeconds(35));
     assertThat(jobScheduler.deleteJob(APPROVAL_EXECUTION_ID, JiraPollingJob.GROUP)).isTrue();
   }
 }
