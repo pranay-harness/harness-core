@@ -394,6 +394,21 @@ public class TemplateServiceImpl implements TemplateService {
     return template.getUuid();
   }
 
+  @Override
+  public String fetchTemplateIdByNameAndFolderId(String accountId, String name, String folderId) {
+    Template template = wingsPersistence.createQuery(Template.class)
+                            .project(Template.NAME_KEY, true)
+                            .project(Template.ACCOUNT_ID_KEY, true)
+                            .filter(Template.ACCOUNT_ID_KEY, accountId)
+                            .filter(Template.NAME_KEY, name)
+                            .filter(Template.FOLDER_ID_KEY, folderId)
+                            .get();
+    if (template == null) {
+      throw new WingsException("No template found with name [" + name + "]");
+    }
+    return template.getUuid();
+  }
+
   private void throwException(TemplateFolder templateFolder, TemplateType templateType, EntityType entityType) {
     throw new WingsException(TEMPLATES_LINKED, USER)
         .addParam("message", String.format("Template Folder : [%s] couldn't be deleted", templateFolder.getName()))

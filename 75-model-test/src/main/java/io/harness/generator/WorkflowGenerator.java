@@ -57,13 +57,19 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.template.Template;
+import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateType;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.ResourceConstraintState.HoldingScope;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Singleton
 public class WorkflowGenerator {
@@ -83,13 +89,15 @@ public class WorkflowGenerator {
   @Inject private SettingGenerator settingGenerator;
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private TemplateGenerator templateGenerator;
 
   public enum Workflows {
     BASIC_SIMPLE,
     BASIC_10_NODES,
     TERRAFORM,
     PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT,
-    BUILD_JENKINS
+    BUILD_JENKINS,
+    BUILD_SHELL_SCRIPT
   }
 
   public Workflow ensurePredefined(Randomizer.Seed seed, Owners owners, Workflows predefined) {
@@ -104,6 +112,8 @@ public class WorkflowGenerator {
         return ensurePermanentlyBlockedResourceConstraint(seed, owners);
       case BUILD_JENKINS:
         return ensureBuildJenkins(seed, owners);
+      case BUILD_SHELL_SCRIPT:
+        return ensureBuildShellScript(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -331,6 +341,44 @@ public class WorkflowGenerator {
                 .put(HttpState.METHOD_KEY, "GET")
                 .build())
         .build();
+  }
+
+  private Workflow ensureBuildShellScript(Seed seed, Owners owners) {
+    Template shellScriptTemplate =
+        templateGenerator.ensurePredefined(seed, owners, TemplateGenerator.Templates.SHELL_SCRIPT);
+    ShellScriptTemplate templateObject = (ShellScriptTemplate) shellScriptTemplate.getTemplateObject();
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("scriptType", templateObject.getScriptType());
+    properties.put("scriptString", templateObject.getScriptString());
+    properties.put("outputVars", templateObject.getOutputVars());
+    properties.put("connectionType", "SSH");
+    WorkflowPhaseBuilder workflowPhaseBuilder = WorkflowPhaseBuilder.aWorkflowPhase();
+
+    workflowPhaseBuilder.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+    workflowPhaseBuilder.addPhaseStep(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
+                                          .addStep(GraphNode.builder()
+                                                       .id(generateUuid())
+                                                       .type(StateType.SHELL_SCRIPT.name())
+                                                       .name(shellScriptTemplate.getName())
+                                                       .properties(properties)
+                                                       .templateVariables(shellScriptTemplate.getVariables())
+                                                       .templateUuid(shellScriptTemplate.getUuid())
+                                                       .templateVersion("latest")
+                                                       .build())
+                                          .build());
+    workflowPhaseBuilder.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+
+    return ensureWorkflow(seed, owners,
+        aWorkflow()
+            .withName("Shell Script Build Workflow")
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aBuildOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .addWorkflowPhase(workflowPhaseBuilder.build())
+                    .build())
+            .build());
   }
 
   public Workflow exists(Workflow workflow) {
