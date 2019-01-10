@@ -8,7 +8,8 @@ import io.prometheus.client.Collector.Type;
 
 public class DeploymentDurationEvent implements HarnessMetricsEvent {
   private static final String[] deploymentDurationLabelNames =
-      new String[] {EventConstants.ACCOUNTID, EventConstants.ACCOUNTNAME};
+      new String[] {EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME, EventConstants.WORKFLOW_ID,
+          EventConstants.WORKFLOW_NAME, EventConstants.APPLICATION_ID, EventConstants.APPLICATION_NAME};
 
   @Override
   public String[] getLabelNames() {

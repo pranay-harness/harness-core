@@ -8,7 +8,7 @@ import io.prometheus.client.Collector.Type;
 
 public class InstanceMetric implements HarnessMetricsEvent {
   private static final String[] staticMetricLabels =
-      new String[] {EventConstants.ACCOUNTID, EventConstants.ACCOUNTNAME, EventConstants.INSTANCE_COUNT_TYPE};
+      new String[] {EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME, EventConstants.INSTANCE_COUNT_TYPE};
 
   public String[] getLabelNames() {
     return staticMetricLabels.clone();

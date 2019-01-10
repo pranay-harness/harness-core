@@ -39,6 +39,7 @@ import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateMachineExecutionCallback;
@@ -72,6 +73,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AccountService accountService;
+  @Inject private WorkflowService workflowService;
 
   /**
    * Instantiates a new workflow execution update.
@@ -146,6 +148,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
     handlePostExecution(context);
 
+    final String workflowId = context.getWorkflowId();
     if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
       try {
         workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
@@ -162,7 +165,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       }
     } else {
       if (status == SUCCESS) {
-        triggerService.triggerExecutionPostPipelineCompletionAsync(appId, context.getWorkflowId());
+        triggerService.triggerExecutionPostPipelineCompletionAsync(appId, workflowId);
       }
     }
     if (ExecutionStatus.isFinalStatus(status)) {
@@ -176,16 +179,20 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
           return;
         }
         eventPublishHelper.handleDeploymentCompleted(workflowExecution);
-        String accountID = getApplicationDataForReporting(appId).getAccountId();
+        final Application applicationDataForReporting = getApplicationDataForReporting(appId);
+        String accountID = applicationDataForReporting.getAccountId();
+        String applicationName = applicationDataForReporting.getName();
         String accountName = accountService.getFromCache(accountID).getAccountName();
         long executionDuration = TimeUnit.MILLISECONDS.toSeconds(currentTime - workflowExecution.getStartTs());
         /**
          * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is manual
          */
         boolean manual = workflowExecution.getDeploymentTriggerId() == null;
-
-        usageMetricsEventPublisher.publishDeploymentDurationEvent(executionDuration, accountID, accountName);
-        usageMetricsEventPublisher.publishDeploymentMetadataEvent(status, manual, accountID, accountName);
+        String workflowName = workflowService.fetchWorkflowName(context.getAppId(), workflowId);
+        usageMetricsEventPublisher.publishDeploymentDurationEvent(
+            executionDuration, accountID, accountName, workflowId, workflowName, appId, applicationName);
+        usageMetricsEventPublisher.publishDeploymentMetadataEvent(
+            status, manual, accountID, accountName, workflowId, workflowName, appId, applicationName);
 
       } catch (Exception e) {
         logger.error(
@@ -242,6 +249,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   private Application getApplicationDataForReporting(String appId) {
     return wingsPersistence.createQuery(Application.class)
         .project(Application.ACCOUNT_ID_KEY, true)
+        .project(Application.NAME_KEY, true)
         .filter(Application.ID_KEY, appId)
         .get();
   }

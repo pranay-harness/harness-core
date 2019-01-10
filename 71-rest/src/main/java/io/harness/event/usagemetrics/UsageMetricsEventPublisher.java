@@ -28,16 +28,24 @@ public class UsageMetricsEventPublisher {
    * @param manual
    * @param accountId
    * @param accountName
+   * @param workflowId
+   * @param workflowName
+   * @param applicationId
+   * @param applicationName
    * @return
    */
-  public void publishDeploymentMetadataEvent(
-      ExecutionStatus status, boolean manual, String accountId, String accountName) {
+  public void publishDeploymentMetadataEvent(ExecutionStatus status, boolean manual, String accountId,
+      String accountName, String workflowId, String workflowName, String applicationId, String applicationName) {
     Map properties = new HashMap<>();
-    properties.put(EventConstants.ACCOUNTID, accountId);
-    properties.put(EventConstants.ACCOUNTNAME, accountName);
+    properties.put(EventConstants.ACCOUNT_ID, accountId);
+    properties.put(EventConstants.ACCOUNT_NAME, accountName);
     properties.put(EventConstants.WORKFLOW_EXECUTION_STATUS, status);
     properties.put(EventConstants.WORKFLOW_TYPE,
         manual ? EventConstants.MANUAL_WORKFLOW_TYPE : EventConstants.AUTOMATIC_WORKFLOW_TYPE);
+    properties.put(EventConstants.WORKFLOW_ID, workflowId);
+    properties.put(EventConstants.WORKFLOW_NAME, workflowName);
+    properties.put(EventConstants.APPLICATION_ID, applicationId);
+    properties.put(EventConstants.APPLICATION_NAME, applicationName);
 
     EventData eventData = EventData.builder().properties(properties).build();
     publishEvent(Event.builder().eventType(EventType.DEPLOYMENT_METADATA).eventData(eventData).build());
@@ -48,12 +56,20 @@ public class UsageMetricsEventPublisher {
    * @param duration
    * @param accountId
    * @param accountName
-   * @return
+   * @param workflowId
+   * @param workflowName
+   * @param applicationId
+   * @param applicationName
    */
-  public void publishDeploymentDurationEvent(long duration, String accountId, String accountName) {
+  public void publishDeploymentDurationEvent(long duration, String accountId, String accountName, String workflowId,
+      String workflowName, String applicationId, String applicationName) {
     Map properties = new HashMap();
-    properties.put(EventConstants.ACCOUNTID, accountId);
-    properties.put(EventConstants.ACCOUNTNAME, accountName);
+    properties.put(EventConstants.ACCOUNT_ID, accountId);
+    properties.put(EventConstants.ACCOUNT_NAME, accountName);
+    properties.put(EventConstants.WORKFLOW_ID, workflowId);
+    properties.put(EventConstants.WORKFLOW_NAME, workflowName);
+    properties.put(EventConstants.APPLICATION_ID, applicationId);
+    properties.put(EventConstants.APPLICATION_NAME, applicationName);
     EventData eventData = EventData.builder().properties(properties).value(duration).build();
     publishEvent(Event.builder().eventType(EventType.DEPLOYMENT_DURATION).eventData(eventData).build());
   };
@@ -65,8 +81,8 @@ public class UsageMetricsEventPublisher {
    */
   public void publishUserLoginEvent(String accountId, String accountName) {
     Map properties = new HashMap();
-    properties.put(EventConstants.ACCOUNTID, accountId);
-    properties.put(EventConstants.ACCOUNTNAME, accountName);
+    properties.put(EventConstants.ACCOUNT_ID, accountId);
+    properties.put(EventConstants.ACCOUNT_NAME, accountName);
     properties.put(EventConstants.USER_LOGGED_IN, Boolean.TRUE.toString());
     EventData eventData = EventData.builder().properties(properties).build();
     publishEvent(Event.builder().eventType(EventType.USERS_LOGGED_IN).eventData(eventData).build());
@@ -79,8 +95,8 @@ public class UsageMetricsEventPublisher {
    */
   public void publishUserLogoutEvent(String accountId, String accountName) {
     Map properties = new HashMap();
-    properties.put(EventConstants.ACCOUNTID, accountId);
-    properties.put(EventConstants.ACCOUNTNAME, accountName);
+    properties.put(EventConstants.ACCOUNT_ID, accountId);
+    properties.put(EventConstants.ACCOUNT_NAME, accountName);
     properties.put(EventConstants.USER_LOGGED_IN, Boolean.FALSE.toString());
     EventData eventData = EventData.builder().properties(properties).build();
     publishEvent(Event.builder().eventType(EventType.USERS_LOGGED_IN).eventData(eventData).build());
@@ -94,8 +110,8 @@ public class UsageMetricsEventPublisher {
    */
   public void publishSetupDataMetric(String accountId, String accountName, long setupDataCount, String setupDataType) {
     Map properties = new HashMap();
-    properties.put(EventConstants.ACCOUNTID, accountId);
-    properties.put(EventConstants.ACCOUNTNAME, accountName);
+    properties.put(EventConstants.ACCOUNT_ID, accountId);
+    properties.put(EventConstants.ACCOUNT_NAME, accountName);
     properties.put(EventConstants.SETUP_DATA_TYPE, setupDataType);
     EventData eventData = EventData.builder().properties(properties).value(setupDataCount).build();
     publishEvent(Event.builder().eventType(EventType.SETUP_DATA).eventData(eventData).build());
@@ -111,8 +127,8 @@ public class UsageMetricsEventPublisher {
   public void publishInstanceMetric(
       String accountId, String accountName, double instanceCount, String instanceCountyType) {
     Map properties = new HashMap();
-    properties.put(EventConstants.ACCOUNTID, accountId);
-    properties.put(EventConstants.ACCOUNTNAME, accountName);
+    properties.put(EventConstants.ACCOUNT_ID, accountId);
+    properties.put(EventConstants.ACCOUNT_NAME, accountName);
     properties.put(EventConstants.INSTANCE_COUNT_TYPE, instanceCountyType);
     EventData eventData = EventData.builder().properties(properties).value(instanceCount).build();
     publishEvent(Event.builder().eventType(EventType.INSTANCE_COUNT).eventData(eventData).build());
