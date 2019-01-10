@@ -19,15 +19,23 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
+import software.wings.beans.Permit;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.service.impl.PermitServiceImpl;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.PermitService;
 import software.wings.service.intfc.TriggerService;
 
 import java.time.Duration;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ArtifactCollectionJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionJob.class);
@@ -42,9 +50,13 @@ public class ArtifactCollectionJob implements Job {
 
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private TriggerService triggerService;
-  @Inject private ArtifactCollectionService artifactCollectionService;
+  @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
+  @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
   @Inject @Named("artifactCollectionExecutor") private ExecutorService artifactCollectionExecutor;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private PermitService permitService;
+  @Inject private AppService appService;
 
   public static void addDefaultJob(PersistentScheduler jobScheduler, String appId, String artifactStreamId) {
     // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
@@ -77,7 +89,47 @@ public class ArtifactCollectionJob implements Job {
       jobScheduler.deleteJob(artifactStreamId, GROUP);
       return;
     }
-    artifactCollectionExecutor.submit(() -> executeJobAsync(appId, artifactStreamId));
+
+    if (artifactStream.getFailedCronAttempts() > 100) {
+      logger.warn(
+          "ASYNC_ARTIFACT_CRON: Artifact collection disabled for artifactstream:[id:{}, type:{}] due to too many failures [{}]",
+          artifactStreamId, artifactStream.getArtifactStreamType(), artifactStream.getFailedCronAttempts());
+      return;
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.ASYNC_ARTIFACT_COLLECTION, appService.getAccountIdByAppId(appId))) {
+      try {
+        int leaseDuration = (int) (TimeUnit.MINUTES.toMillis(1)
+            * PermitServiceImpl.getBackoffMultiplier(artifactStream.getFailedCronAttempts()));
+        String permitId =
+            permitService.acquirePermit(Permit.builder()
+                                            .appId(appId)
+                                            .group(GROUP)
+                                            .key(artifactStreamId)
+                                            .expireAt(new Date(System.currentTimeMillis() + leaseDuration))
+                                            .leaseDuration(leaseDuration)
+                                            .build());
+        if (isNotEmpty(permitId)) {
+          logger.info("Permit [{}] acquired for artifactStream [id: {}, failedCount: {}] for [{}] minutes", permitId,
+              artifactStream.getUuid(), artifactStream.getFailedCronAttempts(),
+              TimeUnit.MILLISECONDS.toMinutes(leaseDuration));
+          artifactCollectionServiceAsync.collectNewArtifactsAsync(appId, artifactStream, permitId);
+        } else {
+          logger.info("Permit already exists for artifactStreamId[{}]", artifactStreamId);
+        }
+      } catch (WingsException exception) {
+        logger.warn("Failed to collect artifacts for appId {}, artifact stream {}. Reason {}", appId, artifactStreamId,
+            exception.getMessage());
+        exception.addContext(Application.class, appId);
+        exception.addContext(ArtifactStream.class, artifactStreamId);
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      } catch (Exception e) {
+        logger.warn(
+            "Failed to collect artifacts for appId {}, artifact stream {}", appId, artifactStreamId, e.getMessage());
+      }
+    } else {
+      artifactCollectionExecutor.submit(() -> executeJobAsync(appId, artifactStreamId));
+    }
   }
 
   private void executeJobAsync(String appId, String artifactStreamId) {
@@ -89,7 +141,8 @@ public class ArtifactCollectionJob implements Job {
       exception.addContext(ArtifactStream.class, artifactStreamId);
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {
-      log(appId, artifactStreamId, new WingsException(e));
+      logger.warn("Failed to collect artifacts for appId {}, artifact stream {}. Reason {}", appId, artifactStreamId,
+          new WingsException(e).getMessage());
     }
     if (isNotEmpty(artifacts)) {
       logger.info("[{}] new artifacts collected", artifacts.size());
@@ -97,10 +150,5 @@ public class ArtifactCollectionJob implements Job {
       logger.info("Calling trigger service to check if any triggers set for the collected artifacts");
       triggerService.triggerExecutionPostArtifactCollectionAsync(appId, artifactStreamId, artifacts);
     }
-  }
-
-  private void log(String appId, String artifactStreamId, WingsException exception) {
-    logger.warn("Failed to collect artifacts for appId {}, artifact stream {}. Reason {}", appId, artifactStreamId,
-        exception.getMessage());
   }
 }

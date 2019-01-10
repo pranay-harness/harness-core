@@ -39,7 +39,11 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -182,7 +186,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (savedArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
-    validateArtifactSourceData(artifactStream);
 
     if (validate) {
       validateArtifactSourceData(artifactStream);
@@ -379,6 +382,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .collect(Collectors.toMap(ArtifactStream::getUuid, ArtifactStream::getSourceName));
   }
 
+  @Override
+  public boolean updateFailedCronAttempts(String appId, String artifactStreamId, int counter) {
+    Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
+                                      .filter(ArtifactStream.APP_ID_KEY, appId)
+                                      .filter(Mapper.ID_KEY, artifactStreamId);
+    UpdateOperations<ArtifactStream> updateOperations =
+        wingsPersistence.createUpdateOperations(ArtifactStream.class).set("failedCronAttempts", counter);
+    UpdateResults update = wingsPersistence.update(query, updateOperations);
+    return update.getUpdatedCount() == 1;
+  }
   public List<ArtifactStream> listBySettingId(String settingId) {
     return wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
         .filter(SETTING_ID_KEY, settingId)

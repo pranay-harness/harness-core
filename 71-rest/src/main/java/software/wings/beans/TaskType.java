@@ -8,6 +8,7 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import software.wings.delegatetasks.APMDataCollectionTask;
 import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
 import software.wings.delegatetasks.BambooTask;
+import software.wings.delegatetasks.BuildSourceTask;
 import software.wings.delegatetasks.CloudWatchDataCollectionTask;
 import software.wings.delegatetasks.CollaborationProviderTask;
 import software.wings.delegatetasks.CommandTask;
@@ -61,6 +62,7 @@ import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
 import software.wings.delegatetasks.validation.AwsConnectionValidation;
 import software.wings.delegatetasks.validation.BambooValidation;
+import software.wings.delegatetasks.validation.BuildSourceTaskValidation;
 import software.wings.delegatetasks.validation.CollaborationProviderTaskValidation;
 import software.wings.delegatetasks.validation.CommandValidation;
 import software.wings.delegatetasks.validation.ConnectivityBasicValidation;
@@ -301,7 +303,8 @@ public enum TaskType {
   JIRA(TaskGroup.JIRA, JiraTask.class, JiraValidation.class),
   CONNECTIVITY_VALIDATION(
       TaskGroup.CONNECTIVITY_VALIDATION, ConnectivityValidationTask.class, ConnectivityBasicValidation.class),
-  GIT_FETCH_FILES_TASK(TaskGroup.GIT, GitFetchFilesTask.class, GitFetchFilesValidation.class);
+  GIT_FETCH_FILES_TASK(TaskGroup.GIT, GitFetchFilesTask.class, GitFetchFilesValidation.class),
+  BUILD_SOURCE_TASK(TaskGroup.BUILD_SOURCE, BuildSourceTask.class, BuildSourceTaskValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

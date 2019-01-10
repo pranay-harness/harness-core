@@ -2,6 +2,7 @@ package software.wings.delegate.app;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
@@ -12,6 +13,15 @@ import io.harness.govern.DependencyModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.EcrConfig;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -155,6 +165,7 @@ import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.AmiBuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
+import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DockerBuildService;
@@ -195,6 +206,7 @@ import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.service.intfc.yaml.GitClient;
+import software.wings.settings.SettingValue;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 import software.wings.utils.message.MessageService;
@@ -396,6 +408,20 @@ public class DelegateModule extends DependencyModule {
         .to(PcfApplicationDetailsCommandTaskHandler.class);
     commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.DATAFETCH.name())
         .to(PcfDataFetchCommandTaskHandler.class);
+
+    MapBinder<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMapBinder =
+        MapBinder.newMapBinder(binder(), new TypeLiteral<Class<? extends SettingValue>>() {},
+            new TypeLiteral<Class<? extends BuildService>>() {});
+
+    buildServiceMapBinder.addBinding(JenkinsConfig.class).toInstance(JenkinsBuildService.class);
+    buildServiceMapBinder.addBinding(BambooConfig.class).toInstance(BambooBuildService.class);
+    buildServiceMapBinder.addBinding(DockerConfig.class).toInstance(DockerBuildService.class);
+    buildServiceMapBinder.addBinding(AwsConfig.class).toInstance(EcrBuildService.class);
+    buildServiceMapBinder.addBinding(EcrConfig.class).toInstance(EcrClassicBuildService.class);
+    buildServiceMapBinder.addBinding(GcpConfig.class).toInstance(GcrBuildService.class);
+    buildServiceMapBinder.addBinding(AzureConfig.class).toInstance(AcrBuildService.class);
+    buildServiceMapBinder.addBinding(NexusConfig.class).toInstance(NexusBuildService.class);
+    buildServiceMapBinder.addBinding(ArtifactoryConfig.class).toInstance(ArtifactoryBuildService.class);
 
     // ECS Command Tasks
     MapBinder<String, EcsCommandTaskHandler> ecsCommandTaskTypeToTaskHandlerMap =

@@ -137,6 +137,7 @@ import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.impl.NotificationSetupServiceImpl;
+import software.wings.service.impl.PermitServiceImpl;
 import software.wings.service.impl.PipelineServiceImpl;
 import software.wings.service.impl.PluginServiceImpl;
 import software.wings.service.impl.PreferenceServiceImpl;
@@ -172,6 +173,7 @@ import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
 import software.wings.service.impl.analysis.LearningEngineAnalysisServiceImpl;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
+import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactServiceImpl;
 import software.wings.service.impl.aws.manager.AwsAsgHelperServiceManagerImpl;
@@ -281,6 +283,7 @@ import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
+import software.wings.service.intfc.PermitService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.PluginService;
 import software.wings.service.intfc.PreferenceService;
@@ -508,7 +511,6 @@ public class WingsModule extends DependencyModule {
     bind(MigrationService.class).to(MigrationServiceImpl.class).in(Singleton.class);
     bind(WorkflowExecutionBaselineService.class).to(WorkflowExecutionBaselineServiceImpl.class);
     bind(GitClient.class).to(GitClientUnsupported.class).in(Singleton.class);
-    bind(ArtifactCollectionService.class).to(ArtifactCollectionServiceImpl.class);
     bind(WhitelistService.class).to(WhitelistServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
     bind(ExternalApiRateLimitingService.class).to(ExternalApiRateLimitingServiceImpl.class);
@@ -584,6 +586,13 @@ public class WingsModule extends DependencyModule {
           .asEagerSingleton();
     }
 
+    bind(ArtifactCollectionService.class)
+        .annotatedWith(Names.named("AsyncArtifactCollectionService"))
+        .to(ArtifactCollectionServiceAsyncImpl.class);
+    bind(ArtifactCollectionService.class)
+        .annotatedWith(Names.named("ArtifactCollectionService"))
+        .to(ArtifactCollectionServiceImpl.class);
+
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
     bind(AwsLambdaService.class).to(AwsLambdaServiceImpl.class);
     bind(SSOSettingService.class).to(SSOSettingServiceImpl.class);
@@ -600,6 +609,7 @@ public class WingsModule extends DependencyModule {
     bind(LimitConfigurationService.class).to(LimitConfigurationServiceMongo.class);
 
     bind(DefaultLimitsService.class).to(DefaultLimitsServiceImpl.class);
+    bind(PermitService.class).to(PermitServiceImpl.class);
 
     // Start of deployment trigger dependencies
     bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);

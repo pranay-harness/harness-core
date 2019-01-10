@@ -28,6 +28,7 @@ import static software.wings.common.Constants.BUILD_NO;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
@@ -54,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -85,6 +87,23 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
       throw new WingsException("Artifact Stream was deleted", USER);
     }
     return artifactService.create(artifactCollectionUtil.getArtifact(artifactStream, buildDetails));
+  }
+
+  @Override
+  public void collectNewArtifactsAsync(String appId, ArtifactStream artifactStream, String permitId) {}
+
+  @Override
+  public Artifact collectNewArtifacts(String appId, ArtifactStream artifactStream, String buildNumber) {
+    List<BuildDetails> builds =
+        buildSourceService.getBuilds(appId, artifactStream.getUuid(), artifactStream.getSettingId());
+    if (EmptyPredicate.isNotEmpty(builds)) {
+      Optional<BuildDetails> buildDetails =
+          builds.stream().filter(build -> buildNumber.equals(build.getNumber())).findFirst();
+      if (buildDetails.isPresent()) {
+        return collectArtifact(appId, artifactStream.getUuid(), buildDetails.get());
+      }
+    }
+    return null;
   }
 
   @Override
@@ -235,7 +254,6 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
 
   /**
    * Compares two maven format version strings.
-   *
    */
   public static int versionCompare(String str1, String str2) {
     return MavenVersionCompareUtil.compare(str1).with(str2);
