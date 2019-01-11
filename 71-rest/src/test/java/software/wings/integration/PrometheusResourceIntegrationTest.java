@@ -17,6 +17,7 @@ import io.harness.rule.RepeatRule.Repeat;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute.Builder;
@@ -34,6 +35,7 @@ import javax.ws.rs.core.Response;
 /**
  * Created by Pranjal on 09/05/2018
  */
+@Ignore
 public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
   private String settingId;
   private String appId;
