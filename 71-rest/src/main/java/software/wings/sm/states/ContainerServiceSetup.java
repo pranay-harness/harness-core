@@ -298,6 +298,7 @@ public abstract class ContainerServiceSetup extends State {
                                                            .name(setupExecutionData.getContainerServiceName())
                                                            .uniqueIdentifier(setupExecutionData.getEcsTaskDefintion())
                                                            .build()));
+        executionData.setServiceName(setupExecutionData.getContainerServiceName());
         executionData.setLoadBalancer(containerServiceElement.getLoadBalancer());
         executionData.setPreviousAwsAutoScalarConfigs(setupExecutionData.getPreviousAwsAutoScalarConfigs());
 
