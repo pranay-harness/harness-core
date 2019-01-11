@@ -53,7 +53,7 @@ public class BarrierServiceTest extends WingsBaseTest {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-            .addWorkflowPhase(aWorkflowPhase().withServiceId(SERVICE_ID).withInfraMappingId(INFRA_MAPPING_ID).build())
+            .addWorkflowPhase(aWorkflowPhase().serviceId(SERVICE_ID).infraMappingId(INFRA_MAPPING_ID).build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
 
@@ -75,9 +75,9 @@ public class BarrierServiceTest extends WingsBaseTest {
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
-                    .withServiceId(SERVICE_ID)
-                    .withInfraMappingId(INFRA_MAPPING_ID)
-                    .addPhaseStep(
+                    .serviceId(SERVICE_ID)
+                    .infraMappingId(INFRA_MAPPING_ID)
+                    .phaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -108,9 +108,9 @@ public class BarrierServiceTest extends WingsBaseTest {
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
-                    .withServiceId(SERVICE_ID)
-                    .withInfraMappingId(INFRA_MAPPING_ID)
-                    .addPhaseStep(
+                    .serviceId(SERVICE_ID)
+                    .infraMappingId(INFRA_MAPPING_ID)
+                    .phaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -129,9 +129,9 @@ public class BarrierServiceTest extends WingsBaseTest {
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
-                    .withServiceId(SERVICE_ID)
-                    .withInfraMappingId(INFRA_MAPPING_ID)
-                    .addPhaseStep(
+                    .serviceId(SERVICE_ID)
+                    .infraMappingId(INFRA_MAPPING_ID)
+                    .phaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -183,9 +183,9 @@ public class BarrierServiceTest extends WingsBaseTest {
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
-                    .withServiceId(SERVICE_ID)
-                    .withInfraMappingId(INFRA_MAPPING_ID)
-                    .addPhaseStep(
+                    .serviceId(SERVICE_ID)
+                    .infraMappingId(INFRA_MAPPING_ID)
+                    .phaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -216,9 +216,9 @@ public class BarrierServiceTest extends WingsBaseTest {
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
-                    .withServiceId(SERVICE_ID)
-                    .withInfraMappingId(INFRA_MAPPING_ID)
-                    .addPhaseStep(
+                    .serviceId(SERVICE_ID)
+                    .infraMappingId(INFRA_MAPPING_ID)
+                    .phaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -228,7 +228,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                              ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
                                          .build())
                             .build())
-                    .addPhaseStep(
+                    .phaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -252,9 +252,9 @@ public class BarrierServiceTest extends WingsBaseTest {
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
                 aWorkflowPhase()
-                    .withServiceId(SERVICE_ID)
-                    .withInfraMappingId(INFRA_MAPPING_ID)
-                    .addPhaseStep(
+                    .serviceId(SERVICE_ID)
+                    .infraMappingId(INFRA_MAPPING_ID)
+                    .phaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(
                                 GraphNode.builder()
@@ -265,7 +265,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                         ImmutableMap.<String, Object>builder().put("identifier", "deploy1").build())
                                     .build())
                             .build())
-                    .addPhaseStep(
+                    .phaseStep(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(
                                 GraphNode.builder()

@@ -277,19 +277,19 @@ public class WorkflowPhase implements UuidAccess {
 
   public WorkflowPhase cloneInternal() {
     WorkflowPhase clonedWorkflowPhase = aWorkflowPhase()
-                                            .withUuid(generateUuid())
-                                            .withServiceId(getServiceId())
-                                            .withInfraMappingId(getInfraMappingId())
-                                            .withInfraMappingName(getInfraMappingName())
-                                            .withComputeProviderId(getComputeProviderId())
-                                            .withDeploymentType(getDeploymentType())
-                                            .withRollback(isRollback())
-                                            .withPhaseNameForRollback(getPhaseNameForRollback())
-                                            .withValid(isValid())
-                                            .withValidationMessage(getValidationMessage())
-                                            .withTemplateExpressions(getTemplateExpressions())
-                                            .withDaemonSet(isDaemonSet())
-                                            .withStatefulSet(isStatefulSet())
+                                            .uuid(generateUuid())
+                                            .serviceId(getServiceId())
+                                            .infraMappingId(getInfraMappingId())
+                                            .infraMappingName(getInfraMappingName())
+                                            .computeProviderId(getComputeProviderId())
+                                            .deploymentType(getDeploymentType())
+                                            .rollback(isRollback())
+                                            .phaseNameForRollback(getPhaseNameForRollback())
+                                            .valid(isValid())
+                                            .validationMessage(getValidationMessage())
+                                            .templateExpressions(getTemplateExpressions())
+                                            .daemonSet(isDaemonSet())
+                                            .statefulSet(isStatefulSet())
                                             .build();
     List<PhaseStep> phaseSteps = getPhaseSteps();
     List<PhaseStep> clonedPhaseSteps = new ArrayList<>();
@@ -365,82 +365,82 @@ public class WorkflowPhase implements UuidAccess {
       return new WorkflowPhaseBuilder();
     }
 
-    public WorkflowPhaseBuilder withUuid(String uuid) {
+    public WorkflowPhaseBuilder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public WorkflowPhaseBuilder withName(String name) {
+    public WorkflowPhaseBuilder name(String name) {
       this.name = name;
       return this;
     }
 
-    public WorkflowPhaseBuilder withServiceId(String serviceId) {
+    public WorkflowPhaseBuilder serviceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
     }
 
-    public WorkflowPhaseBuilder withInfraMappingId(String infraMappingId) {
+    public WorkflowPhaseBuilder infraMappingId(String infraMappingId) {
       this.infraMappingId = infraMappingId;
       return this;
     }
 
-    public WorkflowPhaseBuilder withInfraMappingName(String infraMappingName) {
+    public WorkflowPhaseBuilder infraMappingName(String infraMappingName) {
       this.infraMappingName = infraMappingName;
       return this;
     }
 
-    public WorkflowPhaseBuilder withDeploymentType(DeploymentType deploymentType) {
+    public WorkflowPhaseBuilder deploymentType(DeploymentType deploymentType) {
       this.deploymentType = deploymentType;
       return this;
     }
 
-    public WorkflowPhaseBuilder withComputeProviderId(String computeProviderId) {
+    public WorkflowPhaseBuilder computeProviderId(String computeProviderId) {
       this.computeProviderId = computeProviderId;
       return this;
     }
 
-    public WorkflowPhaseBuilder withRollback(boolean rollback) {
+    public WorkflowPhaseBuilder rollback(boolean rollback) {
       this.rollback = rollback;
       return this;
     }
 
-    public WorkflowPhaseBuilder withPhaseNameForRollback(String phaseNameForRollback) {
+    public WorkflowPhaseBuilder phaseNameForRollback(String phaseNameForRollback) {
       this.phaseNameForRollback = phaseNameForRollback;
       return this;
     }
 
-    public WorkflowPhaseBuilder withValid(boolean valid) {
+    public WorkflowPhaseBuilder valid(boolean valid) {
       this.valid = valid;
       return this;
     }
 
-    public WorkflowPhaseBuilder withValidationMessage(String validationMessage) {
+    public WorkflowPhaseBuilder validationMessage(String validationMessage) {
       this.validationMessage = validationMessage;
       return this;
     }
 
-    public WorkflowPhaseBuilder withPhaseSteps(List<PhaseStep> phaseSteps) {
+    public WorkflowPhaseBuilder phaseSteps(List<PhaseStep> phaseSteps) {
       this.phaseSteps = phaseSteps;
       return this;
     }
 
-    public WorkflowPhaseBuilder withTemplateExpressions(List<TemplateExpression> templateExpressions) {
+    public WorkflowPhaseBuilder templateExpressions(List<TemplateExpression> templateExpressions) {
       this.templateExpressions = templateExpressions;
       return this;
     }
 
-    public WorkflowPhaseBuilder addPhaseStep(PhaseStep phaseStep) {
+    public WorkflowPhaseBuilder phaseStep(PhaseStep phaseStep) {
       this.phaseSteps.add(phaseStep);
       return this;
     }
 
-    public WorkflowPhaseBuilder withDaemonSet(boolean daemonSet) {
+    public WorkflowPhaseBuilder daemonSet(boolean daemonSet) {
       this.daemonSet = daemonSet;
       return this;
     }
 
-    public WorkflowPhaseBuilder withStatefulSet(boolean statefulSet) {
+    public WorkflowPhaseBuilder statefulSet(boolean statefulSet) {
       this.statefulSet = statefulSet;
       return this;
     }

@@ -79,8 +79,8 @@ public class WorkflowSampleDataProvider {
     Validator.notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
 
     // Attach workflow first Workflow Phase
-    WorkflowPhase workflowPhase = workflowService.createWorkflowPhase(appId, savedWorkflow.getUuid(),
-        aWorkflowPhase().withServiceId(serviceId).withInfraMappingId(infraMappingId).build());
+    WorkflowPhase workflowPhase = workflowService.createWorkflowPhase(
+        appId, savedWorkflow.getUuid(), aWorkflowPhase().serviceId(serviceId).infraMappingId(infraMappingId).build());
 
     setK8sSetupContainer(workflowPhase, "2");
     setK8sUpgradeContainer(workflowPhase, "50");
@@ -88,8 +88,8 @@ public class WorkflowSampleDataProvider {
     workflowService.updateWorkflowPhase(appId, savedWorkflow.getUuid(), workflowPhase);
 
     // Attach Second Workflow Phase
-    WorkflowPhase secondPhase = workflowService.createWorkflowPhase(appId, savedWorkflow.getUuid(),
-        aWorkflowPhase().withServiceId(serviceId).withInfraMappingId(infraMappingId).build());
+    WorkflowPhase secondPhase = workflowService.createWorkflowPhase(
+        appId, savedWorkflow.getUuid(), aWorkflowPhase().serviceId(serviceId).infraMappingId(infraMappingId).build());
 
     setK8sUpgradeContainer(secondPhase, "100");
 

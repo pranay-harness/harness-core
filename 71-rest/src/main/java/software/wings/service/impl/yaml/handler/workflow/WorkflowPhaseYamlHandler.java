@@ -123,18 +123,18 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     Boolean isRollback = (Boolean) context.getProperties().get(YamlConstants.IS_ROLLBACK);
     WorkflowPhaseBuilder phase = WorkflowPhaseBuilder.aWorkflowPhase();
     DeploymentType deploymentType = Util.getEnumFromString(DeploymentType.class, deploymentTypeString);
-    phase.withComputeProviderId(computeProviderId)
-        .withDeploymentType(deploymentType)
-        .withInfraMappingId(infraMappingId)
-        .withInfraMappingName(infraMappingName)
-        .withName(yaml.getName())
-        .withPhaseNameForRollback(yaml.getPhaseNameForRollback())
-        .withPhaseSteps(phaseSteps)
-        .withServiceId(serviceId)
-        .withRollback(isRollback)
-        .withTemplateExpressions(templateExpressions)
-        .withDaemonSet(yaml.isDaemonSet())
-        .withStatefulSet(yaml.isStatefulSet())
+    phase.computeProviderId(computeProviderId)
+        .deploymentType(deploymentType)
+        .infraMappingId(infraMappingId)
+        .infraMappingName(infraMappingName)
+        .name(yaml.getName())
+        .phaseNameForRollback(yaml.getPhaseNameForRollback())
+        .phaseSteps(phaseSteps)
+        .serviceId(serviceId)
+        .rollback(isRollback)
+        .templateExpressions(templateExpressions)
+        .daemonSet(yaml.isDaemonSet())
+        .statefulSet(yaml.isStatefulSet())
         .build();
     return phase.build();
   }

@@ -982,7 +982,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     Workflow workflow = aWorkflow()
                             .withOrchestrationWorkflow(
                                 aCanaryOrchestrationWorkflow()
-                                    .addWorkflowPhase(aWorkflowPhase().withDeploymentType(DeploymentType.SSH).build())
+                                    .addWorkflowPhase(aWorkflowPhase().deploymentType(DeploymentType.SSH).build())
                                     .build())
                             .build();
     when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);

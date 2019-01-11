@@ -597,10 +597,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void addK8sBasicWorkflowPhase(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    WorkflowPhase workflowPhase = aWorkflowPhase()
-                                      .withInfraMappingId(workflow.getInfraMappingId())
-                                      .withServiceId(workflow.getServiceId())
-                                      .build();
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().infraMappingId(workflow.getInfraMappingId()).serviceId(workflow.getServiceId()).build();
     workflowServiceHelper.setCloudProvider(workflow.getAppId(), workflowPhase);
 
     Map<String, Object> defaultSetupProperties = new HashMap<>();
@@ -649,10 +647,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void addK8sBlueGreenWorkflowPhase(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    WorkflowPhase workflowPhase = aWorkflowPhase()
-                                      .withInfraMappingId(workflow.getInfraMappingId())
-                                      .withServiceId(workflow.getServiceId())
-                                      .build();
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().infraMappingId(workflow.getInfraMappingId()).serviceId(workflow.getServiceId()).build();
     workflowServiceHelper.setCloudProvider(workflow.getAppId(), workflowPhase);
 
     Map<String, Object> defaultSetupProperties = new HashMap<>();
@@ -709,23 +705,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private WorkflowPhase createRollbackPhase(WorkflowPhase workflowPhase) {
     return aWorkflowPhase()
-        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-        .withRollback(true)
-        .withServiceId(workflowPhase.getServiceId())
-        .withComputeProviderId(workflowPhase.getComputeProviderId())
-        .withInfraMappingName(workflowPhase.getInfraMappingName())
-        .withPhaseNameForRollback(workflowPhase.getName())
-        .withDeploymentType(workflowPhase.getDeploymentType())
-        .withInfraMappingId(workflowPhase.getInfraMappingId())
+        .name(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .rollback(true)
+        .serviceId(workflowPhase.getServiceId())
+        .computeProviderId(workflowPhase.getComputeProviderId())
+        .infraMappingName(workflowPhase.getInfraMappingName())
+        .phaseNameForRollback(workflowPhase.getName())
+        .deploymentType(workflowPhase.getDeploymentType())
+        .infraMappingId(workflowPhase.getInfraMappingId())
         .build();
   }
 
   private void addK8sCanaryWorkflowPhase(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    WorkflowPhase workflowPhase = aWorkflowPhase()
-                                      .withInfraMappingId(workflow.getInfraMappingId())
-                                      .withServiceId(workflow.getServiceId())
-                                      .build();
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().infraMappingId(workflow.getInfraMappingId()).serviceId(workflow.getServiceId()).build();
     workflowServiceHelper.setCloudProvider(workflow.getAppId(), workflowPhase);
 
     addK8sCanaryWorkflowPhaseSteps(workflowPhase);
@@ -870,10 +864,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         WorkflowPhase workflowPhase;
         if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
           workflowPhase = aWorkflowPhase()
-                              .withInfraMappingId(workflow.getInfraMappingId())
-                              .withServiceId(workflow.getServiceId())
-                              .withDaemonSet(isDaemonSet(workflow.getAppId(), workflow.getServiceId()))
-                              .withStatefulSet(isStatefulSet(workflow.getAppId(), workflow.getServiceId()))
+                              .infraMappingId(workflow.getInfraMappingId())
+                              .serviceId(workflow.getServiceId())
+                              .daemonSet(isDaemonSet(workflow.getAppId(), workflow.getServiceId()))
+                              .statefulSet(isStatefulSet(workflow.getAppId(), workflow.getServiceId()))
                               .build();
           attachWorkflowPhase(workflow, workflowPhase);
         }

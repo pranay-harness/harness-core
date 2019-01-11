@@ -264,14 +264,14 @@ public class WorkflowGenerator {
     // Ensure artifact stream
 
     WorkflowPhaseBuilder workflowPhaseBuilder = WorkflowPhaseBuilder.aWorkflowPhase();
-    workflowPhaseBuilder.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+    workflowPhaseBuilder.phaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
 
     // TODO: Change it to Docker ArtifactStream
     artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
 
     SettingAttribute jenkinsConfig = settingGenerator.ensurePredefined(seed, owners, HARNESS_JENKINS_CONNECTOR);
 
-    workflowPhaseBuilder.addPhaseStep(
+    workflowPhaseBuilder.phaseStep(
         aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
             .addStep(GraphNode.builder()
                          .id(generateUuid())
@@ -307,11 +307,11 @@ public class WorkflowGenerator {
                                          .build())
                          .build())
             .build());
-    workflowPhaseBuilder.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP)
-                                          .addStep(getHTTPNode("pipeline"))
-                                          .addStep(getHTTPNode("workflow"))
-                                          .addStep(getHTTPNode("phase"))
-                                          .build());
+    workflowPhaseBuilder.phaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP)
+                                       .addStep(getHTTPNode("pipeline"))
+                                       .addStep(getHTTPNode("workflow"))
+                                       .addStep(getHTTPNode("phase"))
+                                       .build());
 
     return ensureWorkflow(seed, owners,
         aWorkflow()
@@ -354,19 +354,19 @@ public class WorkflowGenerator {
     properties.put("connectionType", "SSH");
     WorkflowPhaseBuilder workflowPhaseBuilder = WorkflowPhaseBuilder.aWorkflowPhase();
 
-    workflowPhaseBuilder.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
-    workflowPhaseBuilder.addPhaseStep(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
-                                          .addStep(GraphNode.builder()
-                                                       .id(generateUuid())
-                                                       .type(StateType.SHELL_SCRIPT.name())
-                                                       .name(shellScriptTemplate.getName())
-                                                       .properties(properties)
-                                                       .templateVariables(shellScriptTemplate.getVariables())
-                                                       .templateUuid(shellScriptTemplate.getUuid())
-                                                       .templateVersion("latest")
-                                                       .build())
-                                          .build());
-    workflowPhaseBuilder.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    workflowPhaseBuilder.phaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+    workflowPhaseBuilder.phaseStep(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
+                                       .addStep(GraphNode.builder()
+                                                    .id(generateUuid())
+                                                    .type(StateType.SHELL_SCRIPT.name())
+                                                    .name(shellScriptTemplate.getName())
+                                                    .properties(properties)
+                                                    .templateVariables(shellScriptTemplate.getVariables())
+                                                    .templateUuid(shellScriptTemplate.getUuid())
+                                                    .templateVersion("latest")
+                                                    .build())
+                                       .build());
+    workflowPhaseBuilder.phaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
 
     return ensureWorkflow(seed, owners,
         aWorkflow()
