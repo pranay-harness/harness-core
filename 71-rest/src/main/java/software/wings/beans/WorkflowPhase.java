@@ -11,7 +11,7 @@ import static software.wings.sm.StateType.PHASE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.data.structure.NullSafeImmutableMap;
-import io.harness.persistence.UuidAware;
+import io.harness.persistence.UuidAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -30,10 +30,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 
-/**
- * Created by rishi on 12/21/16.
- */
-public class WorkflowPhase implements UuidAware {
+public class WorkflowPhase implements UuidAccess {
   private String uuid = generateUuid();
   private String name;
   private String serviceId;

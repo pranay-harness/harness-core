@@ -78,7 +78,7 @@ public class DynaTraceResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
-  @Owner(emails = "pranjal@harness.io")
+  @Owner(emails = "pranjal@harness.io", intermittent = true)
   public void testGetLogRecords() {
     DynaTraceSetupTestNodeData testNodedata = getSampledata();
     WebTarget target = client.target(API_BASE + "/"

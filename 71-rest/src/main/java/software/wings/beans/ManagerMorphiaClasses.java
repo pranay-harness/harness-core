@@ -130,7 +130,7 @@ public class ManagerMorphiaClasses {
       AwsLambdaInfraStructureMapping.class, Schema.class, VaultConfig.class, User.class, AnalysisContext.class,
       ApiKeyEntry.class, PipelineExecution.class, HarnessUserGroup.class, FailureNotification.class, Service.class,
       Whitelist.class, DeploymentPreference.class, EntityVersion.class, BaseFile.class,
-      CloudFormationInfrastructureProvisioner.class, Phase.class, BarrierInstance.class, ResourceConstraint.class,
+      CloudFormationInfrastructureProvisioner.class, BarrierInstance.class, ResourceConstraint.class,
       DirectKubernetesInfrastructureMapping.class, DelegateTask.class, Alert.class, EcrArtifactStream.class,
       ServiceSecretKey.class, ArtifactStream.class, ActionableNotification.class, AppContainer.class,
       EcsContainerTask.class, SweepingOutput.class, PhysicalInfrastructureMappingWinRm.class, CacheEntity.class,
