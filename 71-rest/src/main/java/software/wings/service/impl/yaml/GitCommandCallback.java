@@ -120,15 +120,8 @@ public class GitCommandCallback implements NotifyCallback {
             List<String> yamlGitConfigIds =
                 obtainYamlGitConfigIds(accountId, gitCommitAndPushResult.getYamlGitConfig().getBranchName(),
                     gitCommitAndPushResult.getYamlGitConfig().getGitConnectorId());
-            yamlGitService.saveCommit(GitCommit.builder()
-                                          .accountId(accountId)
-                                          .yamlChangeSet(yamlChangeSet)
-                                          .yamlGitConfigIds(yamlGitConfigIds)
-                                          .status(GitCommit.Status.COMPLETED)
-                                          .commitId(gitCommitAndPushResult.getGitCommitResult().getCommitId())
-                                          .gitCommandResult(gitCommitAndPushResult)
-                                          .yamlChangeSetsProcessed(yamlSetIdsProcessed)
-                                          .build());
+
+            saveCommitFromHarness(gitCommitAndPushResult, yamlChangeSet, yamlGitConfigIds, yamlSetIdsProcessed);
           }
           yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges(), false);
         }
@@ -155,7 +148,8 @@ public class GitCommandCallback implements NotifyCallback {
 
           List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId,
               gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId());
-          saveGitCommit(gitDiffResult, yamlGitConfigIds);
+
+          saveCommitFromGit(gitDiffResult, yamlGitConfigIds);
           // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
           // webhook invocation
           yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList, true);
@@ -177,46 +171,51 @@ public class GitCommandCallback implements NotifyCallback {
     }
   }
 
-  /**
-   *
-   * @param gitDiffResult
-   * @param yamlGitConfigIds
-   */
-  private void saveGitCommit(GitDiffResult gitDiffResult, List<String> yamlGitConfigIds) {
+  private void saveCommitFromHarness(GitCommitAndPushResult gitCommitAndPushResult, YamlChangeSet yamlChangeSet,
+      List<String> yamlGitConfigIds, List<String> yamlSetIdsProcessed) {
+    saveGitCommit(GitCommit.builder()
+                      .accountId(accountId)
+                      .yamlChangeSet(yamlChangeSet)
+                      .yamlGitConfigIds(yamlGitConfigIds)
+                      .status(GitCommit.Status.COMPLETED)
+                      .commitId(gitCommitAndPushResult.getGitCommitResult().getCommitId())
+                      .gitCommandResult(gitCommitAndPushResult)
+                      .yamlChangeSetsProcessed(yamlSetIdsProcessed)
+                      .build());
+  }
+
+  private void saveCommitFromGit(GitDiffResult gitDiffResult, List<String> yamlGitConfigIds) {
+    saveGitCommit(GitCommit.builder()
+                      .accountId(accountId)
+                      .yamlChangeSet(YamlChangeSet.builder()
+                                         .accountId(accountId)
+                                         .appId(Base.GLOBAL_APP_ID)
+                                         .gitToHarness(true)
+                                         .status(Status.COMPLETED)
+                                         .gitFileChanges(gitDiffResult.getGitFileChanges())
+                                         .build())
+                      .yamlGitConfigIds(yamlGitConfigIds)
+                      .status(GitCommit.Status.COMPLETED)
+                      .commitId(gitDiffResult.getCommitId())
+                      .gitCommandResult(gitDiffResult)
+                      .build());
+  }
+
+  private void saveGitCommit(GitCommit gitCommit) {
     try {
-      yamlGitService.saveCommit(GitCommit.builder()
-                                    .accountId(accountId)
-                                    .yamlChangeSet(YamlChangeSet.builder()
-                                                       .accountId(accountId)
-                                                       .appId(Base.GLOBAL_APP_ID)
-                                                       .gitToHarness(true)
-                                                       .status(Status.COMPLETED)
-                                                       .gitFileChanges(gitDiffResult.getGitFileChanges())
-                                                       .build())
-                                    .yamlGitConfigIds(yamlGitConfigIds)
-                                    .status(GitCommit.Status.COMPLETED)
-                                    .commitId(gitDiffResult.getCommitId())
-                                    .gitCommandResult(gitDiffResult)
-                                    .build());
+      yamlGitService.saveCommit(gitCommit);
     } catch (Exception e) {
       if (e instanceof DuplicateKeyException) {
-        logger.info(
-            "This was already persisted in DB. May Happens when 2 successive commits are made to git in short duration, and when 2nd commit is done before gitDiff for 1st one is in progress");
+        logger.info("This was already persisted in DB. May Happens when 2 successive commits"
+            + " are made to git in short duration, and when 2nd commit is done before gitDiff"
+            + " for 1st one is in progress");
       } else {
         logger.warn("Failed to save gitCommit", e);
         // Try again without gitChangeSet and CommandResults.
-        yamlGitService.saveCommit(GitCommit.builder()
-                                      .accountId(accountId)
-                                      .yamlChangeSet(YamlChangeSet.builder()
-                                                         .accountId(accountId)
-                                                         .appId(Base.GLOBAL_APP_ID)
-                                                         .gitToHarness(true)
-                                                         .status(Status.COMPLETED)
-                                                         .build())
-                                      .yamlGitConfigIds(yamlGitConfigIds)
-                                      .status(GitCommit.Status.COMPLETED)
-                                      .commitId(gitDiffResult.getCommitId())
-                                      .build());
+        gitCommit.getYamlChangeSet().setGitFileChanges(null);
+        gitCommit.setGitCommandResult(null);
+
+        yamlGitService.saveCommit(gitCommit);
       }
     }
   }
