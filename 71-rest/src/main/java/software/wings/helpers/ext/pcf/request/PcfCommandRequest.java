@@ -19,5 +19,5 @@ public class PcfCommandRequest {
   private String workflowExecutionId;
   private Integer timeoutIntervalInMin;
 
-  public enum PcfCommandType { SETUP, RESIZE, ROLLBACK, UPDATE_ROUTE, DATAFETCH, VALIDATE, APP_DETAILS }
+  public enum PcfCommandType { SETUP, RESIZE, ROLLBACK, UPDATE_ROUTE, DATAFETCH, VALIDATE, APP_DETAILS, CREATE_ROUTE }
 }

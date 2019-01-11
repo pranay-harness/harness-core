@@ -60,6 +60,7 @@ import software.wings.delegatetasks.k8s.taskhandler.K8sScaleTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfApplicationDetailsCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCommandTaskHandler;
+import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCreatePcfResourceCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDataFetchCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDeployCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfRollbackCommandTaskHandler;
@@ -408,6 +409,8 @@ public class DelegateModule extends DependencyModule {
         .to(PcfApplicationDetailsCommandTaskHandler.class);
     commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.DATAFETCH.name())
         .to(PcfDataFetchCommandTaskHandler.class);
+    commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.CREATE_ROUTE.name())
+        .to(PcfCreatePcfResourceCommandTaskHandler.class);
 
     MapBinder<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMapBinder =
         MapBinder.newMapBinder(binder(), new TypeLiteral<Class<? extends SettingValue>>() {},

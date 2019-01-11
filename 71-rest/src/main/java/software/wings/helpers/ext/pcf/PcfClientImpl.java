@@ -27,7 +27,6 @@ import org.cloudfoundry.operations.applications.Task;
 import org.cloudfoundry.operations.organizations.OrganizationDetail;
 import org.cloudfoundry.operations.organizations.OrganizationInfoRequest;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
-import org.cloudfoundry.operations.routes.CheckRouteRequest;
 import org.cloudfoundry.operations.routes.CreateRouteRequest;
 import org.cloudfoundry.operations.routes.Level;
 import org.cloudfoundry.operations.routes.ListRoutesRequest;
@@ -45,11 +44,13 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -82,6 +83,7 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
+  // Start Org apis
   @Override
   public List<OrganizationSummary> getOrganizations(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
@@ -145,17 +147,9 @@ public class PcfClientImpl implements PcfClient {
 
     return spaces;
   }
+  // End Org apis
 
-  public List<String> getRoutesForSpace(PcfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException, InterruptedException {
-    List<Route> routes = getAllRoutesForSpace(pcfRequestConfig);
-    if (!CollectionUtils.isEmpty(routes)) {
-      return routes.stream().map(route -> getPathFromRouteMap(route)).collect(toList());
-    }
-
-    return Collections.EMPTY_LIST;
-  }
-
+  // Start Application apis
   public List<ApplicationSummary> getApplications(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     logger.info(
@@ -424,54 +418,6 @@ public class PcfClientImpl implements PcfClient {
     return applicationManifests.get(0);
   }
 
-  public List<Route> getRouteMapsByNames(List<String> paths, PcfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException, InterruptedException {
-    if (EmptyPredicate.isEmpty(paths)) {
-      return Collections.EMPTY_LIST;
-    }
-
-    List<Route> routes = getAllRoutesForSpace(pcfRequestConfig);
-    paths = paths.stream().map(path -> path.toLowerCase()).collect(toList());
-    Set<String> routeSet = new HashSet<>(paths);
-
-    return routes.stream()
-        .filter(route -> routeSet.contains(getPathFromRouteMap(route).toLowerCase()))
-        .collect(toList());
-  }
-
-  private List<Route> getAllRoutesForSpace(PcfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Getting routeMaps for Application: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
-
-    CountDownLatch latch = new CountDownLatch(1);
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
-    StringBuilder errorBuilder = new StringBuilder();
-    List<Route> routes = new ArrayList<>();
-
-    getCloudFoundryOperations(pcfRequestConfig)
-        .routes()
-        .list(ListRoutesRequest.builder().level(Level.SPACE).build())
-        .subscribe(routes ::add, throwable -> {
-          exceptionOccured.set(true);
-          handleException(throwable, "getRouteMap", errorBuilder);
-          latch.countDown();
-        }, latch::countDown);
-
-    waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
-    if (exceptionOccured.get()) {
-      throw new PivotalClientApiException(new StringBuilder()
-                                              .append("Exception occuered while getting routeMaps for Application: ")
-                                              .append(pcfRequestConfig.getApplicationName())
-                                              .append(", Error: " + errorBuilder.toString())
-                                              .toString());
-    }
-    return routes;
-  }
-
   public ApplicationDetail getApplicationByName(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     logger.info(new StringBuilder()
@@ -505,67 +451,6 @@ public class PcfClientImpl implements PcfClient {
     return applicationDetails.size() > 0 ? applicationDetails.get(0) : null;
   }
 
-  public void createRouteMapIfNotExists(PcfRequestConfig pcfRequestConfig, String host, String domain)
-      throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("creating routeMap: ")
-                    .append(host + "." + domain)
-                    .append(" for Endpoint: ")
-                    .append(pcfRequestConfig.getEndpointUrl())
-                    .append(", Organization: ")
-                    .append(pcfRequestConfig.getOrgName())
-                    .append(", for Space: ")
-                    .append(pcfRequestConfig.getSpaceName())
-                    .append(", AppName: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
-
-    final CountDownLatch latch = new CountDownLatch(1);
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
-    StringBuilder errorBuilder = new StringBuilder();
-
-    getCloudFoundryOperations(pcfRequestConfig)
-        .routes()
-        .check(CheckRouteRequest.builder().host(host).domain(domain).build())
-        .subscribe(null, throwable -> {
-          exceptionOccured.set(true);
-          handleException(throwable, "createRouteMapIfNotExists", errorBuilder);
-          latch.countDown();
-        }, latch::countDown);
-
-    waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
-
-    // create routeMap
-    final CountDownLatch latch2 = new CountDownLatch(1);
-    errorBuilder.setLength(0);
-    getCloudFoundryOperations(pcfRequestConfig)
-        .routes()
-        .create(CreateRouteRequest.builder().domain(domain).host(host).space(pcfRequestConfig.getSpaceName()).build())
-        .subscribe(null, throwable -> {
-          handleException(throwable, "createRouteMapIfNotExists", errorBuilder);
-          latch2.countDown();
-        }, latch2::countDown);
-
-    waitTillCompletion(latch2, 5);
-
-    if (exceptionOccured.get()) {
-      throw new PivotalClientApiException(new StringBuilder()
-                                              .append("Exception occured while creating routeMap: ")
-                                              .append(host + "." + domain)
-                                              .append(" for Endpoint: ")
-                                              .append(pcfRequestConfig.getEndpointUrl())
-                                              .append(", Organization: ")
-                                              .append(pcfRequestConfig.getOrgName())
-                                              .append(", for Space: ")
-                                              .append(pcfRequestConfig.getSpaceName())
-                                              .append(", AppName: ")
-                                              .append(pcfRequestConfig.getApplicationName())
-                                              .append(", Error: " + errorBuilder.toString())
-                                              .toString());
-    }
-  }
-
   public void deleteApplication(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     logger.info(new StringBuilder()
@@ -594,18 +479,6 @@ public class PcfClientImpl implements PcfClient {
                                               .append(pcfRequestConfig.getApplicationName())
                                               .append(", Error: " + errorBuilder.toString())
                                               .toString());
-    }
-  }
-
-  private void handleException(Throwable t, String apiName, StringBuilder errorBuilder) {
-    logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception Occured while executing PCF api: " + apiName, t);
-    errorBuilder.append(t.getMessage());
-  }
-
-  private void waitTillCompletion(CountDownLatch latch, int time) throws InterruptedException {
-    boolean check = latch.await(time, TimeUnit.MINUTES);
-    if (!check) {
-      throw new RuntimeException(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "PCF operation times out");
     }
   }
 
@@ -673,6 +546,177 @@ public class PcfClientImpl implements PcfClient {
                                               .toString());
     }
   }
+  // End Application apis
+
+  // Start Rout Map Apis
+  /**
+   * Get Route Application by entire route path
+   */
+
+  public List<String> getRoutesForSpace(PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException, InterruptedException {
+    List<Route> routes = getAllRoutesForSpace(pcfRequestConfig);
+    if (!CollectionUtils.isEmpty(routes)) {
+      return routes.stream().map(route -> getPathFromRouteMap(route)).collect(toList());
+    }
+
+    return Collections.EMPTY_LIST;
+  }
+
+  public List<Route> getRouteMapsByNames(List<String> paths, PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException, InterruptedException {
+    if (EmptyPredicate.isEmpty(paths)) {
+      return Collections.EMPTY_LIST;
+    }
+
+    List<Route> routes = getAllRoutesForSpace(pcfRequestConfig);
+    paths = paths.stream().map(path -> path.toLowerCase()).collect(toList());
+    Set<String> routeSet = new HashSet<>(paths);
+
+    return routes.stream()
+        .filter(route -> routeSet.contains(getPathFromRouteMap(route).toLowerCase()))
+        .collect(toList());
+  }
+
+  private List<Route> getAllRoutesForSpace(PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException, InterruptedException {
+    logger.info(new StringBuilder()
+                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                    .append("Getting routeMaps for Application: ")
+                    .append(pcfRequestConfig.getApplicationName())
+                    .toString());
+
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
+    StringBuilder errorBuilder = new StringBuilder();
+    List<Route> routes = new ArrayList<>();
+
+    getCloudFoundryOperations(pcfRequestConfig)
+        .routes()
+        .list(ListRoutesRequest.builder().level(Level.SPACE).build())
+        .subscribe(routes ::add, throwable -> {
+          exceptionOccured.set(true);
+          handleException(throwable, "getRouteMap", errorBuilder);
+          latch.countDown();
+        }, latch::countDown);
+
+    waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
+    if (exceptionOccured.get()) {
+      throw new PivotalClientApiException(new StringBuilder()
+                                              .append("Exception occuered while getting routeMaps for Application: ")
+                                              .append(pcfRequestConfig.getApplicationName())
+                                              .append(", Error: " + errorBuilder.toString())
+                                              .toString());
+    }
+    return routes;
+  }
+
+  public void createRouteMap(PcfRequestConfig pcfRequestConfig, String host, String domain, String path,
+      boolean tcpRoute, boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException {
+    logger.info(new StringBuilder()
+                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                    .append("creating routeMap: ")
+                    .append(host + "." + domain)
+                    .append(" for Endpoint: ")
+                    .append(pcfRequestConfig.getEndpointUrl())
+                    .append(", Organization: ")
+                    .append(pcfRequestConfig.getOrgName())
+                    .append(", for Space: ")
+                    .append(pcfRequestConfig.getSpaceName())
+                    .append(", AppName: ")
+                    .append(pcfRequestConfig.getApplicationName())
+                    .toString());
+
+    // create routeMap
+    final CountDownLatch latch2 = new CountDownLatch(1);
+    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
+    StringBuilder errorBuilder = new StringBuilder();
+
+    path = StringUtils.isBlank(path) ? null : path;
+    errorBuilder.setLength(0);
+
+    CreateRouteRequest.Builder createRouteRequestBuilder =
+        getCreateRouteRequest(pcfRequestConfig, host, domain, path, tcpRoute, useRandomPort, port);
+
+    getCloudFoundryOperations(pcfRequestConfig)
+        .routes()
+        .create(createRouteRequestBuilder.build())
+        .subscribe(null, throwable -> {
+          handleException(throwable, "createRouteMapIfNotExists", errorBuilder);
+          latch2.countDown();
+        }, latch2::countDown);
+
+    waitTillCompletion(latch2, 5);
+
+    if (exceptionOccured.get()) {
+      throw new PivotalClientApiException(new StringBuilder()
+                                              .append("Exception occured while creating routeMap: ")
+                                              .append(host + "." + domain)
+                                              .append(" for Endpoint: ")
+                                              .append(pcfRequestConfig.getEndpointUrl())
+                                              .append(", Organization: ")
+                                              .append(pcfRequestConfig.getOrgName())
+                                              .append(", for Space: ")
+                                              .append(pcfRequestConfig.getSpaceName())
+                                              .append(", AppName: ")
+                                              .append(pcfRequestConfig.getApplicationName())
+                                              .append(", Host: ")
+                                              .append(host)
+                                              .append(", Domain: ")
+                                              .append(domain)
+                                              .append(", Path: ")
+                                              .append(path)
+                                              .append(", Port")
+                                              .append(port)
+                                              .append(", Error: " + errorBuilder.toString())
+                                              .toString());
+    }
+  }
+
+  private CreateRouteRequest.Builder getCreateRouteRequest(PcfRequestConfig pcfRequestConfig, String host,
+      String domain, String path, boolean tcpRoute, boolean useRandomPort, Integer port) {
+    CreateRouteRequest.Builder createRouteRequestBuilder =
+        CreateRouteRequest.builder().domain(domain).space(pcfRequestConfig.getSpaceName());
+
+    if (tcpRoute) {
+      addTcpRouteDetails(useRandomPort, port, createRouteRequestBuilder);
+    } else {
+      addHttpRouteDetails(host, path, createRouteRequestBuilder);
+    }
+    return createRouteRequestBuilder;
+  }
+
+  /**
+   * Http Route Needs Domain, host and path is optional
+   */
+  private void addHttpRouteDetails(String host, String path, CreateRouteRequest.Builder createRouteRequestBuilder) {
+    createRouteRequestBuilder.path(path);
+    createRouteRequestBuilder.host(host);
+  }
+
+  private void addTcpRouteDetails(
+      boolean useRandomPort, Integer port, CreateRouteRequest.Builder createRouteRequestBuilder) {
+    if (useRandomPort) {
+      createRouteRequestBuilder.randomPort(true);
+    } else {
+      createRouteRequestBuilder.port(port);
+    }
+  }
+
+  public Optional<Route> getRouteMap(PcfRequestConfig pcfRequestConfig, String route)
+      throws PivotalClientApiException, InterruptedException {
+    if (StringUtils.isBlank(route)) {
+      throw new PivotalClientApiException(
+          PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Route Can Not Be Blank When Fetching RouteMap");
+    }
+
+    List<Route> routes = getRouteMapsByNames(Arrays.asList(route), pcfRequestConfig);
+    if (EmptyPredicate.isNotEmpty(routes)) {
+      return Optional.of(routes.get(0));
+    }
+
+    return Optional.empty();
+  }
 
   public void unmapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException {
@@ -710,7 +754,7 @@ public class PcfClientImpl implements PcfClient {
     return new StringBuilder()
         .append(StringUtils.isBlank(route.getHost()) ? StringUtils.EMPTY : route.getHost() + ".")
         .append(route.getDomain())
-        .append(StringUtils.isBlank(route.getPath()) ? StringUtils.EMPTY : "/" + route.getPath())
+        .append(StringUtils.isBlank(route.getPath()) ? StringUtils.EMPTY : route.getPath())
         .append(StringUtils.isBlank(route.getPort()) ? StringUtils.EMPTY : ":" + Integer.parseInt(route.getPort()))
         .toString();
   }
@@ -795,6 +839,8 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
+  // End Route Map Apis
+
   private TokenProvider getTokenProvider(String username, String password) throws PivotalClientApiException {
     try {
       return PasswordGrantTokenProvider.builder().username(username).password(password).build();
@@ -808,6 +854,18 @@ public class PcfClientImpl implements PcfClient {
       return DefaultConnectionContext.builder().apiHost(endPointUrl).skipSslValidation(false).build();
     } catch (Exception t) {
       throw new PivotalClientApiException(t.getMessage());
+    }
+  }
+
+  private void handleException(Throwable t, String apiName, StringBuilder errorBuilder) {
+    logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception Occured while executing PCF api: " + apiName, t);
+    errorBuilder.append(t.getMessage());
+  }
+
+  private void waitTillCompletion(CountDownLatch latch, int time) throws InterruptedException {
+    boolean check = latch.await(time, TimeUnit.MINUTES);
+    if (!check) {
+      throw new RuntimeException(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "PCF operation times out");
     }
   }
 }

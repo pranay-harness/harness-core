@@ -141,4 +141,7 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   List<InfrastructureMapping> listByComputeProviderId(String accountId, String computeProviderId);
 
   List<AwsElbListener> listListeners(String appId, String infraMappingId, String loadbalancerName);
+
+  String createRoute(String appId, String computeProviderId, String organization, String spaces, String host,
+      String domain, String path, boolean tcpRoute, boolean useRandomPort, String port);
 }

@@ -7,6 +7,7 @@ import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PcfClient {
   CloudFoundryClient getCloudFoundryClient(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException;
@@ -28,8 +29,8 @@ public interface PcfClient {
 
   void stopApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException;
 
-  void createRouteMapIfNotExists(PcfRequestConfig pcfRequestConfigs, String host, String domain)
-      throws PivotalClientApiException, InterruptedException;
+  void createRouteMap(PcfRequestConfig pcfRequestConfig, String host, String domain, String path, boolean tcpRoute,
+      boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException;
 
   void deleteApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException;
 
@@ -55,5 +56,8 @@ public interface PcfClient {
   void startApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException;
 
   List<String> getRoutesForSpace(PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException, InterruptedException;
+
+  Optional<Route> getRouteMap(PcfRequestConfig pcfRequestConfig, String route)
       throws PivotalClientApiException, InterruptedException;
 }

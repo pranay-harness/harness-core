@@ -1277,6 +1277,21 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
+  public String createRoute(String appId, String computeProviderId, String organization, String spaces, String host,
+      String domain, String path, boolean tcpRoute, boolean useRandomPort, String port) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof PcfConfig)) {
+      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "InvalidConfiguration");
+    }
+
+    Integer portNum = StringUtils.isBlank(port) ? null : Integer.parseInt(port);
+    return pcfHelperService.createRoute((PcfConfig) computeProviderSetting.getValue(), organization, spaces, host,
+        domain, path, tcpRoute, useRandomPort, portNum);
+  }
+
+  @Override
   public List<String> listSecurityGroups(String appId, String computeProviderId, String region, List<String> vpcIds) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     notNullCheck("Compute Provider", computeProviderSetting);
