@@ -19,6 +19,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.states.ApprovalState.ApprovalStateType.USER_GROUP;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -88,7 +89,7 @@ public class ApprovalState extends State {
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
 
   @Getter @Setter ApprovalStateParams approvalStateParams;
-  @Getter @Setter ApprovalStateType approvalStateType = ApprovalStateType.USER_GROUP;
+  @Getter @Setter ApprovalStateType approvalStateType = USER_GROUP;
 
   public enum ApprovalStateType { JIRA, USER_GROUP }
 
@@ -131,6 +132,10 @@ public class ApprovalState extends State {
       }
     }
     executionData.setAppId(app.getAppId());
+    if (approvalStateType == null) {
+      executionData.setApprovalStateType(USER_GROUP);
+      return executeUserGroupApproval(userGroups, app.getAccountId(), placeholderValues, approvalId, executionData);
+    }
     switch (approvalStateType) {
       case JIRA:
         return executeJiraApproval(context, executionData, approvalId);
@@ -209,6 +214,9 @@ public class ApprovalState extends State {
           context, approvalNotifyResponse.getApprovedBy().getName(), approvalNotifyResponse.getStatus());
     }
     sendApprovalNotification(app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
+    if (approvalStateType == null) {
+      return handleAsyncUserGroup(userGroups, placeholderValues, context, executionData, approvalNotifyResponse);
+    }
     switch (approvalStateType) {
       case JIRA:
         return handleAsyncJira(context, executionData, approvalNotifyResponse);
@@ -295,7 +303,10 @@ public class ApprovalState extends State {
     }
 
     context.getStateExecutionData().setErrorMsg(errorMsg);
-
+    if (approvalStateType == null) {
+      sendEmailToUserGroupMembers(userGroups, app.getAccountId(), notificationMessageType, placeholderValues);
+      return;
+    }
     switch (approvalStateType) {
       case JIRA:
         handleAbortEventJira(context, app);
