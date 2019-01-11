@@ -128,20 +128,30 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
-    if (vaultService.getSecretConfig(accountId) != null) {
-      return EncryptionType.VAULT;
+    final EncryptionType encryptionType;
+    if (isLocalEncryptionEnabled(accountId)) {
+      // HAR-8025: Respect the account level 'localEncryptionEnabled' configuration.
+      encryptionType = LOCAL;
+    } else if (vaultService.getSecretConfig(accountId) != null) {
+      encryptionType = EncryptionType.VAULT;
+    } else if (kmsService.getSecretConfig(accountId) != null) {
+      encryptionType = EncryptionType.KMS;
+    } else {
+      encryptionType = LOCAL;
     }
 
-    if (kmsService.getSecretConfig(accountId) != null) {
-      return EncryptionType.KMS;
-    }
-
-    return LOCAL;
+    return encryptionType;
   }
 
   @Override
   public List<EncryptionConfig> listEncryptionConfig(String accountId) {
     List<EncryptionConfig> rv = new ArrayList<>();
+
+    if (isLocalEncryptionEnabled(accountId)) {
+      // If account level local encryption is enabled. Mask all other encryption configs.
+      return rv;
+    }
+
     Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
     Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
 
@@ -1559,6 +1569,15 @@ public class SecretManagerImpl implements SecretManager {
         logger.info("Could not validate vault for account {} and kmsId {}", accountId, vaultConfig.getUuid(), e);
         alertService.openAlert(accountId, Base.GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       }
+    }
+  }
+
+  private boolean isLocalEncryptionEnabled(String accountId) {
+    Account account = wingsPersistence.get(Account.class, accountId);
+    if (account != null && account.isLocalEncryptionEnabled()) {
+      return true;
+    } else {
+      return false;
     }
   }
 

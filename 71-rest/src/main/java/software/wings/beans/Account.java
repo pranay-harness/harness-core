@@ -51,6 +51,13 @@ public class Account extends Base {
 
   private String newClusterUrl;
 
+  /**
+   * If this flag is set, all encryption/decryption activities will go through LOCAL security manager.
+   * No VAULT/KMS secret manager can be configured. This helps for accounts whose delegate can't access
+   * internet KMS. This setting is typically needed for some on-prem installations.
+   */
+  private boolean localEncryptionEnabled;
+
   private DelegateConfiguration delegateConfiguration;
 
   private transient Map<String, String> defaults = new HashMap<>();
@@ -77,6 +84,14 @@ public class Account extends Base {
 
   public void setNewClusterUrl(String newClusterUrl) {
     this.newClusterUrl = newClusterUrl;
+  }
+
+  public boolean isLocalEncryptionEnabled() {
+    return localEncryptionEnabled;
+  }
+
+  public void setLocalEncryptionEnabled(boolean localEncryptionEnabled) {
+    this.localEncryptionEnabled = localEncryptionEnabled;
   }
 
   /**
