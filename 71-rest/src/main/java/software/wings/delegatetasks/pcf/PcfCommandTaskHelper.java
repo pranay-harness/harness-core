@@ -344,7 +344,7 @@ public class PcfCommandTaskHelper {
     return appName.substring(0, appName.lastIndexOf(DELIMITER) + DELIMITER.length());
   }
 
-  public static int getRevisionFromReleaseName(String name) {
+  public int getRevisionFromReleaseName(String name) {
     if (name != null) {
       int index = name.lastIndexOf(DELIMITER);
       if (index >= 0) {
