@@ -1,4 +1,4 @@
-package software.wings.delegatetasks;
+package software.wings.delegatetasks.pcf;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -12,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
+import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -60,10 +60,10 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
 
   @Test
   public void testGetRevisionFromReleaseName() throws Exception {
-    Integer revision = PcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__1");
+    Integer revision = pcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__1");
     assertTrue(1 == revision);
 
-    revision = PcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__2");
+    revision = pcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__2");
     assertTrue(2 == revision);
   }
 

@@ -1,4 +1,4 @@
-package software.wings.delegatetasks;
+package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
@@ -27,12 +27,8 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfApplicationDetailsCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDataFetchCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDeployCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfRollbackCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfSetupCommandTaskHandler;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
@@ -154,6 +150,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     doReturn(previousReleases).when(pcfDeploymentManager).getDeployedServicesWithNonZeroInstances(any(), anyString());
 
     doNothing().when(pcfDeploymentManager).deleteApplication(any());
+    doReturn(null).when(pcfDeploymentManager).resizeApplication(any());
     File f1 = new File("./test1");
     File f2 = new File("./test2");
     doReturn(f1).when(pcfCommandTaskHelper).downloadArtifact(any(), any());
@@ -176,7 +173,8 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         pcfSetupCommandTaskHandler.executeTask(pcfCommandRequest, null);
     verify(pcfDeploymentManager, times(1)).createApplication(any(), any());
-    verify(pcfDeploymentManager, times(2)).deleteApplication(any());
+    verify(pcfDeploymentManager, times(3)).deleteApplication(any());
+    verify(pcfDeploymentManager, times(1)).resizeApplication(any());
 
     PcfSetupCommandResponse pcfSetupCommandResponse =
         (PcfSetupCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse();

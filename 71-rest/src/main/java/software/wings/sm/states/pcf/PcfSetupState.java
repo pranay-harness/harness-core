@@ -9,6 +9,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
@@ -76,6 +77,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PcfSetupState extends State {
   @Inject private transient AppService appService;
   @Inject private transient ServiceResourceService serviceResourceService;
@@ -101,6 +103,9 @@ public class PcfSetupState extends State {
   @Attributes(title = "Map Route") private String route;
 
   @Attributes(title = "API Timeout Interval (Minutes)") private Integer timeoutIntervalInMinutes = 5;
+
+  @Attributes(title = "Active Versions to Keep") @DefaultValue("3") private Integer olderActiveVersionCountToKeep;
+
   public static final String PCF_SETUP_COMMAND = "PCF Setup";
 
   private boolean blueGreen;
@@ -160,6 +165,14 @@ public class PcfSetupState extends State {
     this.route = route;
   }
 
+  public Integer getOlderActiveVersionCountToKeep() {
+    return olderActiveVersionCountToKeep;
+  }
+
+  public void setOlderActiveVersionCountToKeep(Integer olderActiveVersionCountToKeep) {
+    this.olderActiveVersionCountToKeep = olderActiveVersionCountToKeep;
+  }
+
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
@@ -184,6 +197,11 @@ public class PcfSetupState extends State {
       throw new WingsException(format(
           "Unable to find artifact stream for service %s, artifact %s", serviceElement.getName(), artifact.getUuid()));
     }
+
+    if (olderActiveVersionCountToKeep <= 0) {
+      throw new WingsException("Value for Older Active Versions To Keep Must be > 0");
+    }
+
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
 
@@ -249,6 +267,9 @@ public class PcfSetupState extends State {
             .serviceVariables(serviceVariables)
             .timeoutIntervalInMin(timeoutIntervalInMinutes == null ? Integer.valueOf(5) : timeoutIntervalInMinutes)
             .maxCount(maxInstances)
+            .blueGreen(blueGreen)
+            .olderActiveVersionCountToKeep(
+                olderActiveVersionCountToKeep == null ? Integer.valueOf(3) : olderActiveVersionCountToKeep)
             .build();
 
     PcfSetupStateExecutionData stateExecutionData = PcfSetupStateExecutionData.builder()

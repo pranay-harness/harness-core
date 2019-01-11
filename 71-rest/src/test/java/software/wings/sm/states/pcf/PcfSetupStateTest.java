@@ -215,6 +215,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
         .thenReturn(safeDisplayServiceVariableList);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(pcfSetupState, "secretManager", secretManager);
+    setInternalState(pcfSetupState, "olderActiveVersionCountToKeep", 3);
     setInternalState(pcfSetupState, "pcfStateHelper", new PcfStateHelper());
     setInternalState(workflowStandardParams, "infrastructureMappingService", infrastructureMappingService);
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))

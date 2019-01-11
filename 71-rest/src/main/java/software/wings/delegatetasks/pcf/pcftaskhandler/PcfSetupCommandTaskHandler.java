@@ -1,7 +1,12 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -14,6 +19,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
@@ -30,7 +36,9 @@ import software.wings.utils.ServiceVersionConvention;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 @NoArgsConstructor
@@ -76,50 +84,22 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
         executionLogCallback.saveExecutionLog(appNames.toString());
       }
 
-      Integer totalPreviousInstanceCount = previousReleases.stream().mapToInt(ApplicationSummary::getInstances).sum();
-
       // Get new Revision version
       int releaseRevision = CollectionUtils.isEmpty(previousReleases)
           ? 0
           : pcfCommandTaskHelper.getRevisionFromReleaseName(previousReleases.get(previousReleases.size() - 1).getName())
               + 1;
 
-      // Keep only recent 3 releases, delete all previous ones
-      if (previousReleases.size() > MAX_RELEASE_VERSIONS_TO_KEEP) {
-        executionLogCallback.saveExecutionLog(
-            "\n# Deleting any applications having 0 instances and version older than 3 recent versions");
+      // Delete any older application excpet most recent 1.
+      deleteOlderApplications(previousReleases, pcfRequestConfig, pcfCommandSetupRequest);
 
-        int maxVersionToKeep = releaseRevision - MAX_RELEASE_VERSIONS_TO_KEEP;
+      // Fetch apps again, as apps may have been deleted/downsized
+      previousReleases =
+          pcfDeploymentManager.getPreviousReleases(pcfRequestConfig, pcfCommandSetupRequest.getReleaseNamePrefix());
 
-        int countDeleted = 0;
-        for (int index = 0; index < previousReleases.size(); index++) {
-          ApplicationSummary applicationSummary = previousReleases.get(index);
-          String previousAppName = applicationSummary.getName();
-          if (applicationSummary.getInstances() == 0) {
-            if (pcfCommandTaskHelper.getRevisionFromReleaseName(previousAppName) >= maxVersionToKeep) {
-              break;
-            }
-
-            executionLogCallback.saveExecutionLog("# Application being deleted: ");
-            executionLogCallback.saveExecutionLog(new StringBuilder()
-                                                      .append("NAME: ")
-                                                      .append(applicationSummary.getName())
-                                                      .append("\n")
-                                                      .append("INSTANCE-COUNT: ")
-                                                      .append(applicationSummary.getInstances())
-                                                      .toString());
-            pcfRequestConfig.setApplicationName(previousAppName);
-            pcfDeploymentManager.deleteApplication(pcfRequestConfig);
-            countDeleted++;
-          }
-        }
-
-        if (countDeleted > 0) {
-          executionLogCallback.saveExecutionLog("# Done Deleting older applications");
-        } else {
-          executionLogCallback.saveExecutionLog("\n# No applications were eligible for deletion");
-        }
-      }
+      Integer totalPreviousInstanceCount = CollectionUtils.isEmpty(previousReleases)
+          ? Integer.valueOf(0)
+          : previousReleases.stream().mapToInt(ApplicationSummary ::getInstances).sum();
 
       // New appName to be created
       String newReleaseName =
@@ -183,6 +163,148 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(Misc.getMessage(e))
           .build();
+    }
+  }
+
+  /**
+   * 1. First Delete all apps  with 0 instance count
+   * 2. Now process apps with non-zero apps.
+   * 3. Based on count "LastVersopAppsToKeep" provided by user, (default is 3)
+   * 4. Keep most recent app as is, and (last LastVersopAppsToKeep - 1) apps will be downsized to 0
+   * 5. All apps older than that will be deleted
+   *
+   * @param previousReleases
+   * @param pcfRequestConfig
+   */
+  @VisibleForTesting
+  void deleteOlderApplications(List<ApplicationSummary> previousReleases, PcfRequestConfig pcfRequestConfig,
+      PcfCommandSetupRequest pcfCommandSetupRequest) {
+    if (EmptyPredicate.isEmpty(previousReleases)) {
+      return;
+    }
+
+    Integer olderActiveVersionCountToKeep = pcfCommandSetupRequest.getOlderActiveVersionCountToKeep() == null
+        ? Integer.valueOf(MAX_RELEASE_VERSIONS_TO_KEEP)
+        : pcfCommandSetupRequest.getOlderActiveVersionCountToKeep();
+
+    Set<String> appsDeleted = new HashSet<>();
+
+    List<ApplicationSummary> appsWithZeroInstances =
+        previousReleases.stream()
+            .filter(applicationSummary -> applicationSummary.getInstances().intValue() == 0)
+            .collect(toList());
+
+    if (isNotEmpty(appsWithZeroInstances)) {
+      executionLogCallback.saveExecutionLog("\n# Deleting Applications with 0 instances");
+      appsWithZeroInstances.forEach(
+          applicationSummary -> { deleteApplication(applicationSummary, pcfRequestConfig, appsDeleted); });
+    }
+
+    List<ApplicationSummary> appsWithNonZeroInstances =
+        previousReleases.stream()
+            .filter(applicationSummary -> applicationSummary.getInstances().intValue() > 0)
+            .sorted(comparingInt(
+                applicationSummary -> pcfCommandTaskHelper.getRevisionFromReleaseName(applicationSummary.getName())))
+            .collect(toList());
+
+    logApplicationsRetentionsMsg(appsWithNonZeroInstances, olderActiveVersionCountToKeep);
+
+    // At this point, all apps with 0 instances have been deleted.
+    // Now, we need to keep "olderActiveVersionCountToKeep" no of apps.
+    // We will keep most recent one as is, and downsize olderActiveVersionCountToKeep - 1
+    // apps to 0, so they will be deleted in next deployment.
+    if (isNotEmpty(appsWithNonZeroInstances) && appsWithNonZeroInstances.size() > 1) {
+      int appsDownsizedCount = 0;
+      for (int index = appsWithNonZeroInstances.size() - 2; index >= 0; index--) {
+        ApplicationSummary applicationSummary = appsWithNonZeroInstances.get(index);
+        if (appsDownsizedCount < olderActiveVersionCountToKeep - 1) {
+          downsizeApplicationToZero(applicationSummary, pcfRequestConfig);
+          appsDownsizedCount++;
+        } else {
+          deleteApplication(applicationSummary, pcfRequestConfig, appsDeleted);
+        }
+      }
+    }
+
+    if (isNotEmpty(appsDeleted)) {
+      executionLogCallback.saveExecutionLog(new StringBuilder(128)
+                                                .append("# Done Deleting older applications. ")
+                                                .append("Deleted Total ")
+                                                .append(appsDeleted.size())
+                                                .append(" applications")
+                                                .toString());
+    } else {
+      executionLogCallback.saveExecutionLog("# No applications were eligible for deletion\n");
+    }
+  }
+
+  private void logApplicationsRetentionsMsg(
+      List<ApplicationSummary> appsWithNonZeroInstances, Integer olderActiveVersionCountToKeep) {
+    if (isEmpty(appsWithNonZeroInstances)) {
+      return;
+    }
+
+    executionLogCallback.saveExecutionLog("\n# Processing Apps with Non-Zero Instances");
+    executionLogCallback.saveExecutionLog(new StringBuilder(128)
+                                              .append("# No Change For Most Recent Application: ")
+                                              .append(appsWithNonZeroInstances.get(0).getName())
+                                              .toString());
+
+    for (int i = 1; i < appsWithNonZeroInstances.size(); i++) {
+      String msg;
+      if (i < olderActiveVersionCountToKeep) {
+        msg = new StringBuilder(128)
+                  .append("# Application: ")
+                  .append(appsWithNonZeroInstances.get(i).getName())
+                  .append(" Will Be Downsized To 0")
+                  .toString();
+      } else {
+        msg = new StringBuilder(128)
+                  .append("# Application: ")
+                  .append(appsWithNonZeroInstances.get(i).getName())
+                  .append(" Will Be Deleted")
+                  .toString();
+      }
+
+      executionLogCallback.saveExecutionLog(msg);
+    }
+    executionLogCallback.saveExecutionLog("");
+  }
+
+  private void deleteApplication(
+      ApplicationSummary applicationSummary, PcfRequestConfig pcfRequestConfig, Set<String> appsDeleted) {
+    executionLogCallback.saveExecutionLog(
+        new StringBuilder().append("# Application Being Deleted: ").append(applicationSummary.getName()).toString());
+    pcfRequestConfig.setApplicationName(applicationSummary.getName());
+    try {
+      pcfDeploymentManager.deleteApplication(pcfRequestConfig);
+      appsDeleted.add(applicationSummary.getName());
+    } catch (PivotalClientApiException e) {
+      executionLogCallback.saveExecutionLog(new StringBuilder(128)
+                                                .append("Failed while deleting application: ")
+                                                .append(applicationSummary.getName())
+                                                .append(", Continuing for next one")
+                                                .toString(),
+          LogLevel.ERROR);
+    }
+  }
+
+  private void downsizeApplicationToZero(ApplicationSummary applicationSummary, PcfRequestConfig pcfRequestConfig) {
+    executionLogCallback.saveExecutionLog(new StringBuilder()
+                                              .append("# Application Being Downsized To 0: ")
+                                              .append(applicationSummary.getName())
+                                              .toString());
+    pcfRequestConfig.setApplicationName(applicationSummary.getName());
+    pcfRequestConfig.setDesiredCount(0);
+    try {
+      pcfDeploymentManager.resizeApplication(pcfRequestConfig);
+    } catch (PivotalClientApiException e) {
+      executionLogCallback.saveExecutionLog(new StringBuilder(128)
+                                                .append("Failed while Downsizing application: ")
+                                                .append(applicationSummary.getName())
+                                                .append(", Continuing for next one")
+                                                .toString(),
+          LogLevel.ERROR);
     }
   }
 }
