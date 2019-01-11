@@ -24,6 +24,7 @@ public enum AlertType {
   USERGROUP_SYNC_FAILED(Setup, Error, SSOSyncFailedAlert.class),
   USAGE_LIMIT_EXCEEDED(Setup, Error, UsageLimitExceededAlert.class),
   INSTANCE_USAGE_APPROACHING_LIMIT(Setup, Warning, InstanceUsageLimitAlert.class),
+  RESOURCE_USAGE_APPROACHING_LIMIT(Setup, Warning, ResourceUsageApproachingLimitAlert.class),
   DEPLOYMENT_RATE_APPROACHING_LIMIT(Setup, Warning, DeploymentRateApproachingLimitAlert.class);
 
   private AlertCategory category;

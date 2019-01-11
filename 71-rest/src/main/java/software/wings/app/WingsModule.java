@@ -195,6 +195,7 @@ import software.wings.service.impl.instance.InstanceServiceImpl;
 import software.wings.service.impl.instance.licensing.InstanceLimitProviderImpl;
 import software.wings.service.impl.instance.licensing.InstanceUsageLimitCheckerImpl;
 import software.wings.service.impl.instance.licensing.InstanceUsageLimitExcessHandlerImpl;
+import software.wings.service.impl.instance.limits.LimitVicinityHandlerImpl;
 import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
 import software.wings.service.impl.instance.stats.collector.StatsCollectorImpl;
 import software.wings.service.impl.instance.sync.ContainerSync;
@@ -336,6 +337,7 @@ import software.wings.service.intfc.instance.licensing.InstanceUsageLimitChecker
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
+import software.wings.service.intfc.limits.LimitVicinityHandler;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -609,6 +611,7 @@ public class WingsModule extends DependencyModule {
     bind(LimitConfigurationService.class).to(LimitConfigurationServiceMongo.class);
 
     bind(DefaultLimitsService.class).to(DefaultLimitsServiceImpl.class);
+    bind(LimitVicinityHandler.class).to(LimitVicinityHandlerImpl.class);
     bind(PermitService.class).to(PermitServiceImpl.class);
 
     // Start of deployment trigger dependencies

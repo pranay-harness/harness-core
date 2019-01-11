@@ -19,7 +19,15 @@ public class UsageLimitExceededAlert implements AlertData {
   @Override
   public boolean matches(AlertData alertData) {
     UsageLimitExceededAlert alert = (UsageLimitExceededAlert) alertData;
-    return alert.getAccountId().equals(accountId) && alert.getLimit().equals(limit);
+
+    boolean limitSame;
+    if (alert.getLimit() != null) {
+      limitSame = alert.getLimit().equals(limit);
+    } else {
+      limitSame = alert.getLimit() == limit;
+    }
+
+    return alert.getAccountId().equals(accountId) && limitSame;
   }
 
   @Override
