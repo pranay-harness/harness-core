@@ -123,11 +123,13 @@ public class ConfigServiceImpl implements ConfigService {
       // HAR-7996: Only KMS encrypted record it's encrypted value is the file ID.
       if (encryptedData.getEncryptionType() == EncryptionType.KMS) {
         fileId = String.valueOf(encryptedData.getEncryptedValue());
+        configFile.setFileUuid(fileId);
       }
       configFile.setSize(encryptedData.getFileSize());
     } else {
       fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
       configFile.setSize(inputStream.getTotalBytesRead()); // set this only after saving file to gridfs
+      configFile.setFileUuid(fileId);
     }
 
     String id = wingsPersistence.save(configFile);
@@ -338,8 +340,14 @@ public class ConfigServiceImpl implements ConfigService {
       fileId = fileService.saveFile(inputConfigFile, uploadedInputStream, CONFIGS);
       updateMap.put("encryptedFileId", "");
 
-      updateMap.put("fileUuid", inputConfigFile.getFileUuid());
-      updateMap.put("checksum", inputConfigFile.getChecksum());
+      // HAR-8064: some config file entries could have null 'fileUuid/checksum' field. UpdateOperations will reject
+      // update of null value.
+      if (inputConfigFile.getFileUuid() != null) {
+        updateMap.put("fileUuid", inputConfigFile.getFileUuid());
+      }
+      if (inputConfigFile.getChecksum() != null) {
+        updateMap.put("checksum", inputConfigFile.getChecksum());
+      }
       updateMap.put("size", uploadedInputStream.getTotalBytesRead());
       updateMap.put("fileName", inputConfigFile.getFileName());
     }
