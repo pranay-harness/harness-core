@@ -26,6 +26,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.BaseFile;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -126,6 +127,13 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public String saveKmsConfig(String accountId, KmsConfig kmsConfig) {
+    Account account = wingsPersistence.get(Account.class, accountId);
+    if (account != null && account.isLocalEncryptionEnabled()) {
+      // Reject creation of new KMS secret manager if 'localEncryptionEnabled' account flag is set
+      throw new KmsOperationException(
+          "Can't create new KMS secret manager for a LOCAL encryption enabled account!", USER_SRE);
+    }
+
     validateKms(accountId, kmsConfig);
     return saveKmsConfigInternal(accountId, kmsConfig);
   }

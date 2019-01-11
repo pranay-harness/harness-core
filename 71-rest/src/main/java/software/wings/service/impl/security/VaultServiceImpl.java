@@ -38,6 +38,7 @@ import org.mongodb.morphia.query.Query;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.KmsConfig;
@@ -186,6 +187,13 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
+    Account account = wingsPersistence.get(Account.class, accountId);
+    if (account != null && account.isLocalEncryptionEnabled()) {
+      // Reject creation of new Vault secret manager if 'localEncryptionEnabled' account flag is set
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
+          .addParam("reason", "Can't create new Vault secret manager for a LOCAL encryption enabled account!");
+    }
+
     // First normalize the base path value.
     String basePath = isEmpty(vaultConfig.getBasePath()) ? null : vaultConfig.getBasePath().trim();
     vaultConfig.setBasePath(basePath);

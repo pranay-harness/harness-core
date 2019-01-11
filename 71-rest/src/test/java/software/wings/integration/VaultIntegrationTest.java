@@ -19,14 +19,17 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
 import org.junit.Test;
+import software.wings.beans.Account;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.VaultConfig;
 import software.wings.common.Constants;
+import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.SecretText;
+import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
@@ -107,6 +110,37 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
                                    .basePath(VAULT_BASE_PATH_3)
                                    .isDefault(true)
                                    .build();
+  }
+
+  @Test
+  public void test_VaultOperations_accountLocalEncryptionEnabled_shouldFail() {
+    // 1. Create a new Vault config.
+    String vaultConfigId = createVaultConfig(vaultConfig);
+
+    // 2. update account to be 'localEncryptionEnabled'
+    wingsPersistence.updateField(Account.class, accountId, "localEncryptionEnabled", true);
+
+    // 3. account encryption type is LOCAL
+    EncryptionType encryptionType = secretManager.getEncryptionType(accountId);
+    assertEquals(EncryptionType.LOCAL, encryptionType);
+
+    // 4. No secret manager will be returned
+    List<EncryptionConfig> secretManagers = secretManager.listEncryptionConfig(accountId);
+    assertEquals(0, secretManagers.size());
+
+    // 5. Create new VAULT secret manager should fail.
+    try {
+      createVaultConfig(vaultConfig2);
+      fail("Can't create new Vault secret manager if the account has LOCAL encryption enabled!");
+    } catch (Exception e) {
+      // Exception is expected.
+    } finally {
+      // 6. Disable LOCAL encryption for this account
+      wingsPersistence.updateField(Account.class, accountId, "localEncryptionEnabled", false);
+
+      // 7. Delete the vault config
+      deleteVaultConfig(vaultConfigId);
+    }
   }
 
   @Test
