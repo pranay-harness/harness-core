@@ -162,7 +162,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    */
   @Override
   public Environment get(String appId, String envId, boolean withSummary) {
-    Environment environment = wingsPersistence.getWithAppId(Environment.class, appId, envId);
+    Environment environment = get(appId, envId);
     if (environment == null) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "Environment doesn't exist");
     }
@@ -174,7 +174,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public Environment get(String appId, String envId) {
-    return wingsPersistence.getWithAppId(Environment.class, appId, envId);
+    Environment environment = wingsPersistence.getWithAppId(Environment.class, appId, envId);
+    populateValuesInEnvironment(
+        environment); // ToDo anshul Remove this once UI starts hitting ManifestFile new endpoints
+
+    return environment;
   }
 
   @Override
@@ -195,7 +199,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       if (withServiceTemplates) {
         addServiceTemplates(environment);
       }
+      populateValuesInEnvironment(
+          environment); // ToDo anshul Remove this once UI starts hitting ManifestFile new endpoints
     }
+
     return environment;
   }
 
@@ -308,6 +315,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     yamlPushService.pushYamlChangeSet(
         accountId, savedEnvironment, updatedEnvironment, Type.UPDATE, environment.isSyncFromGit(), isRename);
+
+    populateValuesInEnvironment(
+        updatedEnvironment); // ToDo anshul Remove this once UI starts hitting ManifestFile new endpoints
 
     return updatedEnvironment;
   }
@@ -851,54 +861,54 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   @Override
-  public Environment setHelmValueYaml(String appId, String envId, KubernetesPayload kubernetesPayload) {
-    Environment savedEnv = get(appId, envId, false);
-    notNullCheck("Environment", savedEnv, USER);
+  public Environment setHelmValueYaml(
+      String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload) {
+    ManifestFile manifestFile = null;
+    String serviceId = null;
 
-    String helmValueYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
-    UpdateOperations<Environment> updateOperations;
-    if (isNotBlank(helmValueYaml)) {
-      updateOperations = wingsPersistence.createUpdateOperations(Environment.class).set("helmValueYaml", helmValueYaml);
-    } else {
-      updateOperations = wingsPersistence.createUpdateOperations(Environment.class).unset("helmValueYaml");
+    if (isNotBlank(serviceTemplateId)) {
+      ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
+      if (serviceTemplate != null) {
+        serviceId = serviceTemplate.getServiceId();
+      }
     }
 
-    wingsPersistence.update(savedEnv, updateOperations);
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId, AppManifestKind.VALUES);
+    if (applicationManifest != null) {
+      manifestFile =
+          applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), VALUES_YAML_KEY);
+    }
+
+    if (manifestFile == null) {
+      manifestFile = ManifestFile.builder().build();
+      manifestFile.setFileContent(kubernetesPayload.getAdvancedConfig());
+      createValues(appId, envId, serviceId, manifestFile);
+    } else {
+      manifestFile.setFileContent(kubernetesPayload.getAdvancedConfig());
+      updateValues(appId, envId, serviceId, manifestFile);
+    }
+    manifestFile.setFileContent(kubernetesPayload.getAdvancedConfig());
 
     return get(appId, envId, false);
   }
 
+  // ToDo Delete this once UI start using new APIs
   @Override
-  public Environment setHelmValueYamlForService(
-      String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload) {
-    try (
-        AcquiredLock lock = persistentLocker.waitToAcquireLock(Environment.class, envId, ofSeconds(5), ofSeconds(10))) {
-      if (lock == null) {
-        throw new WingsException(GENERAL_ERROR, USER).addParam("message", "The persistent lock was not acquired.");
-      }
-      Environment savedEnv = get(appId, envId, false);
-      notNullCheck("Environment", savedEnv, USER);
+  public Environment deleteHelmValueYaml(String appId, String envId, String serviceTemplateId) {
+    String serviceId = null;
 
-      String helmValueYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
-      Map<String, String> helmValueYamls =
-          Optional.ofNullable(savedEnv.getHelmValueYamlByServiceTemplateId()).orElse(new HashMap<>());
-
-      if (isNotBlank(helmValueYaml)) {
-        helmValueYamls.put(serviceTemplateId, helmValueYaml);
-      } else {
-        helmValueYamls.remove(serviceTemplateId);
+    if (isNotBlank(serviceTemplateId)) {
+      ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
+      if (serviceTemplate != null) {
+        serviceId = serviceTemplate.getServiceId();
       }
-      UpdateOperations<Environment> updateOperations;
-      if (isNotEmpty(helmValueYamls)) {
-        updateOperations = wingsPersistence.createUpdateOperations(Environment.class)
-                               .set("helmValueYamlByServiceTemplateId", helmValueYamls);
-      } else {
-        updateOperations =
-            wingsPersistence.createUpdateOperations(Environment.class).unset("helmValueYamlByServiceTemplateId");
-      }
-
-      wingsPersistence.update(savedEnv, updateOperations);
     }
+
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId, AppManifestKind.VALUES);
+
+    applicationManifestService.deleteAppManifest(appId, applicationManifest.getUuid());
 
     return get(appId, envId, false);
   }
@@ -964,5 +974,54 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       throw new InvalidRequestException(
           format("No valid application manifest exists for environment: %s and service: %s", envId, serviceId));
     }
+  }
+
+  private void populateValuesInEnvironment(Environment environment) {
+    if (environment == null) {
+      return;
+    }
+
+    List<ApplicationManifest> applicationManifests = applicationManifestService.getAllByEnvIdAndKind(
+        environment.getAppId(), environment.getUuid(), AppManifestKind.VALUES);
+    if (isEmpty(applicationManifests)) {
+      return;
+    }
+
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByEnvId(environment.getAppId(), environment.getUuid(), AppManifestKind.VALUES);
+    environment.setHelmValueYaml(getManifestFileContent(applicationManifest));
+
+    List<ServiceTemplate> serviceTemplates = environment.getServiceTemplates();
+    if (isEmpty(serviceTemplates)) {
+      PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
+      pageRequest.addFilter("appId", EQ, environment.getAppId());
+      pageRequest.addFilter("envId", EQ, environment.getUuid());
+      serviceTemplates = serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE).getResponse();
+    }
+
+    Map<String, String> valuesOverrides = new HashMap<>();
+    for (ServiceTemplate serviceTemplate : serviceTemplates) {
+      applicationManifest = applicationManifestService.getByEnvAndServiceId(
+          environment.getAppId(), environment.getUuid(), serviceTemplate.getServiceId(), AppManifestKind.VALUES);
+      String valuesYaml = getManifestFileContent(applicationManifest);
+
+      if (isNotBlank(valuesYaml)) {
+        valuesOverrides.put(serviceTemplate.getUuid(), valuesYaml);
+      }
+    }
+
+    environment.setHelmValueYamlByServiceTemplateId(valuesOverrides);
+  }
+
+  private String getManifestFileContent(ApplicationManifest applicationManifest) {
+    if (applicationManifest != null) {
+      ManifestFile manifestFile =
+          applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), VALUES_YAML_KEY);
+      if (manifestFile != null) {
+        return manifestFile.getFileContent();
+      }
+    }
+
+    return null;
   }
 }

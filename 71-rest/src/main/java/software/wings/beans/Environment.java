@@ -443,22 +443,17 @@ public class Environment extends Base {
     private String description;
     private String configMapYaml;
     private Map<String, String> configMapYamlByServiceTemplateId;
-    private String helmValueYaml;
-    private Map<String, String> helmValueYamlByServiceTemplateId;
     private String environmentType = "NON_PROD";
     private List<VariableOverrideYaml> variableOverrides = new ArrayList<>();
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String configMapYaml,
-        Map<String, String> configMapYamlByServiceTemplateId, String helmValueYaml,
-        Map<String, String> helmValueYamlByServiceTemplateId, String environmentType,
+        Map<String, String> configMapYamlByServiceTemplateId, String environmentType,
         List<VariableOverrideYaml> variableOverrides) {
       super(EntityType.ENVIRONMENT.name(), harnessApiVersion);
       this.description = description;
       this.configMapYaml = configMapYaml;
       this.configMapYamlByServiceTemplateId = configMapYamlByServiceTemplateId;
-      this.helmValueYaml = helmValueYaml;
-      this.helmValueYamlByServiceTemplateId = helmValueYamlByServiceTemplateId;
       this.environmentType = environmentType;
       this.variableOverrides = variableOverrides;
     }
