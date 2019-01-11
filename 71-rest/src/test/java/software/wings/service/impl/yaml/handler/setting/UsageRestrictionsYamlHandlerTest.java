@@ -79,6 +79,23 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
     testCRUD(generateSettingValueYamlConfig(jenkinsProviderName, settingAttributeSaved));
   }
 
+  @Test
+  public void testCRUDAndGetNullRestrictions() throws HarnessException, IOException {
+    String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
+
+    // 1. Create jenkins verification record
+    SettingAttribute settingAttributeSaved = createJenkinsProviderWithUsageRestrictions(jenkinsProviderName, null);
+    assertEquals(jenkinsProviderName, settingAttributeSaved.getName());
+
+    testCRUD(generateSettingValueYamlConfig(jenkinsProviderName, settingAttributeSaved));
+
+    settingAttributeSaved =
+        createJenkinsProviderWithUsageRestrictions(jenkinsProviderName, UsageRestrictions.builder().build());
+    assertEquals(jenkinsProviderName, settingAttributeSaved.getName());
+
+    testCRUD(generateSettingValueYamlConfig(jenkinsProviderName, settingAttributeSaved));
+  }
+
   private SettingAttribute createJenkinsProviderWithUsageRestrictions(
       String jenkinsProviderName, UsageRestrictions usageRestrictions) {
     // Generate Jenkins verification connector
