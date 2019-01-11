@@ -123,8 +123,8 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //            .withAppId(infrastructureMapping.getAppId())
   //            .withEnvId(infrastructureMapping.getEnvId())
   //            .withWorkflowType(WorkflowType.ORCHESTRATION)
-  //            .withServiceId(infrastructureMapping.getServiceId())
-  //            .withInfraMappingId(infrastructureMapping.getUuid())
+  //            .serviceId(infrastructureMapping.getServiceId())
+  //            .infraMappingId(infrastructureMapping.getUuid())
   //            .withOrchestrationWorkflow(
   //                aBasicOrchestrationWorkflow()
   //                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
@@ -148,7 +148,7 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //    InfrastructureMapping infrastructureMapping =
   //        infrastructureMappingGenerator.ensureInfrastructureMapping(seed, owners,
   //            anAwsInfrastructureMapping()
-  //                .withServiceId(infrastructureProvisioner.getMappingBlueprints().get(0).getServiceId())
+  //                .serviceId(infrastructureProvisioner.getMappingBlueprints().get(0).getServiceId())
   //                .withInfraMappingType(AWS_SSH.name())
   //                .withProvisionerId(infrastructureProvisioner.getUuid())
   //                .build());
