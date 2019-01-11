@@ -76,6 +76,10 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.WorkflowGenerator.Workflows;
+import io.harness.limits.ActionType;
+import io.harness.limits.configuration.LimitConfigurationService;
+import io.harness.limits.impl.model.RateLimit;
+import io.harness.limits.impl.model.StaticLimit;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.IndexManagement;
 import io.harness.persistence.ReadPref;
@@ -160,6 +164,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -224,11 +229,14 @@ public class DataGenService {
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SampleDataProviderService sampleDataProviderService;
+  @Inject private LimitConfigurationService limitConfigurationService;
 
   protected String accountId = "INVALID_ID";
   protected String userToken = "INVALID_TOKEN";
   protected final int TIMES_TO_REPEAT = 3;
   protected final int SUCCESS_COUNT = 1;
+
+  private static final String SAMPLE_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
 
   /**
    * Populate data.
@@ -259,6 +267,16 @@ public class DataGenService {
 
     // createSeedEntries();
     loadAppStackCatalogs();
+
+    // set high limits for dev account
+    setLimits(SAMPLE_ACCOUNT_ID);
+  }
+
+  private void setLimits(String accountId) {
+    limitConfigurationService.configure(accountId, ActionType.CREATE_PIPELINE, new StaticLimit(1000));
+    limitConfigurationService.configure(accountId, ActionType.CREATE_USER, new StaticLimit(1000));
+    limitConfigurationService.configure(accountId, ActionType.CREATE_APPLICATION, new StaticLimit(1000));
+    limitConfigurationService.configure(accountId, ActionType.DEPLOY, new RateLimit(1000, 1, TimeUnit.HOURS));
   }
 
   protected void dropDBAndEnsureIndexes() {
@@ -355,7 +373,7 @@ public class DataGenService {
     wingsPersistence.update(wingsPersistence.createQuery(User.class), userUpdateOperations);
 
     UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
-    roleUpdateOperations.set("accountId", "kmpySmUISimoRrJL6NL73w");
+    roleUpdateOperations.set("accountId", SAMPLE_ACCOUNT_ID);
     wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
 
     User adminUser = addUser(adminUserName, adminUserEmail, adminPassword, account);
