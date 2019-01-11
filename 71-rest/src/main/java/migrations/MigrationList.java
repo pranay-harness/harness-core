@@ -40,6 +40,7 @@ import migrations.all.GcsArtifactProjectIdMigration;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.HelmReleaseNamePrefixMigration;
 import migrations.all.HelmReleaseNameSuffixMigration;
+import migrations.all.HelmValuesYamlToManifestFileMigration;
 import migrations.all.InfraProvisionerFilteringTypeMigration;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitUserCounters;
@@ -180,6 +181,7 @@ public class MigrationList {
         .add(Pair.of(219, InitPipelineCounters.class))
         .add(Pair.of(220, AppDTemplateMigration.class))
         .add(Pair.of(221, AddLimitVicinityCheckJobToAllAccounts.class))
+        .add(Pair.of(222, HelmValuesYamlToManifestFileMigration.class))
         .build();
   }
 }

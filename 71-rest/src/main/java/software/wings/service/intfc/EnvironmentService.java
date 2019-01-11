@@ -149,11 +149,6 @@ public interface EnvironmentService extends OwnedByApplication {
   Environment setConfigMapYamlForService(
       String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload);
 
-  Environment setHelmValueYaml(String appId, String envId, KubernetesPayload kubernetesPayload);
-
-  Environment setHelmValueYamlForService(
-      String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload);
-
   Environment update(Environment environment, boolean fromYaml);
 
   void delete(String appId, String envId, boolean syncFromGit);
@@ -163,4 +158,9 @@ public interface EnvironmentService extends OwnedByApplication {
   ManifestFile createValues(String appId, String envId, String serviceId, ManifestFile manifestFile);
 
   ManifestFile updateValues(String appId, String envId, String serviceId, ManifestFile manifestFile);
+
+  Environment setHelmValueYaml(
+      String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload);
+
+  Environment deleteHelmValueYaml(String appId, String envId, String serviceTemplateId);
 }

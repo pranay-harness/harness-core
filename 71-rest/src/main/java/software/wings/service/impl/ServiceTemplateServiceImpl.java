@@ -13,6 +13,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.common.Constants.VALUES_YAML_KEY;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 
@@ -40,6 +41,7 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -483,7 +485,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   @Override
   public List<String> helmValueOverridesYamlFiles(String appId, String templateId) {
-    List<String> result = new ArrayList<>();
+    List<String> values = new ArrayList<>();
 
     ServiceTemplate serviceTemplate = get(appId, templateId);
     if (serviceTemplate != null) {
@@ -491,19 +493,29 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       Environment env = environmentService.get(appId, serviceTemplate.getEnvId(), false);
 
       if (isNotBlank(service.getHelmValueYaml())) {
-        result.add(service.getHelmValueYaml());
+        values.add(service.getHelmValueYaml());
       }
 
-      if (isNotBlank(env.getHelmValueYaml())) {
-        result.add(env.getHelmValueYaml());
-      }
+      ApplicationManifest appManifest =
+          applicationManifestService.getByEnvId(env.getAppId(), env.getUuid(), AppManifestKind.VALUES);
+      addValuesYamlFromAppManifest(appManifest, values);
 
-      Map<String, String> envHelmValues = env.getHelmValueYamlByServiceTemplateId();
-      if (isNotEmpty(envHelmValues) && isNotBlank(envHelmValues.get(templateId))) {
-        result.add(envHelmValues.get(templateId));
+      appManifest = applicationManifestService.getByEnvAndServiceId(
+          env.getAppId(), env.getUuid(), service.getUuid(), AppManifestKind.VALUES);
+      addValuesYamlFromAppManifest(appManifest, values);
+    }
+
+    return values;
+  }
+
+  private void addValuesYamlFromAppManifest(ApplicationManifest appManifest, List<String> values) {
+    if (appManifest != null && StoreType.Local.equals(appManifest.getStoreType())) {
+      ManifestFile manifestFile =
+          applicationManifestService.getManifestFileByFileName(appManifest.getUuid(), VALUES_YAML_KEY);
+      if (manifestFile != null && isNotBlank(manifestFile.getFileContent())) {
+        values.add(manifestFile.getFileContent());
       }
     }
-    return result;
   }
 
   /* (non-Javadoc)
