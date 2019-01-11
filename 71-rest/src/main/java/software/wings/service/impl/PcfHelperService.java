@@ -169,6 +169,48 @@ public class PcfHelperService {
     }
   }
 
+  public String createRoute(PcfConfig pcfConfig, String organization, String space, String host, String domain,
+      String path, boolean tcpRoute, boolean useRandomPort, Integer port) {
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
+    PcfCommandExecutionResponse pcfCommandExecutionResponse;
+    try {
+      pcfCommandExecutionResponse =
+          delegateService.executeTask(aDelegateTask()
+                                          .withTaskType(TaskType.PCF_COMMAND_TASK)
+                                          .withAccountId(pcfConfig.getAccountId())
+                                          .withAppId(GLOBAL_APP_ID)
+                                          .withAsync(false)
+                                          .withTimeout(TimeUnit.MINUTES.toMillis(2))
+                                          .withParameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                                            .pcfConfig(pcfConfig)
+                                                                            .pcfCommandType(PcfCommandType.CREATE_ROUTE)
+                                                                            .organization(organization)
+                                                                            .space(space)
+                                                                            .host(host)
+                                                                            .domain(domain)
+                                                                            .path(path)
+                                                                            .tcpRoute(tcpRoute)
+                                                                            .useRandomPort(useRandomPort)
+                                                                            .port(port)
+                                                                            .timeoutIntervalInMin(2)
+                                                                            .build(),
+                                              encryptionDetails})
+                                          .build());
+    } catch (InterruptedException e) {
+      pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
+                                        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                        .errorMessage(Misc.getMessage(e))
+                                        .build();
+    }
+
+    if (CommandExecutionStatus.SUCCESS.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
+      return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getRouteMaps().get(0);
+    } else {
+      logger.warn(pcfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
+    }
+  }
+
   public List<String> listSpaces(PcfConfig pcfConfig, String organization) {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
     PcfCommandExecutionResponse pcfCommandExecutionResponse;

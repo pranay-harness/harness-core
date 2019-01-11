@@ -2,20 +2,24 @@ package software.wings.helpers.ext.pcf;
 
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
+import org.cloudfoundry.operations.routes.Route;
 import software.wings.beans.PcfConfig;
 import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Singleton
 public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
@@ -155,6 +159,64 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       return getDetailedApplicationState(pcfRequestConfig);
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+    }
+  }
+
+  public String createRouteMap(PcfRequestConfig pcfRequestConfig, String host, String domain, String path,
+      boolean tcpRoute, boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException {
+    validateArgs(host, domain, path, tcpRoute, useRandomPort, port);
+
+    // Path should always start with '/'
+    if (StringUtils.isNotBlank(path) && path.charAt(0) != '/') {
+      path = new StringBuilder(64).append("/").append(path).toString();
+    }
+
+    pcfClient.createRouteMap(pcfRequestConfig, host, domain, path, tcpRoute, useRandomPort, port);
+
+    String routePath = generateRouteUrl(host, domain, path, tcpRoute, useRandomPort, port);
+    Optional<Route> route = pcfClient.getRouteMap(pcfRequestConfig, routePath);
+    if (route.isPresent()) {
+      return routePath;
+    } else {
+      throw new PivotalClientApiException("Failed To Create Route");
+    }
+  }
+
+  private String generateRouteUrl(
+      String host, String domain, String path, boolean tcpRoute, boolean useRandomPort, Integer port) {
+    StringBuilder routeBuilder = new StringBuilder(128);
+    if (tcpRoute) {
+      if (useRandomPort) {
+        routeBuilder.append(domain);
+      } else {
+        routeBuilder.append(domain).append(':').append(port);
+      }
+    } else {
+      routeBuilder.append(host).append('.').append(domain);
+      if (StringUtils.isNotBlank(path)) {
+        routeBuilder.append(path);
+      }
+    }
+
+    return routeBuilder.toString();
+  }
+  private void validateArgs(String host, String domain, String path, boolean tcpRoute, boolean useRandomPort,
+      Integer port) throws PivotalClientApiException {
+    if (isBlank(domain)) {
+      throw new PivotalClientApiException(
+          PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "Domain Can Not Be Null For Create Route Request");
+    }
+
+    if (!tcpRoute) {
+      if (isBlank(host)) {
+        throw new PivotalClientApiException(
+            PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + "HostName is required For Http Route");
+      }
+    } else {
+      if (!useRandomPort && port == null) {
+        throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION
+            + "For TCP Route when UseRandomPort = false, port value must be provided");
+      }
     }
   }
 

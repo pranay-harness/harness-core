@@ -81,4 +81,10 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   public String checkConnectivity(PcfConfig pcfConfig) {
     return "FAILED: connection timed out";
   }
+
+  @Override
+  public String createRouteMap(PcfRequestConfig pcfRequestConfig, String host, String domain, String path,
+      boolean tcpRoute, boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException {
+    throw new PivotalClientApiException("PCF operations not supported by this API.");
+  }
 }
