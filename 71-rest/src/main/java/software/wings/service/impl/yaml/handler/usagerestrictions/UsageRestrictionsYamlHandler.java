@@ -166,6 +166,10 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
       return null;
     }
 
+    if (isEmpty(yaml.getAppEnvRestrictions())) {
+      return null;
+    }
+
     Set<AppEnvRestriction> appEnvRestrictions =
         yaml.getAppEnvRestrictions()
             .stream()
@@ -178,6 +182,10 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   @Override
   public UsageRestrictions.Yaml toYaml(UsageRestrictions usageRestrictions, String appId) {
     if (usageRestrictions == null) {
+      return null;
+    }
+
+    if (isEmpty(usageRestrictions.getAppEnvRestrictions())) {
       return null;
     }
 
