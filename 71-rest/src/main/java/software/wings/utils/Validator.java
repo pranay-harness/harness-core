@@ -7,7 +7,7 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
-import io.harness.persistence.UuidAware;
+import io.harness.persistence.UuidAccess;
 
 import java.util.EnumSet;
 import java.util.Objects;
@@ -71,7 +71,7 @@ public class Validator {
     }
   }
 
-  public static void validateUuid(UuidAware base, String fieldName, String fieldValue) {
+  public static void validateUuid(UuidAccess base, String fieldName, String fieldValue) {
     notNullCheck(fieldValue, fieldName);
     if (!fieldValue.equals(base.getUuid())) {
       throw new InvalidRequestException(fieldName + " mismatch with object uuid");

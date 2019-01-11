@@ -3,13 +3,10 @@ package io.harness.exception;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.category.FastUnitTests;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 public class CauseCollectionTest extends CategoryTest {
   @Test
-  @Category(FastUnitTests.class)
   public void collectCauseCollection() {
     final CauseCollection collection = new CauseCollection()
                                            .addCause(new Exception("first"))
@@ -29,7 +26,6 @@ public class CauseCollectionTest extends CategoryTest {
     }
   }
 
-  @Category(FastUnitTests.class)
   @Test
   public void causeCollectionLimit() {
     CauseCollection collection = new CauseCollection().addCause(new Exception(new Exception()));
@@ -47,7 +43,6 @@ public class CauseCollectionTest extends CategoryTest {
     assertThat(count).isEqualTo(14);
   }
 
-  @Category(FastUnitTests.class)
   @Test
   public void causeCollectionDeduplication() {
     final Exception exception = new Exception(new Exception(new Exception()));
