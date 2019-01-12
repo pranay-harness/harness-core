@@ -1,34 +1,16 @@
 package io.harness;
 
-import static io.harness.SeedData.containerNames;
 import static io.harness.SeedData.randomText;
 import static io.harness.SeedData.seedNames;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.common.GeneratorConstants.adminPassword;
-import static io.harness.common.GeneratorConstants.adminUserEmail;
-import static io.harness.common.GeneratorConstants.adminUserName;
-import static io.harness.common.GeneratorConstants.defaultAccountId;
-import static io.harness.common.GeneratorConstants.defaultEmail;
-import static io.harness.common.GeneratorConstants.defaultPassword;
-import static io.harness.common.GeneratorConstants.defaultUserName;
-import static io.harness.common.GeneratorConstants.delegateAccountSecret;
-import static io.harness.common.GeneratorConstants.rbac1Email;
-import static io.harness.common.GeneratorConstants.rbac1Password;
-import static io.harness.common.GeneratorConstants.rbac1UserName;
-import static io.harness.common.GeneratorConstants.rbac2Email;
-import static io.harness.common.GeneratorConstants.rbac2Password;
-import static io.harness.common.GeneratorConstants.rbac2UserName;
-import static io.harness.common.GeneratorConstants.readOnlyEmail;
-import static io.harness.common.GeneratorConstants.readOnlyPassword;
-import static io.harness.common.GeneratorConstants.readOnlyUserName;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.generator.AccountGenerator.Accounts.GENERIC_TEST;
 import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.util.Arrays.asList;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -38,16 +20,12 @@ import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SystemCatalog.Builder.aSystemCatalog;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
-import static software.wings.beans.User.Builder.anUser;
-import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.ContainerFamily.TOMCAT;
 import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -63,7 +41,6 @@ import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureMappingGenerator;
 import io.harness.generator.InfrastructureProvisionerGenerator;
 import io.harness.generator.LicenseGenerator;
-import io.harness.generator.LicenseGenerator.Licenses;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.PipelineGenerator;
@@ -93,42 +70,29 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedField;
-import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.AccountStatus;
-import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
-import software.wings.beans.ConfigFile;
-import software.wings.beans.EntityType;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
-import software.wings.beans.Role;
-import software.wings.beans.RoleType;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SystemCatalog;
-import software.wings.beans.User;
 import software.wings.beans.Workflow;
-import software.wings.beans.security.HarnessUserGroup;
-import software.wings.beans.security.UserGroup;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppContainerService;
@@ -148,16 +112,8 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.BoundedInputStream;
-import software.wings.utils.ContainerFamily;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -175,10 +131,6 @@ public class DataGenService {
   private static final int NUM_APPS = 1; /* Max 1000 */
   private static final int NUM_APP_CONTAINER_PER_APP = 2; /* Max 1000 */
   private static final int NUM_SERVICES_PER_APP = 1; /* Max 1000 */
-  private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
-  private static final int NUM_ENV_PER_APP = 0; /* Max 6. 4 are created by default */
-  private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
-  private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   public static final String AWS_PLAY_GROUND = "aws-playground";
   public static final String WINGS_KEY = "Wings Key";
 
@@ -245,17 +197,17 @@ public class DataGenService {
    */
   public void populateData() throws IOException {
     dropDBAndEnsureIndexes();
-    //    templateGalleryService.loadHarnessGallery();
-    //    templateGalleryService.copyHarnessTemplates();
 
-    Account account = createLicenseAndDefaultUsers();
-    accountGenerator.setAccount(account);
+    final Seed seed = new Seed(0);
+    Owners owners = ownerManager.create();
+
+    Account account = accountGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
+
     createGlobalSettings(account);
 
-    List<Application> apps = createApplications();
+    List<Application> apps = createApplications(account.getUuid());
 
     for (Application application : apps) {
-      // addAppContainers(application.getUuid());
       addServices(application.getAppId());
     }
 
@@ -265,7 +217,6 @@ public class DataGenService {
 
     createTestApplication(account);
 
-    // createSeedEntries();
     loadAppStackCatalogs();
 
     // set high limits for dev account
@@ -332,114 +283,6 @@ public class DataGenService {
     });
   }
 
-  protected Account createLicenseAndDefaultUsers() {
-    final Seed seed = new Seed(0);
-    licenseGenerator.ensurePredefined(seed, Licenses.TRIAL);
-    Account account = wingsPersistence.createQuery(Account.class).get();
-    boolean oldAccountExists = false;
-    if (account == null) {
-      account = Account.Builder.anAccount().build();
-      account.setCompanyName("Harness");
-      account.setAccountName("Harness");
-    } else {
-      oldAccountExists = true;
-    }
-
-    //    String oldAccountId = account.getUuid();
-    String accountKey = delegateAccountSecret;
-    account.setAccountKey(accountKey);
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.PAID);
-    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
-    licenseInfo.setLicenseUnits(Constants.DEFAULT_PAID_LICENSE_UNITS);
-    account.setLicenseInfo(licenseInfo);
-
-    account.setUuid(defaultAccountId);
-    accountId = defaultAccountId;
-    if (oldAccountExists) {
-      accountService.delete(account.getUuid());
-    }
-
-    accountService.save(account);
-
-    // wingsPersistence.save(account);
-    // Update account key to make delegate works
-    UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
-    accountUpdateOperations.set("accountKey", accountKey);
-    wingsPersistence.update(wingsPersistence.createQuery(Account.class), accountUpdateOperations);
-
-    UpdateOperations<User> userUpdateOperations = wingsPersistence.createUpdateOperations(User.class);
-    userUpdateOperations.set("accounts", Lists.newArrayList(account));
-    wingsPersistence.update(wingsPersistence.createQuery(User.class), userUpdateOperations);
-
-    UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
-    roleUpdateOperations.set("accountId", SAMPLE_ACCOUNT_ID);
-    wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
-
-    User adminUser = addUser(adminUserName, adminUserEmail, adminPassword, account);
-    addUser(defaultUserName, defaultEmail, defaultPassword, account);
-    User readOnlyUser = addUser(readOnlyUserName, readOnlyEmail, readOnlyPassword, account);
-    addUser(rbac1UserName, rbac1Email, rbac1Password, account);
-    addUser(rbac2UserName, rbac2Email, rbac2Password, account);
-    addUserToUserGroup(adminUser, accountId, Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
-    UserGroup readOnlyUserGroup =
-        authHandler.buildReadOnlyUserGroup(accountId, readOnlyUser, Constants.DEFAULT_READ_ONLY_USER_GROUP_NAME);
-    readOnlyUserGroup = wingsPersistence.saveAndGet(UserGroup.class, readOnlyUserGroup);
-
-    addUserToUserGroup(readOnlyUser, readOnlyUserGroup);
-
-    addUserToHarnessUserGroup(adminUser);
-
-    //    loginAdminUser();
-
-    return account;
-  }
-
-  private void addUserToUserGroup(User user, String accountId, String userGroupName) {
-    PageRequest<UserGroup> pageRequest =
-        aPageRequest().addFilter("accountId", EQ, accountId).addFilter("name", EQ, userGroupName).build();
-    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
-    UserGroup userGroup = pageResponse.get(0);
-    userGroup.setMembers(asList(user));
-    userGroupService.updateMembers(userGroup, false);
-  }
-
-  private void addUserToUserGroup(User user, UserGroup userGroup) {
-    userGroup.setMembers(asList(user));
-    userGroupService.updateMembers(userGroup, false);
-  }
-
-  private void addUserToHarnessUserGroup(User user) {
-    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
-                                            .actions(Sets.newHashSet(Action.READ))
-                                            .applyToAllAccounts(true)
-                                            .memberIds(Sets.newHashSet(user.getUuid()))
-                                            .name("harnessUserGroup")
-                                            .build();
-    harnessUserGroupService.save(harnessUserGroup);
-  }
-
-  private User addUser(String userName, String email, char[] password, Account account) {
-    User user = anUser()
-                    .withName(userName)
-                    .withEmail(email)
-                    .withPassword(password)
-                    .withRoles(wingsPersistence
-                                   .query(Role.class,
-                                       aPageRequest()
-                                           .addFilter(ACCOUNT_ID_KEY, EQ, account.getUuid())
-                                           .addFilter("roleType", EQ, RoleType.ACCOUNT_ADMIN)
-                                           .build())
-                                   .getResponse())
-                    .withAccountName(HARNESS_NAME)
-                    .withCompanyName(HARNESS_NAME)
-                    .build();
-    User newUser = userService.registerNewUser(user, account);
-    wingsPersistence.updateFields(User.class, newUser.getUuid(), ImmutableMap.of("emailVerified", true));
-
-    return wingsPersistence.get(User.class, newUser.getUuid());
-  }
-
   private void enableRbac() {
     FeatureFlag featureFlag =
         wingsPersistence.createQuery(FeatureFlag.class).filter("name", FeatureName.RBAC.name()).get();
@@ -455,7 +298,7 @@ public class DataGenService {
 
   private void createGlobalSettings(Account account) {
     final Seed seed = new Seed(0);
-
+    String accountId = account.getUuid();
     Owners owners = new Owners();
     owners.add(account);
 
@@ -467,9 +310,9 @@ public class DataGenService {
         aSettingAttribute()
             .withCategory(Category.CONNECTOR)
             .withName("SMTP")
-            .withAccountId(accountId)
+            .withAccountId(account.getUuid())
             .withValue(SmtpConfig.builder()
-                           .accountId(accountId)
+                           .accountId(account.getUuid())
                            .fromAddress("support@harness.io")
                            .username("support@harness.io")
                            .host("smtp.gmail.com")
@@ -611,7 +454,7 @@ public class DataGenService {
     workflowGenerator.ensurePredefined(seed, terraformOwners, Workflows.TERRAFORM);
   }
 
-  private List<Application> createApplications() {
+  private List<Application> createApplications(String accountId) {
     List<Application> apps = new ArrayList<>();
     for (int i = 0; i < NUM_APPS; i++) {
       String name = getName(appNames);
@@ -631,96 +474,8 @@ public class DataGenService {
       Service service = serviceGenerator.ensureService(
           Service.builder().name(name).description(randomText(40)).appId(appId).artifactType(ArtifactType.WAR).build());
       services.add(service);
-
-      configFileNames = new ArrayList<>(seedNames);
-      //      addConfigFilesToEntity(service, DEFAULT_TEMPLATE_ID, NUM_CONFIG_FILE_PER_SERVICE, SERVICE);
     }
     return services;
-  }
-
-  private void addConfigFilesToEntity(
-      Base entity, String templateId, int numConfigFilesToBeAdded, EntityType entityType) throws IOException {
-    while (numConfigFilesToBeAdded > 0) {
-      if (addOneConfigFileToEntity(entity.getAppId(), templateId, entity.getUuid(), entityType)) {
-        numConfigFilesToBeAdded--;
-      }
-    }
-  }
-
-  private boolean addOneConfigFileToEntity(String appId, String templateId, String entityId, EntityType entityType)
-      throws IOException {
-    File file = getTestFile(getName(configFileNames) + ".properties");
-    InputStream fileInputStream = new java.io.FileInputStream(file);
-    BoundedInputStream uploadedInputStream =
-        new BoundedInputStream(fileInputStream, configuration.getFileUploadLimits().getConfigFileLimit());
-
-    ConfigFile configFile = new ConfigFile();
-    configFile.setAccountId(accountId);
-    configFile.setAppId(appId);
-    configFile.setEntityId(entityId);
-    configFile.setEntityType(entityType);
-    configFile.setTemplateId(templateId);
-    configFile.setRelativeFilePath("configs/" + file.getName());
-    configFile.setFileName(file.getName());
-
-    String key = configService.save(configFile, uploadedInputStream);
-    return key != null;
-  }
-
-  private List<AppContainer> addAppContainers(String appId) {
-    int containersToBeAdded = NUM_APP_CONTAINER_PER_APP;
-    List<String> seedContainerNames = new ArrayList<>(containerNames);
-    while (containersToBeAdded > 0) {
-      if (addOneAppContainer(appId, seedContainerNames)) {
-        containersToBeAdded--;
-      }
-    }
-    return getAppContainers(appId);
-  }
-
-  private List<AppContainer> getAppContainers(String appId) {
-    return wingsPersistence.createQuery(AppContainer.class)
-        .filter(Base.APP_ID_KEY, appId)
-        .filter(ACCOUNT_ID_KEY, accountId)
-        .asList();
-  }
-
-  private boolean addOneAppContainer(String appId, List<String> containerNames) {
-    String version = String.format("%s.%s.%s", random.nextInt(10), random.nextInt(100), random.nextInt(1000));
-    String name = getName(containerNames);
-
-    try {
-      File file = getTestFile(name);
-      InputStream fileInputStream = new java.io.FileInputStream(file);
-      BoundedInputStream uploadedInputStream =
-          new BoundedInputStream(fileInputStream, configuration.getFileUploadLimits().getAppContainerLimit());
-      AppContainer appContainer = AppContainer.Builder.anAppContainer()
-                                      .withAppId(appId)
-                                      .withAccountId(accountId)
-                                      .withVersion(version)
-                                      .withName(name)
-                                      .withFileName(file.getName())
-                                      .withFamily(ContainerFamily.TOMCAT)
-                                      .build();
-      AppContainer savedAppContainer = appContainerService.save(appContainer, uploadedInputStream, PLATFORMS);
-      return savedAppContainer != null;
-    } catch (IOException e) {
-      logger.info("Error occurred in uploading app container", e);
-    }
-    return false;
-  }
-
-  private File getTestFile(String name) throws IOException {
-    File file = new File(testFolder.getRoot().getAbsolutePath() + "/" + name);
-    if (!file.isFile()) {
-      file = testFolder.newFile(name);
-    }
-
-    try (BufferedWriter out =
-             new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
-      out.write(randomText(100));
-    }
-    return file;
   }
 
   private String getName(List<String> names) {

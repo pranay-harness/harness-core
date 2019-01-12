@@ -103,7 +103,6 @@ awsRegionIdToName:
   ap-northeast-2: Asia Pacific (Seoul)
   ap-southeast-1: Asia Pacific (Singapore)
   ap-southeast-2: Asia Pacific (Sydney)
-  ca-central-1: Canada (Central)
   ap-south-1: Asia Pacific (Mumbai)
   sa-east-1: South America (São Paulo)
   us-gov-west-1: GovCloud
@@ -151,4 +150,3 @@ awsInstanceTypes:
   - d2.2xlarge
   - d2.4xlarge
   - d2.8xlarge
-

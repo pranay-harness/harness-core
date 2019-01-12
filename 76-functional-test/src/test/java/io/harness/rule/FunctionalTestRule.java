@@ -12,7 +12,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import io.dropwizard.Configuration;
 import io.harness.event.EventsModule;
-import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -66,19 +65,12 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
   @Override
   public List<Module> modules(List<Annotation> annotations) {
-    List<Module> modules = new ArrayList<>();
+    List<Module> modules;
     MongoClient mongoClient;
-    String dbName = System.getProperty("dbName", "harness");
+    String dbName = "harness";
     try {
       MongoClientURI clientUri =
           new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName), mongoClientOptions);
-      if (!clientUri.getURI().startsWith("mongodb://localhost:")) {
-        // Protection against running tests on non-local databases such as prod or qa.
-        // Comment out this throw exception if you're sure.
-        throw new WingsException("\n*** WARNING *** : Attempting to run test on non-local Mongo: " + clientUri.getURI()
-            + "\n*** Exiting *** : Comment out this check in WingsRule.java "
-            + "if you are sure you want to run against a remote Mongo.\n");
-      }
       dbName = clientUri.getDatabase();
       mongoClient = new MongoClient(clientUri);
       closingFactory.addServer(mongoClient);
@@ -109,7 +101,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     configuration.getPortal().setUrl(PORTAL_URL);
     configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
     configuration.setMongoConnectionFactory(
-        MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
+        MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://35.230.85.134:27017/" + dbName)).build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     return configuration;
   }
