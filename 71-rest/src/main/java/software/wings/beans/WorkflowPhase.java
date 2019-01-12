@@ -426,11 +426,6 @@ public class WorkflowPhase implements UuidAccess {
       return this;
     }
 
-    public WorkflowPhaseBuilder phaseStep(PhaseStep phaseStep) {
-      this.phaseSteps.add(phaseStep);
-      return this;
-    }
-
     public WorkflowPhaseBuilder daemonSet(boolean daemonSet) {
       this.daemonSet = daemonSet;
       return this;

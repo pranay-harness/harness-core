@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.times;
@@ -13,7 +14,6 @@ import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrati
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
-import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -46,8 +46,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
 
-import java.util.Arrays;
-
 public class HttpTemplateProcessorTest extends TemplateBaseTest {
   @Mock private WorkflowService workflowService;
 
@@ -70,16 +68,15 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     HttpTemplate httpTemplate =
         HttpTemplate.builder().url("{Url}").method("GET").header("Authorization:${Header}").assertion("200 ok").build();
-    Template template =
-        Template.builder()
-            .templateObject(httpTemplate)
-            .folderId(parentFolder.getUuid())
-            .appId(GLOBAL_APP_ID)
-            .accountId(GLOBAL_ACCOUNT_ID)
-            .name("Enable Instance")
-            .variables(Arrays.asList(aVariable().withType(TEXT).withName("Url").withMandatory(true).build(),
-                aVariable().withType(TEXT).withName("Header").withMandatory(true).build()))
-            .build();
+    Template template = Template.builder()
+                            .templateObject(httpTemplate)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .name("Enable Instance")
+                            .variables(asList(aVariable().withType(TEXT).withName("Url").withMandatory(true).build(),
+                                aVariable().withType(TEXT).withName("Header").withMandatory(true).build()))
+                            .build();
     Template savedTemplate = templateService.save(template);
     assertSavedTemplate(template, savedTemplate);
     HttpTemplate savedHttpTemplate = (HttpTemplate) savedTemplate.getTemplateObject();
@@ -147,7 +144,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
                                           .build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                     .build())
-            .withLinkedTemplateUuids(Arrays.asList(savedTemplate.getUuid()))
+            .withLinkedTemplateUuids(asList(savedTemplate.getUuid()))
             .build();
 
     on(httpTemplateProcessor).set("wingsPersistence", wingsPersistence);
@@ -200,7 +197,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
         .appId(GLOBAL_APP_ID)
         .accountId(GLOBAL_ACCOUNT_ID)
         .name("Enable Instance")
-        .variables(Arrays.asList(aVariable().withType(TEXT).withName("Url").withMandatory(true).build(),
+        .variables(asList(aVariable().withType(TEXT).withName("Url").withMandatory(true).build(),
             aVariable().withType(TEXT).withName("Header").withMandatory(true).build()))
         .build();
   }
@@ -222,27 +219,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
     GraphNode step = httpTemplateProcessor.constructEntityFromTemplate(savedTemplate);
     step.setTemplateVersion(LATEST_TAG);
 
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withUuid(WORKFLOW_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).addStep(step).build())
-                    .addWorkflowPhase(
-                        aWorkflowPhase()
-                            .infraMappingId(INFRA_MAPPING_ID)
-                            .serviceId(SERVICE_ID)
-                            .deploymentType(SSH)
-                            .phaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE).addStep(step).build())
-                            .build())
-                    .withPostDeploymentSteps(
-                        aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).addStep(step).build())
-                    .build())
-            .withLinkedTemplateUuids(Arrays.asList(savedTemplate.getUuid()))
-            .build();
+    Workflow workflow = generateWorkflow(savedTemplate, step);
 
     on(httpTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(httpTemplateProcessor).set("workflowService", workflowService);

@@ -77,7 +77,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
-                    .phaseStep(
+                    .phaseSteps(asList(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -86,7 +86,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                          .properties(
                                              ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
                                          .build())
-                            .build())
+                            .build()))
                     .build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
@@ -110,7 +110,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
-                    .phaseStep(
+                    .phaseSteps(asList(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -119,7 +119,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                          .properties(
                                              ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
                                          .build())
-                            .build())
+                            .build()))
                     .build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
@@ -131,7 +131,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
-                    .phaseStep(
+                    .phaseSteps(asList(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -140,7 +140,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                          .properties(
                                              ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
                                          .build())
-                            .build())
+                            .build()))
                     .build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
@@ -185,7 +185,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
-                    .phaseStep(
+                    .phaseSteps(asList(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -201,7 +201,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                          .properties(
                                              ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
                                          .build())
-                            .build())
+                            .build()))
                     .build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
@@ -218,7 +218,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
-                    .phaseStep(
+                    .phaseSteps(asList(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -227,8 +227,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                          .properties(
                                              ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
                                          .build())
-                            .build())
-                    .phaseStep(
+                            .build(),
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(GraphNode.builder()
                                          .id(generateUuid())
@@ -237,7 +236,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                          .properties(
                                              ImmutableMap.<String, Object>builder().put("identifier", "deploy").build())
                                          .build())
-                            .build())
+                            .build()))
                     .build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
@@ -254,7 +253,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                 aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
-                    .phaseStep(
+                    .phaseSteps(asList(
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(
                                 GraphNode.builder()
@@ -264,8 +263,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                     .properties(
                                         ImmutableMap.<String, Object>builder().put("identifier", "deploy1").build())
                                     .build())
-                            .build())
-                    .phaseStep(
+                            .build(),
                         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                             .addStep(
                                 GraphNode.builder()
@@ -275,7 +273,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                     .properties(
                                         ImmutableMap.<String, Object>builder().put("identifier", "deploy2").build())
                                     .build())
-                            .build())
+                            .build()))
                     .build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
