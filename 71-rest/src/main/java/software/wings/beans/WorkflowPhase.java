@@ -140,10 +140,6 @@ public class WorkflowPhase implements UuidAccess {
     return phaseSteps;
   }
 
-  public void addPhaseStep(PhaseStep phaseStep) {
-    this.phaseSteps.add(phaseStep);
-  }
-
   public void setPhaseSteps(List<PhaseStep> phaseSteps) {
     this.phaseSteps = phaseSteps;
   }

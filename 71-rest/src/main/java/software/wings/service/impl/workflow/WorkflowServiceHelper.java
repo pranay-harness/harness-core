@@ -373,6 +373,8 @@ public class WorkflowServiceHelper {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
     if (serviceSetupRequired) {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof AwsAmiInfrastructureMapping) {
@@ -380,45 +382,47 @@ public class WorkflowServiceHelper {
         defaultData.put("maxInstances", 10);
         defaultData.put("autoScalingSteadyStateTimeout", 10);
         defaultData.put("blueGreen", true);
-        workflowPhase.addPhaseStep(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
-                                       .addStep(GraphNode.builder()
-                                                    .id(generateUuid())
-                                                    .type(AWS_AMI_SERVICE_SETUP.name())
-                                                    .name("AWS AutoScaling Group Setup")
-                                                    .properties(defaultData)
-                                                    .build())
-                                       .build());
+        phaseSteps.add(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
+                           .addStep(GraphNode.builder()
+                                        .id(generateUuid())
+                                        .type(AWS_AMI_SERVICE_SETUP.name())
+                                        .name("AWS AutoScaling Group Setup")
+                                        .properties(defaultData)
+                                        .build())
+                           .build());
       }
     }
-    workflowPhase.addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
-                                   .addStep(GraphNode.builder()
-                                                .id(generateUuid())
-                                                .type(AWS_AMI_SERVICE_DEPLOY.name())
-                                                .name(Constants.UPGRADE_AUTOSCALING_GROUP)
-                                                .build())
-                                   .build());
+    phaseSteps.add(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(AWS_AMI_SERVICE_DEPLOY.name())
+                                    .name(Constants.UPGRADE_AUTOSCALING_GROUP)
+                                    .build())
+                       .build());
 
-    workflowPhase.addPhaseStep(
+    phaseSteps.add(
         aPhaseStep(VERIFY_SERVICE, VERIFY_STAGING).addAllSteps(commandNodes(commandMap, CommandType.VERIFY)).build());
 
     Map<String, Object> defaultDataSwitchRoutes = newHashMap();
     defaultDataSwitchRoutes.put("downsizeOldAsg", true);
-    workflowPhase.addPhaseStep(aPhaseStep(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, SWAP_AUTOSCALING_GROUP_ROUTE)
-                                   .addStep(GraphNode.builder()
-                                                .id(generateUuid())
-                                                .type(AWS_AMI_SWITCH_ROUTES.name())
-                                                .name(UPGRADE_AUTOSCALING_GROUP_ROUTE)
-                                                .properties(defaultDataSwitchRoutes)
-                                                .build())
-                                   .build());
+    phaseSteps.add(aPhaseStep(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, SWAP_AUTOSCALING_GROUP_ROUTE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(AWS_AMI_SWITCH_ROUTES.name())
+                                    .name(UPGRADE_AUTOSCALING_GROUP_ROUTE)
+                                    .properties(defaultDataSwitchRoutes)
+                                    .build())
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForAWSAmi(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
     if (serviceSetupRequired) {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
@@ -427,55 +431,59 @@ public class WorkflowServiceHelper {
         defaultData.put("maxInstances", 10);
         defaultData.put("autoScalingSteadyStateTimeout", 10);
         defaultData.put("blueGreen", false);
-        workflowPhase.addPhaseStep(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
-                                       .addStep(GraphNode.builder()
-                                                    .id(generateUuid())
-                                                    .type(AWS_AMI_SERVICE_SETUP.name())
-                                                    .name("AWS AutoScaling Group Setup")
-                                                    .properties(defaultData)
-                                                    .build())
-                                       .build());
+        phaseSteps.add(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
+                           .addStep(GraphNode.builder()
+                                        .id(generateUuid())
+                                        .type(AWS_AMI_SERVICE_SETUP.name())
+                                        .name("AWS AutoScaling Group Setup")
+                                        .properties(defaultData)
+                                        .build())
+                           .build());
       }
     }
-    workflowPhase.addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
-                                   .addStep(GraphNode.builder()
-                                                .id(generateUuid())
-                                                .type(AWS_AMI_SERVICE_DEPLOY.name())
-                                                .name(Constants.UPGRADE_AUTOSCALING_GROUP)
-                                                .build())
-                                   .build());
+    phaseSteps.add(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(AWS_AMI_SERVICE_DEPLOY.name())
+                                    .name(Constants.UPGRADE_AUTOSCALING_GROUP)
+                                    .build())
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForAWSLambda(String appId, String envId, WorkflowPhase workflowPhase) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
-    workflowPhase.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
-    workflowPhase.addPhaseStep(
+    phaseSteps.add(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+
+    phaseSteps.add(
         aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
             .addStep(
                 GraphNode.builder().id(generateUuid()).type(AWS_LAMBDA_STATE.name()).name(Constants.AWS_LAMBDA).build())
             .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForAWSCodeDeploy(String appId, WorkflowPhase workflowPhase) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
-    workflowPhase.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    phaseSteps.add(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
 
     Map<String, String> stateDefaults = getStateDefaults(appId, service.getUuid(), AWS_CODEDEPLOY_STATE);
     GraphNodeBuilder node =
@@ -494,14 +502,13 @@ public class WorkflowServiceHelper {
       }
       node.properties(properties);
     }
-    workflowPhase.addPhaseStep(
-        aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE).addStep(node.build()).build());
+    phaseSteps.add(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE).addStep(node.build()).build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   public Map<String, String> getStateDefaults(String appId, String serviceId, StateType stateType) {
@@ -525,42 +532,44 @@ public class WorkflowServiceHelper {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
     boolean isDaemonEcsWorkflow = isDaemonSchedulingStrategy(appId, workflowPhase, orchestrationWorkflowType);
     if (serviceSetupRequired) {
       if (isDaemonEcsWorkflow) {
-        workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                                       .addStep(GraphNode.builder()
-                                                    .id(generateUuid())
-                                                    .type(ECS_DAEMON_SERVICE_SETUP.name())
-                                                    .name(Constants.ECS_DAEMON_SERVICE_SETUP)
-                                                    .build())
-                                       .build());
+        phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                           .addStep(GraphNode.builder()
+                                        .id(generateUuid())
+                                        .type(ECS_DAEMON_SERVICE_SETUP.name())
+                                        .name(Constants.ECS_DAEMON_SERVICE_SETUP)
+                                        .build())
+                           .build());
       } else {
-        workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                                       .addStep(GraphNode.builder()
-                                                    .id(generateUuid())
-                                                    .type(ECS_SERVICE_SETUP.name())
-                                                    .name(Constants.ECS_SERVICE_SETUP)
-                                                    .build())
-                                       .build());
+        phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                           .addStep(GraphNode.builder()
+                                        .id(generateUuid())
+                                        .type(ECS_SERVICE_SETUP.name())
+                                        .name(Constants.ECS_SERVICE_SETUP)
+                                        .build())
+                           .build());
       }
     }
 
     if (!isDaemonEcsWorkflow) {
-      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                     .addStep(GraphNode.builder()
-                                                  .id(generateUuid())
-                                                  .type(ECS_SERVICE_DEPLOY.name())
-                                                  .name(Constants.UPGRADE_CONTAINERS)
-                                                  .build())
-                                     .build());
+      phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                         .addStep(GraphNode.builder()
+                                      .id(generateUuid())
+                                      .type(ECS_SERVICE_DEPLOY.name())
+                                      .name(Constants.UPGRADE_CONTAINERS)
+                                      .build())
+                         .build());
     }
 
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForECSBlueGreen(
@@ -568,19 +577,21 @@ public class WorkflowServiceHelper {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
     if (serviceSetupRequired) {
       Map<String, Object> defaultSetupProperties = newHashMap();
       defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
       defaultSetupProperties.put("useLoadBalancer", true);
 
-      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                                     .addStep(GraphNode.builder()
-                                                  .id(generateUuid())
-                                                  .type(ECS_BG_SERVICE_SETUP.name())
-                                                  .name(Constants.ECS_BG_SERVICE_SETUP)
-                                                  .properties(defaultSetupProperties)
-                                                  .build())
-                                     .build());
+      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                         .addStep(GraphNode.builder()
+                                      .id(generateUuid())
+                                      .type(ECS_BG_SERVICE_SETUP.name())
+                                      .name(Constants.ECS_BG_SERVICE_SETUP)
+                                      .properties(defaultSetupProperties)
+                                      .build())
+                         .build());
     }
 
     Map<String, Object> defaultDeployProperties = newHashMap();
@@ -589,31 +600,31 @@ public class WorkflowServiceHelper {
     defaultDeployProperties.put("downsizeInstanceUnitType", "PERCENTAGE");
     defaultDeployProperties.put("downsizeInstanceCount", 100);
 
-    workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                   .addStep(GraphNode.builder()
-                                                .id(generateUuid())
-                                                .type(ECS_SERVICE_DEPLOY.name())
-                                                .name(Constants.UPGRADE_CONTAINERS)
-                                                .properties(defaultDeployProperties)
-                                                .build())
-                                   .build());
+    phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(ECS_SERVICE_DEPLOY.name())
+                                    .name(Constants.UPGRADE_CONTAINERS)
+                                    .properties(defaultDeployProperties)
+                                    .build())
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
 
     Map<String, Object> defaultDataSwitchRoutes = newHashMap();
     defaultDataSwitchRoutes.put("downsizeOldService", true);
-    workflowPhase.addPhaseStep(aPhaseStep(ECS_UPDATE_LISTENER_BG, ECS_SWAP_TARGET_GROUPS)
-                                   .addStep(GraphNode.builder()
-                                                .id(generateUuid())
-                                                .type(ECS_LISTENER_UPDATE.name())
-                                                .name(ECS_SWAP_TARGET_GROUPS)
-                                                .properties(defaultDataSwitchRoutes)
-                                                .build())
-                                   .build());
+    phaseSteps.add(aPhaseStep(ECS_UPDATE_LISTENER_BG, ECS_SWAP_TARGET_GROUPS)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(ECS_LISTENER_UPDATE.name())
+                                    .name(ECS_SWAP_TARGET_GROUPS)
+                                    .properties(defaultDataSwitchRoutes)
+                                    .build())
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   boolean isDaemonSchedulingStrategy(
@@ -705,6 +716,8 @@ public class WorkflowServiceHelper {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
     // SETUP
     if (serviceSetupRequired) {
       Map<String, Object> defaultSetupProperties = new HashMap<>();
@@ -712,14 +725,14 @@ public class WorkflowServiceHelper {
       defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
       defaultSetupProperties.put("route", "${" + Constants.INFRA_TEMP_ROUTE_PCF + "}");
 
-      workflowPhase.addPhaseStep(aPhaseStep(PCF_SETUP, Constants.SETUP)
-                                     .addStep(GraphNode.builder()
-                                                  .id(generateUuid())
-                                                  .type(PCF_SETUP.name())
-                                                  .name(Constants.PCF_SETUP)
-                                                  .properties(defaultSetupProperties)
-                                                  .build())
-                                     .build());
+      phaseSteps.add(aPhaseStep(PCF_SETUP, Constants.SETUP)
+                         .addStep(GraphNode.builder()
+                                      .id(generateUuid())
+                                      .type(PCF_SETUP.name())
+                                      .name(Constants.PCF_SETUP)
+                                      .properties(defaultSetupProperties)
+                                      .build())
+                         .build());
     }
 
     // RESIZE
@@ -729,33 +742,33 @@ public class WorkflowServiceHelper {
     defaultUpgradeStageContainerProperties.put("downsizeInstanceUnitType", "PERCENTAGE");
     defaultUpgradeStageContainerProperties.put("downsizeInstanceCount", 100);
 
-    workflowPhase.addPhaseStep(aPhaseStep(PCF_RESIZE, Constants.DEPLOY)
-                                   .addStep(GraphNode.builder()
-                                                .id(generateUuid())
-                                                .type(PCF_RESIZE.name())
-                                                .name(Constants.PCF_RESIZE)
-                                                .properties(defaultUpgradeStageContainerProperties)
-                                                .build())
-                                   .build());
+    phaseSteps.add(aPhaseStep(PCF_RESIZE, Constants.DEPLOY)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(PCF_RESIZE.name())
+                                    .name(Constants.PCF_RESIZE)
+                                    .properties(defaultUpgradeStageContainerProperties)
+                                    .build())
+                       .build());
 
     // Verify
-    workflowPhase.addPhaseStep(
+    phaseSteps.add(
         aPhaseStep(VERIFY_SERVICE, VERIFY_STAGING).addAllSteps(commandNodes(commandMap, CommandType.VERIFY)).build());
 
     // Swap Routes
     Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
     defaultRouteUpdateProperties.put("downsizeOldApps", false);
-    workflowPhase.addPhaseStep(aPhaseStep(PCF_SWICH_ROUTES, Constants.PCF_BG_MAP_ROUTE)
-                                   .addStep(GraphNode.builder()
-                                                .id(generateUuid())
-                                                .type(PCF_BG_MAP_ROUTE.name())
-                                                .name(Constants.PCF_BG_SWAP_ROUTE)
-                                                .properties(defaultRouteUpdateProperties)
-                                                .build())
-                                   .build());
+    phaseSteps.add(aPhaseStep(PCF_SWICH_ROUTES, Constants.PCF_BG_MAP_ROUTE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(PCF_BG_MAP_ROUTE.name())
+                                    .name(Constants.PCF_BG_SWAP_ROUTE)
+                                    .properties(defaultRouteUpdateProperties)
+                                    .build())
+                       .build());
 
     // Wrap up
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForPCF(String appId, String envId, WorkflowPhase workflowPhase,
@@ -763,32 +776,34 @@ public class WorkflowServiceHelper {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
     if (serviceSetupRequired) {
       Map<String, Object> defaultProperties = new HashMap<>();
       defaultProperties.put("blueGreen", false);
       defaultProperties.put("resizeStrategy", "DOWNSIZE_OLD_FIRST");
       defaultProperties.put("route", "${" + Constants.INFRA_ROUTE_PCF + "}");
 
-      workflowPhase.addPhaseStep(aPhaseStep(PCF_SETUP, Constants.SETUP)
-                                     .addStep(GraphNode.builder()
-                                                  .id(generateUuid())
-                                                  .type(PCF_SETUP.name())
-                                                  .name(Constants.PCF_SETUP)
-                                                  .properties(defaultProperties)
-                                                  .build())
-                                     .build());
+      phaseSteps.add(aPhaseStep(PCF_SETUP, Constants.SETUP)
+                         .addStep(GraphNode.builder()
+                                      .id(generateUuid())
+                                      .type(PCF_SETUP.name())
+                                      .name(Constants.PCF_SETUP)
+                                      .properties(defaultProperties)
+                                      .build())
+                         .build());
     }
 
-    workflowPhase.addPhaseStep(
+    phaseSteps.add(
         aPhaseStep(PCF_RESIZE, Constants.DEPLOY)
             .addStep(GraphNode.builder().id(generateUuid()).type(PCF_RESIZE.name()).name(Constants.PCF_RESIZE).build())
             .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForHelm(
@@ -796,15 +811,17 @@ public class WorkflowServiceHelper {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
-    workflowPhase.addPhaseStep(
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    phaseSteps.add(
         aPhaseStep(PhaseStepType.HELM_DEPLOY, Constants.DEPLOY_CONTAINERS)
             .addStep(
                 GraphNode.builder().id(generateUuid()).type(HELM_DEPLOY.name()).name(Constants.HELM_DEPLOY).build())
             .build());
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForKubernetes(String appId, WorkflowPhase workflowPhase,
@@ -812,30 +829,32 @@ public class WorkflowServiceHelper {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
     if (serviceSetupRequired) {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof GcpKubernetesInfrastructureMapping
           && Constants.RUNTIME.equals(((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName())) {
-        workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                                       .addStep(GraphNode.builder()
-                                                    .id(generateUuid())
-                                                    .type(GCP_CLUSTER_SETUP.name())
-                                                    .name("GCP Cluster Setup")
-                                                    .build())
-                                       .build());
+        phaseSteps.add(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                           .addStep(GraphNode.builder()
+                                        .id(generateUuid())
+                                        .type(GCP_CLUSTER_SETUP.name())
+                                        .name("GCP Cluster Setup")
+                                        .build())
+                           .build());
       }
 
       Map<String, Object> defaultSetupProperties = new HashMap<>();
       defaultSetupProperties.put("replicationControllerName", "${app.name}-${service.name}-${env.name}");
       defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
-      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                                     .addStep(GraphNode.builder()
-                                                  .id(generateUuid())
-                                                  .type(KUBERNETES_SETUP.name())
-                                                  .name(Constants.KUBERNETES_SERVICE_SETUP)
-                                                  .properties(defaultSetupProperties)
-                                                  .build())
-                                     .build());
+      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                         .addStep(GraphNode.builder()
+                                      .id(generateUuid())
+                                      .type(KUBERNETES_SETUP.name())
+                                      .name(Constants.KUBERNETES_SERVICE_SETUP)
+                                      .properties(defaultSetupProperties)
+                                      .build())
+                         .build());
     }
 
     if (!workflowPhase.isDaemonSet() && !workflowPhase.isStatefulSet()) {
@@ -844,19 +863,19 @@ public class WorkflowServiceHelper {
         // Setting instance count always 100 percent
         properties.put("instanceCount", "100");
       }
-      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                     .addStep(GraphNode.builder()
-                                                  .id(generateUuid())
-                                                  .type(KUBERNETES_DEPLOY.name())
-                                                  .name(Constants.UPGRADE_CONTAINERS)
-                                                  .properties(properties)
-                                                  .build())
-                                     .build());
+      phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                         .addStep(GraphNode.builder()
+                                      .id(generateUuid())
+                                      .type(KUBERNETES_DEPLOY.name())
+                                      .name(Constants.UPGRADE_CONTAINERS)
+                                      .properties(properties)
+                                      .build())
+                         .build());
     }
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForKubernetesBlueGreen(
@@ -867,6 +886,8 @@ public class WorkflowServiceHelper {
 
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
     if (serviceSetupRequired) {
       Map<String, Object> defaultServiceSpec = new HashMap<>();
@@ -885,14 +906,14 @@ public class WorkflowServiceHelper {
       defaultSetupProperties.put("blueGreenConfig", defaultBlueGreenConfig);
       defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
 
-      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                                     .addStep(GraphNode.builder()
-                                                  .id(generateUuid())
-                                                  .type(KUBERNETES_SETUP.name())
-                                                  .name(Constants.KUBERNETES_SERVICE_SETUP_BLUEGREEN)
-                                                  .properties(defaultSetupProperties)
-                                                  .build())
-                                     .build());
+      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                         .addStep(GraphNode.builder()
+                                      .id(generateUuid())
+                                      .type(KUBERNETES_SETUP.name())
+                                      .name(Constants.KUBERNETES_SERVICE_SETUP_BLUEGREEN)
+                                      .properties(defaultSetupProperties)
+                                      .build())
+                         .build());
     }
 
     Map<String, Object> defaultUpgradeStageContainerProperties = new HashMap<>();
@@ -901,32 +922,32 @@ public class WorkflowServiceHelper {
     defaultUpgradeStageContainerProperties.put("downsizeInstanceUnitType", "PERCENTAGE");
     defaultUpgradeStageContainerProperties.put("downsizeInstanceCount", 100);
 
-    workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                   .addStep(GraphNode.builder()
-                                                .id(generateUuid())
-                                                .type(KUBERNETES_DEPLOY.name())
-                                                .name(Constants.UPGRADE_CONTAINERS)
-                                                .properties(defaultUpgradeStageContainerProperties)
-                                                .build())
-                                   .build());
+    phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(KUBERNETES_DEPLOY.name())
+                                    .name(Constants.UPGRADE_CONTAINERS)
+                                    .properties(defaultUpgradeStageContainerProperties)
+                                    .build())
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_STAGE_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_STAGE_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
 
     Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
     defaultRouteUpdateProperties.put("service1", PRIMARY_SERVICE_NAME_EXPRESSION);
     defaultRouteUpdateProperties.put("service2", STAGE_SERVICE_NAME_EXPRESSION);
-    workflowPhase.addPhaseStep(aPhaseStep(ROUTE_UPDATE, Constants.ROUTE_UPDATE)
-                                   .addStep(GraphNode.builder()
-                                                .id(generateUuid())
-                                                .type(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
-                                                .name(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
-                                                .properties(defaultRouteUpdateProperties)
-                                                .build())
-                                   .build());
+    phaseSteps.add(aPhaseStep(ROUTE_UPDATE, Constants.ROUTE_UPDATE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
+                                    .name(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                                    .properties(defaultRouteUpdateProperties)
+                                    .build())
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForSSH(
@@ -950,6 +971,8 @@ public class WorkflowServiceHelper {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
     final PhaseStepBuilder infrastructurePhaseStepBuilder =
         aPhaseStep(INFRASTRUCTURE_NODE, Constants.INFRASTRUCTURE_NODE_NAME);
 
@@ -963,7 +986,7 @@ public class WorkflowServiceHelper {
                                                                .build())
                                                .build());
 
-    workflowPhase.addPhaseStep(infrastructurePhaseStepBuilder.build());
+    phaseSteps.add(infrastructurePhaseStepBuilder.build());
 
     List<GraphNode> disableServiceSteps = commandNodes(commandMap, CommandType.DISABLE);
     List<GraphNode> enableServiceSteps = commandNodes(commandMap, CommandType.ENABLE);
@@ -981,21 +1004,19 @@ public class WorkflowServiceHelper {
                                  .build());
     }
 
-    workflowPhase.addPhaseStep(
-        aPhaseStep(DISABLE_SERVICE, Constants.DISABLE_SERVICE).addAllSteps(disableServiceSteps).build());
+    phaseSteps.add(aPhaseStep(DISABLE_SERVICE, Constants.DISABLE_SERVICE).addAllSteps(disableServiceSteps).build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.INSTALL))
-                                   .build());
+    phaseSteps.add(aPhaseStep(DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.INSTALL))
+                       .build());
 
-    workflowPhase.addPhaseStep(
-        aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE).addAllSteps(enableServiceSteps).build());
+    phaseSteps.add(aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE).addAllSteps(enableServiceSteps).build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   private boolean attachElbSteps(InfrastructureMapping infrastructureMapping) {
