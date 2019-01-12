@@ -54,6 +54,7 @@ public class VerificationManagerClientHelper {
         return SafeHttpCall.execute(call);
       } catch (Exception ex) {
         retryCount++;
+        call = call.clone();
         logger.error(
             "Error while calling manager for call {}, retryCount: {}", call.request().toString(), retryCount, ex);
       }
