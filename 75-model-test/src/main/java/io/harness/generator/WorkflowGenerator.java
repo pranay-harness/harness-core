@@ -21,6 +21,7 @@ import static software.wings.beans.SweepingOutput.Scope.PIPELINE;
 import static software.wings.beans.SweepingOutput.Scope.WORKFLOW;
 import static software.wings.beans.TaskType.JENKINS;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.INFRASTRUCTURE_NODE_NAME;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
 import static software.wings.sm.StateType.HTTP;
@@ -55,7 +56,6 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
-import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.ShellScriptTemplate;
@@ -263,55 +263,10 @@ public class WorkflowGenerator {
   private Workflow ensureBuildJenkins(Seed seed, Owners owners) {
     // Ensure artifact stream
 
-    WorkflowPhaseBuilder workflowPhaseBuilder = WorkflowPhaseBuilder.aWorkflowPhase();
-    workflowPhaseBuilder.phaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
-
     // TODO: Change it to Docker ArtifactStream
     artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
 
     SettingAttribute jenkinsConfig = settingGenerator.ensurePredefined(seed, owners, HARNESS_JENKINS_CONNECTOR);
-
-    workflowPhaseBuilder.phaseStep(
-        aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
-            .addStep(GraphNode.builder()
-                         .id(generateUuid())
-                         .type(JENKINS.name())
-                         .name("Jenkins - pipeline")
-                         .properties(ImmutableMap.<String, Object>builder()
-                                         .put(JenkinsState.JENKINS_CONFIG_ID_KEY, jenkinsConfig.getUuid())
-                                         .put(JenkinsState.JOB_NAME_KEY, "build-description-setter")
-                                         .put(JenkinsState.SWEEPING_OUTPUT_NAME_KEY, "pipeline")
-                                         .put(JenkinsState.SWEEPING_OUTPUT_SCOPE_KEY, PIPELINE)
-                                         .build())
-                         .build())
-            .addStep(GraphNode.builder()
-                         .id(generateUuid())
-                         .type(JENKINS.name())
-                         .name("Jenkins - workflow")
-                         .properties(ImmutableMap.<String, Object>builder()
-                                         .put(JenkinsState.JENKINS_CONFIG_ID_KEY, jenkinsConfig.getUuid())
-                                         .put(JenkinsState.JOB_NAME_KEY, "build-description-setter")
-                                         .put(JenkinsState.SWEEPING_OUTPUT_NAME_KEY, "workflow")
-                                         .put(JenkinsState.SWEEPING_OUTPUT_SCOPE_KEY, WORKFLOW)
-                                         .build())
-                         .build())
-            .addStep(GraphNode.builder()
-                         .id(generateUuid())
-                         .type(JENKINS.name())
-                         .name("Jenkins - phase")
-                         .properties(ImmutableMap.<String, Object>builder()
-                                         .put(JenkinsState.JENKINS_CONFIG_ID_KEY, jenkinsConfig.getUuid())
-                                         .put(JenkinsState.JOB_NAME_KEY, "build-description-setter")
-                                         .put(JenkinsState.SWEEPING_OUTPUT_NAME_KEY, "phase")
-                                         .put(JenkinsState.SWEEPING_OUTPUT_SCOPE_KEY, PHASE)
-                                         .build())
-                         .build())
-            .build());
-    workflowPhaseBuilder.phaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP)
-                                       .addStep(getHTTPNode("pipeline"))
-                                       .addStep(getHTTPNode("workflow"))
-                                       .addStep(getHTTPNode("phase"))
-                                       .build());
 
     return ensureWorkflow(seed, owners,
         aWorkflow()
@@ -325,7 +280,56 @@ public class WorkflowGenerator {
                                                  .addStep(getHTTPNode("workflow"))
                                                  .addStep(getHTTPNode("phase"))
                                                  .build())
-                    .addWorkflowPhase(workflowPhaseBuilder.build())
+                    .addWorkflowPhase(
+                        aWorkflowPhase()
+                            .phaseSteps(asList(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build(),
+                                aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
+                                    .addStep(
+                                        GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(JENKINS.name())
+                                            .name("Jenkins - pipeline")
+                                            .properties(
+                                                ImmutableMap.<String, Object>builder()
+                                                    .put(JenkinsState.JENKINS_CONFIG_ID_KEY, jenkinsConfig.getUuid())
+                                                    .put(JenkinsState.JOB_NAME_KEY, "build-description-setter")
+                                                    .put(JenkinsState.SWEEPING_OUTPUT_NAME_KEY, "pipeline")
+                                                    .put(JenkinsState.SWEEPING_OUTPUT_SCOPE_KEY, PIPELINE)
+                                                    .build())
+                                            .build())
+                                    .addStep(
+                                        GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(JENKINS.name())
+                                            .name("Jenkins - workflow")
+                                            .properties(
+                                                ImmutableMap.<String, Object>builder()
+                                                    .put(JenkinsState.JENKINS_CONFIG_ID_KEY, jenkinsConfig.getUuid())
+                                                    .put(JenkinsState.JOB_NAME_KEY, "build-description-setter")
+                                                    .put(JenkinsState.SWEEPING_OUTPUT_NAME_KEY, "workflow")
+                                                    .put(JenkinsState.SWEEPING_OUTPUT_SCOPE_KEY, WORKFLOW)
+                                                    .build())
+                                            .build())
+                                    .addStep(
+                                        GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(JENKINS.name())
+                                            .name("Jenkins - phase")
+                                            .properties(
+                                                ImmutableMap.<String, Object>builder()
+                                                    .put(JenkinsState.JENKINS_CONFIG_ID_KEY, jenkinsConfig.getUuid())
+                                                    .put(JenkinsState.JOB_NAME_KEY, "build-description-setter")
+                                                    .put(JenkinsState.SWEEPING_OUTPUT_NAME_KEY, "phase")
+                                                    .put(JenkinsState.SWEEPING_OUTPUT_SCOPE_KEY, PHASE)
+                                                    .build())
+                                            .build())
+                                    .build(),
+                                aPhaseStep(WRAP_UP, Constants.WRAP_UP)
+                                    .addStep(getHTTPNode("pipeline"))
+                                    .addStep(getHTTPNode("workflow"))
+                                    .addStep(getHTTPNode("phase"))
+                                    .build()))
+                            .build())
                     .build())
             .build());
   }
@@ -352,21 +356,6 @@ public class WorkflowGenerator {
     properties.put("scriptString", templateObject.getScriptString());
     properties.put("outputVars", templateObject.getOutputVars());
     properties.put("connectionType", "SSH");
-    WorkflowPhaseBuilder workflowPhaseBuilder = WorkflowPhaseBuilder.aWorkflowPhase();
-
-    workflowPhaseBuilder.phaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
-    workflowPhaseBuilder.phaseStep(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
-                                       .addStep(GraphNode.builder()
-                                                    .id(generateUuid())
-                                                    .type(StateType.SHELL_SCRIPT.name())
-                                                    .name(shellScriptTemplate.getName())
-                                                    .properties(properties)
-                                                    .templateVariables(shellScriptTemplate.getVariables())
-                                                    .templateUuid(shellScriptTemplate.getUuid())
-                                                    .templateVersion("latest")
-                                                    .build())
-                                       .build());
-    workflowPhaseBuilder.phaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
 
     return ensureWorkflow(seed, owners,
         aWorkflow()
@@ -376,7 +365,21 @@ public class WorkflowGenerator {
                 aBuildOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .addWorkflowPhase(workflowPhaseBuilder.build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .phaseSteps(asList(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build(),
+                                              aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
+                                                  .addStep(GraphNode.builder()
+                                                               .id(generateUuid())
+                                                               .type(StateType.SHELL_SCRIPT.name())
+                                                               .name(shellScriptTemplate.getName())
+                                                               .properties(properties)
+                                                               .templateVariables(shellScriptTemplate.getVariables())
+                                                               .templateUuid(shellScriptTemplate.getUuid())
+                                                               .templateVersion("latest")
+                                                               .build())
+                                                  .build(),
+                                              aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
+                                          .build())
                     .build())
             .build());
   }

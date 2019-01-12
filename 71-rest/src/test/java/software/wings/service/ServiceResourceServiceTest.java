@@ -1359,33 +1359,33 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionOnReferencedServiceCommandDelete() {
     ServiceCommand serviceCommand = serviceCommandBuilder.but().build();
     when(workflowService.listWorkflows(any(PageRequest.class)))
-        .thenReturn(
-            aPageResponse()
-                .withResponse(asList(
-                    WorkflowBuilder.aWorkflow()
-                        .withName(WORKFLOW_NAME)
-                        .withServices(asList(Service.builder()
-                                                 .uuid(SERVICE_ID)
-                                                 .appId(APP_ID)
-                                                 .serviceCommands(asList(serviceCommand))
-                                                 .build()))
-                        .withOrchestrationWorkflow(
-                            aCanaryOrchestrationWorkflow()
-                                .withWorkflowPhases(asList(
-                                    aWorkflowPhase()
-                                        .serviceId(SERVICE_ID)
-                                        .phaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
-                                                       .addStep(GraphNode.builder()
-                                                                    .type("COMMAND")
-                                                                    .properties(ImmutableMap.<String, Object>builder()
-                                                                                    .put("commandName", "START")
-                                                                                    .build())
-                                                                    .build())
-                                                       .build())
-                                        .build()))
-                                .build())
-                        .build()))
-                .build());
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(
+                            WorkflowBuilder.aWorkflow()
+                                .withName(WORKFLOW_NAME)
+                                .withServices(asList(Service.builder()
+                                                         .uuid(SERVICE_ID)
+                                                         .appId(APP_ID)
+                                                         .serviceCommands(asList(serviceCommand))
+                                                         .build()))
+                                .withOrchestrationWorkflow(
+                                    aCanaryOrchestrationWorkflow()
+                                        .withWorkflowPhases(asList(
+                                            aWorkflowPhase()
+                                                .serviceId(SERVICE_ID)
+                                                .phaseSteps(asList(
+                                                    aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
+                                                        .addStep(GraphNode.builder()
+                                                                     .type("COMMAND")
+                                                                     .properties(ImmutableMap.<String, Object>builder()
+                                                                                     .put("commandName", "START")
+                                                                                     .build())
+                                                                     .build())
+                                                        .build()))
+                                                .build()))
+                                        .build())
+                                .build()))
+                        .build());
     assertThatThrownBy(() -> srs.deleteCommand(APP_ID, SERVICE_ID, SERVICE_COMMAND_ID))
         .isInstanceOf(WingsException.class)
         .hasMessage(INVALID_REQUEST.name());
@@ -1398,33 +1398,33 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldNotThrowExceptionOnReferencedServiceCommandDelete() {
     ServiceCommand serviceCommand = serviceCommandBuilder.but().build();
     when(workflowService.listWorkflows(any(PageRequest.class)))
-        .thenReturn(
-            aPageResponse()
-                .withResponse(asList(
-                    WorkflowBuilder.aWorkflow()
-                        .withName(WORKFLOW_NAME)
-                        .withServices(asList(Service.builder()
-                                                 .uuid(SERVICE_ID)
-                                                 .appId(APP_ID)
-                                                 .serviceCommands(asList(serviceCommand))
-                                                 .build()))
-                        .withOrchestrationWorkflow(
-                            aCanaryOrchestrationWorkflow()
-                                .withWorkflowPhases(asList(
-                                    aWorkflowPhase()
-                                        .serviceId(SERVICE_ID_CHANGED)
-                                        .phaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
-                                                       .addStep(GraphNode.builder()
-                                                                    .type("SSH")
-                                                                    .properties(ImmutableMap.<String, Object>builder()
-                                                                                    .put("commandName", "START")
-                                                                                    .build())
-                                                                    .build())
-                                                       .build())
-                                        .build()))
-                                .build())
-                        .build()))
-                .build());
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(
+                            WorkflowBuilder.aWorkflow()
+                                .withName(WORKFLOW_NAME)
+                                .withServices(asList(Service.builder()
+                                                         .uuid(SERVICE_ID)
+                                                         .appId(APP_ID)
+                                                         .serviceCommands(asList(serviceCommand))
+                                                         .build()))
+                                .withOrchestrationWorkflow(
+                                    aCanaryOrchestrationWorkflow()
+                                        .withWorkflowPhases(asList(
+                                            aWorkflowPhase()
+                                                .serviceId(SERVICE_ID_CHANGED)
+                                                .phaseSteps(asList(
+                                                    aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
+                                                        .addStep(GraphNode.builder()
+                                                                     .type("SSH")
+                                                                     .properties(ImmutableMap.<String, Object>builder()
+                                                                                     .put("commandName", "START")
+                                                                                     .build())
+                                                                     .build())
+                                                        .build()))
+                                                .build()))
+                                        .build())
+                                .build()))
+                        .build());
     when(mockWingsPersistence.delete(any(Query.class))).thenReturn(true);
     when(mockWingsPersistence.delete(any(ServiceCommand.class))).thenReturn(true);
 

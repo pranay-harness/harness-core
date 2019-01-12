@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.times;
@@ -13,7 +14,6 @@ import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrati
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
-import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -47,8 +47,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
 
-import java.util.Arrays;
-
 public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
   @Mock private WorkflowService workflowService;
 
@@ -76,15 +74,14 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
                                                       + "export B=\"bbb\"")
                                                   .outputVars("A,B")
                                                   .build();
-    Template template =
-        Template.builder()
-            .templateObject(shellScriptTemplate)
-            .folderId(parentFolder.getUuid())
-            .appId(GLOBAL_APP_ID)
-            .accountId(GLOBAL_ACCOUNT_ID)
-            .name("Sample Script")
-            .variables(Arrays.asList(aVariable().withType(TEXT).withName("var1").withMandatory(true).build()))
-            .build();
+    Template template = Template.builder()
+                            .templateObject(shellScriptTemplate)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .name("Sample Script")
+                            .variables(asList(aVariable().withType(TEXT).withName("var1").withMandatory(true).build()))
+                            .build();
     Template savedTemplate = templateService.save(template);
     assertSavedTemplate(template, savedTemplate);
     ShellScriptTemplate savedShellScriptTemplate = (ShellScriptTemplate) savedTemplate.getTemplateObject();
@@ -139,7 +136,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
                                           .build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                     .build())
-            .withLinkedTemplateUuids(Arrays.asList(savedTemplate.getUuid()))
+            .withLinkedTemplateUuids(asList(savedTemplate.getUuid()))
             .build();
 
     on(shellScriptTemplateProcessor).set("wingsPersistence", wingsPersistence);
@@ -178,27 +175,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
     GraphNode step = shellScriptTemplateProcessor.constructEntityFromTemplate(savedTemplate);
     step.setTemplateVersion(LATEST_TAG);
 
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withUuid(WORKFLOW_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).addStep(step).build())
-                    .addWorkflowPhase(
-                        aWorkflowPhase()
-                            .infraMappingId(INFRA_MAPPING_ID)
-                            .serviceId(SERVICE_ID)
-                            .deploymentType(SSH)
-                            .phaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE).addStep(step).build())
-                            .build())
-                    .withPostDeploymentSteps(
-                        aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).addStep(step).build())
-                    .build())
-            .withLinkedTemplateUuids(Arrays.asList(savedTemplate.getUuid()))
-            .build();
+    final Workflow workflow = generateWorkflow(savedTemplate, step);
 
     on(shellScriptTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(shellScriptTemplateProcessor).set("workflowService", workflowService);
@@ -243,7 +220,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
         .appId(GLOBAL_APP_ID)
         .accountId(GLOBAL_ACCOUNT_ID)
         .name("Sample Script")
-        .variables(Arrays.asList(aVariable().withType(TEXT).withName("var1").withMandatory(true).build()))
+        .variables(asList(aVariable().withType(TEXT).withName("var1").withMandatory(true).build()))
         .build();
   }
 
