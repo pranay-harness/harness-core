@@ -25,6 +25,7 @@ public interface YamlConstants {
   String CONFIG_FILES_FOLDER = "Config Files";
   String ENVIRONMENTS_FOLDER = "Environments";
   String INFRA_MAPPING_FOLDER = "Service Infrastructure";
+  String CV_CONFIG_FOLDER = "Service Verification";
   String WORKFLOWS_FOLDER = "Workflows";
   String PIPELINES_FOLDER = "Pipelines";
 

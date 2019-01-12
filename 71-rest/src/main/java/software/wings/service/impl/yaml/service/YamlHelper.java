@@ -30,7 +30,9 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.utils.Validator;
+import software.wings.verification.CVConfiguration;
 
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -44,6 +46,7 @@ public class YamlHelper {
   @Inject ServiceResourceService serviceResourceService;
   @Inject AppService appService;
   @Inject InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject CVConfigurationService cvConfigurationService;
   @Inject EnvironmentService environmentService;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject InfrastructureMappingService infraMappingService;
@@ -174,6 +177,15 @@ public class YamlHelper {
     Validator.notNullCheck(
         "InfrastructureProvisioner name null in the given yaml file: " + yamlFilePath, provisionerName);
     return infrastructureProvisionerService.getByName(appId, provisionerName);
+  }
+
+  public CVConfiguration getCVConfiguration(String accountId, String yamlFilePath) {
+    String appId = getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    String configName = getNameFromYamlFilePath(yamlFilePath);
+    String envId = getEnvironmentId(appId, yamlFilePath);
+
+    return cvConfigurationService.getConfiguration(configName, appId, envId);
   }
 
   public String getEnvironmentId(String appId, String yamlFilePath) {

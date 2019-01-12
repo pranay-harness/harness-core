@@ -1,5 +1,6 @@
 package software.wings.verification.newrelic;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,4 +24,24 @@ import java.util.List;
 public class NewRelicCVServiceConfiguration extends CVConfiguration {
   @Attributes(required = true, title = "Application Name") private String applicationId;
   @Attributes(required = true, title = "Metrics") private List<String> metrics;
+  /**
+   * The type Yaml.
+   */
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @JsonPropertyOrder({"type", "harnessApiVersion"})
+  @AllArgsConstructor
+  @Builder
+  public static final class NewRelicCVConfigurationYaml extends CVConfigurationYaml {
+    private String applicationId;
+    private List<String> metrics;
+
+    public NewRelicCVConfigurationYaml(String type, String harnessApiVersion, String name, String accountId,
+        String connectorId, String envId, String serviceId, String stateType, String analysisTolerance,
+        String applicationId, List<String> metrics) {
+      super(type, harnessApiVersion, name, accountId, connectorId, envId, serviceId, stateType, analysisTolerance);
+      this.applicationId = applicationId;
+      this.metrics = metrics;
+    }
+  }
 }

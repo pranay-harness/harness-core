@@ -1014,6 +1014,26 @@ public class YamlResource {
     return yamlCloneService.cloneEntityUsingYaml(accountId, appId, false, entityType, entityId, newEntityName);
   }
 
+  @GET
+  @Path("/cvconfigurations/{cvConfigId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN, action = Action.READ)
+  public RestResponse<YamlPayload> getCVConfiguration(
+      @QueryParam("appId") String appId, @PathParam("cvConfigId") String cvConfigId) {
+    return yamlResourceService.geCVConfiguration(appId, cvConfigId);
+  }
+
+  @PUT
+  @Path("/cvconfigurations/{cvConfigId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN, action = Action.UPDATE)
+  public RestResponse<Base> updateCVConfiguration(@PathParam("cvConfigId") String cvConfigId,
+      @QueryParam("appId") String appId, @QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
+    return yamlService.update(yamlPayload, accountId);
+  }
+
   @POST
   @Path("full-sync-account")
   @Timed

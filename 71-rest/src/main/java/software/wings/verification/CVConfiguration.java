@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.sm.StateType;
+import software.wings.yaml.BaseEntityYaml;
 
 import javax.validation.constraints.NotNull;
 
@@ -36,4 +37,21 @@ public class CVConfiguration extends Base {
   @Transient @SchemaIgnore private String serviceName;
   @Transient @SchemaIgnore private String envName;
   @Transient @SchemaIgnore private String appName;
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public abstract static class CVConfigurationYaml extends BaseEntityYaml {
+    private String name;
+    private String accountId;
+    private String connectorId;
+    private String envId;
+    private String serviceId;
+    private StateType stateType;
+    private AnalysisTolerance analysisTolerance;
+    private boolean enabled24x7;
+
+    public CVConfigurationYaml(String type, String harnessApiVersion, String name, String accountId, String connectorId,
+        String envId, String serviceId, String stateType, String analysisTolerance) {}
+  }
 }

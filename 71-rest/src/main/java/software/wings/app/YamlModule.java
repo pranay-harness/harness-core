@@ -166,6 +166,10 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.sm.StateType;
+import software.wings.verification.AppDynamicsCVConfigurationYamlHandler;
+import software.wings.verification.CVConfigurationYamlHandler;
+import software.wings.verification.NewRelicCVConfigurationYamlHandler;
 
 /**
  * Guice Module for initializing all yaml classes.
@@ -268,6 +272,13 @@ public class YamlModule extends AbstractModule {
         .to(SplunkConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SUMO.name())
         .to(SumoConfigYamlHandler.class);
+
+    MapBinder<String, CVConfigurationYamlHandler> cvConfigYamlHelperMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, CVConfigurationYamlHandler.class);
+
+    cvConfigYamlHelperMapBinder.addBinding(StateType.APP_DYNAMICS.name())
+        .to(AppDynamicsCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.NEW_RELIC.name()).to(NewRelicCVConfigurationYamlHandler.class);
 
     MapBinder<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CollaborationProviderYamlHandler.class);

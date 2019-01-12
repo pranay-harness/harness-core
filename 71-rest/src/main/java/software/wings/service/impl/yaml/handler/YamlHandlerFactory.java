@@ -71,6 +71,7 @@ import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.StepYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowPhaseYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
+import software.wings.verification.CVConfigurationYamlHandler;
 
 import java.util.HashSet;
 import java.util.List;
@@ -96,6 +97,7 @@ public class YamlHandlerFactory {
   @Inject private Map<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHandlerMap;
   @Inject private Map<String, ArtifactServerYamlHandler> artifactServerYamlHelperMap;
   @Inject private Map<String, VerificationProviderYamlHandler> verificationProviderYamlHelperMap;
+  @Inject private Map<String, CVConfigurationYamlHandler> cvConfigurationYamlHelperMap;
   @Inject private Map<String, InfrastructureProvisionerYamlHandler> infrastructureProvisionerYamlHandler;
   @Inject private Map<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMap;
   @Inject private Map<String, CloudProviderYamlHandler> cloudProviderYamlHelperMap;
@@ -251,6 +253,9 @@ public class YamlHandlerFactory {
       case MANIFEST_FILE_VALUES_ENV_OVERRIDE:
       case MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE:
         yamlHandler = manifestFileYamlHandler;
+        break;
+      case CV_CONFIGURATION:
+        yamlHandler = cvConfigurationYamlHelperMap.get(subType);
         break;
       default:
         break;

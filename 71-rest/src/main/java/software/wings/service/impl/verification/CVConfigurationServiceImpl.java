@@ -101,6 +101,30 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     return (T) cvConfiguration;
   }
 
+  public <T extends CVConfiguration> T getConfiguration(String name, String appId, String envId) {
+    CVConfiguration cvConfiguration = wingsPersistence.createQuery(CVConfiguration.class)
+                                          .filter("name", name)
+                                          .filter("appId", appId)
+                                          .filter("envId", envId)
+                                          .get();
+
+    fillInServiceAndConnectorNames(cvConfiguration);
+    return (T) cvConfiguration;
+  }
+
+  public String updateConfiguration(CVConfiguration cvConfiguration, String appId) {
+    CVConfiguration savedConfiguration =
+        wingsPersistence.getWithAppId(CVConfiguration.class, appId, cvConfiguration.getUuid());
+    UpdateOperations<CVConfiguration> updateOperations =
+        getUpdateOperations(cvConfiguration.getStateType(), cvConfiguration);
+    wingsPersistence.update(savedConfiguration, updateOperations);
+    return savedConfiguration.getUuid();
+  }
+
+  public String saveCofiguration(CVConfiguration cvConfiguration) {
+    CVConfiguration config = wingsPersistence.saveAndGet(CVConfiguration.class, cvConfiguration);
+    return config.getUuid();
+  }
   @Override
   public <T extends CVConfiguration> List<T> listConfigurations(
       String accountId, String appId, String envId, StateType stateType) {

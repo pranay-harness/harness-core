@@ -1,5 +1,6 @@
 package software.wings.beans.yaml;
 
+import static software.wings.beans.EntityType.VERIFICATION_CONFIGURATION;
 import static software.wings.beans.yaml.YamlConstants.ANY;
 import static software.wings.beans.yaml.YamlConstants.ANY_EXCEPT_YAML;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
@@ -9,6 +10,7 @@ import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CONFIG_FILES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.CV_CONFIG_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
@@ -67,6 +69,7 @@ import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.defaults.Defaults;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
+import software.wings.verification.CVConfiguration;
 
 /**
  * @author rktummala on 10/17/17
@@ -192,6 +195,12 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PIPELINES_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PIPELINES_FOLDER, ANY),
       Pipeline.class),
+  CV_CONFIGURATION(VERIFICATION_CONFIGURATION.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          CV_CONFIG_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          CV_CONFIG_FOLDER, ANY),
+      CVConfiguration.class),
 
   // Some of these bean classes are embedded within other entities and don't have an yaml file path
   NAME_VALUE_PAIR(ObjectType.NAME_VALUE_PAIR, "", "", NameValuePair.class),
