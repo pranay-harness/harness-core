@@ -1,12 +1,5 @@
 package io.harness.generator;
 
-import static io.harness.common.GeneratorConstants.HARNESS_ARTIFACTORY;
-import static io.harness.common.GeneratorConstants.HARNESS_BAMBOO;
-import static io.harness.common.GeneratorConstants.HARNESS_DOCKER_REGISTRY;
-import static io.harness.common.GeneratorConstants.HARNESS_GCP_EXPLORATION;
-import static io.harness.common.GeneratorConstants.HARNESS_JENKINS;
-import static io.harness.common.GeneratorConstants.HARNESS_NEXUS;
-import static io.harness.common.GeneratorConstants.HARNESS_NEXUS_THREE;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
@@ -50,6 +43,14 @@ import java.util.EnumSet;
 
 @Singleton
 public class SettingGenerator {
+  private static final String HARNESS_NEXUS = "Harness Nexus";
+  private static final String HARNESS_JENKINS = "Harness Jenkins";
+  private static final String HARNESS_NEXUS_THREE = "Harness Nexus 3";
+  private static final String HARNESS_ARTIFACTORY = "Harness Artifactory";
+  private static final String HARNESS_BAMBOO = "Harness Bamboo";
+  private static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
+  private static final String HARNESS_GCP_EXPLORATION = "harness-exploration";
+
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;
 
