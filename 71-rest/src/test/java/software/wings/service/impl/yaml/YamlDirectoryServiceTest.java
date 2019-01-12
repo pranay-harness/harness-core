@@ -186,6 +186,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     Set<String> expectedDirPaths =
         new HashSet<>(Arrays.asList("Setup/Applications/APP_NAME/Environments/ENV_NAME/Index.yaml",
             "Setup/Applications/APP_NAME/Environments/ENV_NAME/Service Infrastructure",
+            "Setup/Applications/APP_NAME/Environments/ENV_NAME/Service Verification",
             "Setup/Applications/APP_NAME/Environments/ENV_NAME/Config Files"));
 
     assertEquals(expectedDirPaths.size(), ((FolderNode) envFolderNode.getChildren().get(0)).getChildren().size());

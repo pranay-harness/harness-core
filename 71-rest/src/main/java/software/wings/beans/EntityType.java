@@ -162,5 +162,7 @@ public enum EntityType {
 
   USER_GROUP,
 
-  CF_AWS_CONFIG_ID
+  CF_AWS_CONFIG_ID,
+
+  VERIFICATION_CONFIGURATION
 }

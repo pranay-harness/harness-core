@@ -14,6 +14,7 @@ import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CONFIG_FILES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.CV_CONFIG_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
@@ -104,6 +105,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -114,6 +116,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.Misc;
 import software.wings.utils.Util;
 import software.wings.utils.Validator;
+import software.wings.verification.CVConfiguration;
 import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.directory.AccountLevelYamlNode;
 import software.wings.yaml.directory.AppLevelYamlNode;
@@ -148,6 +151,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private SettingsService settingsService;
 
   @Inject private InfrastructureMappingService infraMappingService;
+  @Inject private CVConfigurationService cvConfigurationService;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
@@ -1117,6 +1121,29 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         });
 
         // ------------------- END INFRA MAPPING SECTION -----------------------
+
+        // ------------------- CV CONFIG SECTION -----------------------
+
+        DirectoryPath cvConfigPath = envPath.clone().add(CV_CONFIG_FOLDER);
+        FolderNode cvConfigFolder = new FolderNode(accountId, CV_CONFIG_FOLDER, CVConfiguration.class, cvConfigPath,
+            environment.getAppId(), yamlGitSyncService);
+        envFolder.addChild(cvConfigFolder);
+
+        PageRequest<CVConfiguration> cvConfigPageRequest = aPageRequest()
+                                                               .addFilter("appId", Operator.EQ, environment.getAppId())
+                                                               .addFilter("envId", Operator.EQ, environment.getUuid())
+                                                               .build();
+        List<CVConfiguration> cvConfigList = cvConfigurationService.listConfigurations(accountId, cvConfigPageRequest);
+
+        // iterate over service commands
+        cvConfigList.forEach(cvConfig -> {
+          String cvConfigYamlFileName = cvConfig.getName() + YAML_EXTENSION;
+          cvConfigFolder.addChild(new EnvLevelYamlNode(accountId, cvConfig.getUuid(), cvConfig.getAppId(),
+              cvConfig.getEnvId(), cvConfigYamlFileName, CVConfiguration.class,
+              cvConfigPath.clone().add(cvConfigYamlFileName), yamlGitSyncService, Type.SERVICE_CV_CONFIG));
+        });
+
+        // ------------------- END CV CONFIG SECTION -----------------------
 
         // ------------------- CONFIG FILES SECTION -----------------------
         DirectoryPath configFilesPath = envPath.clone().add(CONFIG_FILES_FOLDER);

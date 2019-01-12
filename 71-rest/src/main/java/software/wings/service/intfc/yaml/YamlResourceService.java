@@ -115,5 +115,7 @@ public interface YamlResourceService {
 
   RestResponse<YamlPayload> getManifestFile(String appId, String manifestFileId);
 
+  RestResponse<YamlPayload> geCVConfiguration(String appId, String cvConfigId);
+
   YamlType getYamlTypeFromAppManifest(ApplicationManifest applicationManifest);
 }

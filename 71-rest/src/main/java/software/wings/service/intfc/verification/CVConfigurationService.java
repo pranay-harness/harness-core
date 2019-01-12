@@ -13,10 +13,13 @@ import java.util.List;
 public interface CVConfigurationService {
   String saveConfiguration(String accountId, String appId, StateType stateType, Object params);
   <T extends CVConfiguration> T getConfiguration(String serviceConfigurationId);
+  <T extends CVConfiguration> T getConfiguration(String name, String appId, String envId);
   <T extends CVConfiguration> List<T> listConfigurations(
       String accountId, String appId, String envId, StateType stateType);
   String updateConfiguration(
       String accountId, String appId, StateType stateType, Object params, String serviceConfigurationId);
+  String updateConfiguration(CVConfiguration cvConfiguration, String appId);
+  String saveCofiguration(CVConfiguration cvConfiguration);
   boolean deleteConfiguration(String accountId, String appId, String serviceConfigurationId);
   <T extends CVConfiguration> List<T> listConfigurations(String accountId);
 

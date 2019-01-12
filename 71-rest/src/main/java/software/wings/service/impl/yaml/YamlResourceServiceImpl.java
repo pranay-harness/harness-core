@@ -63,12 +63,15 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
+import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfiguration.CVConfigurationYaml;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
@@ -94,6 +97,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private CVConfigurationService cvConfigurationService;
   @Inject private ApplicationManifestService applicationManifestService;
 
   private static final Logger logger = LoggerFactory.getLogger(YamlResourceServiceImpl.class);
@@ -275,6 +279,20 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, infrastructureProvisioner.getUuid(), accountId,
         provisionerYaml, provisionerYaml.getName() + YAML_EXTENSION);
+  }
+
+  public RestResponse<YamlPayload> geCVConfiguration(String appId, String cvConfigId) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+
+    CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+    CVConfigurationYaml cvConfigurationYaml =
+        (CVConfigurationYaml) yamlHandlerFactory
+            .getYamlHandler(YamlType.CV_CONFIGURATION, cvConfiguration.getStateType().name())
+            .toYaml(cvConfiguration, appId);
+
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, cvConfiguration.getUuid(), accountId, cvConfigurationYaml,
+        cvConfigurationYaml.getName() + YAML_EXTENSION);
   }
 
   /**
