@@ -515,7 +515,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected boolean isAwsLambdaState(ExecutionContext context) {
-    return getStateType().equals(StateType.CLOUD_WATCH.getName())
+    return getStateType().equals(StateType.CLOUD_WATCH.name())
         && getDeploymentType(context).equals(DeploymentType.AWS_LAMBDA);
   }
 
