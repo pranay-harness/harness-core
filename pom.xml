@@ -1442,6 +1442,11 @@
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>0.8.1</version>
                 </plugin>
+                <plugin>
+                    <groupId>com.github.chrisdchristo</groupId>
+                    <artifactId>capsule-maven-plugin</artifactId>
+                    <version>1.5.1</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
