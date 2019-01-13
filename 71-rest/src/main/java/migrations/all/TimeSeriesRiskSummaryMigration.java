@@ -41,7 +41,9 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
     List<CVConfiguration> cvConfigurations =
         wingsPersistence.createQuery(CVConfiguration.class).filter("enabled24x7", true).asList();
 
+    logger.info("Starting TimeSeriesRiskSummaryMigration. Total CV Configs to migrate: {}", cvConfigurations.size());
     for (CVConfiguration config : cvConfigurations) {
+      logger.info("Currently migrating cvConfig: {}", config.getUuid());
       PageRequest<TimeSeriesMLAnalysisRecord> recordPageRequest =
           PageRequestBuilder.aPageRequest()
               .withLimit("999")
@@ -64,12 +66,15 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
       }
       sleep(ofMillis(1000));
     }
+    logger.info("Completed TimeSeriesRiskSummaryMigration after migrating {} records", completedCount);
   }
 
   private void saveRiskSummaries(List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords) {
     List<TimeSeriesRiskSummary> riskSummaries = new ArrayList<>();
 
     timeSeriesMLAnalysisRecords.forEach(mlAnalysisResponse -> {
+      logger.info("In TimeSeriesRiskSummaryMigration, processing record for config {} and minute {}",
+          mlAnalysisResponse.getCvConfigId(), mlAnalysisResponse.getAnalysisMinute());
       mlAnalysisResponse.decompressTransactions();
       TimeSeriesRiskSummary riskSummary = TimeSeriesRiskSummary.builder()
                                               .analysisMinute(mlAnalysisResponse.getAnalysisMinute())
@@ -95,12 +100,17 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
 
       riskSummary.setTxnMetricRisk(risks.rowMap());
       riskSummary.setTxnMetricLongTermPattern(longTermPatterns.rowMap());
+      logger.info("Done creating the riskSummary for config {} and minute {}", mlAnalysisResponse.getCvConfigId(),
+          mlAnalysisResponse.getAnalysisMinute());
       riskSummary.compressMaps();
       riskSummaries.add(riskSummary);
     });
 
     try {
-      wingsPersistence.save(riskSummaries);
+      logger.info("Saving {} records of riskSummary", riskSummaries.size());
+      if (isNotEmpty(riskSummaries)) {
+        wingsPersistence.save(riskSummaries);
+      }
     } catch (DuplicateKeyException ex) {
       logger.info("Swallowing duplicate key exception during migration.");
     }
