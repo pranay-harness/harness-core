@@ -74,15 +74,10 @@
             <plugin>
                 <groupId>com.github.chrisdchristo</groupId>
                 <artifactId>capsule-maven-plugin</artifactId>
-                <version>1.5.1</version>
                 <configuration>
                     <appClass>io.harness.DataGenApplication</appClass>
                     <type>fat</type>
                     <manifest>
-                        <!--<entry>-->
-                        <!--<key>Boot-Class-Path-P</key>-->
-                        <!--<value>alpn-boot-${alpnboot.version}.jar</value>-->
-                        <!--</entry>-->
                         <entry>
                             <key>Min-Java-Version</key>
                             <value>1.8.0</value>
