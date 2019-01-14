@@ -51,7 +51,6 @@ import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
-import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.ROLLBACK_PROVISIONERS;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
@@ -598,7 +597,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void addK8sBasicWorkflowPhase(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().infraMappingId(workflow.getInfraMappingId()).serviceId(workflow.getServiceId()).build();
+        WorkflowPhase.builder().infraMappingId(workflow.getInfraMappingId()).serviceId(workflow.getServiceId()).build();
     workflowServiceHelper.setCloudProvider(workflow.getAppId(), workflowPhase);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -650,7 +649,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void addK8sBlueGreenWorkflowPhase(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().infraMappingId(workflow.getInfraMappingId()).serviceId(workflow.getServiceId()).build();
+        WorkflowPhase.builder().infraMappingId(workflow.getInfraMappingId()).serviceId(workflow.getServiceId()).build();
     workflowServiceHelper.setCloudProvider(workflow.getAppId(), workflowPhase);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -708,7 +707,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private WorkflowPhase createRollbackPhase(WorkflowPhase workflowPhase) {
-    return aWorkflowPhase()
+    return WorkflowPhase.builder()
         .name(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
         .rollback(true)
         .serviceId(workflowPhase.getServiceId())
@@ -723,7 +722,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void addK8sCanaryWorkflowPhase(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     WorkflowPhase workflowPhase =
-        aWorkflowPhase().infraMappingId(workflow.getInfraMappingId()).serviceId(workflow.getServiceId()).build();
+        WorkflowPhase.builder().infraMappingId(workflow.getInfraMappingId()).serviceId(workflow.getServiceId()).build();
     workflowServiceHelper.setCloudProvider(workflow.getAppId(), workflowPhase);
 
     addK8sCanaryWorkflowPhaseSteps(workflowPhase);
@@ -871,7 +870,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
         WorkflowPhase workflowPhase;
         if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-          workflowPhase = aWorkflowPhase()
+          workflowPhase = WorkflowPhase.builder()
                               .infraMappingId(workflow.getInfraMappingId())
                               .serviceId(workflow.getServiceId())
                               .daemonSet(isDaemonSet(workflow.getAppId(), workflow.getServiceId()))
@@ -883,7 +882,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         BuildWorkflow buildWorkflow = (BuildWorkflow) orchestrationWorkflow;
         addLinkedPreOrPostDeploymentSteps(buildWorkflow);
         if (isEmpty(buildWorkflow.getWorkflowPhases())) {
-          WorkflowPhase workflowPhase = aWorkflowPhase().build();
+          WorkflowPhase workflowPhase = WorkflowPhase.builder().build();
           attachWorkflowPhase(workflow, workflowPhase);
         }
       }

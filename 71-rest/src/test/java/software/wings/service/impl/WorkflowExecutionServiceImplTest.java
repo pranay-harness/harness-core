@@ -28,7 +28,6 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
@@ -2005,7 +2004,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withOrchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
+                    .addWorkflowPhase(WorkflowPhase.builder()
                                           .name("Phase1")
                                           .serviceId(service.getUuid())
                                           .deploymentType(SSH)
@@ -2088,7 +2087,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withOrchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
+                    .addWorkflowPhase(WorkflowPhase.builder()
                                           .name("Phase1")
                                           .serviceId(service.getUuid())
                                           .deploymentType(SSH)

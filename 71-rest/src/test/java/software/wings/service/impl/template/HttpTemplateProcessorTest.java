@@ -17,7 +17,6 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -36,6 +35,7 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -137,7 +137,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
             .withOrchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
+                    .addWorkflowPhase(WorkflowPhase.builder()
                                           .infraMappingId(INFRA_MAPPING_ID)
                                           .serviceId(SERVICE_ID)
                                           .deploymentType(SSH)
