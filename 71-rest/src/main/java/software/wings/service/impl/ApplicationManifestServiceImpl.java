@@ -271,11 +271,12 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public ManifestFile upsertApplicationManifestFile(
       ManifestFile manifestFile, ApplicationManifest applicationManifest, boolean isCreate) {
+    manifestFile.setApplicationManifestId(applicationManifest.getUuid());
+
     validateManifestFileName(manifestFile);
     validateFileNamePrefixForDirectory(manifestFile);
     notNullCheck("applicationManifest", applicationManifest, USER);
 
-    manifestFile.setApplicationManifestId(applicationManifest.getUuid());
     ManifestFile savedManifestFile = duplicateCheck(
         () -> wingsPersistence.saveAndGet(ManifestFile.class, manifestFile), FILE_NAME_KEY, manifestFile.getFileName());
 

@@ -25,10 +25,13 @@ import static software.wings.beans.Environment.NAME_KEY;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
+import static software.wings.beans.appmanifest.StoreType.Local;
+import static software.wings.common.Constants.VALUES_YAML_KEY;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
@@ -48,6 +51,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
@@ -75,6 +79,9 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
@@ -101,6 +108,8 @@ import java.util.List;
  * Created by anubhaw on 6/28/16.
  */
 public class EnvironmentServiceTest extends WingsBaseTest {
+  private static final String FILE_CONTENT = "fileContent";
+
   @Mock private Application application;
   @Mock private ActivityService activityService;
   @Mock private AppService appService;
@@ -116,6 +125,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private YamlPushService yamlPushService;
   @Mock private YamlDirectoryService yamlDirectoryService;
 
+  @Inject @InjectMocks private WingsPersistence realWingsPersistence;
   @Inject @InjectMocks private EnvironmentService environmentService;
 
   @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();
@@ -499,5 +509,231 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(serviceVariableService).getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, MASKED);
     verify(configService, times(0))
         .getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate.getUuid());
+  }
+
+  @Test
+  public void testCreateValues() {
+    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Application application =
+        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+
+    realWingsPersistence.save(environment);
+    realWingsPersistence.save(application);
+
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(environment);
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
+
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).build();
+    manifestFile = environmentService.createValues(APP_ID, ENV_ID, null, manifestFile);
+
+    assertThat(manifestFile.getFileContent()).isEqualTo(FILE_CONTENT);
+    assertThat(manifestFile.getFileName()).isEqualTo(VALUES_YAML_KEY);
+    assertThat(manifestFile.getAppId()).isEqualTo(APP_ID);
+
+    ApplicationManifest applicationManifest =
+        realWingsPersistence.get(ApplicationManifest.class, manifestFile.getApplicationManifestId());
+    assertThat(applicationManifest.getAppId()).isEqualTo(APP_ID);
+    assertThat(applicationManifest.getKind()).isEqualTo(AppManifestKind.VALUES);
+    assertThat(applicationManifest.getEnvId()).isEqualTo(ENV_ID);
+    assertThat(applicationManifest.getStoreType()).isEqualTo(Local);
+    assertThat(applicationManifest.getServiceId()).isNull();
+    assertThat(applicationManifest.getGitFileConfig()).isNull();
+  }
+
+  @Test
+  public void testCreateValuesWithExistingAppManifest() {
+    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Application application =
+        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(AppManifestKind.VALUES).envId(ENV_ID).build();
+    applicationManifest.setAppId(APP_ID);
+
+    realWingsPersistence.save(applicationManifest);
+    realWingsPersistence.save(environment);
+    realWingsPersistence.save(application);
+
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(environment);
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
+
+    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", EQ, environment.getAppId());
+    pageRequest.addFilter("envId", EQ, environment.getUuid());
+    when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(aPageResponse().build());
+
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).build();
+    manifestFile = environmentService.createValues(APP_ID, ENV_ID, null, manifestFile);
+
+    assertThat(manifestFile.getFileContent()).isEqualTo(FILE_CONTENT);
+    assertThat(manifestFile.getFileName()).isEqualTo(VALUES_YAML_KEY);
+    assertThat(manifestFile.getAppId()).isEqualTo(APP_ID);
+    assertThat(manifestFile.getApplicationManifestId()).isEqualTo(applicationManifest.getUuid());
+  }
+
+  @Test
+  public void testUpdateValues() {
+    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Application application =
+        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(AppManifestKind.VALUES).envId(ENV_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).build();
+
+    realWingsPersistence.save(applicationManifest);
+    realWingsPersistence.save(environment);
+    realWingsPersistence.save(application);
+    realWingsPersistence.save(manifestFile);
+
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(environment);
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
+
+    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", EQ, environment.getAppId());
+    pageRequest.addFilter("envId", EQ, environment.getUuid());
+    when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(aPageResponse().build());
+
+    manifestFile.setFileContent("updated" + FILE_CONTENT);
+    manifestFile.setFileName("ABC");
+    manifestFile = environmentService.updateValues(APP_ID, ENV_ID, null, manifestFile);
+
+    assertThat(manifestFile.getFileContent()).isEqualTo("updated" + FILE_CONTENT);
+    assertThat(manifestFile.getFileName()).isEqualTo(VALUES_YAML_KEY);
+    assertThat(manifestFile.getAppId()).isEqualTo(APP_ID);
+    assertThat(manifestFile.getApplicationManifestId()).isEqualTo(applicationManifest.getUuid());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testUpdateValuesWithException() {
+    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build();
+    Application application = Application.Builder.anApplication().withUuid(APP_ID).build();
+
+    realWingsPersistence.save(environment);
+    realWingsPersistence.save(application);
+
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(environment);
+    environmentService.updateValues(APP_ID, ENV_ID, null, ManifestFile.builder().build());
+  }
+
+  @Test
+  public void testCreateValuesWithEnvServiceOverride() {
+    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Application application =
+        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+    Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
+
+    realWingsPersistence.save(environment);
+    realWingsPersistence.save(application);
+    realWingsPersistence.save(service);
+
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(environment);
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
+
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).build();
+    manifestFile = environmentService.createValues(APP_ID, ENV_ID, SERVICE_ID, manifestFile);
+
+    assertThat(manifestFile.getFileContent()).isEqualTo(FILE_CONTENT);
+    assertThat(manifestFile.getFileName()).isEqualTo(VALUES_YAML_KEY);
+    assertThat(manifestFile.getAppId()).isEqualTo(APP_ID);
+
+    ApplicationManifest applicationManifest =
+        realWingsPersistence.get(ApplicationManifest.class, manifestFile.getApplicationManifestId());
+    assertThat(applicationManifest.getAppId()).isEqualTo(APP_ID);
+    assertThat(applicationManifest.getServiceId()).isEqualTo(SERVICE_ID);
+    assertThat(applicationManifest.getKind()).isEqualTo(AppManifestKind.VALUES);
+    assertThat(applicationManifest.getEnvId()).isEqualTo(ENV_ID);
+    assertThat(applicationManifest.getStoreType()).isEqualTo(Local);
+    assertThat(applicationManifest.getGitFileConfig()).isNull();
+  }
+
+  @Test
+  public void testCreateValuesWithExistingAppManifestForEnvServiceOverride() {
+    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
+    Application application =
+        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .storeType(Local)
+                                                  .kind(AppManifestKind.VALUES)
+                                                  .envId(ENV_ID)
+                                                  .serviceId(SERVICE_ID)
+                                                  .build();
+    applicationManifest.setAppId(APP_ID);
+
+    realWingsPersistence.save(applicationManifest);
+    realWingsPersistence.save(environment);
+    realWingsPersistence.save(application);
+    realWingsPersistence.save(service);
+
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(environment);
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
+
+    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", EQ, environment.getAppId());
+    pageRequest.addFilter("envId", EQ, environment.getUuid());
+    when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(aPageResponse().build());
+
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).build();
+    manifestFile = environmentService.createValues(APP_ID, ENV_ID, SERVICE_ID, manifestFile);
+
+    assertThat(manifestFile.getFileContent()).isEqualTo(FILE_CONTENT);
+    assertThat(manifestFile.getFileName()).isEqualTo(VALUES_YAML_KEY);
+    assertThat(manifestFile.getAppId()).isEqualTo(APP_ID);
+    assertThat(manifestFile.getApplicationManifestId()).isEqualTo(applicationManifest.getUuid());
+  }
+
+  @Test
+  public void testUpdateValuesWithEnvServiceOverride() {
+    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).build();
+    Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
+    Application application =
+        Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .storeType(Local)
+                                                  .kind(AppManifestKind.VALUES)
+                                                  .envId(ENV_ID)
+                                                  .serviceId(SERVICE_ID)
+                                                  .build();
+    applicationManifest.setAppId(APP_ID);
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).build();
+
+    realWingsPersistence.save(environment);
+    realWingsPersistence.save(application);
+    realWingsPersistence.save(applicationManifest);
+    realWingsPersistence.saveAndGet(ManifestFile.class, manifestFile);
+
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(environment);
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
+
+    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", EQ, environment.getAppId());
+    pageRequest.addFilter("envId", EQ, environment.getUuid());
+    when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(aPageResponse().build());
+
+    manifestFile.setFileContent("updated" + FILE_CONTENT);
+    manifestFile.setFileName("ABC");
+    manifestFile = environmentService.updateValues(APP_ID, ENV_ID, SERVICE_ID, manifestFile);
+
+    assertThat(manifestFile.getFileContent()).isEqualTo("updated" + FILE_CONTENT);
+    assertThat(manifestFile.getFileName()).isEqualTo(VALUES_YAML_KEY);
+    assertThat(manifestFile.getAppId()).isEqualTo(APP_ID);
+    assertThat(manifestFile.getApplicationManifestId()).isEqualTo(applicationManifest.getUuid());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testUpdateValuesWithEnvServiceOverrideException() {
+    Environment environment = anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build();
+    Application application = Application.Builder.anApplication().withUuid(APP_ID).build();
+    Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
+
+    realWingsPersistence.save(environment);
+    realWingsPersistence.save(application);
+
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(environment);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
+    environmentService.updateValues(APP_ID, ENV_ID, SERVICE_ID, ManifestFile.builder().build());
   }
 }

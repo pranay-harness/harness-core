@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
@@ -19,6 +21,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -35,6 +38,7 @@ import software.wings.service.impl.yaml.handler.service.ApplicationManifestYamlH
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.WingsTestConstants;
@@ -46,6 +50,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private SettingsService settingsService;
+  @Mock private EnvironmentService environmentService;
 
   @InjectMocks @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @InjectMocks @Inject private YamlHelper yamlHelper;
@@ -73,6 +78,33 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   private String validYamlFilePath = "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Manifests/Index.yaml";
   private String invalidYamlFilePath = "Setup/Applications/APP_NAME/ServicesInvalid/SERVICE_NAME/Manifests/Index.yaml";
 
+  private String envOverrideLocalValidYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE\n"
+      + "storeType: Local";
+  private String envOverrideRemoteValidYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE\n"
+      + "gitFileConfig:\n"
+      + "  branch: BRANCH\n"
+      + "  connectorName: CONNECTOR_NAME\n"
+      + "  filePath: ABC/\n"
+      + "  useBranch: true\n"
+      + "storeType: Remote";
+  private String envOverrideValidYamlFilePath = "Setup/Applications/APP_NAME/Environments/ENV_NAME/Values/Index.yaml";
+
+  private String envServiceOverrideLocalValidYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE\n"
+      + "storeType: Local";
+  private String envServiceOverrideRemoteValidYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE\n"
+      + "gitFileConfig:\n"
+      + "  branch: BRANCH\n"
+      + "  connectorName: CONNECTOR_NAME\n"
+      + "  filePath: ABC/\n"
+      + "  useBranch: true\n"
+      + "storeType: Remote";
+  private String envServiceOverrideValidYamlFilePath =
+      "Setup/Applications/APP_NAME/Environments/ENV_NAME/Values/Services/SERVICE_NAME/Index.yaml";
+
   @Before
   public void setUp() {
     localApplicationManifest = ApplicationManifest.builder()
@@ -98,6 +130,8 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
     when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
     when(serviceResourceService.exist(any(), any())).thenReturn(true);
+    when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME))
+        .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).build());
 
     SettingAttribute settingAttribute =
         Builder.aSettingAttribute().withName(CONNECTOR_NAME).withUuid(CONNECTOR_ID).build();
@@ -187,5 +221,115 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setYamlSyncHandler(yamlHandler);
 
     return changeContext;
+  }
+
+  @Test
+  public void testCRUDAndGetForEnvOverrideWithLocalStoreType() throws HarnessException, IOException {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .envId(WingsTestConstants.ENV_ID)
+                                                  .storeType(StoreType.Local)
+                                                  .kind(AppManifestKind.VALUES)
+                                                  .build();
+
+    ChangeContext<ApplicationManifest.Yaml> changeContext =
+        createChangeContext(envOverrideLocalValidYamlContent, envOverrideValidYamlFilePath);
+
+    ApplicationManifest.Yaml yamlObject =
+        (ApplicationManifest.Yaml) getYaml(envOverrideLocalValidYamlContent, ApplicationManifest.Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    compareAppManifest(applicationManifest, savedApplicationManifest);
+
+    validateYamlContent(envOverrideLocalValidYamlContent, applicationManifest);
+
+    ApplicationManifest applicationManifestFromGet = yamlHandler.get(ACCOUNT_ID, envOverrideValidYamlFilePath);
+    compareAppManifest(applicationManifest, applicationManifestFromGet);
+  }
+
+  @Test
+  public void testCRUDAndGetForEnvOverrideWithRemoteStoreType() throws HarnessException, IOException {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .envId(WingsTestConstants.ENV_ID)
+                                                  .storeType(StoreType.Remote)
+                                                  .gitFileConfig(GitFileConfig.builder()
+                                                                     .filePath("ABC/")
+                                                                     .branch("BRANCH")
+                                                                     .useBranch(true)
+                                                                     .connectorId(CONNECTOR_ID)
+                                                                     .build())
+                                                  .kind(AppManifestKind.VALUES)
+                                                  .build();
+
+    ChangeContext<ApplicationManifest.Yaml> changeContext =
+        createChangeContext(envOverrideRemoteValidYamlContent, envOverrideValidYamlFilePath);
+
+    ApplicationManifest.Yaml yamlObject =
+        (ApplicationManifest.Yaml) getYaml(envOverrideRemoteValidYamlContent, ApplicationManifest.Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    compareAppManifest(applicationManifest, savedApplicationManifest);
+
+    validateYamlContent(envOverrideRemoteValidYamlContent, applicationManifest);
+
+    ApplicationManifest applicationManifestFromGet = yamlHandler.get(ACCOUNT_ID, envOverrideValidYamlFilePath);
+    compareAppManifest(applicationManifest, applicationManifestFromGet);
+  }
+
+  @Test
+  public void testCRUDAndGetForEnvServiceOverrideWithLocalStoreType() throws HarnessException, IOException {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .envId(ENV_ID)
+                                                  .serviceId(SERVICE_ID)
+                                                  .storeType(StoreType.Local)
+                                                  .kind(AppManifestKind.VALUES)
+                                                  .build();
+
+    ChangeContext<ApplicationManifest.Yaml> changeContext =
+        createChangeContext(envServiceOverrideLocalValidYamlContent, envServiceOverrideValidYamlFilePath);
+
+    ApplicationManifest.Yaml yamlObject =
+        (ApplicationManifest.Yaml) getYaml(envServiceOverrideLocalValidYamlContent, ApplicationManifest.Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    compareAppManifest(applicationManifest, savedApplicationManifest);
+
+    validateYamlContent(envServiceOverrideLocalValidYamlContent, applicationManifest);
+
+    ApplicationManifest applicationManifestFromGet = yamlHandler.get(ACCOUNT_ID, envServiceOverrideValidYamlFilePath);
+    compareAppManifest(applicationManifest, applicationManifestFromGet);
+  }
+
+  @Test
+  public void testCRUDAndGetForEnvServiceOverrideWithRemoteStoreType() throws HarnessException, IOException {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .envId(WingsTestConstants.ENV_ID)
+                                                  .serviceId(SERVICE_ID)
+                                                  .storeType(StoreType.Remote)
+                                                  .gitFileConfig(GitFileConfig.builder()
+                                                                     .filePath("ABC/")
+                                                                     .branch("BRANCH")
+                                                                     .useBranch(true)
+                                                                     .connectorId(CONNECTOR_ID)
+                                                                     .build())
+                                                  .kind(AppManifestKind.VALUES)
+                                                  .build();
+
+    ChangeContext<ApplicationManifest.Yaml> changeContext =
+        createChangeContext(envServiceOverrideRemoteValidYamlContent, envServiceOverrideValidYamlFilePath);
+
+    ApplicationManifest.Yaml yamlObject =
+        (ApplicationManifest.Yaml) getYaml(envServiceOverrideRemoteValidYamlContent, ApplicationManifest.Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    compareAppManifest(applicationManifest, savedApplicationManifest);
+
+    validateYamlContent(envServiceOverrideRemoteValidYamlContent, applicationManifest);
+
+    ApplicationManifest applicationManifestFromGet = yamlHandler.get(ACCOUNT_ID, envServiceOverrideValidYamlFilePath);
+    compareAppManifest(applicationManifest, applicationManifestFromGet);
   }
 }

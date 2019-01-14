@@ -5,6 +5,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.StoreType.Local;
+import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -18,10 +21,10 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
-import software.wings.beans.appmanifest.StoreType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -29,6 +32,12 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 public class ApplicationManifestServiceTest extends WingsBaseTest {
+  private static final String GIT_CONNECTOR_ID = "gitConnectorId";
+  private static final String BRANCH = "branch";
+  private static final String FILE_PATH = "filePath";
+  private static final String FILE_NAME = "fileName";
+  private static final String FILE_CONTENT = "fileContent";
+
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private YamlPushService yamlPushService;
@@ -43,11 +52,8 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     manifestFile.setAppId(APP_ID);
   }
 
-  private static ApplicationManifest applicationManifest = ApplicationManifest.builder()
-                                                               .serviceId(SERVICE_ID)
-                                                               .storeType(StoreType.Local)
-                                                               .kind(AppManifestKind.VALUES)
-                                                               .build();
+  private static ApplicationManifest applicationManifest =
+      ApplicationManifest.builder().serviceId(SERVICE_ID).storeType(Local).kind(AppManifestKind.VALUES).build();
 
   private static ManifestFile manifestFile =
       ManifestFile.builder().fileName("deploy.yaml").fileContent("deployment spec").build();
@@ -70,7 +76,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
     assertThat(savedManifest.getUuid()).isNotEmpty();
     assertThat(savedManifest.getServiceId()).isEqualTo(SERVICE_ID);
-    assertThat(savedManifest.getStoreType()).isEqualTo(StoreType.Local);
+    assertThat(savedManifest.getStoreType()).isEqualTo(Local);
 
     ApplicationManifest manifest = wingsPersistence.createQuery(ApplicationManifest.class)
                                        .filter(ApplicationManifest.APP_ID_KEY, APP_ID)
@@ -140,5 +146,213 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
         applicationManifestService.createManifestFileByServiceId(manifestFile, SERVICE_ID);
     assertNotNull(savedmManifestFile);
     applicationManifestService.createManifestFileByServiceId(manifestFileWithSameName, SERVICE_ID);
+  }
+
+  @Test
+  public void testCreateAppManifestForService() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+
+    ApplicationManifest savedApplicationManifest = applicationManifestService.create(applicationManifest);
+    assertThat(savedApplicationManifest.getUuid()).isNotNull();
+    assertThat(savedApplicationManifest.getGitFileConfig()).isNull();
+    assertThat(savedApplicationManifest.getEnvId()).isNull();
+    assertThat(savedApplicationManifest.getServiceId()).isEqualTo(SERVICE_ID);
+    assertThat(savedApplicationManifest.getStoreType()).isEqualTo(Local);
+    assertThat(savedApplicationManifest.getKind()).isEqualTo(K8S_MANIFEST);
+  }
+
+  @Test
+  public void testUpdateAppManifestForService() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    wingsPersistence.save(applicationManifest);
+
+    GitFileConfig gitFileConfig = GitFileConfig.builder()
+                                      .connectorId(GIT_CONNECTOR_ID)
+                                      .useBranch(true)
+                                      .branch(BRANCH)
+                                      .filePath(FILE_PATH)
+                                      .build();
+    applicationManifest.setStoreType(Remote);
+    applicationManifest.setGitFileConfig(gitFileConfig);
+
+    ApplicationManifest savedApplicationManifest = applicationManifestService.update(applicationManifest);
+    assertThat(savedApplicationManifest.getUuid()).isNotNull();
+    assertThat(savedApplicationManifest.getEnvId()).isNull();
+    assertThat(savedApplicationManifest.getServiceId()).isEqualTo(SERVICE_ID);
+    assertThat(savedApplicationManifest.getStoreType()).isEqualTo(Remote);
+    assertThat(savedApplicationManifest.getKind()).isEqualTo(K8S_MANIFEST);
+    compareGitFileConfig(gitFileConfig, applicationManifest.getGitFileConfig());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testCreateInvalidRemoteAppManifest() {
+    GitFileConfig gitFileConfig = GitFileConfig.builder().useBranch(true).branch(BRANCH).filePath(FILE_PATH).build();
+
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .storeType(Remote)
+                                                  .kind(K8S_MANIFEST)
+                                                  .serviceId(SERVICE_ID)
+                                                  .gitFileConfig(gitFileConfig)
+                                                  .build();
+
+    applicationManifestService.create(applicationManifest);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testCreateInvalidLocalAppManifest() {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .storeType(Local)
+                                                  .kind(K8S_MANIFEST)
+                                                  .serviceId(SERVICE_ID)
+                                                  .gitFileConfig(GitFileConfig.builder().build())
+                                                  .build();
+
+    applicationManifestService.create(applicationManifest);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testCreateInvalidAppManifest() {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).build();
+
+    applicationManifestService.create(applicationManifest);
+  }
+
+  private void compareGitFileConfig(GitFileConfig gitFileConfig, GitFileConfig savedGitFileConfig) {
+    assertThat(savedGitFileConfig.getFilePath()).isEqualTo(gitFileConfig.getFilePath());
+    assertThat(savedGitFileConfig.getConnectorId()).isEqualTo(gitFileConfig.getConnectorId());
+    assertThat(savedGitFileConfig.isUseBranch()).isEqualTo(gitFileConfig.isUseBranch());
+    assertThat(savedGitFileConfig.getBranch()).isEqualTo(gitFileConfig.getBranch());
+  }
+
+  @Test
+  public void testUpdateAppManifestKind() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    wingsPersistence.save(applicationManifest);
+
+    applicationManifest.setKind(AppManifestKind.VALUES);
+    ApplicationManifest savedApplicationManifest = applicationManifestService.update(applicationManifest);
+    assertThat(savedApplicationManifest.getKind()).isEqualTo(K8S_MANIFEST);
+  }
+
+  @Test
+  public void testUpsertApplicationManifestFileForCreate() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    wingsPersistence.save(applicationManifest);
+
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).fileName(FILE_NAME).build();
+    manifestFile.setAppId(APP_ID);
+
+    manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, true);
+    assertThat(manifestFile.getFileName()).isEqualTo(FILE_NAME);
+    assertThat(manifestFile.getFileContent()).isEqualTo(FILE_CONTENT);
+    assertThat(manifestFile.getApplicationManifestId()).isEqualTo(applicationManifest.getUuid());
+  }
+
+  @Test
+  public void testUpsertApplicationManifestFileForUpdate() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    wingsPersistence.save(applicationManifest);
+
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).fileName(FILE_NAME).build();
+    manifestFile.setAppId(APP_ID);
+    wingsPersistence.save(manifestFile);
+
+    manifestFile.setFileName("updated" + FILE_NAME);
+    manifestFile.setFileContent("updated" + FILE_CONTENT);
+    manifestFile.setApplicationManifestId("randomId");
+
+    ManifestFile savedManifestFile =
+        applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, true);
+    assertThat(savedManifestFile.getFileName()).isEqualTo("updated" + FILE_NAME);
+    assertThat(savedManifestFile.getFileContent()).isEqualTo("updated" + FILE_CONTENT);
+    assertThat(savedManifestFile.getApplicationManifestId()).isEqualTo(applicationManifest.getUuid());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidManifestFileName() {
+    validateManifestFileName("  ");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidManifestFileName1() {
+    validateManifestFileName(" / ");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidManifestFileName2() {
+    validateManifestFileName("a//c");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidManifestFileName3() {
+    validateManifestFileName("a/ /c");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidManifestFileName4() {
+    validateManifestFileName("a/b /c");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidManifestFileName5() {
+    validateManifestFileName("a/b/ c");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidManifestFileName6() {
+    validateManifestFileName("a/b/c ");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidManifestFileName7() {
+    validateManifestFileName("a/ b/c");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidManifestFileName8() {
+    validateManifestFileName(" a/b/c");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidManifestFileName9() {
+    validateManifestFileName("a /b/c");
+  }
+
+  private void validateManifestFileName(String fileName) {
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).fileName(fileName).build();
+    manifestFile.setAppId(APP_ID);
+
+    applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, true);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidateFileNamePrefixForDirectory() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    wingsPersistence.save(applicationManifest);
+
+    ManifestFile manifestFile1 = getManifestFileWithName("a/b/c");
+    ManifestFile manifestFile2 = getManifestFileWithName("a/b");
+
+    applicationManifestService.upsertApplicationManifestFile(manifestFile1, applicationManifest, true);
+    applicationManifestService.upsertApplicationManifestFile(manifestFile2, applicationManifest, true);
+  }
+
+  private ManifestFile getManifestFileWithName(String fileName) {
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).fileName(fileName).build();
+    manifestFile.setAppId(APP_ID);
+
+    return manifestFile;
   }
 }
