@@ -908,7 +908,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     ApplicationManifest applicationManifest =
         applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId, AppManifestKind.VALUES);
 
-    applicationManifestService.deleteAppManifest(appId, applicationManifest.getUuid());
+    if (applicationManifest != null) {
+      applicationManifestService.deleteAppManifest(appId, applicationManifest.getUuid());
+    }
 
     return get(appId, envId, false);
   }
@@ -984,6 +986,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     List<ApplicationManifest> applicationManifests = applicationManifestService.getAllByEnvIdAndKind(
         environment.getAppId(), environment.getUuid(), AppManifestKind.VALUES);
     if (isEmpty(applicationManifests)) {
+      environment.setHelmValueYaml(null);
+      environment.setHelmValueYamlByServiceTemplateId(null);
       return;
     }
 
