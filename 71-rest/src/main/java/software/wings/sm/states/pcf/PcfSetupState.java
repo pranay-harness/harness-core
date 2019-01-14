@@ -198,6 +198,10 @@ public class PcfSetupState extends State {
           "Unable to find artifact stream for service %s, artifact %s", serviceElement.getName(), artifact.getUuid()));
     }
 
+    if (olderActiveVersionCountToKeep == null) {
+      olderActiveVersionCountToKeep = Integer.valueOf(3);
+    }
+
     if (olderActiveVersionCountToKeep <= 0) {
       throw new WingsException("Value for Older Active Versions To Keep Must be > 0");
     }
