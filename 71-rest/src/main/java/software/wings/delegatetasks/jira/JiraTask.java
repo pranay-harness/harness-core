@@ -77,7 +77,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     switch (jiraAction) {
       case AUTH:
-        break;
+        return validateCredentials(parameters);
 
       case UPDATE_TICKET:
         return updateTicket(parameters);
@@ -111,6 +111,20 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
 
     return null;
+  }
+
+  private ResponseData validateCredentials(JiraTaskParameters parameters) {
+    JiraClient jiraClient = getJiraClient(parameters);
+
+    try {
+      jiraClient.getProjects();
+    } catch (JiraException e) {
+      String errorMessage = "Failed to fetch projects during credential validation.";
+      logger.error(errorMessage);
+      return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
+    }
+
+    return JiraExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
   }
 
   private ResponseData getCreateMetadata(JiraTaskParameters parameters) {

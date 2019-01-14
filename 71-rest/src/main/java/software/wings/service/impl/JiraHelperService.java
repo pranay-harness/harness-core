@@ -13,11 +13,8 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.protocol.ResponseData;
-import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
-import net.rcarz.jiraclient.BasicCredentials;
-import net.rcarz.jiraclient.JiraClient;
-import net.rcarz.jiraclient.JiraException;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
@@ -48,7 +45,7 @@ import java.util.Objects;
  */
 @Singleton
 public class JiraHelperService {
-  private static final Logger logger = LoggerFactory.getLogger(GcpHelperService.class);
+  private static final Logger logger = LoggerFactory.getLogger(JiraHelperService.class);
   private static final String WORKFLOW_EXECUTION_ID = "workflow";
   private static final long JIRA_DELEGATE_TIMEOUT_MILLIS = 30 * 1000;
   @Inject private DelegateServiceImpl delegateService;
@@ -72,15 +69,26 @@ public class JiraHelperService {
    * Validate credential.
    */
   public void validateCredential(JiraConfig jiraConfig) {
-    BasicCredentials creds = new BasicCredentials(jiraConfig.getUsername(), new String(jiraConfig.getPassword()));
-    JiraClient jira = new JiraClient(jiraConfig.getBaseUrl(), creds);
-    try {
-      jira.getProjects();
-    } catch (JiraException e) {
-      logger.error("[JIRA] Invalid url or credentials");
-      logger.info(e.getMessage());
-      throw new InvalidRequestException(
-          "Failed to Authenticate with JIRA Server. " + extractRelevantMessage(e.getMessage()));
+    String accountId = jiraConfig.getAccountId();
+    JiraTaskParameters jiraTaskParameters =
+        JiraTaskParameters.builder().accountId(accountId).jiraAction(JiraAction.AUTH).build();
+
+    jiraTaskParameters.setJiraConfig(jiraConfig);
+    jiraTaskParameters.setEncryptionDetails(
+        secretManager.getEncryptionDetails(jiraConfig, APP_ID_KEY, WORKFLOW_EXECUTION_ID));
+
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withTaskType(TaskType.JIRA)
+                                    .withAccountId(accountId)
+                                    .withAppId(APP_ID_KEY)
+                                    .withParameters(new Object[] {jiraTaskParameters})
+                                    .withTimeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
+                                    .withAsync(false)
+                                    .build();
+
+    JiraExecutionData jiraExecutionData = delegateService.executeTask(delegateTask);
+    if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
+      throw new WingsException("\"Failed to Authenticate with JIRA Server.");
     }
   }
 
