@@ -37,6 +37,7 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandType.START;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
@@ -113,7 +114,6 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow.WorkflowBuilder;
-import software.wings.beans.WorkflowPhase;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -1371,7 +1371,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                 .withOrchestrationWorkflow(
                                     aCanaryOrchestrationWorkflow()
                                         .withWorkflowPhases(asList(
-                                            WorkflowPhase.builder()
+                                            aWorkflowPhase()
                                                 .serviceId(SERVICE_ID)
                                                 .phaseSteps(asList(
                                                     aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
@@ -1410,7 +1410,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                 .withOrchestrationWorkflow(
                                     aCanaryOrchestrationWorkflow()
                                         .withWorkflowPhases(asList(
-                                            WorkflowPhase.builder()
+                                            aWorkflowPhase()
                                                 .serviceId(SERVICE_ID_CHANGED)
                                                 .phaseSteps(asList(
                                                     aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")

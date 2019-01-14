@@ -8,6 +8,7 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -20,7 +21,6 @@ import org.junit.Before;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.template.Template;
 import software.wings.common.Constants;
@@ -48,7 +48,7 @@ public class TemplateBaseTest extends WingsBaseTest {
             aCanaryOrchestrationWorkflow()
                 .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).addStep(step).build())
                 .addWorkflowPhase(
-                    WorkflowPhase.builder()
+                    aWorkflowPhase()
                         .infraMappingId(INFRA_MAPPING_ID)
                         .serviceId(SERVICE_ID)
                         .deploymentType(SSH)

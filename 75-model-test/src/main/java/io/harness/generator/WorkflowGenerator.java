@@ -21,6 +21,7 @@ import static software.wings.beans.SweepingOutput.Scope.PIPELINE;
 import static software.wings.beans.SweepingOutput.Scope.WORKFLOW;
 import static software.wings.beans.TaskType.JENKINS;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.INFRASTRUCTURE_NODE_NAME;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
 import static software.wings.sm.StateType.HTTP;
@@ -55,7 +56,6 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
-import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.ShellScriptTemplate;
@@ -281,7 +281,7 @@ public class WorkflowGenerator {
                                                  .addStep(getHTTPNode("phase"))
                                                  .build())
                     .addWorkflowPhase(
-                        WorkflowPhase.builder()
+                        aWorkflowPhase()
                             .phaseSteps(asList(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build(),
                                 aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
                                     .addStep(
@@ -365,7 +365,7 @@ public class WorkflowGenerator {
                 aBuildOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .addWorkflowPhase(WorkflowPhase.builder()
+                    .addWorkflowPhase(aWorkflowPhase()
                                           .phaseSteps(asList(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build(),
                                               aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
                                                   .addStep(GraphNode.builder()

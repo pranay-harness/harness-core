@@ -121,7 +121,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     }
 
     Boolean isRollback = (Boolean) context.getProperties().get(YamlConstants.IS_ROLLBACK);
-    WorkflowPhaseBuilder phase = WorkflowPhase.builder();
+    WorkflowPhaseBuilder phase = WorkflowPhaseBuilder.aWorkflowPhase();
     DeploymentType deploymentType = Util.getEnumFromString(DeploymentType.class, deploymentTypeString);
     phase.computeProviderId(computeProviderId)
         .deploymentType(deploymentType)

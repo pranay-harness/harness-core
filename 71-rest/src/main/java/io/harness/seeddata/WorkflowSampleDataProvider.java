@@ -5,6 +5,7 @@ import static io.harness.seeddata.SampleDataProviderConstants.K8S_CANARY_WORKFLO
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.sm.states.ContainerServiceSetup.DESIRED_INSTANCE_COUNT_KEY;
 import static software.wings.sm.states.ContainerServiceSetup.FIXED_INSTANCES;
 import static software.wings.sm.states.KubernetesDeploy.INSTANCE_COUNT_KEY;
@@ -78,8 +79,8 @@ public class WorkflowSampleDataProvider {
     Validator.notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
 
     // Attach workflow first Workflow Phase
-    WorkflowPhase workflowPhase = workflowService.createWorkflowPhase(appId, savedWorkflow.getUuid(),
-        WorkflowPhase.builder().serviceId(serviceId).infraMappingId(infraMappingId).build());
+    WorkflowPhase workflowPhase = workflowService.createWorkflowPhase(
+        appId, savedWorkflow.getUuid(), aWorkflowPhase().serviceId(serviceId).infraMappingId(infraMappingId).build());
 
     setK8sSetupContainer(workflowPhase, "2");
     setK8sUpgradeContainer(workflowPhase, "50");
@@ -87,8 +88,8 @@ public class WorkflowSampleDataProvider {
     workflowService.updateWorkflowPhase(appId, savedWorkflow.getUuid(), workflowPhase);
 
     // Attach Second Workflow Phase
-    WorkflowPhase secondPhase = workflowService.createWorkflowPhase(appId, savedWorkflow.getUuid(),
-        WorkflowPhase.builder().serviceId(serviceId).infraMappingId(infraMappingId).build());
+    WorkflowPhase secondPhase = workflowService.createWorkflowPhase(
+        appId, savedWorkflow.getUuid(), aWorkflowPhase().serviceId(serviceId).infraMappingId(infraMappingId).build());
 
     setK8sUpgradeContainer(secondPhase, "100");
 

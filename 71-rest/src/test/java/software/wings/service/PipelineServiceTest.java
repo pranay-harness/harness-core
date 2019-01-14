@@ -32,6 +32,7 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -86,7 +87,6 @@ import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
@@ -979,13 +979,12 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(Pipeline.class, aPageRequest().build()))
         .thenReturn(aPageResponse().withResponse(asList(pipeline)).build());
 
-    Workflow workflow =
-        aWorkflow()
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .addWorkflowPhase(WorkflowPhase.builder().deploymentType(DeploymentType.SSH).build())
-                    .build())
-            .build();
+    Workflow workflow = aWorkflow()
+                            .withOrchestrationWorkflow(
+                                aCanaryOrchestrationWorkflow()
+                                    .addWorkflowPhase(aWorkflowPhase().deploymentType(DeploymentType.SSH).build())
+                                    .build())
+                            .build();
     when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
 
     PageRequest<WorkflowExecution> workflowExecutionPageRequest = aPageRequest()
