@@ -122,6 +122,7 @@ public class DelegateQueueTask implements Runnable {
                                            .project("tags", true)
                                            .project("accountId", true)
                                            .project("taskType", true)
+                                           .project("parameters", true)
                                            .asList();
 
     boolean deleted = wingsPersistence.delete(
