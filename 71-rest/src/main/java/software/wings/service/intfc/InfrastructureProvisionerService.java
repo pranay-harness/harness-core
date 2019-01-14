@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.validation.Valid;
+import javax.ws.rs.core.StreamingOutput;
 
 public interface InfrastructureProvisionerService extends OwnedByApplication {
   PageResponse<InfrastructureProvisioner> list(PageRequest<InfrastructureProvisioner> pageRequest);
@@ -57,4 +58,6 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
       String appId, String scmSettingId, String terraformDirectory, String accountId, String sourceRepoBranch);
 
   List<String> getTerraformTargets(String appId, String accountId, String provisionerId);
+
+  StreamingOutput downloadTerraformState(String provisionerId, String envId);
 }

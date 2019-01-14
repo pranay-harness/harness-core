@@ -59,6 +59,8 @@ import software.wings.prune.PruneEvent;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -78,6 +80,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
+import javax.ws.rs.core.StreamingOutput;
 
 @Singleton
 @ValidateOnExecution
@@ -95,6 +98,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
   @Inject private GitConfigHelperService gitConfigHelperService;
+  @Inject FileService fileService;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -514,5 +518,15 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   private String normalizeScriptPath(String terraformDirectory) {
     return terraformDirectory.equals(".") ? "" : terraformDirectory;
+  }
+
+  @Override
+  public StreamingOutput downloadTerraformState(String provisionerId, String envId) {
+    String entityId = provisionerId + "-" + envId;
+    String latestFileId = fileService.getLatestFileId(entityId, FileBucket.TERRAFORM_STATE);
+    if (latestFileId == null) {
+      throw new InvalidRequestException("No state file found");
+    }
+    return outputStream -> fileService.downloadToStream(latestFileId, outputStream, FileBucket.TERRAFORM_STATE);
   }
 }
