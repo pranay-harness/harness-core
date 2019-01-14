@@ -620,26 +620,27 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases().add(workflowPhase);
 
     WorkflowPhase rollbackPhase = createRollbackPhase(workflowPhase);
+    List<PhaseStep> rollbackPhaseSteps = rollbackPhase.getPhaseSteps();
 
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
-                       .addStep(GraphNode.builder()
-                                    .id(generateUuid())
-                                    .type(K8S_DEPLOYMENT_ROLLING_ROLLBACK.name())
-                                    .name(Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK)
-                                    .rollback(true)
-                                    .build())
-                       .withPhaseStepNameForRollback(Constants.DEPLOY)
-                       .withStatusForRollback(ExecutionStatus.SUCCESS)
-                       .withRollback(true)
-                       .build());
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
+                               .addStep(GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(K8S_DEPLOYMENT_ROLLING_ROLLBACK.name())
+                                            .name(Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK)
+                                            .rollback(true)
+                                            .build())
+                               .withPhaseStepNameForRollback(Constants.DEPLOY)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .build());
 
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.VERIFY)
-                       .withPhaseStepNameForRollback(Constants.DEPLOY)
-                       .withStatusForRollback(ExecutionStatus.SUCCESS)
-                       .withRollback(true)
-                       .build());
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.VERIFY)
+                               .withPhaseStepNameForRollback(Constants.DEPLOY)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .build());
 
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP).withRollback(true).build());
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP).withRollback(true).build());
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackPhase);
     ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
         .getRollbackWorkflowPhaseIdMap()
@@ -684,22 +685,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases().add(workflowPhase);
 
     WorkflowPhase rollbackPhase = createRollbackPhase(workflowPhase);
+    List<PhaseStep> rollbackPhaseSteps = rollbackPhase.getPhaseSteps();
 
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.ROUTE_UPDATE)
-                       .withPhaseStepNameForRollback(Constants.ROUTE_UPDATE)
-                       .withStatusForRollback(ExecutionStatus.SUCCESS)
-                       .withRollback(true)
-                       .build());
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.VERIFY)
-                       .withPhaseStepNameForRollback(Constants.VERIFY)
-                       .withStatusForRollback(ExecutionStatus.SUCCESS)
-                       .withRollback(true)
-                       .build());
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP)
-                       .withPhaseStepNameForRollback(Constants.WRAP_UP)
-                       .withStatusForRollback(ExecutionStatus.SUCCESS)
-                       .withRollback(true)
-                       .build());
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.ROUTE_UPDATE)
+                               .withPhaseStepNameForRollback(Constants.ROUTE_UPDATE)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .build());
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.VERIFY)
+                               .withPhaseStepNameForRollback(Constants.VERIFY)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .build());
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP)
+                               .withPhaseStepNameForRollback(Constants.WRAP_UP)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .build());
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackPhase);
     ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
         .getRollbackWorkflowPhaseIdMap()
