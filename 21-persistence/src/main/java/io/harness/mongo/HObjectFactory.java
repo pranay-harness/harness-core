@@ -8,9 +8,6 @@ import org.mongodb.morphia.mapping.DefaultCreator;
 import org.mongodb.morphia.mapping.MappingException;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 
 public class HObjectFactory extends DefaultCreator {
   private static final Objenesis objenesis = new ObjenesisStd(true);
@@ -34,14 +31,12 @@ public class HObjectFactory extends DefaultCreator {
       if (constructor != null) {
         return constructor.newInstance();
       }
-
-      Object object = buildObject(clazz);
-      if (object != null) {
-        return object;
-      }
-
       try {
-        return harnessClass ? objenesis.newInstance(clazz) : super.createInstance(clazz);
+        if (harnessClass) {
+          return objenesis.newInstance(clazz);
+        } else {
+          return super.createInstance(clazz);
+        }
       } catch (Exception e) {
         throw new MappingException("Failed to instantiate " + clazz.getName(), e);
       }
@@ -56,21 +51,6 @@ public class HObjectFactory extends DefaultCreator {
       ctor.setAccessible(true);
       return ctor;
     } catch (NoSuchMethodException e) {
-      return null;
-    }
-  }
-
-  private Object buildObject(final Class clazz) {
-    if (!Modifier.isPublic(clazz.getModifiers())) {
-      return null;
-    }
-    try {
-      final Method builderMethod = clazz.getMethod("builder");
-      final Object builder = builderMethod.invoke(null);
-      final Class<?> aClass = builder.getClass();
-      final Method build = aClass.getMethod("build");
-      return build.invoke(builder);
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
       return null;
     }
   }

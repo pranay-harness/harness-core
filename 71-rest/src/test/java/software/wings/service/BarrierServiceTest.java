@@ -9,6 +9,7 @@ import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrati
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.DEPLOY_CONTAINERS;
 import static software.wings.sm.StateType.BARRIER;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -25,7 +26,6 @@ import software.wings.beans.BarrierInstance;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStepType;
-import software.wings.beans.WorkflowPhase;
 import software.wings.common.Constants;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
@@ -53,7 +53,7 @@ public class BarrierServiceTest extends WingsBaseTest {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-            .addWorkflowPhase(WorkflowPhase.builder().serviceId(SERVICE_ID).infraMappingId(INFRA_MAPPING_ID).build())
+            .addWorkflowPhase(aWorkflowPhase().serviceId(SERVICE_ID).infraMappingId(INFRA_MAPPING_ID).build())
             .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
 
@@ -74,7 +74,7 @@ public class BarrierServiceTest extends WingsBaseTest {
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
-                WorkflowPhase.builder()
+                aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
                     .phaseSteps(asList(
@@ -107,7 +107,7 @@ public class BarrierServiceTest extends WingsBaseTest {
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
-                WorkflowPhase.builder()
+                aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
                     .phaseSteps(asList(
@@ -128,7 +128,7 @@ public class BarrierServiceTest extends WingsBaseTest {
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
-                WorkflowPhase.builder()
+                aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
                     .phaseSteps(asList(
@@ -182,7 +182,7 @@ public class BarrierServiceTest extends WingsBaseTest {
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
-                WorkflowPhase.builder()
+                aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
                     .phaseSteps(asList(
@@ -215,7 +215,7 @@ public class BarrierServiceTest extends WingsBaseTest {
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
-                WorkflowPhase.builder()
+                aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
                     .phaseSteps(asList(
@@ -250,7 +250,7 @@ public class BarrierServiceTest extends WingsBaseTest {
         aCanaryOrchestrationWorkflow()
             .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhase(
-                WorkflowPhase.builder()
+                aWorkflowPhase()
                     .serviceId(SERVICE_ID)
                     .infraMappingId(INFRA_MAPPING_ID)
                     .phaseSteps(asList(
