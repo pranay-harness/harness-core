@@ -7,7 +7,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
-import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.ECS_DAEMON_SCHEDULING_STRATEGY;
 import static software.wings.common.Constants.ECS_REPLICA_SCHEDULING_STRATEGY;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
@@ -80,32 +79,32 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     doReturn(serviceSpecification).when(serviceResourceService).getEcsServiceSpecification(anyString(), anyString());
 
     boolean isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
-        APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
+        APP_ID, WorkflowPhase.builder().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
     assertTrue(isDaemonSchedulingStrategy);
 
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
-        APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.CANARY);
+        APP_ID, WorkflowPhase.builder().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.CANARY);
     assertFalse(isDaemonSchedulingStrategy);
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
-        APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.ROLLING);
+        APP_ID, WorkflowPhase.builder().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.ROLLING);
     assertFalse(isDaemonSchedulingStrategy);
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
-        APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.CUSTOM);
+        APP_ID, WorkflowPhase.builder().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.CUSTOM);
     assertFalse(isDaemonSchedulingStrategy);
 
     serviceSpecification.setSchedulingStrategy(ECS_REPLICA_SCHEDULING_STRATEGY);
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
-        APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
+        APP_ID, WorkflowPhase.builder().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
     assertFalse(isDaemonSchedulingStrategy);
 
     serviceSpecification.resetToDefaultSpecification();
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
-        APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
+        APP_ID, WorkflowPhase.builder().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
     assertFalse(isDaemonSchedulingStrategy);
 
     serviceSpecification.setServiceSpecJson(serviceSpecification.getServiceSpecJson().replace("REPLICA", "DAEMON"));
     isDaemonSchedulingStrategy = workflowServiceHelper.isDaemonSchedulingStrategy(
-        APP_ID, aWorkflowPhase().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
+        APP_ID, WorkflowPhase.builder().serviceId(SERVICE_ID).build(), OrchestrationWorkflowType.BASIC);
     assertTrue(isDaemonSchedulingStrategy);
   }
 
@@ -120,14 +119,14 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     specification.setSchedulingStrategy(ECS_REPLICA_SCHEDULING_STRATEGY);
     doReturn(specification).when(serviceResourceService).getEcsServiceSpecification(anyString(), anyString());
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
 
     workflowServiceHelper.generateNewWorkflowPhaseStepsForECS(
         APP_ID, workflowPhase, true, OrchestrationWorkflowType.BASIC);
     verifyPhase(workflowPhase, Arrays.asList(new String[] {ECS_SERVICE_SETUP.name(), ECS_SERVICE_DEPLOY.name()}), 4);
 
     specification.resetToDefaultSpecification();
-    workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
     workflowServiceHelper.generateNewWorkflowPhaseStepsForECS(
         APP_ID, workflowPhase, true, OrchestrationWorkflowType.BASIC);
     verifyPhase(workflowPhase, Arrays.asList(new String[] {ECS_SERVICE_SETUP.name(), ECS_SERVICE_DEPLOY.name()}), 4);
@@ -135,14 +134,14 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     // Non basic workflows should not respect DEAMON scheduling strategy
     specification.setServiceSpecJson(null);
     specification.setSchedulingStrategy(ECS_DAEMON_SCHEDULING_STRATEGY);
-    workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
     workflowServiceHelper.generateNewWorkflowPhaseStepsForECS(
         APP_ID, workflowPhase, true, OrchestrationWorkflowType.CANARY);
     verifyPhase(workflowPhase, Arrays.asList(new String[] {ECS_SERVICE_SETUP.name(), ECS_SERVICE_DEPLOY.name()}), 4);
 
     specification.resetToDefaultSpecification();
     specification.setServiceSpecJson(specification.getServiceSpecJson().replace("REPLICA", "DAEMON"));
-    workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
     workflowServiceHelper.generateNewWorkflowPhaseStepsForECS(
         APP_ID, workflowPhase, true, OrchestrationWorkflowType.CUSTOM);
     verifyPhase(workflowPhase, Arrays.asList(new String[] {ECS_SERVICE_SETUP.name(), ECS_SERVICE_DEPLOY.name()}), 4);
@@ -159,7 +158,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     specification.setSchedulingStrategy(ECS_REPLICA_SCHEDULING_STRATEGY);
     doReturn(specification).when(serviceResourceService).getEcsServiceSpecification(anyString(), anyString());
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
 
     workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreen(APP_ID, workflowPhase, true);
     verifyPhase(workflowPhase,
@@ -179,7 +178,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     serviceSpecification.setSchedulingStrategy(ECS_DAEMON_SCHEDULING_STRATEGY);
     doReturn(serviceSpecification).when(serviceResourceService).getEcsServiceSpecification(anyString(), anyString());
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
 
     workflowServiceHelper.generateNewWorkflowPhaseStepsForECS(
         APP_ID, workflowPhase, true, OrchestrationWorkflowType.BASIC);
@@ -187,7 +186,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
 
     serviceSpecification.resetToDefaultSpecification();
     serviceSpecification.setServiceSpecJson(serviceSpecification.getServiceSpecJson().replace("REPLICA", "DAEMON"));
-    workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
     workflowServiceHelper.generateNewWorkflowPhaseStepsForECS(
         APP_ID, workflowPhase, true, OrchestrationWorkflowType.BASIC);
     verifyPhase(workflowPhase, Arrays.asList(new String[] {ECS_DAEMON_SERVICE_SETUP.name()}), 3);
@@ -204,27 +203,27 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     serviceSpecification.setSchedulingStrategy(ECS_REPLICA_SCHEDULING_STRATEGY);
     doReturn(serviceSpecification).when(serviceResourceService).getEcsServiceSpecification(anyString(), anyString());
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
 
     WorkflowPhase rollbackPhase = workflowServiceHelper.generateRollbackWorkflowPhaseForEcs(
         APP_ID, workflowPhase, OrchestrationWorkflowType.BASIC);
     verifyPhase(rollbackPhase, Arrays.asList(new String[] {ECS_SERVICE_ROLLBACK.name()}), 3);
 
     serviceSpecification.resetToDefaultSpecification();
-    workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
     workflowServiceHelper.generateRollbackWorkflowPhaseForEcs(APP_ID, workflowPhase, OrchestrationWorkflowType.BASIC);
     verifyPhase(rollbackPhase, Arrays.asList(new String[] {ECS_SERVICE_ROLLBACK.name()}), 3);
 
     // Non basic workflows should not respect DEAMON scheduling strategy
     serviceSpecification.setServiceSpecJson(null);
     serviceSpecification.setSchedulingStrategy(ECS_DAEMON_SCHEDULING_STRATEGY);
-    workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
     workflowServiceHelper.generateRollbackWorkflowPhaseForEcs(APP_ID, workflowPhase, OrchestrationWorkflowType.CANARY);
     verifyPhase(rollbackPhase, Arrays.asList(new String[] {ECS_SERVICE_ROLLBACK.name()}), 3);
 
     serviceSpecification.resetToDefaultSpecification();
     serviceSpecification.setServiceSpecJson(serviceSpecification.getServiceSpecJson().replace("REPLICA", "DAEMON"));
-    workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
     workflowServiceHelper.generateRollbackWorkflowPhaseForEcs(APP_ID, workflowPhase, OrchestrationWorkflowType.CUSTOM);
     verifyPhase(rollbackPhase, Arrays.asList(new String[] {ECS_SERVICE_ROLLBACK.name()}), 3);
   }
@@ -240,7 +239,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     serviceSpecification.setSchedulingStrategy(ECS_REPLICA_SCHEDULING_STRATEGY);
     doReturn(serviceSpecification).when(serviceResourceService).getEcsServiceSpecification(anyString(), anyString());
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
 
     WorkflowPhase rollbackPhase = workflowServiceHelper.generateRollbackWorkflowPhaseForEcsBlueGreen(
         APP_ID, workflowPhase, OrchestrationWorkflowType.BASIC);
@@ -259,7 +258,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     ecsServiceSpecification.setSchedulingStrategy(ECS_DAEMON_SCHEDULING_STRATEGY);
     doReturn(ecsServiceSpecification).when(serviceResourceService).getEcsServiceSpecification(anyString(), anyString());
 
-    WorkflowPhase phase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    WorkflowPhase phase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
 
     WorkflowPhase rollbackPhase =
         workflowServiceHelper.generateRollbackWorkflowPhaseForEcs(APP_ID, phase, OrchestrationWorkflowType.BASIC);
@@ -268,7 +267,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     ecsServiceSpecification.resetToDefaultSpecification();
     ecsServiceSpecification.setServiceSpecJson(
         ecsServiceSpecification.getServiceSpecJson().replace("REPLICA", "DAEMON"));
-    phase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    phase = WorkflowPhase.builder().serviceId(SERVICE_ID).build();
     rollbackPhase =
         workflowServiceHelper.generateRollbackWorkflowPhaseForEcs(APP_ID, phase, OrchestrationWorkflowType.BASIC);
     verifyPhase(rollbackPhase, Arrays.asList(new String[] {ECS_SERVICE_SETUP_ROLLBACK.name()}), 3);

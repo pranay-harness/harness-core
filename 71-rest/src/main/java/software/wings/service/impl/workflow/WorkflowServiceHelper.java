@@ -44,7 +44,6 @@ import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
-import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.ECS_DAEMON_SCHEDULING_STRATEGY;
 import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS;
 import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS_ROLLBACK;
@@ -653,7 +652,7 @@ public class WorkflowServiceHelper {
   }
 
   private WorkflowPhaseBuilder rollbackWorkflow(WorkflowPhase workflowPhase) {
-    return aWorkflowPhase()
+    return WorkflowPhase.builder()
         .name(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
         .deploymentType(workflowPhase.getDeploymentType())
         .rollback(true)
