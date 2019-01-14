@@ -16,6 +16,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
@@ -43,6 +44,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.StreamingOutput;
 
 @Api("infrastructure-provisioners")
 @Path("infrastructure-provisioners")
@@ -174,5 +176,16 @@ public class InfrastructureProvisionerResource {
   public RestResponse<List<String>> getTerraformTargets(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @NotNull @QueryParam("provisionerId") String provisionerId) {
     return new RestResponse<>(infrastructureProvisionerService.getTerraformTargets(appId, accountId, provisionerId));
+  }
+
+  @GET
+  @Path("tf-download-state")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PROVISIONER, action = READ)
+  public StreamingOutput downloadTerraformState(@NotEmpty @QueryParam("provisionerId") String provisionerId,
+      @NotEmpty @QueryParam("envId") String envId, @QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId) {
+    return infrastructureProvisionerService.downloadTerraformState(provisionerId, envId);
   }
 }
