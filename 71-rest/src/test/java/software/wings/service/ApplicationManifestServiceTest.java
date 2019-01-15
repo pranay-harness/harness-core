@@ -6,9 +6,11 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
@@ -30,6 +32,8 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlPushService;
+
+import java.util.List;
 
 public class ApplicationManifestServiceTest extends WingsBaseTest {
   private static final String GIT_CONNECTOR_ID = "gitConnectorId";
@@ -354,5 +358,158 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     manifestFile.setAppId(APP_ID);
 
     return manifestFile;
+  }
+
+  @Test
+  public void testDeleteAppManifest() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    applicationManifest = applicationManifestService.create(applicationManifest);
+
+    ManifestFile manifestFile1 = getManifestFileWithName("a");
+    ManifestFile manifestFile2 = getManifestFileWithName("b");
+
+    applicationManifestService.upsertApplicationManifestFile(manifestFile1, applicationManifest, true);
+    applicationManifestService.upsertApplicationManifestFile(manifestFile2, applicationManifest, true);
+
+    applicationManifestService.deleteAppManifest(APP_ID, applicationManifest.getUuid());
+
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(APP_ID, applicationManifest.getUuid());
+    assertThat(manifestFiles).isEmpty();
+    applicationManifest = applicationManifestService.getByServiceId(APP_ID, SERVICE_ID);
+    assertThat(applicationManifest).isNull();
+  }
+
+  @Test
+  public void testDeleteAppManifestMultipleTimes() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    applicationManifest = applicationManifestService.create(applicationManifest);
+
+    ManifestFile manifestFile1 = getManifestFileWithName("a");
+    ManifestFile manifestFile2 = getManifestFileWithName("b");
+
+    applicationManifestService.upsertApplicationManifestFile(manifestFile1, applicationManifest, true);
+    applicationManifestService.upsertApplicationManifestFile(manifestFile2, applicationManifest, true);
+
+    applicationManifestService.deleteAppManifest(APP_ID, applicationManifest.getUuid());
+    applicationManifestService.deleteAppManifest(APP_ID, applicationManifest.getUuid());
+
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(APP_ID, applicationManifest.getUuid());
+    assertThat(manifestFiles).isEmpty();
+    applicationManifest = applicationManifestService.getByServiceId(APP_ID, SERVICE_ID);
+    assertThat(applicationManifest).isNull();
+  }
+
+  @Test
+  public void testDeleteManifestFileForService() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    applicationManifest = applicationManifestService.create(applicationManifest);
+
+    ManifestFile manifestFile = getManifestFileWithName("a");
+
+    manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, true);
+    applicationManifestService.deleteManifestFileById(APP_ID, manifestFile.getUuid());
+
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(APP_ID, applicationManifest.getUuid());
+    assertThat(manifestFiles).isEmpty();
+    applicationManifest = applicationManifestService.getByServiceId(APP_ID, SERVICE_ID);
+    assertThat(applicationManifest).isNotNull();
+  }
+
+  @Test
+  public void testDeleteManifestFileForEnvironment() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(VALUES).envId(ENV_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    applicationManifest = applicationManifestService.create(applicationManifest);
+
+    ManifestFile manifestFile = getManifestFileWithName("a");
+    manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, true);
+
+    applicationManifestService.deleteManifestFile(APP_ID, manifestFile);
+
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(APP_ID, applicationManifest.getUuid());
+    assertThat(manifestFiles).isEmpty();
+    applicationManifest = applicationManifestService.getByEnvId(APP_ID, ENV_ID, VALUES);
+    assertThat(applicationManifest).isNull();
+  }
+
+  @Test
+  public void testDeleteManifestFileForEnvironmentMultipleTimes() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(VALUES).envId(ENV_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    applicationManifest = applicationManifestService.create(applicationManifest);
+
+    ManifestFile manifestFile = getManifestFileWithName("a");
+    manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, true);
+
+    applicationManifestService.deleteManifestFile(APP_ID, manifestFile);
+    applicationManifestService.deleteManifestFile(APP_ID, manifestFile);
+
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(APP_ID, applicationManifest.getUuid());
+    assertThat(manifestFiles).isEmpty();
+    applicationManifest = applicationManifestService.getByEnvId(APP_ID, ENV_ID, VALUES);
+    assertThat(applicationManifest).isNull();
+  }
+
+  @Test
+  public void testPruneByService() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    applicationManifest = applicationManifestService.create(applicationManifest);
+
+    ManifestFile manifestFile1 = getManifestFileWithName("a");
+    ManifestFile manifestFile2 = getManifestFileWithName("b");
+
+    applicationManifestService.upsertApplicationManifestFile(manifestFile1, applicationManifest, true);
+    applicationManifestService.upsertApplicationManifestFile(manifestFile2, applicationManifest, true);
+
+    applicationManifestService.pruneByService(APP_ID, SERVICE_ID);
+
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(APP_ID, applicationManifest.getUuid());
+    assertThat(manifestFiles).isEmpty();
+    applicationManifest = applicationManifestService.getByServiceId(APP_ID, SERVICE_ID);
+    assertThat(applicationManifest).isNull();
+  }
+
+  @Test
+  public void testPruneByEnvironment() {
+    ApplicationManifest envAppManifest =
+        ApplicationManifest.builder().storeType(Local).kind(VALUES).envId(ENV_ID).build();
+    envAppManifest.setAppId(APP_ID);
+    envAppManifest = applicationManifestService.create(envAppManifest);
+    ManifestFile manifestFile1 = getManifestFileWithName("a");
+    applicationManifestService.upsertApplicationManifestFile(manifestFile1, envAppManifest, true);
+
+    ApplicationManifest envServiceAppManifest =
+        ApplicationManifest.builder().storeType(Local).kind(VALUES).envId(ENV_ID).serviceId(SERVICE_ID).build();
+    envServiceAppManifest.setAppId(APP_ID);
+    envServiceAppManifest = applicationManifestService.create(envServiceAppManifest);
+    ManifestFile manifestFile2 = getManifestFileWithName("a");
+    applicationManifestService.upsertApplicationManifestFile(manifestFile2, envServiceAppManifest, true);
+
+    applicationManifestService.pruneByEnvironment(APP_ID, ENV_ID);
+
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(APP_ID, envAppManifest.getUuid());
+    assertThat(manifestFiles).isEmpty();
+    manifestFiles = applicationManifestService.getManifestFilesByAppManifestId(APP_ID, envServiceAppManifest.getUuid());
+    assertThat(manifestFiles).isEmpty();
+    List<ApplicationManifest> applicationManifests =
+        applicationManifestService.getAllByEnvIdAndKind(APP_ID, ENV_ID, VALUES);
+    assertThat(applicationManifests).isEmpty();
   }
 }
