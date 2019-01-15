@@ -88,6 +88,7 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
     assertThat(savedTrigger.getWorkflowId()).isEqualTo(buildWorkflow.getUuid());
     assertThat(savedTrigger.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
+    resetCache();
     // Get the saved workflow
     savedTriggerResponse = given()
                                .auth()

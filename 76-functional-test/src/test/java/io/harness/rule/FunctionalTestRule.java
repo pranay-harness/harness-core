@@ -26,8 +26,6 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.ExecutorModule;
 import software.wings.app.LicenseModule;
@@ -47,8 +45,6 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorRuleMixin, DistributedLockRuleMixin {
-  private static final Logger logger = LoggerFactory.getLogger(FunctionalTestRule.class);
-
   private int port;
   ClosingFactory closingFactory;
 
@@ -68,9 +64,9 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     List<Module> modules;
     MongoClient mongoClient;
     String dbName = "harness";
+    final String mongoUri = System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName);
     try {
-      MongoClientURI clientUri =
-          new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName), mongoClientOptions);
+      MongoClientURI clientUri = new MongoClientURI(mongoUri, mongoClientOptions);
       dbName = clientUri.getDatabase();
       mongoClient = new MongoClient(clientUri);
       closingFactory.addServer(mongoClient);
@@ -86,7 +82,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
     DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoClient, dbName, closingFactory);
 
-    Configuration configuration = getConfiguration(dbName);
+    Configuration configuration = getConfiguration(mongoUri);
 
     modules = getRequiredModules(configuration, distributedLockSvc);
     modules.add(new ManagerQueueModule());
@@ -94,14 +90,13 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     return modules;
   }
 
-  protected Configuration getConfiguration(String dbName) {
+  protected Configuration getConfiguration(String mongoUri) {
     MainConfiguration configuration = new MainConfiguration();
     configuration.getPortal().setCompanyName("COMPANY_NAME");
-    configuration.getPortal().setAllowedDomains("wings.software");
+    configuration.getPortal().setAllowedDomains("harness.io");
     configuration.getPortal().setUrl(PORTAL_URL);
     configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
-    configuration.setMongoConnectionFactory(
-        MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://35.230.85.134:27017/" + dbName)).build());
+    configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     return configuration;
   }
