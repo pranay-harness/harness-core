@@ -226,7 +226,7 @@ public class K8sStateHelper {
     return GitFetchFilesTaskParams.builder()
         .accountId(app.getAccountId())
         .appId(app.getUuid())
-        .isFinalState(false)
+        .isFinalState(isRemoteFetchRequiredForManifest(appManifestMap))
         .gitFetchFilesConfigMap(gitFetchFileConfigMap)
         .build();
   }
@@ -498,5 +498,14 @@ public class K8sStateHelper {
     }
 
     return valuesFiles;
+  }
+
+  private boolean isRemoteFetchRequiredForManifest(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    if (!appManifestMap.containsKey(K8sValuesLocation.Service)) {
+      return true;
+    }
+
+    ApplicationManifest applicationManifest = appManifestMap.get(K8sValuesLocation.Service);
+    return StoreType.Local.equals(applicationManifest.getStoreType());
   }
 }
