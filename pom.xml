@@ -34,7 +34,7 @@
         <url>https://github.com/wings-software/portal</url>
     </scm>
     <properties>
-        <alpnboot.version>8.1.11.v20170118</alpnboot.version>
+        <alpnboot.version>8.1.13.v20181017</alpnboot.version>
         <argLine>-Xmx1024m</argLine>
         <aws.sdk.version>1.11.455</aws.sdk.version>
         <build.fullVersion>${build.majorVersion}.${build.minorVersion}.${build.number}</build.fullVersion>

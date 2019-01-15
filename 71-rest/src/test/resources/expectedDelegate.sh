@@ -7,20 +7,20 @@ if [ ! -e start.sh ]; then
   exit 1
 fi
 
-JRE_DIR_OLD=jre1.8.0_131
-JRE_DIR=jre1.8.0_131_2
+JRE_DIR_OLD=jre1.8.0_131_2
+JRE_DIR=jre1.8.0_191
 JRE_BINARY=jre/bin/java
 case "$OSTYPE" in
   solaris*)
-    JVM_URL=http://localhost:8888/jre/8u131/jre-8u131-solaris-x64.tar.gz
+    JVM_URL=http://localhost:8888/jre/8u191/jre-8u191-solaris-x64.tar.gz
     ;;
   darwin*)
-    JVM_URL=http://localhost:8888/jre/8u131/jre-8u131-macosx-x64.tar.gz
-    JRE_DIR_OLD=jre1.8.0_131.jre
+    JVM_URL=http://localhost:8888/jre/8u191/jre-8u191-macosx-x64.tar.gz
+    JRE_DIR=jre1.8.0_191.jre
     JRE_BINARY=jre/Contents/Home/bin/java
     ;;
   linux*)
-    JVM_URL=http://localhost:8888/jre/8u131/jre-8u131-linux-x64.tar.gz
+    JVM_URL=http://localhost:8888/jre/8u191/jre-8u191-linux-x64.tar.gz
     ;;
   bsd*)
     echo "freebsd not supported."
@@ -94,8 +94,8 @@ then
   mv $JVM_TAR_FILENAME tmp
   cd tmp
   tar xzf $JVM_TAR_FILENAME
-  rm -rf ../$JRE_DIR
-  mv $JRE_DIR_OLD ../$JRE_DIR
+  rm -rf ../$JRE_DIR ../$JRE_DIR_OLD
+  mv $JRE_DIR ../$JRE_DIR
   cd ..
   rm -rf jre tmp
   ln -s $JRE_DIR jre

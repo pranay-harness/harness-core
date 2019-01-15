@@ -76,8 +76,8 @@ then
   mv $JVM_TAR_FILENAME tmp
   cd tmp
   tar xzf $JVM_TAR_FILENAME
-  rm -rf ../$JRE_DIR
-  mv $JRE_DIR_OLD ../$JRE_DIR
+  rm -rf ../$JRE_DIR ../$JRE_DIR_OLD
+  mv $JRE_DIR ../$JRE_DIR
   cd ..
   rm -rf jre tmp
   ln -s $JRE_DIR jre

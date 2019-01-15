@@ -1,3 +1,5 @@
+set -e
+
 export VERSION=`cat destination/dist/${SERVICE}/version.txt`
 export PURPOSE=`cat destination/dist/${SERVICE}/purpose.txt 2>/dev/null`
 
