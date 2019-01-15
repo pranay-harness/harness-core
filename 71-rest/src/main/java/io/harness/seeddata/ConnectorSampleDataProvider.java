@@ -1,5 +1,6 @@
 package io.harness.seeddata;
 
+import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_DOCKER_HUB_CONNECTOR;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_DOCKER_HUB_CONNECTOR_URL;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
@@ -11,6 +12,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 @Singleton
 public class ConnectorSampleDataProvider {
@@ -19,7 +21,7 @@ public class ConnectorSampleDataProvider {
   public SettingAttribute createDockerConnector(String accountId) {
     SettingAttribute dockerSettingAttribute =
         aSettingAttribute()
-            .withName(SampleDataProviderConstants.HARNESS_DOCKER_HUB_CONNECTOR)
+            .withName(HARNESS_DOCKER_HUB_CONNECTOR)
             .withCategory(Category.CONNECTOR)
             .withAccountId(accountId)
             .withValue(
@@ -27,6 +29,11 @@ public class ConnectorSampleDataProvider {
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
 
+    SettingAttribute existing = settingsService.fetchSettingAttributeByName(
+        accountId, HARNESS_DOCKER_HUB_CONNECTOR, SettingVariableTypes.DOCKER);
+    if (existing != null) {
+      return existing;
+    }
     return settingsService.forceSave(dockerSettingAttribute);
   }
 }
