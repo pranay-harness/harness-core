@@ -127,6 +127,7 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setReleaseNumber(k8sRollingDeployResponse.getReleaseNumber());
     stateExecutionData.setStatus(executionStatus);
+    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
