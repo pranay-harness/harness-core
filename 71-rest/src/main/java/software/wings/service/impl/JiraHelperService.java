@@ -86,9 +86,15 @@ public class JiraHelperService {
                                     .withAsync(false)
                                     .build();
 
-    JiraExecutionData jiraExecutionData = delegateService.executeTask(delegateTask);
+    JiraExecutionData jiraExecutionData;
+    try {
+      jiraExecutionData = delegateService.executeTask(delegateTask);
+    } catch (Exception e) {
+      throw new WingsException("Unexpected error during authentication to JIRA server");
+    }
+
     if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
-      throw new WingsException("\"Failed to Authenticate with JIRA Server.");
+      throw new WingsException("Failed to Authenticate with JIRA Server.");
     }
   }
 
