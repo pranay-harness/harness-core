@@ -6,6 +6,7 @@ import static io.restassured.RestAssured.given;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -26,6 +27,7 @@ import org.junit.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
+import software.wings.beans.Account;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
 
@@ -142,12 +144,14 @@ public abstract class AbstractFunctionalTest implements FunctionalTests {
   @Inject private AccountGenerator accountGenerator;
   @Inject OwnerManager ownerManager;
 
+  Account account;
+
   @Before
-  public void testSetup() throws IOException {
+  public void testSetup() {
     final Seed seed = new Seed(0);
     Owners owners = ownerManager.create();
 
-    accountGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
+    account = accountGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
 
     String basicAuthValue =
         "Basic " + encodeBase64String(String.format("%s:%s", "admin@harness.io", "admin").getBytes());
@@ -158,7 +162,19 @@ public abstract class AbstractFunctionalTest implements FunctionalTests {
     RestResponse<User> userRestResponse =
         given().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
 
+    assertThat(userRestResponse).isNotNull();
     User user = userRestResponse.getResource();
+    assertThat(user).isNotNull();
     bearerToken = user.getToken();
+  }
+
+  protected void resetCache() {
+    RestResponse<User> userRestResponse = given()
+                                              .auth()
+                                              .oauth2(bearerToken)
+                                              .queryParam("accountId", account.getUuid())
+                                              .put("/users/reset-cache")
+                                              .as(new GenericType<RestResponse<User>>() {}.getType());
+    assertThat(userRestResponse).isNotNull();
   }
 }
