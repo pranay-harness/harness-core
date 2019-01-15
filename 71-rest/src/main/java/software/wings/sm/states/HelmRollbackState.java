@@ -45,7 +45,7 @@ public class HelmRollbackState extends HelmDeployState {
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageTag,
       ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails) {
+      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags) {
     Integer previousReleaseRevision = null;
 
     ContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
@@ -68,6 +68,7 @@ public class HelmRollbackState extends HelmDeployState {
         .repoName(repoName)
         .gitConfig(gitConfig)
         .encryptedDataDetails(encryptedDataDetails)
+        .commandFlags(commandFlags)
         .build();
   }
 
@@ -79,7 +80,7 @@ public class HelmRollbackState extends HelmDeployState {
   @Override
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
       ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData,
-      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags) {
     HelmDeployContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
     if (contextElement != null) {
       stateExecutionData.setReleaseOldVersion(contextElement.getNewReleaseRevision());
@@ -102,6 +103,11 @@ public class HelmRollbackState extends HelmDeployState {
   @SchemaIgnore
   public GitFileConfig getGitFileConfig() {
     return super.getGitFileConfig();
+  }
+
+  @SchemaIgnore
+  public String getCommandFlags() {
+    return super.getCommandFlags();
   }
 
   @Override

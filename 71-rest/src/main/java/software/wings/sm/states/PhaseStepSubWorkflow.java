@@ -273,6 +273,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                           .releaseName(helmSetpExecutionSummary.getReleaseName())
                           .previousReleaseRevision(helmSetpExecutionSummary.getPrevVersion())
                           .newReleaseRevision(helmSetpExecutionSummary.getNewVersion())
+                          .commandFlags(helmSetpExecutionSummary.getCommandFlags())
                           .build());
       }
       case PCF_RESIZE: {

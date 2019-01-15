@@ -36,24 +36,25 @@ public class HelmConstants {
       + "    ${SERVICE_ACCOUNT_TOKEN_DATA}";
 
   public static final String HELM_ROLLBACK_COMMAND_TEMPLATE =
-      "KUBECONFIG=${KUBECONFIG_PATH} helm rollback ${RELEASE} ${REVISION}";
+      "KUBECONFIG=${KUBECONFIG_PATH} helm rollback ${COMMAND_FLAGS} ${RELEASE} ${REVISION}";
   public static final String HELM_INSTALL_COMMAND_TEMPLATE =
-      "KUBECONFIG=${KUBECONFIG_PATH} helm install ${CHART_REFERENCE} ${OVERRIDE_VALUES} ${RELEASE_NAME} ${NAMESPACE}";
+      "KUBECONFIG=${KUBECONFIG_PATH} helm install ${COMMAND_FLAGS} ${CHART_REFERENCE} ${OVERRIDE_VALUES} ${RELEASE_NAME} ${NAMESPACE}";
   public static final String HELM_UPGRADE_COMMAND_TEMPLATE =
-      "KUBECONFIG=${KUBECONFIG_PATH} helm upgrade ${RELEASE_NAME} ${CHART_REFERENCE} ${OVERRIDE_VALUES}";
+      "KUBECONFIG=${KUBECONFIG_PATH} helm upgrade ${COMMAND_FLAGS} ${RELEASE_NAME} ${CHART_REFERENCE} ${OVERRIDE_VALUES}";
 
   // The reason we are using ^ and $ before and after ${RELEASE_NAME} is because helm list doesn't take releaseName as a
   // param and release name becomes a regex
   public static final String HELM_LIST_RELEASE_COMMAND_TEMPLATE =
-      "KUBECONFIG=${KUBECONFIG_PATH} helm list ^${RELEASE_NAME}$";
+      "KUBECONFIG=${KUBECONFIG_PATH} helm list ${COMMAND_FLAGS} ^${RELEASE_NAME}$";
   public static final String HELM_RELEASE_HIST_COMMAND_TEMPLATE =
-      "KUBECONFIG=${KUBECONFIG_PATH} helm hist ${RELEASE_NAME} ${FLAGS}";
-  public static final String HELM_VERSION_COMMAND_TEMPLATE = "KUBECONFIG=${KUBECONFIG_PATH} helm version";
+      "KUBECONFIG=${KUBECONFIG_PATH} helm hist ${COMMAND_FLAGS} ${RELEASE_NAME} ${FLAGS}";
+  public static final String HELM_VERSION_COMMAND_TEMPLATE =
+      "KUBECONFIG=${KUBECONFIG_PATH} helm version ${COMMAND_FLAGS}";
   public static final String HELM_ADD_REPO_COMMAND_TEMPLATE =
-      "KUBECONFIG=${KUBECONFIG_PATH} helm repo add ${REPO_NAME} ${REPO_URL}";
+      "KUBECONFIG=${KUBECONFIG_PATH} helm repo add ${COMMAND_FLAGS} ${REPO_NAME} ${REPO_URL}";
   public static final String HELM_REPO_LIST_COMMAND_TEMPLATE = "KUBECONFIG=${KUBECONFIG_PATH} helm repo list";
   public static final String HELM_DELETE_RELEASE_TEMPLATE =
-      "KUBECONFIG=${KUBECONFIG_PATH} helm delete ${FLAGS} ${RELEASE_NAME}";
+      "KUBECONFIG=${KUBECONFIG_PATH} helm delete ${COMMAND_FLAGS} ${FLAGS} ${RELEASE_NAME}";
 
   public static final long DEFAULT_HELM_COMMAND_TIMEOUT = TimeUnit.MINUTES.toMillis(30);
   public static final String DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS = "60"; // seconds

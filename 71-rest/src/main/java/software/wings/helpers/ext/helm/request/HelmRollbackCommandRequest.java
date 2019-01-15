@@ -31,10 +31,10 @@ public class HelmRollbackCommandRequest extends HelmCommandRequest {
       String activityId, ContainerServiceParams containerServiceParams, String releaseName, int newReleaseVersion,
       int prevReleaseVersion, int rollbackVersion, long timeoutInMillis, HelmChartSpecification chartSpecification,
       String repoName, GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      LogCallback executionLogCallback) {
+      LogCallback executionLogCallback, String commandFlags) {
     super(HelmCommandType.ROLLBACK, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails,
-        executionLogCallback);
+        executionLogCallback, commandFlags);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;
     this.rollbackVersion = rollbackVersion;

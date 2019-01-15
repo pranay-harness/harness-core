@@ -31,6 +31,7 @@ public class HelmCommandRequest {
   private GitConfig gitConfig;
   private List<EncryptedDataDetail> encryptedDataDetails;
   @JsonIgnore private transient LogCallback executionLogCallback;
+  private String commandFlags;
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;

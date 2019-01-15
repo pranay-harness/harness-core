@@ -53,6 +53,7 @@ import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
+import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
@@ -79,6 +80,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
+import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
@@ -108,6 +110,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   private static final String CHART_VERSION = "0.1.0";
   private static final String CHART_URL = "http://google.com";
   private static final String GIT_CONNECTOR_ID = "connectorId";
+  private static final String COMMAND_FLAGS = "--tls";
 
   @Mock private AppService appService;
   @Mock private ArtifactService artifactService;
@@ -129,6 +132,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private ArtifactCollectionUtil artifactCollectionUtil;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
+  @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
 
   @InjectMocks
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
@@ -239,6 +243,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(helmDeployStateExecutionData.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
     assertThat(helmDeployStateExecutionData.getReleaseOldVersion()).isEqualTo(0);
     assertThat(helmDeployStateExecutionData.getReleaseNewVersion()).isEqualTo(1);
+    assertThat(helmDeployStateExecutionData.getCommandFlags()).isNull();
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -248,6 +253,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(helmInstallCommandRequest.getHelmCommandType()).isEqualTo(HelmCommandType.INSTALL);
     assertThat(helmInstallCommandRequest.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
     assertThat(helmInstallCommandRequest.getRepoName()).isEqualTo("app-name-service-name");
+    assertThat(helmInstallCommandRequest.getCommandFlags()).isNull();
 
     verify(delegateService).executeTask(any());
   }
@@ -303,5 +309,60 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(helmDeployStateExecutionData.getChartName()).isEqualTo(null);
     assertThat(helmDeployStateExecutionData.getChartRepositoryUrl()).isEqualTo(null);
     verify(delegateService).queueTask(any());
+  }
+
+  @Test
+  public void testExecuteWithCommandFlags() {
+    helmDeployState.setCommandFlags(COMMAND_FLAGS);
+    when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
+        .thenReturn(HelmChartSpecification.builder()
+                        .chartName(CHART_NAME)
+                        .chartUrl(CHART_URL)
+                        .chartVersion(CHART_VERSION)
+                        .build());
+
+    ExecutionResponse executionResponse = helmDeployState.execute(context);
+    HelmDeployStateExecutionData helmDeployStateExecutionData =
+        (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(helmDeployStateExecutionData.getCommandFlags()).isEqualTo(COMMAND_FLAGS);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+
+    HelmInstallCommandRequest helmInstallCommandRequest = (HelmInstallCommandRequest) delegateTask.getParameters()[0];
+    assertThat(helmInstallCommandRequest.getCommandFlags()).isEqualTo(COMMAND_FLAGS);
+  }
+
+  @Test
+  public void testExecuteWithHelmRollbackForCommandFlags() {
+    when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
+        .thenReturn(HelmChartSpecification.builder()
+                        .chartName(CHART_NAME)
+                        .chartUrl(CHART_URL)
+                        .chartVersion(CHART_VERSION)
+                        .build());
+    context.pushContextElement(HelmDeployContextElement.builder()
+                                   .releaseName(HELM_RELEASE_NAME_PREFIX)
+                                   .commandFlags(COMMAND_FLAGS)
+                                   .newReleaseRevision(2)
+                                   .previousReleaseRevision(1)
+                                   .build());
+
+    ExecutionResponse executionResponse = helmRollbackState.execute(context);
+    HelmDeployStateExecutionData helmDeployStateExecutionData =
+        (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
+
+    assertThat(helmDeployStateExecutionData.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
+    assertThat(helmDeployStateExecutionData.getCommandFlags()).isEqualTo(COMMAND_FLAGS);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+
+    HelmRollbackCommandRequest helmRollbackCommandRequest =
+        (HelmRollbackCommandRequest) delegateTask.getParameters()[0];
+    assertThat(helmRollbackCommandRequest.getCommandFlags()).isEqualTo(COMMAND_FLAGS);
+    assertThat(helmRollbackCommandRequest.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
   }
 }

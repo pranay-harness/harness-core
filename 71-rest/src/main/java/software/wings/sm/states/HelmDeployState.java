@@ -120,6 +120,7 @@ public class HelmDeployState extends State {
   // This field is in fact representing helmReleaseName. We will change it later on
   @Getter @Setter private String helmReleaseNamePrefix;
   @Getter @Setter private GitFileConfig gitFileConfig;
+  @Getter @Setter private String commandFlags;
 
   public static final String HELM_COMMAND_NAME = "Helm Deploy";
   private static final String DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_TAG}";
@@ -167,6 +168,8 @@ public class HelmDeployState extends State {
     String releaseName = obtainHelmReleaseNamePrefix(context);
     updateHelmReleaseNameInInfraMappingElement(context, releaseName);
 
+    String commandFlags = obtainCommandFlags(context);
+
     ContainerServiceParams containerServiceParams =
         containerDeploymentHelper.getContainerServiceParams(containerInfraMapping, releaseName, context);
 
@@ -184,6 +187,7 @@ public class HelmDeployState extends State {
                                                           .activityId(activity.getUuid())
                                                           .releaseName(releaseName)
                                                           .namespace(containerServiceParams.getNamespace())
+                                                          .commandFlags(commandFlags)
                                                           .build();
 
     if (helmChartSpecification != null) {
@@ -207,11 +211,11 @@ public class HelmDeployState extends State {
       encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
     }
 
-    setNewAndPrevReleaseVersion(
-        context, app, releaseName, containerServiceParams, stateExecutionData, gitConfig, encryptedDataDetails);
+    setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData, gitConfig,
+        encryptedDataDetails, commandFlags);
     HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
         releaseName, app.getAccountId(), app.getUuid(), activity.getUuid(), imageDetails, containerInfraMapping,
-        repoName, gitConfig, encryptedDataDetails);
+        repoName, gitConfig, encryptedDataDetails, commandFlags);
 
     delegateService.queueTask(aDelegateTask()
                                   .withAccountId(app.getAccountId())
@@ -236,10 +240,11 @@ public class HelmDeployState extends State {
 
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
       ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData,
-      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails) throws InterruptedException {
+      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags)
+      throws InterruptedException {
     logger.info("Setting new and previous helm release version");
-    int prevVersion = getPreviousReleaseVersion(
-        app.getUuid(), app.getAccountId(), releaseName, containerServiceParams, gitConfig, encryptedDataDetails);
+    int prevVersion = getPreviousReleaseVersion(app.getUuid(), app.getAccountId(), releaseName, containerServiceParams,
+        gitConfig, encryptedDataDetails, commandFlags);
 
     stateExecutionData.setReleaseOldVersion(prevVersion);
     stateExecutionData.setReleaseNewVersion(prevVersion + 1);
@@ -258,7 +263,7 @@ public class HelmDeployState extends State {
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageDetails,
       ContainerInfrastructureMapping infrastructureMapping, String repoName, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails) {
+      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags) {
     List<String> helmValueOverridesYamlFiles =
         serviceTemplateService.helmValueOverridesYamlFiles(appId, infrastructureMapping.getServiceTemplateId());
     List<String> helmValueOverridesYamlFilesEvaluated = null;
@@ -296,7 +301,8 @@ public class HelmDeployState extends State {
             .timeoutInMillis(TimeUnit.MINUTES.toMillis(steadyStateTimeout))
             .repoName(repoName)
             .gitConfig(gitConfig)
-            .encryptedDataDetails(encryptedDataDetails);
+            .encryptedDataDetails(encryptedDataDetails)
+            .commandFlags(commandFlags);
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);
@@ -322,7 +328,7 @@ public class HelmDeployState extends State {
 
   protected int getPreviousReleaseVersion(String appId, String accountId, String releaseName,
       ContainerServiceParams containerServiceParams, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails) throws InterruptedException {
+      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags) throws InterruptedException {
     int prevVersion = 0;
     HelmReleaseHistoryCommandRequest helmReleaseHistoryCommandRequest =
         HelmReleaseHistoryCommandRequest.builder()
@@ -330,6 +336,7 @@ public class HelmDeployState extends State {
             .containerServiceParams(containerServiceParams)
             .gitConfig(gitConfig)
             .encryptedDataDetails(encryptedDataDetails)
+            .commandFlags(commandFlags)
             .build();
 
     DelegateTask delegateTask = aDelegateTask()
@@ -516,6 +523,25 @@ public class HelmDeployState extends State {
         throw new InvalidRequestException("Helm rollback is not possible without deployment");
       }
       return contextElement.getReleaseName();
+    }
+  }
+
+  private String obtainCommandFlags(ExecutionContext context) {
+    if (getStateType().equals(HELM_DEPLOY.name())) {
+      String commandFlags = getCommandFlags();
+
+      if (isNotBlank(commandFlags)) {
+        commandFlags = context.renderExpression(commandFlags);
+      }
+
+      return commandFlags;
+    } else {
+      HelmDeployContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
+      if (contextElement == null) {
+        return null;
+      }
+
+      return contextElement.getCommandFlags();
     }
   }
 
