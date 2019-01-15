@@ -1866,11 +1866,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldTriggerTemplateCanaryWorkflow() throws InterruptedException {
-    Service service = addService("svc1");
+    Service service1 = addService("svc1");
 
-    Service templateService = addService("svc2");
+    Service service2 = addService("svc2");
 
-    ServiceTemplate serviceTemplate = getServiceTemplate(service);
+    ServiceTemplate serviceTemplate1 = getServiceTemplate(service1);
+
+    ServiceTemplate serviceTemplate2 = getServiceTemplate(service2);
 
     SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
@@ -1882,7 +1884,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .withAccountId(app.getAccountId())
                                               .withEnvId(env.getUuid())
                                               .withHostNames(Lists.newArrayList("host1"))
-                                              .withServiceTemplateId(serviceTemplate.getUuid())
+                                              .withServiceTemplateId(serviceTemplate1.getUuid())
                                               .withComputeProviderSettingId(computeProvider.getUuid())
                                               .withComputeProviderType(computeProvider.getValue().getType())
                                               .withDeploymentType(SSH.name())
@@ -1891,9 +1893,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .build());
 
     InfrastructureMapping templateInfraMapping =
-        createInfraMappingService(serviceTemplate, computeProvider, "Name3", "host12");
-
-    triggerTemplateWorkflow(app.getAppId(), env, service, infrastructureMapping, templateService, templateInfraMapping);
+        createInfraMappingService(serviceTemplate2, computeProvider, "Name3", "host12");
+    triggerTemplateWorkflow(app.getAppId(), env, service1, infrastructureMapping, service2, templateInfraMapping);
   }
 
   private ServiceTemplate getServiceTemplate(Service service) {

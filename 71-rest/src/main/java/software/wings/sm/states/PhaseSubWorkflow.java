@@ -115,6 +115,11 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       }
     }
 
+    if (service != null && infrastructureMapping != null
+        && !service.getUuid().equals(infrastructureMapping.getServiceId())) {
+      throw new InvalidRequestException("Service ID does not match the service ID of the service infrastructure");
+    }
+
     ExecutionResponse response =
         getSpawningExecutionResponse(context, workflowStandardParams, service, infrastructureMapping);
 
