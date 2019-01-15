@@ -47,26 +47,6 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-if [[ "$(ulimit -n)" == "unlimited" || $(ulimit -n) -lt 10000 ]]; then
-  echo "ulimit -n is too low ($(ulimit -n)). Run the following command to set it to 10000 or greater:"
-  echo
-  echo "ulimit -n 10000"
-  echo
-  exit 1
-fi
-
-if [[ "$OSTYPE" == darwin* ]]; then
-  if [[ $(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2 | cut -d 'G' -f 1) -lt 6 ]]; then
-    echo "Not enough memory ($(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2)). Minimum 6 GB required."
-    exit 1
-  fi
-else
-  if [[ $(free -m | grep Mem | awk '{ print $2 }') -lt 6000 ]]; then
-    echo "Not enough memory ($(free -m | grep Mem | awk '{ print $2 }') MB). Minimum 6 GB required."
-    exit 1
-  fi
-fi
-
 if [ ! -e proxy.config ]; then
   echo "PROXY_HOST=" > proxy.config
   echo "PROXY_PORT=" >> proxy.config
