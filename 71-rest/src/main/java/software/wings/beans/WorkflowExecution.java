@@ -20,6 +20,8 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.common.Constants;
 import software.wings.sm.InfraMappingSummary;
@@ -44,6 +46,8 @@ import java.util.Map;
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowExecution extends Base {
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecution.class);
+
   public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";
   public static final String DEPLOYMENT_TRIGGERED_ID_KEY = "deploymentTriggerId";
   public static final String DISPLAY_NAME_KEY = "displayName";

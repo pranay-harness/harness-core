@@ -4,15 +4,12 @@
 
 package software.wings.service.impl;
 
-import static io.harness.beans.ExecutionStatus.NEW;
-import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
 
@@ -133,17 +130,20 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
    */
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
+    // Update the workflow execution if still in NEW, QUEUE status to mark the startTs
+    workflowExecutionService.updateStartStatus(appId, workflowExecutionId, STARTING);
+
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                         .filter("appId", appId)
-                                         .filter(ID_KEY, workflowExecutionId)
-                                         .field("status")
-                                         .in(asList(NEW, QUEUED, STARTING, RUNNING));
+                                         .filter(WorkflowExecution.APP_ID_KEY, appId)
+                                         .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
+                                         .field(WorkflowExecution.STATUS_KEY)
+                                         .in(asList(STARTING, RUNNING));
 
     final long currentTime = System.currentTimeMillis();
 
     UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-                                                        .set("status", status)
-                                                        .set("endTs", currentTime);
+                                                        .set(WorkflowExecution.STATUS_KEY, status)
+                                                        .set(WorkflowExecution.END_TS_KEY, currentTime);
     wingsPersistence.update(query, updateOps);
 
     handlePostExecution(context);

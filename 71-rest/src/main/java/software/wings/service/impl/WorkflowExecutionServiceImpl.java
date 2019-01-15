@@ -101,6 +101,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Value;
 import org.json.JSONObject;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -1348,7 +1349,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution savedWorkflowExecution;
     if (workflowExecution.getWorkflowType() != ORCHESTRATION) {
       stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
-      updateStartStatus(workflowExecution, RUNNING);
+      updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING);
       savedWorkflowExecution = wingsPersistence.getWithAppId(
           WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
       if (workflowExecution.getWorkflowType() == PIPELINE) {
@@ -1389,23 +1390,24 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private void updateStartStatus(WorkflowExecution workflowExecution, ExecutionStatus status) {
-    // TODO: findAndModify
+  private static final FindAndModifyOptions updateStartStatusOptions = new FindAndModifyOptions();
+
+  @Override
+  public void updateStartStatus(String appId, String workflowExecutionId, ExecutionStatus status) {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                         .filter(WorkflowExecution.APP_ID_KEY, workflowExecution.getAppId())
-                                         .filter(WorkflowExecution.ID_KEY, workflowExecution.getUuid())
+                                         .filter(WorkflowExecution.APP_ID_KEY, appId)
+                                         .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
                                          .field(WorkflowExecution.STATUS_KEY)
                                          .in(asList(NEW, QUEUED));
+
     UpdateOperations<WorkflowExecution> updateOps =
         wingsPersistence.createUpdateOperations(WorkflowExecution.class)
             .set(WorkflowExecution.STATUS_KEY, status)
             .set(WorkflowExecution.START_TS_KEY, System.currentTimeMillis());
-    wingsPersistence.update(query, updateOps);
+
+    wingsPersistence.findAndModify(query, updateOps, updateStartStatusOptions);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public WorkflowExecution triggerEnvExecution(
       String appId, String envId, ExecutionArgs executionArgs, Trigger trigger) {

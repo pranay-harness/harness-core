@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.HIterator;
@@ -111,6 +112,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
       String appId, String executionUuid, String stateExecutionInstanceId);
 
   boolean workflowExecutionsRunning(WorkflowType workflowType, String appId, String workflowId);
+
+  void updateStartStatus(String appId, String workflowExecutionId, ExecutionStatus status);
 
   boolean updateNotes(String appId, String workflowExecutionId, ExecutionArgs executionArgs);
 
