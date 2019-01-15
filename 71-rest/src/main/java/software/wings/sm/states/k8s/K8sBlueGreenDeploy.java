@@ -144,6 +144,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setReleaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber());
     stateExecutionData.setStatus(executionStatus);
+    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
     k8sStateHelper.saveK8sElement(context,
         K8sElement.builder()
