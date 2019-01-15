@@ -57,6 +57,7 @@ import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig.K8sDeleg
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -92,6 +93,7 @@ public class K8sStateHelper {
   @Inject private transient AwsCommandHelper awsCommandHelper;
   @Inject private transient ActivityService activityService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
+  @Inject GitFileConfigHelperService gitFileConfigHelperService;
 
   public Activity createK8sActivity(ExecutionContext executionContext, String commandName, String stateType,
       ActivityService activityService, List<CommandUnit> commandUnits) {
@@ -121,7 +123,8 @@ public class K8sStateHelper {
     return activityService.save(activity);
   }
 
-  public K8sDelegateManifestConfig createDelegateManifestConfig(ApplicationManifest appManifest) {
+  public K8sDelegateManifestConfig createDelegateManifestConfig(
+      ExecutionContext context, ApplicationManifest appManifest) {
     K8sDelegateManifestConfigBuilder manifestConfigBuilder =
         K8sDelegateManifestConfig.builder().manifestStoreTypes(appManifest.getStoreType());
 
@@ -129,7 +132,8 @@ public class K8sStateHelper {
       manifestConfigBuilder.manifestFiles(
           applicationManifestService.getManifestFilesByAppManifestId(appManifest.getAppId(), appManifest.getUuid()));
     } else {
-      GitFileConfig gitFileConfig = appManifest.getGitFileConfig();
+      GitFileConfig gitFileConfig =
+          gitFileConfigHelperService.renderGitFileConfig(context, appManifest.getGitFileConfig());
       GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), null);
@@ -147,7 +151,7 @@ public class K8sStateHelper {
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId, String commandName) {
     Application app = appService.get(context.getAppId());
 
-    GitFetchFilesTaskParams fetchFilesTaskParams = createGitFetchFilesTaskParams(app, appManifestMap);
+    GitFetchFilesTaskParams fetchFilesTaskParams = createGitFetchFilesTaskParams(context, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(activityId);
     setValuesYamlPath(fetchFilesTaskParams);
 
@@ -187,7 +191,7 @@ public class K8sStateHelper {
   }
 
   private Map<String, GitFetchFilesConfig> getGitFetchFileConfigMap(
-      Application app, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+      ExecutionContext context, Application app, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = new HashMap<>();
 
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
@@ -195,7 +199,8 @@ public class K8sStateHelper {
       ApplicationManifest applicationManifest = entry.getValue();
 
       if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
-        GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
+        GitFileConfig gitFileConfig =
+            gitFileConfigHelperService.renderGitFileConfig(context, applicationManifest.getGitFileConfig());
         gitFileConfig.setFilePath(normalizeFilePath(gitFileConfig.getFilePath()));
         GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
         List<EncryptedDataDetail> encryptionDetails =
@@ -215,8 +220,8 @@ public class K8sStateHelper {
   }
 
   public GitFetchFilesTaskParams createGitFetchFilesTaskParams(
-      Application app, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
-    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = getGitFetchFileConfigMap(app, appManifestMap);
+      ExecutionContext context, Application app, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = getGitFetchFileConfigMap(context, app, appManifestMap);
 
     return GitFetchFilesTaskParams.builder()
         .accountId(app.getAccountId())

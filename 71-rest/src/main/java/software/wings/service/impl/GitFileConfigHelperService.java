@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -10,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
+import software.wings.sm.ExecutionContext;
 
 @Singleton
 public class GitFileConfigHelperService {
@@ -65,5 +68,25 @@ public class GitFileConfigHelperService {
         .useBranch(gitFileConfig.isUseBranch())
         .connectorName(gitFileConfig.getConnectorName())
         .build();
+  }
+
+  public GitFileConfig renderGitFileConfig(ExecutionContext context, GitFileConfig gitFileConfig) {
+    if (context == null) {
+      return gitFileConfig;
+    }
+
+    if (isNotBlank(gitFileConfig.getCommitId())) {
+      gitFileConfig.setCommitId(context.renderExpression(gitFileConfig.getCommitId()));
+    }
+
+    if (isNotBlank(gitFileConfig.getBranch())) {
+      gitFileConfig.setBranch(context.renderExpression(gitFileConfig.getBranch()));
+    }
+
+    if (isNotBlank(gitFileConfig.getFilePath())) {
+      gitFileConfig.setFilePath(context.renderExpression(gitFileConfig.getFilePath()));
+    }
+
+    return gitFileConfig;
   }
 }
