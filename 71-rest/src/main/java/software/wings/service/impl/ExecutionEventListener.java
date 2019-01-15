@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
-import static io.harness.beans.ExecutionStatus.NEW;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
@@ -19,7 +18,6 @@ import io.harness.lock.PersistentLocker;
 import io.harness.queue.QueueListener;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
@@ -30,6 +28,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateMachineExecutor;
 
 import java.time.Duration;
@@ -41,6 +40,8 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
   @Inject private PersistentLocker persistentLocker;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+
   public ExecutionEventListener() {
     super(false);
   }
@@ -129,17 +130,7 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
               message.getAppId(), workflowExecution.getUuid());
         }
 
-        // TODO: findAndModify
-        Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                             .filter(WorkflowExecution.APP_ID_KEY, workflowExecution.getAppId())
-                                             .filter(WorkflowExecution.ID_KEY, workflowExecution.getUuid())
-                                             .field(WorkflowExecution.STATUS_KEY)
-                                             .in(asList(NEW, QUEUED));
-        UpdateOperations<WorkflowExecution> updateOps =
-            wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-                .set(WorkflowExecution.STATUS_KEY, status)
-                .set(WorkflowExecution.START_TS_KEY, System.currentTimeMillis());
-        wingsPersistence.update(query, updateOps);
+        workflowExecutionService.updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), status);
       } catch (Exception e) {
         logger.error("Exception in generating execution log context", e);
       }
