@@ -11,6 +11,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 @Singleton
 public class CloudProviderSampleDataProvider {
@@ -31,6 +32,12 @@ public class CloudProviderSampleDataProvider {
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
+
+    SettingAttribute existing = settingsService.fetchSettingAttributeByName(
+        accountId, K8S_CLOUD_PROVIDER_NAME, SettingVariableTypes.KUBERNETES_CLUSTER);
+    if (existing != null) {
+      return existing;
+    }
     return settingsService.forceSave(kubeCluster);
   }
 }
