@@ -76,7 +76,7 @@ public class JiraCreateUpdate extends State {
   @Getter @Setter private String sweepingOutputName;
 
   public JiraCreateUpdate(String name) {
-    super(name, StateType.JIRA_CREATE_UPDATE.getName());
+    super(name, StateType.JIRA_CREATE_UPDATE.name());
   }
 
   @Override
