@@ -1,9 +1,8 @@
 #!/bin/bash -e
 
-JRE_DIR_OLD=jre1.8.0_131
-JRE_DIR=jre1.8.0_131_2
+JRE_DIR=jre1.8.0_191
 JRE_BINARY=jre/bin/java
-JVM_URL=_delegateStorageUrl_/jre/8u131/jre-8u131-linux-x64.tar.gz
+JVM_URL=_delegateStorageUrl_/jre/8u191/jre-8u191-linux-x64.tar.gz
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -72,7 +71,7 @@ then
   cd tmp
   tar xzf $JVM_TAR_FILENAME
   rm -rf ../$JRE_DIR
-  mv $JRE_DIR_OLD ../$JRE_DIR
+  mv $JRE_DIR ../$JRE_DIR
   cd ..
   rm -rf jre tmp
   ln -s $JRE_DIR jre

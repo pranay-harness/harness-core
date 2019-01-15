@@ -25,10 +25,16 @@ UI_IMAGE_TAR="${IMAGES_DIR}/ui.tar"
 PROXY_IMAGE_TAR="${IMAGES_DIR}/proxy.tar"
 MONGO_IMAGE_TAR="${IMAGES_DIR}/mongo.tar"
 
-JRE_SOURCE_URL=https://app.harness.io/storage/wingsdelegates/jre/8u131
-JRE_SOLARIS=jre-8u131-solaris-x64.tar.gz
-JRE_MACOSX=jre-8u131-macosx-x64.tar.gz
-JRE_LINUX=jre-8u131-linux-x64.tar.gz
+JRE_SOURCE_URL_1=https://app.harness.io/storage/wingsdelegates/jre/8u131
+JRE_SOLARIS_1=jre-8u131-solaris-x64.tar.gz
+JRE_MACOSX_1=jre-8u131-macosx-x64.tar.gz
+JRE_LINUX_1=jre-8u131-linux-x64.tar.gz
+
+JRE_SOURCE_URL_2=https://app.harness.io/storage/wingsdelegates/jre/8u191
+JRE_SOLARIS_2=jre-8u191-solaris-x64.tar.gz
+JRE_MACOSX_2=jre-8u191-macosx-x64.tar.gz
+JRE_LINUX_2=jre-8u191-linux-x64.tar.gz
+
 
 rm -f "${INSTALLER_COMPRESSED_FILE}"
 
@@ -71,15 +77,24 @@ docker save "${UI_IMAGE}" > "${UI_IMAGE_TAR}"
 docker save "${PROXY_IMAGE}" > "${PROXY_IMAGE_TAR}"
 docker save "${MONGO_IMAGE}" > "${MONGO_IMAGE_TAR}"
 
-curl "${JRE_SOURCE_URL}/${JRE_SOLARIS}" > "${JRE_SOLARIS}"
-curl "${JRE_SOURCE_URL}/${JRE_MACOSX}" > "${JRE_MACOSX}"
-curl "${JRE_SOURCE_URL}/${JRE_LINUX}" > "${JRE_LINUX}"
+curl "${JRE_SOURCE_URL_1}/${JRE_SOLARIS_1}" > "${JRE_SOLARIS_1}"
+curl "${JRE_SOURCE_URL_1}/${JRE_MACOSX_1}" > "${JRE_MACOSX_1}"
+curl "${JRE_SOURCE_URL_1}/${JRE_LINUX_1}" > "${JRE_LINUX_1}"
+
+curl "${JRE_SOURCE_URL_2}/${JRE_SOLARIS_2}" > "${JRE_SOLARIS_2}"
+curl "${JRE_SOURCE_URL_2}/${JRE_MACOSX_2}" > "${JRE_MACOSX_2}"
+curl "${JRE_SOURCE_URL_2}/${JRE_LINUX_2}" > "${JRE_LINUX_2}"
+
 
 cp delegate.jar "${IMAGES_DIR}/"
 cp watcher.jar "${IMAGES_DIR}/"
-mv "${JRE_SOLARIS}" "${IMAGES_DIR}/"
-mv "${JRE_MACOSX}" "${IMAGES_DIR}/"
-mv "${JRE_LINUX}" "${IMAGES_DIR}/"
+mv "${JRE_SOLARIS_1}" "${IMAGES_DIR}/"
+mv "${JRE_MACOSX_1}" "${IMAGES_DIR}/"
+mv "${JRE_LINUX_1}" "${IMAGES_DIR}/"
+
+mv "${JRE_SOLARIS_2}" "${IMAGES_DIR}/"
+mv "${JRE_MACOSX_2}" "${IMAGES_DIR}/"
+mv "${JRE_LINUX_2}" "${IMAGES_DIR}/"
 
 tar -cvzf "${INSTALLER_COMPRESSED_FILE}" "${INSTALLER_DIR}"
 #rm -rf "${INSTALLER_DIR}"
