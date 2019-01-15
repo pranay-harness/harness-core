@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -142,7 +143,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
     on(shellScriptTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(shellScriptTemplateProcessor).set("workflowService", workflowService);
 
-    when(wingsPersistence.createQuery(Workflow.class)).thenReturn(query);
+    when(wingsPersistence.createQuery(Workflow.class, excludeAuthority)).thenReturn(query);
 
     when(query.field(LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
     when(end.contains(savedTemplate.getUuid())).thenReturn(query);
@@ -180,7 +181,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTest {
     on(shellScriptTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(shellScriptTemplateProcessor).set("workflowService", workflowService);
 
-    when(wingsPersistence.createQuery(Workflow.class)).thenReturn(query);
+    when(wingsPersistence.createQuery(Workflow.class, excludeAuthority)).thenReturn(query);
 
     when(query.field(LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
     when(end.contains(savedTemplate.getUuid())).thenReturn(query);

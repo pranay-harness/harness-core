@@ -1,6 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
@@ -76,7 +77,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   public void updateLinkedEntities(Template template) {
     // Read all the service commands that references the given
     try (HIterator<ServiceCommand> iterator =
-             new HIterator<>(wingsPersistence.createQuery(ServiceCommand.class)
+             new HIterator<>(wingsPersistence.createQuery(ServiceCommand.class, excludeAuthority)
                                  .filter(ServiceCommand.TEMPATE_UUID_KEY, template.getUuid())
                                  .fetch())) {
       while (iterator.hasNext()) {

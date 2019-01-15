@@ -94,7 +94,8 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(template).isNotNull();
     assertThat(template.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
     assertThat(template.getKeywords()).isNotEmpty();
-    assertThat(template.getKeywords()).contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase());
+    assertThat(template.getKeywords())
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), template.getName().toLowerCase());
     assertThat(template.getVersion()).isEqualTo(1);
     SshCommandTemplate SshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
     assertThat(SshCommandTemplate).isNotNull();
@@ -110,7 +111,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(savedTemplate).isNotNull();
     assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
     assertThat(savedTemplate.getKeywords()).isNotEmpty();
-    assertThat(savedTemplate.getKeywords()).contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase());
+    assertThat(savedTemplate.getKeywords()).contains(template.getName().toLowerCase());
     assertThat(savedTemplate.getVersion()).isEqualTo(1);
     SshCommandTemplate savedSshCommandTemplate = (SshCommandTemplate) savedTemplate.getTemplateObject();
     assertThat(savedSshCommandTemplate).isNotNull();
@@ -128,7 +129,8 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(template).isNotNull();
     assertThat(template.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
     assertThat(template.getKeywords()).isNotEmpty();
-    assertThat(template.getKeywords()).contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase());
+    assertThat(template.getKeywords())
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), template.getName().toLowerCase());
     assertThat(template.getVersion()).isEqualTo(1);
 
     SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
@@ -142,7 +144,8 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(template).isNotNull();
     assertThat(template.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
     assertThat(template.getKeywords()).isNotEmpty();
-    assertThat(template.getKeywords()).contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase());
+    assertThat(template.getKeywords())
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), template.getName().toLowerCase());
     assertThat(template.getVersion()).isEqualTo(1);
     sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
     assertThat(sshCommandTemplate).isNotNull();
@@ -163,7 +166,8 @@ public class TemplateServiceTest extends TemplateBaseTest {
 
     assertThat(template).isNotNull();
     assertThat(template.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
-    assertThat(template.getKeywords()).contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase());
+    assertThat(template.getKeywords())
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), template.getName().toLowerCase());
   }
 
   @Test
@@ -174,7 +178,9 @@ public class TemplateServiceTest extends TemplateBaseTest {
 
     assertThat(savedTemplate).isNotNull();
     assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
-    assertThat(savedTemplate.getKeywords()).isNotEmpty().contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase());
+    assertThat(savedTemplate.getKeywords())
+        .isNotEmpty()
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), savedTemplate.getName().toLowerCase());
     assertThat(savedTemplate.getVersion()).isEqualTo(1);
     SshCommandTemplate SshCommandTemplate = (SshCommandTemplate) savedTemplate.getTemplateObject();
     assertThat(SshCommandTemplate).isNotNull();
@@ -187,7 +193,9 @@ public class TemplateServiceTest extends TemplateBaseTest {
     Template updatedTemplate = templateService.update(savedTemplate);
     assertThat(updatedTemplate).isNotNull();
     assertThat(updatedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
-    assertThat(updatedTemplate.getKeywords()).isNotEmpty().contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase());
+    assertThat(updatedTemplate.getKeywords())
+        .isNotEmpty()
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), updatedTemplate.getName().toLowerCase());
     assertThat(updatedTemplate.getDescription()).isEqualTo(TEMPLATE_DESC_CHANGED);
     assertThat(updatedTemplate.getVersion()).isEqualTo(1L);
     assertThat(updatedTemplate.getTemplateObject()).isNotNull();
@@ -231,6 +239,8 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(savedHttpTemplate).isNotNull();
     assertThat(savedHttpTemplate.getUrl()).isNotNull().isEqualTo("http://harness.io");
     assertThat(savedHttpTemplate).isNotNull();
+    assertThat(savedTemplate.getKeywords()).isNotEmpty();
+    assertThat(savedTemplate.getKeywords()).contains(savedTemplate.getName().toLowerCase());
 
     savedTemplate.setDescription(TEMPLATE_DESC_CHANGED);
 
@@ -240,6 +250,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
                                            .assertion(savedHttpTemplate.getAssertion())
                                            .build();
     savedTemplate.setTemplateObject(updatedHttpTemplate);
+    savedTemplate.setName("Another Ping Response");
 
     Template updatedTemplate = templateService.update(savedTemplate);
     assertThat(updatedTemplate).isNotNull();
@@ -247,6 +258,9 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(updatedTemplate.getDescription()).isEqualTo(TEMPLATE_DESC_CHANGED);
     assertThat(updatedTemplate.getVersion()).isEqualTo(2L);
     assertThat(updatedTemplate.getTemplateObject()).isNotNull();
+    assertThat(updatedTemplate.getKeywords()).isNotEmpty();
+    assertThat(updatedTemplate.getKeywords()).contains(updatedTemplate.getName().toLowerCase());
+    assertThat(updatedTemplate.getKeywords()).doesNotContain("Ping Response".toLowerCase());
 
     updatedHttpTemplate = (HttpTemplate) updatedTemplate.getTemplateObject();
     assertThat(updatedHttpTemplate).isNotNull();
@@ -262,7 +276,9 @@ public class TemplateServiceTest extends TemplateBaseTest {
 
     assertThat(savedTemplate).isNotNull();
     assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
-    assertThat(savedTemplate.getKeywords()).isNotEmpty().contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase());
+    assertThat(savedTemplate.getKeywords())
+        .isNotEmpty()
+        .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), savedTemplate.getName().toLowerCase());
     assertThat(savedTemplate.getVersion()).isEqualTo(1);
     SshCommandTemplate SshCommandTemplate = (SshCommandTemplate) savedTemplate.getTemplateObject();
     assertThat(SshCommandTemplate).isNotNull();
@@ -425,7 +441,6 @@ public class TemplateServiceTest extends TemplateBaseTest {
                              .name("My Install Command")
                              .description(TEMPLATE_DESC)
                              .folderPath("Harness/Tomcat Commands")
-                             .keywords(asList(TEMPLATE_CUSTOM_KEYWORD))
                              .gallery(HARNESS_GALLERY)
                              .appId(GLOBAL_APP_ID)
                              .accountId(GLOBAL_ACCOUNT_ID)

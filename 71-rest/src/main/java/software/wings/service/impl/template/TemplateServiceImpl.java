@@ -38,7 +38,6 @@ import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
@@ -170,7 +169,17 @@ public class TemplateServiceImpl implements TemplateService {
       oldTemplate = get(template.getAccountId(), template.getUuid(), String.valueOf(template.getVersion()));
     }
     notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
-
+    List<String> existingKeywords = oldTemplate.getKeywords();
+    List<String> generatedKeywords = trimList(template.generateKeywords());
+    if (isNotEmpty(existingKeywords)) {
+      generatedKeywords.addAll(existingKeywords);
+    }
+    generatedKeywords.remove(oldTemplate.getName().toLowerCase());
+    if (oldTemplate.getDescription() != null) {
+      generatedKeywords.remove(oldTemplate.getDescription().toLowerCase());
+    }
+    generatedKeywords.remove(oldTemplate.getType().toLowerCase());
+    template.setKeywords(trimList(Arrays.asList(generatedKeywords.toArray())));
     VersionedTemplate newVersionedTemplate = buildTemplateDetails(template, template.getUuid());
 
     DiffNode templateDetailsDiff = ObjectDifferBuilder.buildDefault().compare(
@@ -461,7 +470,7 @@ public class TemplateServiceImpl implements TemplateService {
                                           .field(KEYWORDS_KEY)
                                           .in(asList(keyword.toLowerCase()));
       List<Template> templates = templateQuery.asList();
-      if (EmptyPredicate.isNotEmpty(templates)) {
+      if (isNotEmpty(templates)) {
         template = templates.get(0);
       }
       if (template != null) {

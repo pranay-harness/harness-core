@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -124,13 +125,16 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
 
     savedTemplate.setVariables(asList(aVariable().withName("MyVar").withValue("MyValue").build(),
         aVariable().withName("MySecondVar").withValue("MySecondValue").build()));
-
+    savedTemplate.setName("Another Template");
     Template updatedTemplate = templateService.update(savedTemplate);
     assertThat(updatedTemplate).isNotNull();
     assertThat(updatedTemplate.getVersion()).isEqualTo(2L);
     assertThat(updatedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
     assertThat(updatedTemplate.getDescription()).isEqualTo(TEMPLATE_DESC_CHANGED);
     assertThat(updatedTemplate.getVariables()).isNotEmpty();
+    assertThat(updatedTemplate.getKeywords()).isNotEmpty();
+    assertThat(updatedTemplate.getKeywords()).doesNotContain(template.getName().toLowerCase());
+    assertThat(updatedTemplate.getKeywords()).contains("Another Template".toLowerCase());
 
     Variable firstVariable = updatedTemplate.getVariables()
                                  .stream()
@@ -166,7 +170,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
     on(sshCommandTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(sshCommandTemplateProcessor).set("serviceResourceService", serviceResourceService);
 
-    when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(query);
+    when(wingsPersistence.createQuery(ServiceCommand.class, excludeAuthority)).thenReturn(query);
 
     Command command =
         aCommand()

@@ -1,6 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static software.wings.beans.Base.LINKED_TEMPLATE_UUIDS_KEY;
 
@@ -36,10 +37,11 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
       logger.info("Template {} was deleted. Not updating linked entities", template.getUuid());
       return;
     }
-    try (HIterator<Workflow> workflowIterator = new HIterator<>(wingsPersistence.createQuery(Workflow.class)
-                                                                    .field(LINKED_TEMPLATE_UUIDS_KEY)
-                                                                    .contains(template.getUuid())
-                                                                    .fetch())) {
+    try (HIterator<Workflow> workflowIterator =
+             new HIterator<>(wingsPersistence.createQuery(Workflow.class, excludeAuthority)
+                                 .field(LINKED_TEMPLATE_UUIDS_KEY)
+                                 .contains(template.getUuid())
+                                 .fetch())) {
       while (workflowIterator.hasNext()) {
         Workflow workflow = workflowIterator.next();
         try {
