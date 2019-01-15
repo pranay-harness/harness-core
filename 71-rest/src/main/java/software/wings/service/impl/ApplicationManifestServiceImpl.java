@@ -390,7 +390,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
     appManifestMap.put(K8sValuesLocation.Service, appManifest);
 
-    GitFetchFilesTaskParams fetchFilesTaskParams = k8sStateHelper.createGitFetchFilesTaskParams(app, appManifestMap);
+    GitFetchFilesTaskParams fetchFilesTaskParams =
+        k8sStateHelper.createGitFetchFilesTaskParams(null, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(generateUuid());
 
     DelegateTask delegateTask = aDelegateTask()

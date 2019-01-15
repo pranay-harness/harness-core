@@ -104,7 +104,7 @@ public class K8sCanarySetup extends State implements K8sStateExecutor {
             .k8sTaskType(K8sTaskType.CANARY_SETUP)
             .timeoutIntervalInMin(10)
             .k8sDelegateManifestConfig(
-                k8sStateHelper.createDelegateManifestConfig(appManifestMap.get(K8sValuesLocation.Service)))
+                k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
             .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context, valuesFiles))
             .build();
 
