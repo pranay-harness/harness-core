@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -111,6 +112,8 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
     assertThat(updatedTemplate.getVersion()).isEqualTo(2L);
     assertThat(updatedTemplate.getTemplateObject()).isNotNull();
     assertThat(updatedTemplate.getVariables()).extracting("name").contains("Url", "Header");
+    assertThat(updatedTemplate.getKeywords()).isNotEmpty();
+    assertThat(updatedTemplate.getKeywords()).contains(template.getName().toLowerCase());
     assertThat(updatedHttpTemplate).isNotNull();
   }
 
@@ -150,7 +153,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
     on(httpTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(httpTemplateProcessor).set("workflowService", workflowService);
 
-    when(wingsPersistence.createQuery(Workflow.class)).thenReturn(query);
+    when(wingsPersistence.createQuery(Workflow.class, excludeAuthority)).thenReturn(query);
 
     when(query.field(LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
     when(end.contains(savedTemplate.getUuid())).thenReturn(query);
@@ -224,7 +227,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTest {
     on(httpTemplateProcessor).set("wingsPersistence", wingsPersistence);
     on(httpTemplateProcessor).set("workflowService", workflowService);
 
-    when(wingsPersistence.createQuery(Workflow.class)).thenReturn(query);
+    when(wingsPersistence.createQuery(Workflow.class, excludeAuthority)).thenReturn(query);
 
     when(query.field(LINKED_TEMPLATE_UUIDS_KEY)).thenReturn(end);
     when(end.contains(savedTemplate.getUuid())).thenReturn(query);
