@@ -2,6 +2,7 @@ package software.wings.helpers.ext.helm;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper.lockObjects;
@@ -63,6 +64,7 @@ public class HelmClientImpl implements HelmClient {
                                 .replace("${NAMESPACE}", getNamespaceFlag(commandRequest))
                                 .replace("${CHART_REFERENCE}", chartReference);
 
+    installCommand = applyCommandFlags(installCommand, commandRequest);
     logHelmCommandInExecutionLogs(commandRequest, installCommand);
     installCommand = applyKubeConfigToCommand(installCommand, kubeConfigLocation);
 
@@ -84,6 +86,7 @@ public class HelmClientImpl implements HelmClient {
                                 .replace("${CHART_REFERENCE}", chartReference)
                                 .replace("${OVERRIDE_VALUES}", keyValueOverrides);
 
+    upgradeCommand = applyCommandFlags(upgradeCommand, commandRequest);
     logHelmCommandInExecutionLogs(commandRequest, upgradeCommand);
     upgradeCommand = applyKubeConfigToCommand(upgradeCommand, kubeConfigLocation);
 
@@ -101,6 +104,7 @@ public class HelmClientImpl implements HelmClient {
     String command = HELM_ROLLBACK_COMMAND_TEMPLATE.replace("${RELEASE}", commandRequest.getReleaseName())
                          .replace("${REVISION}", commandRequest.getPrevReleaseVersion().toString());
 
+    command = applyCommandFlags(command, commandRequest);
     logHelmCommandInExecutionLogs(commandRequest, command);
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
@@ -124,6 +128,7 @@ public class HelmClientImpl implements HelmClient {
     String releaseHistory =
         HELM_RELEASE_HIST_COMMAND_TEMPLATE.replace("${FLAGS}", "--max 5").replace("${RELEASE_NAME}", releaseName);
 
+    releaseHistory = applyCommandFlags(releaseHistory, helmCommandRequest);
     logHelmCommandInExecutionLogs(helmCommandRequest, releaseHistory);
     releaseHistory = applyKubeConfigToCommand(releaseHistory, kubeConfigLocation);
 
@@ -136,6 +141,7 @@ public class HelmClientImpl implements HelmClient {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
     String listRelease = HELM_LIST_RELEASE_COMMAND_TEMPLATE.replace("${RELEASE_NAME}", commandRequest.getReleaseName());
 
+    listRelease = applyCommandFlags(listRelease, commandRequest);
     logHelmCommandInExecutionLogs(commandRequest, listRelease);
     listRelease = applyKubeConfigToCommand(listRelease, kubeConfigLocation);
 
@@ -148,6 +154,7 @@ public class HelmClientImpl implements HelmClient {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
     String command = HELM_VERSION_COMMAND_TEMPLATE;
 
+    command = applyCommandFlags(command, commandRequest);
     logHelmCommandInExecutionLogs(commandRequest, command);
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
@@ -162,6 +169,7 @@ public class HelmClientImpl implements HelmClient {
         HELM_ADD_REPO_COMMAND_TEMPLATE.replace("${REPO_URL}", commandRequest.getChartSpecification().getChartUrl())
             .replace("${REPO_NAME}", commandRequest.getRepoName());
 
+    command = applyCommandFlags(command, commandRequest);
     logHelmCommandInExecutionLogs(commandRequest, command);
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
@@ -174,6 +182,7 @@ public class HelmClientImpl implements HelmClient {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
     String command = HELM_REPO_LIST_COMMAND_TEMPLATE;
 
+    command = applyCommandFlags(command, commandRequest);
     logHelmCommandInExecutionLogs(commandRequest, command);
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
@@ -187,6 +196,7 @@ public class HelmClientImpl implements HelmClient {
     String command = HELM_DELETE_RELEASE_TEMPLATE.replace("${RELEASE_NAME}", commandRequest.getReleaseName())
                          .replace("${FLAGS}", "--purge");
 
+    command = applyCommandFlags(command, commandRequest);
     logHelmCommandInExecutionLogs(commandRequest, command);
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
@@ -270,6 +280,12 @@ public class HelmClientImpl implements HelmClient {
 
   private String applyKubeConfigToCommand(String command, String kubeConfigLocation) {
     return command.replace("${KUBECONFIG_PATH}", kubeConfigLocation);
+  }
+
+  private String applyCommandFlags(String command, HelmCommandRequest commandRequest) {
+    String flags = isBlank(commandRequest.getCommandFlags()) ? "" : commandRequest.getCommandFlags();
+
+    return command.replace("${COMMAND_FLAGS}", flags);
   }
 
   /**

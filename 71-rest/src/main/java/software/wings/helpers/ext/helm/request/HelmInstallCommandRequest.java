@@ -37,10 +37,10 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
       HelmChartSpecification chartSpecification, int newReleaseVersion, int prevReleaseVersion, String namespace,
       long timeoutInMillis, Map<String, String> valueOverrides, List<String> variableOverridesYamlFiles,
       String repoName, GitConfig gitConfig, GitFileConfig gitFileConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      LogCallback executionLogCallback) {
+      LogCallback executionLogCallback, String commandFlags) {
     super(HelmCommandType.INSTALL, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails,
-        executionLogCallback);
+        executionLogCallback, commandFlags);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;
     this.namespace = namespace;

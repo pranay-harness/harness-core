@@ -17,6 +17,7 @@ public class HelmDeployContextElement implements ContextElement {
   private String releaseName;
   private Integer previousReleaseRevision;
   private Integer newReleaseRevision;
+  private String commandFlags;
 
   @Override
   public ContextElementType getElementType() {

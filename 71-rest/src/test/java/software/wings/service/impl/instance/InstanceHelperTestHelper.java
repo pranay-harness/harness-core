@@ -215,7 +215,7 @@ public class InstanceHelperTestHelper {
     if (InfrastructureMappingType.GCP_KUBERNETES.equals(infrastructureMappingType)) {
       if (helm) {
         HelmSetupExecutionSummary helmSetupExecutionSummary =
-            new HelmSetupExecutionSummary("version1", 1, 0, 0, "default");
+            new HelmSetupExecutionSummary("version1", 1, 0, 0, "default", null);
 
         stepExecutionSummaries =
             asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
