@@ -7,10 +7,12 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.security.UserGroup;
 import software.wings.service.intfc.UserGroupService;
@@ -39,6 +41,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
   private String approvalId;
   private String workflowId;
   private String appId;
+  private Integer timeoutMillis;
 
   private ApprovalStateType approvalStateType;
 
@@ -48,6 +51,10 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
   /** Jira Approval */
   private String issueUrl;
   private String webhookUrl;
+  private String approvalField;
+  private String approvalValue;
+  private String rejectionField;
+  private String rejectionValue;
 
   // Setting these variables for pipeline executions with only approval state
   @Transient private transient List<UserGroup> userGroupList;
@@ -76,7 +83,28 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
     putNotNull(executionDetails, "status",
         ExecutionDataValue.builder().displayName("Approval Status").value(getStatus()).build());
     putNotNull(
-        executionDetails, "issueUrl", ExecutionDataValue.builder().displayName("Issue Url").value(issueUrl).build());
+        executionDetails, "issueUrl", ExecutionDataValue.builder().displayName("Issue URL").value(issueUrl).build());
+    if (timeoutMillis != null) {
+      Integer timeoutMins = timeoutMillis / (60 * 1000);
+      putNotNull(executionDetails, "timeoutMins",
+          ExecutionDataValue.builder().displayName("Timeout").value(timeoutMins + " minutes").build());
+    }
+
+    if (EmptyPredicate.isNotEmpty(approvalField) && EmptyPredicate.isNotEmpty(approvalValue)) {
+      putNotNull(executionDetails, "approvalCriteria",
+          ExecutionDataValue.builder()
+              .displayName("Approval Criteria")
+              .value(StringUtils.capitalize(approvalField) + " : " + StringUtils.capitalize(approvalValue))
+              .build());
+    }
+
+    if (EmptyPredicate.isNotEmpty(rejectionField) && EmptyPredicate.isNotEmpty(rejectionValue)) {
+      putNotNull(executionDetails, "rejectionCriteria",
+          ExecutionDataValue.builder()
+              .displayName("Rejection Criteria")
+              .value(StringUtils.capitalize(rejectionField) + " : " + StringUtils.capitalize(rejectionValue))
+              .build());
+    }
 
     if (approvedBy != null) {
       StringBuilder approvedRejectedBy =
