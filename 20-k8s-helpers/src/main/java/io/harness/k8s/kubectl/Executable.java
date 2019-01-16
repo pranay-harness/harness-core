@@ -6,7 +6,8 @@ import org.zeroturnaround.exec.StartedProcess;
 import java.io.OutputStream;
 
 interface Executable {
-  ProcessResult execute(String directory, OutputStream output, OutputStream error) throws Exception;
+  ProcessResult execute(String directory, OutputStream output, OutputStream error, boolean printCommand)
+      throws Exception;
   StartedProcess executeInBackground(String directory, OutputStream output, OutputStream error) throws Exception;
   String command();
 }

@@ -163,8 +163,6 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
             .namespace(previousRollbackEligibleRelease.getManagedWorkload().getNamespace())
             .toRevision(previousRollbackEligibleRelease.getManagedWorkloadRevision());
 
-    executionLogCallback.saveExecutionLog("\n" + rolloutUndoCommand.command());
-
     try (LogOutputStream logOutputStream =
              new LogOutputStream() {
                @Override
@@ -180,8 +178,8 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
                  executionLogCallback.saveExecutionLog(line, ERROR);
                }
              }) {
-      ProcessResult result =
-          rolloutUndoCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream);
+      ProcessResult result = rolloutUndoCommand.execute(
+          k8sDelegateTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream, true);
 
       if (result.getExitValue() == 0) {
         executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
