@@ -35,7 +35,6 @@ public class AzureInfrastructureProvider implements InfrastructureProvider {
 
   @Override
   public void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs) {
-    hostService.updateHostConnectionAttrByInfraMappingId(infrastructureMapping.getAppId(),
-        infrastructureMapping.getUuid(), hostConnectionAttrs, infrastructureMapping.getDeploymentType());
+    hostService.updateHostConnectionAttrByInfraMapping(infrastructureMapping, hostConnectionAttrs);
   }
 }

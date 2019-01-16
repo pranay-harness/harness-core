@@ -18,6 +18,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -64,6 +65,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Activity;
 import software.wings.beans.AppContainer;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -73,6 +75,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GraphNode;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
@@ -1885,5 +1888,31 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       ManifestFile manifestFileNew = manifestFile.cloneInternal();
       applicationManifestService.createManifestFileByServiceId(manifestFileNew, clonedServiceId);
     }
+  }
+
+  @Override
+  public DeploymentType getDeploymentType(InfrastructureMapping infraMapping, Service service, String serviceId) {
+    if (service != null && service.getDeploymentType() != null) {
+      return service.getDeploymentType();
+    }
+
+    if (isNotBlank(serviceId)) {
+      service = get(infraMapping.getAppId(), serviceId);
+      if (service != null && service.getDeploymentType() != null) {
+        return service.getDeploymentType();
+      }
+    }
+
+    if (isBlank(infraMapping.getDeploymentType())) {
+      String msg = new StringBuilder("Deployment type does not exist for")
+                       .append((service != null) ? " serviceId " + service.getUuid() : "")
+                       .append(isNotBlank(serviceId) ? " serviceId " + serviceId : "")
+                       .append(" infraMappingId " + infraMapping.getUuid())
+                       .toString();
+
+      throw new InvalidRequestException(msg, USER);
+    }
+
+    return DeploymentType.valueOf(infraMapping.getDeploymentType());
   }
 }

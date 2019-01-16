@@ -5,6 +5,7 @@ import io.harness.beans.PageResponse;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.utils.BoundedInputStream;
@@ -136,15 +137,7 @@ public interface HostService extends OwnedByInfrastructureMapping {
    */
   void deleteByDnsName(String appId, String infraMappingId, String dnsName);
 
-  /**
-   * Update host connection attr by infra mapping id.
-   *
-   * @param appId               the app id
-   * @param infraMappingId      the infra mapping id
-   * @param hostConnectionAttrs the host connection attrs
-   */
-  void updateHostConnectionAttrByInfraMappingId(
-      String appId, String infraMappingId, String hostConnectionAttrs, String deploymentType);
+  void updateHostConnectionAttrByInfraMapping(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs);
 
   /**
    * Delete by service.

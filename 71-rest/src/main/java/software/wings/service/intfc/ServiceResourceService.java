@@ -6,7 +6,9 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.api.DeploymentType;
 import software.wings.beans.CommandCategory;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -454,4 +456,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   boolean exists(@NotEmpty String appId, @NotEmpty String serviceId);
 
   List<String> fetchServiceNamesByUuids(String appId, List<String> serviceUuids);
+
+  DeploymentType getDeploymentType(InfrastructureMapping infraMapping, Service service, String serviceId);
 }

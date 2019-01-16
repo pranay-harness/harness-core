@@ -77,7 +77,6 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
 
     parts.add("AZURE");
 
-    parts.add(getDeploymentType());
     return Util.normalize(String.join(" - ", parts));
   }
   @Override

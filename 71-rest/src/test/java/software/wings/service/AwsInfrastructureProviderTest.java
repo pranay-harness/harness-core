@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -47,6 +48,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.AwsUtils;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
@@ -64,6 +66,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private AwsEc2HelperServiceManager mockAwsEc2HelperServiceManager;
   @Mock private AwsAsgHelperServiceManager mockAwsAsgHelperServiceManager;
+  @Mock private ServiceResourceService serviceResourceService;
   @Spy private AwsHelperService awsHelperService;
 
   @Inject @InjectMocks private AwsInfrastructureProvider infrastructureProvider = new AwsInfrastructureProvider();
@@ -79,7 +82,9 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(null);
     setInternalState(infrastructureProvider, "secretManager", secretManager);
+    setInternalState(infrastructureProvider, "serviceResourceService", serviceResourceService);
   }
 
   @Test
@@ -99,7 +104,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                             .build();
     doReturn(singletonList(new Filter("instance-state-name", asList("running"))))
         .when(mockAwsUtils)
-        .getAwsFilters(awsInfrastructureMapping);
+        .getAwsFilters(awsInfrastructureMapping, null);
     PageResponse<Host> hosts = infrastructureProvider.listHosts(
         awsInfrastructureMapping, awsSetting, Collections.emptyList(), new PageRequest<>());
     assertThat(hosts)
@@ -128,7 +133,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                             .build();
     doReturn(singletonList(new Filter("instance-state-name", asList("running"))))
         .when(mockAwsUtils)
-        .getAwsFilters(awsInfrastructureMapping);
+        .getAwsFilters(awsInfrastructureMapping, null);
     PageResponse<Host> hosts = infrastructureProvider.listHosts(
         awsInfrastructureMapping, awsSetting, Collections.emptyList(), new PageRequest<>());
     assertThat(hosts)
@@ -155,7 +160,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                             .build();
     doReturn(singletonList(new Filter("instance-state-name", asList("running"))))
         .when(mockAwsUtils)
-        .getAwsFilters(awsInfrastructureMapping);
+        .getAwsFilters(awsInfrastructureMapping, null);
     PageResponse<Host> hosts = infrastructureProvider.listHosts(
         awsInfrastructureMapping, awsSetting, Collections.emptyList(), new PageRequest<>());
     assertThat(hosts).hasSize(0);
@@ -184,15 +189,14 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateHostConnAttrs() {
-    infrastructureProvider.updateHostConnAttrs(anAwsInfrastructureMapping()
-                                                   .withAppId(APP_ID)
-                                                   .withUuid(INFRA_MAPPING_ID)
-                                                   .withDeploymentType(DeploymentType.SSH.toString())
-                                                   .build(),
-        HOST_CONN_ATTR_ID);
-    verify(hostService)
-        .updateHostConnectionAttrByInfraMappingId(
-            APP_ID, INFRA_MAPPING_ID, HOST_CONN_ATTR_ID, DeploymentType.SSH.toString());
+    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
+                                                            .withAppId(APP_ID)
+                                                            .withUuid(INFRA_MAPPING_ID)
+                                                            .withDeploymentType(DeploymentType.SSH.toString())
+                                                            .build();
+
+    infrastructureProvider.updateHostConnAttrs(awsInfrastructureMapping, HOST_CONN_ATTR_ID);
+    verify(hostService).updateHostConnectionAttrByInfraMapping(awsInfrastructureMapping, HOST_CONN_ATTR_ID);
   }
 
   @Test

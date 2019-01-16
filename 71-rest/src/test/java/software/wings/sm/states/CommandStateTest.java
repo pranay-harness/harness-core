@@ -76,6 +76,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
@@ -250,6 +251,7 @@ public class CommandStateTest extends WingsBaseTest {
         .thenReturn(aServiceCommand().withCommand(aCommand().withName("Start").build()).build());
     when(serviceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START")).thenReturn(emptyList());
     when(serviceInstanceService.get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID)).thenReturn(SERVICE_INSTANCE);
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.ECS);
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
 
     when(activityService.get(ACTIVITY_ID, APP_ID)).thenReturn(ACTIVITY_WITH_ID);
@@ -483,6 +485,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(activityService).save(any(Activity.class));
     verify(serviceResourceService).getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceResourceService).getDeploymentType(any(), any(), any());
 
     verify(delegateService)
         .queueTask(aDelegateTask()
@@ -633,6 +636,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "NON_EXISTENT_COMMAND");
     verify(serviceResourceService).getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceResourceService).getDeploymentType(any(), any(), any());
 
     verify(activityService).save(any(Activity.class));
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);

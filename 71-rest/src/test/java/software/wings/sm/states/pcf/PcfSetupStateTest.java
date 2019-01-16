@@ -218,6 +218,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     setInternalState(pcfSetupState, "olderActiveVersionCountToKeep", 3);
     setInternalState(pcfSetupState, "pcfStateHelper", new PcfStateHelper());
     setInternalState(workflowStandardParams, "infrastructureMappingService", infrastructureMappingService);
+    setInternalState(workflowStandardParams, "serviceResourceService", serviceResourceService);
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);

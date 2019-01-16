@@ -56,10 +56,9 @@ public class PcfInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(
-        format("%s (%s_%s::%s) %s", this.getOrganization(), this.getComputeProviderType(), this.getDeploymentType(),
-            Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-            this.getSpace()));
+    return Util.normalize(format("%s (%s::%s) %s", this.getOrganization(), this.getComputeProviderType(),
+        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
+        this.getSpace()));
   }
 
   @Override

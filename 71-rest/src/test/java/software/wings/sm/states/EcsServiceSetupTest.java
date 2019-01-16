@@ -238,6 +238,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
     on(workflowStandardParams).set("infrastructureMappingService", infrastructureMappingService);
+    on(workflowStandardParams).set("serviceResourceService", serviceResourceService);
 
     when(artifactService.get(any(), any())).thenReturn(artifact);
     when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);
@@ -283,6 +284,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
     when(artifactCollectionUtil.fetchContainerImageDetails(artifact, app.getUuid(), context.getWorkflowExecutionId()))
         .thenReturn(ImageDetails.builder().name(artifactStream.getSourceName()).tag(artifact.getBuildNo()).build());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.ECS);
 
     ecsServiceSetup.execute(context);
 

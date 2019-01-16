@@ -1591,7 +1591,7 @@ public class AwsHelperService {
   }
 
   public List<Filter> getAwsFiltersForRunningState() {
-    return awsUtils.getAwsFilters(AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().build());
+    return awsUtils.getAwsFilters(AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().build(), null);
   }
 
   public DescribeInstancesRequest getDescribeInstancesRequestWithRunningFilter() {

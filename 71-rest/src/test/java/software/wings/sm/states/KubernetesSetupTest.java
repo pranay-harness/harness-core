@@ -238,6 +238,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(workflowStandardParams).set("environmentService", environmentService);
     on(workflowStandardParams).set("artifactService", artifactService);
     on(workflowStandardParams).set("infrastructureMappingService", infrastructureMappingService);
+    on(workflowStandardParams).set("serviceResourceService", serviceResourceService);
     on(workflowStandardParams).set("serviceTemplateService", serviceTemplateService);
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
@@ -287,6 +288,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
     when(artifactCollectionUtil.fetchContainerImageDetails(artifact, app.getUuid(), context.getWorkflowExecutionId()))
         .thenReturn(ImageDetails.builder().name(artifactStream.getSourceName()).tag(artifact.getBuildNo()).build());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
 
     kubernetesSetup.execute(context);
 

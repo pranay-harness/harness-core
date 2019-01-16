@@ -113,6 +113,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
@@ -149,6 +150,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private YamlChangeSetHelper yamlChangeSetHelper;
   @Mock private PipelineService pipelineService;
   @Mock private TriggerService triggerService;
+  @Mock private YamlPushService yamlPushService;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 
@@ -813,6 +815,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(directKubernetesInfrastructureMapping);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
     Map<String, Integer> activeCounts = new LinkedHashMap<>();
     activeCounts.put("app-name.service-name.env-name-1", 2);
     activeCounts.put("app-name.service-name.env-name-2", 3);
@@ -847,6 +850,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(gcpKubernetesInfrastructureMapping);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
     Map<String, Integer> activeCounts = new LinkedHashMap<>();
     activeCounts.put("app-name.service-name.env-name-1", 2);
     activeCounts.put("app-name.service-name.env-name-2", 3);
@@ -880,6 +884,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(ecsInfrastructureMapping);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.ECS);
     Map<String, Integer> activeCounts = new LinkedHashMap<>();
     activeCounts.put("APP_NAME__SERVICE_NAME__ENV_NAME__1", 2);
     activeCounts.put("APP_NAME__SERVICE_NAME__ENV_NAME__2", 3);

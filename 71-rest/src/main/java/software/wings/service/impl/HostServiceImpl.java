@@ -11,13 +11,13 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.queue.Queue;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
@@ -27,6 +27,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ownership.OwnedByHost;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
@@ -50,6 +51,7 @@ public class HostServiceImpl implements HostService {
   @Inject private ConfigService configService;
   @Inject private ExecutorService executorService;
   @Inject private ServiceInstanceService serviceInstanceService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -191,12 +193,17 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
-  public void updateHostConnectionAttrByInfraMappingId(
-      String appId, String infraMappingId, String hostConnectionAttrs, String deploymentType) {
+  public void updateHostConnectionAttrByInfraMapping(
+      InfrastructureMapping infrastructureMapping, String hostConnectionAttrs) {
+    String appId = infrastructureMapping.getAppId();
+    String infraMappingId = infrastructureMapping.getUuid();
+    DeploymentType deploymentType =
+        serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
+
     Query<Host> query =
         wingsPersistence.createQuery(Host.class).filter("appId", appId).filter("infraMappingId", infraMappingId);
 
-    UpdateOperations<Host> operations = StringUtils.equals(deploymentType, DeploymentType.SSH.toString())
+    UpdateOperations<Host> operations = DeploymentType.SSH.equals(deploymentType)
         ? wingsPersistence.createUpdateOperations(Host.class).set("hostConnAttr", hostConnectionAttrs)
         : wingsPersistence.createUpdateOperations(Host.class).set("winrmConnAttr", hostConnectionAttrs);
     wingsPersistence.update(query, operations);

@@ -26,6 +26,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
+import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
@@ -145,8 +146,10 @@ public abstract class ContainerServiceDeploy extends State {
       }
 
       CommandStateExecutionData executionData = executionDataBuilder.build();
-
       ContainerResizeParams params = buildContainerResizeParams(context, contextData);
+      DeploymentType deploymentType =
+          serviceResourceService.getDeploymentType(infrastructureMapping, contextData.service, null);
+
       CommandExecutionContext commandExecutionContext =
           aCommandExecutionContext()
               .withAccountId(contextData.app.getAccountId())
@@ -156,7 +159,7 @@ public abstract class ContainerServiceDeploy extends State {
               .withCloudProviderSetting(contextData.settingAttribute)
               .withCloudProviderCredentials(contextData.encryptedDataDetails)
               .withContainerResizeParams(params)
-              .withDeploymentType(infrastructureMapping.getDeploymentType())
+              .withDeploymentType(deploymentType.name())
               .build();
 
       String waitId = UUID.randomUUID().toString();

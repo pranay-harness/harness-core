@@ -46,6 +46,7 @@ import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
@@ -76,6 +77,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Mock private ContainerInstanceHandler containerInstanceHandler;
   @Mock private InfrastructureMappingService infraMappingService;
   @Mock private InfrastructureMapping infrastructureMapping;
+  @Mock private ServiceResourceService serviceResourceService;
 
   private final String workflowId = UUID.randomUUID().toString();
   private final String envId = UUID.randomUUID().toString();
@@ -88,6 +90,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     when(containerInstanceHandler.isContainerDeployment(anyObject())).thenReturn(false);
     when(infrastructureMapping.getDeploymentType()).thenReturn(DeploymentType.KUBERNETES.name());
     when(infraMappingService.get(anyString(), anyString())).thenReturn(infrastructureMapping);
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
   }
 
   @Test
@@ -137,6 +140,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
     setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
+    setInternalState(splunkV2State, "serviceResourceService", serviceResourceService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
 
     Reflect.on(splunkV2State).set("stateExecutionService", stateExecutionService);
@@ -230,6 +234,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
     setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
+    setInternalState(splunkV2State, "serviceResourceService", serviceResourceService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
     Reflect.on(splunkV2State).set("stateExecutionService", stateExecutionService);
 
@@ -277,6 +282,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
 
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
+    setInternalState(splunkV2State, "serviceResourceService", serviceResourceService);
     Map<String, String> nodes = splunkV2State.getCanaryNewHostNames(context);
     assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {
@@ -297,6 +303,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
         .thenReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
                         .withDeploymentType(DeploymentType.HELM.name())
                         .build());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.HELM);
     List<InstanceElement> instanceElements = new ArrayList<>();
     for (int i = 0; i < 5; ++i) {
       instanceElements.add(anInstanceElement()
@@ -316,6 +323,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
 
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
+    setInternalState(splunkV2State, "serviceResourceService", serviceResourceService);
     Map<String, String> nodes = splunkV2State.getCanaryNewHostNames(context);
     assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {

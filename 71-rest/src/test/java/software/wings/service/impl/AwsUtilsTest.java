@@ -45,7 +45,7 @@ public class AwsUtilsTest extends WingsBaseTest {
         anAwsInfrastructureMapping()
             .withAwsInstanceFilter(AwsInstanceFilter.builder().vpcIds(Collections.singletonList("vpc-id")).build())
             .build();
-    List<Filter> filters = utils.getAwsFilters(awsInfrastructureMapping);
+    List<Filter> filters = utils.getAwsFilters(awsInfrastructureMapping, null);
     assertThat(filters).isNotNull();
     assertThat(filters.size()).isEqualTo(2);
     verifyFilter(filters.get(0), "instance-state-name", Collections.singletonList("running"));

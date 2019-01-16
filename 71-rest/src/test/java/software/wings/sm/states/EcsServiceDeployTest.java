@@ -224,6 +224,8 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.ECS);
+
     ExecutionResponse response = ecsServiceDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
     assertThat(response.getCorrelationIds()).isNotNull().hasSize(1);

@@ -73,6 +73,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.StateExecutionService.CurrentPhase;
@@ -151,6 +152,8 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject private HostService hostService;
 
   @Transient @Inject protected StateExecutionService stateExecutionService;
+
+  @Transient @Inject @SchemaIgnore protected ServiceResourceService serviceResourceService;
 
   protected String hostnameField;
 
@@ -250,12 +253,12 @@ public abstract class AbstractAnalysisState extends State {
     String serviceId = getPhaseServiceId(context);
     InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
     String infraMappingId = infrastructureMapping.getUuid();
-    DeploymentType deploymentType = DeploymentType.valueOf(infrastructureMapping.getDeploymentType());
 
     if (infrastructureMapping instanceof PcfInfrastructureMapping) {
       return getPcfHostNames(context, true);
     }
 
+    DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, null, serviceId);
     Map<String, String> phaseHosts = getHostsDeployedSoFar(context, serviceId, deploymentType);
     getLogger().info("Deployed hosts so far: {}", phaseHosts);
 
@@ -464,7 +467,7 @@ public abstract class AbstractAnalysisState extends State {
 
   protected Map<String, String> getCanaryNewHostNames(ExecutionContext context) {
     InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
-    DeploymentType deploymentType = DeploymentType.valueOf(infrastructureMapping.getDeploymentType());
+
     if (infrastructureMapping instanceof PcfInfrastructureMapping) {
       return getPcfHostNames(context, false);
     }
@@ -482,6 +485,9 @@ public abstract class AbstractAnalysisState extends State {
       return rv;
     }
     for (InstanceElement instanceElement : workflowStandardParams.getInstances()) {
+      DeploymentType deploymentType =
+          serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
+
       if (isEmpty(getHostnameTemplate())) {
         rv.put(instanceElement.getHostName(), getGroupName(instanceElement, deploymentType));
       } else {
@@ -534,7 +540,7 @@ public abstract class AbstractAnalysisState extends State {
 
   protected DeploymentType getDeploymentType(ExecutionContext context) {
     InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
-    return DeploymentType.valueOf(infrastructureMapping.getDeploymentType());
+    return serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
   }
 
   protected String getPhaseServiceName(ExecutionContext context) {

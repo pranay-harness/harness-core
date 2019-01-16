@@ -366,7 +366,10 @@ public class WorkflowServiceHelper {
     }
     workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
     workflowPhase.setInfraMappingName(infrastructureMapping.getName());
-    workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
+
+    DeploymentType deploymentType =
+        serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
+    workflowPhase.setDeploymentType(deploymentType);
   }
 
   public void generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
@@ -1542,7 +1545,10 @@ public class WorkflowServiceHelper {
         notNullCheck("InfraMapping", infrastructureMapping, USER);
         phase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
         phase.setInfraMappingName(infrastructureMapping.getName());
-        phase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
+
+        DeploymentType deploymentType =
+            serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
+        phase.setDeploymentType(deploymentType);
         resetNodeSelection(phase);
       }
     } else if (envChanged && !infraChanged) {

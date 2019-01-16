@@ -25,7 +25,6 @@ import io.harness.delegate.task.protocol.AwsElbListener;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
@@ -41,6 +40,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
@@ -72,6 +72,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @Override
   public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
@@ -87,25 +88,27 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     if (isNotEmpty(instances)) {
       List<Host> awsHosts =
           instances.stream()
-              .map(instance
-                  -> aHost()
-                         .withHostName(awsUtils.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
-                         .withPublicDns(awsInfrastructureMapping.isUsePublicDns() ? instance.getPublicDnsName()
-                                                                                  : instance.getPrivateDnsName())
-                         .withEc2Instance(instance)
-                         .withAppId(awsInfrastructureMapping.getAppId())
-                         .withEnvId(awsInfrastructureMapping.getEnvId())
-                         .withHostConnAttr(StringUtils.equals(awsInfrastructureMapping.getDeploymentType(),
-                                               DeploymentType.SSH.toString())
-                                 ? awsInfrastructureMapping.getHostConnectionAttrs()
-                                 : null)
-                         .withWinrmConnAttr(StringUtils.equals(awsInfrastructureMapping.getDeploymentType(),
-                                                DeploymentType.WINRM.toString())
-                                 ? awsInfrastructureMapping.getHostConnectionAttrs()
-                                 : null)
-                         .withInfraMappingId(awsInfrastructureMapping.getUuid())
-                         .withServiceTemplateId(awsInfrastructureMapping.getServiceTemplateId())
-                         .build())
+              .map(instance -> {
+                DeploymentType deploymentType = serviceResourceService.getDeploymentType(
+                    awsInfrastructureMapping, null, awsInfrastructureMapping.getServiceId());
+
+                return aHost()
+                    .withHostName(awsUtils.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
+                    .withPublicDns(awsInfrastructureMapping.isUsePublicDns() ? instance.getPublicDnsName()
+                                                                             : instance.getPrivateDnsName())
+                    .withEc2Instance(instance)
+                    .withAppId(awsInfrastructureMapping.getAppId())
+                    .withEnvId(awsInfrastructureMapping.getEnvId())
+                    .withHostConnAttr(DeploymentType.SSH.equals(deploymentType)
+                            ? awsInfrastructureMapping.getHostConnectionAttrs()
+                            : null)
+                    .withWinrmConnAttr(DeploymentType.WINRM.equals(deploymentType)
+                            ? awsInfrastructureMapping.getHostConnectionAttrs()
+                            : null)
+                    .withInfraMappingId(awsInfrastructureMapping.getUuid())
+                    .withServiceTemplateId(awsInfrastructureMapping.getServiceTemplateId())
+                    .build();
+              })
               .collect(toList());
       if (awsInfrastructureMapping.getHostNameConvention() != null
           && !awsInfrastructureMapping.getHostNameConvention().equals(Constants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
@@ -148,7 +151,9 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   private List<Instance> listFilteredHosts(AwsInfrastructureMapping awsInfrastructureMapping, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails) {
-    List<Filter> filters = awsUtils.getAwsFilters(awsInfrastructureMapping);
+    DeploymentType deploymentType = serviceResourceService.getDeploymentType(
+        awsInfrastructureMapping, null, awsInfrastructureMapping.getServiceId());
+    List<Filter> filters = awsUtils.getAwsFilters(awsInfrastructureMapping, deploymentType);
     try {
       return awsEc2HelperServiceManager.listEc2Instances(awsConfig, encryptedDataDetails,
           awsInfrastructureMapping.getRegion(), filters, awsInfrastructureMapping.getAppId());
@@ -165,8 +170,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   @Override
   public void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs) {
-    hostService.updateHostConnectionAttrByInfraMappingId(infrastructureMapping.getAppId(),
-        infrastructureMapping.getUuid(), hostConnectionAttrs, infrastructureMapping.getDeploymentType());
+    hostService.updateHostConnectionAttrByInfraMapping(infrastructureMapping, hostConnectionAttrs);
   }
 
   private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {

@@ -26,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.impl.StaticInfrastructureProvider;
@@ -74,14 +75,13 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateHostConnAttrs() {
-    infrastructureProvider.updateHostConnAttrs(aPhysicalInfrastructureMapping()
-                                                   .withAppId(APP_ID)
-                                                   .withUuid(INFRA_MAPPING_ID)
-                                                   .withDeploymentType(DeploymentType.WINRM.toString())
-                                                   .build(),
-        HOST_CONN_ATTR_ID);
-    verify(hostService)
-        .updateHostConnectionAttrByInfraMappingId(
-            APP_ID, INFRA_MAPPING_ID, HOST_CONN_ATTR_ID, DeploymentType.WINRM.toString());
+    PhysicalInfrastructureMapping physicalInfrastructureMapping =
+        aPhysicalInfrastructureMapping()
+            .withAppId(APP_ID)
+            .withUuid(INFRA_MAPPING_ID)
+            .withDeploymentType(DeploymentType.WINRM.toString())
+            .build();
+    infrastructureProvider.updateHostConnAttrs(physicalInfrastructureMapping, HOST_CONN_ATTR_ID);
+    verify(hostService).updateHostConnectionAttrByInfraMapping(physicalInfrastructureMapping, HOST_CONN_ATTR_ID);
   }
 }
