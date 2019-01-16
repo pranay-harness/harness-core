@@ -1925,8 +1925,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (artifactRequiredServiceIds == null) {
         artifactRequiredServiceIds = new ArrayList<>();
       }
-      fetchArtifactNeededServiceIds(
-          appId, workflow.getOrchestrationWorkflow(), workflowVariables, artifactRequiredServiceIds);
+      fetchArtifactNeededServiceIds(appId, workflow, workflowVariables, artifactRequiredServiceIds);
       deploymentMetadataBuilder.artifactRequiredServiceIds(artifactRequiredServiceIds);
     }
     if (includeList.contains(Include.DEPLOYMENT_TYPE)) {
@@ -1950,10 +1949,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
+  public Set<EntityType> fetchRequiredEntityTypes(String appId, Workflow workflow) {
     List<String> artifactNeededServiceIds = new ArrayList<>();
     Set<EntityType> requiredEntityTypes = new HashSet<>();
-    fetchArtifactNeededServiceIds(appId, orchestrationWorkflow, null, artifactNeededServiceIds);
+    fetchArtifactNeededServiceIds(appId, workflow, null, artifactNeededServiceIds);
     if (isNotEmpty(artifactNeededServiceIds)) {
       // At least one service needs artifact..so add required entity type as ARTIFACT
       requiredEntityTypes.add(ARTIFACT);
@@ -1961,9 +1960,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return requiredEntityTypes;
   }
 
-  private void fetchArtifactNeededServiceIds(String appId, OrchestrationWorkflow orchestrationWorkflow,
-      Map<String, String> workflowVariables, List<String> artifactNeededServiceIds) {
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
+  private void fetchArtifactNeededServiceIds(
+      String appId, Workflow workflow, Map<String, String> workflowVariables, List<String> artifactNeededServiceIds) {
+    notNullCheck("Workflow does not exist", workflow, USER);
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    notNullCheck("Orchestration workflow not associated", orchestrationWorkflow, USER);
 
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       Set<EntityType> requiredEntityTypes = new HashSet<>();
@@ -1995,6 +1996,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                          .stream())
               .collect(Collectors.toSet());
 
+      if (!requiredEntityTypes.contains(ARTIFACT) && rollbackRequiredEntityTypes.contains(ARTIFACT)) {
+        logger.warn(
+            "Phase Step do not need artifact. However, Rollback steps needed artifact for the workflow {} of the app {}",
+            workflow.getUuid(), appId);
+      }
       requiredEntityTypes.addAll(rollbackRequiredEntityTypes);
     }
   }
@@ -2556,17 +2562,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public List<EntityType> getRequiredEntities(String appId, String workflowId) {
-    notNullCheck("workflowId", workflowId, USER);
-
     Workflow workflow = readWorkflow(appId, workflowId);
-    notNullCheck("workflow", workflow, USER);
-    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-
-    Set<EntityType> entityTypes = fetchRequiredEntityTypes(appId, orchestrationWorkflow);
+    Set<EntityType> entityTypes = fetchRequiredEntityTypes(appId, workflow);
     if (isNotEmpty(entityTypes)) {
       return new ArrayList<>(entityTypes);
     }
-
     return null;
   }
 

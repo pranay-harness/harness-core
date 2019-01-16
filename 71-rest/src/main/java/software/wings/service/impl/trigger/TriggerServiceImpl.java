@@ -734,7 +734,7 @@ public class TriggerServiceImpl implements TriggerService {
           .append(" [")
           .append(trigger.getWorkflowName())
           .append("] does not need artifacts. However, trigger received with the artifacts");
-      logger.error(msg.toString());
+      logger.warn(msg.toString());
       //      throw new WingsException(msg.toString());
     }
     List<String> missingServiceIds = new ArrayList<>();
@@ -751,7 +751,7 @@ public class TriggerServiceImpl implements TriggerService {
           artifactNeededServiceIds, collectedArtifactServiceIds, trigger.getUuid());
       List<String> missingServiceNames =
           serviceResourceService.fetchServiceNamesByUuids(trigger.getAppId(), missingServiceIds);
-      logger.error("Trigger rejected. Reason: Artifacts are missing for service name(s) {}", missingServiceNames);
+      logger.warn("Trigger rejected. Reason: Artifacts are missing for service name(s) {}", missingServiceNames);
       //      throw new WingsException(
       //          "Trigger rejected. Reason: Artifacts are missing for service name(s)" + missingServiceNames, USER);
     }
@@ -763,7 +763,7 @@ public class TriggerServiceImpl implements TriggerService {
           .append(" [")
           .append(trigger.getWorkflowName())
           .append(']');
-
+      logger.warn(msg.toString());
       //      throw new WingsException(msg.toString());
     }
   }

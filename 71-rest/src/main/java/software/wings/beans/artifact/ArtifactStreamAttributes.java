@@ -2,6 +2,7 @@ package software.wings.beans.artifact;
 
 import com.google.common.collect.Maps;
 
+import lombok.ToString;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
@@ -9,9 +10,7 @@ import software.wings.utils.ArtifactType;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by anubhaw on 1/27/17.
- */
+@ToString(exclude = {"serverSetting", "artifactServerEncryptedDataDetails"})
 public class ArtifactStreamAttributes {
   private String jobName;
   private String imageName;
