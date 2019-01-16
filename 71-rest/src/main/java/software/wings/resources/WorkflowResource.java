@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
 import software.wings.api.InstanceElement;
@@ -172,7 +173,18 @@ public class WorkflowResource {
   public RestResponse<Workflow> create(@QueryParam("appId") String appId, Workflow workflow) {
     workflow.setAppId(appId);
     workflow.setWorkflowType(WorkflowType.ORCHESTRATION);
-    return new RestResponse<>(workflowService.createWorkflow(workflow));
+    try {
+      Workflow wf = workflowService.createWorkflow(workflow);
+      return new RestResponse<>(wf);
+    } catch (WingsException e) {
+      if (e.getCode() == ErrorCode.USAGE_LIMITS_EXCEEDED) {
+        throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
+            "You have reached the maximum number of allowed Workflows. Please contact Harness Support.",
+            WingsException.USER);
+      }
+
+      throw e;
+    }
   }
 
   @PUT
@@ -246,7 +258,18 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<Workflow> cloneWorkflow(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, CloneMetadata cloneMetadata) {
-    return new RestResponse<>(workflowService.cloneWorkflow(appId, workflowId, cloneMetadata));
+    try {
+      Workflow wf = workflowService.cloneWorkflow(appId, workflowId, cloneMetadata);
+      return new RestResponse<>(wf);
+    } catch (WingsException e) {
+      if (e.getCode() == ErrorCode.USAGE_LIMITS_EXCEEDED) {
+        throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
+            "You have reached the maximum number of allowed Workflows. Please contact Harness Support.",
+            WingsException.USER);
+      }
+
+      throw e;
+    }
   }
 
   /**

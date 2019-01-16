@@ -168,6 +168,8 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.waiter.NotifyEventListener;
 import org.junit.Before;
@@ -259,6 +261,7 @@ import software.wings.sm.TransitionType;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.util.HashMap;
 import java.util.List;
@@ -307,6 +310,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Mock private PluginManager pluginManager;
   @Mock private UpdateOperations<Workflow> updateOperations;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Inject private EntityVersionService entityVersionService;
 
@@ -314,11 +318,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private FieldEnd fieldEnd;
 
   private Service service = Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactType(WAR).build();
+
   /**
    * Sets mocks.
    */
   @Before
   public void setupMocks() {
+    when(limitCheckerFactory.getInstance(Mockito.any(io.harness.limits.Action.class)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
+
     Mockito.doNothing().when(yamlPushService).pushYamlChangeSet(anyString(), any(), any(), any(), anyBoolean());
     when(pluginManager.getExtensions(StateTypeDescriptor.class)).thenReturn(newArrayList());
 

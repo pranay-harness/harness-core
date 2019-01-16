@@ -159,6 +159,8 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
     when(accountService.get(anyString())).thenReturn(account);
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
     Application application =
         Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
@@ -206,9 +208,6 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
 
   @Test
   public void testCRUDAndGet() throws HarnessException, IOException {
-    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
-        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
-
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);
     gitFileChange.setFilePath(validYamlFilePath);
@@ -245,9 +244,6 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
 
   @Test
   public void testFailures() throws HarnessException, IOException {
-    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
-        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
-
     // Invalid yaml path
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);

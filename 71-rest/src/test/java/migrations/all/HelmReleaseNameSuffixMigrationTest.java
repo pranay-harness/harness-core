@@ -17,10 +17,13 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -37,6 +40,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +57,7 @@ public class HelmReleaseNameSuffixMigrationTest extends WingsBaseTest {
   @Mock private Account account;
   @Mock private EnvironmentService environmentService;
   @Inject private WingsPersistence wingsPersistence;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
   @InjectMocks @Inject private WorkflowService workflowService;
@@ -75,6 +80,8 @@ public class HelmReleaseNameSuffixMigrationTest extends WingsBaseTest {
                         .withAppId(APP_ID)
                         .build());
     wingsPersistence.save(anApplication().withUuid(APP_ID).build());
+    when(limitCheckerFactory.getInstance(Mockito.any(io.harness.limits.Action.class)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
   }
 
   @Test

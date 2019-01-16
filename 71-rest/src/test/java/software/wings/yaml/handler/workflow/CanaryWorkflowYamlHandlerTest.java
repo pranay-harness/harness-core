@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.CANARY_INVALID_YAML_CONTENT;
@@ -13,13 +14,19 @@ import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.CANARY_V
 
 import com.google.inject.Inject;
 
+import io.harness.limits.Action;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.workflow.CanaryWorkflowYamlHandler;
+import software.wings.utils.WingsTestConstants.MockChecker;
 import software.wings.yaml.workflow.CanaryWorkflowYaml;
 
 import java.io.IOException;
@@ -31,6 +38,7 @@ public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   private String workflowName = "canary";
 
   @InjectMocks @Inject private CanaryWorkflowYamlHandler yamlHandler;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Before
   public void runBeforeTest() {
@@ -39,6 +47,9 @@ public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
 
   @Test
   public void testCRUDAndGet() throws HarnessException, IOException {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
+
     ChangeContext<CanaryWorkflowYaml> changeContext =
         getChangeContext(CANARY_VALID_YAML_CONTENT, CANARY_VALID_YAML_FILE_PATH, yamlHandler);
 
