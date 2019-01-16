@@ -178,6 +178,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.WorkflowExecutionServiceImpl.Tree.TreeBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -284,6 +285,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private PreDeploymentChecker preDeploymentChecker;
   @Inject private AlertService alertService;
+  @Inject private WorkflowServiceHelper workflowServiceHelper;
 
   /**
    * {@inheritDoc}
@@ -2114,7 +2116,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     CountsByStatuses breakdown;
     int total;
 
-    if (workflowExecution.getOrchestrationType() == OrchestrationWorkflowType.ROLLING) {
+    if (workflowExecution.getOrchestrationType() == OrchestrationWorkflowType.ROLLING
+        && !workflowServiceHelper.isExecutionForK8sV2Service(workflowExecution)) {
       total = workflowExecution.getTotal();
       if (total == 0) {
         total = refreshTotal(workflowExecution);
