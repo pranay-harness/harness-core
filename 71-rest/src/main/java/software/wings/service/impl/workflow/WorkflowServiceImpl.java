@@ -570,7 +570,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (orchestrationWorkflow != null) {
         orchestrationWorkflow.onLoad();
         workflow.setDeploymentTypes(workflowServiceHelper.obtainDeploymentTypes(orchestrationWorkflow));
-        workflow.setTemplatized(orchestrationWorkflow.isTemplatized());
+        workflow.setTemplatized(orchestrationWorkflow.checkTemplatized());
         if (withServices) {
           populateServices(workflow);
         }

@@ -116,12 +116,12 @@ public abstract class OrchestrationWorkflow {
    * @return
    */
   @JsonIgnore
-  public boolean isTemplatized() {
+  public boolean checkTemplatized() {
     List<Variable> userVariables = getUserVariables();
     if (isEmpty(userVariables)) {
       return false;
     }
-    return userVariables.stream().anyMatch(variable -> variable.getEntityType() != null);
+    return userVariables.stream().anyMatch(variable -> !variable.isFixed());
   }
 
   @JsonIgnore
