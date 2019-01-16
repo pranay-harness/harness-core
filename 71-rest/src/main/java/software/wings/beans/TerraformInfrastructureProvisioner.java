@@ -27,6 +27,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
   @NotEmpty private String sourceRepoBranch;
   @NotNull private String path;
   private List<NameValuePair> backendConfigs;
+  private boolean isTemplatized;
 
   @Override
   public String variableKey() {
