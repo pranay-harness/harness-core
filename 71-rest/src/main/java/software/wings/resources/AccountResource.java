@@ -14,6 +14,7 @@ import io.harness.exception.InvalidRequestException;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
+import software.wings.beans.AccountSalesContactsInfo;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.RestResponse;
@@ -140,15 +141,37 @@ public class AccountResource {
   @Path("license/{accountId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Account> updateAccountLicense(@PathParam("accountId") @NotEmpty String accountId,
-      @QueryParam("salesContacts") String salesContacts, LicenseInfo licenseInfo) {
+  public RestResponse<Account> updateAccountLicense(
+      @PathParam("accountId") @NotEmpty String accountId, LicenseInfo licenseInfo) {
     User existingUser = UserThreadLocal.get();
     if (existingUser == null) {
       throw new InvalidRequestException("Invalid User");
     }
 
     if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
-      return new RestResponse<>(licenseService.updateAccountLicense(accountId, licenseInfo, salesContacts));
+      return new RestResponse<>(licenseService.updateAccountLicense(accountId, licenseInfo));
+    } else {
+      return Builder.aRestResponse()
+          .withResponseMessages(Lists.newArrayList(
+              ResponseMessage.builder().message("User not allowed to update account license").build()))
+          .build();
+    }
+  }
+
+  @PUT
+  @Path("{accountId}/sales-contacts")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Account> updateAccountSalesContacts(
+      @PathParam("accountId") @NotEmpty String accountId, AccountSalesContactsInfo salesContactsInfo) {
+    User existingUser = UserThreadLocal.get();
+    if (existingUser == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+
+    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
+      return new RestResponse<>(
+          licenseService.updateAccountSalesContacts(accountId, salesContactsInfo.getSalesContacts()));
     } else {
       return Builder.aRestResponse()
           .withResponseMessages(Lists.newArrayList(

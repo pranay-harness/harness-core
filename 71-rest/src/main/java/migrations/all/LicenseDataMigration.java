@@ -93,7 +93,7 @@ public class LicenseDataMigration implements Migration {
               break;
           }
 
-          licenseService.updateAccountLicense(account.getUuid(), licenseInfo, null);
+          licenseService.updateAccountLicense(account.getUuid(), licenseInfo);
           logger.info("LicenseMigration - Updated license info for account {}", account.getAccountName());
         } catch (Exception ex) {
           logger.error("LicenseMigration - Error while updating license info for account: {}",
