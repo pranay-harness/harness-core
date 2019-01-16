@@ -36,7 +36,7 @@ public class JiraConfig extends SettingValue implements EncryptableSetting {
   /**
    * Handles both password & OAuth(1.0) token.
    */
-  @Attributes(title = "Password/OAuth token", required = true) @Encrypted private char[] password;
+  @Attributes(title = "Password/API Token", required = true) @Encrypted private char[] password;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
   @SchemaIgnore @NotEmpty private String accountId;
