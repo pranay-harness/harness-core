@@ -21,6 +21,7 @@ public class JiraExecutionData extends StateExecutionData implements ResponseDat
   private String issueId;
   private String issueKey;
   private String issueUrl;
+  private String jiraServerResponse;
 
   private JSONArray projects;
   private JSONObject fields;
@@ -44,6 +45,8 @@ public class JiraExecutionData extends StateExecutionData implements ResponseDat
   private Map<String, ExecutionDataValue> setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
     putNotNull(
         executionDetails, "issueUrl", ExecutionDataValue.builder().displayName("Issue Url").value(issueUrl).build());
+    putNotNull(executionDetails, "jiraServerResponse",
+        ExecutionDataValue.builder().displayName("JIRA Response").value(getJiraServerResponse()).build());
     return executionDetails;
   }
 }
