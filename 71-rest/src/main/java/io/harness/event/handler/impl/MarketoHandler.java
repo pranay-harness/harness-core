@@ -328,17 +328,17 @@ public class MarketoHandler implements EventHandler {
 
   private void reportCampaignEvent(String accountId, EventType eventType, String accessToken, User user)
       throws IOException {
+    String userId = user.getUuid();
     long marketoLeadId = user.getMarketoLeadId();
-    String email = user.getEmail();
     if (marketoLeadId == 0L) {
       marketoLeadId = reportLead(accountId, user, accessToken);
       if (marketoLeadId == 0L) {
-        logger.error("Invalid lead id reported for user {}", email);
+        logger.error("Invalid lead id reported for user {}", userId);
         return;
       }
 
       // Getting the latest copy since we had a sleep of 10 seconds.
-      user = userService.getUserFromCacheOrDB(user.getUuid());
+      user = userService.getUserFromCacheOrDB(userId);
     }
 
     boolean reported =

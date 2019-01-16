@@ -120,6 +120,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     this.harnessUserGroupService = harnessUserGroupService;
   }
 
+  private boolean isHarnessUserExemptedRequest(String uri) {
+    return uri.startsWith("limits/configure") || uri.startsWith("account/license");
+  }
+
   /* (non-Javadoc)
    * @see javax.ws.rs.container.ContainerRequestFilter#filter(javax.ws.rs.container.ContainerRequestContext)
    */
@@ -176,8 +180,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     List<PermissionAttribute> requiredPermissionAttributes;
     List<String> appIdsOfAccount = getValidAppsFromAccount(accountId, appIdsFromRequest, emptyAppIdsInReq);
     if (!userService.isUserAssignedToAccount(user, accountId)) {
-      if (!httpMethod.equals(HttpMethod.GET.name()) && !uriPath.startsWith("account/license")
-          && !uriPath.startsWith("limits/configure")) {
+      if (!httpMethod.equals(HttpMethod.GET.name()) && !isHarnessUserExemptedRequest(uriPath)) {
         throw new InvalidRequestException("User not authorized", USER);
       }
 
