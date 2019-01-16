@@ -29,11 +29,13 @@ import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.Account;
+import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.EntityVersionCollection;
 import software.wings.beans.FeatureFlag;
+import software.wings.beans.GitCommit;
 import software.wings.beans.Idempotent;
 import software.wings.beans.Log;
 import software.wings.beans.Notification;
@@ -58,6 +60,7 @@ import software.wings.security.EncryptionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
@@ -78,6 +81,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.gitSync.YamlChangeSet;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -136,7 +140,7 @@ public class AccountExportImportResource {
 
   private static Set<Class<? extends PersistentEntity>> excludedEntities = new HashSet<>(Arrays.asList(
       // Execution/Command/Audit logs
-      Log.class, LogDataRecord.class, ThirdPartyApiCallLog.class, AuditHeader.class,
+      Log.class, LogDataRecord.class, ThirdPartyApiCallLog.class, AuditHeader.class, SecretUsageLog.class,
       // Notification/alert records
       Notification.class, Alert.class, NotifyResponse.class,
       // Learning engine related runtime data records
@@ -152,9 +156,7 @@ public class AccountExportImportResource {
       // Runtime data/status etc.
       StateExecutionInstance.class, ServiceInstance.class, WorkflowExecution.class, InstanceStatsSnapshot.class,
       StateMachine.class, SweepingOutput.class, ContainerTask.class, GitSyncError.class, ManualSyncJob.class,
-      SyncStatus.class
-
-      ));
+      SyncStatus.class, Activity.class, GitCommit.class, YamlChangeSet.class));
 
   private static Set<String> includedMongoCollections = new HashSet<>();
   private static Set<String> excludedMongoCollections = new HashSet<>();
