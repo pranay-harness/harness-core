@@ -177,6 +177,10 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
     loginUser(adminUserEmail, new String(adminPassword));
   }
 
+  protected void loginDefaultUser() {
+    loginUser(defaultEmail, new String(defaultPassword));
+  }
+
   protected Builder getRequestBuilderWithAuthHeader(WebTarget target) {
     return target.request().header("Authorization", "Bearer " + userToken);
   }

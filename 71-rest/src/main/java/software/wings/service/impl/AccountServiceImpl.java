@@ -250,7 +250,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public void delete(String accountId) {
+  public boolean delete(String accountId) {
     if (wingsPersistence.delete(Account.class, accountId)) {
       dbCache.invalidate(Account.class, accountId);
       InstanceStatsCollectorJob.delete(jobScheduler, accountId);
@@ -260,6 +260,8 @@ public class AccountServiceImpl implements AccountService {
       });
       //      refreshUsersForAccountDelete(accountId);
     }
+
+    return true;
   }
 
   @Override
