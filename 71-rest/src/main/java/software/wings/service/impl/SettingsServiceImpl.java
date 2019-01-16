@@ -718,8 +718,9 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     SettingAttribute gitSettingAttribute = get(gitConnectorId);
-    if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
-      throw new InvalidRequestException("Git connector not found");
+
+    if (gitSettingAttribute == null || !(gitSettingAttribute.getValue() instanceof GitConfig)) {
+      throw new InvalidRequestException("Git connector not found", USER);
     }
 
     GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
