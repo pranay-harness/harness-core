@@ -1,5 +1,38 @@
 <#include "common.sh.ftl">
 
+if [[ "$(ulimit -n)" == "unlimited" || $(ulimit -n) -lt 10000 ]]; then
+  echo
+  echo "WARNING: ulimit -n is too low ($(ulimit -n))"
+  echo
+  echo "Run the following command to set it to 10000 or greater:"
+  echo
+  echo "ulimit -n 10000"
+  echo
+  echo "Continuing in 15 seconds. Ctrl-C to quit."
+  sleep 15s
+  echo
+fi
+
+if [[ "$OSTYPE" == darwin* ]]; then
+  if [[ $(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2 | cut -d 'G' -f 1) -lt 6 ]]; then
+    echo
+    echo "WARNING: Not enough memory ($(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2)). Minimum 6 GB required."
+    echo
+    echo "Continuing in 15 seconds. Ctrl-C to quit."
+    sleep 15s
+    echo
+  fi
+else
+  if [[ $(free -m | grep Mem | awk '{ print $2 }') -lt 6000 ]]; then
+    echo
+    echo "WARNING: Not enough memory ($(free -m | grep Mem | awk '{ print $2 }') MB). Minimum 6 GB required."
+    echo
+    echo "Continuing in 15 seconds. Ctrl-C to quit."
+    sleep 15s
+    echo
+  fi
+fi
+
 if [ ! -e proxy.config ]; then
   echo "PROXY_HOST=" > proxy.config
   echo "PROXY_PORT=" >> proxy.config
