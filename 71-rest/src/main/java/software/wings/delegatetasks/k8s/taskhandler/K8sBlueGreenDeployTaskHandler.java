@@ -333,8 +333,6 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
             DeleteCommand deleteCommand =
                 client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
 
-            executionLogCallback.saveExecutionLog("\n" + deleteCommand.command());
-
             ProcessResult result = deleteCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(),
                 new LogOutputStream() {
                   @Override
@@ -347,7 +345,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
                   protected void processLine(String line) {
                     executionLogCallback.saveExecutionLog(line, ERROR);
                   }
-                });
+                },
+                true);
 
             if (result.getExitValue() != 0) {
               logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());

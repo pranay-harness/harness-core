@@ -96,8 +96,6 @@ public class K8sTaskHelper {
 
     ApplyCommand applyCommand = client.apply().filename("manifests.yaml").record(true);
 
-    executionLogCallback.saveExecutionLog(applyCommand.command() + "\n");
-
     ProcessResult result = applyCommand.execute(k8SDelegateTaskParams.getWorkingDirectory(),
         new LogOutputStream() {
           @Override
@@ -110,7 +108,8 @@ public class K8sTaskHelper {
           protected void processLine(String line) {
             executionLogCallback.saveExecutionLog(line, ERROR);
           }
-        });
+        },
+        true);
 
     if (result.getExitValue() != 0) {
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
@@ -129,7 +128,7 @@ public class K8sTaskHelper {
     GetCommand getEventsCommand =
         client.get().resources("events").namespace(resourceId.getNamespace()).output(eventOutputFormat).watchOnly(true);
 
-    executionLogCallback.saveExecutionLog(getEventsCommand.command() + "\n");
+    executionLogCallback.saveExecutionLog(GetCommand.getPrintableCommand(getEventsCommand.command()) + "\n");
 
     boolean success = false;
 
@@ -154,7 +153,8 @@ public class K8sTaskHelper {
       RolloutStatusCommand rolloutStatusCommand =
           client.rollout().status().resource(resourceId.kindNameRef()).namespace(resourceId.getNamespace()).watch(true);
 
-      executionLogCallback.saveExecutionLog(rolloutStatusCommand.command() + "\n");
+      executionLogCallback.saveExecutionLog(
+          RolloutStatusCommand.getPrintableCommand(rolloutStatusCommand.command()) + "\n");
 
       ProcessResult result = rolloutStatusCommand.execute(k8SDelegateTaskParams.getWorkingDirectory(),
           new LogOutputStream() {
@@ -168,7 +168,8 @@ public class K8sTaskHelper {
             protected void processLine(String line) {
               executionLogCallback.saveExecutionLog(format(statusFormat, "Status", line), ERROR);
             }
-          });
+          },
+          false);
 
       success = result.getExitValue() == 0;
 
@@ -195,8 +196,6 @@ public class K8sTaskHelper {
 
     ScaleCommand scaleCommand = client.scale().resource(resourceId.kindNameRef()).replicas(targetReplicaCount);
 
-    executionLogCallback.saveExecutionLog("\n" + scaleCommand.command());
-
     try (LogOutputStream logOutputStream =
              new LogOutputStream() {
                @Override
@@ -213,7 +212,7 @@ public class K8sTaskHelper {
                }
              }) {
       ProcessResult result =
-          scaleCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream);
+          scaleCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream, true);
 
       if (result.getExitValue() == 0) {
         executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
@@ -248,8 +247,6 @@ public class K8sTaskHelper {
             DeleteCommand deleteCommand =
                 client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
 
-            executionLogCallback.saveExecutionLog("\n" + deleteCommand.command());
-
             ProcessResult result = deleteCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(),
                 new LogOutputStream() {
                   @Override
@@ -262,7 +259,8 @@ public class K8sTaskHelper {
                   protected void processLine(String line) {
                     executionLogCallback.saveExecutionLog(line, ERROR);
                   }
-                });
+                },
+                true);
 
             if (result.getExitValue() != 0) {
               logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
@@ -279,8 +277,6 @@ public class K8sTaskHelper {
       ExecutionLogCallback executionLogCallback) throws Exception {
     DescribeCommand describeCommand = client.describe().filename("manifests.yaml");
 
-    executionLogCallback.saveExecutionLog(describeCommand.command() + "\n");
-
     describeCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(),
         new LogOutputStream() {
           @Override
@@ -293,7 +289,8 @@ public class K8sTaskHelper {
           protected void processLine(String line) {
             executionLogCallback.saveExecutionLog(line, ERROR);
           }
-        });
+        },
+        true);
   }
 
   public String getLatestRevision(
@@ -311,8 +308,8 @@ public class K8sTaskHelper {
                @Override
                protected void processLine(String line) {}
              }) {
-      ProcessResult result =
-          rolloutHistoryCommand.execute(k8SDelegateTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream);
+      ProcessResult result = rolloutHistoryCommand.execute(
+          k8SDelegateTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream, false);
 
       if (result.getExitValue() == 0) {
         return parseLatestRevisionNumberFromRolloutHistory(result.outputString());
@@ -339,7 +336,7 @@ public class K8sTaskHelper {
                protected void processLine(String line) {}
              }) {
       ProcessResult result =
-          getCommand.execute(k8SDelegateTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream);
+          getCommand.execute(k8SDelegateTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream, false);
 
       if (result.getExitValue() == 0) {
         return Integer.valueOf(result.outputString());
