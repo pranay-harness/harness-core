@@ -1,11 +1,13 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.exception.WingsException.USER;
+import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.applicationautoscaling.AWSApplicationAutoScaling;
 import com.amazonaws.services.applicationautoscaling.AWSApplicationAutoScalingClientBuilder;
+import com.amazonaws.services.applicationautoscaling.model.Alarm;
 import com.amazonaws.services.applicationautoscaling.model.DeleteScalingPolicyRequest;
 import com.amazonaws.services.applicationautoscaling.model.DeleteScalingPolicyResult;
 import com.amazonaws.services.applicationautoscaling.model.DeregisterScalableTargetRequest;
@@ -20,10 +22,18 @@ import com.amazonaws.services.applicationautoscaling.model.RegisterScalableTarge
 import com.amazonaws.services.applicationautoscaling.model.RegisterScalableTargetResult;
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.applicationautoscaling.model.ScalingPolicy;
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
+import com.amazonaws.services.cloudwatch.model.DescribeAlarmsRequest;
+import com.amazonaws.services.cloudwatch.model.DescribeAlarmsResult;
+import com.amazonaws.services.cloudwatch.model.MetricAlarm;
+import com.amazonaws.services.cloudwatch.model.PutMetricAlarmRequest;
+import com.amazonaws.services.cloudwatch.model.PutMetricAlarmResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import software.wings.beans.AwsConfig;
@@ -32,11 +42,19 @@ import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceD
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Singleton
 public class AwsAppAutoScalingHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsAppAutoScalingHelperServiceDelegate {
+  private AmazonCloudWatchClient getAmazonCloudWatchClient(
+      String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+    AmazonCloudWatchClientBuilder builder = AmazonCloudWatchClient.builder().withRegion(region);
+    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    return (AmazonCloudWatchClient) builder.build();
+  }
+
   private AWSApplicationAutoScaling getAWSApplicationAutoScalingClient(
       String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
     AWSApplicationAutoScalingClientBuilder builder =
@@ -83,6 +101,57 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     return getAWSApplicationAutoScalingClient(
         region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
         .putScalingPolicy(putScalingPolicyRequest);
+  }
+
+  public List<MetricAlarm> fetchAlarmsByName(
+      String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, List<Alarm> alarms) {
+    if (EmptyPredicate.isEmpty(alarms)) {
+      return Collections.EMPTY_LIST;
+    }
+
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+    AmazonCloudWatchClient amazonCloudWatchClient = getAmazonCloudWatchClient(
+        region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+
+    DescribeAlarmsResult describeAlarmsResult =
+        amazonCloudWatchClient.describeAlarms(new DescribeAlarmsRequest().withAlarmNames(
+            alarms.stream().map(alarm -> alarm.getAlarmName()).collect(toList())));
+
+    return describeAlarmsResult.getMetricAlarms();
+  }
+
+  public PutMetricAlarmResult putMetricAlarm(
+      String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, MetricAlarm alarm) {
+    if (alarm == null) {
+      return null;
+    }
+
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+    AmazonCloudWatchClient amazonCloudWatchClient = getAmazonCloudWatchClient(
+        region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+
+    return amazonCloudWatchClient.putMetricAlarm(
+        new PutMetricAlarmRequest()
+            .withActionsEnabled(alarm.getActionsEnabled())
+            .withAlarmActions(alarm.getAlarmActions())
+            .withAlarmDescription(alarm.getAlarmDescription())
+            .withAlarmName(alarm.getAlarmName())
+            .withComparisonOperator(alarm.getComparisonOperator())
+            .withDatapointsToAlarm(alarm.getDatapointsToAlarm())
+            .withDimensions(alarm.getDimensions())
+            .withEvaluateLowSampleCountPercentile(alarm.getEvaluateLowSampleCountPercentile())
+            .withEvaluationPeriods(alarm.getEvaluationPeriods())
+            .withExtendedStatistic(alarm.getExtendedStatistic())
+            .withInsufficientDataActions(alarm.getInsufficientDataActions())
+            .withMetricName(alarm.getMetricName())
+            .withMetrics(alarm.getMetrics())
+            .withNamespace(alarm.getNamespace())
+            .withOKActions(alarm.getOKActions())
+            .withPeriod(alarm.getPeriod())
+            .withStatistic(alarm.getStatistic())
+            .withThreshold(alarm.getThreshold())
+            .withTreatMissingData(alarm.getTreatMissingData())
+            .withUnit(alarm.getUnit()));
   }
 
   public DeleteScalingPolicyResult deleteScalingPolicy(String region, AwsConfig awsConfig,

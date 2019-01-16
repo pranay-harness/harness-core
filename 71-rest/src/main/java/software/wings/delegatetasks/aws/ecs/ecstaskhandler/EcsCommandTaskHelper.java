@@ -1,15 +1,19 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Singleton;
 
+import com.amazonaws.services.applicationautoscaling.model.Alarm;
 import com.amazonaws.services.applicationautoscaling.model.PutScalingPolicyRequest;
 import com.amazonaws.services.applicationautoscaling.model.PutScalingPolicyResult;
 import com.amazonaws.services.applicationautoscaling.model.RegisterScalableTargetRequest;
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.applicationautoscaling.model.ScalingPolicy;
+import com.amazonaws.services.cloudwatch.model.MetricAlarm;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -53,13 +57,16 @@ public class EcsCommandTaskHelper {
     if (isNotEmpty(scalingPolicies)) {
       scalingPolicies.forEach(scalingPolicy -> {
         scalingPolicy.withResourceId(resourceId).withScalableDimension(scalableDimention);
-        upsertScalingPolicyIfRequired(
+        PutScalingPolicyResult result = upsertScalingPolicyIfRequired(
             region, awsConfig, appAutoScalingService, encryptionDetails, executionLogCallback, scalingPolicy);
+        updateCloudWatchMetricWithPolicyCreated(region, awsConfig, result.getPolicyARN(),
+            scalingPolicy.getAlarms() /*alarms mentioned in policyJson provided by user*/, appAutoScalingService,
+            executionLogCallback, encryptionDetails);
       });
     }
   }
 
-  public void upsertScalingPolicyIfRequired(String region, AwsConfig awsConfig,
+  public PutScalingPolicyResult upsertScalingPolicyIfRequired(String region, AwsConfig awsConfig,
       AwsAppAutoScalingHelperServiceDelegate appAutoScalingService, List<EncryptedDataDetail> encryptionDetails,
       ExecutionLogCallback executionLogCallback, ScalingPolicy scalingPolicy) {
     PutScalingPolicyRequest request =
@@ -78,6 +85,54 @@ public class EcsCommandTaskHelper {
         appAutoScalingService.upsertScalingPolicy(region, awsConfig, encryptionDetails, request);
     executionLogCallback.saveExecutionLog(
         new StringBuilder("Created Scaling Policy Successfully.\n").append(result.toString()).append("\n").toString());
+
+    return result;
+  }
+
+  public void updateCloudWatchMetricWithPolicyCreated(String region, AwsConfig awsConfig, String policyArn,
+      List<Alarm> alarms, AwsAppAutoScalingHelperServiceDelegate appAutoScalingService,
+      ExecutionLogCallback executionLogCallback, List<EncryptedDataDetail> encryptionDetails) {
+    if (isEmpty(alarms)) {
+      return;
+    }
+
+    // this is = aws cloudwatch describe-alarms --alarm-names
+    List<MetricAlarm> metricAlarms =
+        appAutoScalingService.fetchAlarmsByName(region, awsConfig, encryptionDetails, alarms);
+    if (isEmpty(metricAlarms)) {
+      return;
+    }
+
+    // Filter out alarm if it already contains policyArn in alarmActions.
+    // e.g. For CpuUtilization or MemoryUtilization aws automatically create alarms and associate policy with it
+    metricAlarms = metricAlarms.stream()
+                       .filter(metricAlarm -> updateAlarmWithPolicyRequired(policyArn, metricAlarm))
+                       .collect(toList());
+    if (isEmpty(metricAlarms)) {
+      return;
+    }
+
+    // Log alarm data
+    executionLogCallback.saveExecutionLog("Following CloudWatch Alarms will be updated with new registered Policy");
+    StringBuilder builder = new StringBuilder(128);
+    metricAlarms.forEach(metricAlarm
+        -> builder.append("AlarmName: ")
+               .append(metricAlarm.getAlarmName())
+               .append("\nNamespace: ")
+               .append(metricAlarm.getNamespace())
+               .append("\nMetricName: ")
+               .append(metricAlarm.getMetricName())
+               .append("\n "));
+    executionLogCallback.saveExecutionLog(builder.toString());
+
+    metricAlarms.forEach(metricAlarm -> {
+      metricAlarm.getAlarmActions().add(policyArn);
+      appAutoScalingService.putMetricAlarm(region, awsConfig, encryptionDetails, metricAlarm);
+    });
+  }
+
+  private boolean updateAlarmWithPolicyRequired(String policyArn, MetricAlarm metricAlarm) {
+    return isEmpty(metricAlarm.getAlarmActions()) || !metricAlarm.getAlarmActions().contains(policyArn);
   }
 
   public String getResourceIdForEcsService(String serviceName, String clusterName) {
