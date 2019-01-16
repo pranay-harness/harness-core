@@ -194,16 +194,19 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       switch (parameters.getCommand()) {
         case APPLY:
           joinedCommands = Joiner.on(" && ").join(asList("cd \"" + scriptDirectory + "\"",
-              "terraform init -input=false -force-copy "
+              "echo \"yes\" | terraform init -input=false -force-copy "
                   + (tfBackendConfigsFile.exists() ? "-backend-config=" + tfBackendConfigsFile.getAbsolutePath() : ""),
-              "terraform refresh -input=false " + targetArgs, "terraform plan -out=tfplan -input=false " + targetArgs,
-              "terraform apply -input=false tfplan", "(terraform output --json > " + tfOutputsFile.toString() + ")"));
+              "echo \"terraform init ... Done\"", "terraform refresh -input=false " + targetArgs,
+              "terraform plan -out=tfplan -input=false " + targetArgs, "echo \"terraform plan ... Done\"",
+              "terraform apply -input=false tfplan", "echo \"terraform apply ... Done\"",
+              "terraform output --json > " + tfOutputsFile.toString()));
           break;
         case DESTROY:
           joinedCommands = Joiner.on(" && ").join(asList("cd \"" + scriptDirectory + "\"",
               "terraform init -input=false "
                   + (tfBackendConfigsFile.exists() ? "-backend-config=" + tfBackendConfigsFile.getAbsolutePath() : ""),
-              "terraform refresh -input=false " + targetArgs, "terraform destroy -force " + targetArgs));
+              "echo \"terraform init ... Done\"", "terraform refresh -input=false " + targetArgs,
+              "terraform destroy -force " + targetArgs, "echo \"terraform destroy ... Done\""));
           break;
         default:
           throw new IllegalArgumentException("Invalid Terraform Command : " + parameters.getCommand().name());
