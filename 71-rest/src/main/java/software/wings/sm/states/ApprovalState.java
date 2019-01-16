@@ -100,8 +100,11 @@ public class ApprovalState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String approvalId = generateUuid();
-    ApprovalStateExecutionData executionData =
-        ApprovalStateExecutionData.builder().approvalId(approvalId).approvalStateType(approvalStateType).build();
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalId(approvalId)
+                                                   .approvalStateType(approvalStateType)
+                                                   .timeoutMillis(getTimeoutMillis())
+                                                   .build();
 
     if (disable) {
       return anExecutionResponse()
@@ -151,6 +154,11 @@ public class ApprovalState extends State {
     JiraApprovalParams jiraApprovalParams = approvalStateParams.getJiraApprovalParams();
     jiraApprovalParams.setIssueId(context.renderExpression(jiraApprovalParams.getIssueId()));
     Application app = ((ExecutionContextImpl) context).getApp();
+
+    executionData.setApprovalField(jiraApprovalParams.getApprovalField());
+    executionData.setApprovalValue(jiraApprovalParams.getApprovalValue());
+    executionData.setRejectionField(jiraApprovalParams.getRejectionField());
+    executionData.setRejectionValue(jiraApprovalParams.getRejectionValue());
 
     // Create a cron job which polls JIRA for approval status
     JiraPollingJob.doPollingJob(serviceJobScheduler, jiraApprovalParams, executionData.getApprovalId(),
