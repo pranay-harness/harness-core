@@ -303,6 +303,11 @@ public class StateMachine extends Base {
 
       State state = stateTypeDesc.newInstance(node.getName());
 
+      // populate properties
+      if (node.getProperties() != null) {
+        MapperUtils.mapObject(node.getProperties(), state);
+      }
+
       state.setId(node.getId());
       state.setRollback(node.isRollback());
 
@@ -311,10 +316,6 @@ public class StateMachine extends Base {
       state.setTemplateUuid(node.getTemplateUuid());
       state.setTemplateVersion(node.getTemplateVersion());
 
-      // populate properties
-      if (node.getProperties() != null) {
-        MapperUtils.mapObject(node.getProperties(), state);
-      }
       state.resolveProperties();
 
       if (isNotEmpty(node.getVariableOverrides()) && state instanceof SubWorkflowState) {
