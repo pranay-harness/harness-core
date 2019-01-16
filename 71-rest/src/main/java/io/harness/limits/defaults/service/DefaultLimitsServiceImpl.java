@@ -51,6 +51,11 @@ public class DefaultLimitsServiceImpl implements DefaultLimitsService {
     defaultLimits.put(new LimitKey(ActionType.CREATE_PIPELINE, AccountType.PAID), new StaticLimit(MAX_APP_COUNT * 10));
     defaultLimits.put(new LimitKey(ActionType.CREATE_PIPELINE, AccountType.FREE), new StaticLimit(MAX_APP_COUNT * 10));
 
+    // Workflow Limits
+    defaultLimits.put(new LimitKey(ActionType.CREATE_WORKFLOW, AccountType.TRIAL), new StaticLimit(MAX_APP_COUNT * 10));
+    defaultLimits.put(new LimitKey(ActionType.CREATE_WORKFLOW, AccountType.PAID), new StaticLimit(MAX_APP_COUNT * 10));
+    defaultLimits.put(new LimitKey(ActionType.CREATE_WORKFLOW, AccountType.FREE), new StaticLimit(MAX_APP_COUNT * 10));
+
     defaults = ImmutableMap.copyOf(defaultLimits);
   }
 

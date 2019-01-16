@@ -96,6 +96,11 @@ import io.harness.exception.ExplanationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.limits.Action;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.LimitEnforcementUtils;
+import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.observer.Rejection;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
@@ -274,6 +279,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private HostService hostService;
   @Inject private YamlPushService yamlPushService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private LimitCheckerFactory limitCheckerFactory;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -843,12 +849,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP).withRollback(true).build());
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   @ValidationGroups(Create.class)
   public Workflow createWorkflow(Workflow workflow) {
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_WORKFLOW));
+
+    return LimitEnforcementUtils.withLimitCheck(checker, () -> { return createWorkflowInternal(workflow); });
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  private Workflow createWorkflowInternal(Workflow workflow) {
     validateOrchestrationWorkflow(workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
@@ -1193,7 +1208,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public boolean deleteWorkflow(String appId, String workflowId) {
-    return deleteWorkflow(appId, workflowId, false, false);
+    String accountId = appService.getAccountIdByAppId(appId);
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_WORKFLOW));
+
+    return LimitEnforcementUtils.withCounterDecrement(
+        checker, () -> { return deleteWorkflow(appId, workflowId, false, false); });
   }
 
   private boolean deleteWorkflow(String appId, String workflowId, boolean forceDelete, boolean syncFromGit) {
@@ -1753,6 +1773,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Workflow cloneWorkflow(String appId, String originalWorkflowId, Workflow workflow) {
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_WORKFLOW));
+
+    return LimitEnforcementUtils.withLimitCheck(
+        checker, () -> cloneWorkflowInternal(appId, originalWorkflowId, workflow));
+  }
+
+  private Workflow cloneWorkflowInternal(String appId, String originalWorkflowId, Workflow workflow) {
     Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
     Workflow clonedWorkflow = cloneWorkflow(workflow, originalWorkflow);
 

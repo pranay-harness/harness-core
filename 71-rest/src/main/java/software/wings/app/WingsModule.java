@@ -14,6 +14,8 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.configuration.LimitConfigurationServiceMongo;
+import io.harness.limits.counter.service.CounterService;
+import io.harness.limits.counter.service.CounterServiceImpl;
 import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
 import io.harness.persistence.HPersistence;
@@ -612,8 +614,9 @@ public class WingsModule extends DependencyModule {
 
     bind(LimitCheckerFactory.class).to(LimitCheckerFactoryImpl.class);
     bind(LimitConfigurationService.class).to(LimitConfigurationServiceMongo.class);
-
     bind(DefaultLimitsService.class).to(DefaultLimitsServiceImpl.class);
+    bind(CounterService.class).to(CounterServiceImpl.class);
+
     bind(LimitVicinityHandler.class).to(LimitVicinityHandlerImpl.class);
     bind(PermitService.class).to(PermitServiceImpl.class);
 

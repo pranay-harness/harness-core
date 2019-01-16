@@ -44,6 +44,7 @@ import migrations.all.HelmValuesYamlToManifestFileMigration;
 import migrations.all.InfraProvisionerFilteringTypeMigration;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitUserCounters;
+import migrations.all.InitWorkflowCounters;
 import migrations.all.LdapSettingsMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
 import migrations.all.LicenseDataMigration;
@@ -182,6 +183,7 @@ public class MigrationList {
         .add(Pair.of(220, AppDTemplateMigration.class))
         .add(Pair.of(221, AddLimitVicinityCheckJobToAllAccounts.class))
         .add(Pair.of(222, HelmValuesYamlToManifestFileMigration.class))
+        .add(Pair.of(223, InitWorkflowCounters.class))
         .build();
   }
 }

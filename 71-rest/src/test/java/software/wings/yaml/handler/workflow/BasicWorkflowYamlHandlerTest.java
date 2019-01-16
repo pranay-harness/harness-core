@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.BASIC_INVALID_YAML_CONTENT;
@@ -15,13 +16,19 @@ import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VA
 
 import com.google.inject.Inject;
 
+import io.harness.limits.Action;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.workflow.BasicWorkflowYamlHandler;
+import software.wings.utils.WingsTestConstants.MockChecker;
 import software.wings.yaml.workflow.BasicWorkflowYaml;
 
 import java.io.IOException;
@@ -33,6 +40,8 @@ import java.util.Arrays;
 public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   private String workflowName = "basic";
 
+  @Mock private LimitCheckerFactory limitCheckerFactory;
+
   @InjectMocks @Inject private BasicWorkflowYamlHandler yamlHandler;
   @Before
   public void runBeforeTest() {
@@ -41,6 +50,9 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
 
   @Test
   public void testCRUDAndGet() throws HarnessException, IOException {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
+
     testCRUD(BASIC_VALID_YAML_CONTENT);
     testCRUD(BASIC_VALID_YAML_CONTENT_TEMPLATIZED);
     testCRUDWithYamlWithMultilineUserInput();
