@@ -246,7 +246,11 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       String errorMessage = "Failed to update the new JIRA ticket " + parameters.getIssueId();
       logger.error(errorMessage, e);
-      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMessage(errorMessage)
+          .jiraServerResponse(extractResponseMessage(e))
+          .build();
     }
 
     commandExecutionStatus = CommandExecutionStatus.SUCCESS;
@@ -260,6 +264,39 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         .issueId(issue.getId())
         .issueKey(issue.getKey())
         .build();
+  }
+
+  /**
+   * Example error message :
+   *
+   * {400 : {"errorMessages":[],"errors":{"labels":"The label 'Test Application' contains spaces which is invalid."}}}
+   *
+   * @param e
+   * @return
+   */
+  private String extractResponseMessage(Exception e) {
+    String messageJson = "{" + e.getCause().getMessage() + "}";
+
+    org.json.JSONObject jsonObject = null;
+    try {
+      jsonObject = new org.json.JSONObject(messageJson);
+      Object[] keyArray = jsonObject.keySet().toArray();
+      org.json.JSONObject innerJsonObject = jsonObject.getJSONObject((String) keyArray[0]);
+      org.json.JSONArray jsonArray = (org.json.JSONArray) innerJsonObject.get("errorMessages");
+      if (jsonArray.length() > 0) {
+        return (String) jsonArray.get(0);
+      }
+
+      org.json.JSONObject errors = (org.json.JSONObject) innerJsonObject.get("errors");
+      Object[] errorsKeys = errors.keySet().toArray();
+
+      String errorsKey = (String) errorsKeys[0];
+      return errorsKey + " : " + (String) errors.get((String) errorsKey);
+    } catch (Exception ex) {
+      logger.error("Failed to parse json response from JIRA", ex);
+    }
+
+    return e.getCause().getMessage();
   }
 
   private ResponseData createTicket(JiraTaskParameters parameters) {
@@ -288,7 +325,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
-          .errorMessage("Unable to create the new JIRA ticket " + parameters.getIssueId())
+          .errorMessage("Unable to create a new JIRA ticket. ")
+          .jiraServerResponse(extractResponseMessage(e))
           .build();
     }
 
