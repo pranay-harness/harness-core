@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import com.google.inject.Inject;
 
+import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
@@ -58,7 +59,7 @@ public class EcsBGUpdateListnerState extends State {
 
   private static final Logger logger = LoggerFactory.getLogger(EcsBGUpdateListnerState.class);
 
-  private boolean downsizeOldService;
+  @Attributes(title = "Downsize Older Service") private boolean downsizeOldService;
 
   /**
    * Instantiates a new state.
