@@ -53,6 +53,26 @@ then
   exit 0
 fi
 
+if [[ "$(ulimit -n)" == "unlimited" || $(ulimit -n) -lt 10000 ]]; then
+  echo
+  echo "WARNING: ulimit -n is too low ($(ulimit -n)). Minimum 10000 required."
+  echo
+fi
+
+if [[ "$OSTYPE" == darwin* ]]; then
+  if [[ $(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2 | cut -d 'G' -f 1) -lt 6 ]]; then
+    echo
+    echo "WARNING: Not enough memory ($(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2)). Minimum 6 GB required."
+    echo
+  fi
+else
+  if [[ $(free -m | grep Mem | awk '{ print $2 }') -lt 6000 ]]; then
+    echo
+    echo "WARNING: Not enough memory ($(free -m | grep Mem | awk '{ print $2 }') MB). Minimum 6 GB required."
+    echo
+  fi
+fi
+
 if [ -e proxy.config ]
 then
   source proxy.config
