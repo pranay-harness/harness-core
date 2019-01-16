@@ -8,4 +8,5 @@ import lombok.Data;
 public class ContainerMetadata {
   private String containerServiceName;
   private String namespace;
+  private String releaseName;
 }

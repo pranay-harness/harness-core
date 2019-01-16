@@ -11,6 +11,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sContextElement.K8sContextElementBuilder;
 import software.wings.api.k8s.K8sStateExecutionData;
@@ -129,9 +130,17 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
+    InstanceElementListParam instanceElementListParam =
+        k8sStateHelper.getInstanceElementListParam(k8sRollingDeployResponse.getK8sPodList());
+
+    stateExecutionData.setNewInstanceStatusSummaries(
+        k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
+
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(stateExecutionData)
+        .addContextElement(instanceElementListParam)
+        .addNotifyElement(instanceElementListParam)
         .build();
   }
 

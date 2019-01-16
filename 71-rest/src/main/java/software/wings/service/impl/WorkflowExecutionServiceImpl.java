@@ -126,6 +126,7 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.WorkflowElement;
+import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalAuthorization;
@@ -2314,6 +2315,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               (KubernetesSteadyStateCheckExecutionData) next.getStateExecutionData();
           if (isNotEmpty(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries())) {
             instanceStatusSummaries.addAll(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries());
+          }
+        } else if (nextStateType == StateType.K8S_DEPLOYMENT_ROLLING || nextStateType == StateType.K8S_BLUE_GREEN_DEPLOY
+            || nextStateType == StateType.K8S_SCALE) {
+          K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) next.getStateExecutionData();
+          if (isNotEmpty(k8sStateExecutionData.getNewInstanceStatusSummaries())) {
+            instanceStatusSummaries.addAll(k8sStateExecutionData.getNewInstanceStatusSummaries());
           }
         }
         last = next;

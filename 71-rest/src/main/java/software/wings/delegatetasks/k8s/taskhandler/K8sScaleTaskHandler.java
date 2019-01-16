@@ -13,12 +13,14 @@ import com.google.inject.Inject;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResourceId;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
@@ -30,6 +32,11 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sScaleResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.utils.Misc;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class K8sScaleTaskHandler extends K8sTaskHandler {
@@ -65,6 +72,12 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
       return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.SUCCESS);
     }
 
+    KubernetesConfig kubernetesConfig =
+        containerDeploymentDelegateHelper.getKubernetesConfig(k8sScaleTaskParameters.getK8sClusterConfig());
+
+    List<K8sPod> beforePodList = k8sTaskHelper.getPodDetails(
+        kubernetesConfig, resourceIdToScale.getNamespace(), k8sScaleTaskParameters.getReleaseName());
+
     success = k8sTaskHelper.scale(client, k8sDelegateTaskParams, resourceIdToScale, targetReplicaCount,
         new ExecutionLogCallback(delegateLogService, k8sScaleTaskParameters.getAccountId(),
             k8sScaleTaskParameters.getAppId(), k8sScaleTaskParameters.getActivityId(), Scale));
@@ -83,7 +96,23 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
       }
     }
 
+    List<K8sPod> afterPodList = k8sTaskHelper.getPodDetails(
+        kubernetesConfig, resourceIdToScale.getNamespace(), k8sScaleTaskParameters.getReleaseName());
+
+    k8sScaleResponse.setK8sPodList(getNewPods(beforePodList, afterPodList));
     return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.SUCCESS);
+  }
+
+  private List<K8sPod> getNewPods(List<K8sPod> beforePodList, List<K8sPod> afterPodList) {
+    Set<String> beforePodSet = (beforePodList != null)
+        ? beforePodList.stream().map(pod -> pod.getName()).collect(Collectors.toSet())
+        : Collections.emptySet();
+
+    List<K8sPod> newPods = Collections.EMPTY_LIST;
+    if (afterPodList != null) {
+      newPods = afterPodList.stream().filter(pod -> !beforePodSet.contains(pod.getName())).collect(Collectors.toList());
+    }
+    return newPods;
   }
 
   private boolean init(K8sScaleTaskParameters k8sScaleTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams,

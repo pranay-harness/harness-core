@@ -26,6 +26,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
+import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.Status;
@@ -111,6 +112,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
     }
 
+    List<K8sPod> podList = Collections.EMPTY_LIST;
+
     if (managedWorkload == null) {
       k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState)
           .saveExecutionLog("Skipping Status Check since there is no Managed Workload.", INFO, SUCCESS);
@@ -127,6 +130,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
             k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
         return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
       }
+
+      podList =
+          k8sTaskHelper.getPodDetails(kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName);
     }
 
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WrapUp));
@@ -136,7 +142,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     K8sRollingDeployResponse rollingSetupResponse =
-        K8sRollingDeployResponse.builder().releaseNumber(release.getNumber()).build();
+        K8sRollingDeployResponse.builder().releaseNumber(release.getNumber()).k8sPodList(podList).build();
+
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
         .k8sTaskResponse(rollingSetupResponse)

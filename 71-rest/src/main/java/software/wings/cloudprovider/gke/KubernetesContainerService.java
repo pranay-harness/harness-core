@@ -143,4 +143,7 @@ public interface KubernetesContainerService {
 
   void saveReleaseHistory(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String infraMappingId, String releaseHistory);
+
+  List<Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String namespace, Map<String, String> labels);
 }
