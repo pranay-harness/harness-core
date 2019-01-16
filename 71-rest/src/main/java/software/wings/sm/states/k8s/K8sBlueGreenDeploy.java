@@ -3,7 +3,7 @@ package software.wings.sm.states.k8s;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.K8S_CANARY_SETUP;
+import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 
 import com.google.inject.Inject;
 
@@ -17,6 +17,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -65,7 +66,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
   public static final String K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME = "Blue/Green Deployment";
 
   public K8sBlueGreenDeploy(String name) {
-    super(name, K8S_CANARY_SETUP.name());
+    super(name, K8S_BLUE_GREEN_DEPLOY.name());
   }
 
   @Getter @Setter @Attributes(title = "Primary Service Name") private String primaryServiceName;
@@ -146,6 +147,12 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
+    InstanceElementListParam instanceElementListParam =
+        k8sStateHelper.getInstanceElementListParam(k8sBlueGreenDeployResponse.getK8sPodList());
+
+    stateExecutionData.setNewInstanceStatusSummaries(
+        k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
+
     k8sStateHelper.saveK8sElement(context,
         K8sElement.builder()
             .releaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber())
@@ -156,6 +163,8 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(stateExecutionData)
+        .addContextElement(instanceElementListParam)
+        .addNotifyElement(instanceElementListParam)
         .build();
   }
 

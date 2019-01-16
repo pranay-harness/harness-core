@@ -8,7 +8,6 @@ import java.util.List;
 
 @Data
 @Builder
-public class K8sRollingDeployResponse implements K8sTaskResponse {
-  Integer releaseNumber;
-  List<K8sPod> k8sPodList;
+public class K8sInstanceSyncResponse implements K8sTaskResponse {
+  List<K8sPod> k8sPodInfoList;
 }

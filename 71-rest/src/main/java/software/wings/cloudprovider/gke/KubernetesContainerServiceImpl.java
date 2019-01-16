@@ -109,6 +109,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 2/9/17
@@ -1337,5 +1338,21 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
 
     createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
+  }
+
+  @Override
+  public List<Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String namespace, Map<String, String> labels) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .pods()
+        .inNamespace(namespace)
+        .withLabels(labels)
+        .list()
+        .getItems()
+        .stream()
+        .filter(pod
+            -> StringUtils.isBlank(pod.getMetadata().getDeletionTimestamp())
+                && StringUtils.equals(pod.getStatus().getPhase(), "Running"))
+        .collect(Collectors.toList());
   }
 }

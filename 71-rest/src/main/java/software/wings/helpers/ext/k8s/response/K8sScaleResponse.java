@@ -1,10 +1,13 @@
 package software.wings.helpers.ext.k8s.response;
 
+import io.harness.k8s.model.K8sPod;
 import lombok.Builder;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @Builder
 public class K8sScaleResponse implements K8sTaskResponse {
-  public K8sScaleResponse() {}
+  List<K8sPod> k8sPodList;
 }

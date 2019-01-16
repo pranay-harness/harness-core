@@ -1,18 +1,22 @@
-package software.wings.api.k8s;
+package software.wings.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.sm.StepExecutionSummary;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-@Builder
 @EqualsAndHashCode(callSuper = true)
-public class K8sExecutionSummary extends StepExecutionSummary {
+public class K8sDeploymentInfo extends DeploymentInfo {
   private String namespace;
   private String releaseName;
   private Integer releaseNumber;
-  private Integer targetInstances;
+
+  @Builder
+  public K8sDeploymentInfo(String namespace, String releaseName, Integer releaseNumber) {
+    this.namespace = namespace;
+    this.releaseName = releaseName;
+    this.releaseNumber = releaseNumber;
+  }
 }

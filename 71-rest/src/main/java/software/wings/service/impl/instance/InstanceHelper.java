@@ -507,6 +507,7 @@ public class InstanceHelper {
       case AMI_DEPLOY_AUTOSCALING_GROUP:
       case HELM_DEPLOY:
       case CLUSTER_SETUP:
+      case K8S_PHASE_STEP:
         return true;
       default:
         return false;

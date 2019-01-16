@@ -17,6 +17,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploym
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
@@ -72,6 +73,11 @@ public class DeploymentServiceImpl implements DeploymentService {
       PcfDeploymentKey pcfDeploymentKey = deploymentSummary.getPcfDeploymentKey();
       query.filter("pcfDeploymentKey.applicationName", pcfDeploymentKey.getApplicationName());
       return pcfDeploymentKey;
+    } else if (deploymentSummary.getK8sDeploymentKey() != null) {
+      K8sDeploymentKey k8sDeploymentKey = deploymentSummary.getK8sDeploymentKey();
+      query.filter("k8sDeploymentKey.releaseName", k8sDeploymentKey.getReleaseName());
+      query.filter("k8sDeploymentKey.releaseNumber", k8sDeploymentKey.getReleaseNumber());
+      return k8sDeploymentKey;
     } else if (deploymentSummary.getContainerDeploymentKey() != null) {
       return AddDeploymentKeyFilterForContainer(query, deploymentSummary);
     } else if (deploymentSummary.getAwsAmiDeploymentKey() != null) {

@@ -1,5 +1,6 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
@@ -7,9 +8,12 @@ import static io.harness.k8s.manifest.ManifestHelper.normalizeFilePath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.api.HostElement.Builder.aHostElement;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,7 +22,13 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.K8sPod;
 import io.harness.serializer.KryoUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
+import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.k8s.K8sElement;
@@ -43,6 +53,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -54,8 +65,11 @@ import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig.K8sDelegateManifestConfigBuilder;
+import software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
+import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.ActivityService;
@@ -70,16 +84,19 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Singleton
 public class K8sStateHelper {
@@ -94,6 +111,8 @@ public class K8sStateHelper {
   @Inject private transient ActivityService activityService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject GitFileConfigHelperService gitFileConfigHelperService;
+
+  private static final Logger logger = LoggerFactory.getLogger(K8sStateHelper.class);
 
   public Activity createK8sActivity(ExecutionContext executionContext, String commandName, String stateType,
       ActivityService activityService, List<CommandUnit> commandUnits) {
@@ -448,6 +467,76 @@ public class K8sStateHelper {
     } catch (Exception e) {
       throw new InvalidRequestException(Misc.getMessage(e), e);
     }
+  }
+
+  public InstanceElementListParam getInstanceElementListParam(List<K8sPod> podDetailsList) {
+    return InstanceElementListParamBuilder.anInstanceElementListParam()
+        .withInstanceElements(getInstanceElementList(podDetailsList))
+        .build();
+  }
+
+  public List<InstanceStatusSummary> getInstanceStatusSummaries(
+      List<InstanceElement> instanceElementList, ExecutionStatus executionStatus) {
+    return instanceElementList.stream()
+        .map(instanceElement
+            -> anInstanceStatusSummary().withInstanceElement(instanceElement).withStatus(executionStatus).build())
+        .collect(Collectors.toList());
+  }
+
+  public List<K8sPod> getPodList(
+      ContainerInfrastructureMapping containerInfrastructureMapping, String namespace, String releaseName) {
+    K8sInstanceSyncTaskParameters k8sInstanceSyncTaskParameters =
+        K8sInstanceSyncTaskParameters.builder()
+            .accountId(containerInfrastructureMapping.getAccountId())
+            .appId(containerInfrastructureMapping.getAppId())
+            .k8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(containerInfrastructureMapping))
+            .namespace(namespace)
+            .releaseName(releaseName)
+            .build();
+
+    String waitId = generateUuid();
+    DelegateTask delegateTask =
+        aDelegateTask()
+            .withAccountId(containerInfrastructureMapping.getAccountId())
+            .withAppId(containerInfrastructureMapping.getAppId())
+            .withTaskType(TaskType.K8S_COMMAND_TASK)
+            .withWaitId(waitId)
+            .withTags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sInstanceSyncTaskParameters))
+            .withParameters(new Object[] {k8sInstanceSyncTaskParameters})
+            .withEnvId(containerInfrastructureMapping.getEnvId())
+            .withInfrastructureMappingId(containerInfrastructureMapping.getUuid())
+            .build();
+
+    try {
+      K8sTaskExecutionResponse k8sTaskExecutionResponse = delegateService.executeTask(delegateTask);
+      if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
+        K8sInstanceSyncResponse k8sInstanceSyncResponse =
+            (K8sInstanceSyncResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
+        return k8sInstanceSyncResponse.getK8sPodInfoList();
+      }
+      logger.info("Failed to fetch PodList for release " + releaseName);
+    } catch (Exception e) {
+      logger.info("Failed to fetch PodList for release " + releaseName, e);
+    }
+    return null;
+  }
+
+  private List<InstanceElement> getInstanceElementList(List<K8sPod> podList) {
+    if (isEmpty(podList)) {
+      return Collections.emptyList();
+    }
+
+    return podList.stream()
+        .map(podDetails -> {
+          return anInstanceElement()
+              .withUuid(podDetails.getName())
+              .withHost(aHostElement().withHostName(podDetails.getName()).withIp(podDetails.getPodIP()).build())
+              .withHostName(podDetails.getName())
+              .withDisplayName(podDetails.getName())
+              .withPodName(podDetails.getName())
+              .build();
+        })
+        .collect(Collectors.toList());
   }
 
   private boolean anyRemoteStoreType(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {

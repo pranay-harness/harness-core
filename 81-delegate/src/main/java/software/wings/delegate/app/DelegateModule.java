@@ -54,6 +54,7 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandHandle
 import software.wings.delegatetasks.k8s.taskhandler.K8sBlueGreenDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCanaryRollbackTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCanarySetupTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sInstanceSyncTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sRollingDeployRollbackTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sRollingDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sScaleTaskHandler;
@@ -447,6 +448,8 @@ public class DelegateModule extends DependencyModule {
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.SCALE.name()).to(K8sScaleTaskHandler.class);
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.BLUE_GREEN_DEPLOY.name())
         .to(K8sBlueGreenDeployTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.INSTANCE_SYNC.name())
+        .to(K8sInstanceSyncTaskHandler.class);
   }
 
   @Override

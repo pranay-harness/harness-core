@@ -29,6 +29,7 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabels;
+import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
@@ -143,11 +144,15 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, WrapUp));
 
+    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithRevision(
+        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, currentRelease.getNumber());
+
     releaseHistory.setReleaseStatus(Status.Succeeded);
     kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
         k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     k8sBlueGreenDeployResponse.setReleaseNumber(currentRelease.getNumber());
+    k8sBlueGreenDeployResponse.setK8sPodList(podList);
     return k8sTaskHelper.getK8sTaskExecutionResponse(k8sBlueGreenDeployResponse, SUCCESS);
   }
 

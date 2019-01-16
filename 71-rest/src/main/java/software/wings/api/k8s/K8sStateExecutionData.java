@@ -8,8 +8,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.TaskType;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -26,6 +29,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Respons
   private String commandName;
   private Integer targetInstances;
   private TaskType currentTaskType;
+  @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -61,6 +65,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Respons
   @Override
   public K8sExecutionSummary getStepExecutionSummary() {
     return K8sExecutionSummary.builder()
+        .namespace(namespace)
         .releaseName(releaseName)
         .releaseNumber(releaseNumber)
         .targetInstances(targetInstances)

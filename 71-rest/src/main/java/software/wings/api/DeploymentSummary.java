@@ -10,6 +10,7 @@ import software.wings.beans.Base;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
 
 @Entity(value = "deploymentSummary", noClassnameStored = true)
@@ -37,6 +38,7 @@ public class DeploymentSummary extends Base {
   private AwsAmiDeploymentKey awsAmiDeploymentKey;
   private AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey;
   private ContainerDeploymentKey containerDeploymentKey;
+  private K8sDeploymentKey k8sDeploymentKey;
 
   @Builder
   public DeploymentSummary(String uuid, String appId, EmbeddedUser createdBy, long createdAt,

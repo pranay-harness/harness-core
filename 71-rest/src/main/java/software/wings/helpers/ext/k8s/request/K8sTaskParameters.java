@@ -23,6 +23,7 @@ public class K8sTaskParameters implements TaskParameters {
     SCALE,
     CANARY_SETUP,
     CANARY_ROLLBACK,
-    BLUE_GREEN_DEPLOY;
+    BLUE_GREEN_DEPLOY,
+    INSTANCE_SYNC;
   }
 }

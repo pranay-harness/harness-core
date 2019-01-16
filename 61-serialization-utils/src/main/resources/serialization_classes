@@ -673,3 +673,7 @@ software.wings.delegatetasks.buildsource.BuildSourceRequest, 5618
 software.wings.delegatetasks.buildsource.BuildSourceResponse, 5619
 software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse, 5620
 software.wings.delegatetasks.buildsource.BuildSourceRequest$BuildSourceRequestType, 5621
+io.harness.k8s.model.K8sPod, 5622
+io.harness.k8s.model.K8sContainer, 5623
+software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters, 5624
+software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse, 5625

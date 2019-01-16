@@ -17,7 +17,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
+import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
@@ -28,6 +30,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sScaleTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
+import software.wings.helpers.ext.k8s.response.K8sScaleResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -120,11 +123,24 @@ public class K8sScale extends State {
           executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                                : ExecutionStatus.FAILED;
 
+      K8sScaleResponse k8sScaleResponse = (K8sScaleResponse) executionResponse.getK8sTaskResponse();
+
       activityService.updateStatus(k8sStateHelper.getActivityId(context), appId, executionStatus);
+
+      K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+      stateExecutionData.setStatus(executionStatus);
+
+      InstanceElementListParam instanceElementListParam =
+          k8sStateHelper.getInstanceElementListParam(k8sScaleResponse.getK8sPodList());
+
+      stateExecutionData.setNewInstanceStatusSummaries(
+          k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
 
       return anExecutionResponse()
           .withExecutionStatus(executionStatus)
           .withStateExecutionData(context.getStateExecutionData())
+          .addContextElement(instanceElementListParam)
+          .addNotifyElement(instanceElementListParam)
           .build();
     } catch (WingsException e) {
       throw e;

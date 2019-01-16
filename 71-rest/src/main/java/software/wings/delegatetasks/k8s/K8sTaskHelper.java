@@ -18,6 +18,8 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -32,6 +34,9 @@ import io.harness.k8s.kubectl.RolloutHistoryCommand;
 import io.harness.k8s.kubectl.RolloutStatusCommand;
 import io.harness.k8s.kubectl.ScaleCommand;
 import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.model.HarnessLabels;
+import io.harness.k8s.model.K8sContainer;
+import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceComparer;
 import io.harness.k8s.model.KubernetesResourceId;
@@ -46,12 +51,14 @@ import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
+import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
@@ -65,13 +72,18 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
 public class K8sTaskHelper {
   @Inject protected DelegateLogService delegateLogService;
+  @Inject private transient KubernetesContainerService kubernetesContainerService;
+  @Inject private TimeLimiter timeLimiter;
+
   private static final Logger logger = LoggerFactory.getLogger(K8sTaskHelper.class);
 
   private static String eventOutputFormat =
@@ -515,5 +527,50 @@ public class K8sTaskHelper {
   public ExecutionLogCallback getExecutionLogCallback(K8sTaskParameters request, String commandUnit) {
     return new ExecutionLogCallback(
         delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), commandUnit);
+  }
+
+  public List<K8sPod> getPodDetails(KubernetesConfig kubernetesConfig, String namespace, String releaseName) {
+    return getPodDetailsWithRevision(kubernetesConfig, namespace, releaseName, null);
+  }
+
+  public List<K8sPod> getPodDetailsWithRevision(
+      KubernetesConfig kubernetesConfig, String namespace, String releaseName, Integer revision) {
+    try {
+      Map<String, String> labels = (revision != null && revision != 0)
+          ? ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.revision, revision.toString())
+          : ImmutableMap.of(HarnessLabels.releaseName, releaseName);
+      return timeLimiter.callWithTimeout(() -> {
+        try {
+          return kubernetesContainerService
+              .getRunningPodsWithLabels(kubernetesConfig, Collections.emptyList(), namespace, labels)
+              .stream()
+              .map(pod
+                  -> K8sPod.builder()
+                         .uid(pod.getMetadata().getUid())
+                         .name(pod.getMetadata().getName())
+                         .namespace(pod.getMetadata().getNamespace())
+                         .releaseName(releaseName)
+                         .podIP(pod.getStatus().getPodIP())
+                         .containerList(pod.getStatus()
+                                            .getContainerStatuses()
+                                            .stream()
+                                            .map(container
+                                                -> K8sContainer.builder()
+                                                       .containerId(container.getContainerID())
+                                                       .name(container.getName())
+                                                       .image(container.getImage())
+                                                       .build())
+                                            .collect(Collectors.toList()))
+                         .build())
+              .collect(Collectors.toList());
+        } catch (Exception e) {
+          logger.warn("Failed getting Pods ", e);
+          return null;
+        }
+      }, 10, TimeUnit.SECONDS, true);
+    } catch (Exception e) {
+      logger.warn("Failed getting Pods ", e);
+      return null;
+    }
   }
 }

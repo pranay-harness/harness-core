@@ -32,6 +32,7 @@ import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.InstanceKey;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
+import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -156,6 +157,10 @@ public class InstanceServiceImpl implements InstanceService {
       PcfInstanceKey pcfInstanceKey = instance.getPcfInstanceKey();
       query.filter("pcfInstanceKey.id", pcfInstanceKey.getId());
       return pcfInstanceKey;
+    } else if (instance.getPodInstanceKey() != null) {
+      PodInstanceKey podInstanceKey = instance.getPodInstanceKey();
+      query.filter("podInstanceKey.podName", podInstanceKey.getPodName());
+      return podInstanceKey;
     } else {
       String msg = "Either host or container or pcf instance key needs to be set";
       logger.error(msg);

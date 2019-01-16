@@ -16,6 +16,7 @@ import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
+import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 
 import java.util.List;
 
@@ -47,6 +48,7 @@ public class Instance extends Base {
   private HostInstanceKey hostInstanceKey;
   private ContainerInstanceKey containerInstanceKey;
   private PcfInstanceKey pcfInstanceKey;
+  private PodInstanceKey podInstanceKey;
   private String envId;
   private String envName;
   private EnvironmentType envType;
@@ -86,11 +88,11 @@ public class Instance extends Base {
   public Instance(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, List<String> keywords, String entityYamlPath, InstanceType instanceType,
       HostInstanceKey hostInstanceKey, ContainerInstanceKey containerInstanceKey, PcfInstanceKey pcfInstanceKey,
-      String envId, String envName, EnvironmentType envType, String accountId, String serviceId, String serviceName,
-      String appName, String infraMappingId, String infraMappingType, String computeProviderId,
-      String computeProviderName, String lastArtifactStreamId, String lastArtifactId, String lastArtifactName,
-      String lastArtifactSourceName, String lastArtifactBuildNum, String lastDeployedById, String lastDeployedByName,
-      long lastDeployedAt, String lastWorkflowExecutionId, String lastWorkflowExecutionName,
+      PodInstanceKey podInstanceKey, String envId, String envName, EnvironmentType envType, String accountId,
+      String serviceId, String serviceName, String appName, String infraMappingId, String infraMappingType,
+      String computeProviderId, String computeProviderName, String lastArtifactStreamId, String lastArtifactId,
+      String lastArtifactName, String lastArtifactSourceName, String lastArtifactBuildNum, String lastDeployedById,
+      String lastDeployedByName, long lastDeployedAt, String lastWorkflowExecutionId, String lastWorkflowExecutionName,
       String lastPipelineExecutionId, String lastPipelineExecutionName, InstanceInfo instanceInfo, boolean isDeleted,
       long deletedAt) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
@@ -98,6 +100,7 @@ public class Instance extends Base {
     this.hostInstanceKey = hostInstanceKey;
     this.containerInstanceKey = containerInstanceKey;
     this.pcfInstanceKey = pcfInstanceKey;
+    this.podInstanceKey = podInstanceKey;
     this.envId = envId;
     this.envName = envName;
     this.envType = envType;
