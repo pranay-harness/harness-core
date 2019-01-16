@@ -329,8 +329,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
     parts.add("AWS");
 
-    parts.add(getDeploymentType());
-
     if (isNotEmpty(getRegion())) {
       parts.add(getRegion());
     }

@@ -51,6 +51,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
@@ -84,6 +85,8 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
 
   @Inject private transient WorkflowExecutionService workflowExecutionService;
+
+  @Inject private transient ServiceResourceService serviceResourceService;
 
   private String appId;
   private String envId;
@@ -208,8 +211,10 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   private void populateNamespaceInInfraMappingElement(
       InfrastructureMapping infrastructureMapping, InfraMappingElementBuilder builder) {
-    if ((DeploymentType.KUBERNETES.name().equals(infrastructureMapping.getDeploymentType()))
-        || (DeploymentType.HELM.name().equals(infrastructureMapping.getDeploymentType()))) {
+    DeploymentType deploymentType =
+        serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
+
+    if ((DeploymentType.KUBERNETES.equals(deploymentType)) || (DeploymentType.HELM.equals(deploymentType))) {
       String namespace = null;
 
       if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {

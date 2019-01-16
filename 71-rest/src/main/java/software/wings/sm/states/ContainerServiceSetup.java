@@ -29,6 +29,7 @@ import software.wings.api.CommandStateExecutionData;
 import software.wings.api.CommandStateExecutionData.Builder;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
+import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ecs.EcsBGSetupData;
@@ -185,12 +186,14 @@ public abstract class ContainerServiceSetup extends State {
         safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
       }
 
+      DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
+
       CommandExecutionContext commandExecutionContext =
           aCommandExecutionContext()
               .withAccountId(app.getAccountId())
               .withAppId(app.getUuid())
               .withEnvId(env.getUuid())
-              .withDeploymentType(infrastructureMapping.getDeploymentType())
+              .withDeploymentType(deploymentType.name())
               .withContainerSetupParams(containerSetupParams)
               .withActivityId(activity.getUuid())
               .withCloudProviderSetting(settingAttribute)

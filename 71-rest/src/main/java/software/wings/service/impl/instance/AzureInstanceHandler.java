@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toSet;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
-import io.harness.beans.PageRequest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
@@ -92,8 +91,8 @@ public class AzureInstanceHandler extends InstanceHandler {
 
       SettingAttribute settingAttribute = settingsService.get(azureInfrastructureMapping.getComputeProviderSettingId());
 
-      List<Host> activeHostList = azureHelperService.listHosts(
-          azureInfrastructureMapping, settingAttribute, encryptedDataDetails, new PageRequest<>());
+      List<Host> activeHostList =
+          azureHelperService.listHosts(azureInfrastructureMapping, settingAttribute, encryptedDataDetails, null);
       deleteRunningInstancesFromMap(azureInstanceIdInstanceMap, activeHostList);
     }
   }

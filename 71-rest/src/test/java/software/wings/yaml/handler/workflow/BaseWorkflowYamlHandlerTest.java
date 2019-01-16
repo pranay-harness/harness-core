@@ -1,6 +1,7 @@
 package software.wings.yaml.handler.workflow;
 
 import static java.util.Arrays.asList;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -55,6 +56,7 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
@@ -82,6 +84,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected ArtifactStreamService artifactStreamService;
   @Mock protected SettingsService settingsService;
   @Mock protected NotificationSetupService notificationSetupService;
+  @Mock protected YamlPushService yamlPushService;
 
   //  @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject protected WorkflowService workflowService;
@@ -133,6 +136,8 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
 
     when(yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE)).thenReturn(variableYamlHandler);
     when(yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR)).thenReturn(nameValuePairYamlHandler);
+
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
   }
 
   private InfrastructureMapping getInfraMapping() {

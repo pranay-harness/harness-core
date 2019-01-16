@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -34,6 +35,7 @@ import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaD
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionResponse;
@@ -54,6 +56,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private MetricDataAnalysisService metricAnalysisService;
   @Mock private InfrastructureMappingService infraMappingService;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @Mock private AppdynamicsService appdynamicsService;
   @Mock private PhaseElement phaseElement;
@@ -91,11 +94,15 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     setInternalState(appDynamicsState, "featureFlagService", featureFlagService);
     setInternalState(appDynamicsState, "infraMappingService", infraMappingService);
     setInternalState(appDynamicsState, "versionInfoManager", versionInfoManager);
+    setInternalState(appDynamicsState, "serviceResourceService", serviceResourceService);
+
     when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(phaseElement);
     when(phaseElement.getInfraMappingId()).thenReturn(infraMappingId);
     when(executionContext.getAppId()).thenReturn(appId);
     when(infraMappingService.get(anyString(), anyString()))
         .thenReturn(anAwsInfrastructureMapping().withDeploymentType(DeploymentType.AWS_CODEDEPLOY.name()).build());
+    when(serviceResourceService.getDeploymentType(anyObject(), anyObject(), anyObject()))
+        .thenReturn(DeploymentType.AWS_CODEDEPLOY);
 
     setupCommonMocks();
   }

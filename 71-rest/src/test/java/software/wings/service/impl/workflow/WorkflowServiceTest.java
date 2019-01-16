@@ -847,6 +847,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldCreateBasicDirectKubernetesDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructDirectKubernetesInfra());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
+
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
     assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
 
@@ -877,6 +879,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldCreateBasicGCPKubernetesDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructGKInfraMapping());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
     assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
@@ -932,6 +935,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldCreateBlueGreenCPKubernetesDeploymentWorkflow() {
     Workflow workflow = constructBlueGreenWorkflow();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructGKInfraMapping());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
     assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
@@ -961,6 +965,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldCreateBasicEcsDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructEcsnfraMapping());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.ECS);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
     assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
@@ -989,6 +994,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldCreateBasicAwsAmiDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructAmiInfraMapping());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.AMI);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
     assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
@@ -1014,6 +1020,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldCreateBasicAwsLambdaDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructAwsLambdaInfraMapping());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.AWS_LAMBDA);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
     assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
@@ -1041,6 +1048,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     properties.put("helmReleaseNamePrefix", "defaultValue");
     Workflow workflow = constructHelmWorkflowWithProperties(properties);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructHELMInfra());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.HELM);
     when(serviceResourceService.checkArtifactNeededForHelm(APP_ID, SERVICE_TEMPLATE_ID)).thenReturn(true);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
@@ -2191,6 +2199,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldTemplatizeMultiServiceEnvThenTemplatizeInfra() {
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.SSH);
     Workflow workflow1 = constructMulitServiceTemplateWorkflow();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
@@ -2234,6 +2243,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldTemplatizeCanaryEnvThenTemplatizeInfra() {
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.SSH);
+
     Workflow workflow1 = constructTemplatizedCanaryWorkflow();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
@@ -2399,6 +2410,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateTemplatizeExpressionsCanary() {
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.SSH);
     Workflow workflow1 = constructCanaryWorkflowWithPhase();
 
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
@@ -2673,6 +2685,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldTestWorkflowHasSshInfraMapping() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.SSH);
     Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase = aWorkflowPhase().infraMappingId(INFRA_MAPPING_ID).serviceId(SERVICE_ID).build();

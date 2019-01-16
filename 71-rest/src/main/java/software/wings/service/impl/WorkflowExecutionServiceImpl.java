@@ -114,6 +114,7 @@ import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.AwsAmiDeployStateExecutionData;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.DeploymentType;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.InstanceElement;
@@ -1974,12 +1975,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           if (infrastructureMappings != null) {
             for (InfrastructureMapping infraMapping : infrastructureMappings) {
               if (infraMapping.getServiceId().equals(service.getUuid())) {
+                DeploymentType deploymentType = serviceResourceService.getDeploymentType(infraMapping, service, null);
                 infraMappingSummaries.add(anInfraMappingSummary()
                                               .withInframappingId(infraMapping.getUuid())
                                               .withInfraMappingType(infraMapping.getInfraMappingType())
                                               .withComputerProviderName(infraMapping.getComputeProviderName())
                                               .withDisplayName(infraMapping.getName())
-                                              .withDeploymentType(infraMapping.getDeploymentType())
+                                              .withDeploymentType(deploymentType.name())
                                               .withComputerProviderType(infraMapping.getComputeProviderType())
                                               .build());
               }

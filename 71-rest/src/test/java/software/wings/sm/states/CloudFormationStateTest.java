@@ -248,6 +248,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
     on(workflowStandardParams).set("accountService", accountService);
     on(workflowStandardParams).set("infrastructureMappingService", infrastructureMappingService);
+    on(workflowStandardParams).set("serviceResourceService", serviceResourceService);
 
     when(artifactService.get(any(), any())).thenReturn(artifact);
     when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);

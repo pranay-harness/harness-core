@@ -247,6 +247,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
+    when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
 
     ExecutionResponse response = kubernetesDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);

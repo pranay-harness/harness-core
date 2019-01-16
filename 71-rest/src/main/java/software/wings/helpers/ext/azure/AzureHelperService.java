@@ -34,13 +34,11 @@ import io.fabric8.kubernetes.api.model.AuthInfo;
 import io.fabric8.kubernetes.api.model.Cluster;
 import io.fabric8.kubernetes.api.model.Context;
 import io.fabric8.kubernetes.client.internal.KubeConfigUtils;
-import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
@@ -118,7 +116,7 @@ public class AzureHelperService {
   }
 
   public List<VirtualMachine> listVms(AzureInfrastructureMapping azureInfrastructureMapping,
-      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, PageRequest<Host> req) {
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
     notNullCheck("Infra mapping", azureInfrastructureMapping);
 
     String subscriptionId = azureInfrastructureMapping.getSubscriptionId();
@@ -201,8 +199,9 @@ public class AzureHelperService {
   }
 
   public PageResponse<Host> listHosts(AzureInfrastructureMapping azureInfrastructureMapping,
-      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, PageRequest<Host> req) {
-    List<VirtualMachine> vms = listVms(azureInfrastructureMapping, computeProviderSetting, encryptedDataDetails, req);
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
+      DeploymentType deploymentType) {
+    List<VirtualMachine> vms = listVms(azureInfrastructureMapping, computeProviderSetting, encryptedDataDetails);
 
     if (isNotEmpty(vms)) {
       List<Host> azureHosts = new ArrayList<>();
@@ -215,8 +214,7 @@ public class AzureHelperService {
                         : null)
                 .withAppId(azureInfrastructureMapping.getAppId())
                 .withEnvId(azureInfrastructureMapping.getEnvId())
-                .withWinrmConnAttr(
-                    StringUtils.equals(azureInfrastructureMapping.getDeploymentType(), DeploymentType.WINRM.toString())
+                .withWinrmConnAttr(DeploymentType.WINRM.equals(deploymentType)
                         ? azureInfrastructureMapping.getWinRmConnectionAttributes()
                         : null)
                 .withInfraMappingId(azureInfrastructureMapping.getUuid())

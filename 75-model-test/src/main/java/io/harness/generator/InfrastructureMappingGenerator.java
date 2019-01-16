@@ -279,8 +279,9 @@ public class InfrastructureMappingGenerator {
           builder.withServiceTemplateId(serviceTemplate.getUuid());
         }
 
-        if (infrastructureMapping.getDeploymentType() != null) {
-          builder.withDeploymentType(infrastructureMapping.getDeploymentType());
+        DeploymentType deploymentType = owners.obtainService().getDeploymentType();
+        if (deploymentType != null) {
+          builder.withDeploymentType(deploymentType.name());
         } else {
           builder.withDeploymentType(random.nextObject(DeploymentType.class).name());
         }

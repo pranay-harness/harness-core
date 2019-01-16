@@ -1683,7 +1683,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       InfrastructureMapping infrastructureMapping, WorkflowPhase rollbackWorkflowPhase) {
     rollbackWorkflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
     rollbackWorkflowPhase.setInfraMappingName(infrastructureMapping.getName());
-    rollbackWorkflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
+    DeploymentType deploymentType =
+        serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
+    rollbackWorkflowPhase.setDeploymentType(deploymentType);
   }
 
   @Override

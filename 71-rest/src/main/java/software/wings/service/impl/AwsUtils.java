@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Filter;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
@@ -36,7 +35,7 @@ public class AwsUtils {
     return expressionEvaluator.substitute(hostNameConvention, context);
   }
 
-  public List<Filter> getAwsFilters(AwsInfrastructureMapping awsInfrastructureMapping) {
+  public List<Filter> getAwsFilters(AwsInfrastructureMapping awsInfrastructureMapping, DeploymentType deploymentType) {
     AwsInstanceFilter instanceFilter = awsInfrastructureMapping.getAwsInstanceFilter();
     List<Filter> filters = new ArrayList<>();
     filters.add(new Filter("instance-state-name").withValues("running"));
@@ -49,7 +48,7 @@ public class AwsUtils {
         instanceFilter.getTags().forEach(tag -> tags.put(tag.getKey(), tag.getValue()));
         tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
       }
-      if (StringUtils.equals(awsInfrastructureMapping.getDeploymentType(), DeploymentType.WINRM.toString())) {
+      if (DeploymentType.WINRM.equals(deploymentType)) {
         filters.add(new Filter("platform", asList("windows")));
       }
     }

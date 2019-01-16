@@ -267,30 +267,32 @@ public class CommandState extends State {
         safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
       }
 
-      ActivityBuilder activityBuilder = Activity.builder()
-                                            .applicationName(application.getName())
-                                            .environmentId(environment.getUuid())
-                                            .environmentName(environment.getName())
-                                            .environmentType(environment.getEnvironmentType())
-                                            .serviceTemplateId(serviceTemplateId)
-                                            .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
-                                            .serviceId(service.getUuid())
-                                            .serviceName(service.getName())
-                                            .commandName(command.getName())
-                                            .type(Type.Command)
-                                            .serviceInstanceId(serviceInstance.getUuid())
-                                            .workflowExecutionId(context.getWorkflowExecutionId())
-                                            .workflowType(context.getWorkflowType())
-                                            .workflowId(context.getWorkflowId())
-                                            .workflowExecutionName(context.getWorkflowExecutionName())
-                                            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                            .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                            .commandType(command.getCommandUnitType().name())
-                                            .hostName(host.getHostName())
-                                            .publicDns(host.getPublicDns())
-                                            .commandUnits(getFlattenCommandUnits(appId, envId, service,
-                                                infrastructureMapping.getDeploymentType(), accountId))
-                                            .status(ExecutionStatus.RUNNING);
+      DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
+
+      ActivityBuilder activityBuilder =
+          Activity.builder()
+              .applicationName(application.getName())
+              .environmentId(environment.getUuid())
+              .environmentName(environment.getName())
+              .environmentType(environment.getEnvironmentType())
+              .serviceTemplateId(serviceTemplateId)
+              .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
+              .serviceId(service.getUuid())
+              .serviceName(service.getName())
+              .commandName(command.getName())
+              .type(Type.Command)
+              .serviceInstanceId(serviceInstance.getUuid())
+              .workflowExecutionId(context.getWorkflowExecutionId())
+              .workflowType(context.getWorkflowType())
+              .workflowId(context.getWorkflowId())
+              .workflowExecutionName(context.getWorkflowExecutionName())
+              .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+              .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+              .commandType(command.getCommandUnitType().name())
+              .hostName(host.getHostName())
+              .publicDns(host.getPublicDns())
+              .commandUnits(getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId))
+              .status(ExecutionStatus.RUNNING);
 
       String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH);
       String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH);
@@ -301,7 +303,7 @@ public class CommandState extends State {
           aCommandExecutionContext()
               .withAppId(appId)
               .withEnvId(envId)
-              .withDeploymentType(infrastructureMapping.getDeploymentType())
+              .withDeploymentType(deploymentType.name())
               .withBackupPath(backupPath)
               .withRuntimePath(runtimePath)
               .withStagingPath(stagingPath)
@@ -395,9 +397,7 @@ public class CommandState extends State {
         commandExecutionContextBuilder.withInlineSshCommand(true);
       }
       CommandExecutionContext commandExecutionContext =
-          commandExecutionContextBuilder.withActivityId(activityId)
-              .withDeploymentType(infrastructureMapping.getDeploymentType())
-              .build();
+          commandExecutionContextBuilder.withActivityId(activityId).withDeploymentType(deploymentType.name()).build();
 
       DelegateTask delegateTask = aDelegateTask()
                                       .withAccountId(accountId)

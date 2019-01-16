@@ -108,8 +108,8 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(format("%s (%s_%s::%s) %s", isEmpty(this.getProvisionerId()) ? this.getClusterName() : "",
-        this.getComputeProviderType(), this.getDeploymentType(),
+    return Util.normalize(format("%s (%s::%s) %s", isEmpty(this.getProvisionerId()) ? this.getClusterName() : "",
+        this.getComputeProviderType(),
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         this.getRegion()));
   }

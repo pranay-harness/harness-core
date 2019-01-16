@@ -674,9 +674,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           .addParam("args", "Subscription Id must not be empty for Azure Infra mapping.");
     }
 
-    if (isEmpty(infraMapping.getDeploymentType())
-        || (!infraMapping.getDeploymentType().equals(SSH.name())
-               && !infraMapping.getDeploymentType().equals(WINRM.name()))) {
+    DeploymentType deploymentType =
+        serviceResourceService.getDeploymentType(infraMapping, null, infraMapping.getServiceId());
+    if (!(SSH.equals(deploymentType) || WINRM.equals(deploymentType))) {
       throw new WingsException(INVALID_ARGUMENT, USER)
           .addParam("args", "Deployment type must not be empty and must be one of SSH/WINRM for Azure Infra mapping.");
     }
@@ -1028,9 +1028,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AzureInfrastructureMapping azureInfraMapping = (AzureInfrastructureMapping) infrastructureMapping;
       SettingAttribute computeProviderSetting = settingsService.get(azureInfraMapping.getComputeProviderSettingId());
       notNullCheck("Compute Provider", computeProviderSetting);
+      DeploymentType deploymentType =
+          serviceResourceService.getDeploymentType(azureInfraMapping, null, azureInfraMapping.getServiceId());
+
       return azureHelperService.listHosts(azureInfraMapping, computeProviderSetting,
           secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null),
-          new PageRequest<>());
+          deploymentType);
     } else {
       throw new InvalidRequestException(
           "Unsupported infrastructure mapping: " + infrastructureMapping.getClass().getName());
@@ -1619,7 +1622,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
       // Get VMs
       List<VirtualMachine> vms = azureHelperService.listVms(azureInfrastructureMapping, computeProviderSetting,
-          secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null), null);
+          secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null));
       hostDisplayNames = vms.stream().map(vm -> vm.name()).collect(Collectors.toList());
       return hostDisplayNames;
     }
@@ -1654,8 +1657,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
     boolean isStatefulSet = false;
 
+    DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
     ContainerTask containerTask = serviceResourceService.getContainerTaskByDeploymentType(
-        app.getUuid(), service.getUuid(), infrastructureMapping.getDeploymentType());
+        app.getUuid(), service.getUuid(), deploymentType.name());
     if (containerTask instanceof KubernetesContainerTask) {
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
       isStatefulSet = kubernetesContainerTask.checkStatefulSet();

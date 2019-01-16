@@ -125,6 +125,9 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
     PhaseExecutionDataBuilder phaseExecutionDataBuilder = aPhaseExecutionData();
     if (infrastructureMapping != null) {
+      DeploymentType deploymentType =
+          serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
+
       phaseExecutionDataBuilder.withComputeProviderId(infrastructureMapping.getComputeProviderSettingId())
           .withComputeProviderName(infrastructureMapping.getComputeProviderName())
           .withComputeProviderType(
@@ -132,7 +135,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                   .getDisplayName())
           .withInfraMappingId(infrastructureMapping.getUuid())
           .withInfraMappingName(infrastructureMapping.getName())
-          .withDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()).getDisplayName());
+          .withDeploymentType(deploymentType.getDisplayName());
     }
     if (service != null) {
       phaseExecutionDataBuilder.withServiceId(service.getUuid()).withServiceName(service.getName());
@@ -221,8 +224,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     }
 
     if (infrastructureMapping != null) {
-      phaseElementBuilder.withDeploymentType(infrastructureMapping.getDeploymentType())
-          .withInfraMappingId(infrastructureMapping.getUuid());
+      DeploymentType deploymentType =
+          serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
+
+      phaseElementBuilder.withDeploymentType(deploymentType.name()).withInfraMappingId(infrastructureMapping.getUuid());
     }
 
     if (stateExecutionInstance.getRollbackPhaseName() != null) {

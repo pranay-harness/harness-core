@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.CommandStateExecutionData.Builder;
+import software.wings.api.DeploymentType;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -192,12 +193,13 @@ public class AwsCodeDeployState extends State {
     CodeDeployParams codeDeployParams = prepareCodeDeployParams(
         context, infrastructureMapping, cloudProviderSetting, encryptedDataDetails, executionDataBuilder);
 
+    DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
     CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
                                                           .withAccountId(app.getAccountId())
                                                           .withAppId(app.getUuid())
                                                           .withEnvId(envId)
                                                           .withServiceName(service.getName())
-                                                          .withDeploymentType(infrastructureMapping.getDeploymentType())
+                                                          .withDeploymentType(deploymentType.name())
                                                           .withActivityId(activity.getUuid())
                                                           .withCloudProviderSetting(cloudProviderSetting)
                                                           .withCloudProviderCredentials(encryptedDataDetails)
