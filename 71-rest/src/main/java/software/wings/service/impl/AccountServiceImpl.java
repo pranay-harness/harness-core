@@ -443,7 +443,7 @@ public class AccountServiceImpl implements AccountService {
 
     LicenseInfo newLicenseInfo = account.getLicenseInfo();
     newLicenseInfo.setAccountStatus(accountStatus);
-    licenseService.updateAccountLicense(accountId, newLicenseInfo, null);
+    licenseService.updateAccountLicense(accountId, newLicenseInfo);
 
     return true;
   }

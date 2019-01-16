@@ -125,7 +125,7 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .withLicenseInfo(licenseInfo)
                                               .build());
     Account accountFromDB = accountService.get(account.getUuid());
-    licenseService.updateAccountLicense(accountFromDB.getUuid(), accountFromDB.getLicenseInfo(), null);
+    licenseService.updateAccountLicense(accountFromDB.getUuid(), accountFromDB.getLicenseInfo());
     accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo()).isNotNull();
   }
@@ -150,7 +150,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     LicenseInfo updatedLicenseInfo = new LicenseInfo();
     updatedLicenseInfo.setExpiryTime(newExpiryTime);
 
-    licenseService.updateAccountLicense(accountFromDB.getUuid(), updatedLicenseInfo, null);
+    licenseService.updateAccountLicense(accountFromDB.getUuid(), updatedLicenseInfo);
     accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo()).isNotNull();
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
@@ -175,7 +175,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account accountFromDB = accountService.get(account.getUuid());
     thrown.expect(WingsException.class);
     thrown.expectMessage("Invalid / Null license info for update");
-    licenseService.updateAccountLicense(accountFromDB.getUuid(), null, null);
+    licenseService.updateAccountLicense(accountFromDB.getUuid(), null);
   }
 
   @Test
@@ -199,7 +199,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     updatedLicenseInfo.setAccountStatus(AccountStatus.EXPIRED);
     updatedLicenseInfo.setExpiryTime(expiryTime);
 
-    licenseService.updateAccountLicense(accountFromDB.getUuid(), updatedLicenseInfo, null);
+    licenseService.updateAccountLicense(accountFromDB.getUuid(), updatedLicenseInfo);
     accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo()).isNotNull();
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
@@ -223,7 +223,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     LicenseInfo updatedLicenseInfo = new LicenseInfo();
     updatedLicenseInfo.setAccountType(AccountType.PAID);
     accountFromDB.setLicenseInfo(updatedLicenseInfo);
-    licenseService.updateAccountLicense(accountFromDB.getUuid(), updatedLicenseInfo, null);
+    licenseService.updateAccountLicense(accountFromDB.getUuid(), updatedLicenseInfo);
     accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo()).isNotNull();
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.PAID);
@@ -251,7 +251,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
 
     accountFromDB.setLicenseInfo(licenseInfo);
-    licenseService.updateAccountLicense(accountFromDB.getUuid(), licenseInfo, null);
+    licenseService.updateAccountLicense(accountFromDB.getUuid(), licenseInfo);
     accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo()).isNotNull();
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.PAID);

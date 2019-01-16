@@ -933,7 +933,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 5000);
     account.setLicenseInfo(licenseInfo);
-    licenseService.updateAccountLicense(account.getUuid(), licenseInfo, null);
+    licenseService.updateAccountLicense(account.getUuid(), licenseInfo);
 
     Thread.sleep(10000);
     Workflow workflow = createExecutableWorkflow(app.getUuid(), env);
@@ -953,7 +953,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 1000000);
     account.setLicenseInfo(licenseInfo);
-    licenseService.updateAccountLicense(account.getUuid(), licenseInfo, null);
+    licenseService.updateAccountLicense(account.getUuid(), licenseInfo);
 
     WorkflowExecution workflowExecution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
         appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback, null);
@@ -976,7 +976,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 5000);
     account.setLicenseInfo(licenseInfo);
-    licenseService.updateAccountLicense(account.getUuid(), licenseInfo, null);
+    licenseService.updateAccountLicense(account.getUuid(), licenseInfo);
 
     Thread.sleep(10000);
     Service service = addService("svc1");
@@ -991,7 +991,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 1000000);
     account.setLicenseInfo(licenseInfo);
-    licenseService.updateAccountLicense(account.getUuid(), licenseInfo, null);
+    licenseService.updateAccountLicense(account.getUuid(), licenseInfo);
 
     WorkflowExecution workflowExecution = triggerPipeline(app.getUuid(), pipeline, service);
     assertNotNull(workflowExecution);

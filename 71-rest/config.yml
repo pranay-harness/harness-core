@@ -67,6 +67,14 @@ smtp:
 globalWhitelistConfig:
   filters: 127.0.0.1/8
 
+defaultSalesContacts:
+  enabled: false
+  accountTypeDefaults:
+    - accountType: TRIAL
+      emailIds: se@harness.io
+    - accountType: PAID
+      emailIds: csm@harness.io
+
 logging:
   level: INFO
   loggers:

@@ -26,6 +26,7 @@ import io.harness.scheduler.SchedulerConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.DataStorageMode;
+import software.wings.beans.DefaultSalesContacts;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
@@ -72,6 +73,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
   @JsonProperty("clusterName") private String clusterName;
   @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
+  @JsonProperty("defaultSalesContacts") private DefaultSalesContacts defaultSalesContacts;
 
   private int applicationPort;
   private boolean sslEnabled;

@@ -121,7 +121,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private boolean isHarnessUserExemptedRequest(String uri) {
-    return uri.startsWith("limits/configure") || uri.startsWith("account/license");
+    return uri.startsWith("limits/configure") || uri.startsWith("account/license") || uri.endsWith("sales-contacts");
   }
 
   /* (non-Javadoc)

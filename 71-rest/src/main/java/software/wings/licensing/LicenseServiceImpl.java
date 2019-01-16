@@ -6,11 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.LICENSE_EXPIRED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.util.Arrays.asList;
 import static software.wings.common.Constants.DEFAULT_FREE_LICENSE_UNITS;
 import static software.wings.common.Constants.DEFAULT_TRIAL_LICENSE_UNITS;
 import static software.wings.common.Constants.MONTH;
-import static software.wings.common.Constants.SUPPORT_EMAIL;
 import static software.wings.common.Constants.WEEK;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -25,9 +23,12 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.DeployMode;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
+import software.wings.beans.DefaultSalesContacts;
+import software.wings.beans.DefaultSalesContacts.AccountTypeDefault;
 import software.wings.beans.License;
 import software.wings.beans.LicenseInfo;
 import software.wings.common.Constants;
@@ -41,6 +42,7 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.utils.Validator;
 
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Calendar;
@@ -64,9 +66,33 @@ public class LicenseServiceImpl implements LicenseService {
   @Inject private LicenseProvider licenseProvider;
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private MainConfiguration mainConfiguration;
 
   @Override
   public void checkForLicenseExpiry() {
+    List<String> trialDefaultContacts = null;
+    List<String> paidDefaultContacts = null;
+
+    DefaultSalesContacts defaultSalesContacts = mainConfiguration.getDefaultSalesContacts();
+    if (defaultSalesContacts != null && defaultSalesContacts.isEnabled()) {
+      List<AccountTypeDefault> accountTypeDefaults = defaultSalesContacts.getAccountTypeDefaults();
+
+      if (isNotEmpty(accountTypeDefaults)) {
+        for (AccountTypeDefault accountTypeDefault : accountTypeDefaults) {
+          switch (accountTypeDefault.getAccountType()) {
+            case AccountType.PAID:
+              paidDefaultContacts = getEmailIds(accountTypeDefault.getEmailIds());
+              break;
+            case AccountType.TRIAL:
+              trialDefaultContacts = getEmailIds(accountTypeDefault.getEmailIds());
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    }
+
     Query<Account> query = wingsPersistence.createQuery(Account.class, excludeAuthority);
     query.project("_id", true);
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
@@ -95,19 +121,20 @@ public class LicenseServiceImpl implements LicenseService {
             if (accountType.equals(AccountType.PAID)) {
               if (!account.isEmailSentToSales() && ((expiryTime - currentTime) <= MONTH)) {
                 sendEmail(account, expiryTime, accountType, Constants.EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
-                    Constants.EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE);
+                    Constants.EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, paidDefaultContacts);
               }
             } else if (accountType.equals(AccountType.TRIAL)) {
               if (!account.isEmailSentToSales() && ((expiryTime - currentTime) <= WEEK)) {
                 sendEmail(account, expiryTime, accountType, Constants.EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
-                    Constants.EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE);
+                    Constants.EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, trialDefaultContacts);
               }
             }
           } else {
             if (AccountStatus.ACTIVE.equals(licenseInfo.getAccountStatus())) {
               expireLicense(account.getUuid(), licenseInfo);
               sendEmail(account, expiryTime, accountType, Constants.EMAIL_SUBJECT_ACCOUNT_EXPIRED,
-                  Constants.EMAIL_BODY_ACCOUNT_EXPIRED);
+                  Constants.EMAIL_BODY_ACCOUNT_EXPIRED,
+                  accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
             }
           }
         } catch (Exception e) {
@@ -117,9 +144,37 @@ public class LicenseServiceImpl implements LicenseService {
     }
   }
 
-  private void sendEmail(Account account, long expiryTime, String accountType, String subject, String body) {
-    Date expiryDate = new Date(expiryTime);
+  private List<String> getEmailIds(String emailIdsStr) {
+    if (isEmpty(emailIdsStr)) {
+      return null;
+    }
 
+    String[] emailIdArr = emailIdsStr.split(",");
+
+    if (isEmpty(emailIdArr)) {
+      return null;
+    }
+
+    List<String> emailIds = new ArrayList<>();
+
+    for (String emailId : emailIdArr) {
+      emailIds.add(emailId.trim());
+    }
+
+    return emailIds;
+  }
+
+  private void sendEmail(
+      Account account, long expiryTime, String accountType, String subject, String body, List<String> defaultContacts) {
+    if (isEmpty(account.getSalesContacts()) && isEmpty(defaultContacts)) {
+      logger.info(
+          "Skipping the sending of email for account {} since no sales contacts were configured", account.getUuid());
+      return;
+    }
+
+    List<String> mailingList = isEmpty(account.getSalesContacts()) ? defaultContacts : account.getSalesContacts();
+
+    Date expiryDate = new Date(expiryTime);
     Map<String, String> templateModel = new HashMap<>();
     templateModel.put("emailSubject", subject);
     templateModel.put("emailBody", body);
@@ -128,8 +183,6 @@ public class LicenseServiceImpl implements LicenseService {
     templateModel.put("accountType", accountType);
     templateModel.put("expiry", expiryDate.toString());
 
-    List<String> mailingList =
-        isEmpty(account.getSalesContacts()) ? asList("support@harness.io") : account.getSalesContacts();
     EmailData emailData = EmailData.builder()
                               .system(true)
                               .to(mailingList)
@@ -164,15 +217,6 @@ public class LicenseServiceImpl implements LicenseService {
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     byte[] encryptedLicenseInfo = getEncryptedLicenseInfo(licenseInfo);
     account.setEncryptedLicenseInfo(encryptedLicenseInfo);
-
-    if (isEmpty(account.getSalesContacts())) {
-      account.setSalesContacts(asList(SUPPORT_EMAIL));
-    } else {
-      if (!account.getSalesContacts().contains(SUPPORT_EMAIL)) {
-        account.getSalesContacts().add(SUPPORT_EMAIL);
-      }
-    }
-
     return account;
   }
 
@@ -320,7 +364,7 @@ public class LicenseServiceImpl implements LicenseService {
   }
 
   @Override
-  public Account updateAccountLicense(@NotEmpty String accountId, LicenseInfo licenseInfo, String salesContacts) {
+  public Account updateAccountLicense(@NotEmpty String accountId, LicenseInfo licenseInfo) {
     Account accountInDB = accountService.get(accountId);
 
     notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB);
@@ -332,8 +376,27 @@ public class LicenseServiceImpl implements LicenseService {
 
     updateOperations.set("encryptedLicenseInfo", encryptedLicenseInfo);
 
+    wingsPersistence.update(accountInDB, updateOperations);
+    updateEmailSentToSales(accountId, false);
+    dbCache.invalidate(Account.class, accountId);
+    Account updatedAccount = wingsPersistence.get(Account.class, accountId);
+    decryptLicenseInfo(updatedAccount, false);
+    //    refreshUsersForAccountUpdate(updatedAccount);
+    return updatedAccount;
+  }
+
+  @Override
+  public Account updateAccountSalesContacts(@NotEmpty String accountId, List<String> salesContacts) {
+    Account accountInDB = accountService.get(accountId);
+
+    notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB);
+
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
+
     if (isNotEmpty(salesContacts)) {
       updateOperations.set("salesContacts", salesContacts);
+    } else {
+      updateOperations.unset("salesContacts");
     }
 
     wingsPersistence.update(accountInDB, updateOperations);
@@ -400,7 +463,7 @@ public class LicenseServiceImpl implements LicenseService {
             decryptLicenseInfo(account, true);
             LicenseInfo licenseInfo = account.getLicenseInfo();
             if (licenseInfo != null) {
-              updateAccountLicense(account.getUuid(), licenseInfo, null);
+              updateAccountLicense(account.getUuid(), licenseInfo);
             } else {
               throw new WingsException("No license info could be extracted from the encrypted license info");
             }
@@ -460,7 +523,7 @@ public class LicenseServiceImpl implements LicenseService {
 
   private void expireLicense(String accountId, LicenseInfo licenseInfo) {
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
-    updateAccountLicense(accountId, licenseInfo, null);
+    updateAccountLicense(accountId, licenseInfo);
   }
 
   private void updateEmailSentToSales(String accountId, boolean status) {
