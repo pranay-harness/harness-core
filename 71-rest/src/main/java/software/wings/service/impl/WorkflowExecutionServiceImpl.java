@@ -2320,9 +2320,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           }
         } else if (nextStateType == StateType.K8S_DEPLOYMENT_ROLLING || nextStateType == StateType.K8S_BLUE_GREEN_DEPLOY
             || nextStateType == StateType.K8S_SCALE) {
-          K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) next.getStateExecutionData();
-          if (isNotEmpty(k8sStateExecutionData.getNewInstanceStatusSummaries())) {
-            instanceStatusSummaries.addAll(k8sStateExecutionData.getNewInstanceStatusSummaries());
+          StateExecutionData stateExecutionData = next.getStateExecutionData();
+          if (stateExecutionData instanceof K8sStateExecutionData) {
+            K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) stateExecutionData;
+            if (isNotEmpty(k8sStateExecutionData.getNewInstanceStatusSummaries())) {
+              instanceStatusSummaries.addAll(k8sStateExecutionData.getNewInstanceStatusSummaries());
+            }
           }
         }
         last = next;

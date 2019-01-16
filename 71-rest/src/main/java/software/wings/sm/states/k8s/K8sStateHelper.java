@@ -14,6 +14,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -154,6 +155,7 @@ public class K8sStateHelper {
       GitFileConfig gitFileConfig =
           gitFileConfigHelperService.renderGitFileConfig(context, appManifest.getGitFileConfig());
       GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
+      notNullCheck("Git config not found", gitConfig);
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), null);
 
@@ -222,6 +224,7 @@ public class K8sStateHelper {
             gitFileConfigHelperService.renderGitFileConfig(context, applicationManifest.getGitFileConfig());
         gitFileConfig.setFilePath(normalizeFilePath(gitFileConfig.getFilePath()));
         GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
+        notNullCheck("Git config not found", gitConfig);
         List<EncryptedDataDetail> encryptionDetails =
             secretManager.getEncryptionDetails(gitConfig, app.getUuid(), null);
 

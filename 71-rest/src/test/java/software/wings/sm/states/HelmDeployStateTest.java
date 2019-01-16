@@ -69,7 +69,6 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
@@ -297,8 +296,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
 
   @Test
   public void testEmptyHelmChartSpecWithGit() {
-    when(settingsService.get(GIT_CONNECTOR_ID))
-        .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(GitConfig.builder().build()).build());
+    when(settingsService.fetchGitConfigFromConnectorId(GIT_CONNECTOR_ID)).thenReturn(GitConfig.builder().build());
 
     doNothing().when(gitConfigHelperService).setSshKeySettingAttributeIfNeeded(any());
     helmDeployState.setGitFileConfig(GitFileConfig.builder().connectorId(GIT_CONNECTOR_ID).build());

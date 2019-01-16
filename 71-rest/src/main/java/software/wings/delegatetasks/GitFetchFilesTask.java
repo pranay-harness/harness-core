@@ -28,6 +28,7 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -81,12 +82,10 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
           .gitCommandStatus(GitCommandStatus.SUCCESS)
           .build();
     } catch (Exception ex) {
-      logger.error("Exception in processing GitFetchFilesTask", ex);
-      executionLogCallback.saveExecutionLog(ex.getMessage(), ERROR, CommandExecutionStatus.FAILURE);
-      return GitCommandExecutionResponse.builder()
-          .errorMessage(ex.getMessage())
-          .gitCommandStatus(GitCommandStatus.FAILURE)
-          .build();
+      String msg = "Exception in processing GitFetchFilesTask. " + Misc.getMessage(ex);
+      logger.error(msg, ex);
+      executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
+      return GitCommandExecutionResponse.builder().errorMessage(msg).gitCommandStatus(GitCommandStatus.FAILURE).build();
     }
   }
 
