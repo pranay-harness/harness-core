@@ -342,6 +342,27 @@ public class LicenseServiceTest extends WingsBaseTest {
     assertThat(accountWithDecryptedInfo.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
   }
 
+  @Test
+  public void shouldCheckForLicenseExpiry() throws InterruptedException {
+    long expiryTime = System.currentTimeMillis() + 1000;
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setExpiryTime(expiryTime);
+
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName(HARNESS_NAME)
+                                              .withAccountName(HARNESS_NAME)
+                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withLicenseInfo(licenseInfo)
+                                              .build());
+
+    Thread.sleep(2000);
+    licenseService.checkForLicenseExpiry();
+    Account accountFromDB = accountService.get(account.getUuid());
+    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.EXPIRED);
+  }
+
   private String getEncryptedString(LicenseInfo licenseInfo) {
     return licenseService.generateLicense(licenseInfo);
   }

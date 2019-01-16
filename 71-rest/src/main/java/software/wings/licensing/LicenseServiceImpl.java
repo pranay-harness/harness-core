@@ -288,7 +288,8 @@ public class LicenseServiceImpl implements LicenseService {
       int expiryInDays = newLicenseInfo.getExpireAfterDays();
       if (expiryInDays > 0) {
         currentLicenseInfo.setExpiryTime(getExpiryTime(expiryInDays));
-      } else if (newLicenseInfo.getExpiryTime() > 0) {
+      } else if (newLicenseInfo.getExpiryTime() > 0
+          && newLicenseInfo.getExpiryTime() != currentLicenseInfo.getExpiryTime()) {
         if (newLicenseInfo.getExpiryTime() <= System.currentTimeMillis()) {
           throw new WingsException("Expiry time less than current time. Cannot proceed with update", USER);
         }
@@ -458,10 +459,8 @@ public class LicenseServiceImpl implements LicenseService {
   }
 
   private void expireLicense(String accountId, LicenseInfo licenseInfo) {
-    LicenseInfo newLicenseInfo = new LicenseInfo();
-    newLicenseInfo.setAccountStatus(AccountStatus.EXPIRED);
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
-    updateAccountLicense(accountId, newLicenseInfo, null);
+    updateAccountLicense(accountId, licenseInfo, null);
   }
 
   private void updateEmailSentToSales(String accountId, boolean status) {
