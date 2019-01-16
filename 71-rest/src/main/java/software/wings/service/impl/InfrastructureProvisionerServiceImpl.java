@@ -460,7 +460,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         (TerraformInfrastructureProvisioner) infrastructureProvisioner;
     validateProvisioner(terraformInfrastructureProvisioner);
     if (isTemplatizedProvisioner(terraformInfrastructureProvisioner)) {
-      throw new InvalidRequestException("Fetching targets not possible for templatized provisioner");
+      throw new WingsException(ErrorCode.INVALID_TERRAFORM_TARGETS_REQUEST);
     }
     SettingAttribute settingAttribute = settingService.get(terraformInfrastructureProvisioner.getSourceRepoSettingId());
     if (settingAttribute == null || !(settingAttribute.getValue() instanceof GitConfig)) {
