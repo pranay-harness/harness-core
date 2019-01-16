@@ -107,6 +107,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   @ValidationGroups(Create.class)
   public InfrastructureProvisioner save(@Valid InfrastructureProvisioner infrastructureProvisioner) {
+    populateDerivedFields(infrastructureProvisioner);
     InfrastructureProvisioner finalInfraProvisioner =
         wingsPersistence.saveAndGet(InfrastructureProvisioner.class, infrastructureProvisioner);
 
@@ -117,9 +118,18 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     return finalInfraProvisioner;
   }
 
+  private void populateDerivedFields(InfrastructureProvisioner infrastructureProvisioner) {
+    if (infrastructureProvisioner instanceof TerraformInfrastructureProvisioner) {
+      TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
+          (TerraformInfrastructureProvisioner) infrastructureProvisioner;
+      terraformInfrastructureProvisioner.setTemplatized(isTemplatizedProvisioner(terraformInfrastructureProvisioner));
+    }
+  }
+
   @Override
   @ValidationGroups(Update.class)
   public InfrastructureProvisioner update(@Valid InfrastructureProvisioner infrastructureProvisioner) {
+    populateDerivedFields(infrastructureProvisioner);
     InfrastructureProvisioner savedInfraProvisioner =
         get(infrastructureProvisioner.getAppId(), infrastructureProvisioner.getUuid());
 
