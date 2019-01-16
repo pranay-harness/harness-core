@@ -31,6 +31,7 @@ import software.wings.service.intfc.HarnessUserGroupService;
 
 import java.util.List;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -197,6 +198,26 @@ public class AccountResource {
       return Builder.aRestResponse()
           .withResponseMessages(Lists.newArrayList(
               ResponseMessage.builder().message("User not allowed to generate a new license").build()))
+          .build();
+    }
+  }
+
+  @DELETE
+  @Path("{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> deleteAccount(@PathParam("accountId") @NotEmpty String accountId) {
+    User existingUser = UserThreadLocal.get();
+    if (existingUser == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+
+    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
+      return new RestResponse(accountService.delete(accountId));
+    } else {
+      return Builder.aRestResponse()
+          .withResponseMessages(
+              Lists.newArrayList(ResponseMessage.builder().message("User not allowed to delete account").build()))
           .build();
     }
   }

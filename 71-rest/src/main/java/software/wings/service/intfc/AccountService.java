@@ -35,7 +35,7 @@ public interface AccountService {
 
   String getAccountStatus(String accountId);
 
-  void delete(String accountId);
+  boolean delete(String accountId);
 
   boolean getTwoFactorEnforceInfo(String accountId);
 

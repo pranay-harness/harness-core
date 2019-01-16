@@ -1,30 +1,41 @@
 package software.wings.integration;
 
 import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import io.harness.exception.WingsException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
+import software.wings.beans.Base;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.RestResponse;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * @author marklu on 2018-12-26
  */
-public class AccountServiceIntegrationTest extends BaseIntegrationTest {
+public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() {
     super.loginAdminUser();
   }
 
+  @Rule public ExpectedException thrown = ExpectedException.none();
   @After
   public void tearDown() {
     // Recover the original account state.
@@ -46,6 +57,43 @@ public class AccountServiceIntegrationTest extends BaseIntegrationTest {
     completeAccountMigration(accountId);
     accountStatus = getAccountStatus(accountId);
     assertEquals(AccountStatus.MIGRATED, accountStatus);
+  }
+
+  @Test
+  public void shallCreateAndDeleteAccount() {
+    Account account = new Account();
+    account.setLicenseInfo(LicenseInfo.builder()
+                               .accountType(AccountType.PAID)
+                               .accountStatus(AccountStatus.ACTIVE)
+                               .licenseUnits(100)
+                               .expireAfterDays(30)
+                               .build());
+    long timeMillis = System.currentTimeMillis();
+    String randomString = "" + timeMillis;
+    account.setCompanyName(randomString);
+    account.setAccountName(randomString);
+    account.setAccountKey(randomString);
+    account.setAppId(Base.GLOBAL_APP_ID);
+
+    WebTarget target = client.target(API_BASE + "/users/account");
+    Response response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));
+    if (response.getStatus() != Status.OK.getStatusCode()) {
+      log().error("Non-ok-status. Headers: {}", response.getHeaders());
+    }
+    assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
+    RestResponse<Account> restResponse = response.readEntity(new GenericType<RestResponse<Account>>() {});
+    Account createdAccount = restResponse.getResource();
+    assertThat(restResponse.getResource().getAccountName()).isEqualTo(randomString);
+
+    target = client.target(API_BASE + "/account/" + createdAccount.getUuid());
+    getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
+    assertThat(response).isNotNull();
+    if (response.getStatus() != Status.OK.getStatusCode()) {
+      log().error("Non-ok-status. Headers: {}", response.getHeaders());
+    }
+
+    thrown.expect(WingsException.class);
+    accountService.get(createdAccount.getUuid());
   }
 
   private String getAccountStatus(String accountId) {
