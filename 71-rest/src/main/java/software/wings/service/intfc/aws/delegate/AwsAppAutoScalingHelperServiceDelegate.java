@@ -1,5 +1,6 @@
 package software.wings.service.intfc.aws.delegate;
 
+import com.amazonaws.services.applicationautoscaling.model.Alarm;
 import com.amazonaws.services.applicationautoscaling.model.DeleteScalingPolicyRequest;
 import com.amazonaws.services.applicationautoscaling.model.DeleteScalingPolicyResult;
 import com.amazonaws.services.applicationautoscaling.model.DeregisterScalableTargetRequest;
@@ -14,6 +15,8 @@ import com.amazonaws.services.applicationautoscaling.model.RegisterScalableTarge
 import com.amazonaws.services.applicationautoscaling.model.RegisterScalableTargetResult;
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.applicationautoscaling.model.ScalingPolicy;
+import com.amazonaws.services.cloudwatch.model.MetricAlarm;
+import com.amazonaws.services.cloudwatch.model.PutMetricAlarmResult;
 import software.wings.beans.AwsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 
@@ -45,4 +48,10 @@ public interface AwsAppAutoScalingHelperServiceDelegate {
   String getJsonForAwsScalableTarget(ScalableTarget scalableTarget);
 
   String getJsonForAwsScalablePolicy(ScalingPolicy scalingPolicy);
+
+  List<MetricAlarm> fetchAlarmsByName(
+      String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, List<Alarm> alarms);
+
+  PutMetricAlarmResult putMetricAlarm(
+      String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, MetricAlarm alarm);
 }
