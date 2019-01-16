@@ -107,7 +107,7 @@ public class VerificationServiceExecutorService {
     Trigger trigger = TriggerBuilder.newTrigger()
                           .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(10)
+                                            .withIntervalInSeconds(60)
                                             .repeatForever()
                                             .withMisfireHandlingInstructionNowWithExistingCount())
                           .startAt(startDate)

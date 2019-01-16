@@ -272,7 +272,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
   private void initializeServiceSecretKeys(Injector injector) {
     injector.getInstance(LearningEngineService.class).initializeServiceSecretKeys();
-    System.setProperty(VERIFICATION_SERVICE_SECRET,
+    VERIFICATION_SERVICE_SECRET.set(
         injector.getInstance(LearningEngineService.class).getServiceSecretKey(LEARNING_ENGINE));
   }
 
