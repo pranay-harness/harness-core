@@ -869,7 +869,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(PhaseStep::getPhaseStepType)
         .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
 
-    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
                    .contains(SERVICE_ID));
@@ -901,8 +901,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(PhaseStep::getPhaseStepType)
         .contains(CLUSTER_SETUP, CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
 
-    assertThat(workflowService.fetchRequiredEntityTypes(Constants.APP_ID, orchestrationWorkflow))
-        .contains(EntityType.ARTIFACT);
+    assertThat(workflowService.fetchRequiredEntityTypes(Constants.APP_ID, workflow)).contains(EntityType.ARTIFACT);
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
                    .contains(SERVICE_ID));
@@ -955,7 +954,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(PhaseStep::getPhaseStepType)
         .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, ROUTE_UPDATE, WRAP_UP);
 
-    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
                    .contains(SERVICE_ID));
@@ -984,7 +983,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(PhaseStep::getPhaseStepType)
         .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
 
-    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, savedWorkflow, null, null, null)
                    .getArtifactRequiredServiceIds()
                    .contains(SERVICE_ID));
@@ -1013,7 +1012,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(PhaseStep::getPhaseStepType)
         .contains(AMI_DEPLOY_AUTOSCALING_GROUP, VERIFY_SERVICE, WRAP_UP);
 
-    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
   }
 
   @Test
@@ -1039,7 +1038,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(PhaseStep::getPhaseStepType)
         .contains(PREPARE_STEPS, DEPLOY_AWS_LAMBDA, VERIFY_SERVICE, WRAP_UP);
 
-    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
   }
 
   @Test
@@ -1068,7 +1067,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(PhaseStep::getPhaseStepType)
         .contains(CONTAINER_DEPLOY);
 
-    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, workflow)).contains(EntityType.ARTIFACT);
   }
 
   private void assertWorkflowPhase(CanaryOrchestrationWorkflow orchestrationWorkflow) {

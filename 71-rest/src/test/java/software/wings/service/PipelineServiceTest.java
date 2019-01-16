@@ -1112,7 +1112,7 @@ public class PipelineServiceTest extends WingsBaseTest {
             .build();
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
-    when(workflowService.fetchRequiredEntityTypes(APP_ID, workflow.getOrchestrationWorkflow()))
+    when(workflowService.fetchRequiredEntityTypes(APP_ID, workflow))
         .thenReturn(ImmutableSet.of(ARTIFACT, SSH_USER, SSH_PASSWORD));
     List<EntityType> requiredEntities = pipelineService.getRequiredEntities(APP_ID, PIPELINE_ID);
     assertThat(requiredEntities).isEmpty();

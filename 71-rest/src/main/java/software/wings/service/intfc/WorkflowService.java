@@ -155,12 +155,12 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   GraphNode readGraphNode(@NotEmpty String appId, @NotEmpty String workflowId, @NotEmpty String nodeId);
 
-  List<EntityType> getRequiredEntities(String appId, String workflowId);
+  List<EntityType> getRequiredEntities(@NotEmpty String appId, @NotEmpty String workflowId);
 
   DeploymentMetadata fetchDeploymentMetadata(String appId, Workflow workflow, Map<String, String> workflowVariables,
       List<String> artifactNeededServiceIds, List<String> envIds, DeploymentMetadata.Include... includeList);
 
-  Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow);
+  Set<EntityType> fetchRequiredEntityTypes(String appId, Workflow workflow);
 
   boolean deleteByYamlGit(String appId, String workflowId, boolean syncFromGit);
 
