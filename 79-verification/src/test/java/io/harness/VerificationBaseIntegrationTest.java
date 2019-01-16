@@ -114,7 +114,7 @@ public abstract class VerificationBaseIntegrationTest
 
   @Before
   public void setUp() throws Exception {
-    System.setProperty(VerificationTokenGenerator.VERIFICATION_SERVICE_SECRET,
+    VerificationTokenGenerator.VERIFICATION_SERVICE_SECRET.set(
         learningEngineService.getServiceSecretKey(ServiceType.LEARNING_ENGINE));
   }
 

@@ -559,7 +559,7 @@ public class DelegateServiceImpl implements DelegateService {
         continue;
       }
       builder.withUuid(delegateId).withStatus(delegateResponse.getResource().getStatus());
-      System.setProperty(VERIFICATION_SERVICE_SECRET, delegateResponse.getResource().getVerificationServiceSecret());
+      VERIFICATION_SERVICE_SECRET.set(delegateResponse.getResource().getVerificationServiceSecret());
       logger.info(
           "Delegate registered with id {} and status {}", delegateId, delegateResponse.getResource().getStatus());
       return delegateId;

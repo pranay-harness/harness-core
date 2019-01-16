@@ -1,6 +1,5 @@
 package io.harness.security;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 
@@ -14,23 +13,19 @@ import io.harness.exception.WingsException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by rsingh on 9/17/18.
  */
 public class VerificationTokenGenerator {
-  public static final String VERIFICATION_SERVICE_SECRET = "verification_service_secret";
+  public static final AtomicReference<String> VERIFICATION_SERVICE_SECRET = new AtomicReference<>();
 
   public String getToken() {
-    String verificationSecret = System.getenv(VERIFICATION_SERVICE_SECRET);
-    if (isEmpty(verificationSecret)) {
-      verificationSecret = System.getProperty(VERIFICATION_SERVICE_SECRET);
-    }
-
-    Preconditions.checkState(
-        isNotEmpty(verificationSecret), "could not read verification secret from system or env properties");
+    Preconditions.checkState(isNotEmpty(VERIFICATION_SERVICE_SECRET.get()),
+        "could not read verification secret from system or env properties");
     try {
-      Algorithm algorithm = Algorithm.HMAC256(verificationSecret);
+      Algorithm algorithm = Algorithm.HMAC256(VERIFICATION_SERVICE_SECRET.get());
 
       return JWT.create()
           .withIssuer("Harness Inc")
