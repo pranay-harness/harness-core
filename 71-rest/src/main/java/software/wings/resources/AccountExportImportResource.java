@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -65,9 +66,12 @@ import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.AppService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -76,6 +80,8 @@ import software.wings.sm.StateMachine;
 import software.wings.yaml.errorhandling.GitSyncError;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -138,6 +144,7 @@ public class AccountExportImportResource {
       EntityVersionCollection.class, TimeSeriesMLAnalysisRecord.class, LearningEngineAnalysisTask.class,
       LearningEngineExperimentalAnalysisTask.class, MLExperiments.class, NewRelicMetricDataRecord.class,
       ExperimentalMetricAnalysisRecord.class, ContinuousVerificationExecutionMetaData.class,
+      NewRelicMetricAnalysisRecord.class, TimeSeriesMLScores.class, TimeSeriesRiskSummary.class,
       // Locks and Tasks
       Idempotent.class, WaitInstance.class, DelegateTask.class,
       // Global entities not associated with any account
@@ -180,8 +187,10 @@ public class AccountExportImportResource {
       throw new IllegalArgumentException("Export type is ALL but no entity type is specified.");
     }
 
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
+    String zipFileName = accountId + ZIP_FILE_SUFFIX;
+    File zipFile = new File(Files.createTempDir(), zipFileName);
+    FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
+    ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
 
     Map<String, Boolean> toBeExported = getToBeExported(exportMode, entityTypes);
     List<String> appIds = appService.getAppIdsByAccountId(accountId);
@@ -248,16 +257,20 @@ public class AccountExportImportResource {
         if (entityClazz != null) {
           String collectionName = getCollectionName(entityClazz);
           List<String> records = mongoExportImport.exportRecords(accountOrAppIdsFilter, collectionName);
+          log.info("{} '{}' records have been exported.", records.size(), collectionName);
           exportToStream(zipOutputStream, records, collectionName);
         }
       }
     }
 
-    String zipFileName = accountId + ZIP_FILE_SUFFIX;
+    log.info("Flushing exported data into a zip file {}.", zipFileName);
     zipOutputStream.flush();
     zipOutputStream.close();
+    fileOutputStream.flush();
+    fileOutputStream.close();
+    log.info("Finished flushing {} bytes of exported account data into a zip file {}.", zipFile.length(), zipFileName);
 
-    return Response.ok(outputStream.toByteArray(), MediaType.APPLICATION_OCTET_STREAM)
+    return Response.ok(zipFile, MediaType.APPLICATION_OCTET_STREAM)
         .header("content-disposition", "attachment; filename = " + zipFileName)
         .build();
   }

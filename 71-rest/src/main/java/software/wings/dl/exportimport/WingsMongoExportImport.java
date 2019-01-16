@@ -44,7 +44,6 @@ public class WingsMongoExportImport {
       records.add(basicDBObject.toJson());
     }
 
-    log.info("{} '{}' records have been exported.", records.size(), collection.getName());
     return records;
   }
 
@@ -83,6 +82,10 @@ public class WingsMongoExportImport {
         naturalKeyQuery = getNaturalKeyQueryFromKeyFields(naturalKeyFields, importRecord);
       }
       long recordCountFromNaturalKey = collection.getCount(naturalKeyQuery);
+      if (recordCountFromNaturalKey > 1) {
+        // This usually means this entity has no naturaly key. E.g 'secretChangeLogs' collection
+        recordCountFromNaturalKey = 1;
+      }
 
       idClashCount += recordCountFromId;
       naturalKeyClashCount += recordCountFromNaturalKey;
