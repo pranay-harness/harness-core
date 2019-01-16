@@ -586,16 +586,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
       addK8sBasicWorkflowPhase(workflow);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
-      addK8sCanaryWorkflowPhase(workflow);
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
+      addK8sRollingWorkflowPhase(workflow);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
       addK8sBlueGreenWorkflowPhase(workflow);
     } else {
-      throw new InvalidRequestException("DeploymentType not supported.");
+      throw new InvalidRequestException(String.format(
+          "WorkflowType %s not supported for Kubernetes V2" + orchestrationWorkflow.getOrchestrationWorkflowType()));
     }
   }
 
-  private void addK8sBasicWorkflowPhase(Workflow workflow) {
+  private void addK8sRollingWorkflowPhase(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     WorkflowPhase workflowPhase =
         aWorkflowPhase().infraMappingId(workflow.getInfraMappingId()).serviceId(workflow.getServiceId()).build();
@@ -722,20 +723,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .build();
   }
 
-  private void addK8sCanaryWorkflowPhase(Workflow workflow) {
+  private void addK8sBasicWorkflowPhase(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     WorkflowPhase workflowPhase =
         aWorkflowPhase().infraMappingId(workflow.getInfraMappingId()).serviceId(workflow.getServiceId()).build();
     workflowServiceHelper.setCloudProvider(workflow.getAppId(), workflowPhase);
 
-    addK8sCanaryWorkflowPhaseSteps(workflowPhase);
+    addK8sBasicWorkflowPhaseSteps(workflowPhase);
 
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
     ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases().add(workflowPhase);
 
     WorkflowPhase rollbackPhase = createRollbackPhase(workflowPhase);
 
-    addK8sCanaryRollbackWorkflowPhaseSteps(rollbackPhase);
+    addK8sBasicRollbackWorkflowPhaseSteps(rollbackPhase);
 
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackPhase);
     ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
@@ -743,7 +744,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .put(workflowPhase.getUuid(), rollbackPhase);
   }
 
-  private void addK8sCanaryWorkflowPhaseSteps(WorkflowPhase workflowPhase) {
+  private void addK8sBasicWorkflowPhaseSteps(WorkflowPhase workflowPhase) {
     Map<String, Object> defaultSetupProperties = new HashMap<>();
     defaultSetupProperties.put("defaultInstanceCount", "2");
     defaultSetupProperties.put("preferExistingInstanceCount", true);
@@ -754,7 +755,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(K8S_CANARY_SETUP.name())
-                                    .name(Constants.K8S_CANARY_SETUP)
+                                    .name(Constants.K8S_SETUP)
                                     .properties(defaultSetupProperties)
                                     .build())
                        .build());
@@ -818,14 +819,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP).build());
   }
 
-  private void addK8sCanaryRollbackWorkflowPhaseSteps(WorkflowPhase rollbackPhase) {
+  private void addK8sBasicRollbackWorkflowPhaseSteps(WorkflowPhase rollbackPhase) {
     List<PhaseStep> phaseSteps = rollbackPhase.getPhaseSteps();
 
     phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.SETUP)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(K8S_CANARY_ROLLBACK.name())
-                                    .name(Constants.K8S_CANARY_ROLLBACK)
+                                    .name(Constants.K8S_ROLLBACK)
                                     .rollback(true)
                                     .build())
                        .withPhaseStepNameForRollback(Constants.SETUP)
@@ -855,7 +856,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<String> linkedTemplateUuids = new ArrayList<>();
     if (orchestrationWorkflow != null) {
       if (StringUtils.isNotEmpty(workflow.getServiceId())
-          && isK8sV2Service(workflow.getAppId(), workflow.getServiceId())) {
+          && workflowServiceHelper.isK8sV2Service(workflow.getAppId(), workflow.getServiceId())) {
         createK8sWorkflow(workflow);
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)
           || orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
@@ -940,11 +941,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             appId, serviceId, KUBERNETES.name());
     return containerTask != null && containerTask.checkStatefulSet();
-  }
-
-  private boolean isK8sV2Service(String appId, String serviceId) {
-    Service service = serviceResourceService.get(appId, serviceId);
-    return service != null && service.isK8sV2();
   }
 
   private void addLinkedPreOrPostDeploymentSteps(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
@@ -1509,13 +1505,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         || orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
 
-      if (isK8sV2Service(workflow.getAppId(), workflowPhase.getServiceId())) {
-        addK8sCanaryWorkflowPhaseSteps(workflowPhase);
+      if (workflowServiceHelper.isK8sV2Service(workflow.getAppId(), workflowPhase.getServiceId())) {
+        addK8sBasicWorkflowPhaseSteps(workflowPhase);
         workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
         canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
         WorkflowPhase rollbackWorkflowPhase = createRollbackPhase(workflowPhase);
-        addK8sCanaryRollbackWorkflowPhaseSteps(rollbackWorkflowPhase);
+        addK8sBasicRollbackWorkflowPhaseSteps(rollbackWorkflowPhase);
         workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
         canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
       } else {
@@ -2296,9 +2292,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
         if (!(InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
                 || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
-                       infrastructureMapping.getInfraMappingType()))) {
+                       infrastructureMapping.getInfraMappingType())
+                || workflowServiceHelper.isK8sV2Service(infrastructureMapping.getAppId(), workflow.getServiceId()))) {
           throw new InvalidRequestException(
-              "Requested Infrastructure Type is not supported using Rolling Deployment", USER);
+              "Requested Service/InfrastructureType is not supported using Rolling Deployment", USER);
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
         if (!(InfrastructureMappingType.DIRECT_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())

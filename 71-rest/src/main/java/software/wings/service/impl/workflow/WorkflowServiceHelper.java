@@ -122,6 +122,7 @@ import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.artifact.ArtifactStream;
@@ -1737,5 +1738,25 @@ public class WorkflowServiceHelper {
     phase.setInfraMappingId(null);
     phase.setInfraMappingName(null);
     // phase.setDeploymentType(null);
+  }
+
+  public boolean isExecutionForK8sV2Service(WorkflowExecution workflowExecution) {
+    if (isNotEmpty(workflowExecution.getServiceIds())) {
+      return isK8sV2Service(workflowExecution.getAppId(), workflowExecution.getServiceIds().get(0));
+    }
+    return false;
+  }
+
+  public boolean isOrchestrationWorkflowForK8sV2Service(
+      String appId, CanaryOrchestrationWorkflow orchestrationWorkflow) {
+    if (isNotEmpty(orchestrationWorkflow.getServiceIds())) {
+      return isK8sV2Service(appId, orchestrationWorkflow.getServiceIds().get(0));
+    }
+    return false;
+  }
+
+  public boolean isK8sV2Service(String appId, String serviceId) {
+    Service service = serviceResourceService.get(appId, serviceId);
+    return service != null && service.isK8sV2();
   }
 }

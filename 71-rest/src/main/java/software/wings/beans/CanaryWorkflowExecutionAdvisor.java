@@ -30,6 +30,7 @@ import software.wings.api.PhaseElement;
 import software.wings.common.Constants;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -74,6 +75,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
   @Inject @Transient private transient StateExecutionService stateExecutionService;
 
+  @Inject @Transient private transient WorkflowServiceHelper workflowServiceHelper;
+
   @Override
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
     State state = executionEvent.getState();
@@ -95,7 +98,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           (CanaryOrchestrationWorkflow) findOrchestrationWorkflow(workflow, workflowExecution);
 
       boolean rolling = false;
-      if (stateExecutionInstance != null && stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING) {
+      if (stateExecutionInstance != null && stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING
+          && !workflowServiceHelper.isExecutionForK8sV2Service(workflowExecution)) {
         rolling = true;
       }
 
@@ -436,7 +440,9 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
   private ExecutionEventAdvice phaseSubWorkflowAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,
       PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance) {
-    if (stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING) {
+    if (stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING
+        && !workflowServiceHelper.isOrchestrationWorkflowForK8sV2Service(
+               stateExecutionInstance.getAppId(), orchestrationWorkflow)) {
       return phaseSubWorkflowAdviceForRolling(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
     } else {
       return phaseSubWorkflowAdviceForOthers(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
