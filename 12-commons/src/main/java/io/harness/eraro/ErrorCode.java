@@ -304,7 +304,9 @@ public enum ErrorCode {
 
   EXPRESSION_EVALUATION_FAILED,
 
-  KUBERNETES_VALUES_ERROR;
+  KUBERNETES_VALUES_ERROR,
+
+  INVALID_TERRAFORM_TARGETS_REQUEST(Status.OK);
 
   private Status status = BAD_REQUEST;
   private String description;
