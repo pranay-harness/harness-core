@@ -40,6 +40,8 @@ import java.util.regex.Pattern;
 public class GcsServiceImpl implements GcsService {
   private static final Logger logger = LoggerFactory.getLogger(software.wings.helpers.ext.gcs.GcsServiceImpl.class);
   private GcpHelperService gcpHelperService;
+  private static int MAX_GCS_ARTIFACT_PATHS_LIMIT = 1000;
+  private static int MAX_GCS_BUILD_DETAILS_LIMIT = 1000;
 
   @Inject
   public GcsServiceImpl(GcpHelperService gcpHelperService) {
@@ -51,25 +53,42 @@ public class GcsServiceImpl implements GcsService {
   public List<String> getArtifactPaths(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
     List<String> objectNameList = Lists.newArrayList();
-    Storage.Objects objs;
     Objects listOfObjects;
+    String nextPageToken = "";
+    long maxResults = 1000;
     try {
       Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
-      objs = gcsStorageService.objects();
-      listOfObjects = objs.list(bucketName).execute();
+      Storage.Objects.List listObjects = gcsStorageService.objects().list(bucketName);
+      listObjects.setMaxResults(maxResults);
+      do {
+        listOfObjects = listObjects.execute();
+        // Get objects for the bucket
+        List<StorageObject> items;
+        if (listOfObjects != null && listOfObjects.getItems() != null && listOfObjects.getItems().size() > 0) {
+          items = listOfObjects.getItems();
+          for (StorageObject storageObject : items) {
+            objectNameList.add(storageObject.getName());
+          }
+        }
+
+        if (listOfObjects != null) {
+          nextPageToken = listOfObjects.getNextPageToken();
+          if (isNotEmpty(nextPageToken)) {
+            listObjects.setPageToken(nextPageToken);
+          }
+        }
+
+        // Get only artifact paths till set limit
+        if (objectNameList.size() >= MAX_GCS_ARTIFACT_PATHS_LIMIT) {
+          break;
+        }
+
+      } while (nextPageToken != null);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
           .addParam("message", "Could not get artifact paths from Google Cloud Storage for bucket :" + bucketName);
     }
 
-    // Get objects for the bucket
-    List<StorageObject> items;
-    if (listOfObjects != null && listOfObjects.getItems() != null && listOfObjects.getItems().size() > 0) {
-      items = listOfObjects.getItems();
-      for (StorageObject storageObject : items) {
-        objectNameList.add(storageObject.getName());
-      }
-    }
     return objectNameList;
   }
 
@@ -98,21 +117,38 @@ public class GcsServiceImpl implements GcsService {
   public List<BuildDetails> getArtifactsBuildDetails(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, String artifactPath, boolean isExpression, boolean versioningEnabledForBucket) {
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
+    String nextPageToken = "";
+    long maxResults = 1000;
+
     if (isExpression) {
       try {
         Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
         Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
-        Objects listOfObjects = gcsStorageService.objects().list(bucketName).execute();
+        Storage.Objects.List listObjects = gcsStorageService.objects().list(bucketName);
+        listObjects.setMaxResults(maxResults);
 
-        // Get all objects for the bucket
-        if (listOfObjects != null && isNotEmpty(listOfObjects.getItems())) {
-          List<String> objectKeyList = getObjectSummaries(pattern, listOfObjects.getItems());
-          for (String obj : objectKeyList) {
-            BuildDetails artifactMetadata =
-                getArtifactBuildDetails(gcpConfig, encryptionDetails, bucketName, obj, versioningEnabledForBucket);
-            buildDetailsList.add(artifactMetadata);
+        do {
+          Objects listOfObjects = listObjects.execute();
+
+          // Get objects for the bucket
+          if (listOfObjects != null && isNotEmpty(listOfObjects.getItems())) {
+            List<String> objectKeyList = getObjectSummaries(pattern, listOfObjects.getItems());
+            for (String obj : objectKeyList) {
+              BuildDetails artifactMetadata =
+                  getArtifactBuildDetails(gcpConfig, encryptionDetails, bucketName, obj, versioningEnabledForBucket);
+              buildDetailsList.add(artifactMetadata);
+            }
           }
-        }
+
+          // Set page token to get next set of objects
+          if (listOfObjects != null) {
+            nextPageToken = listOfObjects.getNextPageToken();
+            if (isNotEmpty(nextPageToken)) {
+              listObjects.setPageToken(nextPageToken);
+            }
+          }
+        } while (nextPageToken != null);
+
       } catch (Exception e) {
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
             .addParam("message", "Could not get Build details from Google Cloud Storage for bucket :" + bucketName);
