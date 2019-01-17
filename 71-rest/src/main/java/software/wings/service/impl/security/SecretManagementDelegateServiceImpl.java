@@ -12,6 +12,7 @@ import static software.wings.helpers.ext.vault.VaultRestClientFactory.getFullPat
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
@@ -57,6 +58,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -70,7 +72,14 @@ import javax.crypto.spec.SecretKeySpec;
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(SecretManagementDelegateServiceImpl.class);
 
-  @Inject private TimeLimiter timeLimiter;
+  private TimeLimiter timeLimiter;
+  private ExecutorService executorService;
+
+  @Inject
+  public SecretManagementDelegateServiceImpl(ExecutorService executorService) {
+    this.executorService = executorService;
+    this.timeLimiter = new SimpleTimeLimiter(executorService);
+  }
 
   private boolean isRetryable(Exception e) {
     // TimeLimiter.callWithTimer will throw a new exception wrapping around the AwsKMS exceptions. Unwrap it.
@@ -91,19 +100,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   @Override
   public EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
     Preconditions.checkNotNull(kmsConfig, "null for " + accountId);
-    ClassLoader callerClassLoader = Thread.currentThread().getContextClassLoader();
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        return timeLimiter.callWithTimeout(() -> {
-          ClassLoader prevClassLoader = Thread.currentThread().getContextClassLoader();
-          try {
-            // HAR-6885: Use the caller's context class loader to ensure consistent class loading behavior.
-            Thread.currentThread().setContextClassLoader(callerClassLoader);
-            return encryptInternal(accountId, value, kmsConfig);
-          } finally {
-            Thread.currentThread().setContextClassLoader(prevClassLoader);
-          }
-        }, 5, TimeUnit.SECONDS, true);
+        return timeLimiter.callWithTimeout(
+            () -> { return encryptInternal(accountId, value, kmsConfig); }, 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
@@ -131,18 +131,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
     Preconditions.checkNotNull(kmsConfig, "null for " + data);
 
-    ClassLoader callerClassLoader = Thread.currentThread().getContextClassLoader();
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
         return timeLimiter.callWithTimeout(() -> {
-          ClassLoader prevClassLoader = Thread.currentThread().getContextClassLoader();
-          try {
-            // HAR-6885: Use the caller's context class loader to ensure consistent class loading behavior.
-            Thread.currentThread().setContextClassLoader(callerClassLoader);
-            return decryptInternal(data, kmsConfig);
-          } finally {
-            Thread.currentThread().setContextClassLoader(prevClassLoader);
-          }
+          // ClassLoader prevClassLoader = Thread.currentThread().getContextClassLoader();
+          return decryptInternal(data, kmsConfig);
         }, 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
@@ -164,18 +157,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData savedEncryptedData) {
-    ClassLoader callerClassLoader = Thread.currentThread().getContextClassLoader();
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
         return timeLimiter.callWithTimeout(() -> {
-          ClassLoader prevClassLoader = Thread.currentThread().getContextClassLoader();
-          try {
-            // HAR-6885: Use the caller's context class loader to ensure consistent class loading behavior.
-            Thread.currentThread().setContextClassLoader(callerClassLoader);
-            return encryptInternal(name, value, accountId, settingType, vaultConfig, savedEncryptedData);
-          } finally {
-            Thread.currentThread().setContextClassLoader(prevClassLoader);
-          }
+          return encryptInternal(name, value, accountId, settingType, vaultConfig, savedEncryptedData);
         }, 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
@@ -199,19 +184,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       return null;
     }
 
-    ClassLoader callerClassLoader = Thread.currentThread().getContextClassLoader();
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        return timeLimiter.callWithTimeout(() -> {
-          ClassLoader prevClassLoader = Thread.currentThread().getContextClassLoader();
-          try {
-            // HAR-6885: Use the caller's context class loader to ensure consistent class loading behavior.
-            Thread.currentThread().setContextClassLoader(callerClassLoader);
-            return decryptInternal(data, vaultConfig);
-          } finally {
-            Thread.currentThread().setContextClassLoader(prevClassLoader);
-          }
-        }, 5, TimeUnit.SECONDS, true);
+        return timeLimiter.callWithTimeout(
+            () -> { return decryptInternal(data, vaultConfig); }, 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
