@@ -50,6 +50,7 @@ import de.danielbechler.diff.node.DiffNode;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.eraro.ErrorCode;
@@ -625,8 +626,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (service == null) {
       return;
     }
-    deleteCommands(appId, serviceId);
-
     if (!forceDelete) {
       // Ensure service is safe to delete
       ensureServiceSafeToDelete(service);
@@ -639,6 +638,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     // safe to delete
     if (wingsPersistence.delete(Service.class, service.getUuid())) {
+      getServiceCommands(appId, serviceId, false)
+          .forEach(serviceCommand -> deleteServiceCommand(service, serviceCommand, syncFromGit));
       sendNotificationAsync(service, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
     }
   }
@@ -651,6 +652,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void ensureServiceSafeToDelete(Service service) {
+    // Ensure service and and sevice commands referenced by workflow
+
     List<String> referencingWorkflowNames =
         workflowService.obtainWorkflowNamesReferencedByService(service.getAppId(), service.getUuid());
 
@@ -698,11 +701,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return workflowService
         .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
         .getResponse();
-  }
-
-  private void deleteCommands(String appId, String serviceId) {
-    getServiceCommands(appId, serviceId, false)
-        .forEach(serviceCommand -> deleteCommand(appId, serviceId, serviceCommand.getUuid()));
   }
 
   /**
@@ -785,10 +783,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void ensureServiceCommandSafeToDelete(Service service, ServiceCommand serviceCommand) {
-    List<Workflow> workflows = getWorkflows(service);
-    if (workflows == null) {
-      return;
-    }
+    List<Workflow> workflows =
+        workflowService
+            .listWorkflows(
+                aPageRequest().withLimit(UNLIMITED).addFilter("appId", Operator.EQ, service.getAppId()).build())
+            .getResponse();
     StringBuilder sb = new StringBuilder();
     for (Workflow workflow : workflows) {
       OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
