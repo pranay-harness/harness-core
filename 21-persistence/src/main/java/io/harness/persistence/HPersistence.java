@@ -226,7 +226,7 @@ public interface HPersistence {
   FindAndModifyOptions UPSERT_RETURN_OLD_OPTIONS = new FindAndModifyOptions().upsert(true).returnNew(false);
 
   /**
-   * Upsert t.
+   * Upsert.
    *
    * @param query            the query
    * @param updateOperations the update operations
@@ -252,6 +252,17 @@ public interface HPersistence {
    * @return the update results
    */
   <T extends PersistentEntity> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
+
+  /**
+   * Find and modify.
+   *
+   * @param query                the query
+   * @param updateOperations     the update operations
+   * @param findAndModifyOptions the find and modify options
+   * @return previous or new entity depending on options
+   */
+  <T extends PersistentEntity> T findAndModify(
+      Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions);
 
   /**
    * Merge.

@@ -6,9 +6,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
-import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Base;
 
 import java.util.List;
@@ -42,18 +40,6 @@ public interface WingsPersistence extends HPersistence {
    * @return the t
    */
   <T extends Base> T getWithAppId(Class<T> cls, String appId, String id, ReadPref readPref);
-
-  /**
-   * Find and modify t.
-   *
-   * @param <T>                  the type parameter
-   * @param query                the query
-   * @param updateOperations     the update operations
-   * @param findAndModifyOptions the find and modify options
-   * @return the t
-   */
-  <T extends Base> T findAndModify(
-      Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions);
 
   /**
    * Save and get.

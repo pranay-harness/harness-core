@@ -38,7 +38,6 @@ import io.harness.reflection.ReflectionUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.DatastoreImpl;
-import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -130,13 +129,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       object.getShardKeys().keySet().forEach(key -> query.filter(key, object.getShardKeys().get(key)));
     }
     return query.get();
-  }
-
-  @Override
-  public <T extends Base> T findAndModify(
-      Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions) {
-    return getDatastore(query.getEntityClass(), ReadPref.NORMAL)
-        .findAndModify(query, updateOperations, findAndModifyOptions);
   }
 
   @Override
