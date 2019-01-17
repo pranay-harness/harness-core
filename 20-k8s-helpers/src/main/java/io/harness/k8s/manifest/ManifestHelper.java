@@ -151,7 +151,7 @@ public class ManifestHelper {
         // noop
         return true;
       } else {
-        throw new KubernetesValuesException("Object is not a map. Content: \n" + valuesFileContent);
+        throw new KubernetesValuesException("Object is not a map.");
       }
     } catch (YamlException e) {
       throw new KubernetesValuesException(e.getMessage(), e.getCause());

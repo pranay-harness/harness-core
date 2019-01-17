@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.KubernetesYamlException;
+import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.DeleteCommand;
@@ -354,18 +355,22 @@ public class K8sTaskHelper {
       return manifestFiles;
     }
 
-    StringBuilder valuesFilesOptions = new StringBuilder(128);
+    StringBuilder valuesFilesOptionsBuilder = new StringBuilder(128);
     for (int i = 0; i < valuesFiles.size(); i++) {
       try {
         String item = valuesFiles.get(i);
         validateValuesFileContents(item);
         FileIo.writeUtf8StringToFile(k8SDelegateTaskParams.getWorkingDirectory() + '/' + i + values_filename, item);
-        valuesFilesOptions.append(" -f ").append(i).append(values_filename);
+        valuesFilesOptionsBuilder.append(" -f ").append(i).append(values_filename);
       } catch (Exception e) {
         executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
         throw e;
       }
     }
+
+    String valuesFileOptions = valuesFilesOptionsBuilder.toString();
+
+    logger.info("Values file options: " + valuesFileOptions);
 
     List<ManifestFile> result = new ArrayList<>();
 
@@ -382,9 +387,17 @@ public class K8sTaskHelper {
               .timeout(10, TimeUnit.SECONDS)
               .directory(new File(k8SDelegateTaskParams.getWorkingDirectory()))
               .commandSplit(encloseWithQuotesIfNeeded(k8SDelegateTaskParams.getGoTemplateClientPath())
-                  + " -t template.yaml " + valuesFilesOptions.toString())
+                  + " -t template.yaml " + valuesFileOptions)
               .readOutput(true);
       ProcessResult processResult = processExecutor.execute();
+
+      if (processResult.getExitValue() != 0) {
+        logger.error("Failed to render templates. " + processResult.getOutput().getUTF8());
+        String message =
+            isNotEmpty(processResult.getOutput().getLines()) ? processResult.getOutput().getLines().get(0) : "";
+        throw new WingsException("Failed to render template: " + message);
+      }
+
       result.add(ManifestFile.builder()
                      .fileName(manifestFile.getFileName())
                      .fileContent(processResult.outputString())
