@@ -59,6 +59,14 @@ public class HttpTest {
   }
 
   @Test
+  public void testJoinHostPort() {
+    assertEquals("localhost:443", Http.joinHostPort("localhost", "443"));
+    assertEquals("127.0.0.1:443", Http.joinHostPort("127.0.0.1", "443"));
+    assertEquals("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:443",
+        Http.joinHostPort("2001:0db8:85a3:0000:0000:8a2e:0370:7334", "443"));
+  }
+
+  @Test
   public void concurrencyTest() {
     Concurrent.test(5, i -> { final OkHttpClient client = Http.getUnsafeOkHttpClient("https://harness.io"); });
   }
