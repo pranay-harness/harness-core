@@ -201,7 +201,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
       System.exit(0);
     } catch (Exception e) {
       logger.error("Exception occurred. Exiting datagen application...", e);
-      System.exit(0);
+      System.exit(1);
     }
   }
 
