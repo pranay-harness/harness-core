@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
+
 import com.google.inject.Inject;
 
 import io.harness.scheduler.BackgroundExecutorService;
@@ -25,7 +27,6 @@ public class LimitVicinityCheckerJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LimitVicinityCheckerJob.class);
 
   public static final String GROUP = "LIMIT_VICINITY_CHECKER_CRON_GROUP";
-  public static final String ACCOUNT_ID = "accountId";
 
   private static final int SYNC_INTERVAL_IN_MINUTES = 30;
 
@@ -37,7 +38,7 @@ public class LimitVicinityCheckerJob implements Job {
     jobScheduler.deleteJob(account.getUuid(), GROUP);
     JobDetail job = JobBuilder.newJob(LimitVicinityCheckerJob.class)
                         .withIdentity(account.getUuid(), GROUP)
-                        .usingJobData(ACCOUNT_ID, account.getUuid())
+                        .usingJobData(ACCOUNT_ID_KEY, account.getUuid())
                         .build();
 
     Trigger trigger =
@@ -57,7 +58,7 @@ public class LimitVicinityCheckerJob implements Job {
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     executorService.submit(() -> {
-      String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID);
+      String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY);
       Objects.requireNonNull(accountId, "[LimitVicinityCheckerJob] Account Id must be passed in job context");
       limitVicinityHandler.checkAndAct(accountId);
     });

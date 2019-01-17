@@ -2,6 +2,8 @@ package software.wings.scheduler;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.lang.String.format;
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
+import static software.wings.common.Constants.APP_ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -43,8 +45,6 @@ import java.util.concurrent.ExecutorService;
 public class InstanceSyncJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(InstanceSyncJob.class);
 
-  public static final String APP_ID_KEY = "appId";
-
   public static final String GROUP = "INSTANCE_SYNC_CRON_GROUP";
   private static final int POLL_INTERVAL = 600;
 
@@ -56,11 +56,14 @@ public class InstanceSyncJob implements Job {
   @Inject private PersistentLocker persistentLocker;
   @Inject private ExecutorService executorService;
 
-  public static void add(PersistentScheduler jobScheduler, String appId) {
+  public static void add(PersistentScheduler jobScheduler, String accountId, String appId) {
     jobScheduler.deleteJob(appId, GROUP);
 
-    JobDetail job =
-        JobBuilder.newJob(InstanceSyncJob.class).withIdentity(appId, GROUP).usingJobData(APP_ID_KEY, appId).build();
+    JobDetail job = JobBuilder.newJob(InstanceSyncJob.class)
+                        .withIdentity(appId, GROUP)
+                        .usingJobData(APP_ID_KEY, appId)
+                        .usingJobData(ACCOUNT_ID_KEY, accountId)
+                        .build();
 
     Trigger trigger =
         TriggerBuilder.newTrigger()

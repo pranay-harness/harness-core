@@ -16,6 +16,7 @@ import java.util.concurrent.TimeoutException;
 public class InstanceSyncJobTest extends WingsBaseTest {
   @Inject private ServiceJobScheduler jobScheduler;
 
+  private static final String accountId = "Dummy Account Id";
   private static final String appId = "Dummy App Id";
 
   @Test
@@ -23,7 +24,7 @@ public class InstanceSyncJobTest extends WingsBaseTest {
     TestJobListener listener = new TestJobListener(InstanceSyncJob.GROUP + "." + appId);
     jobScheduler.getScheduler().getListenerManager().addJobListener(listener);
 
-    InstanceSyncJob.add(jobScheduler, appId);
+    InstanceSyncJob.add(jobScheduler, accountId, appId);
 
     listener.waitToSatisfy(Duration.ofSeconds(5));
 

@@ -136,9 +136,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     setAutoPopulatedName(artifactStream);
 
     String id = wingsPersistence.save(artifactStream);
-    ArtifactCollectionJob.addDefaultJob(serviceJobScheduler, artifactStream.getAppId(), artifactStream.getUuid());
-
     String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+
+    ArtifactCollectionJob.addDefaultJob(
+        serviceJobScheduler, accountId, artifactStream.getAppId(), artifactStream.getUuid());
+
     yamlPushService.pushYamlChangeSet(
         accountId, null, artifactStream, Type.CREATE, artifactStream.isSyncFromGit(), false);
 

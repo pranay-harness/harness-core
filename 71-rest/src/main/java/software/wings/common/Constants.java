@@ -962,4 +962,10 @@ public interface Constants {
   String BG_VERSION = "BG_VERSION";
   String BG_GREEN = "GREEN";
   String BG_BLUE = "BLUE";
+
+  /**
+   * Quartz job detail key names
+   */
+  String ACCOUNT_ID_KEY = "accountId";
+  String APP_ID_KEY = "appId";
 }

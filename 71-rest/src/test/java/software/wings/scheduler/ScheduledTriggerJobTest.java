@@ -19,6 +19,7 @@ import java.util.concurrent.TimeoutException;
 public class ScheduledTriggerJobTest extends WingsBaseTest {
   @Inject private BackgroundJobScheduler jobScheduler;
 
+  private static final String accountId = "Dummy Account Id";
   private static final String appId = "Dummy App Id";
   private static final String triggerId = "Dummy Trigger Id";
 
@@ -33,7 +34,7 @@ public class ScheduledTriggerJobTest extends WingsBaseTest {
                                       .withSchedule(SimpleScheduleBuilder.simpleSchedule())
                                       .build();
 
-    ScheduledTriggerJob.add(jobScheduler, appId, triggerId, trigger);
+    ScheduledTriggerJob.add(jobScheduler, accountId, appId, triggerId, trigger);
 
     listener.waitToSatisfy(Duration.ofSeconds(5));
 

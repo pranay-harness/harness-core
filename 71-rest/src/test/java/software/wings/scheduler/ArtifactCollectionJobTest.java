@@ -18,6 +18,7 @@ public class ArtifactCollectionJobTest extends WingsBaseTest {
   @Inject private BackgroundJobScheduler jobScheduler;
   @Inject @InjectMocks ArtifactCollectionJob job = new ArtifactCollectionJob();
 
+  private static final String accountId = "Dummy Account Id";
   private static final String appId = "Dummy App Id";
   private static final String artifactScreamId = "Dummy Artifact Stream Id";
 
@@ -26,7 +27,7 @@ public class ArtifactCollectionJobTest extends WingsBaseTest {
     TestJobListener listener = new TestJobListener(ArtifactCollectionJob.GROUP + "." + artifactScreamId);
     jobScheduler.getScheduler().getListenerManager().addJobListener(listener);
 
-    ArtifactCollectionJob.addDefaultJob(jobScheduler, appId, artifactScreamId);
+    ArtifactCollectionJob.addDefaultJob(jobScheduler, accountId, appId, artifactScreamId);
 
     listener.waitToSatisfy(ofSeconds(5));
 
