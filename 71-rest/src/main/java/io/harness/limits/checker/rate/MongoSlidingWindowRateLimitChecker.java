@@ -13,6 +13,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Instant;
+import javax.annotation.Nullable;
 
 /**
  * Mongo backed implementation for rate limits.
@@ -27,13 +28,20 @@ public class MongoSlidingWindowRateLimitChecker implements RateLimitChecker, Rat
   @Getter private final RateLimit limit;
   private final WingsPersistence persistence;
   private final String key;
-  @Getter private final Action action;
+  @Getter @Nullable private final Action action;
 
   public MongoSlidingWindowRateLimitChecker(RateLimit limit, WingsPersistence persistence, Action action) {
     this.limit = limit;
     this.persistence = persistence;
     this.action = action;
     this.key = action.key();
+  }
+
+  public MongoSlidingWindowRateLimitChecker(RateLimit limit, WingsPersistence persistence, String key) {
+    this.limit = limit;
+    this.persistence = persistence;
+    this.action = null;
+    this.key = key;
   }
 
   @Override
