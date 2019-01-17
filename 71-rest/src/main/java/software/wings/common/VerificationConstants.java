@@ -42,6 +42,7 @@ public class VerificationConstants {
   public static final String ANALYSIS_STATE_RE_QUEUE_TASK = "/experimentalTask";
   public static final String LEARNING_EXP_URL = "learning-exp";
   public static final String LAMBDA_HOST_NAME = "LAMBDA_HOST";
+  public static String DEFAULT_GROUP_NAME = "default";
 
   public static final Double HIGH_RISK_CUTOFF = 0.5;
   public static final Double MEDIUM_RISK_CUTOFF = 0.3;
@@ -107,7 +108,7 @@ public class VerificationConstants {
     return NEWRELIC_METRICS_YAML_URL;
   }
 
-  public static final String[] dataCollectionMetricLabels = new String[] {
+  public static final String[] DATA_COLLECTION_METRIC_LABELS = new String[] {
       EventConstants.ACCOUNT_ID, EventConstants.VERIFICATION_TYPE, EventConstants.VERIFICATION_247_CONFIGURED};
 
   public static final String[] IGNORED_ERRORS_METRIC_LABELS = new String[] {EventConstants.LOG_ML_FEEDBACKTYPE,

@@ -14,7 +14,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

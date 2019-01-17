@@ -11,7 +11,6 @@ import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -34,7 +33,7 @@ import java.util.Set;
  * Created by sriram_parthasarathy on 8/23/17.
  */
 public class LogMLAnalysisGenerator implements Runnable {
-  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(LogMLAnalysisGenerator.class);
+  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(LogMLAnalysisGenerator.class);
 
   private final AnalysisContext context;
   private final String accountId;

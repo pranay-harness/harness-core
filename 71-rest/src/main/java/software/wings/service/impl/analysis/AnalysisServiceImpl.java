@@ -27,6 +27,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
 import io.harness.metrics.HarnessMetricRegistry;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -117,6 +118,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject private LearningEngineService learningEngineService;
   @Inject private AccountResource accountResource;
   @Inject private HarnessMetricRegistry metricRegistry;
+  @Inject private UsageMetricsHelper usageMetricsHelper;
 
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
