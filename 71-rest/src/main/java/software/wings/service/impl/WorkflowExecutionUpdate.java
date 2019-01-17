@@ -4,6 +4,8 @@
 
 package software.wings.service.impl;
 
+import static io.harness.beans.ExecutionStatus.NEW;
+import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -130,20 +132,18 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
    */
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
-    // Update the workflow execution if still in NEW, QUEUE status to mark the startTs
-    workflowExecutionService.updateStartStatus(appId, workflowExecutionId, STARTING);
-
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .filter(WorkflowExecution.APP_ID_KEY, appId)
                                          .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
+                                         // make sure that we add endTs, only if the workflow started at all
+                                         .field(WorkflowExecution.START_TS_KEY)
+                                         .exists()
                                          .field(WorkflowExecution.STATUS_KEY)
-                                         .in(asList(STARTING, RUNNING));
-
-    final long currentTime = System.currentTimeMillis();
+                                         .in(asList(NEW, QUEUED, STARTING, RUNNING));
 
     UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                         .set(WorkflowExecution.STATUS_KEY, status)
-                                                        .set(WorkflowExecution.END_TS_KEY, currentTime);
+                                                        .set(WorkflowExecution.END_TS_KEY, System.currentTimeMillis());
     wingsPersistence.update(query, updateOps);
 
     handlePostExecution(context);
@@ -183,7 +183,9 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         String accountID = applicationDataForReporting.getAccountId();
         String applicationName = applicationDataForReporting.getName();
         String accountName = accountService.getFromCache(accountID).getAccountName();
-        long executionDuration = TimeUnit.MILLISECONDS.toSeconds(currentTime - workflowExecution.getStartTs());
+        long executionDuration = workflowExecution.getStartTs() != null && workflowExecution.getEndTs() != null
+            ? TimeUnit.MILLISECONDS.toSeconds(workflowExecution.getEndTs() - workflowExecution.getStartTs())
+            : 0;
         /**
          * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is manual
          */
