@@ -15,6 +15,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -69,6 +70,7 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * Created by rsingh on 10/2/17.
  */
+@Singleton
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(SecretManagementDelegateServiceImpl.class);
 
@@ -103,7 +105,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
         return timeLimiter.callWithTimeout(
-            () -> { return encryptInternal(accountId, value, kmsConfig); }, 5, TimeUnit.SECONDS, true);
+            () -> encryptInternal(accountId, value, kmsConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
@@ -133,10 +135,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        return timeLimiter.callWithTimeout(() -> {
-          // ClassLoader prevClassLoader = Thread.currentThread().getContextClassLoader();
-          return decryptInternal(data, kmsConfig);
-        }, 5, TimeUnit.SECONDS, true);
+        return timeLimiter.callWithTimeout(() -> decryptInternal(data, kmsConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
@@ -159,9 +158,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       VaultConfig vaultConfig, EncryptedData savedEncryptedData) {
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        return timeLimiter.callWithTimeout(() -> {
-          return encryptInternal(name, value, accountId, settingType, vaultConfig, savedEncryptedData);
-        }, 5, TimeUnit.SECONDS, true);
+        return timeLimiter.callWithTimeout(
+            ()
+                -> encryptInternal(name, value, accountId, settingType, vaultConfig, savedEncryptedData),
+            5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
@@ -186,8 +186,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> { return decryptInternal(data, vaultConfig); }, 5, TimeUnit.SECONDS, true);
+        return timeLimiter.callWithTimeout(() -> decryptInternal(data, vaultConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
@@ -293,6 +292,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   private EncryptedData encryptInternal(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
+    long startTime = System.currentTimeMillis();
+    logger.info("Encrypting one secret in account {} with KMS secret manager '{}'", accountId, kmsConfig.getName());
+
     final AWSKMS kmsClient =
         AWSKMSClientBuilder.standard()
             .withCredentials(new AWSStaticCredentialsProvider(
@@ -313,6 +315,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     // Shutdown the KMS client so as to prevent resource leaking,
     kmsClient.shutdown();
 
+    logger.info("Finished encrypting one secret in account {} with KMS secret manager '{}' in {} ms.", accountId,
+        kmsConfig.getName(), System.currentTimeMillis() - startTime);
     return EncryptedData.builder()
         .encryptionKey(encryptedKeyString)
         .encryptedValue(encryptedValue)
@@ -325,6 +329,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   private char[] decryptInternal(EncryptedData data, KmsConfig kmsConfig) throws Exception {
+    long startTime = System.currentTimeMillis();
+    logger.info("Decrypting secret {} with KMS secret manager '{}'", data.getUuid(), kmsConfig.getName());
+
     final AWSKMS kmsClient =
         AWSKMSClientBuilder.standard()
             .withCredentials(new AWSStaticCredentialsProvider(
@@ -339,6 +346,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     // Shutdown the KMS client so as to prevent resource leaking,
     kmsClient.shutdown();
 
+    logger.info("Finished decrypting secret {} with KMS secret manager '{}' in {} ms.", data.getUuid(),
+        kmsConfig.getName(), System.currentTimeMillis() - startTime);
     return decrypt(data.getEncryptedValue(), new SecretKeySpec(getByteArray(plainTextKey), "AES")).toCharArray();
   }
 
@@ -346,6 +355,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws Exception {
     String keyUrl = settingType + "/" + name;
     char[] encryptedValue = keyUrl.toCharArray();
+
+    long startTime = System.currentTimeMillis();
+    logger.info("Saving secret {} into Vault {}", name, keyUrl);
 
     EncryptedData encryptedData = savedEncryptedData;
     if (savedEncryptedData == null) {
@@ -380,7 +392,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
 
     // With existing encrypted value. Need to delete it first and rewrite with new value.
-    logger.info("deleting vault secret {} for {}", keyUrl, encryptedData);
+    logger.info("Deleting vault secret {} for {} in {} ms.", keyUrl, encryptedData.getUuid(),
+        System.currentTimeMillis() - startTime);
     String fullPath = getFullPath(vaultConfig.getBasePath(), keyUrl);
     VaultRestClientFactory.create(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath);
 
@@ -388,7 +401,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
                                .writeSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath, value);
 
     if (isSuccessful) {
-      logger.info("saving vault secret {} for {}", keyUrl, encryptedData);
+      logger.info("Done saving vault secret {} for {}", keyUrl, encryptedData.getUuid());
       encryptedData.setEncryptionKey(keyUrl);
       encryptedData.setEncryptedValue(encryptedValue);
       return encryptedData;
@@ -402,12 +415,15 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   private char[] decryptInternal(EncryptedData data, VaultConfig vaultConfig) throws Exception {
     String fullPath =
         isEmpty(data.getPath()) ? getFullPath(vaultConfig.getBasePath(), data.getEncryptionKey()) : data.getPath();
-    logger.info("reading secret {} from vault {}", fullPath, vaultConfig.getVaultUrl());
+    long startTime = System.currentTimeMillis();
+    logger.info("Reading secret {} from vault {}", fullPath, vaultConfig.getVaultUrl());
 
     String value =
         VaultRestClientFactory.create(vaultConfig).readSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath);
 
     if (EmptyPredicate.isNotEmpty(value)) {
+      logger.info("Done reading secret {} from vault {} in {} ms.", fullPath, vaultConfig.getVaultUrl(),
+          System.currentTimeMillis() - startTime);
       return value.toCharArray();
     } else {
       String errorMsg = "Secret key path '" + fullPath + "' is invalid.";
