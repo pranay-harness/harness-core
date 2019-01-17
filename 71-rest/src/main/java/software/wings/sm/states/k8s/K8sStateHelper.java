@@ -310,16 +310,15 @@ public class K8sStateHelper {
 
     List<String> result = new ArrayList<>();
 
-    if (valuesFiles.containsKey(K8sValuesLocation.Service)) {
-      result.add(context.renderExpression(valuesFiles.get(K8sValuesLocation.Service)));
-    }
+    logger.info("Found Values at following sources: " + valuesFiles.keySet());
 
-    if (valuesFiles.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
-      result.add(context.renderExpression(valuesFiles.get(K8sValuesLocation.EnvironmentGlobal)));
-    }
-
-    if (valuesFiles.containsKey(K8sValuesLocation.Environment)) {
-      result.add(context.renderExpression(valuesFiles.get(K8sValuesLocation.Environment)));
+    for (Entry<K8sValuesLocation, String> entry : valuesFiles.entrySet()) {
+      String renderedValue = context.renderExpression(entry.getValue());
+      if (isNotBlank(renderedValue)) {
+        result.add(renderedValue);
+      } else {
+        logger.info("Values content is empty in " + entry.getKey());
+      }
     }
 
     return result;

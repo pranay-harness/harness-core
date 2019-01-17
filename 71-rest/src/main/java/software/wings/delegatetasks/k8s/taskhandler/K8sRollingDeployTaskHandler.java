@@ -184,6 +184,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
     } catch (Exception e) {
+      executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
