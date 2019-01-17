@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GitCommit;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitConnectionErrorAlert;
@@ -234,7 +233,7 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   private void applySyncFromGit(List<GitFileChange> gitFileChangeList) {
-    if (!featureFlagService.isEnabled(FeatureName.OPTMIZE_SYNC_FROM_GIT, accountId) || isEmpty(gitFileChangeList)) {
+    if (isEmpty(gitFileChangeList)) {
       return;
     }
 
