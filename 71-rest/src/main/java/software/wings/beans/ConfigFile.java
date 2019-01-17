@@ -104,7 +104,7 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
 
   @SchemaIgnore @Transient private transient EncryptionType encryptionType;
 
-  @SchemaIgnore @Transient private transient String encryptedBy;
+  @SchemaIgnore private transient String encryptedBy;
 
   /**
    * Gets version for env.
