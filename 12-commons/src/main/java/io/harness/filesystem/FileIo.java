@@ -1,5 +1,9 @@
 package io.harness.filesystem;
 
+import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.SYNC;
+import static java.nio.file.StandardOpenOption.WRITE;
+
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -54,11 +58,11 @@ public class FileIo {
   }
 
   public static void writeUtf8StringToFile(final String directoryPath, String content) throws IOException {
-    Files.write(Paths.get(directoryPath), content.getBytes(StandardCharsets.UTF_8));
+    Files.write(Paths.get(directoryPath), content.getBytes(StandardCharsets.UTF_8), CREATE, WRITE, SYNC);
   }
 
   public static void writeFile(final String directoryPath, byte[] content) throws IOException {
-    Files.write(Paths.get(directoryPath), content);
+    Files.write(Paths.get(directoryPath), content, CREATE, WRITE, SYNC);
   }
 
   public static boolean acquireLock(File file) {
