@@ -256,6 +256,9 @@ public class ShellScriptState extends State {
     String username = null;
     String keyPath = null;
     boolean keyless = false;
+    Integer port = null;
+    HostConnectionAttributes.AccessType accessType = null;
+    String keyName = null;
     WinRmConnectionAttributes winRmConnectionAttributes = null;
     List<EncryptedDataDetail> winrmEdd = emptyList();
     List<EncryptedDataDetail> keyEncryptionDetails = emptyList();
@@ -285,6 +288,12 @@ public class ShellScriptState extends State {
         username = ((HostConnectionAttributes) keySettingAttribute.getValue()).getUserName();
         keyPath = ((HostConnectionAttributes) keySettingAttribute.getValue()).getKeyPath();
         keyless = ((HostConnectionAttributes) keySettingAttribute.getValue()).isKeyless();
+        port = ((HostConnectionAttributes) keySettingAttribute.getValue()).getSshPort();
+        if (port == null) {
+          port = 22;
+        }
+        accessType = ((HostConnectionAttributes) keySettingAttribute.getValue()).getAccessType();
+        keyName = keySettingAttribute.getUuid();
         keyEncryptionDetails = secretManager.getEncryptionDetails(
             (EncryptableSetting) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
@@ -359,6 +368,9 @@ public class ShellScriptState extends State {
                                               .hostConnectionAttributes(hostConnectionAttributes)
                                               .keyless(keyless)
                                               .keyPath(keyPath)
+                                              .port(port)
+                                              .accessType(accessType)
+                                              .keyName(keyName)
                                               .build()})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)

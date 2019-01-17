@@ -50,6 +50,9 @@ public class ShellScriptParameters implements TaskParameters {
   private final HostConnectionAttributes hostConnectionAttributes;
   private final String keyPath;
   private final boolean keyless;
+  private final Integer port;
+  private final HostConnectionAttributes.AccessType accessType;
+  private final String keyName;
 
   private Map<String, String> getResolvedEnvironmentVariables() {
     Map<String, String> resolvedEnvironment = new HashMap<>();
@@ -73,13 +76,25 @@ public class ShellScriptParameters implements TaskParameters {
         .withExecutionId(activityId)
         .withHost(host)
         .withUserName(userName)
-        .withKey(encryptionService.getDecryptedValue(keyEncryptedDataDetails.get(0)))
+        .withKey(encryptionService.getDecryptedValue(
+            fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_KEY)))
+        .withKeyPassphrase(encryptionService.getDecryptedValue(
+            fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_PASSPHRASE)))
         .withKeyPath(keyPath)
         .withKeyLess(keyless)
         .withWorkingDirectory(workingDirectory)
         .withCommandUnitName(CommandUnit)
-        .withPort(22)
+        .withPort(port)
+        .withKeyName(keyName)
+        .withAccessType(accessType)
         .build();
+  }
+
+  private EncryptedDataDetail fetchEncryptedDataDetail(List<EncryptedDataDetail> encryptedDataDetails, String key) {
+    return encryptedDataDetails.stream()
+        .filter(encryptedDataDetail -> encryptedDataDetail.getFieldName().equals(key))
+        .findFirst()
+        .orElse(null);
   }
 
   public WinRmSessionConfig winrmSessionConfig(EncryptionService encryptionService) throws IOException {

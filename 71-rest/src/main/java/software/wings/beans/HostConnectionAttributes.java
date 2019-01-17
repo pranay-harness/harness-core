@@ -26,6 +26,9 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class HostConnectionAttributes extends SettingValue implements EncryptableSetting {
+  public static final String KEY_KEY = "key";
+  public static final String KEY_PASSPHRASE = "passphrase";
+
   @Attributes(title = "Connection Type", required = true) @NotNull private ConnectionType connectionType;
   @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;
 
