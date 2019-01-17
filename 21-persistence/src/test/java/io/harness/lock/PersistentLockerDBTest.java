@@ -19,6 +19,8 @@ import io.harness.PersistenceTest;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
+import io.harness.rule.RealMongo;
+import io.harness.threading.Concurrent;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -74,6 +76,19 @@ public class PersistentLockerDBTest extends PersistenceTest {
 
     DBObject dbLock = getDbLock(uuid);
     assertNull(dbLock);
+  }
+
+  @Test
+  @RealMongo
+  public void testConcurrentAcquireEphemeralLock() {
+    String uuid = generateUuid();
+
+    Concurrent.test(10, i -> {
+      try (AcquiredLock lock = persistentLocker.acquireEphemeralLock(uuid, Duration.ofSeconds(1))) {
+      } catch (WingsException exception) {
+        // Do nothing. This is just to suppress the exception
+      }
+    });
   }
 
   @Test

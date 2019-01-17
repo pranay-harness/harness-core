@@ -47,6 +47,7 @@ public class PersistentLocker implements Locker {
         name, timeout, AcquiredDistributedLock.builder().closeAction(CloseAction.DESTROY).persistence(persistence));
   }
 
+  @SuppressWarnings("PMD")
   public AcquiredLock acquireLock(String name, Duration timeout, AcquiredDistributedLockBuilder builder) {
     DistributedLockOptions options = new DistributedLockOptions();
     options.setInactiveLockTimeout((int) timeout.toMillis());
@@ -55,8 +56,14 @@ public class PersistentLocker implements Locker {
 
     // measure the time before obtaining the lock
     long start = AcquiredDistributedLock.monotonicTimestamp();
-    if (lock.tryLock()) {
-      return builder.lock(lock).startTimestamp(start).build();
+
+    try {
+      if (lock.tryLock()) {
+        return builder.lock(lock).startTimestamp(start).build();
+      }
+    } catch (NullPointerException ignore) {
+      // There is a race inside DistributedLock that can result in a NullPointerException when the persistent db lock
+      // object is deleted in the middle of tryLock. Ignore the exception and assume that we failed to obtain the lock.
     }
 
     throw new WingsException(GENERAL_ERROR, NOBODY)
