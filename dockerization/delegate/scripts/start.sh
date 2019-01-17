@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 JRE_DIR=jre1.8.0_191
-JRE_BINARY=jre/bin/java
+JRE_BINARY=$JRE_DIR/bin/java
 JVM_URL=_delegateStorageUrl_/jre/8u191/jre-8u191-linux-x64.tar.gz
 
 SOURCE="${BASH_SOURCE[0]}"
@@ -60,24 +60,18 @@ then
   while true; do sleep 60s; done
 fi
 
-if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
+if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]
 then
   echo "Downloading JRE packages..."
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
   curl $PROXY_CURL -#kLO $JVM_URL
   echo "Extracting JRE packages..."
-  mkdir -p tmp
-  mv $JVM_TAR_FILENAME tmp
-  cd tmp
+  rm -rf $JRE_DIR
   tar xzf $JVM_TAR_FILENAME
-  rm -rf ../$JRE_DIR
-  mv $JRE_DIR ../$JRE_DIR
-  cd ..
-  rm -rf jre tmp
-  ln -s $JRE_DIR jre
+  rm -f $JVM_TAR_FILENAME
 fi
 
-if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
+if [ ! -d $JRE_DIR  -o ! -e $JRE_BINARY ]
 then
   echo "No JRE available. Exiting."
   exit 1

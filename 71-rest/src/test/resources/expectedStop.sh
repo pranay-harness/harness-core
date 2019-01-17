@@ -7,9 +7,8 @@ if [ ! -e start.sh ]; then
   exit 1
 fi
 
-JRE_DIR_OLD=jre1.8.0_131_2
 JRE_DIR=jre1.8.0_191
-JRE_BINARY=jre/bin/java
+JRE_BINARY=$JRE_DIR/bin/java
 case "$OSTYPE" in
   solaris*)
     JVM_URL=http://localhost:8888/jre/8u191/jre-8u191-solaris-x64.tar.gz
@@ -17,7 +16,7 @@ case "$OSTYPE" in
   darwin*)
     JVM_URL=http://localhost:8888/jre/8u191/jre-8u191-macosx-x64.tar.gz
     JRE_DIR=jre1.8.0_191.jre
-    JRE_BINARY=jre/Contents/Home/bin/java
+    JRE_BINARY=$JRE_DIR/Contents/Home/bin/java
     ;;
   linux*)
     JVM_URL=http://localhost:8888/jre/8u191/jre-8u191-linux-x64.tar.gz
