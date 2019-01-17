@@ -7,6 +7,7 @@ import static io.harness.reflection.ReflectionUtils.getFieldByName;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.KmsOperationException;
@@ -28,6 +29,7 @@ import java.util.List;
 /**
  * Created by rsingh on 10/18/17.
  */
+@Singleton
 public class EncryptionServiceImpl implements EncryptionService {
   private static final Logger logger = LoggerFactory.getLogger(EncryptionServiceImpl.class);
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
