@@ -1,4 +1,4 @@
-package software.wings.common.thread;
+package io.harness.threading;
 
 import static io.harness.threading.Morpheus.quietSleep;
 
@@ -12,8 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * This is a common threadpool for the entire application.
- *
- * @author Rishi
  */
 public class ThreadPool {
   private static final int CORE_POOL_SIZE = 20;

@@ -1,4 +1,4 @@
-package software.wings.common.thread;
+package io.harness.threading;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * /blob/master/app/src/main /java/lb/listviewvariants/utils/async_task_thread_pool
  * /ScalingThreadPoolExecutor.java that forces the Java to raise the current pool size, if it has
  * still not reached the max threshold, in case existing ones are busy processing other jobs.
- *
- * @author Rishi
  */
 public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
   /**
