@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
+import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.queue.Queue;
@@ -73,6 +74,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AccountService accountService;
   @Inject private WorkflowService workflowService;
+  @Inject private UsageMetricsHelper usageMetricsHelper;
 
   /**
    * Instantiates a new workflow execution update.
@@ -179,7 +181,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
           return;
         }
         eventPublishHelper.handleDeploymentCompleted(workflowExecution);
-        final Application applicationDataForReporting = getApplicationDataForReporting(appId);
+        final Application applicationDataForReporting = usageMetricsHelper.getApplication(appId);
         String accountID = applicationDataForReporting.getAccountId();
         String applicationName = applicationDataForReporting.getName();
         String accountName = accountService.getFromCache(accountID).getAccountName();
@@ -190,7 +192,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
          * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is manual
          */
         boolean manual = workflowExecution.getDeploymentTriggerId() == null;
-        String workflowName = workflowService.fetchWorkflowName(context.getAppId(), workflowId);
+        String workflowName = usageMetricsHelper.getWorkFlowName(context.getAppId(), workflowId);
         usageMetricsEventPublisher.publishDeploymentDurationEvent(
             executionDuration, accountID, accountName, workflowId, workflowName, appId, applicationName);
         usageMetricsEventPublisher.publishDeploymentMetadataEvent(
@@ -246,13 +248,5 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
   public void setNeedToNotifyPipeline(boolean needToNotifyPipeline) {
     this.needToNotifyPipeline = needToNotifyPipeline;
-  }
-
-  private Application getApplicationDataForReporting(String appId) {
-    return wingsPersistence.createQuery(Application.class)
-        .project(Application.ACCOUNT_ID_KEY, true)
-        .project(Application.NAME_KEY, true)
-        .filter(Application.ID_KEY, appId)
-        .get();
   }
 }

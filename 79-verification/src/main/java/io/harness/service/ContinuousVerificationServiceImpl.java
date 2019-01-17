@@ -27,6 +27,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -64,6 +65,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private TimeSeriesAnalysisService analysisService;
   @Inject private HarnessMetricRegistry metricRegistry;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private UsageMetricsHelper usageMetricsHelper;
 
   @Override
   @Counted
@@ -85,10 +87,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
         verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerAPMDataCollection(
             cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
+
+        metricRegistry.recordGaugeInc(DATA_COLLECTION_TASKS_PER_MINUTE,
+            new String[] {
+                accountId, cvConfiguration.getStateType().toString(), String.valueOf(cvConfiguration.isEnabled24x7())});
       }
-      metricRegistry.recordGaugeInc(DATA_COLLECTION_TASKS_PER_MINUTE,
-          new String[] {
-              accountId, cvConfiguration.getStateType().toString(), String.valueOf(cvConfiguration.isEnabled24x7())});
     });
     return true;
   }

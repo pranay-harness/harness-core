@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -94,6 +95,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private VerificationManagerClient managerClient;
   @Inject private HarnessMetricRegistry metricRegistry;
+  @Inject private UsageMetricsHelper usageMetricsHelper;
 
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
