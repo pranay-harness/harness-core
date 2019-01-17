@@ -3,6 +3,7 @@ package software.wings.scheduler;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -62,7 +63,6 @@ import java.util.stream.Collectors;
 public class LdapGroupSyncJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LdapGroupSyncJob.class);
 
-  public static final String ACCOUNT_ID_KEY = "accountId";
   private static final String SSO_PROVIDER_ID_KEY = "ssoId";
 
   public static final String GROUP = "LDAP_GROUP_SYNC_CRON_JOB";

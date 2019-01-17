@@ -168,8 +168,9 @@ public class TriggerServiceImpl implements TriggerService {
     Trigger savedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     if (trigger.getCondition().getConditionType().equals(SCHEDULED)) {
-      ScheduledTriggerJob.add(
-          jobScheduler, savedTrigger.getAppId(), savedTrigger.getUuid(), ScheduledTriggerJob.getQuartzTrigger(trigger));
+      String accountId = appService.getAccountIdByAppId(savedTrigger.getAppId());
+      ScheduledTriggerJob.add(jobScheduler, accountId, savedTrigger.getAppId(), savedTrigger.getUuid(),
+          ScheduledTriggerJob.getQuartzTrigger(trigger));
     }
     return savedTrigger;
   }
@@ -1096,8 +1097,9 @@ public class TriggerServiceImpl implements TriggerService {
         jobScheduler.deleteJob(existingTrigger.getUuid(), ScheduledTriggerJob.GROUP);
       }
     } else if (trigger.getCondition().getConditionType().equals(SCHEDULED)) {
-      ScheduledTriggerJob.add(
-          jobScheduler, trigger.getAppId(), trigger.getUuid(), ScheduledTriggerJob.getQuartzTrigger(trigger));
+      String accountId = appService.getAccountIdByAppId(trigger.getAppId());
+      ScheduledTriggerJob.add(jobScheduler, accountId, trigger.getAppId(), trigger.getUuid(),
+          ScheduledTriggerJob.getQuartzTrigger(trigger));
     }
   }
 

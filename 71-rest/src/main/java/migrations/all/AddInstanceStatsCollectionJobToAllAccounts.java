@@ -29,7 +29,7 @@ public class AddInstanceStatsCollectionJobToAllAccounts implements Migration {
       while (records.hasNext()) {
         Account account = records.next();
         InstanceStatsCollectorJob.delete(jobScheduler, account.getUuid());
-        InstanceStatsCollectorJob.add(jobScheduler, account);
+        InstanceStatsCollectorJob.add(jobScheduler, account.getUuid());
         logger.info("Added InstanceStatsCollectorJob for account {}", account.getUuid());
       }
     }

@@ -1,6 +1,8 @@
 package software.wings.scheduler;
 
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
+import static software.wings.common.Constants.APP_ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -30,7 +32,6 @@ public class ScheduledTriggerJob implements Job {
   // 'Second' unit prefix to convert unix to quartz cron expression
   public static final String PREFIX = "0 ";
   public static final String TRIGGER_ID_KEY = "triggerId";
-  public static final String APP_ID_KEY = "appId";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TriggerService triggerService;
@@ -44,11 +45,13 @@ public class ScheduledTriggerJob implements Job {
         .build();
   }
 
-  public static void add(PersistentScheduler jobScheduler, String appId, String triggerId, org.quartz.Trigger trigger) {
+  public static void add(
+      PersistentScheduler jobScheduler, String accountId, String appId, String triggerId, org.quartz.Trigger trigger) {
     JobDetail job = JobBuilder.newJob(ScheduledTriggerJob.class)
                         .withIdentity(triggerId, ScheduledTriggerJob.GROUP)
                         .usingJobData(TRIGGER_ID_KEY, triggerId)
                         .usingJobData(APP_ID_KEY, appId)
+                        .usingJobData(ACCOUNT_ID_KEY, accountId)
                         .build();
     jobScheduler.scheduleJob(job, trigger);
   }

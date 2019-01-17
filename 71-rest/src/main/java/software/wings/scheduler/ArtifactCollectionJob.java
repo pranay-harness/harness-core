@@ -2,6 +2,8 @@ package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
+import static software.wings.common.Constants.APP_ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -43,7 +45,6 @@ public class ArtifactCollectionJob implements Job {
   public static final String GROUP = "ARTIFACT_STREAM_CRON_GROUP";
   private static final int POLL_INTERVAL = 60; // in secs
 
-  private static final String APP_ID_KEY = "appId";
   private static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
 
   public static final Duration timeout = Duration.ofMinutes(10);
@@ -58,7 +59,8 @@ public class ArtifactCollectionJob implements Job {
   @Inject private PermitService permitService;
   @Inject private AppService appService;
 
-  public static void addDefaultJob(PersistentScheduler jobScheduler, String appId, String artifactStreamId) {
+  public static void addDefaultJob(
+      PersistentScheduler jobScheduler, String accountId, String appId, String artifactStreamId) {
     // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
     jobScheduler.deleteJob(artifactStreamId, GROUP);
 
@@ -66,6 +68,7 @@ public class ArtifactCollectionJob implements Job {
                         .withIdentity(artifactStreamId, ArtifactCollectionJob.GROUP)
                         .usingJobData(ARTIFACT_STREAM_ID_KEY, artifactStreamId)
                         .usingJobData(APP_ID_KEY, appId)
+                        .usingJobData(ACCOUNT_ID_KEY, accountId)
                         .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()

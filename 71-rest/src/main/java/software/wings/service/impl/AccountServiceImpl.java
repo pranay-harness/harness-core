@@ -149,7 +149,7 @@ public class AccountServiceImpl implements AccountService {
     wingsPersistence.save(account);
     createDefaultAccountEntities(account);
     AlertCheckJob.add(jobScheduler, account);
-    InstanceStatsCollectorJob.add(jobScheduler, account);
+    InstanceStatsCollectorJob.add(jobScheduler, account.getUuid());
     return account;
   }
 

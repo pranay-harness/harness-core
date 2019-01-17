@@ -1,5 +1,8 @@
 package software.wings.scheduler;
 
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
+import static software.wings.common.Constants.APP_ID_KEY;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -25,8 +28,6 @@ public class JiraPollingJob implements Job {
   private static final int POLL_INTERVAL_SECONDS = 10;
   private static final int DELAY_START_SECONDS = 30;
   private static final String CONNECTOR_ID = "connectorId";
-  private static final String ACCOUNT_ID = "accountId";
-  private static final String APP_ID = "appId";
   private static final String ISSUE_ID = "issueId";
   private static final String APPROVAL_ID = "approvalId";
   private static final String WORKFLOW_EXECUTION_ID = "workflowExecutionId";
@@ -41,8 +42,8 @@ public class JiraPollingJob implements Job {
     JobDetail job = JobBuilder.newJob(JiraPollingJob.class)
                         .withIdentity(approvalExecutionId, GROUP)
                         .usingJobData(CONNECTOR_ID, jiraApprovalParams.getJiraConnectorId())
-                        .usingJobData(ACCOUNT_ID, accountId)
-                        .usingJobData(APP_ID, appId)
+                        .usingJobData(ACCOUNT_ID_KEY, accountId)
+                        .usingJobData(APP_ID_KEY, appId)
                         .usingJobData(ISSUE_ID, jiraApprovalParams.getIssueId())
                         .usingJobData(APPROVAL_ID, approvalExecutionId)
                         .usingJobData("approvalField", jiraApprovalParams.getApprovalField())
@@ -71,8 +72,8 @@ public class JiraPollingJob implements Job {
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     String connectorId = jobExecutionContext.getMergedJobDataMap().getString(CONNECTOR_ID);
-    String accountId = jobExecutionContext.getMergedJobDataMap().getString(ACCOUNT_ID);
-    String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID);
+    String accountId = jobExecutionContext.getMergedJobDataMap().getString(ACCOUNT_ID_KEY);
+    String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
     String approvalId = jobExecutionContext.getMergedJobDataMap().getString(APPROVAL_ID);
     String issueId = jobExecutionContext.getMergedJobDataMap().getString(ISSUE_ID);
     String approvalField = jobExecutionContext.getMergedJobDataMap().getString("approvalField");

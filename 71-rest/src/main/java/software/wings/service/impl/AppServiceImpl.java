@@ -137,7 +137,9 @@ public class AppServiceImpl implements AppService {
    */
   @Override
   public Application save(Application app) {
-    notNullCheck("accountId", app.getAccountId());
+    String accountId = app.getAccountId();
+    notNullCheck("accountId", accountId);
+
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new io.harness.limits.Action(app.getAccountId(), ActionType.CREATE_APPLICATION));
 
@@ -151,7 +153,7 @@ public class AppServiceImpl implements AppService {
       settingsService.createDefaultApplicationSettings(
           application.getUuid(), application.getAccountId(), app.isSyncFromGit());
       sendNotification(application, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
-      InstanceSyncJob.add(serviceJobScheduler, application.getUuid());
+      InstanceSyncJob.add(serviceJobScheduler, accountId, application.getUuid());
 
       // Save the Git Configuration for application if not null
       YamlGitConfig yamlGitConfig = app.getYamlGitConfig();

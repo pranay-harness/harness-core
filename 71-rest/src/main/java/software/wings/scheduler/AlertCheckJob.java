@@ -3,6 +3,7 @@ package software.wings.scheduler;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -42,7 +43,6 @@ public class AlertCheckJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(AlertCheckJob.class);
 
   public static final String GROUP = "ALERT_CHECK_CRON_GROUP";
-  public static final String ACCOUNT_ID = "accountId";
 
   private static final int POLL_INTERVAL = 300;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
@@ -61,7 +61,7 @@ public class AlertCheckJob implements Job {
     jobScheduler.deleteJob(account.getUuid(), GROUP);
     JobDetail job = JobBuilder.newJob(AlertCheckJob.class)
                         .withIdentity(account.getUuid(), GROUP)
-                        .usingJobData(ACCOUNT_ID, account.getUuid())
+                        .usingJobData(ACCOUNT_ID_KEY, account.getUuid())
                         .build();
 
     Trigger trigger =
@@ -76,7 +76,7 @@ public class AlertCheckJob implements Job {
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     executorService.submit(
-        () -> executeInternal((String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID)));
+        () -> executeInternal((String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY)));
   }
 
   @VisibleForTesting

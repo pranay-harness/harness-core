@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
+
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 
@@ -40,7 +42,6 @@ public class InstanceStatsCollectorJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(InstanceStatsCollectorJob.class);
 
   public static final String GROUP = "INSTANCE_STATS_COLLECT_CRON_GROUP";
-  public static final String ACCOUNT_ID = "accountId";
 
   // 10 minutes
   private static final int SYNC_INTERVAL = 10;
@@ -54,16 +55,16 @@ public class InstanceStatsCollectorJob implements Job {
   @Inject private AccountService accountService;
   @Inject private UsageMetricsEventPublisher eventPublisher;
 
-  public static void add(PersistentScheduler jobScheduler, Account account) {
-    jobScheduler.deleteJob(account.getUuid(), GROUP);
+  public static void add(PersistentScheduler jobScheduler, String accountId) {
+    jobScheduler.deleteJob(accountId, GROUP);
     JobDetail job = JobBuilder.newJob(InstanceStatsCollectorJob.class)
-                        .withIdentity(account.getUuid(), GROUP)
-                        .usingJobData(ACCOUNT_ID, account.getUuid())
+                        .withIdentity(accountId, GROUP)
+                        .usingJobData(ACCOUNT_ID_KEY, accountId)
                         .build();
 
     Trigger trigger =
         TriggerBuilder.newTrigger()
-            .withIdentity(account.getUuid(), GROUP)
+            .withIdentity(accountId, GROUP)
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(SYNC_INTERVAL).repeatForever())
             .build();
 
@@ -77,7 +78,7 @@ public class InstanceStatsCollectorJob implements Job {
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     executorService.submit(() -> {
-      String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID);
+      String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY);
       Objects.requireNonNull(accountId, "Account Id must be passed in job context");
       createStats(accountId);
       double ninety_five_percentile_usage = actualUsage(accountId);
