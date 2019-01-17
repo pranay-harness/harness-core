@@ -1,4 +1,4 @@
-package software.wings.common.thread;
+package io.harness.threading;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -12,7 +12,6 @@ import java.util.concurrent.ThreadPoolExecutor;
  * still not reached the max threshold, in case existing ones are busy processing other jobs.
  *
  * @param <E> the element type
- * @author Rishi
  */
 @SuppressFBWarnings("SE_BAD_FIELD")
 public class ScalingQueue<E> extends LinkedBlockingQueue<E> {

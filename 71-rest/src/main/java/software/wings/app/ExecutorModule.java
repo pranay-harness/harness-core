@@ -1,6 +1,6 @@
 package software.wings.app;
 
-import static software.wings.common.thread.ThreadPool.create;
+import static io.harness.threading.ThreadPool.create;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
@@ -8,7 +8,7 @@ import com.google.inject.name.Names;
 
 import io.harness.manage.ManagedExecutorService;
 import io.harness.manage.ManagedScheduledExecutorService;
-import software.wings.common.thread.ThreadPool;
+import io.harness.threading.ThreadPool;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
