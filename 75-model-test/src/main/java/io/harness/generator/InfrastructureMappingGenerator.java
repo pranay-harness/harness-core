@@ -279,11 +279,15 @@ public class InfrastructureMappingGenerator {
           builder.withServiceTemplateId(serviceTemplate.getUuid());
         }
 
-        DeploymentType deploymentType = owners.obtainService().getDeploymentType();
-        if (deploymentType != null) {
-          builder.withDeploymentType(deploymentType.name());
+        if (infrastructureMapping.getDeploymentType() != null) {
+          builder.withDeploymentType(infrastructureMapping.getDeploymentType());
         } else {
-          builder.withDeploymentType(random.nextObject(DeploymentType.class).name());
+          DeploymentType deploymentType = owners.obtainService().getDeploymentType();
+          if (deploymentType != null) {
+            builder.withDeploymentType(deploymentType.name());
+          } else {
+            builder.withDeploymentType(random.nextObject(DeploymentType.class).name());
+          }
         }
 
         builder.withComputeProviderType(SettingVariableTypes.AWS.name());
