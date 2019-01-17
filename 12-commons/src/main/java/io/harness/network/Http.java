@@ -262,6 +262,14 @@ public class Http {
     }
   }
 
+  public static String joinHostPort(String host, String port) {
+    if (host.indexOf(':') >= 0) {
+      // Host is an IPv6
+      return "[" + host + "]:" + port;
+    }
+    return host + ":" + port;
+  }
+
   private static URI getNormalizedURI(String url) throws URISyntaxException {
     if (!startsWith(url, "http")) {
       return new URI("http://" + url);
