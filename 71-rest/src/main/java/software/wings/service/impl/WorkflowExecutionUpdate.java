@@ -181,23 +181,24 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
           return;
         }
         eventPublishHelper.handleDeploymentCompleted(workflowExecution);
-        final Application applicationDataForReporting = usageMetricsHelper.getApplication(appId);
-        String accountID = applicationDataForReporting.getAccountId();
-        String applicationName = applicationDataForReporting.getName();
-        String accountName = accountService.getFromCache(accountID).getAccountName();
-        long executionDuration = workflowExecution.getStartTs() != null && workflowExecution.getEndTs() != null
-            ? TimeUnit.MILLISECONDS.toSeconds(workflowExecution.getEndTs() - workflowExecution.getStartTs())
-            : 0;
-        /**
-         * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is manual
-         */
-        boolean manual = workflowExecution.getDeploymentTriggerId() == null;
-        String workflowName = usageMetricsHelper.getWorkFlowName(context.getAppId(), workflowId);
-        usageMetricsEventPublisher.publishDeploymentDurationEvent(
-            executionDuration, accountID, accountName, workflowId, workflowName, appId, applicationName);
-        usageMetricsEventPublisher.publishDeploymentMetadataEvent(
-            status, manual, accountID, accountName, workflowId, workflowName, appId, applicationName);
-
+        if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
+          final Application applicationDataForReporting = usageMetricsHelper.getApplication(appId);
+          String accountID = applicationDataForReporting.getAccountId();
+          String applicationName = applicationDataForReporting.getName();
+          String accountName = accountService.getFromCache(accountID).getAccountName();
+          long executionDuration = workflowExecution.getStartTs() != null && workflowExecution.getEndTs() != null
+              ? TimeUnit.MILLISECONDS.toSeconds(workflowExecution.getEndTs() - workflowExecution.getStartTs())
+              : 0;
+          /**
+           * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is manual
+           */
+          boolean manual = workflowExecution.getDeploymentTriggerId() == null;
+          String workflowName = usageMetricsHelper.getWorkFlowName(context.getAppId(), workflowId);
+          usageMetricsEventPublisher.publishDeploymentDurationEvent(
+              executionDuration, accountID, accountName, workflowId, workflowName, appId, applicationName);
+          usageMetricsEventPublisher.publishDeploymentMetadataEvent(
+              status, manual, accountID, accountName, workflowId, workflowName, appId, applicationName);
+        }
       } catch (Exception e) {
         logger.error(
             "Failed to generate events for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId, e);
