@@ -15,6 +15,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import io.harness.logging.MorphiaLoggerFactory;
 import io.harness.persistence.ReadPref;
+import io.harness.serializer.KryoUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.slf4j.Logger;
@@ -114,6 +115,9 @@ public class MongoModule extends AbstractModule {
     bind(AdvancedDatastore.class).annotatedWith(Names.named("primaryDatastore")).toInstance(primaryDatastore);
     bind(AdvancedDatastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(secondaryDatastore);
     bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
+
+    // Dummy kryo initialization trigger to make sure it is in good condition
+    KryoUtils.asBytes(1);
 
     // TODO: this should be enabled when all wingsPersistence functionality is promoted to MongoPersistence and the
     //       class is removed. Till then we are binding the HPersistence to the wingsPersistence instance.

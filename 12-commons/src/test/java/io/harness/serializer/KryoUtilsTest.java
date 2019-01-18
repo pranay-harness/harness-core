@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Registration;
-import com.esotericsoftware.kryo.util.IntMap;
 import io.harness.threading.Concurrent;
 import org.junit.Test;
 
@@ -37,11 +35,7 @@ public class KryoUtilsTest {
         .hasMessage("The class io.harness.serializer.KryoUtilsTest was already registered with id 123456,"
             + " do not double register it with 123457");
 
-    final IntMap<Registration> previousState = new IntMap<>(classResolver.getRegistrations());
-    kryo.register(ClassResolver.class, 123456);
-
-    assertThatThrownBy(() -> KryoUtils.check(previousState, classResolver.getRegistrations()))
-        .hasMessage("The id 123456 changed its class from io.harness.serializer.KryoUtilsTest"
-            + " to io.harness.serializer.ClassResolver");
+    assertThatThrownBy(() -> kryo.register(ClassResolver.class, 123456))
+        .hasMessage("The id is already used by class io.harness.serializer.KryoUtilsTest");
   }
 }

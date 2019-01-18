@@ -148,9 +148,6 @@ public class HKryo extends Kryo {
     register(java.util.LinkedList.class, 78);
     register(ArrayListMultimap.class, new ArrayListMultimapSerializer(), 51);
     register(HashMultimap.class, new HashMultimapSerializer(), 52);
-    register(java.net.ConnectException.class, 76);
-    register(StringIndexOutOfBoundsException.class, 77);
-    register(java.util.LinkedList.class, 78);
 
     // External Serializers
     UnmodifiableCollectionsSerializer.registerSerializers(this);
@@ -179,6 +176,9 @@ public class HKryo extends Kryo {
 
   @Override
   public Registration register(Class type, int id) {
+    if (getRegistration(id) != null) {
+      throw new IllegalStateException("The id is already used by " + getRegistration(id).getType());
+    }
     return check(super.register(type, id), id);
   }
 
