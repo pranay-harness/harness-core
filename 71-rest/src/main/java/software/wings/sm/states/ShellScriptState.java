@@ -9,6 +9,7 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -167,7 +168,7 @@ public class ShellScriptState extends State {
     ExecutionResponse executionResponse = new ExecutionResponse();
     String activityId = response.keySet().iterator().next();
     ResponseData data = response.values().iterator().next();
-
+    boolean saveSweepingOutputToContext = false;
     if (data instanceof CommandExecutionResult) {
       CommandExecutionResult commandExecutionResult = (CommandExecutionResult) data;
 
@@ -189,24 +190,27 @@ public class ShellScriptState extends State {
               "Unhandled type CommandExecutionStatus: " + commandExecutionResult.getStatus().name());
       }
       executionResponse.setErrorMessage(commandExecutionResult.getErrorMessage());
-      Map<String, String> sweepingOutputEnvVariables =
-          ((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
-              .getSweepingOutputEnvVariables();
 
       ScriptStateExecutionData scriptStateExecutionData = (ScriptStateExecutionData) context.getStateExecutionData();
-      scriptStateExecutionData.setSweepingOutputEnvVariables(sweepingOutputEnvVariables);
+      if (commandExecutionResult.getStatus().equals(SUCCESS)) {
+        Map<String, String> sweepingOutputEnvVariables =
+            ((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
+                .getSweepingOutputEnvVariables();
+        scriptStateExecutionData.setSweepingOutputEnvVariables(sweepingOutputEnvVariables);
+        saveSweepingOutputToContext = true;
+      }
       executionResponse.setStateExecutionData(scriptStateExecutionData);
     } else if (data instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData executionData = (ErrorNotifyResponseData) data;
       executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
       executionResponse.setErrorMessage(((ErrorNotifyResponseData) data).getErrorMessage());
+      return executionResponse;
     } else {
       logger.error("Unhandled ResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
     }
 
     updateActivityStatus(
         activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionResponse.getExecutionStatus());
-    if (isNotEmpty(sweepingOutputName)) {
+    if (isNotEmpty(sweepingOutputName) && saveSweepingOutputToContext) {
       final SweepingOutput sweepingOutput =
           context.prepareSweepingOutputBuilder(sweepingOutputScope)
               .name(sweepingOutputName)
