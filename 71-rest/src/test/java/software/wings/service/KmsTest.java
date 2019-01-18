@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -1789,7 +1790,7 @@ public class KmsTest extends WingsBaseTest {
       SettingAttribute settingAttribute = (SettingAttribute) encryptedValue;
       assertTrue(settingAttributeMap.containsKey(settingAttribute.getName()));
       AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-      assertEquals(SecretManager.ENCRYPTED_FIELD_MASK, appDynamicsConfig.getPassword());
+      assertArrayEquals(SecretManager.ENCRYPTED_FIELD_MASK.toCharArray(), appDynamicsConfig.getPassword());
     }
   }
 

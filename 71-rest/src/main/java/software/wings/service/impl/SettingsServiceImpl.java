@@ -27,6 +27,7 @@ import static software.wings.common.Constants.DEFAULT_WINDOWS_RUNTIME_PATH;
 import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
 import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
+import static software.wings.service.intfc.security.SecretManager.ENCRYPTED_FIELD_MASK;
 import static software.wings.utils.Misc.getMessage;
 import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
 import static software.wings.utils.Validator.duplicateCheck;
@@ -384,7 +385,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (updatedSettingValue instanceof HostConnectionAttributes) {
       HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) updatedSettingValue;
       if (!hostConnectionAttributes.isKeyless()) {
-        hostConnectionAttributes.setKey(SecretManager.ENCRYPTED_FIELD_MASK);
+        hostConnectionAttributes.setKey(ENCRYPTED_FIELD_MASK.toCharArray());
       }
     }
 

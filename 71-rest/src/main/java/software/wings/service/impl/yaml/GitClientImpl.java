@@ -24,7 +24,6 @@ import com.google.inject.Inject;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Singleton;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
@@ -959,7 +958,6 @@ public class GitClientImpl implements GitClient {
     return gitCommand;
   }
 
-  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
   private void setSshAuthCredentials(TransportCommand gitCommand, GitConfig gitConfig) {
     String keyPath = null;
     try {
@@ -974,7 +972,10 @@ public class GitClientImpl implements GitClient {
       });
     } catch (Exception e) {
       if (isNotEmpty(keyPath)) {
-        new File(keyPath).delete();
+        boolean deleted = new File(keyPath).delete();
+        if (!deleted) {
+          logger.warn("File {} can't be deleted.", keyPath);
+        }
       }
       throw new InvalidRequestException("Error setting SSH credentials", e);
     }
@@ -999,11 +1000,14 @@ public class GitClientImpl implements GitClient {
         return jsch;
       }
 
-      @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
       @Override
       public void releaseSession(RemoteSession session) {
         super.releaseSession(session);
-        (new File(sshKeyPath)).delete(); // TODO: try-catch security exception
+        boolean deleted = new File(sshKeyPath).delete();
+        if (!deleted) {
+          logger.warn("File {} can't be deleted.", sshKeyPath);
+        }
+        // TODO: try-catch security exception
       }
     };
   }

@@ -4,7 +4,7 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import static software.wings.utils.SshHelperUtil.normalizeError;
-import static software.wings.utils.WinRmHelperUtil.GetErrorDetailsFromWinRmClientException;
+import static software.wings.utils.WinRmHelperUtil.buildErrorDetailsFromWinRmClientException;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -136,7 +136,7 @@ public class HostValidationServiceImpl implements HostValidationService {
 
     try (WinRmSession ignore = new WinRmSession(config)) {
     } catch (Exception e) {
-      ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
+      ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       response.setStatus(ExecutionStatus.FAILED.name());
       response.setErrorCode(details.getCode().name());
       response.setErrorDescription(details.getMessage());

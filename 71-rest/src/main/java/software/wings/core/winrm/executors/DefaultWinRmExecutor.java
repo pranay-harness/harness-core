@@ -10,7 +10,7 @@ import static software.wings.beans.command.CommandExecutionResult.Builder.aComma
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.utils.WinRmHelperUtil.GetErrorDetailsFromWinRmClientException;
+import static software.wings.utils.WinRmHelperUtil.buildErrorDetailsFromWinRmClientException;
 
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.eraro.ResponseMessage;
@@ -105,7 +105,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;
       logger.error("Error while executing command", e);
-      ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
+      ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
     }
@@ -209,7 +209,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       commandExecutionStatus = FAILURE;
       executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
       logger.error("Error while executing command", e);
-      ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
+      ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
     } finally {
@@ -317,7 +317,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       throw re;
     } catch (Exception e) {
       logger.error("Error while executing command", e);
-      ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
+      ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
     } finally {

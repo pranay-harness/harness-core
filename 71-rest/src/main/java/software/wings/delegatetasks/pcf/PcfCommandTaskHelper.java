@@ -336,8 +336,8 @@ public class PcfCommandTaskHelper {
     return applicationDetail;
   }
 
-  public void deleteCreataedFile(List<File> files) {
-    files.forEach(file -> file.delete());
+  public void deleteCreatedFile(List<File> files) {
+    files.forEach(File::delete);
   }
 
   public String getAppPrefix(String appName) {

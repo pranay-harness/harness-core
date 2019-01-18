@@ -392,7 +392,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       for (Field field : encryptedFields) {
         field.setAccessible(true);
         char[] secrets = (char[]) field.get(settingValue);
-        assertArrayEquals(SecretManager.ENCRYPTED_FIELD_MASK, secrets);
+        assertArrayEquals(SecretManager.ENCRYPTED_FIELD_MASK.toCharArray(), secrets);
       }
     }
   }

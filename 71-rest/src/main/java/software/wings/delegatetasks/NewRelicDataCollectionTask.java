@@ -20,7 +20,6 @@ import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
@@ -381,7 +380,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       return (int) ((t2Millis - t1Millis) / TimeUnit.MINUTES.toMillis(1));
     }
 
-    @SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"})
     @Override
     public void run() {
       try {
@@ -396,12 +394,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         while (!completed.get() && retry < RETRIES) {
           try {
             Set<NewRelicMetric> txnsToCollect = getTxnsToCollect();
-            if (txnsToCollect != null) {
-              logger.info("Found total new relic metrics " + txnsToCollect.size());
-            } else {
-              logger.info("Found 0 total new relic metrics ");
-              return;
-            }
+            logger.info("Found total new relic metrics " + txnsToCollect.size());
             List<NewRelicApplicationInstance> instances = newRelicDelegateService.getApplicationInstances(
                 dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
                 dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));

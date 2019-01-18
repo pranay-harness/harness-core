@@ -55,14 +55,17 @@ public class SecretManagerTest {
   public void testMaskEncryptedFields() {
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build();
     secretManager.maskEncryptedFields(awsConfig);
-    assertArrayEquals(awsConfig.getSecretKey(), ENCRYPTED_FIELD_MASK);
+    assertArrayEquals(awsConfig.getSecretKey(), ENCRYPTED_FIELD_MASK.toCharArray());
   }
 
   @Test
   public void testResetUnchangedEncryptedFields() {
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build();
-    AwsConfig maskedAwsConfig =
-        AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(ENCRYPTED_FIELD_MASK).build();
+    AwsConfig maskedAwsConfig = AwsConfig.builder()
+                                    .accountId(ACCOUNT_ID)
+                                    .accessKey(ACCESS_KEY)
+                                    .secretKey(ENCRYPTED_FIELD_MASK.toCharArray())
+                                    .build();
     secretManager.resetUnchangedEncryptedFields(awsConfig, maskedAwsConfig);
     assertArrayEquals(maskedAwsConfig.getSecretKey(), SECRET_KEY);
   }

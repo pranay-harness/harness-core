@@ -42,6 +42,7 @@ import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -49,7 +50,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -130,9 +130,8 @@ public class ZombieHunterJob implements Job {
   public static final String SERVICES = "services";
   public static final String SETTING_ATTRIBUTES = "settingAttributes";
 
-  @SuppressFBWarnings("MS_MUTABLE_COLLECTION_PKGPROTECT")
-  protected static final List<ZombieType> zombieTypes =
-      asList(new ZombieType("applications", "accountId", asList("accounts"), null),
+  protected static final ImmutableList<ZombieType> zombieTypes =
+      ImmutableList.of(new ZombieType("applications", "accountId", asList("accounts"), null),
           new ZombieType("artifactStream", ArtifactStream.SERVICE_ID_KEY, asList(SERVICES), null),
           new ZombieType("artifactStream", ArtifactStream.SETTING_ID_KEY, asList(SETTING_ATTRIBUTES), null),
           new ZombieType("infrastructureMapping", InfrastructureMapping.SERVICE_ID_KEY, asList(SERVICES), null),

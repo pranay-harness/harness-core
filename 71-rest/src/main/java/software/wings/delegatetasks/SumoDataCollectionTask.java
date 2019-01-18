@@ -6,7 +6,6 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import com.google.inject.Inject;
 
 import com.sumologic.client.SumoLogicClient;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,7 +95,6 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
     }
 
-    @SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"})
     @Override
     public void run() {
       try {
@@ -105,7 +103,6 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           try {
             final List<LogElement> logElements = new ArrayList<>();
             for (String host : dataCollectionInfo.getHosts()) {
-              String hostStr = dataCollectionInfo.getHostnameField() + " = \"" + host + "\" ";
               String query = dataCollectionInfo.getQuery();
 
               /* Heart beat */
@@ -118,10 +115,6 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
               sumoHeartBeatElement.setTimeStamp(0);
               sumoHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
               logElements.add(sumoHeartBeatElement);
-
-              if (hostStr == null) {
-                throw new IllegalArgumentException("No hosts found for Sumo task " + dataCollectionInfo.toString());
-              }
 
               ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
               final long collectionEndTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
