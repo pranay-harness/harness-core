@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
@@ -84,6 +85,7 @@ public class ArtifactCollectionJob implements Job {
   public void execute(JobExecutionContext jobExecutionContext) {
     String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString(ARTIFACT_STREAM_ID_KEY);
     String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
+    String accountId = jobExecutionContext.getMergedJobDataMap().getString(ACCOUNT_ID_KEY);
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     if (artifactStream == null) {
       jobScheduler.deleteJob(artifactStreamId, GROUP);
@@ -129,6 +131,16 @@ public class ArtifactCollectionJob implements Job {
       }
     } else {
       artifactCollectionExecutor.submit(() -> executeJobAsync(appId, artifactStreamId));
+    }
+
+    // Old cron jobs doesn't have accountId. Will need to recreate with accountId as part of the job details
+    if (isEmpty(accountId)) {
+      logger.info(
+          "Quartz job '{}' in group {} doesn't have accountId in job details. Will recreate with accountId included.",
+          artifactStreamId, GROUP);
+      accountId = appService.getAccountIdByAppId(appId);
+      jobScheduler.deleteJob(artifactStreamId, GROUP);
+      addDefaultJob(jobScheduler, accountId, appId, artifactStreamId);
     }
   }
 

@@ -14,6 +14,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -64,6 +65,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
+@Singleton
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(SecretManagementDelegateServiceImpl.class);
 

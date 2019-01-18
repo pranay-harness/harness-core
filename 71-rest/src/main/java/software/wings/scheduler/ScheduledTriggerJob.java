@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.common.Constants.APP_ID_KEY;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.TriggerService;
 
 /**
@@ -35,6 +37,7 @@ public class ScheduledTriggerJob implements Job {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TriggerService triggerService;
+  @Inject private AppService appService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   public static org.quartz.Trigger getQuartzTrigger(Trigger trigger) {
@@ -60,6 +63,7 @@ public class ScheduledTriggerJob implements Job {
   public void execute(JobExecutionContext jobExecutionContext) {
     String triggerId = jobExecutionContext.getMergedJobDataMap().getString(TRIGGER_ID_KEY);
     String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
+    String accountId = jobExecutionContext.getMergedJobDataMap().getString(ACCOUNT_ID_KEY);
 
     Trigger trigger = wingsPersistence.getWithAppId(Trigger.class, appId, triggerId);
     if (trigger == null || !trigger.getCondition().getConditionType().equals(SCHEDULED)) {
@@ -70,5 +74,15 @@ public class ScheduledTriggerJob implements Job {
     logger.info("Triggering scheduled job for appId {} and triggerId {} with the scheduled fire time {}", appId,
         triggerId, jobExecutionContext.getNextFireTime());
     triggerService.triggerScheduledExecutionAsync(trigger, jobExecutionContext.getNextFireTime());
+
+    // Old cron jobs doesn't have accountId. Will need to recreate with accountId as part of the job details
+    if (isEmpty(accountId)) {
+      logger.info(
+          "Quartz job '{}' in group {} doesn't have accountId in job details. Will recreate with accountId included.",
+          triggerId, GROUP);
+      jobScheduler.deleteJob(triggerId, GROUP);
+      accountId = appService.getAccountIdByAppId(appId);
+      add(jobScheduler, accountId, appId, triggerId, getQuartzTrigger(trigger));
+    }
   }
 }
