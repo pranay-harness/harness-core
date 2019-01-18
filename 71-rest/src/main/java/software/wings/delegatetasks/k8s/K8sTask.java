@@ -1,7 +1,9 @@
 package software.wings.delegatetasks.k8s;
 
+import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
+import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.filesystem.FileIo.writeUtf8StringToFile;
 import static java.lang.String.format;
 
@@ -65,16 +67,18 @@ public class K8sTask extends AbstractDelegateRunnableTask {
             .build();
       }
     } else {
-      String workingDirectory = Paths.get(WORKING_DIR_BASE, k8sTaskParameters.getWorkflowExecutionId())
-                                    .normalize()
-                                    .toAbsolutePath()
-                                    .toString();
+      String workingDirectory =
+          Paths.get(WORKING_DIR_BASE, convertBase64UuidToCanonicalForm(k8sTaskParameters.getWorkflowExecutionId()))
+              .normalize()
+              .toAbsolutePath()
+              .toString();
 
       try {
         String kubeconfigFileContent =
             containerDeploymentDelegateHelper.getKubeconfigFileContent(k8sTaskParameters.getK8sClusterConfig());
 
         createDirectoryIfDoesNotExist(workingDirectory);
+        waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
         writeUtf8StringToFile(Paths.get(workingDirectory, KUBECONFIG_FILENAME).toString(), kubeconfigFileContent);
 
         K8sDelegateTaskParams k8SDelegateTaskParams =
@@ -101,6 +105,7 @@ public class K8sTask extends AbstractDelegateRunnableTask {
 
   private void cleanup(String workingDirectory) {
     try {
+      logger.warn("Cleaning up directory " + workingDirectory);
       deleteDirectoryAndItsContentIfExists(workingDirectory);
     } catch (Exception ex) {
       logger.warn("Exception in directory cleanup.", ex);
