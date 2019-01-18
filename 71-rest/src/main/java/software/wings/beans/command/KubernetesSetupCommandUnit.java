@@ -1934,6 +1934,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       return;
     }
 
+    if (primaryService == null) {
+      executionLogCallback.saveExecutionLog("No Primary Service found.");
+      return;
+    }
+
     if (stageService == null) {
       executionLogCallback.saveExecutionLog("No Stage Service found.");
       return;
