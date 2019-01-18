@@ -54,7 +54,7 @@ public class JiraCreateUpdate extends State {
   private static final String JIRA_ISSUE_ID = "issueId";
   private static final String JIRA_ISSUE_KEY = "issueKey";
 
-  @Inject @Transient private ActivityService activityService;
+  @Inject private transient ActivityService activityService;
   @Inject @Transient private transient WingsPersistence wingsPersistence;
   @Inject @Transient private DelegateServiceImpl delegateService;
   @Inject @Transient private transient SecretManager secretManager;

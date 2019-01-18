@@ -14,6 +14,7 @@ import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.Field;
 import net.rcarz.jiraclient.Issue;
 import net.rcarz.jiraclient.Issue.FluentUpdate;
+import net.rcarz.jiraclient.Issue.SearchResult;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
 import net.rcarz.jiraclient.Resource;
@@ -21,6 +22,7 @@ import net.rcarz.jiraclient.RestException;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -175,12 +177,20 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     URI uri;
     try {
-      String issueKey = parameters.getProject() + "-1";
+      String jqlQuery = "project = " + parameters.getProject();
+      SearchResult issues = jiraClient.searchIssues(jqlQuery, 1);
+
+      Issue issue = null;
+      if (CollectionUtils.isNotEmpty(issues.issues)) {
+        issue = issues.issues.get(0);
+      }
+
+      String issueKey = (issue == null) ? (parameters.getProject() + "-1") : issue.getKey();
       uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/" + issueKey + "/editmeta");
       JSON response = jiraClient.getRestClient().get(uri);
 
       return JiraExecutionData.builder().fields((JSONObject) response).build();
-    } catch (URISyntaxException | IOException | RestException e) {
+    } catch (URISyntaxException | IOException | RestException | JiraException e) {
       String errorMessage = "Failed to fetch fields from JIRA server.";
       logger.error(errorMessage);
 
