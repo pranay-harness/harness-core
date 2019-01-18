@@ -896,7 +896,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return customResourceDefinition;
   }
 
-  @SuppressFBWarnings("DE_MIGHT_IGNORE")
   @Override
   public void deleteIstioResource(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String kind, String name) {
@@ -910,7 +909,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                                .endMetadata()
                                                .build());
     } catch (Exception e) {
-      // Do nothing
+      logger.info(e.getMessage());
     }
   }
 
