@@ -84,6 +84,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 /**
  * Both the normal instance and container instance are handled here.
@@ -419,18 +420,27 @@ public class InstanceHelper {
 
   @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
   public void processDeploymentEvent(DeploymentEvent deploymentEvent) {
-    List<DeploymentSummary> deploymentSummaries = deploymentEvent.getDeploymentSummaries();
+    try {
+      List<DeploymentSummary> deploymentSummaries = deploymentEvent.getDeploymentSummaries();
 
-    if (isEmpty(deploymentSummaries)) {
-      logger.error("Deployment Summaries can not be empty or null");
-      return;
+      if (isEmpty(deploymentSummaries)) {
+        logger.error("Deployment Summaries can not be empty or null");
+        return;
+      }
+
+      deploymentSummaries = deploymentSummaries.stream()
+                                .filter(deploymentSummary -> hasDeploymentKey(deploymentSummary))
+                                .collect(Collectors.toList());
+
+      if (!deploymentEvent.isRollback()) {
+        deploymentSummaries.forEach(deploymentSummary -> saveDeploymentSummary(deploymentSummary, false));
+      }
+
+      processDeploymentSummaries(deploymentSummaries, deploymentEvent.isRollback());
+    } catch (Exception ex) {
+      logger.error(
+          "Error while processing deployment event {}. Skipping the deployment event", deploymentEvent.getId());
     }
-
-    if (!deploymentEvent.isRollback()) {
-      deploymentSummaries.forEach(deploymentSummary -> saveDeploymentSummary(deploymentSummary, false));
-    }
-
-    processDeploymentSummaries(deploymentSummaries, deploymentEvent.isRollback());
   }
 
   private DeploymentSummary saveDeploymentSummary(DeploymentSummary deploymentSummary, boolean rollback) {
@@ -439,6 +449,12 @@ public class InstanceHelper {
     }
 
     return deploymentService.save(deploymentSummary);
+  }
+
+  private boolean hasDeploymentKey(DeploymentSummary deploymentSummary) {
+    return deploymentSummary.getPcfDeploymentKey() != null || deploymentSummary.getK8sDeploymentKey() != null
+        || deploymentSummary.getContainerDeploymentKey() != null || deploymentSummary.getAwsAmiDeploymentKey() != null
+        || deploymentSummary.getAwsCodeDeployDeploymentKey() != null;
   }
 
   private void processDeploymentSummaries(List<DeploymentSummary> deploymentSummaries, boolean isRollback) {
