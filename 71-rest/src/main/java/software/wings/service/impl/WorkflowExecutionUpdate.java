@@ -4,13 +4,8 @@
 
 package software.wings.service.impl;
 
-import static io.harness.beans.ExecutionStatus.NEW;
-import static io.harness.beans.ExecutionStatus.QUEUED;
-import static io.harness.beans.ExecutionStatus.RUNNING;
-import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 
 import com.google.inject.Inject;
@@ -23,6 +18,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.queue.Queue;
 import io.harness.waiter.WaitNotifyEngine;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -128,25 +124,38 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     this.workflowExecutionId = workflowExecutionId;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.StateMachineExecutionCallback#callback(software.wings.sm.ExecutionContext,
-   * software.wings.sm.ExecutionStatus, java.lang.Exception)
-   */
+  private static final FindAndModifyOptions callbackFindAndModifyOptions = new FindAndModifyOptions().returnNew(false);
+
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .filter(WorkflowExecution.APP_ID_KEY, appId)
                                          .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
-                                         // make sure that we add endTs, only if the workflow started at all
                                          .field(WorkflowExecution.START_TS_KEY)
                                          .exists()
                                          .field(WorkflowExecution.STATUS_KEY)
-                                         .in(asList(NEW, QUEUED, STARTING, RUNNING));
+                                         .in(ExecutionStatus.runningStatuses());
 
     UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                         .set(WorkflowExecution.STATUS_KEY, status)
                                                         .set(WorkflowExecution.END_TS_KEY, System.currentTimeMillis());
-    wingsPersistence.update(query, updateOps);
+
+    // Lets optimistically try to update the workflow status and the end ts, but if we failed, likely the workflow
+    // did not even started
+    if (wingsPersistence.findAndModify(query, updateOps, callbackFindAndModifyOptions) == null) {
+      query = wingsPersistence.createQuery(WorkflowExecution.class)
+                  .filter(WorkflowExecution.APP_ID_KEY, appId)
+                  .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
+                  .field(WorkflowExecution.STATUS_KEY)
+                  .in(ExecutionStatus.runningStatuses());
+
+      updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                      .set(WorkflowExecution.STATUS_KEY, status)
+                      .unset(WorkflowExecution.START_TS_KEY)
+                      .unset(WorkflowExecution.END_TS_KEY);
+
+      wingsPersistence.update(query, updateOps);
+    }
 
     handlePostExecution(context);
 
@@ -177,7 +186,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
             workflowExecutionService.getWorkflowExecutionSummary(appId, workflowExecutionId);
         alertService.deploymentCompleted(appId, context.getWorkflowExecutionId());
         if (workflowExecution == null) {
-          logger.warn("No workflowExecutiod for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId);
+          logger.warn("No workflowExecution for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId);
           return;
         }
         eventPublishHelper.handleDeploymentCompleted(workflowExecution);

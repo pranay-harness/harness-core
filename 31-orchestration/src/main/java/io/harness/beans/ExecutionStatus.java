@@ -40,6 +40,10 @@ public enum ExecutionStatus {
 
   ExecutionStatus() {}
 
+  public static Set<ExecutionStatus> activeStatuses() {
+    return activeStatuses;
+  }
+
   public static Set<ExecutionStatus> finalStatuses() {
     return finalStatuses;
   }
@@ -56,8 +60,16 @@ public enum ExecutionStatus {
     return status != null && brokeStatuses.contains(status);
   }
 
+  public static Set<ExecutionStatus> negativeStatuses() {
+    return negativeStatuses;
+  }
+
   public static boolean isNegativeStatus(ExecutionStatus status) {
     return status != null && negativeStatuses.contains(status);
+  }
+
+  public static Set<ExecutionStatus> runningStatuses() {
+    return runningStatuses;
   }
 
   public static boolean isRunningStatus(ExecutionStatus status) {
@@ -66,14 +78,6 @@ public enum ExecutionStatus {
 
   public static boolean isDiscontinueStatus(ExecutionStatus status) {
     return status != null && discontinueStatuses.contains(status);
-  }
-
-  public static Set<ExecutionStatus> activeStatuses() {
-    return activeStatuses;
-  }
-
-  public static Set<ExecutionStatus> negativeStatuses() {
-    return negativeStatuses;
   }
 
   public static boolean isPositiveStatus(ExecutionStatus status) {
