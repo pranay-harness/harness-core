@@ -11,6 +11,7 @@ import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 
 import com.google.common.base.Splitter;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -21,6 +22,8 @@ import com.google.inject.name.Names;
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.serializer.YamlUtils;
+import io.harness.threading.ExecutorModule;
+import io.harness.threading.ThreadPool;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
@@ -41,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 /**
@@ -86,6 +90,9 @@ public class DelegateApplication {
 
   @SuppressFBWarnings("DM_EXIT")
   private void run(DelegateConfiguration configuration, String watcherProcess) {
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
+
     List<Module> modules = new ArrayList<>();
     modules.add(new AbstractModule() {
       @Override

@@ -12,10 +12,8 @@ import static software.wings.helpers.ext.vault.VaultRestClientFactory.getFullPat
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -59,7 +57,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -67,21 +64,10 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
-/**
- * Created by rsingh on 10/2/17.
- */
-@Singleton
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(SecretManagementDelegateServiceImpl.class);
 
-  private TimeLimiter timeLimiter;
-  private ExecutorService executorService;
-
-  @Inject
-  public SecretManagementDelegateServiceImpl(ExecutorService executorService) {
-    this.executorService = executorService;
-    this.timeLimiter = new SimpleTimeLimiter(executorService);
-  }
+  @Inject private TimeLimiter timeLimiter;
 
   private boolean isRetryable(Exception e) {
     // TimeLimiter.callWithTimer will throw a new exception wrapping around the AwsKMS exceptions. Unwrap it.

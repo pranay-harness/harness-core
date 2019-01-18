@@ -55,6 +55,8 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.threading.ExecutorModule;
+import io.harness.threading.ThreadPool;
 import io.harness.waiter.Notifier;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEventListener;
@@ -206,6 +208,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
+
     MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory(), morphiaClasses);
     List<Module> modules = new ArrayList<>();
     modules.add(databaseModule);
@@ -243,7 +247,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new YamlModule());
     modules.add(new ManagerQueueModule());
-    modules.add(new ExecutorModule());
+    modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new EventsModule(configuration));

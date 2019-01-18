@@ -15,6 +15,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.TimerScheduledExecutorService;
+import io.harness.threading.CurrentThreadExecutor;
+import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -43,6 +45,8 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
+    ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
+
     String databaseName = databaseName();
     MongoInfo mongoInfo = testMongo(annotations, closingFactory);
 

@@ -1,9 +1,11 @@
 package io.harness.time;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 
 import io.harness.govern.DependencyModule;
+import io.harness.threading.ExecutorModule;
 
 import java.util.Set;
 
@@ -19,11 +21,11 @@ public class TimeModule extends DependencyModule {
 
   @Override
   protected void configure() {
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter(ExecutorModule.getInstance().getExecutorService()));
   }
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return null;
+    return ImmutableSet.<DependencyModule>of(ExecutorModule.getInstance());
   }
 }

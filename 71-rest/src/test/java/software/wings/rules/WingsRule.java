@@ -36,6 +36,7 @@ import io.harness.rule.BypassRuleMixin;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
+import io.harness.threading.ExecutorModule;
 import io.harness.waiter.Notifier;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -51,9 +52,9 @@ import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.WingsTestModule;
 import software.wings.app.CacheModule;
-import software.wings.app.ExecutorModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
+import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsApplication;
@@ -258,6 +259,8 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
   }
 
   protected List<Module> getRequiredModules(Configuration configuration, DistributedLockSvc distributedLockSvc) {
+    ExecutorModule.getInstance().setExecutorService(executorService);
+
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
@@ -273,12 +276,13 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
         bind(MetricRegistry.class);
       }
     });
+
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new MongoModule(datastore, datastore, distributedLockSvc));
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new YamlModule());
-    modules.add(new ExecutorModule(executorService));
+    modules.add(new ManagerExecutorModule());
     modules.add(new WingsTestModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule((MainConfiguration) configuration));
