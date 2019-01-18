@@ -1287,8 +1287,6 @@ public class StateMachineExecutor {
             .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
             .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
             .filter(StateExecutionInstance.STATUS_KEY, WAITING)
-            .field(StateExecutionInstance.CREATED_AT_KEY)
-            .greaterThanOrEq(workflowExecution.getCreatedAt())
             .asList();
 
     for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
@@ -1312,8 +1310,6 @@ public class StateMachineExecutor {
             .filter(StateExecutionInstance.APP_ID_KEY, workflowExecutionInterrupt.getAppId())
             .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecutionInterrupt.getExecutionUuid())
             .filter(StateExecutionInstance.STATUS_KEY, DISCONTINUING)
-            .field(StateExecutionInstance.CREATED_AT_KEY)
-            .greaterThanOrEq(workflowExecution.getCreatedAt())
             .asList();
 
     if (isEmpty(allStateExecutionInstances)) {
