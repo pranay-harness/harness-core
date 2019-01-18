@@ -14,7 +14,6 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
 import static software.wings.sm.StateType.HELM_DEPLOY;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
@@ -207,7 +206,6 @@ public class HelmDeployState extends State {
     if (gitFileConfig != null) {
       evaluateGitFileConfig(context);
       gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
-      notNullCheck("Git config not found", gitConfig);
       encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
     }
 
