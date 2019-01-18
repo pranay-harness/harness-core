@@ -92,15 +92,18 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
           throw new HarnessException("Operation not supported");
       }
     } catch (Exception ex) {
-      logger.error(format("Exception in processing helm task [%s]", helmCommandRequest.toString()), ex);
+      String errorMsg = Misc.getMessage(ex);
+      logger.error(
+          format("Exception in processing helm task [%s] and error is %s", helmCommandRequest.toString(), errorMsg));
       return HelmCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(Misc.getMessage(ex))
+          .errorMessage(errorMsg)
           .build();
     }
 
     executionLogCallback.saveExecutionLog("Command finished with status " + commandResponse.getCommandExecutionStatus(),
         LogLevel.INFO, commandResponse.getCommandExecutionStatus());
+    logger.info(commandResponse.getOutput());
 
     return HelmCommandExecutionResponse.builder()
         .commandExecutionStatus(commandResponse.getCommandExecutionStatus())
@@ -122,6 +125,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     executionLogCallback.saveExecutionLog(
         "Finding helm client and server version", LogLevel.INFO, CommandExecutionStatus.RUNNING);
     HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(helmCommandRequest);
+    logger.info(helmCommandResponse.getOutput());
     executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
   }
 

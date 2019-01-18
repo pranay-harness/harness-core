@@ -66,7 +66,6 @@ import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandRespons
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
-import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtil;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -113,7 +112,6 @@ public class HelmDeployState extends State {
   @Inject private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Inject private transient SettingsService settingsService;
   @Inject private transient SecretManager secretManager;
-  @Inject @Transient protected transient GitConfigHelperService gitConfigHelperService;
   @Inject @Transient private ArtifactCollectionUtil artifactCollectionUtil;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes

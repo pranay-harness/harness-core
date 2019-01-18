@@ -274,6 +274,7 @@ public class HelmClientImpl implements HelmClient {
 
     if (executionLogCallback != null) {
       String msg = "Executing command - " + helmCommand + "\n";
+      logger.info(msg);
       executionLogCallback.saveExecutionLog(msg, LogLevel.INFO);
     }
   }
