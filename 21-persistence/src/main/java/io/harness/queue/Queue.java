@@ -1,5 +1,6 @@
 package io.harness.queue;
 
+import java.time.Duration;
 import java.util.Date;
 
 /**
@@ -9,28 +10,13 @@ import java.util.Date;
  */
 public interface Queue<T> {
   /**
-   * Get a non running message from queue with a wait of 3 seconds and poll of 1 second.
-   *
-   * @return message or null
-   */
-  T get();
-
-  /**
-   * Get a non running message from queue with a poll of 1 second.
-   *
-   * @param waitDuration duration in milliseconds to keep polling before returning null
-   * @return message or null
-   */
-  T get(int waitDuration);
-
-  /**
    * Get a non running message from queue.
    *
-   * @param waitDuration duration in milliseconds to keep polling before returning null
-   * @param pollDuration duration in milliseconds between poll attempts
+   * @param wait duration in milliseconds to keep polling before returning null
+   * @param poll duration in milliseconds between poll attempts
    * @return message or null
    */
-  T get(int waitDuration, long pollDuration);
+  T get(Duration wait, Duration poll);
 
   /**
    * Update the refresh duration of a message while still processing.

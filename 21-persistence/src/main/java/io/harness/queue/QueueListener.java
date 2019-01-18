@@ -6,6 +6,7 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.maintenance.MaintenanceController.isMaintenance;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
 
@@ -49,7 +50,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
 
     do {
       while (isMaintenance() || (primaryOnly && queueController.isNotPrimary())) {
-        sleep(Duration.ofSeconds(1));
+        sleep(ofSeconds(1));
       }
 
       if (!execute()) {
@@ -63,7 +64,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     T message = null;
     try {
       logger.trace("Waiting for message");
-      message = queue.get();
+      message = queue.get(ofSeconds(3), ofSeconds(1));
     } catch (Exception exception) {
       if (exception.getCause() instanceof InterruptedException) {
         logger.info("Thread interrupted, shutting down for queue {}", queue.name());
@@ -83,7 +84,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       T message = null;
       try {
         logger.trace("Waiting for message");
-        message = queue.get(0);
+        message = queue.get(Duration.ZERO, Duration.ZERO);
       } catch (Exception exception) {
         if (exception.getCause() instanceof InterruptedException) {
           logger.info("Thread interrupted, shutting down for queue {}", queue.name());
