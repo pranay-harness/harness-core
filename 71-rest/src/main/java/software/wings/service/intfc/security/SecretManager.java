@@ -1,6 +1,5 @@
 package software.wings.service.intfc.security;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.UuidAware;
@@ -26,7 +25,7 @@ import java.util.Optional;
  */
 public interface SecretManager {
   String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Manager";
-  @SuppressFBWarnings("MS_MUTABLE_ARRAY") char[] ENCRYPTED_FIELD_MASK = "*******".toCharArray();
+  String ENCRYPTED_FIELD_MASK = "*******";
 
   List<EncryptionConfig> listEncryptionConfig(String accountId);
 

@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream.DockerArtifactStreamBuilder;
 import software.wings.beans.artifact.DockerArtifactStream.Yaml;
@@ -34,9 +33,7 @@ public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     String serviceId = yamlHelper.getServiceId(appId, changeContext.getChange().getFilePath());
     DockerArtifactStreamBuilder builder = DockerArtifactStream.builder().serviceId(serviceId).appId(appId);
-    toBean(accountId, builder, changeContext.getYaml(), appId);
-
-    DockerArtifactStream dockerArtifactStream = builder.build();
+    DockerArtifactStream dockerArtifactStream = toBean(accountId, builder, changeContext.getYaml(), appId);
     dockerArtifactStream.setName(yamlHelper.getArtifactStreamName(yamlFilePath));
     dockerArtifactStream.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 
@@ -55,9 +52,9 @@ public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
     return new DockerArtifactStream();
   }
 
-  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
-  private void toBean(String accountId, DockerArtifactStreamBuilder builder, Yaml artifactStreamYaml, String appId) {
-    builder.settingId(getSettingId(accountId, appId, artifactStreamYaml.getServerName()))
+  private DockerArtifactStream toBean(
+      String accountId, DockerArtifactStreamBuilder builder, Yaml artifactStreamYaml, String appId) {
+    return builder.settingId(getSettingId(accountId, appId, artifactStreamYaml.getServerName()))
         .imageName(artifactStreamYaml.getImageName())
         .build();
   }

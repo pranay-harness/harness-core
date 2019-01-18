@@ -283,7 +283,7 @@ public class SettingResource {
       if (credentials.length > 0) {
         value = GcpConfig.builder().serviceAccountKeyFileContent(credentials).build();
       } else {
-        value = GcpConfig.builder().serviceAccountKeyFileContent(ENCRYPTED_FIELD_MASK).build();
+        value = GcpConfig.builder().serviceAccountKeyFileContent(ENCRYPTED_FIELD_MASK.toCharArray()).build();
       }
     }
 
@@ -339,7 +339,7 @@ public class SettingResource {
       if (credentials.length > 0) {
         value = GcpConfig.builder().serviceAccountKeyFileContent(credentials).build();
       } else {
-        value = GcpConfig.builder().serviceAccountKeyFileContent(ENCRYPTED_FIELD_MASK).build();
+        value = GcpConfig.builder().serviceAccountKeyFileContent(ENCRYPTED_FIELD_MASK.toCharArray()).build();
       }
 
       ((EncryptableSetting) value).setAccountId(accountId);

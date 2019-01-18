@@ -28,7 +28,6 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -329,7 +328,7 @@ public class SecretManagerImpl implements SecretManager {
     try {
       for (Field f : encryptedFields) {
         f.setAccessible(true);
-        f.set(object, ENCRYPTED_FIELD_MASK);
+        f.set(object, ENCRYPTED_FIELD_MASK.toCharArray());
       }
     } catch (IllegalAccessException e) {
       throw new WingsException(e);
@@ -344,7 +343,7 @@ public class SecretManagerImpl implements SecretManager {
     try {
       for (Field f : encryptedFields) {
         f.setAccessible(true);
-        if (java.util.Arrays.equals((char[]) f.get(destinationObject), ENCRYPTED_FIELD_MASK)) {
+        if (java.util.Arrays.equals((char[]) f.get(destinationObject), ENCRYPTED_FIELD_MASK.toCharArray())) {
           f.set(destinationObject, f.get(sourceObject));
         }
       }
@@ -1140,7 +1139,6 @@ public class SecretManagerImpl implements SecretManager {
     return recordId;
   }
 
-  @SuppressFBWarnings("SBSC_USE_STRINGBUFFER_CONCATENATION")
   @Override
   public boolean deleteFile(String accountId, String uuId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
@@ -1154,12 +1152,12 @@ public class SecretManagerImpl implements SecretManager {
                                        .filter("encryptedFileId", uuId)
                                        .asList();
     if (!configFiles.isEmpty()) {
-      String errorMessage = "Being used by ";
+      StringBuilder errorMessage = new StringBuilder("Being used by ");
       for (ConfigFile configFile : configFiles) {
-        errorMessage += configFile.getFileName() + ", ";
+        errorMessage.append(configFile.getFileName()).append(", ");
       }
 
-      throw new KmsOperationException(errorMessage);
+      throw new KmsOperationException(errorMessage.toString());
     }
 
     switch (encryptedData.getEncryptionType()) {

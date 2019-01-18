@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.Http;
 import io.harness.security.VerificationAuthInterceptor;
 import io.harness.security.VerificationTokenGenerator;
@@ -36,7 +35,6 @@ class ManagerClientX509TrustManager implements X509TrustManager {
 }
 
 public class VerificationServiceClientFactory implements Provider<VerificationServiceClient> {
-  @SuppressFBWarnings("MS_MUTABLE_ARRAY")
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new ManagerClientX509TrustManager());
 

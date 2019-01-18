@@ -145,7 +145,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
       // Delete downloaded artifact and generated manifest.yaml file
       executionLogCallback.saveExecutionLog("# Deleting any temporary files created");
-      pcfCommandTaskHelper.deleteCreataedFile(Arrays.asList(manifestYamlFile, artifactFile));
+      pcfCommandTaskHelper.deleteCreatedFile(Arrays.asList(manifestYamlFile, artifactFile));
 
       executionLogCallback.saveExecutionLog("\n ----------  PCF Setup process completed successfully");
       return PcfCommandExecutionResponse.builder()

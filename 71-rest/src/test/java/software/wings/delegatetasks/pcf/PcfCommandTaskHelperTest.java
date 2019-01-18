@@ -89,7 +89,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     }
 
     assertEquals(MANIFEST_YAML_1, stringBuilder.toString());
-    pcfCommandTaskHelper.deleteCreataedFile(Arrays.asList(file));
+    pcfCommandTaskHelper.deleteCreatedFile(Arrays.asList(file));
     assertFalse(file.exists());
   }
 

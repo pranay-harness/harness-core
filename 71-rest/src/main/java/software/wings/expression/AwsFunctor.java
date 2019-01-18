@@ -1,15 +1,13 @@
 package software.wings.expression;
 
 import com.amazonaws.services.ec2.model.Tag;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.expression.ExpressionFunctor;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collection;
 
 public class AwsFunctor implements ExpressionFunctor {
-  @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC")
-  public class TagsFunctor {
+  public static class TagsFunctor {
     public String find(Collection<Tag> tags, String key) {
       return tags.stream()
           .filter(tag -> tag.getKey().equals(key))
