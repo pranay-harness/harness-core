@@ -19,6 +19,8 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.TestQueuableObject;
 import io.harness.queue.TestQueuableObjectListener;
 import io.harness.queue.TimerScheduledExecutorService;
+import io.harness.threading.CurrentThreadExecutor;
+import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import lombok.Getter;
@@ -61,6 +63,8 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
+    ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
+
     String databaseName = databaseName();
     MongoInfo mongoInfo = testMongo(annotations, closingFactory);
 

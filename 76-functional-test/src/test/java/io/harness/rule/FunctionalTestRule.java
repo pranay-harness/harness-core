@@ -27,9 +27,9 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import ru.vyarus.guice.validator.ValidationModule;
-import software.wings.app.ExecutorModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
+import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
@@ -102,6 +102,8 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
   }
 
   protected List<Module> getRequiredModules(Configuration configuration, DistributedLockSvc distributedLockSvc) {
+    io.harness.threading.ExecutorModule.getInstance().setExecutorService(executorService);
+
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
@@ -122,7 +124,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     modules.add(new MongoModule(datastore, datastore, distributedLockSvc));
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new YamlModule());
-    modules.add(new ExecutorModule(executorService));
+    modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule((MainConfiguration) configuration));
     return modules;
