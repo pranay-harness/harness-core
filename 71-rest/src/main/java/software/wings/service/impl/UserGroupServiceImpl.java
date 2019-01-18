@@ -19,16 +19,22 @@ import com.google.inject.name.Named;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.EntityType;
 import software.wings.beans.User;
+import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
@@ -60,6 +66,8 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class UserGroupServiceImpl implements UserGroupService {
+  private static final Logger log = LoggerFactory.getLogger(UserGroupServiceImpl.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private AccountService accountService;
@@ -165,6 +173,34 @@ public class UserGroupServiceImpl implements UserGroupService {
         wingsPersistence.createUpdateOperations(UserGroup.class).set("name", userGroup.getName());
     setUnset(operations, "description", userGroup.getDescription());
     return update(userGroup, operations);
+  }
+
+  @Override
+  public UserGroup updateNotificationSettings(
+      String accountId, String groupId, NotificationSettings newNotificationSettings) {
+    if (null == newNotificationSettings) {
+      return get(accountId, groupId);
+    }
+
+    UpdateOperations<UserGroup> update =
+        wingsPersistence.createUpdateOperations(UserGroup.class).set("notificationSettings", newNotificationSettings);
+
+    Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
+                                 .field(UserGroup.ACCOUNT_ID_KEY)
+                                 .equal(accountId)
+                                 .field("_id")
+                                 .equal(groupId);
+
+    FindAndModifyOptions options = new FindAndModifyOptions();
+    options.returnNew(true);
+
+    UserGroup updatedGroup = wingsPersistence.findAndModify(query, update, options);
+    if (null == updatedGroup) {
+      log.error("No user group found. groupId={}, accountId={}", groupId, accountId);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "No user group found");
+    }
+
+    return updatedGroup;
   }
 
   @Override

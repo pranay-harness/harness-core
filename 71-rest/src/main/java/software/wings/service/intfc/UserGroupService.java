@@ -5,6 +5,7 @@ import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.User;
+import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOType;
 
@@ -65,6 +66,8 @@ public interface UserGroupService {
    * @return the userGroup
    */
   UserGroup updateOverview(UserGroup userGroup);
+
+  UserGroup updateNotificationSettings(String accountId, String groupId, NotificationSettings newNotificationSettings);
 
   /**
    * Update Overview.

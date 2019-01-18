@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -49,6 +50,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.Role;
 import software.wings.beans.User;
+import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
@@ -68,6 +70,7 @@ import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -312,6 +315,23 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                       .size()
           == 1);
     }
+  }
+
+  @Test
+  public void shouldUpdateNotificationSettings() {
+    String accountId = "some-account-id";
+    UserGroup ug = UserGroup.builder().accountId(accountId).name("some-name").build();
+    UserGroup saved = userGroupService.save(ug);
+
+    UserGroup fetchedGroup = userGroupService.get(accountId, saved.getUuid(), false);
+    assertNotNull(fetchedGroup);
+    assertNull(fetchedGroup.getNotificationSettings());
+
+    NotificationSettings settings = new NotificationSettings(true, Collections.emptyMap());
+    userGroupService.updateNotificationSettings(accountId, fetchedGroup.getUuid(), settings);
+    fetchedGroup = userGroupService.get(accountId, fetchedGroup.getUuid(), false);
+    assertNotNull(fetchedGroup.getNotificationSettings());
+    assertEquals(settings, fetchedGroup.getNotificationSettings());
   }
 
   @Test
