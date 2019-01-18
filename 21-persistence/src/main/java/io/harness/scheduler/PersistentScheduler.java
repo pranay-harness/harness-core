@@ -7,6 +7,7 @@ import org.quartz.TriggerKey;
 import java.util.Date;
 
 public interface PersistentScheduler {
+  void ensureJob__UnderConstruction(JobDetail jobDetail, Trigger trigger);
   Date scheduleJob(JobDetail jobDetail, Trigger trigger);
   boolean deleteJob(String jobName, String groupName);
   Date rescheduleJob(TriggerKey triggerKey, Trigger newTrigger);

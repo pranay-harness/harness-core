@@ -79,8 +79,6 @@ public class LdapGroupSyncJob implements Job {
   @Inject private UserGroupService userGroupService;
 
   public static void add(PersistentScheduler jobScheduler, String accountId, String ssoId) {
-    jobScheduler.deleteJob(ssoId, GROUP);
-
     JobDetail job = JobBuilder.newJob(LdapGroupSyncJob.class)
                         .withIdentity(ssoId, GROUP)
                         .usingJobData(ACCOUNT_ID_KEY, accountId)
@@ -93,7 +91,7 @@ public class LdapGroupSyncJob implements Job {
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever())
             .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 
   public static void delete(

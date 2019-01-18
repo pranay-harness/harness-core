@@ -57,8 +57,6 @@ public class InstanceSyncJob implements Job {
   @Inject private ExecutorService executorService;
 
   public static void add(PersistentScheduler jobScheduler, String accountId, String appId) {
-    jobScheduler.deleteJob(appId, GROUP);
-
     JobDetail job = JobBuilder.newJob(InstanceSyncJob.class)
                         .withIdentity(appId, GROUP)
                         .usingJobData(APP_ID_KEY, appId)
@@ -71,7 +69,7 @@ public class InstanceSyncJob implements Job {
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever())
             .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 
   @Override

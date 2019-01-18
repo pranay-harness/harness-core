@@ -15,6 +15,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
 import io.harness.maintenance.MaintenanceListener;
 import io.harness.mongo.MongoModule;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
@@ -29,8 +30,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.Properties;
 
-public class AbstractQuartzScheduler implements PersistentScheduler, MaintenanceListener {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractQuartzScheduler.class);
+public class HQuartzScheduler implements PersistentScheduler, MaintenanceListener {
+  private static final Logger logger = LoggerFactory.getLogger(HQuartzScheduler.class);
 
   protected Injector injector;
   protected Scheduler scheduler;
@@ -38,7 +39,7 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
   private SchedulerConfig schedulerConfig;
   private String defaultMongoUri;
 
-  public AbstractQuartzScheduler(Injector injector, SchedulerConfig schedulerConfig, String defaultMongoUri) {
+  public HQuartzScheduler(Injector injector, SchedulerConfig schedulerConfig, String defaultMongoUri) {
     this.injector = injector;
     this.schedulerConfig = schedulerConfig;
     this.defaultMongoUri = defaultMongoUri;
@@ -139,6 +140,79 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
    */
   public Scheduler getScheduler() {
     return scheduler;
+  }
+
+  static boolean compare(JobDetail jobDetail1, JobDetail jobDetail2) {
+    if (jobDetail1 == null && jobDetail2 == null) {
+      return true;
+    }
+
+    if (jobDetail1 == null || jobDetail2 == null) {
+      return false;
+    }
+
+    if (jobDetail1.isConcurrentExectionDisallowed() != jobDetail2.isConcurrentExectionDisallowed()) {
+      return false;
+    }
+
+    if (jobDetail1.isPersistJobDataAfterExecution() != jobDetail2.isPersistJobDataAfterExecution()) {
+      return false;
+    }
+
+    if (jobDetail1.isDurable() != jobDetail2.isDurable()) {
+      return false;
+    }
+
+    if (!StringUtils.equals(jobDetail1.getDescription(), jobDetail1.getDescription())) {
+      return false;
+    }
+
+    return true;
+  }
+
+  static boolean compare(Trigger trigger1, Trigger trigger2) {
+    if (trigger1 == null && trigger2 == null) {
+      return true;
+    }
+
+    if (trigger1 == null || trigger2 == null) {
+      return false;
+    }
+
+    if (!trigger1.getScheduleBuilder().equals(trigger2.getScheduleBuilder())) {
+      return false;
+    }
+
+    if (!StringUtils.equals(trigger1.getDescription(), trigger2.getDescription())) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // This method is under construction. If you using it and you make changes to your job or trigger
+  // make sure that the difference will be detected from the compare methods
+  @Override
+  public void ensureJob__UnderConstruction(JobDetail jobDetail, Trigger trigger) {
+    if (scheduler == null) {
+      return;
+    }
+
+    try {
+      final JobDetail currentJobDetail = scheduler.getJobDetail(jobDetail.getKey());
+
+      if (compare(jobDetail, currentJobDetail)) {
+        final Trigger currentTrigger = scheduler.getTrigger(trigger.getKey());
+        if (compare(trigger, currentTrigger)) {
+          return;
+        }
+      }
+
+      scheduler.deleteJob(jobDetail.getKey());
+      scheduler.scheduleJob(jobDetail, trigger);
+    } catch (SchedulerException ex) {
+      logger.error(format("Couldn't ensure cron job [%s] ", jobDetail.getKey()), ex);
+    }
   }
 
   /**

@@ -52,9 +52,6 @@ public class PruneFileJob implements Job {
 
   public static void addDefaultJob(
       PersistentScheduler jobScheduler, Class cls, String entityId, FileBucket fileBucket) {
-    // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
-    jobScheduler.deleteJob(entityId, GROUP);
-
     JobDetail details = JobBuilder.newJob(PruneFileJob.class)
                             .withIdentity(entityId, GROUP)
                             .usingJobData(ENTITY_CLASS_KEY, cls.getCanonicalName())
@@ -64,7 +61,7 @@ public class PruneFileJob implements Job {
 
     Trigger trigger = defaultTrigger(entityId, ofSeconds(5));
 
-    jobScheduler.scheduleJob(details, trigger);
+    jobScheduler.ensureJob__UnderConstruction(details, trigger);
   }
 
   @Override

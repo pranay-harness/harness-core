@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-public class VerificationJobScheduler extends AbstractQuartzScheduler {
+public class VerificationJobScheduler extends HQuartzScheduler {
   private static final Logger logger = LoggerFactory.getLogger(VerificationJobScheduler.class);
 
   /**

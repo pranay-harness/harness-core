@@ -61,9 +61,6 @@ public class ArtifactCollectionJob implements Job {
 
   public static void addDefaultJob(
       PersistentScheduler jobScheduler, String accountId, String appId, String artifactStreamId) {
-    // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
-    jobScheduler.deleteJob(artifactStreamId, GROUP);
-
     JobDetail job = JobBuilder.newJob(ArtifactCollectionJob.class)
                         .withIdentity(artifactStreamId, ArtifactCollectionJob.GROUP)
                         .usingJobData(ARTIFACT_STREAM_ID_KEY, artifactStreamId)
@@ -80,7 +77,7 @@ public class ArtifactCollectionJob implements Job {
                                             .withMisfireHandlingInstructionNowWithExistingCount())
                           .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 
   @Override

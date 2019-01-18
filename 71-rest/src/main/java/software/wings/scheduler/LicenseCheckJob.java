@@ -50,7 +50,6 @@ public class LicenseCheckJob implements Job {
   }
 
   public static void addJob(PersistentScheduler jobScheduler) {
-    jobScheduler.deleteJob(CRON_NAME, CRON_GROUP);
     JobDetail job = JobBuilder.newJob(LicenseCheckJob.class)
                         .withIdentity(CRON_NAME, CRON_GROUP)
                         .withDescription("Administrative job ")
@@ -62,6 +61,6 @@ public class LicenseCheckJob implements Job {
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(30).repeatForever())
             .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 }

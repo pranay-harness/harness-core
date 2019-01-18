@@ -50,7 +50,6 @@ public class UsageMetricsJob implements Job {
   }
 
   public static void addJob(PersistentScheduler jobScheduler) {
-    jobScheduler.deleteJob(CRON_NAME, CRON_GROUP);
     JobDetail job = JobBuilder.newJob(UsageMetricsJob.class)
                         .withIdentity(CRON_NAME, CRON_GROUP)
                         .withDescription("Administrative job ")
@@ -61,6 +60,6 @@ public class UsageMetricsJob implements Job {
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(4).repeatForever())
                           .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 }
