@@ -439,8 +439,24 @@ public class K8sTaskHelper {
   }
 
   public String getResourcesInTableFormat(List<KubernetesResource> resources) {
+    int maxKindLength = 16;
+    int maxNameLength = 36;
+    for (KubernetesResource resource : resources) {
+      KubernetesResourceId id = resource.getResourceId();
+      if (id.getKind().length() > maxKindLength) {
+        maxKindLength = id.getKind().length();
+      }
+
+      if (id.getName().length() > maxNameLength) {
+        maxNameLength = id.getKind().length();
+      }
+    }
+
+    maxKindLength += 4;
+    maxNameLength += 4;
+
     StringBuilder sb = new StringBuilder(1024);
-    final String tableFormat = "%-20s%-40s%-10s";
+    String tableFormat = "%-" + maxKindLength + "s%-" + maxNameLength + "s%-10s";
     sb.append(System.lineSeparator())
         .append(color(format(tableFormat, "Kind", "Name", "Versioned"), White, Bold))
         .append(System.lineSeparator());
