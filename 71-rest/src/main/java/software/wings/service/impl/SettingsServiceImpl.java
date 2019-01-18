@@ -18,6 +18,9 @@ import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.ENV_ID_KEY;
+import static software.wings.beans.SettingAttribute.NAME_KEY;
+import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.common.Constants.BACKUP_PATH;
 import static software.wings.common.Constants.DEFAULT_BACKUP_PATH;
@@ -47,6 +50,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Rejection;
 import io.harness.observer.Subject;
+import io.harness.persistence.HIterator;
 import io.harness.validation.Create;
 import lombok.Getter;
 import org.mongodb.morphia.annotations.Transient;
@@ -81,6 +85,7 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.CryptoUtil;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -239,12 +244,11 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private Map<String, String> listAccountOrAppDefaults(String accountId, String appId) {
-    List<SettingAttribute> settingAttributes =
-        wingsPersistence.createQuery(SettingAttribute.class)
-            .filter(ACCOUNT_ID_KEY, accountId)
-            .filter(APP_ID_KEY, appId)
-            .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())
-            .asList();
+    List<SettingAttribute> settingAttributes = wingsPersistence.createQuery(SettingAttribute.class)
+                                                   .filter(ACCOUNT_ID_KEY, accountId)
+                                                   .filter(APP_ID_KEY, appId)
+                                                   .filter(VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())
+                                                   .asList();
 
     return settingAttributes.stream().collect(Collectors.toMap(SettingAttribute::getName,
         settingAttribute
@@ -567,9 +571,9 @@ public class SettingsServiceImpl implements SettingsService {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
         .filter(SettingAttribute.APP_ID_KEY, GLOBAL_APP_ID)
-        .filter(SettingAttribute.ENV_ID_KEY, GLOBAL_ENV_ID)
+        .filter(ENV_ID_KEY, GLOBAL_ENV_ID)
         .filter(SettingAttribute.NAME_KEY, attributeName)
-        .filter(SettingAttribute.VALUE_TYPE_KEY, settingVariableTypes.name())
+        .filter(VALUE_TYPE_KEY, settingVariableTypes.name())
         .get();
   }
 
@@ -663,13 +667,21 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public List<SettingAttribute> getSettingAttributesByType(String accountId, String appId, String envId, String type) {
-    PageRequest<SettingAttribute> pageRequest = aPageRequest()
-                                                    .addFilter("accountId", EQ, accountId)
-                                                    .addFilter("appId", EQ, appId)
-                                                    .addFilter("envId", EQ, envId)
-                                                    .addFilter("value.type", EQ, type)
-                                                    .build();
-    return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
+    List<SettingAttribute> settingAttributes = new ArrayList<>();
+
+    try (HIterator<SettingAttribute> iterator = new HIterator(wingsPersistence.createQuery(SettingAttribute.class)
+                                                                  .filter(ACCOUNT_ID_KEY, accountId)
+                                                                  .filter(APP_ID_KEY, appId)
+                                                                  .filter(ENV_ID_KEY, envId)
+                                                                  .filter(VALUE_TYPE_KEY, type)
+                                                                  .order(NAME_KEY)
+                                                                  .fetch())) {
+      while (iterator.hasNext()) {
+        settingAttributes.add(iterator.next());
+      }
+    }
+
+    return settingAttributes;
   }
 
   @Override
