@@ -1,5 +1,6 @@
 package io.harness.queue;
 
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -76,7 +77,7 @@ public class QueueListenerTest extends PersistenceTest {
       queue.send(message);
       assertThat(queue.count(Filter.ALL)).isEqualTo(1);
 
-      doThrow(new RuntimeException(new InterruptedException())).when(queue).get();
+      doThrow(new RuntimeException(new InterruptedException())).when(queue).get(any(), any());
 
       listener.run();
 
@@ -129,7 +130,7 @@ public class QueueListenerTest extends PersistenceTest {
         }
       })
           .when(queue)
-          .get();
+          .get(ofSeconds(3), ofSeconds(1));
 
       Thread listenerThread = new Thread(listener);
       listenerThread.start();

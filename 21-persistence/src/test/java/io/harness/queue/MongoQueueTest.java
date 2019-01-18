@@ -2,6 +2,7 @@ package io.harness.queue;
 
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
@@ -19,9 +20,13 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.Date;
 
 public class MongoQueueTest extends PersistenceTest {
+  private final Duration DEFAULT_WAIT = ofSeconds(3);
+  private final Duration DEFAULT_POLL = ofSeconds(1);
+
   @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
 
@@ -40,40 +45,16 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   /**
-   * Should get with negative wait.
-   */
-  @Test
-  public void shouldGetWithNegativeWait() {
-    assertThat(queue.get(Integer.MIN_VALUE)).isNull();
-
-    queue.send(new TestQueuableObject(1));
-
-    assertThat(queue.get(Integer.MIN_VALUE)).isNotNull();
-  }
-
-  /**
-   * Should get when negative poll.
-   */
-  @Test
-  public void shouldGetWhenNegativePoll() {
-    assertThat(queue.get(100, Long.MIN_VALUE)).isNull();
-
-    queue.send(new TestQueuableObject(1));
-
-    assertThat(queue.get(100, Long.MIN_VALUE)).isNotNull();
-  }
-
-  /**
    * Should not get message once acquired.
    */
   @Test
   public void shouldNotGetMessageOnceAcquired() {
     queue.send(new TestQueuableObject(1));
 
-    assertThat(queue.get()).isNotNull();
+    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
 
     // try get message we already have before ack
-    assertThat(queue.get(0)).isNull();
+    assertThat(queue.get(Duration.ZERO, Duration.ZERO)).isNull();
   }
 
   /**
@@ -94,9 +75,9 @@ public class MongoQueueTest extends PersistenceTest {
     sleep(ofMillis(2));
     queue.send(messageThree);
 
-    assertThat(queue.get()).isEqualTo(messageOne);
-    assertThat(queue.get()).isEqualTo(messageTwo);
-    assertThat(queue.get()).isEqualTo(messageThree);
+    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageOne);
+    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageTwo);
+    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageThree);
   }
 
   /**
@@ -112,9 +93,9 @@ public class MongoQueueTest extends PersistenceTest {
     queue.send(messageTwo);
     queue.send(messageThree);
 
-    assertThat(queue.get()).isEqualTo(messageOne);
-    assertThat(queue.get()).isEqualTo(messageTwo);
-    assertThat(queue.get()).isEqualTo(messageThree);
+    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageOne);
+    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageTwo);
+    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageThree);
   }
 
   /**
@@ -123,7 +104,7 @@ public class MongoQueueTest extends PersistenceTest {
   @Test
   public void shouldWaitForSpecifiedTimePeriodForGetWhenNoMessages() {
     Date start = new Date();
-    queue.get(1000);
+    queue.get(ofSeconds(1), DEFAULT_POLL);
     long elapsed = new Date().getTime() - start.getTime();
 
     assertThat(elapsed).isBetween(1000L, 3000L);
@@ -139,7 +120,7 @@ public class MongoQueueTest extends PersistenceTest {
 
     queue.send(new TestQueuableObject(1));
 
-    queue.get(3000);
+    queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
     assertThat(new Date().getTime() - start.getTime()).isLessThan(2000);
   }
@@ -156,11 +137,11 @@ public class MongoQueueTest extends PersistenceTest {
     message.setEarliestGet(new Date(System.currentTimeMillis() + 200));
     queue.send(message);
 
-    assertThat(queue.get(0)).isNull();
+    assertThat(queue.get(Duration.ZERO, Duration.ZERO)).isNull();
 
     Thread.sleep(200);
 
-    assertThat(queue.get()).isNotNull();
+    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
   }
 
   /**
@@ -172,8 +153,8 @@ public class MongoQueueTest extends PersistenceTest {
 
     queue.resetDuration(0);
     // sets resetTimestamp on messageOne
-    assertThat(queue.get()).isNotNull();
-    assertThat(queue.get()).isNotNull();
+    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
+    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
   }
 
   /**
@@ -191,7 +172,7 @@ public class MongoQueueTest extends PersistenceTest {
   public void shouldNotExtendResetTimestampOfAlreadyExpiredMessage() {
     queue.send(new TestQueuableObject(1));
     // sets resetTimestamp on messageOne
-    TestQueuableObject message = queue.get(0);
+    TestQueuableObject message = queue.get(Duration.ZERO, Duration.ZERO);
 
     queue.updateResetDuration(message);
 
@@ -225,7 +206,7 @@ public class MongoQueueTest extends PersistenceTest {
     queue.send(new TestQueuableObject(1));
 
     Date beforeGet = new Date();
-    TestQueuableObject message = queue.get();
+    TestQueuableObject message = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
     Date messageResetTimeStamp = message.getResetTimestamp();
 
@@ -256,7 +237,7 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(queue.count(Filter.NOT_RUNNING)).isEqualTo(1);
     assertThat(queue.count(Filter.ALL)).isEqualTo(1);
 
-    queue.get();
+    queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
     assertThat(queue.count(Filter.RUNNING)).isEqualTo(1);
     assertThat(queue.count(Filter.NOT_RUNNING)).isEqualTo(0);
@@ -271,7 +252,7 @@ public class MongoQueueTest extends PersistenceTest {
     queue.send(new TestQueuableObject(0));
     queue.send(new TestQueuableObject(1));
 
-    TestQueuableObject result = queue.get();
+    TestQueuableObject result = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
     assertThat(getDatastore().getCount(TestQueuableObject.class)).isEqualTo(2);
 
@@ -300,7 +281,7 @@ public class MongoQueueTest extends PersistenceTest {
 
     queue.send(message);
 
-    TestQueuableObject resultOne = queue.get();
+    TestQueuableObject resultOne = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
     Date expectedEarliestGet = new Date();
     Date timeBeforeRequeue = new Date();
@@ -384,7 +365,7 @@ public class MongoQueueTest extends PersistenceTest {
 
     assertThat(getDatastore().getCount(TestQueuableWithEntity.class)).isEqualTo(1);
 
-    TestQueuableWithEntity actual = entityQueue.get();
+    TestQueuableWithEntity actual = entityQueue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
     assertThat(actual.getEntity()).isEqualTo(testEntity);
   }
@@ -398,7 +379,7 @@ public class MongoQueueTest extends PersistenceTest {
     TestQueuableObject message = new TestQueuableObject(1);
     versionQueue.send(message);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 2.0.0"));
-    assertThat(versionQueue.get()).isNull();
+    assertThat(versionQueue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNull();
   }
 
   @Test
@@ -410,6 +391,6 @@ public class MongoQueueTest extends PersistenceTest {
     TestQueuableObject message = new TestQueuableObject(1);
     versionQueue.send(message);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 2.0.0"));
-    assertThat(versionQueue.get()).isNotNull();
+    assertThat(versionQueue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
   }
 }

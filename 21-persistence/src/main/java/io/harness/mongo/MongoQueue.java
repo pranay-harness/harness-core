@@ -18,6 +18,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
@@ -69,23 +70,13 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   }
 
   @Override
-  public T get() {
-    return get(3000, 1000);
-  }
-
-  @Override
-  public T get(final int waitDuration) {
-    return get(waitDuration, 1000);
-  }
-
-  @Override
-  public T get(final int waitDuration, long pollDuration) {
-    long endTime = System.currentTimeMillis() + waitDuration;
+  public T get(Duration wait, Duration poll) {
+    long endTime = System.currentTimeMillis() + wait.toMillis();
 
     boolean acquired = false;
     try {
-      if (acquired = semaphore.tryAcquire(waitDuration, TimeUnit.MILLISECONDS)) {
-        return getUnderLock(endTime, pollDuration);
+      if (acquired = semaphore.tryAcquire(wait.toMillis(), TimeUnit.MILLISECONDS)) {
+        return getUnderLock(endTime, poll);
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
@@ -97,7 +88,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     return null;
   }
 
-  private T getUnderLock(long endTime, long pollDuration) {
+  private T getUnderLock(long endTime, Duration poll) {
     final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
 
     while (true) {
@@ -125,12 +116,12 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
       }
 
       try {
-        Thread.sleep(pollDuration);
+        Thread.sleep(poll.toMillis());
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         return null;
       } catch (final IllegalArgumentException ex) {
-        pollDuration = 0;
+        poll = Duration.ofMillis(0);
       }
     }
   }
