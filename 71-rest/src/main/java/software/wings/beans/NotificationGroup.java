@@ -30,6 +30,7 @@ import javax.validation.constraints.NotNull;
     @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@Deprecated
 public class NotificationGroup extends Base {
   public static final String NAME_KEY = "name";
 
@@ -318,27 +319,6 @@ public class NotificationGroup extends Base {
     public NotificationGroupBuilder withDefaultNotificationGroupForAccount(boolean defaultNotificationGroupForAccount) {
       this.defaultNotificationGroupForAccount = defaultNotificationGroupForAccount;
       return this;
-    }
-
-    /**
-     * But notification group builder.
-     *
-     * @return the notification group builder
-     */
-    public NotificationGroupBuilder but() {
-      return aNotificationGroup()
-          .withAccountId(accountId)
-          .withName(name)
-          .withAddressesByChannelType(addressesByChannelType)
-          .withRoles(roles)
-          .withEditable(editable)
-          .withDefaultNotificationGroupForAccount(defaultNotificationGroupForAccount)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**

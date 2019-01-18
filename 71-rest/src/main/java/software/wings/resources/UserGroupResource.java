@@ -15,6 +15,7 @@ import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
+import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.LdapLinkGroupRequest;
 import software.wings.beans.sso.SSOType;
@@ -204,6 +205,23 @@ public class UserGroupResource {
     userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
     return getPublicUserGroup(userGroupService.updateMembers(userGroup, true));
+  }
+
+  /**
+   * Update Notification Settings.
+   *
+   * @param accountId   the account id
+   * @param userGroupId  the userGroupId
+   * @param userGroup the userGroup
+   * @return the rest response
+   */
+  @PUT
+  @Path("{userGroupId}/notification-settings")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<UserGroup> updateNotificationSettings(@QueryParam("accountId") String accountId,
+      @PathParam("userGroupId") String userGroupId, NotificationSettings settings) {
+    return getPublicUserGroup(userGroupService.updateNotificationSettings(accountId, userGroupId, settings));
   }
 
   /**

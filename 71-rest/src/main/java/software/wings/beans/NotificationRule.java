@@ -27,7 +27,10 @@ public class NotificationRule {
   private List<ExecutionStatus> conditions = new ArrayList<>();
   private ExecutionScope executionScope;
   @Getter @Setter private boolean notificationGroupAsExpression;
-  @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
+
+  @Deprecated @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
+
+  @NotNull @Getter @Setter private List<String> userGroupIds = new ArrayList<>();
 
   private boolean batchNotifications;
 
@@ -37,7 +40,9 @@ public class NotificationRule {
    * Gets notification groups.
    *
    * @return the notification groups
+   * @deprecated user {@link #getUserGroupIds()} instead
    */
+  @Deprecated
   public List<NotificationGroup> getNotificationGroups() {
     return notificationGroups;
   }
@@ -46,7 +51,9 @@ public class NotificationRule {
    * Sets notification groups.
    *
    * @param notificationGroups the notification groups
+   * @deprecated use {@link #setUserGroupIds(List)} instead
    */
+  @Deprecated
   public void setNotificationGroups(List<NotificationGroup> notificationGroups) {
     this.notificationGroups = notificationGroups;
   }
@@ -148,6 +155,7 @@ public class NotificationRule {
         .add("conditions", conditions)
         .add("executionScope", executionScope)
         .add("notificationGroups", notificationGroups)
+        .add("userGroupIds", userGroupIds)
         .add("batchNotifications", batchNotifications)
         .add("active", active)
         .toString();

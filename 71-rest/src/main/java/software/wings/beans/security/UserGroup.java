@@ -19,10 +19,12 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.User;
+import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.sso.SSOType;
 
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * User bean class.
@@ -60,6 +62,8 @@ public class UserGroup extends Base {
 
   private Set<AppPermission> appPermissions;
   private AccountPermissions accountPermissions;
+
+  @Nullable private NotificationSettings notificationSettings;
 
   // TODO: Should use Builder at the class level itself.
   @Builder

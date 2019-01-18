@@ -53,6 +53,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class AwsLambdaVerification extends State {
+  private static final Logger logger = LoggerFactory.getLogger(AwsLambdaVerification.class);
+
   @Attributes(title = "Function Test Events") private List<LambdaTestEvent> lambdaTestEvents = new ArrayList<>();
 
   @Transient @Inject private ActivityService activityService;
@@ -61,7 +63,6 @@ public class AwsLambdaVerification extends State {
   @Inject @Transient private transient SettingsService settingsService;
   private static final long TIME_OUT_IN_MINUTES = 2;
   @Inject private DelegateService delegateService;
-  @Transient private static final Logger logger = LoggerFactory.getLogger(AwsLambdaVerification.class);
 
   /**
    * Instantiates a new state.
