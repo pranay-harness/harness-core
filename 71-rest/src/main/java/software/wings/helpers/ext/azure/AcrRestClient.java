@@ -9,7 +9,7 @@ public interface AcrRestClient {
   @GET("/v2/_catalog")
   Call<AcrGetRepositoriesResponse> listRepositories(@Header("Authorization") String basicAuthHeader);
 
-  @GET("/v2/{repositoryName}/tags/list")
+  @GET("/v2/{repositoryName}/tags/list?orderby=timedesc")
   Call<AcrGetRepositoryTagsResponse> listRepositoryTags(@Header("Authorization") String basicAuthHeader,
       @Path(value = "repositoryName", encoded = true) String repositoryName);
 }
