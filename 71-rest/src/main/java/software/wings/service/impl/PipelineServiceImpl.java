@@ -86,10 +86,8 @@ import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import javax.validation.executable.ValidateOnExecution;
@@ -396,92 +394,57 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public Pipeline readPipelineWithResolvedVariables(
-      String appId, String pipelineId, Map<String, String> inputPipelineVariables) {
+      String appId, String pipelineId, Map<String, String> pipelineVariables) {
     Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("Pipeline does not exist", pipeline, USER);
     List<Service> services = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     List<String> envIds = new ArrayList<>();
-    Map<String, String> resolvedPipelineVariables = new LinkedHashMap<>();
-    Map<String, String> reducedPipelineVariables =
-        isEmpty(inputPipelineVariables) ? new LinkedHashMap<>() : new LinkedHashMap<>(inputPipelineVariables);
+    List<String> infraMappingIds = new ArrayList<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
         if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
-          try {
-            Workflow workflow = workflowService.readWorkflow(
-                pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
-            notNullCheck("Workflow does not exist", workflow);
-            Map<String, String> workflowVariables = pipelineStageElement.getWorkflowVariables();
-            Map<String, String> resolvedWorkflowVariables = new LinkedHashMap<>();
-            if (isNotEmpty(workflowVariables)) {
-              for (Entry<String, String> variableEntry : workflowVariables.entrySet()) {
-                String variableName = variableEntry.getKey();
-                String variableValue = getName(workflowVariables.get(variableName));
-                if (isNotEmpty(inputPipelineVariables)) {
-                  if (inputPipelineVariables.containsKey(variableValue)) {
-                    resolvedPipelineVariables.put(variableName, inputPipelineVariables.get(variableValue));
-                    resolvedWorkflowVariables.put(variableName, inputPipelineVariables.get(variableValue));
-                    reducedPipelineVariables.remove(variableValue);
-                  } else if (inputPipelineVariables.containsKey(variableName)) {
-                    resolvedPipelineVariables.put(variableName, inputPipelineVariables.get(variableName));
-                    resolvedWorkflowVariables.put(variableName, inputPipelineVariables.get(variableName));
-                    reducedPipelineVariables.remove(variableName);
-                  } else {
-                    resolvedWorkflowVariables.put(variableName, variableEntry.getValue());
-                  }
-                } else {
-                  if (!matchesVariablePattern(variableEntry.getValue())) {
-                    resolvedWorkflowVariables.put(variableName, variableValue);
-                  }
-                }
-              }
-            }
-            if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
-              resolveServicesOfWorkflow(services, serviceIds, resolvedWorkflowVariables, workflow);
-              resolveEnvIds(envIds, resolvedWorkflowVariables, workflow);
-            }
-          } catch (Exception ex) {
-            logger.warn("Exception occurred while reading workflow associated to the pipeline + [" + pipelineId
-                    + "]. Reason: {}",
-                ex.getMessage());
+          Workflow workflow = workflowService.readWorkflow(
+              pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
+          notNullCheck("Workflow does not exist", workflow);
+          Map<String, String> resolvedWorkflowStepVariables =
+              WorkflowServiceHelper.overrideWorkflowVariables(workflow.getOrchestrationWorkflow().getUserVariables(),
+                  pipelineStageElement.getWorkflowVariables(), pipelineVariables);
+
+          if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+            resolveServices(services, serviceIds, resolvedWorkflowStepVariables, workflow);
+            resolveInfraMappings(infraMappingIds, resolvedWorkflowStepVariables, workflow);
+            resolveEnvIds(envIds, resolvedWorkflowStepVariables, workflow);
           }
         }
       }
     }
     pipeline.setServices(services);
-    // Add all input variables to the resolved pipeline variables
-    for (Entry<String, String> entry : reducedPipelineVariables.entrySet()) {
-      if (!resolvedPipelineVariables.containsKey(entry.getKey())) {
-        resolvedPipelineVariables.put(entry.getKey(), entry.getValue());
-      }
-    }
-    pipeline.setResolvedPipelineVariables(resolvedPipelineVariables);
     pipeline.setEnvIds(envIds);
+    pipeline.setInfraMappingIds(infraMappingIds);
     return pipeline;
   }
 
-  private void resolveServicesOfWorkflow(
+  private void resolveServices(
       List<Service> services, List<String> serviceIds, Map<String, String> pseWorkflowVariables, Workflow workflow) {
-    if (isEmpty(pseWorkflowVariables)) {
-      if (workflow.getServices() != null) {
-        workflow.getServices().forEach((Service service) -> {
-          if (!serviceIds.contains(service.getUuid())) {
-            services.add(service);
-            serviceIds.add(service.getUuid());
-          }
-        });
-      }
-    } else {
-      List<Service> resolvedServices = workflowService.getResolvedServices(workflow, pseWorkflowVariables);
-      if (resolvedServices != null) {
-        for (Service resolvedService : resolvedServices) {
-          if (!serviceIds.contains(resolvedService.getUuid())) {
-            services.add(resolvedService);
-            serviceIds.add(resolvedService.getUuid());
-          }
+    List<Service> resolvedServices = workflowService.getResolvedServices(workflow, pseWorkflowVariables);
+    if (resolvedServices != null) {
+      for (Service resolvedService : resolvedServices) {
+        if (!serviceIds.contains(resolvedService.getUuid())) {
+          services.add(resolvedService);
+          serviceIds.add(resolvedService.getUuid());
         }
       }
+    }
+  }
+
+  private void resolveInfraMappings(
+      List<String> infraMappingIds, Map<String, String> pseWorkflowVariables, Workflow workflow) {
+    List<String> resolvedInfraMappingIds = workflowService.getResolvedInfraMappingIds(workflow, pseWorkflowVariables);
+    if (resolvedInfraMappingIds != null) {
+      resolvedInfraMappingIds.stream()
+          .filter(resolvedInfraId -> !infraMappingIds.contains(resolvedInfraId))
+          .forEach(infraMappingIds::add);
     }
   }
 
@@ -825,7 +788,7 @@ public class PipelineServiceImpl implements PipelineService {
         }
         keywords.add(workflow.getName());
         keywords.add(workflow.getDescription());
-        resolveServicesOfWorkflow(services, serviceIds, stageElement.getWorkflowVariables(), workflow);
+        resolveServices(services, serviceIds, stageElement.getWorkflowVariables(), workflow);
         if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != BUILD
             && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
           logger.info("It should not happen. If happens printing the properties of appId {} are {}",

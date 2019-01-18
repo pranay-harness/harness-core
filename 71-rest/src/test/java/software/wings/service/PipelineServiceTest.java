@@ -444,6 +444,8 @@ public class PipelineServiceTest extends WingsBaseTest {
                 .build());
 
     when(workflowService.resolveEnvironmentId(any(), any())).thenReturn(ENV_ID);
+    when(workflowService.getResolvedServices(any(), anyMap()))
+        .thenReturn(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()));
 
     Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(APP_ID, PIPELINE_ID, null);
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
@@ -643,13 +645,6 @@ public class PipelineServiceTest extends WingsBaseTest {
         ImmutableMap.of("ENV", ENV_ID, "SERVICE", SERVICE_ID, "INFRA", INFRA_MAPPING_ID, "MyVar", "MyValue"));
 
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
-    assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
-    assertThat(pipeline.getResolvedPipelineVariables())
-        .hasSize(4)
-        .containsKeys("Environment", "Service", "ServiceInfrastructure_SSH");
-    assertThat(pipeline.getResolvedPipelineVariables())
-        .hasSize(4)
-        .containsValues(ENV_ID, SERVICE_ID, INFRA_MAPPING_ID, "MyValue");
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
 
     verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);

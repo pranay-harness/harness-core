@@ -42,10 +42,6 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by anubhaw on 11/2/16.
- */
-
 public class EnvStateTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ExecutionContextImpl context;
@@ -67,7 +63,7 @@ public class EnvStateTest extends WingsBaseTest {
     when(workflowExecutionService.triggerOrchestrationExecution(
              eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
         .thenReturn(aWorkflowExecution().withUuid(WORKFLOW_EXECUTION_ID).build());
-    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
   }
 
   @Test
