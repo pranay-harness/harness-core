@@ -4,9 +4,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -105,7 +102,6 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .withLicenseInfo(licenseInfo)
                                               .build());
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
-    verify(jobScheduler, times(2)).deleteJob(eq(account.getUuid()), anyString());
   }
 
   @Test

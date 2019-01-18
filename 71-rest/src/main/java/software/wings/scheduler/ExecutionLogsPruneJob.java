@@ -28,7 +28,6 @@ public class ExecutionLogsPruneJob implements Job {
   }
 
   public static void addJob(PersistentScheduler jobScheduler) {
-    jobScheduler.deleteJob(EXECUTION_LOGS_PRUNE_CRON_NAME, EXECUTION_LOGS_PRUNE_CRON_GROUP);
     JobDetail job = JobBuilder.newJob(ExecutionLogsPruneJob.class)
                         .withIdentity(EXECUTION_LOGS_PRUNE_CRON_NAME, EXECUTION_LOGS_PRUNE_CRON_GROUP)
                         .withDescription("Execution Logs prune job ")
@@ -38,7 +37,6 @@ public class ExecutionLogsPruneJob implements Job {
                           .withIdentity(EXECUTION_LOGS_PRUNE_CRON_NAME, EXECUTION_LOGS_PRUNE_CRON_GROUP)
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(1).repeatForever())
                           .build();
-
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 }

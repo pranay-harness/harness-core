@@ -42,8 +42,6 @@ public class PersistentLockCleanupJob implements Job {
   @Inject private ExecutorService executorService;
 
   public static void add(PersistentScheduler jobScheduler) {
-    jobScheduler.deleteJob(NAME, GROUP);
-
     JobDetail job = JobBuilder.newJob(PersistentLockCleanupJob.class).withIdentity(NAME, GROUP).build();
 
     OffsetDateTime startTime = OffsetDateTime.now().plusMinutes(10);
@@ -55,7 +53,7 @@ public class PersistentLockCleanupJob implements Job {
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever())
             .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 
   public void deleteOld(OffsetDateTime date) {

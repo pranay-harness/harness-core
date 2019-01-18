@@ -172,14 +172,11 @@ public class ZombieHunterJob implements Job {
     // added, but this is not critical.
     for (int i = 0; i < zombieTypes.size(); ++i) {
       String id = "" + i;
-      // If somehow this job was scheduled from before make sure the trigger is correct.
-      jobScheduler.deleteJob(id, GROUP);
-
       JobDetail details =
           JobBuilder.newJob(ZombieHunterJob.class).withIdentity(id, GROUP).usingJobData(INDEX_KEY, i).build();
 
       Trigger trigger = defaultTrigger(i);
-      jobScheduler.scheduleJob(details, trigger);
+      jobScheduler.ensureJob__UnderConstruction(details, trigger);
     }
   }
 

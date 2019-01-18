@@ -58,7 +58,6 @@ public class AlertCheckJob implements Job {
   @Inject private ExecutorService executorService;
 
   public static void add(PersistentScheduler jobScheduler, Account account) {
-    jobScheduler.deleteJob(account.getUuid(), GROUP);
     JobDetail job = JobBuilder.newJob(AlertCheckJob.class)
                         .withIdentity(account.getUuid(), GROUP)
                         .usingJobData(ACCOUNT_ID_KEY, account.getUuid())
@@ -70,7 +69,7 @@ public class AlertCheckJob implements Job {
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever())
             .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 
   @Override

@@ -110,7 +110,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedJenkinsArtifactStream.getJobname()).isEqualTo("todolistwar");
     assertThat(savedJenkinsArtifactStream.getArtifactPaths()).contains("target/todolist.war");
 
-    verify(serviceJobScheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
+    verify(serviceJobScheduler).ensureJob__UnderConstruction(any(JobDetail.class), any(Trigger.class));
     verify(appService).getAccountIdByAppId(APP_ID);
   }
 
@@ -179,7 +179,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedBambooArtifactStream.getJobname()).isEqualTo("TOD-TOD");
     assertThat(savedBambooArtifactStream.getArtifactPaths()).contains("artifacts/todolist.war");
 
-    verify(serviceJobScheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
+    verify(serviceJobScheduler).ensureJob__UnderConstruction(any(JobDetail.class), any(Trigger.class));
     verify(appService).getAccountIdByAppId(APP_ID);
   }
 

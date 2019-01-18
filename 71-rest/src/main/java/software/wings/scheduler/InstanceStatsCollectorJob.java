@@ -56,7 +56,6 @@ public class InstanceStatsCollectorJob implements Job {
   @Inject private UsageMetricsEventPublisher eventPublisher;
 
   public static void add(PersistentScheduler jobScheduler, String accountId) {
-    jobScheduler.deleteJob(accountId, GROUP);
     JobDetail job = JobBuilder.newJob(InstanceStatsCollectorJob.class)
                         .withIdentity(accountId, GROUP)
                         .usingJobData(ACCOUNT_ID_KEY, accountId)
@@ -68,7 +67,7 @@ public class InstanceStatsCollectorJob implements Job {
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(SYNC_INTERVAL).repeatForever())
             .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 
   public static void delete(PersistentScheduler jobScheduler, String accountId) {

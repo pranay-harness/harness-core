@@ -56,7 +56,6 @@ public class WorkflowExecutionMonitorJob implements Job {
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   public static void add(PersistentScheduler jobScheduler) {
-    jobScheduler.deleteJob(NAME, GROUP);
     JobDetail job = JobBuilder.newJob(WorkflowExecutionMonitorJob.class).withIdentity(NAME, GROUP).build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
@@ -66,7 +65,7 @@ public class WorkflowExecutionMonitorJob implements Job {
                                             .repeatForever())
                           .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 
   @Override

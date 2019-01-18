@@ -36,11 +36,8 @@ public class BarrierBackupJob implements Job {
   }
 
   public static void addJob(PersistentScheduler jobScheduler) {
-    // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
-    jobScheduler.deleteJob(NAME, GROUP);
-
     JobDetail details = JobBuilder.newJob(BarrierBackupJob.class).withIdentity(NAME, GROUP).build();
-    jobScheduler.scheduleJob(details, trigger());
+    jobScheduler.ensureJob__UnderConstruction(details, trigger());
   }
 
   @Override

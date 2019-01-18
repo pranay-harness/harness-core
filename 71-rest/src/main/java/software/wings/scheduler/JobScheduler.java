@@ -10,7 +10,7 @@ import com.google.inject.Key;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceController;
-import io.harness.scheduler.AbstractQuartzScheduler;
+import io.harness.scheduler.HQuartzScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
@@ -21,7 +21,7 @@ import software.wings.core.managerConfiguration.ConfigurationController;
 
 import java.util.List;
 
-public class JobScheduler extends AbstractQuartzScheduler implements ConfigChangeListener {
+public class JobScheduler extends HQuartzScheduler implements ConfigChangeListener {
   private static final Logger logger = LoggerFactory.getLogger(JobScheduler.class);
 
   @Inject

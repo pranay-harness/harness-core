@@ -35,7 +35,6 @@ public class LimitVicinityCheckerJob implements Job {
   @Inject private LimitVicinityHandler limitVicinityHandler;
 
   public static void add(PersistentScheduler jobScheduler, Account account) {
-    jobScheduler.deleteJob(account.getUuid(), GROUP);
     JobDetail job = JobBuilder.newJob(LimitVicinityCheckerJob.class)
                         .withIdentity(account.getUuid(), GROUP)
                         .usingJobData(ACCOUNT_ID_KEY, account.getUuid())
@@ -48,7 +47,7 @@ public class LimitVicinityCheckerJob implements Job {
                 SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(SYNC_INTERVAL_IN_MINUTES).repeatForever())
             .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 
   public static void delete(PersistentScheduler jobScheduler, String accountId) {

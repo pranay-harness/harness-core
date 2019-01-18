@@ -37,7 +37,6 @@ public class AdministrativeJob implements Job {
   }
 
   public static void addJob(PersistentScheduler jobScheduler) {
-    jobScheduler.deleteJob(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP);
     JobDetail job = JobBuilder.newJob(AdministrativeJob.class)
                         .withIdentity(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP)
                         .withDescription("Administrative job ")
@@ -49,6 +48,6 @@ public class AdministrativeJob implements Job {
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(10).repeatForever())
             .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 }

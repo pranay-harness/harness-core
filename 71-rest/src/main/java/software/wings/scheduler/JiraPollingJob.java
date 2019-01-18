@@ -37,8 +37,6 @@ public class JiraPollingJob implements Job {
 
   public static void doPollingJob(PersistentScheduler jobScheduler, JiraApprovalParams jiraApprovalParams,
       String approvalExecutionId, String accountId, String appId, String workflowExecutionId) {
-    jobScheduler.deleteJob(approvalExecutionId, GROUP);
-
     JobDetail job = JobBuilder.newJob(JiraPollingJob.class)
                         .withIdentity(approvalExecutionId, GROUP)
                         .usingJobData(CONNECTOR_ID, jiraApprovalParams.getJiraConnectorId())
@@ -66,7 +64,7 @@ public class JiraPollingJob implements Job {
                                             .withMisfireHandlingInstructionNowWithExistingCount())
                           .build();
 
-    jobScheduler.scheduleJob(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
 
   @Override

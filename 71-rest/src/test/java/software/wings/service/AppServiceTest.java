@@ -45,8 +45,6 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.quartz.JobDetail;
-import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
@@ -174,15 +172,6 @@ public class AppServiceTest extends WingsBaseTest {
 
     verify(settingsService).createDefaultApplicationSettings(APP_ID, "ACCOUNT_ID", false);
     verify(notificationService).sendNotificationAsync(any(Notification.class));
-    ArgumentCaptor<JobDetail> jobDetailArgumentCaptor = ArgumentCaptor.forClass(JobDetail.class);
-    ArgumentCaptor<Trigger> triggerArgumentCaptor = ArgumentCaptor.forClass(Trigger.class);
-    verify(serviceJobScheduler, Mockito.times(1))
-        .scheduleJob(jobDetailArgumentCaptor.capture(), triggerArgumentCaptor.capture());
-
-    assertThat(jobDetailArgumentCaptor.getValue()).isNotNull();
-    assertThat(jobDetailArgumentCaptor.getValue().getJobDataMap().getString("appId")).isEqualTo(savedApp.getUuid());
-    assertThat(triggerArgumentCaptor.getValue()).isNotNull();
-    assertThat(triggerArgumentCaptor.getValue().getKey().getName()).isEqualTo(savedApp.getUuid());
   }
 
   /**
