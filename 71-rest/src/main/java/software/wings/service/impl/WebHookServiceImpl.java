@@ -45,6 +45,7 @@ import software.wings.utils.Misc;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -283,11 +284,11 @@ public class WebHookServiceImpl implements WebHookService {
     webhookEventDetails.setGitConnectorId(webhookTriggerCondition.getGitConnectorId());
     webhookEventDetails.setFilePaths(webhookTriggerCondition.getFilePaths());
 
-    for (Map.Entry<String, String> parameterEntry : workflowVariables.entrySet()) {
-      String paramValue = parameterEntry.getValue();
-      String param = parameterEntry.getKey();
+    for (Entry<String, String> entry : workflowVariables.entrySet()) {
+      String param = entry.getKey();
+      String paramValue = entry.getValue();
       try {
-        if (isNotEmpty(parameterEntry.getValue())) {
+        if (isNotEmpty(paramValue)) {
           Object evalutedValue = expressionEvaluator.substitute(paramValue, payLoadMap);
           if (evalutedValue != null) {
             resolvedParameters.put(param, String.valueOf(evalutedValue));

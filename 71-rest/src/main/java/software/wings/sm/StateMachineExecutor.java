@@ -690,10 +690,10 @@ public class StateMachineExecutor {
   private void openAnAlert(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
     try {
       Application app = context.getApp();
-
+      Environment environment = context.getEnv();
       ManualInterventionNeededAlert manualInterventionNeededAlert =
           ManualInterventionNeededAlert.builder()
-              .envId(context.getEnv().getUuid())
+              .envId(environment != null ? environment.getUuid() : null)
               .stateExecutionInstanceId(stateExecutionInstance.getUuid())
               .executionId(context.getWorkflowExecutionId())
               .name(context.getWorkflowExecutionName())

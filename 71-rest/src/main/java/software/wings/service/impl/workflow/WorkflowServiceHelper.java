@@ -101,6 +101,7 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
@@ -144,12 +145,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Singleton
 public class WorkflowServiceHelper {
@@ -180,6 +184,7 @@ public class WorkflowServiceHelper {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ExpressionEvaluator expressionEvaluator;
 
   public String getHPAYamlStringWithCustomMetric(
       Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage) {
@@ -1764,5 +1769,38 @@ public class WorkflowServiceHelper {
   public boolean isK8sV2Service(String appId, String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId);
     return service != null && service.isK8sV2();
+  }
+
+  public static Map<String, String> overrideWorkflowVariables(
+      List<Variable> variables, Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables) {
+    Map<String, String> resolvedWorkflowVariables = new LinkedHashMap<>();
+    if (isEmpty(variables) || isEmpty(workflowStepVariables)) {
+      return new HashMap<>();
+    }
+    if (isEmpty(pipelineVariables)) {
+      // No need to override the workflow variables return workflow variables
+      return workflowStepVariables;
+    }
+    final Set<String> variableNames = variables.stream().map(Variable::getName).collect(Collectors.toSet());
+    if (isNotEmpty(workflowStepVariables)) {
+      for (Map.Entry<String, String> workflowVariableEntry : workflowStepVariables.entrySet()) {
+        String workflowVariableName = workflowVariableEntry.getKey();
+        if (variableNames.contains(workflowVariableName)) {
+          String workflowVariableValue = workflowVariableEntry.getValue();
+          String pipelineVariableName = ExpressionEvaluator.getName(workflowVariableValue);
+          if (pipelineVariables.containsKey(pipelineVariableName)) {
+            // Pipeline variable exists so that takes highest precedence
+            resolvedWorkflowVariables.put(workflowVariableName, pipelineVariables.get(pipelineVariableName));
+          } else if (pipelineVariables.containsKey(workflowVariableName)) {
+            /// Pipeline variable overrides workflow variable
+            resolvedWorkflowVariables.put(workflowVariableName, pipelineVariables.get(workflowVariableName));
+          } else {
+            // Use workflow variable as is
+            resolvedWorkflowVariables.put(workflowVariableName, workflowVariableValue);
+          }
+        }
+      }
+    }
+    return resolvedWorkflowVariables;
   }
 }

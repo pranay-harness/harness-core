@@ -936,7 +936,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (pipeline == null) {
       throw new WingsException(ErrorCode.NON_EXISTING_PIPELINE);
     }
-    executionArgs.setWorkflowVariables(pipeline.getResolvedPipelineVariables());
 
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowType.PIPELINE, appId, pipelineId);
@@ -1002,6 +1001,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setServiceIds(pipeline.getServices().stream().map(Service::getUuid).collect(toList()));
     }
     workflowExecution.setEnvIds(pipeline.getEnvIds());
+    workflowExecution.setInfraMappingIds(pipeline.getInfraMappingIds());
     return triggerExecution(
         workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger, pipeline, null);
   }

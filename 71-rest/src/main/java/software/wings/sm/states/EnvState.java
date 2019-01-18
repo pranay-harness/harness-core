@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
@@ -33,6 +32,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -102,20 +102,7 @@ public class EnvState extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
 
-    List<Artifact> artifacts = ((DeploymentExecutionContext) context).getArtifacts();
-
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
-    executionArgs.setOrchestrationId(workflowId);
-    executionArgs.setArtifacts(artifacts);
-    executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
-    executionArgs.setTriggeredFromPipeline(true);
-    executionArgs.setPipelineId(pipelineId);
-    executionArgs.setPipelinePhaseElementId(context.getPipelineStateElementId());
-    executionArgs.setWorkflowVariables(populatePipelineVariables(workflowStandardParams));
-    executionArgs.setExcludeHostsWithSameArtifact(workflowStandardParams.isExcludeHostsWithSameArtifact());
-
-    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+    Workflow workflow = workflowService.readWorkflowWithoutServices(appId, workflowId);
 
     EnvStateExecutionData envStateExecutionData =
         anEnvStateExecutionData().withWorkflowId(workflowId).withEnvId(envId).build();
@@ -135,7 +122,19 @@ public class EnvState extends State {
           .build();
     }
 
-    // TODO: Resolve environment form Workflow
+    List<Artifact> artifacts = ((DeploymentExecutionContext) context).getArtifacts();
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+    executionArgs.setOrchestrationId(workflowId);
+    executionArgs.setArtifacts(artifacts);
+    executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
+    executionArgs.setTriggeredFromPipeline(true);
+    executionArgs.setPipelineId(pipelineId);
+    executionArgs.setPipelinePhaseElementId(context.getPipelineStateElementId());
+    executionArgs.setWorkflowVariables(populatePipelineVariables(workflow, workflowStandardParams));
+    executionArgs.setExcludeHostsWithSameArtifact(workflowStandardParams.isExcludeHostsWithSameArtifact());
+
     envStateExecutionData.setOrchestrationWorkflowType(
         workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
     try {
@@ -157,21 +156,12 @@ public class EnvState extends State {
     }
   }
 
-  private Map<String, String> populatePipelineVariables(WorkflowStandardParams workflowStandardParams) {
-    if (workflowStandardParams.getWorkflowVariables() == null) {
-      return workflowVariables;
-    }
-    Map<String, String> variables = workflowStandardParams.getWorkflowVariables();
-    if (isEmpty(workflowVariables)) {
-      return variables;
-    }
-    workflowVariables.keySet().forEach(s -> {
-      if (!variables.containsKey(s)) {
-        variables.put(s, workflowVariables.get(s));
-      }
-    });
-    return variables;
+  private Map<String, String> populatePipelineVariables(
+      Workflow workflow, WorkflowStandardParams workflowStandardParams) {
+    return WorkflowServiceHelper.overrideWorkflowVariables(workflow.getOrchestrationWorkflow().getUserVariables(),
+        workflowVariables, workflowStandardParams.getWorkflowVariables());
   }
+
   /**
    * Handle abort event.
    *

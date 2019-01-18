@@ -7,7 +7,6 @@ package software.wings.beans;
 import static java.util.Arrays.asList;
 import static software.wings.beans.WorkflowType.PIPELINE;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import lombok.AllArgsConstructor;
@@ -22,7 +21,6 @@ import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -55,10 +53,10 @@ public class Pipeline extends Base {
   private transient List<Variable> pipelineVariables = new ArrayList<>();
   private transient List<String> envIds = new ArrayList<>();
   private transient boolean envParameterized;
-  @JsonIgnore private transient Map<String, String> resolvedPipelineVariables = new LinkedHashMap<>();
   private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
   private transient List<EnvSummary> envSummaries = new ArrayList<>();
   private transient boolean hasBuildWorkflow;
+  private transient List<String> infraMappingIds = new ArrayList<>();
 
   @Builder
   public Pipeline(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
