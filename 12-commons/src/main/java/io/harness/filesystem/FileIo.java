@@ -1,10 +1,16 @@
 package io.harness.filesystem;
 
+import static io.harness.govern.Switch.noop;
+import static io.harness.threading.Morpheus.sleep;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.SYNC;
 import static java.nio.file.StandardOpenOption.WRITE;
+import static java.time.Duration.ofSeconds;
 
 import org.apache.commons.io.FileUtils;
+import org.zeroturnaround.exec.InvalidExitValueException;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +23,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class FileIo {
   public static void createDirectoryIfDoesNotExist(final String directoryPath) throws IOException {
@@ -28,6 +35,37 @@ public class FileIo {
     } catch (FileAlreadyExistsException e) {
       // Ignore.
     }
+  }
+
+  public static boolean waitForDirectoryToBeAccessibleOutOfProcess(final String directoryPath, int maxRetries) {
+    int retryCountRemaining = maxRetries;
+    while (true) {
+      try {
+        ProcessExecutor processExecutor = new ProcessExecutor()
+                                              .timeout(1, TimeUnit.SECONDS)
+                                              .directory(new File(directoryPath))
+                                              .commandSplit(getDirectoryCheckCommand())
+                                              .readOutput(true);
+        ProcessResult processResult = processExecutor.execute();
+        if (processResult.getExitValue() == 0) {
+          return true;
+        }
+      } catch (IOException | InterruptedException | TimeoutException | InvalidExitValueException e) {
+        noop(); // Ignore
+      }
+      retryCountRemaining--;
+      if (retryCountRemaining == 0) {
+        return false;
+      }
+      sleep(ofSeconds(1));
+    }
+  }
+
+  private static String getDirectoryCheckCommand() {
+    if (System.getProperty("os.name").startsWith("Windows")) {
+      return "cmd /c cd";
+    }
+    return "bash -c pwd";
   }
 
   public static void deleteFileIfExists(final String filePath) throws IOException {

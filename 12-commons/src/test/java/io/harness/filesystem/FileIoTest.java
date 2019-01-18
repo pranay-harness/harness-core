@@ -3,6 +3,7 @@ package io.harness.filesystem;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
+import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.filesystem.FileIo.writeFile;
 import static java.nio.file.Files.lines;
 import static org.junit.Assert.assertEquals;
@@ -40,6 +41,23 @@ public class FileIoTest {
     } finally {
       deleteDirectoryAndItsContentIfExists(directoryPath);
     }
+  }
+
+  @Test
+  public void waitForDirectoryToBeAccessibleOutOfProcessPositiveTest() throws IOException {
+    final String directoryPath = getRandomTempDirectory();
+    try {
+      createDirectoryIfDoesNotExist(directoryPath);
+      assertTrue(waitForDirectoryToBeAccessibleOutOfProcess(directoryPath, 3));
+
+    } finally {
+      deleteDirectoryAndItsContentIfExists(directoryPath);
+    }
+  }
+
+  @Test
+  public void waitForDirectoryToBeAccessibleOutOfProcessNegativeTest() {
+    assertFalse(waitForDirectoryToBeAccessibleOutOfProcess(getRandomTempDirectory(), 3));
   }
 
   @Test
