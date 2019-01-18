@@ -312,16 +312,31 @@ public class K8sStateHelper {
 
     logger.info("Found Values at following sources: " + valuesFiles.keySet());
 
-    for (Entry<K8sValuesLocation, String> entry : valuesFiles.entrySet()) {
-      String renderedValue = context.renderExpression(entry.getValue());
-      if (isNotBlank(renderedValue)) {
-        result.add(renderedValue);
-      } else {
-        logger.info("Values content is empty in " + entry.getKey());
-      }
+    if (valuesFiles.containsKey(K8sValuesLocation.Service)) {
+      addRenderedValueToList(context, K8sValuesLocation.Service, valuesFiles.get(K8sValuesLocation.Service), result);
+    }
+
+    if (valuesFiles.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
+      addRenderedValueToList(
+          context, K8sValuesLocation.EnvironmentGlobal, valuesFiles.get(K8sValuesLocation.EnvironmentGlobal), result);
+    }
+
+    if (valuesFiles.containsKey(K8sValuesLocation.Environment)) {
+      addRenderedValueToList(
+          context, K8sValuesLocation.Environment, valuesFiles.get(K8sValuesLocation.Environment), result);
     }
 
     return result;
+  }
+
+  private void addRenderedValueToList(
+      ExecutionContext context, K8sValuesLocation location, String value, List<String> result) {
+    String renderedValue = context.renderExpression(value);
+    if (isNotBlank(renderedValue)) {
+      result.add(renderedValue);
+    } else {
+      logger.info("Values content is empty in " + location);
+    }
   }
 
   public void saveK8sElement(ExecutionContext context, K8sElement k8sElement) {
