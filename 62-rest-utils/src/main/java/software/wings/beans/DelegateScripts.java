@@ -16,6 +16,7 @@ public class DelegateScripts {
   private String stopScript;
   private String startScript;
   private String delegateScript;
+  private String setupProxyScript;
 
   public String getScriptByName(String fileName) {
     switch (fileName) {
@@ -25,6 +26,8 @@ public class DelegateScripts {
         return getStopScript();
       case "delegate.sh":
         return getDelegateScript();
+      case "setup-proxy.sh":
+        return getSetupProxyScript();
       default:
         return null;
     }

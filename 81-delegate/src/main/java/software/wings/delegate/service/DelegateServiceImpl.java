@@ -1265,7 +1265,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
-    for (String fileName : asList("start.sh", "stop.sh", "delegate.sh")) {
+    for (String fileName : asList("start.sh", "stop.sh", "delegate.sh", "setup-proxy.sh")) {
       Files.deleteIfExists(Paths.get(fileName));
       File scriptFile = new File(fileName);
       String script = delegateScripts.getScriptByName(fileName);
