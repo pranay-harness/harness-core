@@ -82,7 +82,6 @@ public class GoogleCloudFileServiceImpl implements FileService {
     String fileUuid = fileMetadata.getFileUuid();
     if (isEmpty(fileUuid)) {
       fileUuid = UUIDGenerator.generateUuid();
-      fileMetadata.setFileUuid(fileUuid);
     }
     String gcsFileName = accountId + FILE_PATH_SEPARATOR + fileUuid;
     BlobId blobId = BlobId.of(getBucketName(fileBucket), gcsFileName);
@@ -100,6 +99,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
       String gcsFileId = generateFileId(blobId);
       fileMetadata.setChecksum(blob.getMd5());
       fileMetadata.setFileLength(blob.getSize());
+      fileMetadata.setFileUuid(gcsFileId);
       saveGcsFileMetadata(fileMetadata, fileBucket, null, gcsFileId);
       logger.info("File '{}' of type {} is saved in GCS with id {}", fileMetadata.getFileName(), fileBucket, gcsFileId);
       return gcsFileId;
@@ -114,7 +114,6 @@ public class GoogleCloudFileServiceImpl implements FileService {
     String fileUuid = baseFile.getFileUuid();
     if (isEmpty(fileUuid)) {
       fileUuid = UUIDGenerator.generateUuid();
-      baseFile.setFileUuid(fileUuid);
     }
     String gcsFileName = accountId + FILE_PATH_SEPARATOR + fileUuid;
     BlobId blobId = BlobId.of(getBucketName(fileBucket), gcsFileName);
@@ -129,9 +128,10 @@ public class GoogleCloudFileServiceImpl implements FileService {
                             .build();
     try {
       Blob blob = getStorage().create(blobInfo, IOUtils.toByteArray(uploadedInputStream));
+      String gcsFileId = generateFileId(blobId);
       baseFile.setChecksum(blob.getMd5());
       baseFile.setSize(blob.getSize());
-      String gcsFileId = generateFileId(blobId);
+      baseFile.setFileUuid(gcsFileId);
       saveGcsFileMetadata(baseFile, fileBucket, null, gcsFileId);
       logger.info("File '{}' of type {} is saved in GCS with id {}", baseFile.getFileName(), fileBucket, gcsFileId);
       return gcsFileId;
