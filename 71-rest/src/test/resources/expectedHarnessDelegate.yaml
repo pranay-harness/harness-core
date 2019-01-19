@@ -20,6 +20,19 @@ roleRef:
 
 ---
 
+apiVersion: v1
+kind: Secret
+metadata:
+  name: harness-proxy-pass
+  namespace: harness-delegate
+type: Opaque
+data:
+  # Enter base64 encoded username and password, if needed
+  PROXY_USER: ""
+  PROXY_PASSWORD: ""
+
+---
+
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
@@ -82,9 +95,15 @@ spec:
         - name: NO_PROXY
           value: ""
         - name: PROXY_USER
-          value: ""
+          valueFrom:
+            secretKeyRef:
+              name: harness-proxy-pass
+              key: PROXY_USER
         - name: PROXY_PASSWORD
-          value: ""
+          valueFrom:
+            secretKeyRef:
+              name: harness-proxy-pass
+              key: PROXY_PASSWORD
         - name: POLL_FOR_TASKS
           value: "false"
         - name: HELM_DESIRED_VERSION

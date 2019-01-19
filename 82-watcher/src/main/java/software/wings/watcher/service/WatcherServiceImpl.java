@@ -574,7 +574,7 @@ public class WatcherServiceImpl implements WatcherService {
       Files.createDirectory(versionDir);
     }
 
-    for (String fileName : asList("start.sh", "stop.sh", "delegate.sh")) {
+    for (String fileName : asList("start.sh", "stop.sh", "delegate.sh", "setup-proxy.sh")) {
       String filePath = fileName;
       if ("delegate.sh".equals(fileName)) {
         filePath = version + "/" + fileName;

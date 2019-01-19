@@ -504,15 +504,15 @@ public class DelegateServiceTest extends WingsBaseTest {
           .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStop.sh"))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
-      assertThat(file).extracting(TarArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/README.txt");
-
-      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
-      assertThat(file).extracting(TarArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/proxy.config");
+      assertThat(file).extracting(TarArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/setup-proxy.sh");
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedProxy.config"))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedSetupProxy.sh"))));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).containsExactly(DELEGATE_DIR + "/README.txt");
     }
   }
 

@@ -51,6 +51,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -153,7 +154,6 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.BoundedInputStream;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -162,6 +162,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -521,10 +522,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         cfg.getTemplate("delegate.sh.ftl").process(scriptParams, stringWriter);
         delegateScripts.setDelegateScript(stringWriter.toString());
       }
-
       try (StringWriter stringWriter = new StringWriter()) {
         cfg.getTemplate("stop.sh.ftl").process(scriptParams, stringWriter);
         delegateScripts.setStopScript(stringWriter.toString());
+      }
+      try (StringWriter stringWriter = new StringWriter()) {
+        cfg.getTemplate("setup-proxy.sh.ftl").process(scriptParams, stringWriter);
+        delegateScripts.setSetupProxyScript(stringWriter.toString());
       }
     }
     return delegateScripts;
@@ -624,6 +628,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       Account account = accountService.get(accountId);
 
+      String hexkey = String.format("%040x", new BigInteger(1, accountId.substring(0, 6).getBytes(Charsets.UTF_8)))
+                          .replaceFirst("^0+(?!$)", "");
+
       if (mainConfiguration.getDeployMode().equals(DeployMode.KUBERNETES_ONPREM)) {
         delegateDockerImage = mainConfiguration.getPortal().getDelegateDockerImage();
       }
@@ -632,6 +639,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                         .put("delegateDockerImage", delegateDockerImage)
                                                         .put("accountId", accountId)
                                                         .put("accountSecret", account.getAccountKey())
+                                                        .put("hexkey", hexkey)
                                                         .put("upgradeVersion", latestVersion)
                                                         .put("managerHostAndPort", managerHost)
                                                         .put("verificationHostAndPort", verificationHost)
@@ -727,6 +735,19 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
       out.closeArchiveEntry();
 
+      File setupProxy = File.createTempFile("setup-proxy", ".sh");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(setupProxy), UTF_8)) {
+        cfg.getTemplate("setup-proxy.sh.ftl").process(scriptParams, fileWriter);
+      }
+      setupProxy = new File(setupProxy.getAbsolutePath());
+      TarArchiveEntry setupProxyTarArchiveEntry = new TarArchiveEntry(setupProxy, DELEGATE_DIR + "/setup-proxy.sh");
+      setupProxyTarArchiveEntry.setMode(0755);
+      out.putArchiveEntry(setupProxyTarArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(setupProxy)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+
       File readme = File.createTempFile("README", ".txt");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
         cfg.getTemplate("readme.txt.ftl").process(emptyMap(), fileWriter);
@@ -735,25 +756,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, DELEGATE_DIR + "/README.txt");
       out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
-        IOUtils.copy(fis, out);
-      }
-      out.closeArchiveEntry();
-
-      File proxyConfig = File.createTempFile("proxy", ".config");
-      try (BufferedWriter fileWriter =
-               new BufferedWriter(new OutputStreamWriter(new FileOutputStream(proxyConfig), UTF_8))) {
-        fileWriter.write("PROXY_HOST=");
-        fileWriter.newLine();
-        fileWriter.write("PROXY_PORT=");
-        fileWriter.newLine();
-        fileWriter.write("PROXY_SCHEME=");
-        fileWriter.newLine();
-        fileWriter.write("NO_PROXY=");
-      }
-      proxyConfig = new File(proxyConfig.getAbsolutePath());
-      TarArchiveEntry proxyTarArchiveEntry = new TarArchiveEntry(proxyConfig, DELEGATE_DIR + "/proxy.config");
-      out.putArchiveEntry(proxyTarArchiveEntry);
-      try (FileInputStream fis = new FileInputStream(proxyConfig)) {
         IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();

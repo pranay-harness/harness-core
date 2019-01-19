@@ -6,22 +6,28 @@ then
   exit 0
 fi
 
-if [[ "$(ulimit -n)" == "unlimited" || $(ulimit -n) -lt 10000 ]]; then
+ULIM=$(ulimit -n)
+echo "ulimit -n is set to $ULIM"
+if [[ "$ULIM" == "unlimited" || $ULIM -lt 10000 ]]; then
   echo
-  echo "WARNING: ulimit -n is too low ($(ulimit -n)). Minimum 10000 required."
+  echo "WARNING: ulimit -n is too low ($ULIM). Minimum 10000 required."
   echo
 fi
 
 if [[ "$OSTYPE" == darwin* ]]; then
-  if [[ $(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2 | cut -d 'G' -f 1) -lt 6 ]]; then
+  MEM=$(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2)
+  echo "Memory is $MEM"
+  if [[ $MEM -lt 6 ]]; then
     echo
-    echo "WARNING: Not enough memory ($(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2)). Minimum 6 GB required."
+    echo "WARNING: Not enough memory ($MEM). Minimum 6 GB required."
     echo
   fi
 else
-  if [[ $(free -m | grep Mem | awk '{ print $2 }') -lt 6000 ]]; then
+  MEM=$(free -m | grep Mem | awk '{ print $2 }')
+  echo "Memory is $MEM MB"
+  if [[ $MEM -lt 6000 ]]; then
     echo
-    echo "WARNING: Not enough memory ($(free -m | grep Mem | awk '{ print $2 }') MB). Minimum 6 GB required."
+    echo "WARNING: Not enough memory ($MEM MB). Minimum 6 GB required."
     echo
   fi
 fi
@@ -29,13 +35,14 @@ fi
 if [ -e proxy.config ]
 then
   source proxy.config
-
-  # when using authenticated proxy, need to use format curl -x <http/s://username:password@host:port> <actual_url>
   if [[ $PROXY_HOST != "" ]]
   then
-    echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
+    echo "Using proxy $PROXY_SCHEME://$PROXY_HOST:$PROXY_PORT"
     if [[ $PROXY_USER != "" ]]
     then
+      if [[ "$PROXY_PASSWORD_ENC" != "" ]]; then
+        PROXY_PASSWORD=$(echo $PROXY_PASSWORD_ENC | openssl enc -d -a -des-ecb -K ${hexkey})
+      fi
       export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
       PROXY_SYS_PROPS="-Dhttp.proxyUser=$PROXY_USER -Dhttp.proxyPassword=$PROXY_PASSWORD -Dhttps.proxyUser=$PROXY_USER -Dhttps.proxyPassword=$PROXY_PASSWORD "
     else
@@ -54,7 +61,6 @@ then
     PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
   fi
 
-  echo $PROXY_SYS_PROPS
 fi
 
 if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]

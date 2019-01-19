@@ -1,8 +1,9 @@
 <#include "common.sh.ftl">
 
-if [[ "$(ulimit -n)" == "unlimited" || $(ulimit -n) -lt 10000 ]]; then
+ULIM=$(ulimit -n)
+if [[ "$ULIM" == "unlimited" || $ULIM -lt 10000 ]]; then
   echo
-  echo "WARNING: ulimit -n is too low ($(ulimit -n))"
+  echo "WARNING: ulimit -n is too low ($ULIM)"
   echo
   echo "Run the following command to set it to 10000 or greater:"
   echo
@@ -14,18 +15,20 @@ if [[ "$(ulimit -n)" == "unlimited" || $(ulimit -n) -lt 10000 ]]; then
 fi
 
 if [[ "$OSTYPE" == darwin* ]]; then
-  if [[ $(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2 | cut -d 'G' -f 1) -lt 6 ]]; then
+  MEM=$(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2 | cut -d 'G' -f 1)
+  if [[ $MEM -lt 6 ]]; then
     echo
-    echo "WARNING: Not enough memory ($(top -l 1 -n 0 | grep PhysMem | cut -d ' ' -f 2)). Minimum 6 GB required."
+    echo "WARNING: Not enough memory ($MEM). Minimum 6 GB required."
     echo
     echo "Continuing in 15 seconds. Ctrl-C to quit."
     sleep 15s
     echo
   fi
 else
-  if [[ $(free -m | grep Mem | awk '{ print $2 }') -lt 6000 ]]; then
+  MEM=$(free -m | grep Mem | awk '{ print $2 }')
+  if [[ $MEM -lt 6000 ]]; then
     echo
-    echo "WARNING: Not enough memory ($(free -m | grep Mem | awk '{ print $2 }') MB). Minimum 6 GB required."
+    echo "WARNING: Not enough memory ($MEM MB). Minimum 6 GB required."
     echo
     echo "Continuing in 15 seconds. Ctrl-C to quit."
     sleep 15s
@@ -33,43 +36,35 @@ else
   fi
 fi
 
-if [ ! -e proxy.config ]; then
-  echo "PROXY_HOST=" > proxy.config
-  echo "PROXY_PORT=" >> proxy.config
-  echo "PROXY_SCHEME=" >> proxy.config
-  echo "PROXY_USER=" >> proxy.config
-  echo "PROXY_PASSWORD=" >> proxy.config
-fi
-test "$(tail -c 1 proxy.config)" && `echo "" >> proxy.config`
-if ! `grep NO_PROXY proxy.config > /dev/null`; then
-  echo "NO_PROXY=" >> proxy.config
-fi
-
-source proxy.config
-if [[ $PROXY_HOST != "" ]]
-then
-  echo "Using $PROXY_SCHEME proxy $PROXY_HOST:$PROXY_PORT"
-  if [[ $PROXY_USER != "" ]]
+if [[ -e proxy.config ]]; then
+  source proxy.config
+  if [[ $PROXY_HOST != "" ]]
   then
-    export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
-    PROXY_SYS_PROPS="-Dhttp.proxyUser=$PROXY_USER -Dhttp.proxyPassword=$PROXY_PASSWORD -Dhttps.proxyUser=$PROXY_USER -Dhttps.proxyPassword=$PROXY_PASSWORD "
-  else
-    export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_HOST:$PROXY_PORT
-    export http_proxy=$PROXY_HOST:$PROXY_PORT
-    export https_proxy=$PROXY_HOST:$PROXY_PORT
+    echo "Using proxy $PROXY_SCHEME://$PROXY_HOST:$PROXY_PORT"
+    if [[ $PROXY_USER != "" ]]
+    then
+      if [[ "$PROXY_PASSWORD_ENC" != "" ]]; then
+        PROXY_PASSWORD=$(echo $PROXY_PASSWORD_ENC | openssl enc -d -a -des-ecb -K ${hexkey})
+      fi
+      export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
+      PROXY_SYS_PROPS="-Dhttp.proxyUser=$PROXY_USER -Dhttp.proxyPassword=$PROXY_PASSWORD -Dhttps.proxyUser=$PROXY_USER -Dhttps.proxyPassword=$PROXY_PASSWORD "
+    else
+      export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_HOST:$PROXY_PORT
+      export http_proxy=$PROXY_HOST:$PROXY_PORT
+      export https_proxy=$PROXY_HOST:$PROXY_PORT
+    fi
+    PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
   fi
-  PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
-fi
 
-if [[ $NO_PROXY != "" ]]
-then
-  echo "No proxy for domain suffixes $NO_PROXY"
-  export no_proxy=$NO_PROXY
-  SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
-  PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
-fi
+  if [[ $NO_PROXY != "" ]]
+  then
+    echo "No proxy for domain suffixes $NO_PROXY"
+    export no_proxy=$NO_PROXY
+    SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
+    PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
+  fi
 
-echo $PROXY_SYS_PROPS
+fi
 
 ACCOUNT_STATUS=$(curl $PROXY_CURL -#k ${managerHostAndPort}/api/account/${accountId}/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
 if [[ $ACCOUNT_STATUS == "DELETED" ]]
