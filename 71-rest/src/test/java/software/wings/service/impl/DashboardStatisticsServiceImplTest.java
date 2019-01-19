@@ -88,7 +88,9 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.rule.RealMongo;
+import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -135,8 +137,10 @@ import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.sm.PipelineSummary;
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -148,6 +152,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private InfrastructureMappingService infraMappingService;
   @Mock private AppService appService;
+  @Inject private UsageMetricsHelper usageMetricsHelper;
 
   @Inject private WingsPersistence wingsPersistence;
   @InjectMocks @Inject private DashboardStatisticsService dashboardService = spy(DashboardStatisticsServiceImpl.class);
@@ -314,6 +319,28 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                           .podName(containerId)
                           .build())
         .build();
+  }
+
+  @Test
+  @RealMongo
+  public void testUsageMetrics() {
+    Map<String, Integer> instanceCountMap = usageMetricsHelper.getAllValidInstanceCounts();
+    boolean account1Validation = false;
+    boolean account2Validation = false;
+    final Iterator<Entry<String, Integer>> mapIterator = instanceCountMap.entrySet().iterator();
+    while (mapIterator.hasNext()) {
+      Map.Entry entry = mapIterator.next();
+      if (entry.getKey().equals(ACCOUNT_1_ID)) {
+        Assertions.assertThat(entry.getValue()).isEqualTo(6);
+        account1Validation = true;
+      }
+      if (entry.getKey().equals(ACCOUNT_2_ID)) {
+        Assertions.assertThat(entry.getValue()).isEqualTo(2);
+        account2Validation = true;
+      }
+    }
+    Assertions.assertThat(account1Validation).isTrue();
+    Assertions.assertThat(account2Validation).isTrue();
   }
 
   @Test
