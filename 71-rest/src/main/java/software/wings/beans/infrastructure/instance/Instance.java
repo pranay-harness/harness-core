@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.Environment.EnvironmentType;
@@ -81,7 +82,7 @@ public class Instance extends Base {
 
   private InstanceInfo instanceInfo;
 
-  private boolean isDeleted;
+  @Indexed(background = true) private boolean isDeleted;
   private long deletedAt;
 
   @Builder

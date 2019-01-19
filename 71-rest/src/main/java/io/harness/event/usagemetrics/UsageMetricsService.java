@@ -20,7 +20,6 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.trigger.Trigger;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
@@ -32,7 +31,7 @@ import java.util.List;
 
 @Singleton
 public class UsageMetricsService {
-  @Inject private AccountService accountService;
+  @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
@@ -69,7 +68,7 @@ public class UsageMetricsService {
   }
 
   protected List<Account> getAllAccounts() {
-    return accountService.listAllAccountWithDefaultsWithoutLicenseInfo();
+    return usageMetricsHelper.listAllAccountsWithDefaults();
   }
 
   protected List<String> getAppIds(String accountId) {

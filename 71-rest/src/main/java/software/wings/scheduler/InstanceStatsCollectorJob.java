@@ -5,9 +5,6 @@ import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 
-import io.harness.event.model.EventConstants;
-import io.harness.event.model.EventType;
-import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.lock.AcquiredLock;
 import io.harness.scheduler.BackgroundExecutorService;
 import io.harness.scheduler.BackgroundSchedulerLocker;
@@ -23,16 +20,12 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
-import software.wings.resources.DashboardStatisticsResource;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.instance.DashboardStatisticsService;
+import software.wings.beans.instance.dashboard.InstanceStatsUtil;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
@@ -51,9 +44,6 @@ public class InstanceStatsCollectorJob implements Job {
   @Inject private StatsCollector statsCollector;
   @Inject private InstanceUsageLimitExcessHandler instanceLimitHandler;
   @Inject private InstanceStatService instanceStatService;
-  @Inject private DashboardStatisticsService dashboardStatisticsService;
-  @Inject private AccountService accountService;
-  @Inject private UsageMetricsEventPublisher eventPublisher;
 
   public static void add(PersistentScheduler jobScheduler, String accountId) {
     JobDetail job = JobBuilder.newJob(InstanceStatsCollectorJob.class)
@@ -80,19 +70,8 @@ public class InstanceStatsCollectorJob implements Job {
       String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY);
       Objects.requireNonNull(accountId, "Account Id must be passed in job context");
       createStats(accountId);
-      double ninety_five_percentile_usage = actualUsage(accountId);
+      double ninety_five_percentile_usage = InstanceStatsUtil.actualUsage(accountId, instanceStatService);
       instanceLimitHandler.handle(accountId, ninety_five_percentile_usage);
-      try {
-        int currentInstanceCount =
-            dashboardStatisticsService.getAppInstancesForAccount(accountId, System.currentTimeMillis()).size();
-        Account accountWithDefaults = accountService.getAccountWithDefaults(accountId);
-        eventPublisher.publishInstanceMetric(accountId, accountWithDefaults.getAccountName(),
-            ninety_five_percentile_usage, EventConstants.INSTANCE_COUNT_NINETY_FIVE_PERCENTILE);
-        eventPublisher.publishInstanceMetric(
-            accountId, accountWithDefaults.getAccountName(), currentInstanceCount, EventConstants.INSTANCE_COUNT_TOTAL);
-      } catch (Exception e) {
-        logger.warn("Failed to publish eventType:[{}] for accountID:[{}]", EventType.INSTANCE_COUNT, accountId, e);
-      }
     });
   }
 
@@ -115,13 +94,5 @@ public class InstanceStatsCollectorJob implements Job {
             sw.elapsed(TimeUnit.MILLISECONDS));
       }
     }
-  }
-
-  // Find 95th percentile of usage in last 30 days.
-  // This will serve as 'average' usage in last 30 days (the word 'average' is not used mathematically here)
-  private double actualUsage(String accountId) {
-    Instant now = Instant.now();
-    Instant from = now.minus(30, ChronoUnit.DAYS);
-    return instanceStatService.percentile(accountId, from, now, DashboardStatisticsResource.DEFAULT_PERCENTILE);
   }
 }
