@@ -12,13 +12,13 @@ import com.google.inject.Inject;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.serializer.MapperUtils;
 import software.wings.api.HostElement;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.HostService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExpressionProcessor;
-import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;

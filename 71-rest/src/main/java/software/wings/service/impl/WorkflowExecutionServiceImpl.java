@@ -95,6 +95,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.serializer.KryoUtils;
+import io.harness.serializer.MapperUtils;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
 import lombok.Data;
@@ -223,7 +224,6 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
-import software.wings.utils.MapperUtils;
 import software.wings.utils.Validator;
 
 import java.io.ObjectStreamClass;
