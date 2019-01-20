@@ -753,7 +753,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         metricMap.entrySet()
             .stream()
             .filter(e
-                -> summary.getTxnMetricRisk().containsKey(transaction)
+                -> isNotEmpty(summary.getTxnMetricRisk()) && summary.getTxnMetricRisk().containsKey(transaction)
                     && summary.getTxnMetricRisk().get(transaction).containsKey(e.getKey()))
             .forEach(entry -> {
               Integer risk = summary.getTxnMetricRisk().get(transaction).get(entry.getKey());
@@ -768,7 +768,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         metricMap.entrySet()
             .stream()
             .filter(e
-                -> summary.getTxnMetricLongTermPattern().containsKey(transaction)
+                -> isNotEmpty(summary.getTxnMetricLongTermPattern())
+                    && summary.getTxnMetricLongTermPattern().containsKey(transaction)
                     && summary.getTxnMetricLongTermPattern().get(transaction).containsKey(e.getKey()))
             .forEach(entry -> {
               Integer pattern = summary.getTxnMetricLongTermPattern().get(transaction).get(entry.getKey());

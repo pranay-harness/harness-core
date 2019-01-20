@@ -174,6 +174,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
 import software.wings.service.impl.analysis.LearningEngineAnalysisServiceImpl;
+import software.wings.service.impl.analysis.LogLabelingServiceImpl;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
@@ -319,6 +320,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.APMVerificationService;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.analysis.LogLabelingService;
 import software.wings.service.intfc.analysis.LogVerificationService;
 import software.wings.service.intfc.analysis.LogVerificationServiceImpl;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
@@ -537,6 +539,7 @@ public class WingsModule extends DependencyModule {
     bind(SumoLogicAnalysisService.class).to(SumoLogicAnalysisServiceImpl.class);
     bind(InstanceStatService.class).to(InstanceStatServiceImpl.class);
     bind(StatsCollector.class).to(StatsCollectorImpl.class);
+    bind(LogLabelingService.class).to(LogLabelingServiceImpl.class);
 
     bind(SamlUserGroupSync.class);
     bind(SmbService.class).to(SmbServiceImpl.class);
@@ -639,6 +642,7 @@ public class WingsModule extends DependencyModule {
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
     }
+
     switch (configuration.getExecutionLogsStorageMode()) {
       case GOOGLE_CLOUD_DATA_STORE:
         bind(DataStoreService.class).to(GoogleDataStoreServiceImpl.class);
