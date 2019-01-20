@@ -1781,11 +1781,11 @@ public class WorkflowServiceHelper {
       // No need to override the workflow variables return workflow variables
       return workflowStepVariables;
     }
-    final Set<String> variableNames = variables.stream().map(Variable::getName).collect(Collectors.toSet());
+    final Set<String> workflowVariableNames = variables.stream().map(Variable::getName).collect(Collectors.toSet());
     if (isNotEmpty(workflowStepVariables)) {
       for (Map.Entry<String, String> workflowVariableEntry : workflowStepVariables.entrySet()) {
         String workflowVariableName = workflowVariableEntry.getKey();
-        if (variableNames.contains(workflowVariableName)) {
+        if (workflowVariableNames.contains(workflowVariableName)) {
           String workflowVariableValue = workflowVariableEntry.getValue();
           String pipelineVariableName = ExpressionEvaluator.getName(workflowVariableValue);
           if (pipelineVariables.containsKey(pipelineVariableName)) {
@@ -1798,6 +1798,15 @@ public class WorkflowServiceHelper {
             // Use workflow variable as is
             resolvedWorkflowVariables.put(workflowVariableName, workflowVariableValue);
           }
+        }
+      }
+    }
+    // Add all missing workflow variables from pipeline variables
+    for (String variableName : workflowVariableNames) {
+      if (!resolvedWorkflowVariables.containsKey(variableName)) {
+        // Check for pipeline variables
+        if (pipelineVariables.containsKey(variableName)) {
+          resolvedWorkflowVariables.put(variableName, pipelineVariables.get(variableName));
         }
       }
     }

@@ -280,37 +280,50 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
 
   @Test
   public void shouldTestWorkflowOverrideVariables() {
-    List<Variable> variables = asList(aVariable().withName("Environment").build(),
-        aVariable().withName("OverrideVariable").build(), aVariable().withName("MyOwnVariable").build());
+    List<Variable> variables =
+        asList(aVariable().withName("Environment").build(), aVariable().withName("OverrideVariable").build(),
+            aVariable().withName("MyOwnVariable").build(), aVariable().withName("NewlyCreatedVariable").build());
+
     Map<String, String> pipelineVariables = new HashMap<>();
     pipelineVariables.put("Env", "EnvironmentValue");
     pipelineVariables.put("Service", "ServiceValue");
     pipelineVariables.put("OverrideVariable", "${app.name}");
+    pipelineVariables.put("NewlyCreatedVariable", "NewlyCreatedVariableValue");
 
-    Map<String, String> workflowVariables = new HashMap<>();
-    workflowVariables.put("Environment", "${Env}");
-    workflowVariables.put("OverrideVariable", "myValue");
-    workflowVariables.put("MyOwnVariable", "MyOwnVariableValue");
+    Map<String, String> pipelineStepVariables = new HashMap<>();
+    pipelineStepVariables.put("Environment", "${Env}");
+    pipelineStepVariables.put("OverrideVariable", "myValue");
+    pipelineStepVariables.put("MyOwnVariable", "MyOwnVariableValue");
 
     Map<String, String> overrideWorkflowVariables =
-        WorkflowServiceHelper.overrideWorkflowVariables(variables, workflowVariables, pipelineVariables);
+        WorkflowServiceHelper.overrideWorkflowVariables(variables, pipelineStepVariables, pipelineVariables);
 
     // Case 1: Override the workflow variable name
     assertThat(overrideWorkflowVariables).containsKeys("Environment", "OverrideVariable", "MyOwnVariable");
     assertThat(overrideWorkflowVariables).containsValues("EnvironmentValue", "${app.name}", "MyOwnVariableValue");
     assertThat(overrideWorkflowVariables).doesNotContainKey("Service");
+    assertThat(overrideWorkflowVariables).containsKey("NewlyCreatedVariable");
+    assertThat(overrideWorkflowVariables.get("NewlyCreatedVariable")).isEqualTo("NewlyCreatedVariableValue");
 
     // Case 2: No pipeline variables .. should return all the workflow variables
     overrideWorkflowVariables =
-        WorkflowServiceHelper.overrideWorkflowVariables(variables, workflowVariables, new HashMap<>());
+        WorkflowServiceHelper.overrideWorkflowVariables(variables, pipelineStepVariables, new HashMap<>());
     assertThat(overrideWorkflowVariables).containsKeys("Environment", "OverrideVariable", "MyOwnVariable");
     assertThat(overrideWorkflowVariables).containsValues("${Env}", "myValue", "MyOwnVariableValue");
 
     // Case 3: Pipeline Step has variable, however Workflow does not have that variable anymore
     variables = asList(aVariable().withName("Environment").build(), aVariable().withName("OverrideVariable").build());
     overrideWorkflowVariables =
-        WorkflowServiceHelper.overrideWorkflowVariables(variables, workflowVariables, pipelineVariables);
+        WorkflowServiceHelper.overrideWorkflowVariables(variables, pipelineStepVariables, pipelineVariables);
     assertThat(overrideWorkflowVariables).doesNotContainKey("MyOwnVariable");
+
+    // Case 4: Pipeline step does not have variable, however pipeline variable has the value
+    variables = asList(aVariable().withName("Environment").build(), aVariable().withName("OverrideVariable").build(),
+        aVariable().withName("MyOwnVariable").build());
+    overrideWorkflowVariables =
+        WorkflowServiceHelper.overrideWorkflowVariables(variables, pipelineStepVariables, pipelineVariables);
+    assertThat(overrideWorkflowVariables).doesNotContainKey("Service");
+    assertThat(overrideWorkflowVariables.get("Service")).isNullOrEmpty();
   }
 
   private void verifyPhase(WorkflowPhase workflowPhase, List<String> expectedNames, int stepCount) {
