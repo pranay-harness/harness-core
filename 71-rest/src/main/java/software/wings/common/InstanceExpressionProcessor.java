@@ -23,6 +23,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.ReadPref;
+import io.harness.serializer.MapperUtils;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PartitionElement;
@@ -42,7 +43,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessor;
-import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;

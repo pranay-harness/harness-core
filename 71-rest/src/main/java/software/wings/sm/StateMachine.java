@@ -16,6 +16,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.serializer.MapperUtils;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
@@ -37,7 +38,6 @@ import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SubWorkflowState;
-import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;

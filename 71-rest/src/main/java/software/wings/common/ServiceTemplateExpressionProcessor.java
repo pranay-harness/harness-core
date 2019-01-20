@@ -4,10 +4,10 @@
 
 package software.wings.common;
 
+import io.harness.serializer.MapperUtils;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
-import software.wings.utils.MapperUtils;
 
 /**
  * The type Service template expression processor.

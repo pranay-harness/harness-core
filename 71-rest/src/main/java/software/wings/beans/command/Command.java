@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.serializer.MapperUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -26,7 +27,6 @@ import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
-import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
