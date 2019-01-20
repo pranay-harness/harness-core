@@ -56,6 +56,7 @@ public class LogDataRecord extends Base {
 
   @NotEmpty private long timeStamp;
 
+  private int timesLabeled;
   @NotEmpty private int count;
   @NotEmpty private String logMessage;
   @NotEmpty private String logMD5Hash;
