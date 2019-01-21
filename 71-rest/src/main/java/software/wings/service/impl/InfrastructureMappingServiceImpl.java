@@ -397,9 +397,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       validateAzureInfraMapping(azureInfrastructureMapping);
       keyValuePairs.put("subscriptionId", azureInfrastructureMapping.getSubscriptionId());
       keyValuePairs.put("resourceGroup", azureInfrastructureMapping.getResourceGroup());
-      keyValuePairs.put("winRmConnectionAttributes", azureInfrastructureMapping.getWinRmConnectionAttributes());
       keyValuePairs.put("tags", azureInfrastructureMapping.getTags());
       keyValuePairs.put("usePublicDns", azureInfrastructureMapping.isUsePublicDns());
+      if (DeploymentType.SSH.name().equals(infrastructureMapping.getDeploymentType())) {
+        keyValuePairs.put("hostConnectionAttrs", azureInfrastructureMapping.getHostConnectionAttrs());
+      }
+      if (DeploymentType.WINRM.name().equals(infrastructureMapping.getDeploymentType())) {
+        keyValuePairs.put("winRmConnectionAttributes", azureInfrastructureMapping.getWinRmConnectionAttributes());
+      }
 
       if (!StringUtils.equals(((AzureInfrastructureMapping) savedInfraMapping).getWinRmConnectionAttributes(),
               azureInfrastructureMapping.getWinRmConnectionAttributes())) {

@@ -104,6 +104,9 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
     private String name;
     private boolean autoPopulate = true;
     private List<AzureTag> tags;
+    private String hostConnectionAttrs;
+    private String winRmConnectionAttributes;
+    private boolean usePublicDns;
 
     private Builder() {}
 
@@ -216,6 +219,21 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    public AzureInfrastructureMapping.Builder withWinRmConnectionAttributes(String winRmConnectionAttributes) {
+      this.winRmConnectionAttributes = winRmConnectionAttributes;
+      return this;
+    }
+
+    public AzureInfrastructureMapping.Builder withHostConnectionAttributes(String hostConnectionAttrs) {
+      this.hostConnectionAttrs = hostConnectionAttrs;
+      return this;
+    }
+
+    public AzureInfrastructureMapping.Builder withUsePublicDns(boolean usePublicDns) {
+      this.usePublicDns = usePublicDns;
+      return this;
+    }
+
     public AzureInfrastructureMapping build() {
       AzureInfrastructureMapping azureInfrastructureMapping = new AzureInfrastructureMapping();
       azureInfrastructureMapping.setSubscriptionId(subscriptionId);
@@ -239,6 +257,9 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
       azureInfrastructureMapping.setAutoPopulate(autoPopulate);
       azureInfrastructureMapping.setAccountId(accountId);
       azureInfrastructureMapping.setTags(tags);
+      azureInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
+      azureInfrastructureMapping.setWinRmConnectionAttributes(winRmConnectionAttributes);
+      azureInfrastructureMapping.setUsePublicDns(usePublicDns);
       return azureInfrastructureMapping;
     }
   }
