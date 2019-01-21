@@ -16,7 +16,7 @@ public class ScmSecret {
 
   @Getter private final Properties secrets;
 
-  ScmSecret() {
+  public ScmSecret() {
     secrets = new Properties();
     try (InputStream in = getClass().getResourceAsStream("/secrets.properties")) {
       secrets.load(in);

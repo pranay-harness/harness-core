@@ -21,8 +21,7 @@ public class AsymmetricDecryptor {
   private PrivateKey privateKey;
 
   @Inject
-  public AsymmetricDecryptor(ScmSecret scmSecret)
-      throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException {
+  public AsymmetricDecryptor(ScmSecret scmSecret) throws NoSuchAlgorithmException, InvalidKeySpecException {
     final byte[] testPrivateKeys = scmSecret.decrypt(SecretName.builder().value("test_private_key").build());
     PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(testPrivateKeys);
     KeyFactory kf = KeyFactory.getInstance("RSA");
