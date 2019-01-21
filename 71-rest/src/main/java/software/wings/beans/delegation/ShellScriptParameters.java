@@ -70,24 +70,30 @@ public class ShellScriptParameters implements TaskParameters {
 
   public SshSessionConfig sshSessionConfig(EncryptionService encryptionService) throws IOException {
     encryptionService.decrypt(hostConnectionAttributes, keyEncryptedDataDetails);
-    return aSshSessionConfig()
-        .withAccountId(accountId)
+    SshSessionConfig.Builder sshSessionConfigBuilder = aSshSessionConfig();
+    sshSessionConfigBuilder.withAccountId(accountId)
         .withAppId(appId)
         .withExecutionId(activityId)
         .withHost(host)
         .withUserName(userName)
-        .withKey(encryptionService.getDecryptedValue(
-            fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_KEY)))
-        .withKeyPassphrase(encryptionService.getDecryptedValue(
-            fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_PASSPHRASE)))
         .withKeyPath(keyPath)
         .withKeyLess(keyless)
         .withWorkingDirectory(workingDirectory)
         .withCommandUnitName(CommandUnit)
         .withPort(port)
         .withKeyName(keyName)
-        .withAccessType(accessType)
-        .build();
+        .withAccessType(accessType);
+    EncryptedDataDetail encryptedDataDetailKey =
+        fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_KEY);
+    if (encryptedDataDetailKey != null) {
+      sshSessionConfigBuilder.withKey(encryptionService.getDecryptedValue(encryptedDataDetailKey));
+    }
+    EncryptedDataDetail encryptedDataDetailPassPhrase =
+        fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_PASSPHRASE);
+    if (encryptedDataDetailPassPhrase != null) {
+      sshSessionConfigBuilder.withKeyPassphrase(encryptionService.getDecryptedValue(encryptedDataDetailPassPhrase));
+    }
+    return sshSessionConfigBuilder.build();
   }
 
   private EncryptedDataDetail fetchEncryptedDataDetail(List<EncryptedDataDetail> encryptedDataDetails, String key) {
