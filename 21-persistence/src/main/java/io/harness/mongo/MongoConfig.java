@@ -19,4 +19,7 @@ public class MongoConfig {
   private String uri = "mongodb://localhost:27017/wings";
 
   private String locksUri;
+
+  private byte[] encryptedUri;
+  private byte[] encryptedLocksUri;
 }

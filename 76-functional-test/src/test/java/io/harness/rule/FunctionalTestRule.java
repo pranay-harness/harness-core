@@ -1,5 +1,6 @@
 package io.harness.rule;
 
+import static io.restassured.RestAssured.given;
 import static org.mockito.Mockito.mock;
 
 import com.google.inject.AbstractModule;
@@ -11,6 +12,7 @@ import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import io.dropwizard.Configuration;
+import io.harness.configuration.ConfigurationType;
 import io.harness.event.EventsModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.mongo.HObjectFactory;
@@ -18,6 +20,8 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
+import io.harness.scm.ScmSecret;
+import io.harness.security.AsymmetricDecryptor;
 import io.harness.threading.CurrentThreadExecutor;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -34,6 +38,7 @@ import software.wings.app.ManagerQueueModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
+import software.wings.beans.RestResponse;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 
@@ -43,6 +48,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import javax.ws.rs.core.GenericType;
 
 public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorRuleMixin, DistributedLockRuleMixin {
   private int port;
@@ -60,21 +66,25 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
   String VERIFICATION_PATH = "VERIFICATION_PATH";
 
   @Override
-  public List<Module> modules(List<Annotation> annotations) {
+  public List<Module> modules(List<Annotation> annotations) throws Exception {
     List<Module> modules;
     MongoClient mongoClient;
-    String dbName = "harness";
-    final String mongoUri = System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName);
-    try {
-      MongoClientURI clientUri = new MongoClientURI(mongoUri, mongoClientOptions);
-      dbName = clientUri.getDatabase();
-      mongoClient = new MongoClient(clientUri);
-      closingFactory.addServer(mongoClient);
-    } catch (NumberFormatException ex) {
-      port = 27017;
-      mongoClient = new MongoClient("localhost", port);
-      closingFactory.addServer(mongoClient);
-    }
+    String dbName;
+    String mongoUri;
+    RestResponse<MongoConfig> mongoConfigRestResponse =
+        given()
+            .queryParam("configurationType", ConfigurationType.MONGO)
+            .get("/health/configuration")
+            .as(new GenericType<RestResponse<MongoConfig>>() {}.getType());
+
+    mongoUri =
+        new AsymmetricDecryptor(new ScmSecret()).decryptText(mongoConfigRestResponse.getResource().getEncryptedUri());
+    MongoClientURI clientUri = new MongoClientURI(mongoUri, mongoClientOptions);
+    dbName = clientUri.getDatabase();
+
+    mongoClient = new MongoClient(clientUri);
+    closingFactory.addServer(mongoClient);
+
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
