@@ -88,7 +88,9 @@ public class LdapHelper {
 
   public LdapResponse validateConnectionConfig() {
     try (Connection connection = getConnection()) {
+      logger.info("LTVF: Inside validateConnectionConfig class. Testing the connection");
       connection.open();
+      logger.info("LTVF: Connection test successful");
       return LdapResponse.builder().status(Status.SUCCESS).message(LdapConstants.CONNECTION_SUCCESS).build();
     } catch (LdapException e) {
       logger.error(String.format("Ldap connection validation failed for url: [%s]", connectionConfig.generateUrl()), e);
