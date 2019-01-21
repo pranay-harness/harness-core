@@ -43,7 +43,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
   protected final AtomicBoolean completed = new AtomicBoolean(false);
   private final Object lockObject = new Object();
   @Inject protected EncryptionService encryptionService;
-  @Inject private ExecutorService executorService;
+  @Inject @Named("asyncExecutor") private ExecutorService executorService;
   @Inject @Named("verificationExecutor") private ScheduledExecutorService verificationExecutor;
   @Inject private MetricDataStoreService metricStoreService;
 
@@ -95,6 +95,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
       final Runnable runnable = getDataCollector(taskResult);
       future = verificationExecutor.scheduleAtFixedRate(() -> {
         if (taskFuture == null || taskFuture.isCancelled() || taskFuture.isDone()) {
+          getLogger().info("submitting data collection to executor service");
           taskFuture = executorService.submit(runnable);
         } else {
           if (!pendingTask) {
