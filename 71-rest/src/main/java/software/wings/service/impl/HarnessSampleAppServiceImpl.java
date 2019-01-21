@@ -37,6 +37,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessSampleAppService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -62,6 +63,7 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
   @Inject private PipelineService pipelineService;
   @Inject private SampleDataProviderService sampleDataProviderService;
   @Inject private AccountService accountService;
+  @Inject private AuthService authService;
 
   @Override
   public SampleAppStatus getSampleAppsHealth(String accountId, String deploymentType) {
@@ -91,6 +93,7 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
     Account account = accountService.get(accountId);
     if (account != null) {
       sampleDataProviderService.createHarnessSampleApp(account);
+      authService.evictAccountUserPermissionInfoCache(accountId, false);
     } else {
       throw new WingsException(
           "Account invalid. Sample App for deployment type could not be restored." + deploymentType,
