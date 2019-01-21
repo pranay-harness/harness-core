@@ -42,7 +42,7 @@ public class AmiServiceImpl implements AmiService {
     DescribeImagesRequest describeImagesRequest = new DescribeImagesRequest().withFilters(filters);
     DescribeImagesResult describeImagesResult;
     describeImagesResult =
-        awsHelperService.decribeEc2Images(awsConfig, encryptionDetails, region, describeImagesRequest);
+        awsHelperService.desribeEc2Images(awsConfig, encryptionDetails, region, describeImagesRequest);
     logger.info("Sorting on creation time");
     Collections.sort(describeImagesResult.getImages(), Comparator.comparing(Image::getCreationDate));
     describeImagesResult.getImages()

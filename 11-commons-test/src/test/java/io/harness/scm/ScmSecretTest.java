@@ -78,7 +78,7 @@ public class ScmSecretTest {
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(secretsPath.toFile()))) {
       for (Object key : sortedKeys) {
         final SecretName secretName = SecretName.builder().value((String) key).build();
-        final String secret = ScmSecret.encrypt(scmSecret.decryptToString(secretName).getBytes(), passphrase);
+        final String secret = ScmSecret.encrypt(scmSecret.decrypt(secretName), passphrase);
 
         final String line = format(pattern, key, secret);
         if (line.length() <= 120) {

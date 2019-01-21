@@ -741,7 +741,7 @@ public class AwsHelperService {
     return new DescribeInstancesResult();
   }
 
-  public DescribeImagesResult decribeEc2Images(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+  public DescribeImagesResult desribeEc2Images(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, DescribeImagesRequest describeImagesRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
