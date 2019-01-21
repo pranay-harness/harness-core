@@ -23,6 +23,10 @@ public class ApproachingLimitsMessage {
         template =
             "You have consumed {}% of allowed User creation limits. Please contact Harness Support to avoid any interruptions.";
         break;
+      case CREATE_WORKFLOW:
+        template =
+            "You have consumed {}% of allowed Workflow creation limits. Please contact Harness Support to avoid any interruptions.";
+        break;
       default:
         log.error(
             "No warning message configured. Please configure one or default message will be shown. ActionType: {}",
