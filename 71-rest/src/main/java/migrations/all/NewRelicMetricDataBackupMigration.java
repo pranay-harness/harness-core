@@ -61,13 +61,12 @@ public class NewRelicMetricDataBackupMigration implements Migration {
     }
 
     logger.info("Move NewRelicMetricDataRecord to google data store from time {}", minTime);
-    PageRequest<NewRelicMetricDataRecord> pageRequest =
-        aPageRequest()
-            .addFilter("timeStamp", Operator.LT_EQ, minTime)
-            .withLimit("5000")
-            .withOffset("0")
-            .addOrder(NewRelicMetricDataRecord.CREATED_AT_KEY, OrderType.DESC)
-            .build();
+    PageRequest<NewRelicMetricDataRecord> pageRequest = aPageRequest()
+                                                            .addFilter("timeStamp", Operator.LT_EQ, minTime)
+                                                            .withLimit("5000")
+                                                            .withOffset("0")
+                                                            .addOrder("timeStamp", OrderType.DESC)
+                                                            .build();
 
     int previousOffSet = 0;
     PageResponse<NewRelicMetricDataRecord> response =

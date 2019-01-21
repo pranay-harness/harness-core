@@ -23,8 +23,9 @@ public class MigrationBackgroundList {
         .add(Pair.of(3, SetLastLoginTimeToAllUsers.class))
         .add(Pair.of(4, BaseMigration.class))
         .add(Pair.of(5, BaseMigration.class))
-        .add(Pair.of(6, NewRelicMetricDataBackupMigration.class))
+        .add(Pair.of(6, BaseMigration.class))
         .add(Pair.of(7, RemoveSupportEmailFromSalesContacts.class))
+        .add(Pair.of(8, NewRelicMetricDataBackupMigration.class))
         .build();
   }
 }
