@@ -7,6 +7,9 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>76-functional-test</artifactId>
+    <properties>
+        <excludedGroups>io.harness.category.element.FunctionalTests.class</excludedGroups>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -102,7 +105,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <excludedGroups>io.harness.category.element.FunctionalTests.class</excludedGroups>
+                    <excludedGroups>${excludedGroups}</excludedGroups>
                 </configuration>
             </plugin>
         </plugins>
