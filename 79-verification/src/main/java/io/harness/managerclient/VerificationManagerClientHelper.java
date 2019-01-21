@@ -55,10 +55,11 @@ public class VerificationManagerClientHelper {
       } catch (Exception ex) {
         retryCount++;
         call = call.clone();
-        logger.error(
+        logger.info(
             "Error while calling manager for call {}, retryCount: {}", call.request().toString(), retryCount, ex);
       }
     }
+    logger.error("Error while calling manager for call {} after all retries", call.request().toString());
     throw new WingsException(
         "Exception occurred while calling manager from verification service. Call: " + call.request().toString());
   }
