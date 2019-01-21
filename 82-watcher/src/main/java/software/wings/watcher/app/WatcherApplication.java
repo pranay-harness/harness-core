@@ -5,6 +5,7 @@ import static software.wings.utils.message.MessageConstants.NEW_WATCHER;
 import static software.wings.utils.message.MessengerType.WATCHER;
 
 import com.google.common.base.Splitter;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -14,6 +15,7 @@ import com.google.inject.name.Names;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.serializer.YamlUtils;
+import io.harness.threading.ExecutorModule;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
@@ -29,7 +31,9 @@ import java.lang.management.ManagementFactory;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -64,13 +68,6 @@ public class WatcherApplication {
       previousWatcherProcess = args[2];
     }
 
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      MessageService messageService =
-          Guice.createInjector(new WatcherModule().cumulativeDependencies()).getInstance(MessageService.class);
-      messageService.closeChannel(WATCHER, processId);
-      logger.info("My watch has ended");
-      LogManager.shutdown();
-    }));
     logger.info("Starting Watcher");
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     WatcherApplication watcherApplication = new WatcherApplication();
@@ -82,6 +79,14 @@ public class WatcherApplication {
   @SuppressFBWarnings("DM_EXIT")
   private void run(WatcherConfiguration configuration, boolean upgrade, String previousWatcherProcess)
       throws Exception {
+    int cores = Runtime.getRuntime().availableProcessors();
+    int corePoolSize = 2 * cores;
+    int maximumPoolSize = Math.max(corePoolSize, 200);
+
+    ExecutorModule.getInstance().setExecutorService(
+        new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
+            new ThreadFactoryBuilder().setNameFormat("watcher-task-%d").build()));
+
     Set<Module> modules = new HashSet<>();
 
     modules.add(new AbstractModule() {
@@ -97,6 +102,13 @@ public class WatcherApplication {
     modules.addAll(new WatcherModule().cumulativeDependencies());
 
     Injector injector = Guice.createInjector(modules);
+
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      MessageService messageService = injector.getInstance(MessageService.class);
+      messageService.closeChannel(WATCHER, processId);
+      logger.info("My watch has ended");
+      LogManager.shutdown();
+    }));
 
     if (upgrade) {
       MessageService messageService = injector.getInstance(MessageService.class);

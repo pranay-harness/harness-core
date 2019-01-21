@@ -14,12 +14,8 @@ import software.wings.watcher.service.WatcherServiceImpl;
 
 import java.time.Clock;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by brett on 10/26/17
@@ -45,12 +41,6 @@ public class WatcherModule extends DependencyModule {
         .toInstance(new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder().setNameFormat("CommandCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
 
-    int cores = Runtime.getRuntime().availableProcessors();
-    int corePoolSize = 2 * cores;
-    int maximumPoolSize = Math.max(corePoolSize, 200);
-    bind(ExecutorService.class)
-        .toInstance(new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(), new ThreadFactoryBuilder().setNameFormat("watcher-task-%d").build()));
     bind(MessageService.class)
         .toInstance(
             new MessageServiceImpl(Clock.systemUTC(), MessengerType.WATCHER, WatcherApplication.getProcessId()));
