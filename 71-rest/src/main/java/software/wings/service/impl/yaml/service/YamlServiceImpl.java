@@ -181,17 +181,22 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     List<GitFileChange> gitFileChangeList = asList(change);
 
     try {
+      logger.info("YAML-GIT-SYNC Processing changeset from yaml");
       List<ChangeContext> changeContextList = processChangeSet(asList(change));
+      logger.info("YAML-GIT-SYNC Done processing changeset from yaml");
       notNullCheck("Change Context List is null", changeContextList);
       boolean empty = isEmpty(changeContextList);
       if (!empty) {
         // We only sent one
+        logger.info("YAML-GIT-SYNC Setting resource");
         ChangeContext changeContext = changeContextList.get(0);
         Object base = changeContext.getYamlSyncHandler().get(
             changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+        logger.info("YAML-GIT-SYNC Setting resource");
         rr.setResource(base);
+        logger.info("YAML-GIT-SYNC Removing git sync errors");
         yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList, false);
-
+        logger.info("YAML-GIT-SYNC Done removing git sync errors");
       } else {
         throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
             .addParam("message", "Update failed. Reason: " + yamlPayload.getName());
@@ -441,6 +446,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = Maps.newConcurrentMap();
     YamlType previousYamlType = null;
     int numOfParallelChanges = 0;
+
+    logger.info("YAML-GIT-SYNC Processing changeContext");
     for (ChangeContext changeContext : changeContextList) {
       String yamlFilePath = changeContext.getChange().getFilePath();
       YamlType yamlType = changeContext.getYamlType();
@@ -473,7 +480,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       }));
     }
 
+    logger.info("YAML-GIT-SYNC Checking futures and evicting cache");
     checkFuturesAndEvictCache(futures, previousYamlType, accountId);
+    logger.info("YAML-GIT-SYNC Done checking futures and evicting cache");
 
     if (failedYamlFileChangeMap.size() > 0) {
       logAllErrorsWhileYamlInjestion(failedYamlFileChangeMap);
