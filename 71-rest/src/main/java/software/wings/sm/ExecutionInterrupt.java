@@ -4,13 +4,13 @@
 
 package software.wings.sm;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 
 import java.util.Map;
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -19,7 +19,6 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "executionInterrupts", noClassnameStored = true)
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class ExecutionInterrupt extends Base {
   @NotNull private ExecutionInterruptType executionInterruptType;
 
@@ -76,6 +75,30 @@ public class ExecutionInterrupt extends Base {
 
   public void setProperties(Map<String, Object> properties) {
     this.properties = properties;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof ExecutionInterrupt)) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    ExecutionInterrupt that = (ExecutionInterrupt) o;
+    return seized == that.seized && executionInterruptType == that.executionInterruptType
+        && Objects.equals(envId, that.envId) && Objects.equals(executionUuid, that.executionUuid)
+        && Objects.equals(stateExecutionInstanceId, that.stateExecutionInstanceId)
+        && Objects.equals(properties, that.properties);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        super.hashCode(), executionInterruptType, seized, envId, executionUuid, stateExecutionInstanceId, properties);
   }
 
   public static final class ExecutionInterruptBuilder {
