@@ -174,7 +174,8 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   @Parameters(method = "getData")
   @TestCaseName("{method}-{0}")
   public void testShouldDownloadThroughBash(ArtifactStreamType artifactStreamType) {
-    ShellCommandExecutionContext context = null;
+    ShellCommandExecutionContext context =
+        new ShellCommandExecutionContext(CommandExecutionContext.Builder.aCommandExecutionContext().build());
     switch (artifactStreamType) {
       case AMAZON_S3:
         context = amazonS3Context;

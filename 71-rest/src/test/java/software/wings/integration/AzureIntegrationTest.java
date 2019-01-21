@@ -148,7 +148,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
       for (String rg : resourceGroups) {
         List<VirtualMachine> vms = azureHelperService.listVmsByTagsAndResourceGroup(
             config, Collections.EMPTY_LIST, subscriptionId, rg, Collections.EMPTY_MAP, OSType.LINUX);
-        // assert that only windows instances are returned
+        // assert that only linux instances are returned
         for (VirtualMachine vm : vms) {
           assertThat(vm.inner().osProfile().linuxConfiguration()).isNotNull();
           logger.info("Resource group :" + rg + " VM :" + vm.name());

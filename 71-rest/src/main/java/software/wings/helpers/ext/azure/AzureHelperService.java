@@ -130,8 +130,14 @@ public class AzureHelperService {
 
     notNullCheck("Compute Provider", computeProviderSetting);
     AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderSetting);
-    return listVmsByTagsAndResourceGroup(
-        azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.WINDOWS);
+    if (DeploymentType.WINRM.name().equals(azureInfrastructureMapping.getDeploymentType())) {
+      return listVmsByTagsAndResourceGroup(
+          azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.WINDOWS);
+    } else if (DeploymentType.SSH.name().equals(azureInfrastructureMapping.getDeploymentType())) {
+      return listVmsByTagsAndResourceGroup(
+          azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.LINUX);
+    }
+    return Collections.EMPTY_LIST;
   }
 
   public List<AzureAvailabilitySet> listAvailabilitySets(
@@ -214,6 +220,7 @@ public class AzureHelperService {
                         : null)
                 .withAppId(azureInfrastructureMapping.getAppId())
                 .withEnvId(azureInfrastructureMapping.getEnvId())
+                .withHostConnAttr(azureInfrastructureMapping.getHostConnectionAttrs())
                 .withWinrmConnAttr(DeploymentType.WINRM.equals(deploymentType)
                         ? azureInfrastructureMapping.getWinRmConnectionAttributes()
                         : null)

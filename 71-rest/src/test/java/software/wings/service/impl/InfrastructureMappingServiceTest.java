@@ -21,6 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.AzureInfrastructureMapping.Builder.anAzureInfrastructureMapping;
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
@@ -33,6 +34,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
@@ -78,6 +80,8 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -97,6 +101,7 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
@@ -136,6 +141,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private Map<String, InfrastructureProvider> infrastructureProviders;
   @Mock private StaticInfrastructureProvider staticInfrastructureProvider;
   @Mock private AwsInfrastructureProvider awsInfrastructureProvider;
+  @Mock private AzureInfrastructureProvider azureInfrastructureProvider;
 
   @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private ServiceTemplateService serviceTemplateService;
@@ -151,6 +157,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private PipelineService pipelineService;
   @Mock private TriggerService triggerService;
   @Mock private YamlPushService yamlPushService;
+  @Mock private AzureHelperService azureHelperService;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 
@@ -661,6 +668,37 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldListHostsForAzureSSHDeployment() {
+    AzureInfrastructureMapping azureInfrastructureMapping = anAzureInfrastructureMapping()
+                                                                .withHostConnectionAttributes(HOST_CONN_ATTR_ID)
+                                                                .withDeploymentType(DeploymentType.SSH.name())
+                                                                .withSubscriptionId("TEST_SUBSCRIPTION_ID")
+                                                                .withResourceGroup("TEST_RESOURCE_GROUP")
+                                                                .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+                                                                .withAppId(APP_ID)
+                                                                .withEnvId(ENV_ID)
+                                                                .withComputeProviderType(AZURE.name())
+                                                                .withUuid(INFRA_MAPPING_ID)
+                                                                .withServiceTemplateId(TEMPLATE_ID)
+                                                                .withUsePublicDns(false)
+                                                                .build();
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(azureInfrastructureMapping);
+
+    SettingAttribute computeProviderSetting =
+        aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(AzureConfig.builder().build()).build();
+    when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
+
+    List<Host> newHosts = singletonList(aHost().withEc2Instance(new Instance().withPublicDnsName(HOST_NAME)).build());
+    when(azureHelperService.listHosts(azureInfrastructureMapping, computeProviderSetting, null, DeploymentType.SSH))
+        .thenReturn(aPageResponse().withResponse(newHosts).build());
+    when(azureInfrastructureProvider.saveHost(newHosts.get(0))).thenReturn(newHosts.get(0));
+    assertThat(newHosts).isNotNull();
+    assertThat(newHosts).hasSize(1);
+    assertThat(newHosts.get(0)).isNotNull();
+  }
+
+  @Test
   public void shouldListPhysicalComputeProviderHosts() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
@@ -964,5 +1002,32 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     assertThat(result.size()).isEqualTo(1);
     assertThat(result.keySet()).contains(DeploymentType.KUBERNETES);
+  }
+
+  @Test
+  public void shouldGetAzureInfraMappingTypes() {
+    AzureInfrastructureMapping azureSSHInfrastructureMapping =
+        AzureInfrastructureMapping.Builder.anAzureInfrastructureMapping()
+            .withResourceGroup("TEST_RESOURCE_GROUP")
+            .withSubscriptionId("TEST_SUBSCRIPTION_ID")
+            .withDeploymentType(DeploymentType.SSH.name())
+            .withHostConnectionAttributes("TEST_HOST_CONNECTION_ATTRS")
+            .build();
+    doReturn(azureSSHInfrastructureMapping)
+        .when(wingsPersistence)
+        .saveAndGet(InfrastructureMapping.class, azureSSHInfrastructureMapping);
+    assertThat(azureSSHInfrastructureMapping.getHostConnectionAttrs()).isNotNull();
+
+    AzureInfrastructureMapping azureWinRMInfrastructureMapping =
+        AzureInfrastructureMapping.Builder.anAzureInfrastructureMapping()
+            .withResourceGroup("TEST_RESOURCE_GROUP")
+            .withSubscriptionId("TEST_SUBSCRIPTION_ID")
+            .withDeploymentType(DeploymentType.SSH.name())
+            .withWinRmConnectionAttributes("TEST_WINRM_CONNECTION_ATTRS")
+            .build();
+    doReturn(azureWinRMInfrastructureMapping)
+        .when(wingsPersistence)
+        .saveAndGet(InfrastructureMapping.class, azureWinRMInfrastructureMapping);
+    assertThat(azureWinRMInfrastructureMapping.getWinRmConnectionAttributes()).isNotNull();
   }
 }
