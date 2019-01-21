@@ -16,10 +16,13 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarSource;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Job;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretEnvSource;
+import io.fabric8.kubernetes.api.model.SecretKeySelector;
 import io.fabric8.kubernetes.api.model.SecretVolumeSource;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.Volume;
@@ -280,6 +283,32 @@ public class KubernetesResource {
   }
 
   private void updateSecretRef(PodSpec podSpec, UnaryOperator<Object> transformer) {
+    for (Container container : podSpec.getContainers()) {
+      for (EnvVar envVar : container.getEnv()) {
+        EnvVarSource envVarSource = envVar.getValueFrom();
+        if (envVarSource != null) {
+          SecretKeySelector secretKeyRef = envVarSource.getSecretKeyRef();
+          if (secretKeyRef != null) {
+            String name = secretKeyRef.getName();
+            secretKeyRef.setName((String) transformer.apply(name));
+          }
+        }
+      }
+
+      for (EnvFromSource envFromSource : container.getEnvFrom()) {
+        SecretEnvSource secretRef = envFromSource.getSecretRef();
+        if (secretRef != null) {
+          String name = secretRef.getName();
+          secretRef.setName((String) transformer.apply(name));
+        }
+      }
+    }
+
+    for (LocalObjectReference imagePullSecret : podSpec.getImagePullSecrets()) {
+      String name = imagePullSecret.getName();
+      imagePullSecret.setName((String) transformer.apply(name));
+    }
+
     for (Volume volume : podSpec.getVolumes()) {
       SecretVolumeSource secret = volume.getSecret();
       if (secret != null) {
