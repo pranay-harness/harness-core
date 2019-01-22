@@ -97,7 +97,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   // TODO: centralized in-memory executionCredential and special encrypted mapping
   private ExecutionCredential executionCredential;
 
-  @JsonIgnore @Transient private transient Application app;
+  @JsonIgnore private transient Application app;
   @JsonIgnore @Transient private transient Environment env;
   @JsonIgnore @Transient private transient List<Artifact> artifacts;
   @JsonIgnore @Transient private transient Account account;
