@@ -375,8 +375,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     final NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
                                                     .workflowExecutionId("CV-Demo")
-                                                    .stateExecutionId("CV-Demo-TS-Success")
-                                                    .appId("CV-Demo-" + StateType.NEW_RELIC)
+                                                    .stateExecutionId("CV-Demo-TS-Success-NEW_RELIC")
+                                                    .appId("CV-Demo")
                                                     .stateType(StateType.NEW_RELIC)
                                                     .metricAnalyses(new ArrayList<>())
                                                     .message("CV-demo")
@@ -437,8 +437,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     final NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
                                                     .workflowExecutionId("CV-Demo")
-                                                    .stateExecutionId("CV-Demo-TS-Failure")
-                                                    .appId("CV-Demo-" + StateType.NEW_RELIC)
+                                                    .stateExecutionId("CV-Demo-TS-Failure-NEW_RELIC")
+                                                    .appId("CV-Demo")
                                                     .stateType(StateType.NEW_RELIC)
                                                     .metricAnalyses(new ArrayList<>())
                                                     .build();

@@ -7,6 +7,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
+import static software.wings.common.VerificationConstants.DEMO_APPLICAITON_ID;
+import static software.wings.common.VerificationConstants.DEMO_FAILURE_TS_STATE_EXECUTION_ID;
+import static software.wings.common.VerificationConstants.DEMO_SUCCESS_TS_STATE_EXECUTION_ID;
+import static software.wings.common.VerificationConstants.DEMO_WORKFLOW_EXECUTION_ID;
 import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.utils.Misc.replaceDotWithUnicode;
@@ -293,32 +297,16 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     SettingAttribute settingAttribute = settingsService.get(
         ((MetricAnalysisExecutionData) stateExecutionInstance.getStateExecutionData()).getServerConfigId());
 
-    if (stateExecutionInstance.getStateType().equals(StateType.NEW_RELIC.name())) {
-      if (settingAttribute.getName().toLowerCase().endsWith("dev")
-          || settingAttribute.getName().toLowerCase().endsWith("prod")) {
-        if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
-          return getMetricsAnalysis(
-              "CV-Demo-" + stateExecutionInstance.getStateType(), "CV-Demo-TS-Success", "CV-Demo");
-        } else {
-          return getMetricsAnalysis(
-              "CV-Demo-" + stateExecutionInstance.getStateType(), "CV-Demo-TS-Failure", "CV-Demo");
-        }
+    if (settingAttribute.getName().toLowerCase().endsWith("dev")
+        || settingAttribute.getName().toLowerCase().endsWith("prod")) {
+      if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
+        return getMetricsAnalysis(DEMO_APPLICAITON_ID,
+            DEMO_SUCCESS_TS_STATE_EXECUTION_ID + stateExecutionInstance.getStateType(), DEMO_WORKFLOW_EXECUTION_ID);
+      } else {
+        return getMetricsAnalysis(DEMO_APPLICAITON_ID,
+            DEMO_FAILURE_TS_STATE_EXECUTION_ID + stateExecutionInstance.getStateType(), DEMO_WORKFLOW_EXECUTION_ID);
       }
     }
-
-    if (stateExecutionInstance.getStateType().equals(StateType.APP_DYNAMICS.name())) {
-      if (settingAttribute.getName().toLowerCase().endsWith("dev")
-          || settingAttribute.getName().toLowerCase().endsWith("prod")) {
-        if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
-          return getMetricsAnalysis(
-              "CV-Demo-" + stateExecutionInstance.getStateType(), "CV-Demo-TS-Success-Appdynamics", "CV-Demo");
-        } else {
-          return getMetricsAnalysis(
-              "CV-Demo-" + stateExecutionInstance.getStateType(), "CV-Demo-TS-Failure-Appdynamics", "CV-Demo");
-        }
-      }
-    }
-
     return getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
   }
 

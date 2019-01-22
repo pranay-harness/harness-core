@@ -264,7 +264,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
       testClusters.put(UUID.randomUUID().toString(), hostMap);
     }
     LogMLAnalysisRecord record = new LogMLAnalysisRecord();
-    record.setStateExecutionId("CV-Demo-LOG-Success");
+    record.setStateExecutionId("CV-Demo-LOG-Success-ELK");
     record.setAppId("CV-Demo");
     record.setStateType(StateType.ELK);
     record.setLogCollectionMinute(0);
@@ -333,7 +333,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
       testClusters.put(UUID.randomUUID().toString(), hostMap);
     }
     LogMLAnalysisRecord record = new LogMLAnalysisRecord();
-    record.setStateExecutionId("CV-Demo-LOG-Failure");
+    record.setStateExecutionId("CV-Demo-LOG-Failure-ELK");
     record.setAppId("CV-Demo");
     record.setStateType(StateType.ELK);
     record.setLogCollectionMinute(0);

@@ -45,7 +45,7 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
     super(SettingVariableTypes.DATA_DOG.name());
   }
 
-  @SuppressFBWarnings({"EI_EXPOSE_REP2", "EI_EXPOSE_REP2"})
+  @SuppressFBWarnings({"EI_EXPOSE_REP2"})
   public DatadogConfig(String url, char[] apiKey, char[] applicationKey, String accountId, String encryptedApiKey,
       String encryptedApplicationKey) {
     this();
