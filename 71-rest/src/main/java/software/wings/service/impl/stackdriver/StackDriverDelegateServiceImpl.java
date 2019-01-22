@@ -13,6 +13,7 @@ import com.google.api.services.monitoring.v3.Monitoring;
 import com.google.api.services.monitoring.v3.MonitoringScopes;
 import com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.time.FastDateFormat;
@@ -41,6 +42,7 @@ import java.util.TimeZone;
 /**
  * Created by Pranjal on 11/27/2018
  */
+@Singleton
 public class StackDriverDelegateServiceImpl implements StackDriverDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(StackDriverDelegateServiceImpl.class);
 

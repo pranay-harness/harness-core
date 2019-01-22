@@ -11,6 +11,7 @@ import static software.wings.sm.states.DatadogState.metricEndpointsInfo;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -77,7 +78,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Praveen 9/6/18
  */
-
+@Singleton
 public class APMVerificationServiceImpl implements APMVerificationService {
   private static final Logger logger = LoggerFactory.getLogger(APMVerificationServiceImpl.class);
   @Inject private SettingsService settingsService;

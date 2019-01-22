@@ -3,6 +3,7 @@ package software.wings.service.impl.analysis;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@Singleton
 public class APMDelegateServiceImpl implements APMDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(APMDelegateServiceImpl.class);
 

@@ -14,6 +14,7 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -70,6 +71,7 @@ import javax.servlet.http.HttpServletResponse;
  * Created by rsingh on 8/28/17.
  */
 
+@Singleton
 public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   public static final String METRIC_NAME_NON_SPECIAL_CHARS = "METRIC_NAME_NON_SPECIAL_CHARS";
   public static final String METRIC_NAME_SPECIAL_CHARS = "METRIC_NAME_SPECIAL_CHAR";

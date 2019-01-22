@@ -3,6 +3,7 @@ package software.wings.service.impl.dynatrace;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -37,6 +38,7 @@ import java.util.concurrent.Callable;
 /**
  * Created by rsingh on 1/29/18.
  */
+@Singleton
 public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(DynaTraceDelegateServiceImpl.class);
 

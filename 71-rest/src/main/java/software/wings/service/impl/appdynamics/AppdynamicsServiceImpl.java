@@ -5,6 +5,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -37,6 +38,7 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by rsingh on 4/17/17.
  */
 @ValidateOnExecution
+@Singleton
 public class AppdynamicsServiceImpl implements AppdynamicsService {
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsServiceImpl.class);
 
