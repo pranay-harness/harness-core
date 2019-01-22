@@ -62,6 +62,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
+import software.wings.service.impl.analysis.TimeSeriesRiskData;
 import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
@@ -196,6 +197,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     riskSummary.setAppId(appId);
     TreeBasedTable<String, String, Integer> risks = TreeBasedTable.create();
     TreeBasedTable<String, String, Integer> longTermPatterns = TreeBasedTable.create();
+    TreeBasedTable<String, String, TimeSeriesRiskData> riskData = TreeBasedTable.create();
     for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
       TimeSeriesMLTxnScores txnScores =
           TimeSeriesMLTxnScores.builder().transactionName(txnSummary.getTxn_name()).scoresMap(new HashMap<>()).build();
@@ -221,6 +223,16 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
           mlMetricSummary.setResults(timeSeriesMLHostSummaryMap);
           ++metricId;
 
+          int maxRisk = mlMetricSummary.getMax_risk();
+          int longTermPattern = mlMetricSummary.getLong_term_pattern();
+          long lastSeenTime = mlMetricSummary.getLast_seen_time();
+          riskData.put(txnSummary.getTxn_name(), mlMetricSummary.getMetric_name(),
+              TimeSeriesRiskData.builder()
+                  .longTermPattern(longTermPattern)
+                  .lastSeenTime(lastSeenTime)
+                  .metricRisk(maxRisk)
+                  .build());
+
           risks.put(txnSummary.getTxn_name(), mlMetricSummary.getMetric_name(), mlMetricSummary.getMax_risk());
           longTermPatterns.put(
               txnSummary.getTxn_name(), mlMetricSummary.getMetric_name(), mlMetricSummary.getLong_term_pattern());
@@ -232,6 +244,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     riskSummary.setTxnMetricRisk(risks.rowMap());
     riskSummary.setTxnMetricLongTermPattern(longTermPatterns.rowMap());
+    riskSummary.setTxnMetricRiskData(riskData.rowMap());
     riskSummary.compressMaps();
 
     mlAnalysisResponse.setAggregatedRisk(aggregatedRisk);
