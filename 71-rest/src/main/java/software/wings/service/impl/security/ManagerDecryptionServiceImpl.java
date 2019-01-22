@@ -7,6 +7,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.KmsOperationException;
 import org.slf4j.Logger;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 /**
  * Created by rsingh on 6/7/18.
  */
+@Singleton
 public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
   private static final Logger logger = LoggerFactory.getLogger(ManagerDecryptionServiceImpl.class);
   @Inject private DelegateProxyFactory delegateProxyFactory;
