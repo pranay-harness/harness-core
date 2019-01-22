@@ -76,7 +76,7 @@ public class ThirdPartyApiCallServiceTest extends WingsBaseTest {
     delegateResource.saveApiCallLogs(delegateId, accountId, apiCallLogs);
 
     RestResponse<List<ThirdPartyApiCallLog>> restResponse =
-        activityResource.listLogs(appId, stateExecutionId, aPageRequest().build());
+        activityResource.listLogs(appId, stateExecutionId, 0, 0, aPageRequest().build());
     List<ThirdPartyApiCallLog> savedApiCallLogs = restResponse.getResource();
     assertEquals(numOfApiCallLogs, savedApiCallLogs.size());
     for (int i = 0; i < numOfApiCallLogs; i++) {

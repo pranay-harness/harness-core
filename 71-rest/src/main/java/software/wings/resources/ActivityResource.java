@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.GE;
+import static io.harness.beans.SearchFilter.Operator.LT_EQ;
 import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -8,6 +10,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -160,9 +163,18 @@ public class ActivityResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<ThirdPartyApiCallLog>> listLogs(@QueryParam("appId") String appId,
-      @PathParam("stateExecutionId") String stateExecutionId, @BeanParam PageRequest<ThirdPartyApiCallLog> request) {
-    request.addFilter("appId", EQ, appId);
-    request.addFilter("stateExecutionId", EQ, stateExecutionId);
+      @PathParam("stateExecutionId") String stateExecutionId, @QueryParam("startTime") long startTime,
+      @QueryParam("endTime") long endTime, @BeanParam PageRequest<ThirdPartyApiCallLog> request) {
+    Preconditions.checkState(endTime >= startTime, "End time should be greater than start time");
+
+    if (startTime > 0) {
+      request.addFilter("createdAt", GE, startTime);
+    }
+
+    if (endTime > 0) {
+      request.addFilter("createdAt", LT_EQ, endTime);
+    }
+
     if (isEmpty(request.getOrders())) {
       request.setOrders(asList(aSortOrder().withField(ThirdPartyApiCallLog.CREATED_AT_KEY, DESC).build()));
     }
