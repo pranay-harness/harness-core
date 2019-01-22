@@ -4,6 +4,7 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.threading.Morpheus.sleep;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.SYNC;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Duration.ofSeconds;
 
@@ -96,7 +97,8 @@ public class FileIo {
   }
 
   public static void writeUtf8StringToFile(final String directoryPath, String content) throws IOException {
-    Files.write(Paths.get(directoryPath), content.getBytes(StandardCharsets.UTF_8), CREATE, WRITE, SYNC);
+    Files.write(
+        Paths.get(directoryPath), content.getBytes(StandardCharsets.UTF_8), CREATE, TRUNCATE_EXISTING, WRITE, SYNC);
   }
 
   public static void writeFile(final String directoryPath, byte[] content) throws IOException {
