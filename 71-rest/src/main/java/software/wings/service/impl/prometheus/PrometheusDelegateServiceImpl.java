@@ -4,6 +4,7 @@ import static software.wings.common.Constants.URL_STRING;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -28,6 +29,7 @@ import java.time.OffsetDateTime;
 /**
  * Created by rsingh on 3/14/18.
  */
+@Singleton
 public class PrometheusDelegateServiceImpl implements PrometheusDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(PrometheusDelegateServiceImpl.class);
   @Inject private DelegateLogService delegateLogService;

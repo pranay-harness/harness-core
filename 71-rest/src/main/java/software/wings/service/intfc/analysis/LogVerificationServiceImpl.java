@@ -3,6 +3,7 @@ package software.wings.service.intfc.analysis;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
@@ -25,6 +26,7 @@ import software.wings.sm.StateType;
 import java.util.List;
 import java.util.Set;
 
+@Singleton
 public class LogVerificationServiceImpl implements LogVerificationService {
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;

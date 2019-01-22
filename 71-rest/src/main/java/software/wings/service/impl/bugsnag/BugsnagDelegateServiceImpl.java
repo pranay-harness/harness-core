@@ -2,6 +2,7 @@ package software.wings.service.impl.bugsnag;
 
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.network.Http;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by Praveen
  */
+@Singleton
 public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
   private static final String organizationsUrl = "user/organizations";
   private static final String projectsUrl = "organizations/orgId/projects";

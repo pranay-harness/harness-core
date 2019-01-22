@@ -7,6 +7,7 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.sumologic.client.Credentials;
 import com.sumologic.client.SumoLogicClient;
@@ -51,6 +52,7 @@ import java.util.concurrent.TimeUnit;
  *
  * Created by sriram_parthasarathy on 9/11/17.
  */
+@Singleton
 public class SumoDelegateServiceImpl implements SumoDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(SumoDelegateServiceImpl.class);
   private static final long DEFAULT_SLEEP_TIME_IN_MILLIS = 5000;

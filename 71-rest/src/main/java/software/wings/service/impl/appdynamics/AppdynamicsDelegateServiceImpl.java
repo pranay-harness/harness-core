@@ -10,6 +10,7 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -61,6 +62,7 @@ import java.util.stream.Collectors;
 /**
  * Created by rsingh on 4/17/17.
  */
+@Singleton
 public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDelegateServiceImpl.class);
   public static final String BT_PERFORMANCE_PATH_PREFIX = "Business Transaction Performance|Business Transactions|";

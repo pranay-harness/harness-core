@@ -4,6 +4,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -29,6 +30,7 @@ import java.util.List;
 /**
  * Created by Pranjal on 09/12/2018
  */
+@Singleton
 public class DynaTraceServiceImpl implements DynaTraceService {
   private static final Logger logger = LoggerFactory.getLogger(DynaTraceServiceImpl.class);
   @Inject private SettingsService settingsService;

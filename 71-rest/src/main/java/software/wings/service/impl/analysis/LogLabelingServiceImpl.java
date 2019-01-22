@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -28,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+@Singleton
 public class LogLabelingServiceImpl implements LogLabelingService {
   private static final Logger logger = LoggerFactory.getLogger(LogLabelingServiceImpl.class);
 

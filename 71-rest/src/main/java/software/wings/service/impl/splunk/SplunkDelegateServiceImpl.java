@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.common.Constants.URL_STRING;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.splunk.Event;
 import com.splunk.HttpService;
@@ -45,6 +46,7 @@ import java.util.concurrent.TimeUnit;
  * Implementation of Splunk Delegate Service.
  * Created by rsingh on 6/30/17.
  */
+@Singleton
 public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(SplunkDelegateServiceImpl.class);
 

@@ -11,6 +11,7 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -61,6 +62,7 @@ import javax.net.ssl.X509TrustManager;
 /**
  * Created by rsingh on 8/01/17.
  */
+@Singleton
 public class ElkDelegateServiceImpl implements ElkDelegateService {
   public static final int MAX_RECORDS = 10000;
 

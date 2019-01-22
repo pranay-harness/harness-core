@@ -9,6 +9,7 @@ import static software.wings.sm.states.AbstractAnalysisState.START_TIME_PLACE_HO
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by Pranjal on 09/02/2018
  */
 @ValidateOnExecution
+@Singleton
 public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService {
   private static final Logger logger = LoggerFactory.getLogger(PrometheusAnalysisServiceImpl.class);
 

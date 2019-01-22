@@ -12,6 +12,7 @@ import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -57,6 +58,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by Pranjal on 09/04/2018
  */
+@Singleton
 public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(CloudWatchDelegateServiceImpl.class);
   private static final int CANARY_DAYS_TO_COLLECT = 7;

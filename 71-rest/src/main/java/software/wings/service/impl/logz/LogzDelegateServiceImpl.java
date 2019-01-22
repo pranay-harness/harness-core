@@ -6,6 +6,7 @@ import static software.wings.common.Constants.URL_STRING;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import okhttp3.OkHttpClient;
@@ -36,6 +37,7 @@ import java.util.List;
 /**
  * Created by rsingh on 8/21/17.
  */
+@Singleton
 public class LogzDelegateServiceImpl implements LogzDelegateService {
   private static final Object logzQuery = JsonUtils.asObject(
       "{ \"size\": 0, \"query\": { \"bool\": { \"must\": [{ \"range\": { \"@timestamp\": { \"gte\": \"now-5m\", \"lte\": \"now\" } } }] } }, \"aggs\": { \"byType\": { \"terms\": { \"field\": \"type\", \"size\": 5 } } } }",

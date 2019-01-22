@@ -3,6 +3,8 @@ package software.wings.service.impl.sumo;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import com.google.inject.Singleton;
+
 import io.harness.exception.WingsException;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
@@ -20,6 +22,7 @@ import java.util.List;
 /**
  * Created by Pranjal on 08/23/2018
  */
+@Singleton
 public class SumoLogicAnalysisServiceImpl extends AnalysisServiceImpl implements SumoLogicAnalysisService {
   @Override
   public VerificationNodeDataSetupResponse getLogDataByHost(

@@ -7,6 +7,7 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.exception.WingsException;
@@ -39,6 +40,7 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by Pranjal on 11/27/2018
  */
 @ValidateOnExecution
+@Singleton
 public class StackDriverServiceImpl implements StackDriverService {
   private static final Logger logger = LoggerFactory.getLogger(StackDriverServiceImpl.class);
 

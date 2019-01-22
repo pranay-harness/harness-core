@@ -9,6 +9,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ErrorCode;
@@ -68,6 +69,7 @@ import javax.cache.Cache;
 /**
  * Created by rsingh on 8/28/17.
  */
+@Singleton
 public class NewRelicServiceImpl implements NewRelicService {
   private static final Logger logger = LoggerFactory.getLogger(NewRelicServiceImpl.class);
 
