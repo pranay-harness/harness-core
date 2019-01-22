@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
 import org.apache.commons.collections.CollectionUtils;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
@@ -39,7 +38,7 @@ import java.util.List;
 public class EcsDaemonServiceSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/ECSLoadBalancerModal.js
 
-  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsDaemonServiceSetup.class);
+  private static final Logger logger = LoggerFactory.getLogger(EcsDaemonServiceSetup.class);
 
   private String ecsServiceName;
   private boolean useLoadBalancer;

@@ -86,7 +86,7 @@ import java.util.concurrent.TimeUnit;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class ContainerServiceSetup extends State {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(ContainerServiceSetup.class);
+  private static final Logger logger = LoggerFactory.getLogger(ContainerServiceSetup.class);
 
   public static final String FIXED_INSTANCES = "fixedInstances";
   public static final String DESIRED_INSTANCE_COUNT_KEY = "desiredInstanceCount";

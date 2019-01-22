@@ -10,6 +10,7 @@ import static io.harness.persistence.HQuery.excludeCount;
 import static java.lang.Integer.max;
 import static java.util.Arrays.asList;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.common.VerificationConstants.MEDIUM_RISK_CUTOFF;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
@@ -303,6 +304,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
     wingsPersistence.save(mlAnalysisResponse);
     wingsPersistence.save(riskSummary);
+
+    if (!isEmpty(mlAnalysisResponse.getOverallMetricScores())) {
+      double finalOverallScore =
+          mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(val -> val).average().orElse(0.0);
+      if (!isEmpty(cvConfigId) && finalOverallScore >= MEDIUM_RISK_CUTOFF) {
+        logger.warn("Risk detected for cvConfigId {}, stateType {}, finalOverallScore {}", cvConfigId, stateType,
+            finalOverallScore);
+      }
+    }
     logger.info("inserted MetricAnalysisRecord to persistence layer for "
             + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
         stateType, workflowExecutionId, stateExecutionId);
