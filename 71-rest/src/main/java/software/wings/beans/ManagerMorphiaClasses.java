@@ -10,6 +10,7 @@ import software.wings.api.InstanceChangeEvent;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.AcrArtifactStream;
@@ -166,5 +167,6 @@ public class ManagerMorphiaClasses {
       NewRelicCVServiceConfiguration.class, ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class,
       YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class,
       ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class,
-      AbstractLogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class);
+      AbstractLogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
+      AlertNotificationRule.class);
 }
