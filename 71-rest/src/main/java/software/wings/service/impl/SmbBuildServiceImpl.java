@@ -4,6 +4,7 @@ import static io.harness.exception.WingsException.USER;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Singleton
 public class SmbBuildServiceImpl implements SmbBuildService {
   private static final Logger logger = LoggerFactory.getLogger(SmbBuildServiceImpl.class);
 

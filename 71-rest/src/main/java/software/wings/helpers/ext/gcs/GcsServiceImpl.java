@@ -19,6 +19,7 @@ import com.google.api.services.storage.model.Objects;
 import com.google.api.services.storage.model.StorageObject;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+@Singleton
 public class GcsServiceImpl implements GcsService {
   private static final Logger logger = LoggerFactory.getLogger(software.wings.helpers.ext.gcs.GcsServiceImpl.class);
   private GcpHelperService gcpHelperService;

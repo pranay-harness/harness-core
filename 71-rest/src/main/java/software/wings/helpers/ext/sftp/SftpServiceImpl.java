@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.USER;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ import software.wings.utils.Misc;
 import java.util.Collections;
 import java.util.List;
 
+@Singleton
 public class SftpServiceImpl implements SftpService {
   private static final Logger logger = LoggerFactory.getLogger(software.wings.helpers.ext.sftp.SftpServiceImpl.class);
   @Inject private SftpHelperService sftpHelperService;

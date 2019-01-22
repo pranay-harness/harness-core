@@ -14,6 +14,7 @@ import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_NAME;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.seeddata.SampleDataProviderService;
@@ -51,6 +52,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import java.util.ArrayList;
 import java.util.List;
 
+@Singleton
 public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
   @Inject private AppService appService;
   @Inject private SettingsService settingsService;
