@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.KmsOperationException;
@@ -56,6 +57,7 @@ import java.util.UUID;
 /**
  * Created by rsingh on 9/29/17.
  */
+@Singleton
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
   @Inject private FileService fileService;
 

@@ -61,7 +61,7 @@ public class FileServiceUtils {
     byte[] idBytes = Base64.getDecoder().decode(fileId);
     String idString = new String(idBytes, Charset.defaultCharset());
     if (!idString.startsWith(GCS_ID_PREFIX)) {
-      throw new IllegalArgumentException("Mal-formed google could storage based file id '" + fileId + "'.");
+      throw new IllegalArgumentException("Mal-formed google cloud storage based file id '" + fileId + "'.");
     } else {
       String filePath = idString.substring(GCS_ID_PREFIX.length());
       GoogleCloudFileIdComponent component = new GoogleCloudFileIdComponent();

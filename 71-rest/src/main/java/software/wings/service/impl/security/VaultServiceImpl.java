@@ -23,6 +23,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
@@ -71,6 +72,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 11/2/17.
  */
+@Singleton
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
   public static final String VAULT_VAILDATION_URL = "harness_vault_validation";
   @Inject private KmsService kmsService;
