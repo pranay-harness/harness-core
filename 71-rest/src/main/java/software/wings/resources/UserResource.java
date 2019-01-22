@@ -68,6 +68,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -184,14 +185,15 @@ public class UserResource {
   @Path("account")
   @Timed
   @ExceptionMetered
-  public RestResponse<Account> addAccount(Account account) {
+  public RestResponse<Account> addAccount(
+      Account account, @QueryParam("addUser") @DefaultValue("true") boolean addUser) {
     User existingUser = UserThreadLocal.get();
     if (existingUser == null) {
       throw new InvalidRequestException("Invalid User");
     }
 
     if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
-      return new RestResponse<>(userService.addAccount(account, existingUser));
+      return new RestResponse<>(userService.addAccount(account, existingUser, addUser));
     } else {
       return Builder.aRestResponse()
           .withResponseMessages(

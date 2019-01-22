@@ -27,11 +27,14 @@ import org.bson.types.ObjectId;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.api.DeploymentSummary;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.Account;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.BarrierInstance;
 import software.wings.beans.Base;
+import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.EntityVersionCollection;
 import software.wings.beans.FeatureFlag;
@@ -39,6 +42,9 @@ import software.wings.beans.GitCommit;
 import software.wings.beans.Idempotent;
 import software.wings.beans.Log;
 import software.wings.beans.Notification;
+import software.wings.beans.NotificationBatch;
+import software.wings.beans.PipelineExecution;
+import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Schema;
 import software.wings.beans.ServiceInstance;
@@ -46,11 +52,16 @@ import software.wings.beans.SweepingOutput;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.infrastructure.Host;
+import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
 import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.template.TemplateVersion;
+import software.wings.beans.trigger.TriggerExecution;
+import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.exportimport.ExportMode;
 import software.wings.dl.exportimport.ImportMode;
 import software.wings.dl.exportimport.ImportStatusReport;
@@ -60,8 +71,10 @@ import software.wings.security.EncryptionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
@@ -70,6 +83,9 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
@@ -78,6 +94,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.AppService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -141,6 +158,7 @@ public class AccountExportImportResource {
   private static Set<Class<? extends PersistentEntity>> excludedEntities = new HashSet<>(Arrays.asList(
       // Execution/Command/Audit logs
       Log.class, LogDataRecord.class, ThirdPartyApiCallLog.class, AuditHeader.class, SecretUsageLog.class,
+      SecretChangeLog.class,
       // Notification/alert records
       Notification.class, Alert.class, NotifyResponse.class,
       // Learning engine related runtime data records
@@ -149,14 +167,18 @@ public class AccountExportImportResource {
       LearningEngineExperimentalAnalysisTask.class, MLExperiments.class, NewRelicMetricDataRecord.class,
       ExperimentalMetricAnalysisRecord.class, ContinuousVerificationExecutionMetaData.class,
       NewRelicMetricAnalysisRecord.class, TimeSeriesMLScores.class, TimeSeriesRiskSummary.class,
+      TimeSeriesMetricGroup.class, TimeSeriesMetricTemplates.class, TimeSeriesMLTransactionThresholds.class,
+      AnalysisContext.class,
       // Locks and Tasks
-      Idempotent.class, WaitInstance.class, DelegateTask.class,
+      Idempotent.class, WaitInstance.class, DelegateTask.class, ExecutionInterrupt.class, BarrierInstance.class,
       // Global entities not associated with any account
       FeatureFlag.class, TemplateVersion.class,
-      // Runtime data/status etc.
+      // Runtime data/instance/status etc.
       StateExecutionInstance.class, ServiceInstance.class, WorkflowExecution.class, InstanceStatsSnapshot.class,
       StateMachine.class, SweepingOutput.class, ContainerTask.class, GitSyncError.class, ManualSyncJob.class,
-      SyncStatus.class, Activity.class, GitCommit.class, YamlChangeSet.class));
+      SyncStatus.class, Activity.class, GitCommit.class, YamlChangeSet.class, Instance.class, TriggerExecution.class,
+      PipelineExecution.class, ResourceConstraintInstance.class, Artifact.class, Host.class,
+      DelegateConnectionResult.class, DelegateConnection.class, DeploymentSummary.class, NotificationBatch.class));
 
   private static Set<String> includedMongoCollections = new HashSet<>();
   private static Set<String> excludedMongoCollections = new HashSet<>();
@@ -339,29 +361,35 @@ public class AccountExportImportResource {
   @ExceptionMetered
   public RestResponse<ImportStatusReport> importAccountData(@QueryParam("accountId") final String accountId,
       @QueryParam("mode") @DefaultValue("UPSERT") ImportMode importMode,
+      @QueryParam("disableSchemaCheck") boolean disableSchemaCheck,
+      @QueryParam("disableNaturalKeyCheck") boolean disableNaturalKeyCheck,
       @FormDataParam("file") final InputStream uploadInputStream) throws Exception {
+    log.info("Started importing data for account '{}'.", accountId);
     Map<String, String> zipEntryDataMap = readZipEntries(uploadInputStream);
+    log.info("Finished reading uploaded input stream in zip format.");
 
     List<ImportStatus> importStatuses = new ArrayList<>();
 
     // 1. Check schema version compatibility. Would enforce the exported collections' schema is the same as the current
     // installation's
-    checkSchemaVersionCompatibility(zipEntryDataMap);
+    if (!disableSchemaCheck) {
+      checkSchemaVersionCompatibility(zipEntryDataMap);
+    }
 
     // 2. Import account data first.
     String accountCollectionName = getCollectionName(Account.class);
     JsonArray accounts = getJsonArray(zipEntryDataMap, accountCollectionName);
     if (accounts != null) {
-      importStatuses.add(mongoExportImport.importRecords(
-          accountCollectionName, convertJsonArrayToStringList(accounts), importMode, new String[] {"accountName"}));
+      importStatuses.add(mongoExportImport.importRecords(accountCollectionName, convertJsonArrayToStringList(accounts),
+          importMode, new String[] {"accountName"}, disableNaturalKeyCheck));
     }
 
     // 3. Import users
     String userCollectionName = getCollectionName(User.class);
     JsonArray users = getJsonArray(zipEntryDataMap, userCollectionName);
     if (users != null) {
-      importStatuses.add(
-          mongoExportImport.importRecords(userCollectionName, convertJsonArrayToStringList(users), importMode));
+      importStatuses.add(mongoExportImport.importRecords(
+          userCollectionName, convertJsonArrayToStringList(users), importMode, disableNaturalKeyCheck));
     }
 
     // 4. Import applications
@@ -369,20 +397,20 @@ public class AccountExportImportResource {
     JsonArray applications = getJsonArray(zipEntryDataMap, applicationsCollectionName);
     if (applications != null) {
       importStatuses.add(mongoExportImport.importRecords(
-          applicationsCollectionName, convertJsonArrayToStringList(applications), importMode));
+          applicationsCollectionName, convertJsonArrayToStringList(applications), importMode, disableNaturalKeyCheck));
     }
 
     // 5. Import all "encryptedRecords", "configs.file" and "configs.chunks" content
     String encryptedDataCollectionName = getCollectionName(EncryptedData.class);
     JsonArray encryptedData = getJsonArray(zipEntryDataMap, encryptedDataCollectionName);
     if (encryptedData != null) {
-      importStatuses.add(mongoExportImport.importRecords(
-          encryptedDataCollectionName, convertJsonArrayToStringList(encryptedData), importMode));
+      importStatuses.add(mongoExportImport.importRecords(encryptedDataCollectionName,
+          convertJsonArrayToStringList(encryptedData), importMode, disableNaturalKeyCheck));
     }
     JsonArray configFiles = getJsonArray(zipEntryDataMap, COLLECTION_CONFIG_FILES);
     if (configFiles != null) {
       ImportStatus importStatus = mongoExportImport.importRecords(
-          COLLECTION_CONFIG_FILES, convertJsonArrayToStringList(configFiles), importMode);
+          COLLECTION_CONFIG_FILES, convertJsonArrayToStringList(configFiles), importMode, disableNaturalKeyCheck);
       if (importStatus != null) {
         importStatuses.add(importStatus);
       }
@@ -390,7 +418,7 @@ public class AccountExportImportResource {
     JsonArray configChunks = getJsonArray(zipEntryDataMap, COLLECTION_CONFIG_CHUNKS);
     if (configChunks != null) {
       ImportStatus importStatus = mongoExportImport.importRecords(
-          COLLECTION_CONFIG_CHUNKS, convertJsonArrayToStringList(configChunks), importMode);
+          COLLECTION_CONFIG_CHUNKS, convertJsonArrayToStringList(configChunks), importMode, disableNaturalKeyCheck);
       if (importStatus != null) {
         importStatuses.add(importStatus);
       }
@@ -400,12 +428,20 @@ public class AccountExportImportResource {
     for (Entry<String, Class<? extends Base>> entry : genericExportableEntityTypes.entrySet()) {
       String collectionName = getCollectionName(entry.getValue());
       JsonArray jsonArray = getJsonArray(zipEntryDataMap, collectionName);
-      ImportStatus importStatus =
-          mongoExportImport.importRecords(collectionName, convertJsonArrayToStringList(jsonArray), importMode);
-      if (importStatus != null) {
-        importStatuses.add(importStatus);
+      if (excludedMongoCollections.contains(collectionName)) {
+        log.info("Import of collection '{}' has been skipped since it is in the exclusion list.", collectionName);
+      } else if (jsonArray == null) {
+        log.info("No data found for collection '{}' to import.", collectionName);
+      } else {
+        ImportStatus importStatus = mongoExportImport.importRecords(
+            collectionName, convertJsonArrayToStringList(jsonArray), importMode, disableNaturalKeyCheck);
+        if (importStatus != null) {
+          importStatuses.add(importStatus);
+        }
       }
     }
+    log.info("{} collections has been imported.", importStatuses.size());
+    log.info("Finished importing data for account '{}'.", accountId);
 
     return new RestResponse<>(ImportStatusReport.builder().statuses(importStatuses).mode(importMode).build());
   }

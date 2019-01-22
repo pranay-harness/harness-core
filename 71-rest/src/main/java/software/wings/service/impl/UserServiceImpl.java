@@ -260,7 +260,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Account addAccount(Account account, User user) {
+  public Account addAccount(Account account, User user, boolean addUser) {
     if (isNotBlank(account.getAccountName())) {
       account.setAccountName(account.getAccountName().trim());
     }
@@ -270,10 +270,12 @@ public class UserServiceImpl implements UserService {
     }
 
     account = setupAccount(account);
-    addAccountAdminRole(user, account);
-    authHandler.addUserToDefaultAccountAdminUserGroup(user, account, true);
-    sendSuccessfullyAddedToNewAccountEmail(user, account);
-    evictUserFromCache(user.getUuid());
+    if (addUser) {
+      addAccountAdminRole(user, account);
+      authHandler.addUserToDefaultAccountAdminUserGroup(user, account, true);
+      sendSuccessfullyAddedToNewAccountEmail(user, account);
+      evictUserFromCache(user.getUuid());
+    }
     return account;
   }
 

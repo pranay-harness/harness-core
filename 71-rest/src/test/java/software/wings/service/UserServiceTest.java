@@ -803,7 +803,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(roleService.getAccountAdminRole(ACCOUNT_ID)).thenReturn(aRole().build());
     when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
     User user = anUser().withUuid(USER_ID).withEmail(USER_EMAIL).build();
-    Account created = userService.addAccount(account, user);
+    Account created = userService.addAccount(account, user, true);
     assertThat(created).isEqualTo(account);
     verify(accountService).exists(eq(ACCOUNT_NAME));
   }

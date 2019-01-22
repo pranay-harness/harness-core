@@ -73,6 +73,7 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
+
 /**
  * Created by anubhaw on 3/11/16.
  */
@@ -80,6 +81,14 @@ import javax.ws.rs.core.MultivaluedMap;
 @Priority(AUTHORIZATION)
 public class AuthRuleFilter implements ContainerRequestFilter {
   private static final Logger logger = LoggerFactory.getLogger(AuthRuleFilter.class);
+
+  private static final String[] NO_FILTERING_URIS_PREFIXES =
+      new String[] {"users/user", "users/sso/zendesk", "users/account", "users/two-factor-auth",
+          "users/disable-two-factor-auth", "users/enable-two-factor-auth", "users/refresh-token"};
+  private static final String[] NO_FILTERING_URIS_SUFFIXES = new String[] {"/logout"};
+  private static final String[] EXEMPTED_URI_PREFIXES =
+      new String[] {"limits/configure", "account/license", "account/export", "account/import"};
+  private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts"};
 
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
@@ -120,8 +129,32 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     this.harnessUserGroupService = harnessUserGroupService;
   }
 
+  private boolean isAuthFilteringExempted(String uri) {
+    for (String noFilteringUri : NO_FILTERING_URIS_PREFIXES) {
+      if (uri.startsWith(noFilteringUri)) {
+        return true;
+      }
+    }
+    for (String noFilteringUri : NO_FILTERING_URIS_SUFFIXES) {
+      if (uri.endsWith(noFilteringUri)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private boolean isHarnessUserExemptedRequest(String uri) {
-    return uri.startsWith("limits/configure") || uri.startsWith("account/license") || uri.endsWith("sales-contacts");
+    for (String exemptedUriPrefix : EXEMPTED_URI_PREFIXES) {
+      if (uri.startsWith(exemptedUriPrefix)) {
+        return true;
+      }
+    }
+    for (String exemptedUriSuffix : EXEMPTED_URI_SUFFIXES) {
+      if (uri.endsWith(exemptedUriSuffix)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /* (non-Javadoc)
@@ -156,12 +189,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     String uriPath = requestContext.getUriInfo().getPath();
-    // TODO change this to Annotation based
-    if (accountId == null
-        && (uriPath.startsWith("users/user") || uriPath.startsWith("users/sso/zendesk")
-               || uriPath.startsWith("users/account") || uriPath.endsWith("/logout")
-               || uriPath.startsWith("users/two-factor-auth") || uriPath.startsWith("users/disable-two-factor-auth")
-               || uriPath.startsWith("users/enable-two-factor-auth") || uriPath.startsWith("users/refresh-token"))) {
+    if (accountId == null && isAuthFilteringExempted(uriPath)) {
       return;
     }
 
