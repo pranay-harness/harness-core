@@ -49,36 +49,41 @@ public class InstanceStatsMetricsJob implements Job {
   private void executeInternal() {
     try (AcquiredLock lock = persistentLocker.getLocker().tryToAcquireLock(LOCK, Duration.ofMinutes(5))) {
       if (lock == null) {
+        logger.info("Lock not acquired");
         return;
       }
-      List<Account> accountList = usageMetricsHelper.listAllAccountsWithDefaults();
-      Map<String, Integer> instanceCountMap = usageMetricsHelper.getAllValidInstanceCounts();
-      logger.info("Instance metrics job start");
-      final int[] globalCount = new int[] {0};
-      accountList.forEach(account -> {
-        try {
-          logger.info("Publishing metric for accountId:[{}]", account.getUuid());
-          Integer instanceCount =
-              instanceCountMap.get(account.getUuid()) == null ? 0 : instanceCountMap.get(account.getUuid());
-          eventPublisher.publishInstanceMetric(
-              account.getUuid(), account.getAccountName(), instanceCount, EventConstants.INSTANCE_COUNT_TOTAL);
-          eventPublisher.publishInstanceMetric(account.getUuid(), account.getAccountName(),
-              InstanceStatsUtil.actualUsage(account.getUuid(), instanceStatService),
-              EventConstants.INSTANCE_COUNT_NINETY_FIVE_PERCENTILE);
-          globalCount[0] = +instanceCount;
-
-        } catch (Exception e) {
-          logger.warn("Failed to retrieve metric for accountId: [{}], accountName: [{}]", account.getUuid(),
-              account.getAccountName(), e);
-        }
-      });
       try {
-        eventPublisher.publishInstanceMetric(Account.GLOBAL_ACCOUNT_ID, Account.GLOBAL_ACCOUNT_ID, globalCount[0],
-            EventConstants.INSTANCE_COUNT_GLOBAL_TOTAL);
+        List<Account> accountList = usageMetricsHelper.listAllAccountsWithDefaults();
+        Map<String, Integer> instanceCountMap = usageMetricsHelper.getAllValidInstanceCounts();
+        logger.info("Instance metrics job start");
+        final int[] globalCount = new int[] {0};
+        accountList.forEach(account -> {
+          try {
+            logger.info("Publishing metric for accountId:[{}]", account.getUuid());
+            Integer instanceCount =
+                instanceCountMap.get(account.getUuid()) == null ? 0 : instanceCountMap.get(account.getUuid());
+            eventPublisher.publishInstanceMetric(
+                account.getUuid(), account.getAccountName(), instanceCount, EventConstants.INSTANCE_COUNT_TOTAL);
+            eventPublisher.publishInstanceMetric(account.getUuid(), account.getAccountName(),
+                InstanceStatsUtil.actualUsage(account.getUuid(), instanceStatService),
+                EventConstants.INSTANCE_COUNT_NINETY_FIVE_PERCENTILE);
+            globalCount[0] = +instanceCount;
+
+          } catch (Exception e) {
+            logger.warn("Failed to retrieve metric for accountId: [{}], accountName: [{}]", account.getUuid(),
+                account.getAccountName(), e);
+          }
+        });
+        try {
+          eventPublisher.publishInstanceMetric(Account.GLOBAL_ACCOUNT_ID, Account.GLOBAL_ACCOUNT_ID, globalCount[0],
+              EventConstants.INSTANCE_COUNT_GLOBAL_TOTAL);
+        } catch (Exception e) {
+          logger.warn("Failed to publish global account metrics", e);
+        }
+        logger.info("Instance metrics job end");
       } catch (Exception e) {
-        logger.warn("Failed to publish global account metrics", e);
+        logger.warn("Instance metrics job failed to execute", e);
       }
-      logger.info("Instance metrics job end");
     }
   }
 

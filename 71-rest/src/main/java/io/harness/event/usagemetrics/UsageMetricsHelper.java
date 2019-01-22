@@ -87,7 +87,7 @@ public class UsageMetricsHelper {
                                            .addFieldsIncluded(ID_KEY, ACCOUNT_NAME_KEY)
                                            .addFilter(APP_ID_KEY, Operator.EQ, GLOBAL_APP_ID)
                                            .build();
-    return wingsPersistence.getAllEntities(pageRequest, null);
+    return wingsPersistence.getAllEntities(pageRequest, () -> wingsPersistence.query(Account.class, pageRequest));
   }
 
   public Map<String, Integer> getAllValidInstanceCounts() {
