@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
+import software.wings.sm.StateType;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,9 +30,9 @@ public class StackDriverSetupTestNodeData extends SetupTestNodeData {
   @Builder
   public StackDriverSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      Map<String, List<StackDriverMetric>> loadBalancerMetrics, Set<StackDriverMetric> vmInstanceMetrics) {
-    super(
-        appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, fromTime, toTime);
+      Map<String, List<StackDriverMetric>> loadBalancerMetrics, Set<StackDriverMetric> vmInstanceMetrics, String guid) {
+    super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
+        StateType.STACK_DRIVER, fromTime, toTime);
     this.loadBalancerMetrics = loadBalancerMetrics;
     this.vmInstanceMetrics = vmInstanceMetrics;
   }

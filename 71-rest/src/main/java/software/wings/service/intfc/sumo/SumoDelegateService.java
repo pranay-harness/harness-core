@@ -4,6 +4,7 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 
@@ -45,9 +46,11 @@ public interface SumoDelegateService {
    * @param hostNameField
    * @param hostName
    * @param encryptedDataDetails
+   * @param apiCallLog
    * @return
    */
   @DelegateTaskType(TaskType.SUMO_GET_LOG_DATA_BY_HOST)
   VerificationNodeDataSetupResponse getLogDataByHost(String accountId, SumoConfig config, String query,
-      String hostNameField, String hostName, List<EncryptedDataDetail> encryptedDataDetails);
+      String hostNameField, String hostName, List<EncryptedDataDetail> encryptedDataDetails,
+      ThirdPartyApiCallLog apiCallLog);
 }

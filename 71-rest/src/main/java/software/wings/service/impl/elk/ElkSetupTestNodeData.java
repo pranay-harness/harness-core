@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
+import software.wings.sm.StateType;
 
 /**
  * ELK request payload for TestNodeData.
@@ -30,9 +31,9 @@ public class ElkSetupTestNodeData extends SetupTestNodeData {
   public ElkSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
       String query, String indices, String messageField, String timeStampField, String timeStampFieldFormat,
-      ElkQueryType queryType, String hostNameField, boolean formattedQuery) {
-    super(
-        appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, fromTime, toTime);
+      ElkQueryType queryType, String hostNameField, boolean formattedQuery, String guid) {
+    super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
+        StateType.ELK, fromTime, toTime);
     this.query = query;
     this.indices = indices;
     this.messageField = messageField;

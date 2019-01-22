@@ -13,7 +13,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import com.google.inject.Inject;
@@ -154,7 +154,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
       for (AppdynamicsTier tier : tierRestResponse.getResource()) {
         List<AppdynamicsMetric> btMetrics = appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig,
             application.getId(), tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null),
-            apiCallLogWithDummyStateExecution(accountId));
+            createApiCallLog(appDynamicsConfig.getAccountId(), accountId, null));
 
         assertFalse(btMetrics.isEmpty());
 
@@ -246,7 +246,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         logger.info(application.toString());
         Set<AppdynamicsNode> nodes = appdynamicsDelegateService.getNodes(appDynamicsConfig, application.getId(),
             tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null),
-            apiCallLogWithDummyStateExecution(accountId));
+            createApiCallLog(appDynamicsConfig.getAccountId(), accountId, null));
 
         for (AppdynamicsNode node : new TreeSet<>(nodes).descendingSet()) {
           AppdynamicsSetupTestNodeData testNodeData =
@@ -255,6 +255,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                   .tierId(tier.getId())
                   .settingId(appdynamicsSettingId)
                   .appId(appId)
+                  .guid("test_guid")
                   .instanceName(generateUuid())
                   .hostExpression("${host.hostName}")
                   .workflowId(workflowId)

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.analysis.TimeSeries;
+import software.wings.sm.StateType;
 
 import java.util.List;
 
@@ -25,9 +26,9 @@ public class PrometheusSetupTestNodeData extends SetupTestNodeData {
   @Builder
   public PrometheusSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      List<TimeSeries> timeSeriesToCollect) {
-    super(
-        appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, fromTime, toTime);
+      List<TimeSeries> timeSeriesToCollect, String guid) {
+    super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
+        StateType.PROMETHEUS, fromTime, toTime);
     this.timeSeriesToCollect = timeSeriesToCollect;
   }
 }

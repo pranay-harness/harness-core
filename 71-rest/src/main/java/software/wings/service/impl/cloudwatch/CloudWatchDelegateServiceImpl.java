@@ -3,7 +3,6 @@ package software.wings.service.impl.cloudwatch;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
@@ -86,16 +85,15 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     if (!isEmpty(setupTestNodeData.getLoadBalancerMetricsByLBName())) {
       setupTestNodeData.getLoadBalancerMetricsByLBName().forEach(
           (loadBalancerName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
-            callables.add(
-                ()
-                    -> getMetricDataRecords(AwsNameSpace.ELB, cloudWatchClient, cloudWatchMetric, loadBalancerName,
-                        DEFAULT_GROUP_NAME,
-                        CloudWatchDataCollectionInfo.builder()
-                            .awsConfig(config)
-                            .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
-                            .build(),
-                        setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(),
-                        apiCallLogWithDummyStateExecution(config.getAccountId()), false, new HashMap<>()));
+            callables.add(()
+                              -> getMetricDataRecords(AwsNameSpace.ELB, cloudWatchClient, cloudWatchMetric,
+                                  loadBalancerName, DEFAULT_GROUP_NAME,
+                                  CloudWatchDataCollectionInfo.builder()
+                                      .awsConfig(config)
+                                      .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
+                                      .build(),
+                                  setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(),
+                                  setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>()));
           }));
     }
 
@@ -111,16 +109,15 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
 
     if (!isEmpty(setupTestNodeData.getEc2Metrics())) {
       setupTestNodeData.getEc2Metrics().forEach(cloudWatchMetric
-          -> callables.add(
-              ()
-                  -> getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient, cloudWatchMetric, hostName,
-                      NewRelicMetricDataRecord.DEFAULT_GROUP_NAME,
-                      CloudWatchDataCollectionInfo.builder()
-                          .awsConfig(config)
-                          .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
-                          .build(),
-                      setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(),
-                      apiCallLogWithDummyStateExecution(config.getAccountId()), false, new HashMap<>())));
+          -> callables.add(()
+                               -> getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient, cloudWatchMetric, hostName,
+                                   NewRelicMetricDataRecord.DEFAULT_GROUP_NAME,
+                                   CloudWatchDataCollectionInfo.builder()
+                                       .awsConfig(config)
+                                       .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
+                                       .build(),
+                                   setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(),
+                                   setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>())));
     }
 
     List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> hostMetricsResults =

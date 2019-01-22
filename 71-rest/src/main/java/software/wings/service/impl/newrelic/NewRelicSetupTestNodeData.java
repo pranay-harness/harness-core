@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
+import software.wings.sm.StateType;
 
 /**
  * Created by rsingh on 8/3/18.
@@ -19,9 +20,9 @@ public class NewRelicSetupTestNodeData extends SetupTestNodeData {
   @Builder
   public NewRelicSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      long newRelicAppId) {
-    super(
-        appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, fromTime, toTime);
+      long newRelicAppId, String guid) {
+    super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
+        StateType.NEW_RELIC, fromTime, toTime);
     this.newRelicAppId = newRelicAppId;
   }
 }

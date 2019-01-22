@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.System.currentTimeMillis;
@@ -57,7 +58,7 @@ import java.util.List;
 @ToString(exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
-  private static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
+  public static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
   private static final int MAX_JSON_RESPONSE_LENGTH = 16384;
   private @NotEmpty @Indexed String stateExecutionId;
   private @NotEmpty String accountId;
@@ -131,8 +132,12 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
     request.add(field);
   }
 
-  public static ThirdPartyApiCallLog apiCallLogWithDummyStateExecution(String accountId) {
-    return ThirdPartyApiCallLog.builder().accountId(accountId).stateExecutionId(NO_STATE_EXECUTION_ID).build();
+  public static ThirdPartyApiCallLog createApiCallLog(String accountId, String appId, String stateExecutionId) {
+    return ThirdPartyApiCallLog.builder()
+        .accountId(accountId)
+        .appId(appId)
+        .stateExecutionId(isEmpty(stateExecutionId) ? NO_STATE_EXECUTION_ID : stateExecutionId)
+        .build();
   }
 
   @Override

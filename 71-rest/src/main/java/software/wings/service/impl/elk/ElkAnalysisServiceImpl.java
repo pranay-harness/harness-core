@@ -2,7 +2,7 @@ package software.wings.service.impl.elk;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
 
@@ -95,9 +95,12 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     Object responseWithoutHost;
     try {
-      responseWithoutHost = delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
-                                .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails,
-                                    elkFetchRequestWithoutHost, apiCallLogWithDummyStateExecution(accountId), 5);
+      responseWithoutHost =
+          delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
+              .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequestWithoutHost,
+                  createApiCallLog(
+                      settingAttribute.getAccountId(), elkSetupTestNodeData.getAppId(), elkSetupTestNodeData.getGuid()),
+                  5);
     } catch (IOException ex) {
       logger.info("Error while getting data ", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
@@ -132,9 +135,12 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     logger.info("ElkFetchRequest to be send : " + elkFetchRequestWithHost);
     Object responseWithHost;
     try {
-      responseWithHost = delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
-                             .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails,
-                                 elkFetchRequestWithHost, apiCallLogWithDummyStateExecution(accountId), 5);
+      responseWithHost =
+          delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
+              .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequestWithHost,
+                  createApiCallLog(
+                      settingAttribute.getAccountId(), elkSetupTestNodeData.getAppId(), elkSetupTestNodeData.getGuid()),
+                  5);
     } catch (IOException ex) {
       logger.info("Error while getting data for node", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();

@@ -6,7 +6,7 @@ import static io.harness.network.Http.validUrl;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.RETRIES;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -24,6 +24,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.Base;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
@@ -131,7 +132,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
           try {
             List<AppdynamicsMetric> externalCallMetrics =
                 getExternalCallMetrics(appDynamicsConfig, appdynamicsAppId, tierBtMetric, tierBTsPath + "|",
-                    encryptionDetails, apiCallLogWithDummyStateExecution(appDynamicsConfig.getAccountId()));
+                    encryptionDetails, createApiCallLog(appDynamicsConfig.getAccountId(), Base.GLOBAL_APP_ID, null));
             externalCallMetrics.forEach(
                 externalCallMetric -> parseAndAddExternalTier(tier.getExternalTiers(), externalCallMetric, tiers));
           } catch (IOException e) {

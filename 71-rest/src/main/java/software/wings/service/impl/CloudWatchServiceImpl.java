@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -131,7 +131,9 @@ public class CloudWatchServiceImpl implements CloudWatchService {
                                             .build();
       return delegateProxyFactory.get(CloudWatchDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((AwsConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
-              apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()), hostName);
+              createApiCallLog(
+                  settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()),
+              hostName);
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(ErrorCode.CLOUDWATCH_ERROR)
