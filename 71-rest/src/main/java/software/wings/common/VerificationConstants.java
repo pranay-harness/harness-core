@@ -44,7 +44,15 @@ public class VerificationConstants {
   public static final String LOG_CLASSIFY_URL = "log-classify";
   public static final String GET_CLASSIFY_LABELS_URL = "/list-labels-to-classify";
   public static final String LAMBDA_HOST_NAME = "LAMBDA_HOST";
-  public static String DEFAULT_GROUP_NAME = "default";
+  public static final String DEFAULT_GROUP_NAME = "default";
+
+  // DEMO Workflow Constants
+  public static final String DEMO_APPLICAITON_ID = "CV-Demo";
+  public static final String DEMO_WORKFLOW_EXECUTION_ID = "CV-Demo";
+  public static final String DEMO_SUCCESS_LOG_STATE_EXECUTION_ID = "CV-Demo-LOG-Success-";
+  public static final String DEMO_FAILURE_LOG_STATE_EXECUTION_ID = "CV-Demo-LOG-Failure-";
+  public static final String DEMO_SUCCESS_TS_STATE_EXECUTION_ID = "CV-Demo-TS-Success-";
+  public static final String DEMO_FAILURE_TS_STATE_EXECUTION_ID = "CV-Demo-TS-Failure-";
 
   public static final Double HIGH_RISK_CUTOFF = 0.5;
   public static final Double MEDIUM_RISK_CUTOFF = 0.3;

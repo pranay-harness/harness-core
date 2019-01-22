@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
@@ -56,7 +55,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by raghu on 8/4/17.
  */
-@SuppressFBWarnings("MF_CLASS_MASKS_FIELD")
 public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore @Transient public static final String DEFAULT_TIME_FIELD = "@timestamp";
 
@@ -71,10 +69,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @Attributes(title = "Elastic search indices to search", required = true)
   @DefaultValue("_all")
   protected String indices;
-
-  @Attributes(required = true, title = "Hostname or Container Id Field")
-  @DefaultValue("beat.hostname")
-  protected String hostnameField;
 
   @Attributes(required = true, title = "Timestamp Field")
   @DefaultValue(DEFAULT_TIME_FIELD)
@@ -132,6 +126,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     this.indices = indices;
   }
 
+  @DefaultValue("beat.hostname")
+  @Attributes(required = true, title = "Hostname or Container Id Field")
   public String getHostnameField() {
     return hostnameField;
   }

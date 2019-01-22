@@ -14,6 +14,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
+import static software.wings.common.VerificationConstants.DEMO_APPLICAITON_ID;
+import static software.wings.common.VerificationConstants.DEMO_FAILURE_LOG_STATE_EXECUTION_ID;
+import static software.wings.common.VerificationConstants.DEMO_SUCCESS_LOG_STATE_EXECUTION_ID;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
@@ -213,17 +216,16 @@ public class AnalysisServiceImpl implements AnalysisService {
     SettingAttribute settingAttribute = settingsService.get(
         ((LogAnalysisExecutionData) stateExecutionInstance.getStateExecutionData()).getServerConfigId());
 
-    if (stateType.equals(StateType.ELK)) {
-      if (settingAttribute.getName().toLowerCase().endsWith("dev")
-          || settingAttribute.getName().toLowerCase().endsWith("prod")) {
-        if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
-          return getAnalysisSummary("CV-Demo-LOG-Success", "CV-Demo", stateType);
-        } else {
-          return getAnalysisSummary("CV-Demo-LOG-Failure", "CV-Demo", stateType);
-        }
+    if (settingAttribute.getName().toLowerCase().endsWith("dev")
+        || settingAttribute.getName().toLowerCase().endsWith("prod")) {
+      if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
+        return getAnalysisSummary(
+            DEMO_SUCCESS_LOG_STATE_EXECUTION_ID + stateType.getName(), DEMO_APPLICAITON_ID, stateType);
+      } else {
+        return getAnalysisSummary(
+            DEMO_FAILURE_LOG_STATE_EXECUTION_ID + stateType.getName(), DEMO_APPLICAITON_ID, stateType);
       }
     }
-
     return getAnalysisSummary(stateExecutionId, applicationId, stateType);
   }
 
