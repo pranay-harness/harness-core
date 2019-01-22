@@ -38,8 +38,8 @@ public class SimpleEncryption implements EncryptionInterface {
   @JsonIgnore private static final int AES_256_KEY_LENGTH = 32;
 
   // IV and KEY both need to be AES_256_KEY_LENGTH characters long.
-  @JsonIgnore @Transient private static final byte[] IV = "EncryptionIV0*d&".getBytes(CHARSET);
-  @JsonIgnore @Transient private static final char[] DEFAULT_KEY = "EncryptionKey2a@EncryptionKey2a@".toCharArray();
+  @JsonIgnore private static final byte[] IV = "EncryptionIV0*d&".getBytes(CHARSET);
+  @JsonIgnore private static final char[] DEFAULT_KEY = "EncryptionKey2a@EncryptionKey2a@".toCharArray();
   @JsonIgnore @Transient private SecretKeyFactory FACTORY;
 
   @JsonIgnore @Transient private char[] key;

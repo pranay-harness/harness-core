@@ -19,7 +19,6 @@ import io.harness.serializer.YamlUtils;
 import io.harness.time.Timestamp;
 import lombok.Builder;
 import lombok.Data;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
@@ -64,7 +63,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class DatadogState extends AbstractMetricAnalysisState {
-  @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(DatadogState.class);
+  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(DatadogState.class);
   private static final int DATA_COLLECTION_RATE_MINS = 5;
 
   public DatadogState(String name) {

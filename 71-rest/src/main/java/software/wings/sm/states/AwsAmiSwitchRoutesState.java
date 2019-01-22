@@ -58,7 +58,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class AwsAmiSwitchRoutesState extends State {
-  @Transient private static final transient Logger logger = LoggerFactory.getLogger(AwsAmiSwitchRoutesState.class);
+  private static final transient Logger logger = LoggerFactory.getLogger(AwsAmiSwitchRoutesState.class);
   public static final String SWAP_AUTO_SCALING_ROUTES = "Swap AutoScaling Routes";
   @Attributes(title = "Downsize Old Auto Scaling Group")
   @Getter

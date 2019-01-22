@@ -35,6 +35,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -84,6 +85,12 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         TimeSeriesMLAnalysisRecord mlAnalysisResponse = TimeSeriesMLAnalysisRecord.builder().build();
         mlAnalysisResponse.setCreatedAt(j);
         mlAnalysisResponse.setTransactions(Collections.EMPTY_MAP);
+        mlAnalysisResponse.setOverallMetricScores(new HashMap<String, Double>() {
+          {
+            put("key1", 0.76);
+            put("key2", 0.5);
+          }
+        });
         metricDataAnalysisService.saveAnalysisRecordsML(StateType.DYNA_TRACE, appId, stateExecutionId,
             workflowExecutionId, groupName + i, j, delegateTaskId, "-1", cvConfigId, mlAnalysisResponse);
       }
@@ -205,6 +212,12 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       timeSeriesMLAnalysisRecord.setAppId(appId);
       timeSeriesMLAnalysisRecord.setCvConfigId(generateUuid());
       timeSeriesMLAnalysisRecord.setAnalysisMinute((int) analysisMinute);
+      timeSeriesMLAnalysisRecord.setOverallMetricScores(new HashMap<String, Double>() {
+        {
+          put("key1", 0.76);
+          put("key2", 0.5);
+        }
+      });
     }
     assertFalse(isEmpty(timeSeriesMLAnalysisRecord.getTransactions()));
     assertNull(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson());
