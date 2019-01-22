@@ -9,6 +9,7 @@ import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.exception.WingsException;
@@ -52,6 +53,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @ValidateOnExecution
+@Singleton
 public class WebHookServiceImpl implements WebHookService {
   public static final String X_GIT_HUB_EVENT = "X-GitHub-Event";
   public static final String X_GIT_LAB_EVENT = "X-Gitlab-Event";
