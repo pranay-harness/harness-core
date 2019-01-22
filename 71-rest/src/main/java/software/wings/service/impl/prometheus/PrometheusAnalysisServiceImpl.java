@@ -2,7 +2,7 @@ package software.wings.service.impl.prometheus;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.sm.states.AbstractAnalysisState.END_TIME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.HOST_NAME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.START_TIME_PLACE_HOLDER;
@@ -47,7 +47,8 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(PrometheusSetupTestNodeData setupTestNodeData) {
     final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
-    ThirdPartyApiCallLog apiCallLog = apiCallLogWithDummyStateExecution(settingAttribute.getAccountId());
+    ThirdPartyApiCallLog apiCallLog =
+        createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid());
 
     String hostName = null;
     if (!isEmpty(setupTestNodeData.getInstanceElement().getHostName())) {

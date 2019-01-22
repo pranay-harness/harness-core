@@ -104,7 +104,8 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       throw new WingsException(e.getMessage());
     }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    apiCallLog.addFieldToResponse(200, "splunk query done. Num of events: " + job.getEventCount(), FieldType.TEXT);
+    apiCallLog.addFieldToResponse(
+        HttpStatus.SC_OK, "splunk query done. Num of events: " + job.getEventCount(), FieldType.TEXT);
     delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
     ResultsReaderJson resultsReader;
     try {

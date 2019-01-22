@@ -2,7 +2,7 @@ package software.wings.service.impl.splunk;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
 
@@ -47,7 +47,8 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
       throw new WingsException(
           "No " + StateType.SPLUNKV2 + " setting with id: " + setupTestNodeData.getSettingId() + " found");
     }
-    ThirdPartyApiCallLog apiCallLog = apiCallLogWithDummyStateExecution(accountId);
+    ThirdPartyApiCallLog apiCallLog =
+        createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid());
 
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);

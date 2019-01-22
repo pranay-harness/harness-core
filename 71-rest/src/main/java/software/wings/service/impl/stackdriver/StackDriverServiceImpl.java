@@ -2,7 +2,7 @@ package software.wings.service.impl.stackdriver;
 
 import static io.harness.eraro.ErrorCode.STACKDRIVER_ERROR;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -74,7 +74,9 @@ public class StackDriverServiceImpl implements StackDriverService {
                                             .build();
       return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
-              hostName, apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()));
+              hostName,
+              createApiCallLog(
+                  settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()));
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(STACKDRIVER_ERROR)

@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.Constants.URL_STRING;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
 
@@ -22,6 +22,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Base;
 import software.wings.beans.SumoConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.SumoDataCollectionTask;
@@ -86,14 +87,15 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
 
   @Override
   public VerificationNodeDataSetupResponse getLogDataByHost(String accountId, SumoConfig config, String query,
-      String hostNameField, String hostName, List<EncryptedDataDetail> encryptedDataDetails) {
+      String hostNameField, String hostName, List<EncryptedDataDetail> encryptedDataDetails,
+      ThirdPartyApiCallLog apiCallLog) {
     logger.info("Starting to fetch test log data by host for sumo logic");
 
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(5);
     long endTime = Timestamp.currentMinuteBoundary();
 
     List<LogElement> responseWithoutHost = getResponse(config, query, "1m", encryptedDataDetails, null, null, startTime,
-        endTime, SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, 0, null);
+        endTime, SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, 0, apiCallLog);
     if (isEmpty(responseWithoutHost)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
@@ -101,7 +103,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
           .build();
     } else {
       List<LogElement> responseWithHost = getResponse(config, query, "1m", encryptedDataDetails, hostNameField,
-          hostName, startTime, endTime, SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, 0, null);
+          hostName, startTime, endTime, SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, 0, apiCallLog);
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(
@@ -297,7 +299,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       String collectionStartTime, String collectionEndTime, Object searchJobStatusResponse, Long requestTimeStamp,
       Long responseTimeStamp, int httpStatus, FieldType responseFieldType) {
     if (apiCallLog == null) {
-      apiCallLog = apiCallLogWithDummyStateExecution(config.getAccountId());
+      apiCallLog = createApiCallLog(config.getAccountId(), Base.GLOBAL_APP_ID, null);
     }
     apiCallLog.setTitle("Fetch request to " + config.getSumoUrl());
     apiCallLog.addFieldToRequest(

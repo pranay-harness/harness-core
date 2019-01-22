@@ -118,6 +118,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
         .settingId(awsConfigId)
         .loadBalancerMetricsByLBName(getMockMetricsByLBName())
         .ec2Metrics(getMockEC2Metrics())
+        .guid("test_guid")
         .instanceName("testHost")
         .toTime(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1))
         .fromTime(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)

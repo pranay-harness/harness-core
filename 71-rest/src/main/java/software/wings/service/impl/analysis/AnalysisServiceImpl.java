@@ -16,7 +16,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -713,9 +713,10 @@ public class AnalysisServiceImpl implements AnalysisService {
         case ELK:
           errorCode = ErrorCode.ELK_CONFIGURATION_ERROR;
           SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
-          searchResponse = delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
-                               .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequest,
-                                   apiCallLogWithDummyStateExecution(accountId), ElkDelegateServiceImpl.MAX_RECORDS);
+          searchResponse =
+              delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
+                  .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequest,
+                      createApiCallLog(accountId, Base.GLOBAL_APP_ID, null), ElkDelegateServiceImpl.MAX_RECORDS);
           break;
         case LOGZ:
           errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
@@ -723,7 +724,7 @@ public class AnalysisServiceImpl implements AnalysisService {
               aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
           searchResponse = delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
                                .search((LogzConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequest,
-                                   apiCallLogWithDummyStateExecution(accountId));
+                                   createApiCallLog(accountId, Base.GLOBAL_APP_ID, null));
           break;
         default:
           errorCode = ErrorCode.DEFAULT_ERROR_CODE;

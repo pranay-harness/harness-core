@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
+import software.wings.sm.StateType;
 
 /**
  * Created by rsingh on 8/3/18.
@@ -22,9 +23,9 @@ public class AppdynamicsSetupTestNodeData extends SetupTestNodeData {
   @Builder
   private AppdynamicsSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      long applicationId, long tierId) {
-    super(
-        appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, fromTime, toTime);
+      long applicationId, long tierId, String guid) {
+    super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
+        StateType.APP_DYNAMICS, fromTime, toTime);
     this.applicationId = applicationId;
     this.tierId = tierId;
   }

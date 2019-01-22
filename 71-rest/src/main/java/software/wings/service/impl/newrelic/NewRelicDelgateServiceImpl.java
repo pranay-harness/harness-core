@@ -8,7 +8,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static software.wings.common.Constants.PAYLOAD;
 import static software.wings.common.Constants.URL_STRING;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 
 import com.google.common.collect.Lists;
@@ -29,6 +29,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import software.wings.beans.Base;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.delegatetasks.DataCollectionExecutorService;
@@ -167,7 +168,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
     List<NewRelicApplication> rv = new ArrayList<>();
     if (apiCallLog == null) {
-      apiCallLog = apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), Base.GLOBAL_APP_ID, null);
     }
     int pageCount = 1;
     while (true) {
@@ -221,7 +222,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       throws IOException {
     List<NewRelicApplicationInstance> rv = new ArrayList<>();
     if (apiCallLog == null) {
-      apiCallLog = apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), Base.GLOBAL_APP_ID, null);
     }
     int pageCount = 1;
     while (true) {
@@ -286,7 +287,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       throws IOException {
     Set<NewRelicMetric> newRelicMetrics = new HashSet<>();
     if (apiCallLog == null) {
-      apiCallLog = apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), Base.GLOBAL_APP_ID, null);
     }
     for (int retry = 0; retry <= NUM_OF_RETRIES; retry++) {
       try {
@@ -348,7 +349,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, long applicationId,
       ThirdPartyApiCallLog apiCallLog) {
     if (apiCallLog == null) {
-      apiCallLog = ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), Base.GLOBAL_APP_ID, null);
     }
     Map<String, NewRelicMetric> webTransactionMetrics = new HashMap<>();
     for (NewRelicMetric metric : metrics) {
@@ -448,11 +449,11 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   private NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, long applicationId, long instanceId,
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId,
       Collection<String> metricNames, long fromTime, long toTime, ThirdPartyApiCallLog apiCallLog, boolean summarize)
       throws IOException {
     if (apiCallLog == null) {
-      apiCallLog = apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), Base.GLOBAL_APP_ID, null);
     }
 
     Collection<String> updatedMetrics = new ArrayList<>();
@@ -467,18 +468,18 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
 
     String urlToCall = instanceId > 0
-        ? "/v2/applications/" + applicationId + "/instances/" + instanceId + "/metrics/data.json"
-        : "/v2/applications/" + applicationId + "/metrics/data.json";
+        ? "/v2/applications/" + newRelicApplicationId + "/instances/" + instanceId + "/metrics/data.json"
+        : "/v2/applications/" + newRelicApplicationId + "/metrics/data.json";
     apiCallLog.setTitle("Fetching " + (instanceId > 0 ? "instance" : "application") + " metric data for "
         + updatedMetrics.size() + " transactions from " + newRelicConfig.getNewRelicUrl() + urlToCall);
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
     final Call<NewRelicMetricDataResponse> request = instanceId > 0
         ? getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
-              .getInstanceMetricData(applicationId, instanceId, dateFormatter.format(new Date(fromTime)),
+              .getInstanceMetricData(newRelicApplicationId, instanceId, dateFormatter.format(new Date(fromTime)),
                   dateFormatter.format(new Date(toTime)), updatedMetrics)
         : getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
-              .getApplicationMetricData(applicationId, summarize, dateFormatter.format(new Date(fromTime)),
+              .getApplicationMetricData(newRelicApplicationId, summarize, dateFormatter.format(new Date(fromTime)),
                   dateFormatter.format(new Date(toTime)), updatedMetrics);
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name(URL_STRING)
@@ -514,7 +515,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       long newRelicApplicationId, NewRelicDeploymentMarkerPayload body, ThirdPartyApiCallLog apiCallLog)
       throws IOException {
     if (apiCallLog == null) {
-      apiCallLog = apiCallLogWithDummyStateExecution(config.getAccountId());
+      apiCallLog = createApiCallLog(config.getAccountId(), Base.GLOBAL_APP_ID, null);
     }
     final String baseUrl =
         config.getNewRelicUrl().endsWith("/") ? config.getNewRelicUrl() : config.getNewRelicUrl() + "/";

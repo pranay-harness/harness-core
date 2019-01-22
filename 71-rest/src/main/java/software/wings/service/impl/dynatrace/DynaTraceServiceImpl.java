@@ -1,7 +1,7 @@
 package software.wings.service.impl.dynatrace;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
 
@@ -49,7 +49,9 @@ public class DynaTraceServiceImpl implements DynaTraceService {
       List<DynaTraceMetricDataResponse> response =
           delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext)
               .getMetricsWithDataForNode((DynaTraceConfig) settingAttribute.getValue(), encryptionDetails,
-                  setupTestNodeData, apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()));
+                  setupTestNodeData,
+                  createApiCallLog(
+                      settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()));
       if (response.isEmpty()) {
         return VerificationNodeDataSetupResponse.builder()
             .providerReachable(true)

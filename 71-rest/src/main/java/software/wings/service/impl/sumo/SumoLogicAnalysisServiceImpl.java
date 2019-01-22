@@ -1,6 +1,7 @@
 package software.wings.service.impl.sumo;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import io.harness.exception.WingsException;
 import software.wings.annotation.EncryptableSetting;
@@ -33,6 +34,8 @@ public class SumoLogicAnalysisServiceImpl extends AnalysisServiceImpl implements
     return delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
         .getLogDataByHost(accountId, (SumoConfig) settingAttribute.getValue(), sumoLogicSetupTestNodedata.getQuery(),
             sumoLogicSetupTestNodedata.getHostNameField(),
-            sumoLogicSetupTestNodedata.getInstanceElement().getHostName(), encryptedDataDetails);
+            sumoLogicSetupTestNodedata.getInstanceElement().getHostName(), encryptedDataDetails,
+            createApiCallLog(settingAttribute.getAccountId(), sumoLogicSetupTestNodedata.getAppId(),
+                sumoLogicSetupTestNodedata.getGuid()));
   }
 }

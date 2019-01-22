@@ -3,7 +3,7 @@ package software.wings.service.impl.newrelic;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
@@ -288,7 +288,9 @@ public class NewRelicServiceImpl implements NewRelicService {
                                             .build();
       return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
-              instanceId, apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()));
+              instanceId,
+              createApiCallLog(
+                  settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()));
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(ErrorCode.NEWRELIC_ERROR, USER)

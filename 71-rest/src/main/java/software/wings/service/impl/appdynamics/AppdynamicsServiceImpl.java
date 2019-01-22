@@ -2,7 +2,7 @@ package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
 
@@ -148,7 +148,9 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
                                             .build();
       return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((AppDynamicsConfig) settingAttribute.getValue(), encryptionDetails,
-              setupTestNodeData, hostName, apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()));
+              setupTestNodeData, hostName,
+              createApiCallLog(
+                  settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()));
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
