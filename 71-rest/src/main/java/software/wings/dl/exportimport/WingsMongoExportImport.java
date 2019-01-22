@@ -26,6 +26,15 @@ import java.util.List;
 @Singleton
 public class WingsMongoExportImport {
   private static final int BATCH_SIZE = 1000;
+  private static final String[] CANDIDATE_NATURAL_KEY_FIELDS = new String[] {"name", "email", "hostName", "key",
+      "appName", "artifactSourceName", "source", "sourceName", "fileName", "fileBucket", "clusterName", "imageName",
+      "namespace", "version", "defaultVersion", "status", "filter", "kind", "type", "templatized", "encrypted",
+      "metadataOnly", "metadata", "serviceSpecJson", "expression", "gitFileConfig", "pipelineStages", "artifactType",
+      "artifactStreamType", "computeProviderType", "infraMappingType", "infrastructureProvisionerType", "workflowType",
+      "deploymentType", "overrideType", "instanceType", "stateType", "storeType", "entityType", "completed",
+      "accountId", "appId", "envId", "serviceId", "folderId", "fileId", "gcsFileId", "artifactStreamId",
+      "infraMappingId", "pipelineId", "workflowId", "triggerId", "computeProviderId", "templateId", "serviceTemplateId",
+      "entityId", "originEntityId", "galleryId", "settingId", "cvConfigId", "encryptedDataId", "encryptedFileId"};
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -48,7 +57,12 @@ public class WingsMongoExportImport {
   }
 
   public ImportStatus importRecords(String collectionName, List<String> records, ImportMode mode) {
-    return importRecords(collectionName, records, mode, null);
+    return importRecords(collectionName, records, mode, null, false);
+  }
+
+  public ImportStatus importRecords(
+      String collectionName, List<String> records, ImportMode mode, boolean disableNaturalKeyCheck) {
+    return importRecords(collectionName, records, mode, null, disableNaturalKeyCheck);
   }
 
   /**
@@ -59,8 +73,8 @@ public class WingsMongoExportImport {
    *
    * @param  mode one of the supported import mode such as DRY_RUN/UPSERT etc.
    */
-  public ImportStatus importRecords(
-      String collectionName, List<String> records, ImportMode mode, String[] naturalKeyFields) {
+  public ImportStatus importRecords(String collectionName, List<String> records, ImportMode mode,
+      String[] naturalKeyFields, boolean disableNaturalKeyCheck) {
     DBCollection collection = wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE, ReadPref.NORMAL)
                                   .getDB()
                                   .getCollection(collectionName);
@@ -74,37 +88,57 @@ public class WingsMongoExportImport {
       DBObject importRecord = BasicDBObject.parse(record);
       Object id = importRecord.get("_id");
       long recordCountFromId = collection.getCount(new BasicDBObject("_id", id));
-
-      final DBObject naturalKeyQuery;
-      if (EmptyPredicate.isEmpty(naturalKeyFields)) {
-        naturalKeyQuery = getDefaultNaturalKeyQuery(importRecord);
-      } else {
-        naturalKeyQuery = getNaturalKeyQueryFromKeyFields(naturalKeyFields, importRecord);
-      }
-      long recordCountFromNaturalKey = collection.getCount(naturalKeyQuery);
-      if (recordCountFromNaturalKey > 1) {
-        // This usually means this entity has no naturaly key. E.g 'secretChangeLogs' collection
-        recordCountFromNaturalKey = 1;
-      }
-
       idClashCount += recordCountFromId;
-      naturalKeyClashCount += recordCountFromNaturalKey;
+
+      long recordCountFromNaturalKey = 0;
+      DBObject naturalKeyQuery = null;
+      if (!disableNaturalKeyCheck) {
+        if (EmptyPredicate.isEmpty(naturalKeyFields)) {
+          naturalKeyQuery = getDefaultNaturalKeyQuery(importRecord);
+        } else {
+          naturalKeyQuery = getNaturalKeyQueryFromKeyFields(naturalKeyFields, importRecord);
+        }
+        recordCountFromNaturalKey = collection.getCount(naturalKeyQuery);
+        if (recordCountFromNaturalKey > 1) {
+          // This usually means this entity has no naturaly key. E.g 'secretChangeLogs' collection
+          log.debug("Record {} in collection {} matched {} records using natural key query {}.", id, collectionName,
+              recordCountFromNaturalKey, naturalKeyQuery);
+          recordCountFromNaturalKey = 1;
+        }
+        naturalKeyClashCount += recordCountFromNaturalKey;
+      }
 
       switch (mode) {
         case DRY_RUN:
           break;
         case INSERT:
-          if (recordCountFromId == 0 && recordCountFromNaturalKey == 0) {
-            // Totally new record, it can be inserted directly.
-            collection.insert(importRecord, WriteConcern.ACKNOWLEDGED);
-            importedRecords++;
+          if (disableNaturalKeyCheck) {
+            if (recordCountFromId == 0) {
+              collection.insert(importRecord, WriteConcern.ACKNOWLEDGED);
+              importedRecords++;
+            }
+          } else {
+            if (recordCountFromId == 0 && recordCountFromNaturalKey == 0) {
+              // Totally new record, it can be inserted directly.
+              collection.insert(importRecord, WriteConcern.ACKNOWLEDGED);
+              importedRecords++;
+            }
           }
           break;
         case UPSERT:
           // We should not UPSERT record if same ID record exists, but with different natural key.
-          if (recordCountFromId == recordCountFromNaturalKey) {
+          if (disableNaturalKeyCheck) {
             collection.save(importRecord, WriteConcern.ACKNOWLEDGED);
             importedRecords++;
+          } else {
+            if (recordCountFromId == recordCountFromNaturalKey) {
+              collection.save(importRecord, WriteConcern.ACKNOWLEDGED);
+              importedRecords++;
+            } else {
+              log.debug(
+                  "Record {} in collection {} matched {} records using natural key query {} but matches {} record using id query.",
+                  id, collectionName, recordCountFromNaturalKey, naturalKeyQuery, recordCountFromId);
+            }
           }
           break;
         default:
@@ -116,7 +150,10 @@ public class WingsMongoExportImport {
       log.info("{} out of {} '{}' records have been imported successfully in {} mode.", importedRecords, totalRecords,
           collectionName, mode);
       log.info("{} '{}' records have the same ID as existing records.", idClashCount, collectionName);
-      log.info("{} '{}' records have the same natural key as existing records.", naturalKeyClashCount, collectionName);
+      if (!disableNaturalKeyCheck) {
+        log.info(
+            "{} '{}' records have the same natural key as existing records.", naturalKeyClashCount, collectionName);
+      }
       return ImportStatus.builder()
           .collectionName(collectionName)
           .imported(importedRecords)
@@ -154,77 +191,11 @@ public class WingsMongoExportImport {
 
     // Typical Mongo collection in Harness schema should have one subset of the following
     // combinations as their natural key.
-    String name = (String) importRecord.get("name");
-    if (name != null) {
-      filterList.add(new BasicDBObject("name", name));
-    }
-    String email = (String) importRecord.get("email");
-    if (email != null) {
-      filterList.add(new BasicDBObject("email", email));
-    }
-    String hostname = (String) importRecord.get("hostname");
-    if (hostname != null) {
-      filterList.add(new BasicDBObject("hostname", hostname));
-    }
-    String publicDns = (String) importRecord.get("publicDns");
-    if (publicDns != null) {
-      filterList.add(new BasicDBObject("publicDns", publicDns));
-    }
-    String accountId = (String) importRecord.get("accountId");
-    if (accountId != null) {
-      filterList.add(new BasicDBObject("accountId", accountId));
-    }
-    String appId = (String) importRecord.get("appId");
-    if (appId != null) {
-      filterList.add(new BasicDBObject("appId", appId));
-    }
-    String envId = (String) importRecord.get("envId");
-    if (envId != null) {
-      filterList.add(new BasicDBObject("envId", envId));
-    }
-    String appName = (String) importRecord.get("appName");
-    if (appName != null) {
-      filterList.add(new BasicDBObject("appName", appName));
-    }
-    String artifactSourceName = (String) importRecord.get("artifactSourceName");
-    if (artifactSourceName != null) {
-      filterList.add(new BasicDBObject("artifactSourceName", artifactSourceName));
-    }
-    String displayName = (String) importRecord.get("displayName");
-    if (displayName != null) {
-      filterList.add(new BasicDBObject("displayName", displayName));
-    }
-    String folderId = (String) importRecord.get("folderId");
-    if (folderId != null) {
-      filterList.add(new BasicDBObject("folderId", folderId));
-    }
-    String artifactStreamId = (String) importRecord.get("artifactStreamId");
-    if (artifactStreamId != null) {
-      filterList.add(new BasicDBObject("artifactStreamId", artifactStreamId));
-    }
-    String templateId = (String) importRecord.get("templateId");
-    if (templateId != null) {
-      filterList.add(new BasicDBObject("templateId", templateId));
-    }
-    String galleryId = (String) importRecord.get("galleryId");
-    if (galleryId != null) {
-      filterList.add(new BasicDBObject("galleryId", galleryId));
-    }
-    Object version = importRecord.get("version");
-    if (version != null) {
-      filterList.add(new BasicDBObject("version", version));
-    }
-    String serviceId = (String) importRecord.get("serviceId");
-    if (serviceId != null) {
-      filterList.add(new BasicDBObject("serviceId", serviceId));
-    }
-    String encryptedDataId = (String) importRecord.get("encryptedDataId");
-    if (encryptedDataId != null) {
-      filterList.add(new BasicDBObject("encryptedDataId", encryptedDataId));
-    }
-    String infraMappingId = (String) importRecord.get("infraMappingId");
-    if (infraMappingId != null) {
-      filterList.add(new BasicDBObject("infraMappingId", infraMappingId));
+    for (String fieldName : CANDIDATE_NATURAL_KEY_FIELDS) {
+      Object fieldValue = importRecord.get(fieldName);
+      if (fieldValue != null) {
+        filterList.add(new BasicDBObject(fieldName, fieldValue));
+      }
     }
 
     // If non of the above field exists, fall back to use '_id' field as their natural key

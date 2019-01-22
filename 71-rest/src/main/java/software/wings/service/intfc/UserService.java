@@ -184,9 +184,10 @@ public interface UserService {
    *
    * @param account the account
    * @param user    the user
+   * @param addUser    whether to add the specified current as account admin to the specified account
    * @return the account
    */
-  Account addAccount(Account account, User user);
+  Account addAccount(Account account, User user, boolean addUser);
 
   /**
    * Retrieve an user by its email.
