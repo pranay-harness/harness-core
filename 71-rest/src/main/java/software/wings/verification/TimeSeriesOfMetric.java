@@ -35,6 +35,7 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
   private String metricName;
   private String metricDeeplinkUrl;
   private boolean isLongTermPattern;
+  private long lastSeenTime;
 
   private SortedMap<Long, TimeSeriesDataPoint> timeSeries;
   private SortedMap<Long, TimeSeriesRisk> risksForTimeSeries;

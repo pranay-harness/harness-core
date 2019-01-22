@@ -750,6 +750,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     for (TimeSeriesRiskSummary summary : riskSummaries) {
       observedTimeSeries.forEach((transaction, metricMap) -> {
+        // TODO: Remove these two loops.
         metricMap.entrySet()
             .stream()
             .filter(e
@@ -774,6 +775,20 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .forEach(entry -> {
               Integer pattern = summary.getTxnMetricLongTermPattern().get(transaction).get(entry.getKey());
               observedTimeSeries.get(transaction).get(entry.getKey()).setLongTermPattern(pattern);
+            });
+
+        // TODO: Keep just this loop going forward and move risk and longtermPattern to this.
+        metricMap.entrySet()
+            .stream()
+            .filter(e
+                -> isNotEmpty(summary.getTxnMetricRiskData()) && summary.getTxnMetricRiskData().containsKey(transaction)
+                    && summary.getTxnMetricRiskData().get(transaction).containsKey(e.getKey()))
+            .forEach(entry -> {
+              Integer pattern =
+                  summary.getTxnMetricRiskData().get(transaction).get(entry.getKey()).getLongTermPattern();
+              long lastSeenTime = summary.getTxnMetricRiskData().get(transaction).get(entry.getKey()).getLastSeenTime();
+              Integer risk = summary.getTxnMetricRisk().get(transaction).get(entry.getKey());
+              observedTimeSeries.get(transaction).get(entry.getKey()).setLastSeenTime(lastSeenTime);
             });
       });
     }
