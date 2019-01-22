@@ -519,6 +519,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       quietSleep(ofMillis(10));
     }
 
+    logger.info("YAML-GIT-SYNC Evicting cache");
     authService.evictAccountUserPermissionInfoCache(accountId, true);
   }
 
