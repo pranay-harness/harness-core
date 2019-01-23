@@ -205,9 +205,11 @@ public class K8sStateHelper {
     Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = gitFetchFilesTaskParams.getGitFetchFilesConfigMap();
 
     for (Entry<String, GitFetchFilesConfig> entry : gitFetchFileConfigMap.entrySet()) {
-      GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
-      gitFetchFileConfig.getGitFileConfig().setFilePath(
-          getValuesYamlGitFilePath(gitFetchFileConfig.getGitFileConfig().getFilePath()));
+      if (K8sValuesLocation.Service.name().equals(entry.getKey())) {
+        GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
+        gitFetchFileConfig.getGitFileConfig().setFilePath(
+            getValuesYamlGitFilePath(gitFetchFileConfig.getGitFileConfig().getFilePath()));
+      }
     }
   }
 
