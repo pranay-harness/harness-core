@@ -36,6 +36,6 @@ public class TerraformValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList("terraform");
+    return singletonList("Please ensure that terraform is installed on the delegate.");
   }
 }
