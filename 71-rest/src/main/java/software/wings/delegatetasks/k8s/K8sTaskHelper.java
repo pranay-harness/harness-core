@@ -90,6 +90,45 @@ public class K8sTaskHelper {
   private static String eventOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,MESSAGE:.message,REASON:.reason";
 
+  public boolean dryRunManifests(Kubectl client, List<KubernetesResource> resources,
+      K8sDelegateTaskParams k8SDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
+    try {
+      executionLogCallback.saveExecutionLog(color("\nValidating manifests with Dry Run", White, Bold), INFO);
+
+      FileIo.writeUtf8StringToFile(
+          k8SDelegateTaskParams.getWorkingDirectory() + "/manifests-dry-run.yaml", ManifestHelper.toYaml(resources));
+
+      ApplyCommand applyCommand = client.apply().filename("manifests-dry-run.yaml").dryrun(true);
+
+      ProcessResult result = applyCommand.execute(k8SDelegateTaskParams.getWorkingDirectory(),
+          new LogOutputStream() {
+            @Override
+            protected void processLine(String line) {
+              executionLogCallback.saveExecutionLog(line, INFO);
+            }
+          },
+          new LogOutputStream() {
+            @Override
+            protected void processLine(String line) {
+              executionLogCallback.saveExecutionLog(line, ERROR);
+            }
+          },
+          true);
+
+      if (result.getExitValue() != 0) {
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+        return false;
+      }
+    } catch (Exception e) {
+      logger.error("Exception in running dry-run", e);
+      executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+      return false;
+    }
+
+    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+    return true;
+  }
+
   public boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8SDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
     FileIo.writeUtf8StringToFile(

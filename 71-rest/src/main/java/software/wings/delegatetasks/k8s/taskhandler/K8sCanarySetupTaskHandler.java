@@ -180,9 +180,7 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
 
     executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));
 
-    executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
-
-    return true;
+    return k8sTaskHelper.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
   }
 
   private boolean prepareForCanary(
