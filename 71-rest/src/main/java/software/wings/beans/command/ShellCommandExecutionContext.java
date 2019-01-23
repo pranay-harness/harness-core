@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Created by peeyushaggarwal on 8/2/16.
  */
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@EqualsAndHashCode(callSuper = true)
 public class ShellCommandExecutionContext extends CommandExecutionContext {
   private BaseExecutor executor;
 

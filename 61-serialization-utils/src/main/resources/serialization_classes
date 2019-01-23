@@ -45,6 +45,8 @@ com.google.api.client.util.ArrayMap, 2011
 com.google.api.services.monitoring.v3.model.Distribution, 2012
 com.google.api.services.monitoring.v3.model.BucketOptions, 2013
 com.google.api.services.monitoring.v3.model.Exponential, 2014
+com.mongodb.BasicDBList, 2015
+com.mongodb.BasicDBObject, 2016
 
 software.wings.sm.ExecutionInterruptType, 4000
 software.wings.sm.StateType, 4001

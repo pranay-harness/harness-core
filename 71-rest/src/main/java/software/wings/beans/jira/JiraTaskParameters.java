@@ -7,6 +7,7 @@ import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -19,7 +20,7 @@ public class JiraTaskParameters {
   private String issueType;
   private String priority;
   private List<String> labels;
-  private String assignee;
+  private Map<String, Object> customFields;
 
   private String issueId;
   private String status;

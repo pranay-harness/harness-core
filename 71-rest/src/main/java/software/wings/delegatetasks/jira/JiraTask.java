@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -116,9 +117,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   }
 
   private ResponseData validateCredentials(JiraTaskParameters parameters) {
-    JiraClient jiraClient = getJiraClient(parameters);
-
     try {
+      JiraClient jiraClient = getJiraClient(parameters);
       jiraClient.getProjects();
     } catch (JiraException e) {
       String errorMessage = "Failed to fetch projects during credential validation.";
@@ -130,10 +130,9 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   }
 
   private ResponseData getCreateMetadata(JiraTaskParameters parameters) {
-    JiraClient jiraClient = getJiraClient(parameters);
-
     URI uri = null;
     try {
+      JiraClient jiraClient = getJiraClient(parameters);
       Map<String, String> queryParams = new HashMap<>();
       queryParams.put("expand", "projects.issuetypes.fields");
 
@@ -145,7 +144,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .executionStatus(ExecutionStatus.SUCCESS)
           .createMetadata((JSONObject) response)
           .build();
-    } catch (URISyntaxException | RestException | IOException e) {
+    } catch (URISyntaxException | RestException | IOException | JiraException e) {
       String errorMessage = "Failed to fetch statuses from JIRA server.";
       logger.error(errorMessage);
       return JiraExecutionData.builder().errorMessage(errorMessage).build();
@@ -153,11 +152,9 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   }
 
   private ResponseData getStatuses(JiraTaskParameters parameters) {
-    JiraClient jiraClient = getJiraClient(parameters);
-
-    URI uri = null;
     try {
-      uri = jiraClient.getRestClient().buildURI(
+      JiraClient jiraClient = getJiraClient(parameters);
+      URI uri = jiraClient.getRestClient().buildURI(
           Resource.getBaseUri() + "project/" + parameters.getProject() + "/statuses");
       JSON response = jiraClient.getRestClient().get(uri);
 
@@ -165,7 +162,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .executionStatus(ExecutionStatus.SUCCESS)
           .statuses((JSONArray) response)
           .build();
-    } catch (URISyntaxException | RestException | IOException e) {
+    } catch (URISyntaxException | RestException | IOException | JiraException e) {
       String errorMessage = "Failed to fetch statuses from JIRA server.";
       logger.error(errorMessage);
       return JiraExecutionData.builder().errorMessage(errorMessage).build();
@@ -173,10 +170,9 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   }
 
   private ResponseData getFieldsAndOptions(JiraTaskParameters parameters) {
-    JiraClient jiraClient = getJiraClient(parameters);
-
     URI uri;
     try {
+      JiraClient jiraClient = getJiraClient(parameters);
       String jqlQuery = "project = " + parameters.getProject();
       SearchResult issues = jiraClient.searchIssues(jqlQuery, 1);
 
@@ -200,30 +196,24 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   }
 
   private ResponseData getProjects(JiraTaskParameters parameters) {
-    JiraClient jira = getJiraClient(parameters);
-
-    JSONArray projectsArray = null;
     try {
+      JiraClient jira = getJiraClient(parameters);
       URI uri = jira.getRestClient().buildURI(Resource.getBaseUri() + "project");
       JSON response = jira.getRestClient().get(uri);
-      projectsArray = JSONArray.fromObject(response);
-    } catch (URISyntaxException | IOException | RestException e) {
+      JSONArray projectsArray = JSONArray.fromObject(response);
+      return JiraExecutionData.builder().projects(projectsArray).build();
+    } catch (URISyntaxException | IOException | RestException | JiraException e) {
       String errorMessage = "Failed to fetch projects from JIRA server.";
       logger.error(errorMessage);
-
       return JiraExecutionData.builder().errorMessage(errorMessage).build();
     }
-
-    return JiraExecutionData.builder().projects(projectsArray).build();
   }
 
   private ResponseData updateTicket(JiraTaskParameters parameters) {
-    JiraClient jira = getJiraClient(parameters);
-
-    Issue issue = null;
-    CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.RUNNING;
+    CommandExecutionStatus commandExecutionStatus;
     try {
-      issue = jira.getIssue(parameters.getIssueId());
+      JiraClient jira = getJiraClient(parameters);
+      Issue issue = jira.getIssue(parameters.getIssueId());
       boolean fieldsUpdated = false;
 
       FluentUpdate update = issue.update();
@@ -235,6 +225,13 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       if (EmptyPredicate.isNotEmpty(parameters.getLabels())) {
         update.field(Field.LABELS, parameters.getLabels());
         fieldsUpdated = true;
+      }
+
+      if (EmptyPredicate.isNotEmpty(parameters.getCustomFields())) {
+        for (Entry<String, Object> customField : parameters.getCustomFields().entrySet()) {
+          update.field(customField.getKey(), customField.getValue());
+          fieldsUpdated = true;
+        }
       }
 
       if (fieldsUpdated) {
@@ -249,6 +246,18 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         issue.transition().execute(parameters.getStatus());
       }
 
+      commandExecutionStatus = CommandExecutionStatus.SUCCESS;
+      saveExecutionLog(
+          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
+
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .errorMessage("Updated JIRA ticket " + issue.getKey())
+          .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
+          .issueId(issue.getId())
+          .issueKey(issue.getKey())
+          .build();
+
     } catch (JiraException e) {
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
       saveExecutionLog(
@@ -262,18 +271,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .jiraServerResponse(extractResponseMessage(e))
           .build();
     }
-
-    commandExecutionStatus = CommandExecutionStatus.SUCCESS;
-    saveExecutionLog(
-        parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
-
-    return JiraExecutionData.builder()
-        .executionStatus(ExecutionStatus.SUCCESS)
-        .errorMessage("Updated JIRA ticket " + issue.getKey())
-        .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
-        .issueId(issue.getId())
-        .issueKey(issue.getKey())
-        .build();
   }
 
   /**
@@ -285,48 +282,64 @@ public class JiraTask extends AbstractDelegateRunnableTask {
    * @return
    */
   private String extractResponseMessage(Exception e) {
-    String messageJson = "{" + e.getCause().getMessage() + "}";
+    if (e.getCause() != null) {
+      String messageJson = "{" + e.getCause().getMessage() + "}";
+      org.json.JSONObject jsonObject = null;
+      try {
+        jsonObject = new org.json.JSONObject(messageJson);
+        Object[] keyArray = jsonObject.keySet().toArray();
+        org.json.JSONObject innerJsonObject = jsonObject.getJSONObject((String) keyArray[0]);
+        org.json.JSONArray jsonArray = (org.json.JSONArray) innerJsonObject.get("errorMessages");
+        if (jsonArray.length() > 0) {
+          return (String) jsonArray.get(0);
+        }
 
-    org.json.JSONObject jsonObject = null;
-    try {
-      jsonObject = new org.json.JSONObject(messageJson);
-      Object[] keyArray = jsonObject.keySet().toArray();
-      org.json.JSONObject innerJsonObject = jsonObject.getJSONObject((String) keyArray[0]);
-      org.json.JSONArray jsonArray = (org.json.JSONArray) innerJsonObject.get("errorMessages");
-      if (jsonArray.length() > 0) {
-        return (String) jsonArray.get(0);
+        org.json.JSONObject errors = (org.json.JSONObject) innerJsonObject.get("errors");
+        Object[] errorsKeys = errors.keySet().toArray();
+
+        String errorsKey = (String) errorsKeys[0];
+        return errorsKey + " : " + (String) errors.get((String) errorsKey);
+      } catch (Exception ex) {
+        logger.error("Failed to parse json response from JIRA", ex);
       }
-
-      org.json.JSONObject errors = (org.json.JSONObject) innerJsonObject.get("errors");
-      Object[] errorsKeys = errors.keySet().toArray();
-
-      String errorsKey = (String) errorsKeys[0];
-      return errorsKey + " : " + (String) errors.get((String) errorsKey);
-    } catch (Exception ex) {
-      logger.error("Failed to parse json response from JIRA", ex);
     }
 
-    return e.getCause().getMessage();
+    return e.getMessage();
   }
 
   private ResponseData createTicket(JiraTaskParameters parameters) {
-    JiraClient jira = getJiraClient(parameters);
-    Issue issue;
-
     CommandExecutionStatus commandExecutionStatus;
     try {
-      issue = jira.createIssue(parameters.getProject(), parameters.getIssueType())
-                  .field(Field.SUMMARY, parameters.getSummary())
-                  .field(Field.DESCRIPTION, parameters.getDescription())
-                  .field(Field.ASSIGNEE, parameters.getAssignee())
-                  .field(Field.LABELS, parameters.getLabels())
-                  .field(Field.PRIORITY, parameters.getPriority())
-                  .execute();
+      JiraClient jira = getJiraClient(parameters);
+      Issue.FluentCreate fluentCreate = jira.createIssue(parameters.getProject(), parameters.getIssueType())
+                                            .field(Field.SUMMARY, parameters.getSummary())
+                                            .field(Field.DESCRIPTION, parameters.getDescription())
+                                            .field(Field.LABELS, parameters.getLabels())
+                                            .field(Field.PRIORITY, parameters.getPriority());
+
+      if (EmptyPredicate.isNotEmpty(parameters.getCustomFields())) {
+        for (Entry<String, Object> customField : parameters.getCustomFields().entrySet()) {
+          fluentCreate.field(customField.getKey(), customField.getValue());
+        }
+      }
+
+      Issue issue = fluentCreate.execute();
 
       if (isNotBlank(parameters.getStatus())) {
         issue.transition().execute(parameters.getStatus());
       }
       commandExecutionStatus = CommandExecutionStatus.SUCCESS;
+      saveExecutionLog(
+          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
+
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .jiraAction(JiraAction.CREATE_TICKET)
+          .errorMessage("Created JIRA ticket " + issue.getKey())
+          .issueId(issue.getId())
+          .issueKey(issue.getKey())
+          .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
+          .build();
     } catch (JiraException e) {
       logger.error("Unable to create a new JIRA ticket", e);
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
@@ -339,28 +352,16 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .jiraServerResponse(extractResponseMessage(e))
           .build();
     }
-
-    saveExecutionLog(
-        parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
-
-    return JiraExecutionData.builder()
-        .executionStatus(ExecutionStatus.SUCCESS)
-        .jiraAction(JiraAction.CREATE_TICKET)
-        .errorMessage("Created JIRA ticket " + issue.getKey())
-        .issueId(issue.getId())
-        .issueKey(issue.getKey())
-        .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
-        .build();
   }
 
   private ResponseData checkJiraApproval(JiraTaskParameters parameters) {
-    JiraClient jira = getJiraClient(parameters);
     Issue issue;
-    CommandExecutionStatus commandExecutionStatus;
+
     try {
+      JiraClient jira = getJiraClient(parameters);
       issue = jira.getIssue(parameters.getIssueId());
     } catch (JiraException e) {
-      commandExecutionStatus = CommandExecutionStatus.FAILURE;
+      CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.FAILURE;
       saveExecutionLog(
           parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
 
@@ -419,7 +420,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
             .build());
   }
 
-  private JiraClient getJiraClient(JiraTaskParameters parameters) {
+  private JiraClient getJiraClient(JiraTaskParameters parameters) throws JiraException {
     JiraConfig jiraConfig = parameters.getJiraConfig();
     encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
     BasicCredentials creds = new BasicCredentials(jiraConfig.getUsername(), new String(jiraConfig.getPassword()));
@@ -430,10 +431,12 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   private ResponseData deleteWebhook(JiraTaskParameters parameters) {
     JiraConfig jiraConfig = parameters.getJiraConfig();
     encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
-    JiraClient jira = getJiraClient(parameters);
+
     Issue issue;
     CommandExecutionStatus commandExecutionStatus;
+    JiraClient jira;
     try {
+      jira = getJiraClient(parameters);
       issue = jira.getIssue(parameters.getIssueId());
     } catch (JiraException e) {
       String error = "Unable to fetch Jira for id: " + parameters.getIssueId();
@@ -473,10 +476,11 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   private ResponseData createWebhook(JiraTaskParameters parameters) {
     JiraConfig jiraConfig = parameters.getJiraConfig();
     encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
-    JiraClient jira = getJiraClient(parameters);
+    JiraClient jira;
     CommandExecutionStatus commandExecutionStatus;
     Issue issue;
     try {
+      jira = getJiraClient(parameters);
       issue = jira.getIssue(parameters.getIssueId());
     } catch (JiraException e) {
       String error = "Unable to fetch Jira for id: " + parameters.getIssueId();
