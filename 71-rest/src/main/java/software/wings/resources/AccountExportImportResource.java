@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.mongodb.BasicDBObject;
@@ -19,6 +20,7 @@ import com.mongodb.DBObject;
 import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
 import io.harness.queue.Queuable;
+import io.harness.scheduler.PersistentScheduler;
 import io.harness.waiter.NotifyResponse;
 import io.harness.waiter.WaitInstance;
 import io.swagger.annotations.Api;
@@ -27,6 +29,7 @@ import org.bson.types.ObjectId;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.query.Query;
 import software.wings.api.DeploymentSummary;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.Account;
@@ -53,20 +56,32 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
 import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
+import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.template.TemplateVersion;
+import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.exportimport.ExportMode;
 import software.wings.dl.exportimport.ImportMode;
 import software.wings.dl.exportimport.ImportStatusReport;
 import software.wings.dl.exportimport.ImportStatusReport.ImportStatus;
 import software.wings.dl.exportimport.WingsMongoExportImport;
+import software.wings.scheduler.AlertCheckJob;
+import software.wings.scheduler.ArtifactCollectionJob;
+import software.wings.scheduler.InstanceStatsCollectorJob;
+import software.wings.scheduler.InstanceSyncJob;
+import software.wings.scheduler.LdapGroupSyncJob;
+import software.wings.scheduler.LimitVicinityCheckerJob;
+import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.EncryptionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
@@ -110,6 +125,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -143,10 +159,14 @@ import javax.ws.rs.core.Response;
 public class AccountExportImportResource {
   private static final String COLLECTION_CONFIG_FILES = "configs.files";
   private static final String COLLECTION_CONFIG_CHUNKS = "configs.chunks";
+  private static final String COLLECTION_QUARTZ_JOBS = "quartz_jobs";
+
   private static final String JSON_FILE_SUFFIX = ".json";
   private static final String ZIP_FILE_SUFFIX = ".zip";
 
+  private WingsMongoPersistence wingsPersistence;
   private WingsMongoExportImport mongoExportImport;
+  private PersistentScheduler scheduler;
   private AppService appService;
   private Map<String, Class<? extends Base>> genericExportableEntityTypes = new LinkedHashMap<>();
   private Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -193,8 +213,11 @@ public class AccountExportImportResource {
   }
 
   @Inject
-  public AccountExportImportResource(WingsMongoExportImport mongoExportImport, AppService appService) {
+  public AccountExportImportResource(WingsMongoPersistence wingsPersistence, WingsMongoExportImport mongoExportImport,
+      AppService appService, @Named("BackgroundJobScheduler") PersistentScheduler scheduler) {
+    this.wingsPersistence = wingsPersistence;
     this.mongoExportImport = mongoExportImport;
+    this.scheduler = scheduler;
     this.appService = appService;
 
     findExportableEntityTypes();
@@ -286,6 +309,8 @@ public class AccountExportImportResource {
         }
       }
     }
+
+    // 7. No need to export Quartz jobs. They can be recreated based on accountId/appId/triggerId etc.
 
     log.info("Flushing exported data into a zip file {}.", zipFileName);
     zipOutputStream.flush();
@@ -440,10 +465,102 @@ public class AccountExportImportResource {
         }
       }
     }
+
+    // 7. Reinstantiate Quartz jobs (recreate through APIs) in the new cluster
+    reinstantiateQuartzJobs(accountId, importStatuses);
+
     log.info("{} collections has been imported.", importStatuses.size());
     log.info("Finished importing data for account '{}'.", accountId);
 
     return new RestResponse<>(ImportStatusReport.builder().statuses(importStatuses).mode(importMode).build());
+  }
+
+  private void reinstantiateQuartzJobs(String accountId, List<ImportStatus> importStatuses) {
+    // 1. Recreate account level jobs
+    AlertCheckJob.addWithDelay(scheduler, accountId);
+    InstanceStatsCollectorJob.addWithDelay(scheduler, accountId);
+    LimitVicinityCheckerJob.addWithDelay(scheduler, accountId);
+
+    // Recreate application or lower level jobs each need some special handling.
+    List<String> appIds = appService.getAppIdsByAccountId(accountId);
+    int importedJobCount = 0;
+
+    // 2. ArtifactCollectionJob
+    List<ArtifactStream> artifactStreams = getAllArtifactStreamsForAccount(accountId, appIds);
+    for (ArtifactStream artifactStream : artifactStreams) {
+      ArtifactCollectionJob.addWithDelay(scheduler, accountId, artifactStream.getAppId(), artifactStream.getUuid());
+      importedJobCount++;
+    }
+
+    // 3. ScheduledTriggerJob
+    List<Trigger> triggers = getAllScheduledTriggersForAccount(accountId, appIds);
+    for (Trigger trigger : triggers) {
+      // Scheduled triggers is using the cron expression as trigger. No need to add special delay.
+      ScheduledTriggerJob.add(scheduler, accountId, trigger.getAppId(), trigger.getUuid(), trigger);
+      importedJobCount++;
+    }
+
+    // 4. InstanceSyncJob:
+    for (String appId : appIds) {
+      InstanceSyncJob.addWithDelay(scheduler, accountId, appId);
+      importedJobCount++;
+    }
+
+    // 5. LdapGroupSyncJob
+    List<LdapSettings> ldapSettings = getAllLdapSettingsForAccount(accountId);
+    for (LdapSettings ldapSetting : ldapSettings) {
+      LdapGroupSyncJob.add(scheduler, accountId, ldapSetting.getUuid());
+      importedJobCount++;
+    }
+
+    // 6. PruneFileJob seems to be transient, the old cluster should have managed to prune all the deleted app
+    // containers.
+
+    // 7. JiraPollingJob seems to be transient as well. No need to migrate/recreate in new cluster.
+
+    log.info("{} cron jobs has been recreated.", importedJobCount);
+
+    if (importedJobCount > 0) {
+      ImportStatus importStatus =
+          ImportStatus.builder().collectionName(COLLECTION_QUARTZ_JOBS).imported(importedJobCount).build();
+      importStatuses.add(importStatus);
+    }
+  }
+
+  private List<ArtifactStream> getAllArtifactStreamsForAccount(String accountId, List<String> appIds) {
+    List<ArtifactStream> artifactStreams = new ArrayList<>();
+    Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class).filter("appId in", appIds);
+    Iterator<ArtifactStream> iterator = query.iterator();
+    while (iterator.hasNext()) {
+      artifactStreams.add(iterator.next());
+    }
+
+    return artifactStreams;
+  }
+
+  private List<Trigger> getAllScheduledTriggersForAccount(String accountId, List<String> appIds) {
+    List<Trigger> triggers = new ArrayList<>();
+    Query<Trigger> query = wingsPersistence.createQuery(Trigger.class).filter("appId in", appIds);
+    Iterator<Trigger> iterator = query.iterator();
+    while (iterator.hasNext()) {
+      Trigger trigger = iterator.next();
+      if (trigger.getCondition().getConditionType() == TriggerConditionType.SCHEDULED) {
+        triggers.add(trigger);
+      }
+    }
+
+    return triggers;
+  }
+
+  private List<LdapSettings> getAllLdapSettingsForAccount(String accountId) {
+    List<LdapSettings> ldapSettings = new ArrayList<>();
+    Query<LdapSettings> query = wingsPersistence.createQuery(LdapSettings.class).filter("accountId", accountId);
+    Iterator<LdapSettings> iterator = query.iterator();
+    while (iterator.hasNext()) {
+      ldapSettings.add(iterator.next());
+    }
+
+    return ldapSettings;
   }
 
   private Map<String, String> readZipEntries(InputStream inputStream) throws IOException {

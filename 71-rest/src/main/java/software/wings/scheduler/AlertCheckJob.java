@@ -16,7 +16,6 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,9 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.EmailHelperUtil;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -57,19 +58,31 @@ public class AlertCheckJob implements Job {
 
   @Inject private ExecutorService executorService;
 
-  public static void add(PersistentScheduler jobScheduler, Account account) {
+  public static void addWithDelay(PersistentScheduler jobScheduler, String accountId) {
+    // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
+    long startTime = System.currentTimeMillis() + new Random().nextInt((int) TimeUnit.SECONDS.toMillis(POLL_INTERVAL));
+    addInternal(jobScheduler, accountId, new Date(startTime));
+  }
+
+  public static void add(PersistentScheduler jobScheduler, String accountId) {
+    addInternal(jobScheduler, accountId, null);
+  }
+
+  private static void addInternal(PersistentScheduler jobScheduler, String accountId, Date triggerStartTime) {
     JobDetail job = JobBuilder.newJob(AlertCheckJob.class)
-                        .withIdentity(account.getUuid(), GROUP)
-                        .usingJobData(ACCOUNT_ID_KEY, account.getUuid())
+                        .withIdentity(accountId, GROUP)
+                        .usingJobData(ACCOUNT_ID_KEY, accountId)
                         .build();
 
-    Trigger trigger =
+    TriggerBuilder triggerBuilder =
         TriggerBuilder.newTrigger()
-            .withIdentity(account.getUuid(), GROUP)
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever())
-            .build();
+            .withIdentity(accountId, GROUP)
+            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever());
+    if (triggerStartTime != null) {
+      triggerBuilder.startAt(triggerStartTime);
+    }
 
-    jobScheduler.ensureJob__UnderConstruction(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, triggerBuilder.build());
   }
 
   @Override

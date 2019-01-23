@@ -17,7 +17,6 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +36,7 @@ import software.wings.service.intfc.TriggerService;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -60,8 +60,20 @@ public class ArtifactCollectionJob implements Job {
   @Inject private PermitService permitService;
   @Inject private AppService appService;
 
+  public static void addWithDelay(
+      PersistentScheduler jobScheduler, String accountId, String appId, String artifactStreamId) {
+    // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
+    long startTime = System.currentTimeMillis() + new Random().nextInt((int) TimeUnit.SECONDS.toMillis(POLL_INTERVAL));
+    addInternal(jobScheduler, accountId, appId, artifactStreamId, new Date(startTime));
+  }
+
   public static void addDefaultJob(
       PersistentScheduler jobScheduler, String accountId, String appId, String artifactStreamId) {
+    addInternal(jobScheduler, accountId, appId, artifactStreamId, null);
+  }
+
+  private static void addInternal(PersistentScheduler jobScheduler, String accountId, String appId,
+      String artifactStreamId, Date triggerStartTime) {
     JobDetail job = JobBuilder.newJob(ArtifactCollectionJob.class)
                         .withIdentity(artifactStreamId, ArtifactCollectionJob.GROUP)
                         .usingJobData(ARTIFACT_STREAM_ID_KEY, artifactStreamId)
@@ -69,16 +81,17 @@ public class ArtifactCollectionJob implements Job {
                         .usingJobData(ACCOUNT_ID_KEY, accountId)
                         .build();
 
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(artifactStreamId, ArtifactCollectionJob.GROUP)
-                          .startNow()
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(POLL_INTERVAL)
-                                            .repeatForever()
-                                            .withMisfireHandlingInstructionNowWithExistingCount())
-                          .build();
+    TriggerBuilder triggerBuilder = TriggerBuilder.newTrigger()
+                                        .withIdentity(artifactStreamId, ArtifactCollectionJob.GROUP)
+                                        .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                                          .withIntervalInSeconds(POLL_INTERVAL)
+                                                          .repeatForever()
+                                                          .withMisfireHandlingInstructionNowWithExistingCount());
+    if (triggerStartTime != null) {
+      triggerBuilder.startAt(triggerStartTime);
+    }
 
-    jobScheduler.ensureJob__UnderConstruction(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, triggerBuilder.build());
   }
 
   @Override

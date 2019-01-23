@@ -21,7 +21,6 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,11 +47,14 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -78,20 +80,33 @@ public class LdapGroupSyncJob implements Job {
   @Inject private UserService userService;
   @Inject private UserGroupService userGroupService;
 
+  public static void addWithDelay(PersistentScheduler jobScheduler, String accountId, String ssoId) {
+    // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
+    long startTime = System.currentTimeMillis() + new Random().nextInt((int) TimeUnit.SECONDS.toMillis(POLL_INTERVAL));
+    addInternal(jobScheduler, accountId, ssoId, new Date(startTime));
+  }
+
   public static void add(PersistentScheduler jobScheduler, String accountId, String ssoId) {
+    addInternal(jobScheduler, accountId, ssoId, null);
+  }
+
+  private static void addInternal(
+      PersistentScheduler jobScheduler, String accountId, String ssoId, Date triggerStartTime) {
     JobDetail job = JobBuilder.newJob(LdapGroupSyncJob.class)
                         .withIdentity(ssoId, GROUP)
                         .usingJobData(ACCOUNT_ID_KEY, accountId)
                         .usingJobData(SSO_PROVIDER_ID_KEY, ssoId)
                         .build();
 
-    Trigger trigger =
+    TriggerBuilder triggerBuilder =
         TriggerBuilder.newTrigger()
             .withIdentity(ssoId, GROUP)
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever())
-            .build();
+            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever());
+    if (triggerStartTime != null) {
+      triggerBuilder.startAt(triggerStartTime);
+    }
 
-    jobScheduler.ensureJob__UnderConstruction(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, triggerBuilder.build());
   }
 
   public static void delete(
