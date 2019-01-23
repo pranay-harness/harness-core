@@ -518,9 +518,14 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       }
       quietSleep(ofMillis(10));
     }
-
     logger.info("YAML-GIT-SYNC Evicting cache");
-    authService.evictAccountUserPermissionInfoCache(accountId, true);
+
+    // Evict only in case of below six entity types
+    if (YamlType.APPLICATION.equals(yamlType) || YamlType.SERVICE.equals(yamlType)
+        || YamlType.ENVIRONMENT.equals(yamlType) || YamlType.WORKFLOW.equals(yamlType)
+        || YamlType.PIPELINE.equals(yamlType) || YamlType.PROVISIONER.equals(yamlType)) {
+      authService.evictAccountUserPermissionInfoCache(accountId, true);
+    }
   }
 
   private void processYamlChange(ChangeContext changeContext, List<ChangeContext> changeContextList)
