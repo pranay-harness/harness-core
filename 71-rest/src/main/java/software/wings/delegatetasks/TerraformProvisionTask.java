@@ -194,7 +194,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       switch (parameters.getCommand()) {
         case APPLY:
           joinedCommands = Joiner.on(" && ").join(asList("cd \"" + scriptDirectory + "\"",
-              "echo \"yes\" | terraform init -input=false -force-copy "
+              "echo \"yes\" | terraform init -force-copy "
                   + (tfBackendConfigsFile.exists() ? "-backend-config=" + tfBackendConfigsFile.getAbsolutePath() : ""),
               "echo \"terraform init ... Done\"", "terraform refresh -input=false " + targetArgs,
               "terraform plan -out=tfplan -input=false " + targetArgs, "echo \"terraform plan ... Done\"",
