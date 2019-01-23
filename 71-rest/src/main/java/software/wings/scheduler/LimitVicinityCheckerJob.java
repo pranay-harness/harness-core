@@ -13,14 +13,15 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Account;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
 
+import java.util.Date;
 import java.util.Objects;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 @DisallowConcurrentExecution
 public class LimitVicinityCheckerJob implements Job {
@@ -34,20 +35,33 @@ public class LimitVicinityCheckerJob implements Job {
   @Inject private BackgroundSchedulerLocker persistentLocker;
   @Inject private LimitVicinityHandler limitVicinityHandler;
 
-  public static void add(PersistentScheduler jobScheduler, Account account) {
+  public static void addWithDelay(PersistentScheduler jobScheduler, String accountId) {
+    // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
+    long startTime =
+        System.currentTimeMillis() + new Random().nextInt((int) TimeUnit.MINUTES.toMillis(SYNC_INTERVAL_IN_MINUTES));
+    addInternal(jobScheduler, accountId, new Date(startTime));
+  }
+
+  public static void add(PersistentScheduler jobScheduler, String accountId) {
+    addInternal(jobScheduler, accountId, null);
+  }
+
+  private static void addInternal(PersistentScheduler jobScheduler, String accountId, Date triggerStartTime) {
     JobDetail job = JobBuilder.newJob(LimitVicinityCheckerJob.class)
-                        .withIdentity(account.getUuid(), GROUP)
-                        .usingJobData(ACCOUNT_ID_KEY, account.getUuid())
+                        .withIdentity(accountId, GROUP)
+                        .usingJobData(ACCOUNT_ID_KEY, accountId)
                         .build();
 
-    Trigger trigger =
+    TriggerBuilder triggerBuilder =
         TriggerBuilder.newTrigger()
-            .withIdentity(account.getUuid(), GROUP)
+            .withIdentity(accountId, GROUP)
             .withSchedule(
-                SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(SYNC_INTERVAL_IN_MINUTES).repeatForever())
-            .build();
+                SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(SYNC_INTERVAL_IN_MINUTES).repeatForever());
+    if (triggerStartTime != null) {
+      triggerBuilder.startAt(triggerStartTime);
+    }
 
-    jobScheduler.ensureJob__UnderConstruction(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, triggerBuilder.build());
   }
 
   public static void delete(PersistentScheduler jobScheduler, String accountId) {

@@ -49,6 +49,11 @@ public class ScheduledTriggerJob implements Job {
   }
 
   public static void add(
+      PersistentScheduler jobScheduler, String accountId, String appId, String triggerId, Trigger trigger) {
+    add(jobScheduler, accountId, appId, triggerId, getQuartzTrigger(trigger));
+  }
+
+  public static void add(
       PersistentScheduler jobScheduler, String accountId, String appId, String triggerId, org.quartz.Trigger trigger) {
     JobDetail job = JobBuilder.newJob(ScheduledTriggerJob.class)
                         .withIdentity(triggerId, ScheduledTriggerJob.GROUP)

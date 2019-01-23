@@ -15,7 +15,6 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,9 @@ import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 
 import java.time.Duration;
+import java.util.Date;
 import java.util.Objects;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 
@@ -45,19 +46,31 @@ public class InstanceStatsCollectorJob implements Job {
   @Inject private InstanceUsageLimitExcessHandler instanceLimitHandler;
   @Inject private InstanceStatService instanceStatService;
 
+  public static void addWithDelay(PersistentScheduler jobScheduler, String accountId) {
+    // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
+    long startTime = System.currentTimeMillis() + new Random().nextInt((int) TimeUnit.MINUTES.toMillis(SYNC_INTERVAL));
+    addInternal(jobScheduler, accountId, new Date(startTime));
+  }
+
   public static void add(PersistentScheduler jobScheduler, String accountId) {
+    addInternal(jobScheduler, accountId, null);
+  }
+
+  private static void addInternal(PersistentScheduler jobScheduler, String accountId, Date triggerStartTime) {
     JobDetail job = JobBuilder.newJob(InstanceStatsCollectorJob.class)
                         .withIdentity(accountId, GROUP)
                         .usingJobData(ACCOUNT_ID_KEY, accountId)
                         .build();
 
-    Trigger trigger =
+    TriggerBuilder triggerBuilder =
         TriggerBuilder.newTrigger()
             .withIdentity(accountId, GROUP)
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(SYNC_INTERVAL).repeatForever())
-            .build();
+            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(SYNC_INTERVAL).repeatForever());
+    if (triggerStartTime != null) {
+      triggerBuilder.startAt(triggerStartTime);
+    }
 
-    jobScheduler.ensureJob__UnderConstruction(job, trigger);
+    jobScheduler.ensureJob__UnderConstruction(job, triggerBuilder.build());
   }
 
   public static void delete(PersistentScheduler jobScheduler, String accountId) {

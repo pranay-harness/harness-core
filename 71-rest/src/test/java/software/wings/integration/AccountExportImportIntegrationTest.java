@@ -80,16 +80,19 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
     String qaHarnessAccountId = "zEaak-FLS425IEO7OLzMUg";
     String qaHarnessAccountName = "Harness-QA";
 
+    // 1. Delete the account if it exists.
     if (accountService.exists(qaHarnessAccountName)) {
       deleteAccount(qaHarnessAccountId);
     }
+    // 2. Create an empty account for the account to be imported.
     createAccount(qaHarnessAccountId, qaHarnessAccountName);
 
     try {
+      // 3. Actually import the Harness-QA account data from the exported Zip file.
       String qaHarnessAccountDataZipFile = "./exportimport/account_zEaak-FLS425IEO7OLzMUg.zip";
       importAccountDataFromFile(qaHarnessAccountId, qaHarnessAccountDataZipFile);
 
-      // Verify relevant data has been imported successfully.
+      // 4. Verify relevant data has been imported successfully.
       Application application = appService.getAppByName(qaHarnessAccountId, "Harness Verification");
       assertNotNull(application);
       Pipeline pipeline =
@@ -104,7 +107,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
           cvConfigurationService.getConfiguration("Manager Prod", application.getUuid(), environment.getUuid());
       assertNotNull(cvConfiguration);
     } finally {
-      // Delete the imported account after done.
+      // 5. Delete the imported account after done.
       deleteAccount(qaHarnessAccountId);
     }
   }
