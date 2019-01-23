@@ -13,6 +13,7 @@ import static software.wings.common.Constants.WEEK;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
@@ -57,6 +58,7 @@ import java.util.concurrent.ExecutorService;
  *
  * @author rktummala on 11/10/18
  */
+@Singleton
 public class LicenseServiceImpl implements LicenseService {
   private static final Logger logger = LoggerFactory.getLogger(LicenseServiceImpl.class);
   @Inject private AccountService accountService;
