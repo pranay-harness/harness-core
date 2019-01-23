@@ -1774,7 +1774,7 @@ public class WorkflowServiceHelper {
   public static Map<String, String> overrideWorkflowVariables(
       List<Variable> variables, Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables) {
     Map<String, String> resolvedWorkflowVariables = new LinkedHashMap<>();
-    if (isEmpty(variables) || isEmpty(workflowStepVariables)) {
+    if (isEmpty(variables)) {
       return new HashMap<>();
     }
     if (isEmpty(pipelineVariables)) {
