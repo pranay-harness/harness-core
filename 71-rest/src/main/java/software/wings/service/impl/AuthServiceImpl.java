@@ -94,6 +94,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.cache.Cache;
 import javax.crypto.spec.SecretKeySpec;
@@ -120,6 +121,7 @@ public class AuthServiceImpl implements AuthService {
   private HarnessUserGroupService harnessUserGroupService;
   private SecretManager secretManager;
   private UsageMetricsEventPublisher usageMetricsEventPublisher;
+  @Inject private ExecutorService executorService;
 
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence wingsPersistence, UserService userService,
@@ -577,20 +579,22 @@ public class AuthServiceImpl implements AuthService {
       cache.removeAll(keys);
 
       if (rebuild) {
-        keys.forEach(key -> {
-          String userId = getUserId(key, accountId);
-          if (userId == null) {
-            return;
-          }
+        executorService.submit(() -> {
+          keys.forEach(key -> {
+            String userId = getUserId(key, accountId);
+            if (userId == null) {
+              return;
+            }
 
-          User user = cacheHelper.getUserCache().get(userId);
-          if (user == null) {
-            return;
-          }
+            User user = cacheHelper.getUserCache().get(userId);
+            if (user == null) {
+              return;
+            }
 
-          // This call reloads the cache from db, if some user request does that first, this simply makes sure the cache
-          // is rebuilt.
-          getUserPermissionInfo(accountId, user);
+            // This call reloads the cache from db, if some user request does that first, this simply makes sure the
+            // cache is rebuilt.
+            getUserPermissionInfo(accountId, user);
+          });
         });
       }
     }
