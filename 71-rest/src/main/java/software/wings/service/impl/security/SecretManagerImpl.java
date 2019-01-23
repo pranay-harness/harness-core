@@ -112,7 +112,7 @@ import java.util.stream.Collectors;
 public class SecretManagerImpl implements SecretManager {
   protected static final Logger logger = LoggerFactory.getLogger(SecretManagerImpl.class);
 
-  private static final String ILLEGAL_CHARACTERS = "[~!@#$%^&*\\[\\]'\"/?<>,;]";
+  private static final String ILLEGAL_CHARACTERS = "[~!@#$%^&*'\"/?<>,;]";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
