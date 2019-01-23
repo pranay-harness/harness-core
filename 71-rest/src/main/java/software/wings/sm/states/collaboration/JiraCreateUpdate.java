@@ -71,6 +71,15 @@ public class JiraCreateUpdate extends State {
   @Getter @Setter private String status;
   @Getter @Setter private String comment;
   @Getter @Setter private String issueId;
+  private Map<String, Object> customFields;
+
+  public Map<String, Object> fetchCustomFields() {
+    return customFields;
+  }
+
+  public void setCustomFields(Map<String, Object> customFields) {
+    this.customFields = customFields;
+  }
 
   @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
   @Getter @Setter private String sweepingOutputName;
@@ -101,6 +110,7 @@ public class JiraCreateUpdate extends State {
                                         .status(status)
                                         .description(description)
                                         .labels(labels)
+                                        .customFields(customFields)
                                         .comment(comment)
                                         .priority(priority)
                                         .encryptionDetails(secretManager.getEncryptionDetails(jiraConfig,
