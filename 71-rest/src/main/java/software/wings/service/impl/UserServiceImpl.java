@@ -316,7 +316,7 @@ public class UserServiceImpl implements UserService {
                                 .templateName("add_account")
                                 .templateModel(templateModel)
                                 .accountId(account.getUuid())
-                                .system(true)
+                                .system(false)
                                 .build();
       emailData.setCc(Collections.emptyList());
       emailData.setRetries(2);
@@ -733,6 +733,7 @@ public class UserServiceImpl implements UserService {
 
     emailData.setCc(Collections.emptyList());
     emailData.setRetries(2);
+    emailData.setAccountId(userInvite.getAccountId());
 
     emailNotificationService.send(emailData);
   }

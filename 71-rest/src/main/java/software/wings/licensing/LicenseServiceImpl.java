@@ -191,7 +191,6 @@ public class LicenseServiceImpl implements LicenseService {
                               .templateName("send_email_to_sales")
                               .templateModel(templateModel)
                               .accountId(account.getUuid())
-                              .system(true)
                               .build();
     emailData.setCc(Collections.emptyList());
     emailData.setRetries(3);
