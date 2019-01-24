@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -24,6 +25,7 @@ import software.wings.beans.Application;
 import software.wings.beans.EntityReference;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.security.AppPermission;
@@ -103,7 +105,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Override
   public boolean hasAccess(String accountId, boolean isAccountAdmin, String appIdFromRequest, String envIdFromRequest,
       UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions,
-      Map<String, Set<String>> appEnvMapFromPermissions) {
+      Map<String, Set<String>> appEnvMapFromPermissions, Set<String> appIdsInAccount) {
     boolean hasNoRestrictions = hasNoRestrictions(entityUsageRestrictions);
     if (isNotEmpty(appIdFromRequest) && !appIdFromRequest.equals(GLOBAL_APP_ID)) {
       if (hasNoRestrictions) {
@@ -111,7 +113,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       }
 
       Map<String, Set<String>> appEnvMapFromEntityRestrictions =
-          getAppEnvMap(accountId, entityUsageRestrictions.getAppEnvRestrictions(), Action.UPDATE);
+          getAppEnvMap(entityUsageRestrictions.getAppEnvRestrictions(), appIdsInAccount);
       if (isNotEmpty(envIdFromRequest)) {
         // Restrict it to both app and env
         Set<String> envIds = appEnvMapFromEntityRestrictions.get(appIdFromRequest);
@@ -137,7 +139,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       }
 
       Map<String, Set<String>> appEnvMapFromEntityRestrictions =
-          getAppEnvMap(accountId, entityUsageRestrictions.getAppEnvRestrictions(), Action.READ);
+          getAppEnvMap(entityUsageRestrictions.getAppEnvRestrictions(), appIdsInAccount);
       return hasAccess(isAccountAdmin, appEnvMapFromEntityRestrictions, entityUsageRestrictions,
           appEnvMapFromPermissions, restrictionsFromUserPermissions);
     }
@@ -312,36 +314,16 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
   @Override
   public Map<String, Set<String>> getAppEnvMap(
-      String accountId, Set<AppEnvRestriction> appEnvRestrictions, Action action) {
+      Set<AppEnvRestriction> appEnvRestrictions, Set<String> allAppIdsInAccount) {
     Map<String, Set<String>> appEnvMap = Maps.newHashMap();
 
     if (isEmpty(appEnvRestrictions)) {
       return appEnvMap;
     }
 
-    User user = UserThreadLocal.get();
-    if (user == null) {
-      return appEnvMap;
-    }
-
-    if (user.getUserRequestContext() == null) {
-      logger.error("User request context is null, returning");
-      return appEnvMap;
-    }
-    UserPermissionInfo userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
-    if (userPermissionInfo.getAppPermissionMapInternal() == null) {
-      return appEnvMap;
-    }
-
-    Set<String> appSetFromPermissions = userPermissionInfo.getAppPermissionMapInternal().keySet();
-
-    if (isEmpty(appSetFromPermissions)) {
-      return appEnvMap;
-    }
-
     appEnvRestrictions.forEach(appEnvRestriction -> {
       GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
-      Set<String> appSet = getAppIdsByFilter(appFilter, appSetFromPermissions);
+      Set<String> appSet = getAppIdsByFilter(appFilter, allAppIdsInAccount);
 
       if (isEmpty(appSet)) {
         return;
@@ -349,8 +331,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
       EnvFilter envFilter = appEnvRestriction.getEnvFilter();
       appSet.forEach(appId -> {
-        Set<String> envIdsByFilter =
-            getEnvIdsByFilter(envFilter, userPermissionInfo.getAppPermissionMapInternal().get(appId), action);
+        Set<String> envIdsByFilter = getEnvIdsByFilter(envFilter, appId);
         // Multimap is deliberately not used since we want to be able to insert the key with null values.
         Set<String> valueSet = appEnvMap.get(appId);
         if (valueSet == null) {
@@ -367,14 +348,14 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     return appEnvMap;
   }
 
-  private Set<String> getAppIdsByFilter(GenericEntityFilter appFilter, Set<String> appSetFromPermissions) {
+  private Set<String> getAppIdsByFilter(GenericEntityFilter appFilter, Set<String> allAppIdsInAccount) {
     Set<String> appSet;
     switch (appFilter.getFilterType()) {
       case GenericEntityFilter.FilterType.ALL:
-        appSet = appSetFromPermissions;
+        appSet = new HashSet<>(allAppIdsInAccount);
         break;
       case GenericEntityFilter.FilterType.SELECTED:
-        appSet = Sets.intersection(appSetFromPermissions, appFilter.getIds());
+        appSet = appFilter.getIds();
         break;
       default:
         throw new WingsException("Unsupported app filter type" + appFilter.getFilterType());
@@ -383,9 +364,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     return appSet;
   }
 
-  private Set<String> getEnvIdsByFilter(EnvFilter envFilter, AppPermissionSummary appPermissionSummary, Action action) {
+  private Set<String> getEnvIdsByFilter(EnvFilter envFilter, String appId) {
     Set<String> envSet = new HashSet<>();
-    if (appPermissionSummary == null) {
+    if (envFilter == null) {
       return envSet;
     }
 
@@ -395,36 +376,21 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return envSet;
     }
 
-    Map<Action, Set<EnvInfo>> envActionMap = appPermissionSummary.getEnvPermissions();
-    if (isEmpty(envActionMap)) {
-      return envSet;
-    }
-
-    Set<EnvInfo> envSetFromPermissions = envActionMap.get(action);
-
-    if (isEmpty(envSetFromPermissions)) {
-      return envSet;
-    }
-
     if (filterTypes.contains(FilterType.PROD) && filterTypes.contains(FilterType.NON_PROD)) {
-      return envSetFromPermissions.stream().map(envInfo -> envInfo.getEnvId()).collect(Collectors.toSet());
+      List<String> envIdsByApp = environmentService.getEnvIdsByApp(appId);
+      envSet.addAll(envIdsByApp);
+      return envSet;
     }
 
     filterTypes.forEach(filterType -> {
       switch (filterType) {
         case FilterType.PROD:
-          Set<String> envs = envSetFromPermissions.stream()
-                                 .filter(envInfo -> FilterType.PROD.equals(envInfo.getEnvType()))
-                                 .map(envInfo -> envInfo.getEnvId())
-                                 .collect(Collectors.toSet());
-          envSet.addAll(envs);
+          List<String> envIdsByApp = environmentService.getEnvIdsByApp(appId, EnvironmentType.PROD);
+          envSet.addAll(envIdsByApp);
           break;
         case FilterType.NON_PROD:
-          envs = envSetFromPermissions.stream()
-                     .filter(envInfo -> FilterType.NON_PROD.equals(envInfo.getEnvType()))
-                     .map(envInfo -> envInfo.getEnvId())
-                     .collect(Collectors.toSet());
-          envSet.addAll(envs);
+          envIdsByApp = environmentService.getEnvIdsByApp(appId, EnvironmentType.NON_PROD);
+          envSet.addAll(envIdsByApp);
           break;
         case FilterType.SELECTED:
           envSet.addAll(envFilter.getIds());
@@ -597,7 +563,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     PageResponse<Application> pageResponse = appService.list(PageRequestBuilder.aPageRequest()
-                                                                 .addFilter("accountId", Operator.EQ, accountId)
+                                                                 .addFilter("accountId", EQ, accountId)
                                                                  .addFieldsIncluded("_id", "name")
                                                                  .build(),
         false);
@@ -777,17 +743,35 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return true;
     }
 
-    return userHasPermissions(accountId, entityUsageRestrictions, restrictionsFromUserPermissions);
+    Set<String> appIdsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+    return userHasPermissions(accountId, entityUsageRestrictions, restrictionsFromUserPermissions, appIdsByAccountId);
+  }
+
+  @Override
+  public boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
+      UsageRestrictions restrictionsFromUserPermissions, Set<String> allAppsInAccount) {
+    if (!hasUserContext()) {
+      return true;
+    }
+
+    return userHasPermissions(accountId, entityUsageRestrictions, restrictionsFromUserPermissions, allAppsInAccount);
   }
 
   @Override
   public boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions) {
-    return this.userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions,
-        getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions());
+    Set<String> appIdsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+    return userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions, appIdsByAccountId);
   }
 
-  private boolean userHasPermissions(
-      String accountId, UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions) {
+  @Override
+  public boolean userHasPermissionsToChangeEntity(
+      String accountId, UsageRestrictions entityUsageRestrictions, Set<String> allAppsInAccount) {
+    return this.userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions,
+        getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions(), allAppsInAccount);
+  }
+
+  private boolean userHasPermissions(String accountId, UsageRestrictions entityUsageRestrictions,
+      UsageRestrictions restrictionsFromUserPermissions, Set<String> allAppsInAccount) {
     // If no restrictions, only account admin can modify it
     if (hasNoRestrictions(entityUsageRestrictions)) {
       return isAccountAdmin(accountId);
@@ -801,7 +785,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getAppEnvMap();
 
     Map<String, Set<String>> appEnvMapFromEntityRestrictions =
-        getAppEnvMap(accountId, entityUsageRestrictions.getAppEnvRestrictions(), Action.UPDATE);
+        getAppEnvMap(entityUsageRestrictions.getAppEnvRestrictions(), allAppsInAccount);
 
     if (isEmpty(appEnvMapFromEntityRestrictions)) {
       return hasAllCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
@@ -901,8 +885,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       throw new WingsException(ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS, USER);
     }
 
-    boolean canUpdateEntity =
-        userHasPermissionsToChangeEntity(accountId, usageRestrictions, restrictionsFromUserPermissions);
+    Set<String> appIdsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+    boolean canUpdateEntity = userHasPermissionsToChangeEntity(
+        accountId, usageRestrictions, restrictionsFromUserPermissions, appIdsByAccountId);
 
     if (!canUpdateEntity) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
@@ -1088,7 +1073,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   public int purgeDanglingAppEnvReferences(String accountId) {
     int count = 0;
 
-    Set<String> existingAppIds = new HashSet<>(appService.getAppIdsByAccountId(accountId));
+    Set<String> existingAppIds = appService.getAppIdsAsSetByAccountId(accountId);
     Set<String> existingEnvIds = new HashSet<>();
     for (String appId : existingAppIds) {
       existingEnvIds.addAll(environmentService.getEnvIdsByApp(appId));
