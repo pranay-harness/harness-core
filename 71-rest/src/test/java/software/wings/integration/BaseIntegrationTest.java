@@ -16,8 +16,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.integration.IntegrationTestUtil.randomInt;
-import static software.wings.integration.SeedData.randomSeedString;
 
 import com.google.inject.Inject;
 
@@ -56,12 +54,13 @@ import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
@@ -109,11 +108,12 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   @Inject protected WorkflowService workflowService;
   @Inject protected TriggerService triggerService;
   @Inject protected EnvironmentService environmentService;
-  @Inject protected LearningEngineService learningEngineService;
+  @Inject protected ConfigService configService;
+  @Inject protected ServiceResourceService serviceResourceService;
+  @Inject protected ServiceTemplateService serviceTemplateService;
   @Inject protected CVConfigurationService cvConfigurationService;
   @Inject protected KmsService kmsService;
   @Inject protected SecretManager secretManager;
-  @Inject protected AuthHandler authHandler;
   @Inject protected SecretManagementDelegateService delegateService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
 
@@ -148,7 +148,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
 
     // To log HTTP Request/Response for debugging purpose.
     java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(BaseIntegrationTest.class.getName());
-    Feature loggingFeature = new LoggingFeature(julLogger, Level.INFO, null, null);
+    Feature loggingFeature = new LoggingFeature(julLogger, Level.ALL, null, null);
 
     client = ClientBuilder.newBuilder()
                  .sslContext(sslcontext)
@@ -246,12 +246,6 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
 
     });
     assertThat(response).isNotNull();
-  }
-
-  protected String randomText(int length) { // TODO: choose words start to word end boundary
-    int low = randomInt(50);
-    int high = length + low > randomSeedString.length() ? randomSeedString.length() - low : length + low;
-    return randomSeedString.substring(low, high);
   }
 
   public String getDelegateToken() {
