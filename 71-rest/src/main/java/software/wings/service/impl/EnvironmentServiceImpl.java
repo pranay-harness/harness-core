@@ -58,7 +58,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -507,15 +506,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public List<String> getEnvIdsByApp(String appId) {
     List<Key<Environment>> environmentKeyList =
         wingsPersistence.createQuery(Environment.class).filter("appId", appId).asKeyList();
-    return environmentKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toList());
-  }
-
-  @Override
-  public List<String> getEnvIdsByApp(String appId, EnvironmentType environmentType) {
-    List<Key<Environment>> environmentKeyList = wingsPersistence.createQuery(Environment.class)
-                                                    .filter("appId", appId)
-                                                    .filter("environmentType", environmentType)
-                                                    .asKeyList();
+    logger.info(environmentKeyList.size() + " environments found for appId " + appId);
     return environmentKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toList());
   }
 
