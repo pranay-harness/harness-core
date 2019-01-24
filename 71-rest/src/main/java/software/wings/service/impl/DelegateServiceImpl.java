@@ -1221,6 +1221,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return assignTask(delegateId, taskId, delegateTask);
     } else if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
       setValidationStarted(delegateId, delegateTask);
+      resolvePreAssignmentExpressions(delegateTask, delegateId);
       return delegateTask;
     } else {
       logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
@@ -1345,19 +1346,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).filter(ID_KEY, taskId).get();
 
     if (delegateTask != null) {
-      try {
-        executeManagerPreExecutionHook(delegateTask);
-      } catch (FunctorException | CriticalExpressionEvaluationException exception) {
-        Query<DelegateTask> taskQuery =
-            wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).filter(ID_KEY, taskId);
-        DelegateTaskResponse response =
-            DelegateTaskResponse.builder()
-                .response(ErrorNotifyResponseData.builder().errorMessage(exception.getMessage()).build())
-                .responseCode(ResponseCode.FAILED)
-                .accountId(accountId)
-                .build();
-        handleResponse(taskId, delegateId, delegateTask, taskQuery, response, ERROR);
-      }
       if (delegateTask.getDelegateId() == null && delegateTask.getStatus() == QUEUED) {
         logger.info("Found unassigned delegate task: {}", delegateTask.getUuid());
         return delegateTask;
@@ -1371,6 +1359,30 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       logger.info("Task {} no longer exists", taskId);
     }
     return null;
+  }
+
+  private void resolvePreAssignmentExpressions(DelegateTask delegateTask, String delegateId) {
+    try {
+      final ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
+          new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
+              delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtil,
+              delegateTask.getArtifactStreamId());
+      if (delegateTask.getParameters().length == 1 && delegateTask.getParameters()[0] instanceof TaskParameters) {
+        ExpressionReflectionUtils.applyExpression(delegateTask.getParameters()[0],
+            value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
+      }
+    } catch (FunctorException | CriticalExpressionEvaluationException exception) {
+      Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                          .filter("accountId", delegateTask.getAccountId())
+                                          .filter(ID_KEY, delegateTask.getUuid());
+      DelegateTaskResponse response =
+          DelegateTaskResponse.builder()
+              .response(ErrorNotifyResponseData.builder().errorMessage(exception.getMessage()).build())
+              .responseCode(ResponseCode.FAILED)
+              .accountId(delegateTask.getAccountId())
+              .build();
+      handleResponse(delegateTask.getUuid(), delegateId, delegateTask, taskQuery, response, ERROR);
+    }
   }
 
   private void handleResponse(String taskId, String delegateId, DelegateTask delegateTask,
@@ -1389,19 +1401,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           wingsPersistence.createUpdateOperations(DelegateTask.class)
               .set("serializedNotifyResponseData", KryoUtils.asBytes(response.getResponse()))
               .set("status", error));
-    }
-  }
-
-  private void executeManagerPreExecutionHook(DelegateTask delegateTask) {
-    if (delegateTask != null) {
-      final ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
-          new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
-              delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtil,
-              delegateTask.getArtifactStreamId());
-      if (delegateTask.getParameters().length == 1 && delegateTask.getParameters()[0] instanceof TaskParameters) {
-        ExpressionReflectionUtils.applyExpression(delegateTask.getParameters()[0],
-            value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
-      }
     }
   }
 
@@ -1428,6 +1427,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (task != null) {
       logger.info("Task {} assigned to delegate {}", taskId, delegateId);
       task.setParameters(delegateTask.getParameters());
+      resolvePreAssignmentExpressions(task, delegateId);
       return task;
     }
     task = wingsPersistence.createQuery(DelegateTask.class)
@@ -1439,6 +1439,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                .get();
     if (task != null) {
       task.setParameters(delegateTask.getParameters());
+      resolvePreAssignmentExpressions(task, delegateId);
       logger.info("Returning previously assigned task {} to delegate {}", taskId, delegateId);
     } else {
       logger.info("Task {} no longer available for delegate {}", taskId, delegateId);
@@ -1468,7 +1469,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     DelegateTask delegateTask = taskQuery.get();
 
     if (delegateTask != null) {
-      executeManagerPreExecutionHook(delegateTask);
       if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
         logger.warn("Version mismatch for task {} in account {}. [managerVersion {}, taskVersion {}]",
             delegateTask.getUuid(), delegateTask.getAccountId(), getVersion(), delegateTask.getVersion());
