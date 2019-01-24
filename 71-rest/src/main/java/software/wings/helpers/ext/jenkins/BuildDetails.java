@@ -8,6 +8,7 @@ import java.util.Objects;
 
 public class BuildDetails {
   private String number;
+  private String buildNo;
   private String revision;
   private String description;
   private String artifactPath;
@@ -164,6 +165,14 @@ public class BuildDetails {
     this.metadata = metadata;
   }
 
+  public String getBuildNo() {
+    return buildNo;
+  }
+
+  public void setBuildNo(String buildNo) {
+    this.buildNo = buildNo;
+  }
+
   /**
    * The type Builder.
    */
@@ -178,6 +187,7 @@ public class BuildDetails {
     private String buildFullDisplayName;
     private String artifactFileSize;
     private Map<String, String> metadata = new HashMap<>();
+    private String buildNo;
 
     private Builder() {}
 
@@ -267,6 +277,11 @@ public class BuildDetails {
       return this;
     }
 
+    public Builder withBuildNo(String buildNo) {
+      this.buildNo = buildNo;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -283,7 +298,8 @@ public class BuildDetails {
           .withBuildDisplayName(buildDisplayName)
           .withBuildFullDisplayName(buildFullDisplayName)
           .withArtifactFileSize(artifactFileSize)
-          .withMetadata(metadata);
+          .withMetadata(metadata)
+          .withBuildNo(buildNo);
     }
 
     /**
@@ -303,6 +319,7 @@ public class BuildDetails {
       buildDetails.setBuildFullDisplayName(buildFullDisplayName);
       buildDetails.setArtifactFileSize(artifactFileSize);
       buildDetails.setMetadata(metadata);
+      buildDetails.setBuildNo(buildNo);
       return buildDetails;
     }
   }

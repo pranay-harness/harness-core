@@ -306,7 +306,9 @@ public enum ErrorCode {
 
   KUBERNETES_VALUES_ERROR,
 
-  INVALID_TERRAFORM_TARGETS_REQUEST(Status.OK);
+  INVALID_TERRAFORM_TARGETS_REQUEST(Status.OK),
+
+  FILE_READ_FAILED;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -22,6 +22,8 @@ import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfClientImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
+import software.wings.helpers.ext.shell.response.ShellExecutionService;
+import software.wings.helpers.ext.shell.response.ShellExecutionServiceImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
 import software.wings.service.impl.ContainerServiceImpl;
@@ -128,5 +130,6 @@ public class WingsTestModule extends AbstractModule {
         .annotatedWith(Names.named("timeoutExecutor"))
         .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("timeout-enforcer-%d").setPriority(Thread.NORM_PRIORITY).build()));
+    bind(ShellExecutionService.class).to(ShellExecutionServiceImpl.class);
   }
 }

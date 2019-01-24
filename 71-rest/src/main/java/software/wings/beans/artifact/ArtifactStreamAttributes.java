@@ -38,6 +38,8 @@ public class ArtifactStreamAttributes {
   private String artifactoryDockerRepositoryServer;
   private String nexusDockerPort;
 
+  private String customScript;
+
   /**
    * Gets job name.
    *
@@ -309,6 +311,14 @@ public class ArtifactStreamAttributes {
     this.nexusDockerPort = nexusDockerPort;
   }
 
+  public String getCustomScript() {
+    return customScript;
+  }
+
+  public void setCustomScript(String customScript) {
+    this.customScript = customScript;
+  }
+
   /**
    * The type Builder.
    */
@@ -337,6 +347,7 @@ public class ArtifactStreamAttributes {
     private boolean copyArtifactEnabledForArtifactory;
     private String artifactoryDockerRepositoryServer;
     private String nexusDockerPort;
+    private String customScript;
 
     private Builder() {}
 
@@ -515,6 +526,11 @@ public class ArtifactStreamAttributes {
       return this;
     }
 
+    public Builder withCustomScript(String customScript) {
+      this.customScript = customScript;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -545,7 +561,8 @@ public class ArtifactStreamAttributes {
           .withMetadata(metadata)
           .withCopyArtifactEnabledForArtifactory(copyArtifactEnabledForArtifactory)
           .withArtifactoryDockerRepositoryServer(artifactoryDockerRepositoryServer)
-          .withNexusDockerPort(nexusDockerPort);
+          .withNexusDockerPort(nexusDockerPort)
+          .withCustomScript(customScript);
     }
 
     /**
@@ -579,6 +596,7 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(copyArtifactEnabledForArtifactory);
       artifactStreamAttributes.setArtifactoryDockerRepositoryServer(artifactoryDockerRepositoryServer);
       artifactStreamAttributes.setNexusDockerPort(nexusDockerPort);
+      artifactStreamAttributes.setCustomScript(customScript);
       return artifactStreamAttributes;
     }
   }
