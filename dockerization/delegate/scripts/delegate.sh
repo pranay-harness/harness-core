@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-JRE_DIR=jre1.8.0_131
+JRE_DIR=jre1.8.0_191
 JRE_BINARY=$JRE_DIR/bin/java
-JVM_URL=_delegateStorageUrl_/jre/8u131/jre-8u131-linux-x64.tar.gz
+JVM_URL=_delegateStorageUrl_/jre/8u191/jre-8u191-linux-x64.tar.gz
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
