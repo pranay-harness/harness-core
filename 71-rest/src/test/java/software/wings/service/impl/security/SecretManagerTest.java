@@ -31,6 +31,8 @@ import software.wings.beans.AwsConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.UsageRestrictions;
@@ -41,6 +43,8 @@ import java.util.List;
 public class SecretManagerTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private UsageRestrictionsService usageRestrictionsService;
+  @Mock private AppService appService;
+  @Mock private EnvironmentService envService;
   @Inject @InjectMocks private SecretManagerImpl secretManager;
 
   @Before
@@ -103,7 +107,7 @@ public class SecretManagerTest {
             getSecretList(3));
     when(wingsPersistence.query(eq(EncryptedData.class), any(PageRequest.class))).thenReturn(pageResponse);
     when(usageRestrictionsService.hasAccess(anyString(), anyBoolean(), anyString(), anyString(),
-             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap()))
+             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap(), anyMap()))
         .thenReturn(true);
 
     PageResponse<EncryptedData> finalPageResponse =
@@ -126,7 +130,7 @@ public class SecretManagerTest {
     when(pageResponse.getResponse()).thenReturn(getSecretList(pageSize * 2));
     when(wingsPersistence.query(eq(EncryptedData.class), any(PageRequest.class))).thenReturn(pageResponse);
     when(usageRestrictionsService.hasAccess(anyString(), anyBoolean(), anyString(), anyString(),
-             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap()))
+             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap(), anyMap()))
         .thenReturn(false, false, false, true);
 
     PageResponse<EncryptedData> finalPageResponse =
@@ -152,7 +156,7 @@ public class SecretManagerTest {
 
     // Filter out the first 3 records based on usage restriction.
     when(usageRestrictionsService.hasAccess(anyString(), anyBoolean(), anyString(), anyString(),
-             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap()))
+             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap(), anyMap()))
         .thenReturn(true, true, true, false);
 
     PageResponse<EncryptedData> finalPageResponse =

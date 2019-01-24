@@ -57,6 +57,7 @@ import org.mongodb.morphia.annotations.Transient;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -71,6 +72,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -113,6 +115,7 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
   @Inject private CacheHelper cacheHelper;
+  @Inject private EnvironmentService envService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -156,11 +159,15 @@ public class SettingsServiceImpl implements SettingsService {
 
     boolean isAccountAdmin = usageRestrictionsService.isAccountAdmin(accountId);
 
+    Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+    Map<String, List<Base>> appIdEnvMap = envService.getAppIdEnvMap(appsByAccountId);
+
     inputSettingAttributes.forEach(settingAttribute -> {
       UsageRestrictions usageRestrictionsFromEntity = settingAttribute.getUsageRestrictions();
 
       if (usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
-              usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromUserPermissions)) {
+              usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromUserPermissions,
+              appIdEnvMap)) {
         // HAR-7726: Mask the encrypted field values when listing all settings.
         SettingValue settingValue = settingAttribute.getValue();
         if (settingValue instanceof EncryptableSetting) {
@@ -435,7 +442,6 @@ public class SettingsServiceImpl implements SettingsService {
     SettingAttribute settingAttribute = get(varId);
     notNullCheck("Setting Value", settingAttribute, USER);
     String accountId = settingAttribute.getAccountId();
-
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
             accountId, settingAttribute.getUsageRestrictions())) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);

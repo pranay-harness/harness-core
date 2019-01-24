@@ -42,6 +42,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
@@ -55,6 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
@@ -104,6 +106,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -506,8 +509,22 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public List<String> getEnvIdsByApp(String appId) {
     List<Key<Environment>> environmentKeyList =
         wingsPersistence.createQuery(Environment.class).filter("appId", appId).asKeyList();
-    logger.info(environmentKeyList.size() + " environments found for appId " + appId);
     return environmentKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toList());
+  }
+
+  @Override
+  public Map<String, List<Base>> getAppIdEnvMap(Set<String> appIds) {
+    if (isEmpty(appIds)) {
+      return new HashMap<>();
+    }
+    PageRequest<Environment> pageRequest = aPageRequest()
+                                               .addFilter("appId", Operator.IN, appIds.toArray())
+                                               .addFieldsIncluded("_id", "appId", "environmentType")
+                                               .build();
+
+    List<Environment> list = wingsPersistence.getAllEntities(pageRequest, () -> list(pageRequest, false));
+
+    return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
   @Override

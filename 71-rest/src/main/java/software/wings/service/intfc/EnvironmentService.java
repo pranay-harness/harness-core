@@ -6,6 +6,7 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Base;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -16,6 +17,8 @@ import software.wings.beans.stats.CloneMetadata;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -126,6 +129,8 @@ public interface EnvironmentService extends OwnedByApplication {
    * @return
    */
   List<String> getEnvIdsByApp(@NotEmpty String appId);
+
+  Map<String, List<Base>> getAppIdEnvMap(Set<String> appIds);
 
   /**
    * Clones Environment along with Service Infrastructure

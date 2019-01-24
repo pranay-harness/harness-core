@@ -565,16 +565,6 @@ public class AuthHandler {
     return getAppIdsByFilter(Sets.newHashSet(appIdsByAccountId), appFilter);
   }
 
-  public Set<String> getEnvIdsByFilter(Set<Environment> appIds, EnvFilter envFilter) {
-    PageRequest<Environment> pageRequest = aPageRequest()
-                                               .addFilter("appId", Operator.IN, appIds.toArray(new String[0]))
-                                               .addFieldsIncluded("_id", "environmentType")
-                                               .build();
-    List<Environment> envList = getAllEntities(pageRequest, () -> environmentService.list(pageRequest, false));
-
-    return getEnvIdsByFilter(envList, envFilter);
-  }
-
   public Set<String> getEnvIdsByFilter(String appId, EnvFilter envFilter) {
     PageRequest<Environment> pageRequest =
         aPageRequest().addFilter("appId", Operator.EQ, appId).addFieldsIncluded("_id", "environmentType").build();

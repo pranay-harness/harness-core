@@ -282,7 +282,7 @@ public enum ErrorCode {
 
   USER_HAS_NO_PERMISSIONS("The user doesn't have update access to any Environment"),
 
-  USER_NOT_AUTHORIZED("User not authorized to change due to usage restrictions"),
+  USER_NOT_AUTHORIZED("User not authorized"),
 
   INVALID_USAGE_RESTRICTION("Invalid usage restrictions"),
 

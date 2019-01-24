@@ -6,22 +6,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.RestResponse;
-import software.wings.security.EnvFilter;
-import software.wings.security.GenericEntityFilter;
-import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.service.impl.security.SecretText;
-import software.wings.settings.UsageRestrictions;
-import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
-import java.io.IOException;
-import java.util.Collections;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -97,35 +89,38 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
   private Entity<MultiPart> generateSecretFileForm(String fileName, String uuid) throws Exception {
     FormDataBodyPart bodyPart = new FormDataBodyPart("file", "Test File Content!");
     FormDataMultiPart multiPart = new FormDataMultiPart();
-    multiPart.field("name", fileName).field("usageRestrictions", generateUsageRestrictionsJson()).bodyPart(bodyPart);
+    //    multiPart.field("name", fileName).field("usageRestrictions",
+    //    generateUsageRestrictionsJson()).bodyPart(bodyPart);
+    multiPart.field("name", fileName).bodyPart(bodyPart);
     if (uuid != null) {
       multiPart.field("uuid", uuid);
     }
     return entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE);
   }
 
-  private String generateUsageRestrictionsJson() throws IOException {
-    UsageRestrictions usageRestrictions = generateUsageRestrictions();
-    ObjectMapper objectMapper = new ObjectMapper();
-    return objectMapper.writeValueAsString(usageRestrictions);
-  }
+  //  private String generateUsageRestrictionsJson() throws IOException {
+  //    UsageRestrictions usageRestrictions = generateUsageRestrictions();
+  //    ObjectMapper objectMapper = new ObjectMapper();
+  //    return objectMapper.writeValueAsString(usageRestrictions);
+  //  }
 
   private SecretText generateSecretText(String secret) {
     return SecretText.builder()
         .name("TestSecret1")
         .value(secret)
-        .usageRestrictions(generateUsageRestrictions())
+        //        .usageRestrictions(generateUsageRestrictions())
         .build();
   }
 
-  private UsageRestrictions generateUsageRestrictions() {
-    return UsageRestrictions.builder().appEnvRestrictions(Collections.singleton(generateAppEnvRestriction())).build();
-  }
-
-  private AppEnvRestriction generateAppEnvRestriction() {
-    return AppEnvRestriction.builder()
-        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-        .envFilter(EnvFilter.builder().filterTypes(Collections.singleton(EnvFilter.FilterType.NON_PROD)).build())
-        .build();
-  }
+  //  private UsageRestrictions generateUsageRestrictions() {
+  //    return
+  //    UsageRestrictions.builder().appEnvRestrictions(Collections.singleton(generateAppEnvRestriction())).build();
+  //  }
+  //
+  //  private AppEnvRestriction generateAppEnvRestriction() {
+  //    return AppEnvRestriction.builder()
+  //        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+  //        .envFilter(EnvFilter.builder().filterTypes(Collections.singleton(EnvFilter.FilterType.NON_PROD)).build())
+  //        .build();
+  //  }
 }
