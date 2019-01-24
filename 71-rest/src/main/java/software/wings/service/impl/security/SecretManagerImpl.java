@@ -72,6 +72,7 @@ import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -124,6 +125,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ConfigService configService;
+  @Inject private AppService appService;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -1241,12 +1243,15 @@ public class SecretManagerImpl implements SecretManager {
       List<EncryptedData> encryptedDataList, List<EncryptedData> filteredEncryptedDataList)
       throws IllegalAccessException {
     int index = 0;
+    Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+
     for (EncryptedData encryptedData : encryptedDataList) {
       index++;
 
       UsageRestrictions usageRestrictionsFromEntity = encryptedData.getUsageRestrictions();
       if (usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
-              usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromPermissions)) {
+              usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromPermissions,
+              appsByAccountId)) {
         filteredEncryptedDataList.add(encryptedData);
         encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
         encryptedData.setEncryptionKey(SECRET_MASK);

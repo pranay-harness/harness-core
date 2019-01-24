@@ -156,11 +156,14 @@ public class SettingsServiceImpl implements SettingsService {
 
     boolean isAccountAdmin = usageRestrictionsService.isAccountAdmin(accountId);
 
+    Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+
     inputSettingAttributes.forEach(settingAttribute -> {
       UsageRestrictions usageRestrictionsFromEntity = settingAttribute.getUsageRestrictions();
 
       if (usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
-              usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromUserPermissions)) {
+              usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromUserPermissions,
+              appsByAccountId)) {
         // HAR-7726: Mask the encrypted field values when listing all settings.
         SettingValue settingValue = settingAttribute.getValue();
         if (settingValue instanceof EncryptableSetting) {
@@ -435,7 +438,6 @@ public class SettingsServiceImpl implements SettingsService {
     SettingAttribute settingAttribute = get(varId);
     notNullCheck("Setting Value", settingAttribute, USER);
     String accountId = settingAttribute.getAccountId();
-
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
             accountId, settingAttribute.getUsageRestrictions())) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);

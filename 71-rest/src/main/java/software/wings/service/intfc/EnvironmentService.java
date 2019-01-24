@@ -8,6 +8,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -126,6 +127,8 @@ public interface EnvironmentService extends OwnedByApplication {
    * @return
    */
   List<String> getEnvIdsByApp(@NotEmpty String appId);
+
+  List<String> getEnvIdsByApp(String appId, EnvironmentType environmentType);
 
   /**
    * Clones Environment along with Service Infrastructure
