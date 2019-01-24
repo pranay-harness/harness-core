@@ -26,7 +26,7 @@ public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest,
     try {
       searchResult = ldapSearch.execute(ldapUserConfig.getReturnAttrs());
       if (searchResult == null || searchResult.size() == 0) {
-        logger.info("Got zero results with regular search, trying with fallbackLDAPSearch instead");
+        logger.info("Got zero results with regular search, trying with fallbackLDAPSearch instead for search to work");
         searchResult = getFallBackLdapSearch(ldapSearch).execute(ldapUserConfig.getReturnAttrs());
       }
     } catch (LdapException le) {
