@@ -25,6 +25,10 @@ public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest,
     SearchResult searchResult = null;
     try {
       searchResult = ldapSearch.execute(ldapUserConfig.getReturnAttrs());
+      if (searchResult == null || searchResult.size() == 0) {
+        logger.info("Got zero results with regular search, trying with fallbackLDAPSearch instead");
+        searchResult = getFallBackLdapSearch(ldapSearch).execute(ldapUserConfig.getReturnAttrs());
+      }
     } catch (LdapException le) {
       if (ResultCode.UNAVAILABLE_CRITICAL_EXTENSION == le.getResultCode()) {
         try {
