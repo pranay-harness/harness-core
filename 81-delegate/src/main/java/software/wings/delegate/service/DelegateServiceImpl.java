@@ -617,7 +617,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void applyProfile(DelegateProfileParams profile) {
     if (profile != null && executingProfile.compareAndSet(false, true)) {
       File profileFile = new File("profile");
-      if (acquireLock(profileFile)) {
+      if (acquireLock(profileFile, ofSeconds(5))) {
         try {
           if ("NONE".equals(profile.getProfileId())) {
             FileUtils.deleteQuietly(profileFile);

@@ -67,8 +67,8 @@ public class ScmSecretTest {
 
     final List<Object> sortedKeys = scmSecret.getSecrets().keySet().stream().sorted().collect(toList());
 
-    final Path secretsPath =
-        Paths.get(Project.rootDirectory(), "11-commons-test", "src", "main", "resources", "secrets.properties");
+    final Path secretsPath = Paths.get(
+        Project.rootDirectory(getClass()), "11-commons-test", "src", "main", "resources", "secrets.properties");
 
     String passphrase = System.getenv("NEW_HARNESS_GENERATION_PASSPHRASE");
     if (passphrase == null) {

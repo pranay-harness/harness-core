@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -105,9 +106,9 @@ public class FileIo {
     Files.write(Paths.get(directoryPath), content, CREATE, WRITE, SYNC);
   }
 
-  public static boolean acquireLock(File file) {
+  public static boolean acquireLock(File file, Duration wait) {
     File lockFile = new File(file.getPath() + ".lock");
-    final long finishAt = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5);
+    final long finishAt = lockFile.exists() ? lockFile.lastModified() : System.currentTimeMillis() + wait.toMillis();
     boolean wasInterrupted = false;
     try {
       while (lockFile.exists()) {
