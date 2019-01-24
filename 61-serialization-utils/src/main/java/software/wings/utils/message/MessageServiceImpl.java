@@ -4,6 +4,7 @@ import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.releaseLock;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -96,7 +97,7 @@ public class MessageServiceImpl implements MessageService {
       if (params != null) {
         messageContent.add(Joiner.on(SECONDARY_DELIMITER).join(params));
       }
-      if (acquireLock(channel)) {
+      if (acquireLock(channel, ofSeconds(5))) {
         try {
           FileUtils.touch(channel);
           FileUtils.writeLines(channel, singletonList(Joiner.on(PRIMARY_DELIMITER).join(messageContent)), true);
@@ -355,7 +356,7 @@ public class MessageServiceImpl implements MessageService {
     logger.debug("Writing data to {}: {}", name, dataToWrite);
     try {
       File file = getDataFile(name);
-      if (acquireLock(file)) {
+      if (acquireLock(file, ofSeconds(5))) {
         try {
           Map<String, Object> data = getDataMap(file);
           data.putAll(dataToWrite);
@@ -403,7 +404,7 @@ public class MessageServiceImpl implements MessageService {
   public Map<String, Object> getAllData(String name) {
     try {
       File file = getDataFile(name);
-      if (acquireLock(file)) {
+      if (acquireLock(file, ofSeconds(5))) {
         try {
           return getDataMap(file);
         } finally {
@@ -446,7 +447,7 @@ public class MessageServiceImpl implements MessageService {
     logger.debug("Removing data from {}: {}", name, key);
     try {
       File file = getDataFile(name);
-      if (acquireLock(file)) {
+      if (acquireLock(file, ofSeconds(5))) {
         try {
           Map<String, Object> data = getDataMap(file);
           data.remove(key);

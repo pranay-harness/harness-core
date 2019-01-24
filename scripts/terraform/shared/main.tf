@@ -34,6 +34,9 @@ resource "aws_instance" "test" {
         Name        = "workflow"
         User        = "${var.user}"
         Zone        = "${var.zone}"
+        Department  = "Deployment"
+        Project     = "Workflow"
+        Owner       = "${var.user}"
     }
 
     count = "${var.generic-instances}"
