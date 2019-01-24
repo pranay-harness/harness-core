@@ -110,6 +110,13 @@ public class EcsStateHelper {
         .withProdListenerArn(context.renderExpression(ecsSetupStateConfig.getProdListenerArn()))
         .withStageListenerArn(context.renderExpression(ecsSetupStateConfig.getStageListenerArn()))
         .withStageListenerPort(context.renderExpression(ecsSetupStateConfig.getStageListenerPort()))
+        .withUseDNSRoute53Swap(ecsSetupStateConfig.isUseRoute53DNSSwap())
+        .withServiceDiscoveryService1JSON(
+            context.renderExpression(ecsSetupStateConfig.getServiceDiscoveryService1JSON()))
+        .withServiceDiscoveryService2JSON(
+            context.renderExpression(ecsSetupStateConfig.getServiceDiscoveryService2JSON()))
+        .withParentRecordHostedZoneId(ecsSetupStateConfig.getParentRecordHostedZoneId())
+        .withParentRecordName(context.renderExpression(ecsSetupStateConfig.getParentRecordName()))
         .withTaskFamily(taskFamily)
         .withUseLoadBalancer(ecsSetupStateConfig.isUseLoadBalancer())
         .withRegion(ecsInfrastructureMapping.getRegion())

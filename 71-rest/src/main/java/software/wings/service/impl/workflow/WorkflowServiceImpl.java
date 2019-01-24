@@ -150,6 +150,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowCreationFlags;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
@@ -1538,12 +1539,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         boolean serviceRepeat = canaryOrchestrationWorkflow.serviceRepeat(workflowPhase);
 
         generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat,
-            orchestrationWorkflow.getOrchestrationWorkflowType());
+            orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
         workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
         canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
-        WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(
-            workflow.getAppId(), workflowPhase, !serviceRepeat, orchestrationWorkflow.getOrchestrationWorkflowType());
+        WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase,
+            !serviceRepeat, orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
         workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
         canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
       }
@@ -1552,13 +1553,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
       generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, false,
-          orchestrationWorkflow.getOrchestrationWorkflowType());
+          orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
 
       workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
       canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
-      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(
-          workflow.getAppId(), workflowPhase, true, orchestrationWorkflow.getOrchestrationWorkflowType());
+      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase, true,
+          orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
       workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
       canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
@@ -2159,11 +2160,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase,
-      boolean serviceRepeat, OrchestrationWorkflowType orchestrationWorkflowType) {
+      boolean serviceRepeat, OrchestrationWorkflowType orchestrationWorkflowType, WorkflowCreationFlags creationFlags) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
     if (deploymentType == ECS) {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
-        workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreen(appId, workflowPhase, !serviceRepeat);
+        if (creationFlags != null && creationFlags.isEcsBgDnsType()) {
+          workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreenRoute53(
+              appId, workflowPhase, !serviceRepeat);
+        } else {
+          workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreen(appId, workflowPhase, !serviceRepeat);
+        }
       } else {
         workflowServiceHelper.generateNewWorkflowPhaseStepsForECS(
             appId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
@@ -2200,12 +2206,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase,
-      boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType) {
+      boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType,
+      WorkflowCreationFlags creationFlags) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
     if (deploymentType == ECS) {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
-        return workflowServiceHelper.generateRollbackWorkflowPhaseForEcsBlueGreen(
-            appId, workflowPhase, orchestrationWorkflowType);
+        if (creationFlags != null && creationFlags.isEcsBgDnsType()) {
+          return workflowServiceHelper.generateRollbackWorkflowPhaseForEcsBlueGreenRoute53(
+              appId, workflowPhase, orchestrationWorkflowType);
+        } else {
+          return workflowServiceHelper.generateRollbackWorkflowPhaseForEcsBlueGreen(
+              appId, workflowPhase, orchestrationWorkflowType);
+        }
       } else {
         return workflowServiceHelper.generateRollbackWorkflowPhaseForEcs(
             appId, workflowPhase, orchestrationWorkflowType);

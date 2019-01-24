@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static java.util.Collections.emptyList;
+import static java.util.Optional.of;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -19,6 +21,7 @@ import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TASK_FAMILY;
 import static software.wings.utils.WingsTestConstants.TASK_REVISION;
+import static wiremock.com.google.common.collect.Lists.newArrayList;
 
 import com.google.inject.Inject;
 
@@ -42,12 +45,14 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
+import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.EcsContainerTask;
@@ -72,11 +77,11 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public static final String DOCKER_IMG_NAME = "dockerImgName";
   public static final String DOCKER_DOMAIN_NAME = "domainName";
   @Mock private AwsClusterService awsClusterService;
-  @InjectMocks @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
+  @Spy @InjectMocks @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
 
   private static Logger logger = LoggerFactory.getLogger(EcsSetupCommandTaskHelperTest.class);
 
-  private SettingAttribute computeProvider = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
+  private SettingAttribute computeProvider = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
 
   private String ecsSErviceSpecJsonString = "{\n"
       + "\"placementConstraints\":[],\n"
@@ -229,12 +234,12 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     targetGroup.setPort(80);
     targetGroup.setTargetGroupArn(TARGET_GROUP_ARN);
 
-    when(awsClusterService.getTargetGroup(
-             Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), TARGET_GROUP_ARN))
+    when(awsClusterService.getTargetGroup(Regions.US_EAST_1.getName(), computeProvider, emptyList(), TARGET_GROUP_ARN))
         .thenReturn(targetGroup);
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
-        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger);
+        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger,
+        ContainerSetupCommandUnitExecutionData.builder());
 
     assertNotNull(createServiceRequest);
 
@@ -282,12 +287,12 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
     TargetGroup targetGroup = getTargetGroup();
 
-    when(awsClusterService.getTargetGroup(
-             Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), TARGET_GROUP_ARN))
+    when(awsClusterService.getTargetGroup(Regions.US_EAST_1.getName(), computeProvider, emptyList(), TARGET_GROUP_ARN))
         .thenReturn(targetGroup);
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
-        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger);
+        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger,
+        ContainerSetupCommandUnitExecutionData.builder());
 
     assertCreateServiceRequestObject(taskDefinition, createServiceRequest);
   }
@@ -308,7 +313,8 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
-        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger);
+        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger,
+        ContainerSetupCommandUnitExecutionData.builder());
 
     List<ServiceRegistry> serviceRegistries = createServiceRequest.getServiceRegistries();
     assertNotNull(createServiceRequest.getServiceRegistries());
@@ -373,12 +379,12 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
 
-    when(awsClusterService.getTargetGroup(
-             Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), TARGET_GROUP_ARN))
+    when(awsClusterService.getTargetGroup(Regions.US_EAST_1.getName(), computeProvider, emptyList(), TARGET_GROUP_ARN))
         .thenReturn(targetGroup);
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
-        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger);
+        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger,
+        ContainerSetupCommandUnitExecutionData.builder());
 
     assertNotNull(createServiceRequest.getNetworkConfiguration());
     assertNotNull(createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration());
@@ -637,5 +643,34 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertTrue(ecsSetupCommandTaskHelper.matchWithRegex("App_Service_Env__2", "App_Service_Env__1"));
     assertTrue(ecsSetupCommandTaskHelper.matchWithRegex("App_Service_Env__2", "App_Service_Env__21"));
     assertTrue(ecsSetupCommandTaskHelper.matchWithRegex("App1_Service1_Env1__2", "App1_Service1_Env1__121"));
+  }
+
+  @Test
+  public void testSetServiceRegistryForDNSSwap() {
+    EcsSetupParams mockParams = mock(EcsSetupParams.class);
+    doReturn(ImageDetails.builder().name("imageName").tag("imageTag").build()).when(mockParams).getImageDetails();
+    doReturn(true).when(mockParams).isBlueGreen();
+    doReturn(true).when(mockParams).isUseRoute53DNSSwap();
+    doReturn("json1").when(mockParams).getServiceDiscoveryService1JSON();
+    doReturn("json2").when(mockParams).getServiceDiscoveryService2JSON();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    Logger mockLogger = mock(Logger.class);
+    doReturn(new ServiceRegistry().withRegistryArn("arn1"))
+        .doReturn(new ServiceRegistry().withRegistryArn("arn2"))
+        .when(ecsSetupCommandTaskHelper)
+        .getServiceRegistryFromJson(anyString(), any());
+    doReturn(of(new Service().withServiceRegistries(new ServiceRegistry().withRegistryArn("arn1"))))
+        .when(ecsSetupCommandTaskHelper)
+        .getLastRunningService(any(), anyList(), any(), anyString());
+    ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
+    List<ServiceRegistry> serviceRegistries = newArrayList();
+    ecsSetupCommandTaskHelper.setServiceRegistryForDNSSwap(
+        AwsConfig.builder().build(), null, mockParams, "foo_2", serviceRegistries, mockCallback, mockLogger, builder);
+    ContainerSetupCommandUnitExecutionData data = builder.build();
+    assertEquals(data.getOldServiceDiscoveryArn(), "arn1");
+    assertEquals(data.getNewServiceDiscoveryArn(), "arn2");
+    assertEquals(serviceRegistries.size(), 1);
+    assertEquals(serviceRegistries.get(0).getRegistryArn(), "arn2");
   }
 }

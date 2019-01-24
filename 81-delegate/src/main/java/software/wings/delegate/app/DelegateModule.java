@@ -47,6 +47,8 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.delegatetasks.MetricDataStoreService;
+import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsBlueGreenRoute53DNSWeightHandler;
+import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsBlueGreenRoute53SetupCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsBlueGreenSetupCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsListenerUpdateBGTaskHandler;
@@ -151,6 +153,8 @@ import software.wings.service.impl.aws.delegate.AwsEcsHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsElbHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsIamHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsLambdaHelperServiceDelegateImpl;
+import software.wings.service.impl.aws.delegate.AwsRoute53HelperServiceDelegateImpl;
+import software.wings.service.impl.aws.delegate.AwsServiceDiscoveryHelperServiceDelegateImpl;
 import software.wings.service.impl.bugsnag.BugsnagDelegateService;
 import software.wings.service.impl.bugsnag.BugsnagDelegateServiceImpl;
 import software.wings.service.impl.cloudwatch.CloudWatchDelegateServiceImpl;
@@ -198,6 +202,8 @@ import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsIamHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsRoute53HelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsServiceDiscoveryHelperServiceDelegate;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
@@ -386,6 +392,8 @@ public class DelegateModule extends DependencyModule {
     bind(DockerRestClientFactory.class).to(DockerRestClientFactoryImpl.class);
     bind(ShellExecutionService.class).to(ShellExecutionServiceImpl.class);
     bind(CustomRepositoryService.class).to(CustomRepositoryServiceImpl.class);
+    bind(AwsRoute53HelperServiceDelegate.class).to(AwsRoute53HelperServiceDelegateImpl.class);
+    bind(AwsServiceDiscoveryHelperServiceDelegate.class).to(AwsServiceDiscoveryHelperServiceDelegateImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
@@ -437,6 +445,10 @@ public class DelegateModule extends DependencyModule {
         .to(EcsListenerUpdateBGTaskHandler.class);
     ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.BG_SERVICE_SETUP.name())
         .to(EcsBlueGreenSetupCommandHandler.class);
+    ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.ROUTE53_BG_SERVICE_SETUP.name())
+        .to(EcsBlueGreenRoute53SetupCommandHandler.class);
+    ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.ROUTE53_DNS_WEIGHT_UPDATE.name())
+        .to(EcsBlueGreenRoute53DNSWeightHandler.class);
     ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.SERVICE_SETUP.name()).to(EcsSetupCommandHandler.class);
 
     MapBinder<String, K8sTaskHandler> k8sCommandTaskTypeToTaskHandlerMap =

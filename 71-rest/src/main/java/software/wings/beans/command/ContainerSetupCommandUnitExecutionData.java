@@ -22,6 +22,7 @@ public class ContainerSetupCommandUnitExecutionData extends CommandExecutionData
   private List<String[]> activeServiceCounts;
   private List<String[]> trafficWeights;
   private String autoscalerYaml;
+
   // Following 3 fields are required while Daemon ECS service rollback
   private String previousEcsServiceSnapshotJson;
   private String ecsServiceArn;
@@ -29,14 +30,23 @@ public class ContainerSetupCommandUnitExecutionData extends CommandExecutionData
   private List<Label> lookupLabels;
   private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
   private String loadBalancer;
+
   // Only to be used by ECS BG
   private boolean ecsBlueGreen;
   private String prodEcsListener;
   private String stageEcsListener;
-  // This is Target Group associated with Service,
+
+  // This is Target Group associated with Service
   private String targetGroupForNewService;
   private String targetGroupForExistingService;
   private String ecsRegion;
   private String ecsServiceToBeDownsized;
   private int countToBeDownsizedForOldService;
+
+  // For ECS BG Route 53 DNS weight swap
+  private boolean useRoute53Swap;
+  private String parentRecordName;
+  private String parentRecordHostedZoneId;
+  private String oldServiceDiscoveryArn;
+  private String newServiceDiscoveryArn;
 }

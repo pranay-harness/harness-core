@@ -24,6 +24,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -361,6 +362,16 @@ public class InfrastructureMappingResource {
   public RestResponse<List<AwsElbListener>> getListeners(@QueryParam("appId") String appId,
       @PathParam("infraMappingId") String infraMappingId, @PathParam("loadbalancerName") String loadbalancerName) {
     return new RestResponse<>(infrastructureMappingService.listListeners(appId, infraMappingId, loadbalancerName));
+  }
+
+  @GET
+  @Path("{infraMappingId}/hosted-zones")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<AwsRoute53HostedZoneData>> getHostedZones(
+      @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(infrastructureMappingService.listHostedZones(appId, infraMappingId));
   }
 
   @GET

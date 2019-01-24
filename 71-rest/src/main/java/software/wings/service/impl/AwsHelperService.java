@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
@@ -17,7 +18,6 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -1206,7 +1206,7 @@ public class AwsHelperService {
 
   public List<Instance> listAutoScalingGroupInstances(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
-    List<Instance> instanceList = Lists.newArrayList();
+    List<Instance> instanceList = newArrayList();
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonEC2Client amazonEc2Client = getAmazonEc2Client(

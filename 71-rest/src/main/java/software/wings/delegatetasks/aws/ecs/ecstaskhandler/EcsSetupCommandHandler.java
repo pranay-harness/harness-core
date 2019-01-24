@@ -123,8 +123,9 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
 
     // We just use mapper to deserialize service Spec.We then use this object to get configs we want to updat e with
     // service
-    CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(cloudProviderSetting,
-        encryptedDataDetails, setupParams, taskDefinition, setupParams.getTaskFamily(), executionLogCallback, logger);
+    CreateServiceRequest createServiceRequest =
+        ecsSetupCommandTaskHelper.getCreateServiceRequest(cloudProviderSetting, encryptedDataDetails, setupParams,
+            taskDefinition, setupParams.getTaskFamily(), executionLogCallback, logger, commandExecutionDataBuilder);
 
     if (existingServiceMetadataSnapshot.isPresent()) {
       Service service = existingServiceMetadataSnapshot.get();

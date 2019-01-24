@@ -9,8 +9,6 @@ import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
@@ -37,7 +35,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class AwsEc2Task extends AbstractDelegateRunnableTask {
-  private static final Logger logger = LoggerFactory.getLogger(AwsEc2Task.class);
   @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
 
   public AwsEc2Task(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,

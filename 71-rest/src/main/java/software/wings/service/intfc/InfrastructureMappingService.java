@@ -16,6 +16,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.infrastructure.Host;
+import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureProvisioner;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -144,4 +145,6 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   String createRoute(String appId, String computeProviderId, String organization, String spaces, String host,
       String domain, String path, boolean tcpRoute, boolean useRandomPort, String port);
+
+  List<AwsRoute53HostedZoneData> listHostedZones(String appId, String infraMappingId);
 }

@@ -22,7 +22,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.mongodb.morphia.Key;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
@@ -108,25 +107,16 @@ public class AwsCodeDeployState extends State {
 
   @Attributes(title = "Command") @DefaultValue("Amazon Code Deploy") private String commandName = "Amazon Code Deploy";
 
-  @Inject @Transient private transient AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
-
-  @Inject @Transient protected transient SettingsService settingsService;
-
-  @Inject @Transient protected transient DelegateService delegateService;
-
-  @Inject @Transient protected transient ServiceResourceService serviceResourceService;
-
-  @Inject @Transient protected transient ActivityService activityService;
-
-  @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
-
-  @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
-
-  @Inject @Transient private transient AwsHelperService awsHelperService;
-
-  @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
-
-  @Inject @Transient protected transient SecretManager secretManager;
+  @Inject private transient AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
+  @Inject private transient AwsHelperService awsHelperService;
+  @Inject private transient AwsCommandHelper awsCommandHelper;
+  @Inject protected transient SettingsService settingsService;
+  @Inject protected transient DelegateService delegateService;
+  @Inject protected transient ServiceResourceService serviceResourceService;
+  @Inject protected transient ActivityService activityService;
+  @Inject protected transient InfrastructureMappingService infrastructureMappingService;
+  @Inject protected transient ServiceTemplateService serviceTemplateService;
+  @Inject protected transient SecretManager secretManager;
 
   public AwsCodeDeployState(String name) {
     super(name, StateType.AWS_CODEDEPLOY_STATE.name());

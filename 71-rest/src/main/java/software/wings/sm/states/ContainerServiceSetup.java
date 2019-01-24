@@ -322,6 +322,11 @@ public abstract class ContainerServiceSetup extends State {
                   .ecsBlueGreen(true)
                   .downsizedServiceName(setupExecutionData.getEcsServiceToBeDownsized())
                   .downsizedServiceCount(setupExecutionData.getCountToBeDownsizedForOldService())
+                  .parentRecordName(setupExecutionData.getParentRecordName())
+                  .parentRecordHostedZoneId(setupExecutionData.getParentRecordHostedZoneId())
+                  .useRoute53Swap(setupExecutionData.isUseRoute53Swap())
+                  .oldServiceDiscoveryArn(setupExecutionData.getOldServiceDiscoveryArn())
+                  .newServiceDiscoveryArn(setupExecutionData.getNewServiceDiscoveryArn())
                   .build());
         }
       }

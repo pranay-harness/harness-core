@@ -10,7 +10,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.amazonaws.services.ecs.AmazonECSClient;
+import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.ListClustersResult;
+import com.amazonaws.services.ecs.model.ListServicesResult;
+import com.amazonaws.services.ecs.model.Service;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -38,5 +41,23 @@ public class AwsEcsHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(result).isNotNull();
     assertThat(result.size()).isEqualTo(1);
     assertThat(result.get(0)).isEqualTo("bar");
+  }
+
+  @Test
+  public void testListServicesForCluster() {
+    AmazonECSClient mockClient = mock(AmazonECSClient.class);
+    doReturn(mockClient)
+        .when(awsEcsHelperServiceDelegate)
+        .getAmazonEcsClient(anyString(), anyString(), any(), anyBoolean());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(new ListServicesResult().withServiceArns("arn0", "arn1")).when(mockClient).listServices(any());
+    doReturn(new DescribeServicesResult().withServices(
+                 new Service().withServiceArn("arn0"), new Service().withServiceArn("arn1")))
+        .when(mockClient)
+        .describeServices(any());
+    List<Service> services = awsEcsHelperServiceDelegate.listServicesForCluster(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "cluster");
+    assertThat(services).isNotNull();
+    assertThat(services.size()).isEqualTo(2);
   }
 }

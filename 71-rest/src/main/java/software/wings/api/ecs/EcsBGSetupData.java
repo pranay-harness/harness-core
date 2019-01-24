@@ -13,4 +13,11 @@ public class EcsBGSetupData {
   private String ecsBGTargetGroup2;
   private String downsizedServiceName;
   private int downsizedServiceCount;
+
+  // For Route 53 swap
+  private boolean useRoute53Swap;
+  private String parentRecordName;
+  private String parentRecordHostedZoneId;
+  private String oldServiceDiscoveryArn;
+  private String newServiceDiscoveryArn;
 }

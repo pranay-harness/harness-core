@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -7,9 +8,13 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.EcsSetupCommandUnit.ERROR;
 import static software.wings.common.Constants.BG_GREEN;
@@ -18,7 +23,6 @@ import static software.wings.utils.EcsConvention.getServiceNamePrefixFromService
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -50,6 +54,7 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.SchedulingStrategy;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceRegistry;
+import com.amazonaws.services.ecs.model.Tag;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
@@ -80,6 +85,7 @@ import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 import software.wings.utils.EcsConvention;
 
 import java.io.IOException;
@@ -102,6 +108,7 @@ public class EcsSetupCommandTaskHelper {
   @Inject private AwsClusterService awsClusterService;
   @Inject private AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingService;
   @Inject private AwsHelperService awsHelperService;
+  @Inject private AwsEcsHelperServiceDelegate awsEcsHelperServiceDelegate;
   @Inject private EcsContainerService ecsContainerService;
   private static final String DELIMITER = "__";
   private static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
@@ -135,7 +142,7 @@ public class EcsSetupCommandTaskHelper {
               .cpu(1)
               .portMappings(emptyList())
               .build();
-      ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
+      ecsContainerTask.setContainerDefinitions(newArrayList(containerDefinition));
     }
 
     return ecsContainerTask;
@@ -280,15 +287,14 @@ public class EcsSetupCommandTaskHelper {
     return errorMessage.toString();
   }
 
-  public void storeCurrentServiceNameAndCountInfo(AwsConfig awsConfig, EcsSetupParams setupParams,
-      List<EncryptedDataDetail> encryptedDataDetails,
-      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder, AwsHelperService awsHelperService,
-      String serviceName) {
+  @VisibleForTesting
+  Optional<Service> getLastRunningService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      EcsSetupParams setupParams, String serviceName) {
     List<Service> sortedServiceList =
         getServicesForClusterByMatchingPrefix(awsConfig, setupParams, encryptedDataDetails, serviceName);
 
     if (isEmpty(sortedServiceList)) {
-      return;
+      return empty();
     }
 
     for (int i = sortedServiceList.size() - 1; i >= 0; i--) {
@@ -298,18 +304,26 @@ public class EcsSetupCommandTaskHelper {
       }
 
       if (service.getDesiredCount() > 0) {
-        commandExecutionDataBuilder.ecsServiceToBeDownsized(service.getServiceName());
-        commandExecutionDataBuilder.countToBeDownsizedForOldService(service.getDesiredCount());
-        break;
+        return of(service);
       }
+    }
+    return empty();
+  }
+
+  public void storeCurrentServiceNameAndCountInfo(AwsConfig awsConfig, EcsSetupParams setupParams,
+      List<EncryptedDataDetail> encryptedDataDetails,
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder, String serviceName) {
+    Optional<Service> currentService = getLastRunningService(awsConfig, encryptedDataDetails, setupParams, serviceName);
+    if (currentService.isPresent()) {
+      commandExecutionDataBuilder.ecsServiceToBeDownsized(currentService.get().getServiceName());
+      commandExecutionDataBuilder.countToBeDownsizedForOldService(currentService.get().getDesiredCount());
     }
   }
 
   public List<Service> getServicesForClusterByMatchingPrefix(AwsConfig awsConfig, EcsSetupParams setupParams,
       List<EncryptedDataDetail> encryptedDataDetails, String serviceName) {
-    List<Service> services = awsHelperService.getServiceForCluster(
-        awsConfig, encryptedDataDetails, setupParams.getClusterName(), setupParams.getRegion());
-
+    List<Service> services = awsEcsHelperServiceDelegate.listServicesForCluster(
+        awsConfig, encryptedDataDetails, setupParams.getRegion(), setupParams.getClusterName());
     return services.stream()
         .filter(service -> matchWithRegex(service.getServiceName(), serviceName))
         .sorted(comparingInt(service -> getRevisionFromServiceName(service.getServiceName())))
@@ -355,7 +369,7 @@ public class EcsSetupCommandTaskHelper {
 
   @VisibleForTesting
   void logLoadBalancerInfo(ExecutionLogCallback executionLogCallback, EcsSetupParams setupParams) {
-    if (setupParams.isUseLoadBalancer()) {
+    if (!setupParams.isUseRoute53DNSSwap() && setupParams.isUseLoadBalancer()) {
       executionLogCallback.saveExecutionLog("Load Balancer Name: " + setupParams.getLoadBalancerName(), LogLevel.INFO);
       executionLogCallback.saveExecutionLog("Target Group ARN: " + setupParams.getTargetGroupArn(), LogLevel.INFO);
       if (isNotBlank(setupParams.getRoleArn())) {
@@ -442,7 +456,8 @@ public class EcsSetupCommandTaskHelper {
 
   public CreateServiceRequest getCreateServiceRequest(SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, EcsSetupParams setupParams, TaskDefinition taskDefinition,
-      String containerServiceName, ExecutionLogCallback executionLogCallback, Logger logger) {
+      String containerServiceName, ExecutionLogCallback executionLogCallback, Logger logger,
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
     boolean isFargateTaskType = isFargateTaskLauchType(setupParams);
     CreateServiceRequest createServiceRequest =
         new CreateServiceRequest()
@@ -468,7 +483,7 @@ public class EcsSetupCommandTaskHelper {
     }
 
     // Set load balancer config
-    if (setupParams.isUseLoadBalancer()) {
+    if (!setupParams.isUseRoute53DNSSwap() && setupParams.isUseLoadBalancer()) {
       executionLogCallback.saveExecutionLog("Setting load balancer to service");
       setLoadBalancerToService(setupParams, cloudProviderSetting, encryptedDataDetails, taskDefinition,
           createServiceRequest, awsClusterService, executionLogCallback);
@@ -499,6 +514,7 @@ public class EcsSetupCommandTaskHelper {
 
     // Handle Advanced Scenario (This is ECS Service json spec provided by user)
     EcsServiceSpecification serviceSpecification = setupParams.getEcsServiceSpecification();
+    List<ServiceRegistry> serviceRegistries = newArrayList();
     if (serviceSpecification != null && StringUtils.isNotBlank(serviceSpecification.getServiceSpecJson())) {
       // Replace $Container_NAME string if exists, with actual container name
       if (setupParams.getEcsServiceSpecification() != null
@@ -516,11 +532,73 @@ public class EcsSetupCommandTaskHelper {
       createServiceRequest.setPlacementStrategy(advancedServiceConfig.getPlacementStrategy());
       createServiceRequest.setPlacementConstraints(advancedServiceConfig.getPlacementConstraints());
       createServiceRequest.setHealthCheckGracePeriodSeconds(advancedServiceConfig.getHealthCheckGracePeriodSeconds());
-      createServiceRequest.setServiceRegistries(advancedServiceConfig.getServiceRegistries());
+      if (isNotEmpty(advancedServiceConfig.getServiceRegistries())) {
+        serviceRegistries.addAll(advancedServiceConfig.getServiceRegistries());
+      }
       setDeploymentConfiguration(createServiceRequest, advancedServiceConfig);
     }
-
+    setServiceRegistryForDNSSwap((AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails, setupParams,
+        containerServiceName, serviceRegistries, executionLogCallback, logger, commandExecutionDataBuilder);
+    createServiceRequest.setServiceRegistries(serviceRegistries);
     return createServiceRequest;
+  }
+
+  @VisibleForTesting
+  void setServiceRegistryForDNSSwap(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      EcsSetupParams setupParams, String serviceName, List<ServiceRegistry> serviceRegistries,
+      ExecutionLogCallback logCallback, Logger logger,
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
+    if (!setupParams.isBlueGreen() || !setupParams.isUseRoute53DNSSwap()) {
+      return;
+    }
+    commandExecutionDataBuilder.useRoute53Swap(true);
+    commandExecutionDataBuilder.parentRecordName(setupParams.getParentRecordName());
+    commandExecutionDataBuilder.parentRecordHostedZoneId(setupParams.getParentRecordHostedZoneId());
+
+    String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
+    String containerName = EcsConvention.getContainerName(dockerImageName);
+    String registry1JSON =
+        setupParams.getServiceDiscoveryService1JSON().replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName);
+    String registry2JSON =
+        setupParams.getServiceDiscoveryService2JSON().replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName);
+    ServiceRegistry registry1 = getServiceRegistryFromJson(registry1JSON, logger);
+    ServiceRegistry registry2 = getServiceRegistryFromJson(registry2JSON, logger);
+
+    Optional<Service> currentRunningService =
+        getLastRunningService(awsConfig, encryptedDataDetails, setupParams, serviceName);
+    if (!currentRunningService.isPresent() || isEmpty(currentRunningService.get().getServiceRegistries())) {
+      logCallback.saveExecutionLog("No currently running service found. OR no service registries found with it");
+      logCallback.saveExecutionLog(format("Using: [%s] for new service.", registry1.getRegistryArn()));
+      serviceRegistries.add(registry1);
+      commandExecutionDataBuilder.newServiceDiscoveryArn(registry1.getRegistryArn());
+      commandExecutionDataBuilder.oldServiceDiscoveryArn(registry2.getRegistryArn());
+      return;
+    }
+
+    Set<String> registries = currentRunningService.get()
+                                 .getServiceRegistries()
+                                 .stream()
+                                 .map(ServiceRegistry::getRegistryArn)
+                                 .collect(toSet());
+
+    ServiceRegistry oldRegistry;
+    ServiceRegistry newRegistry;
+    if (registries.contains(registry1.getRegistryArn())) {
+      oldRegistry = registry1;
+      newRegistry = registry2;
+    } else if (registries.contains(registry2.getRegistryArn())) {
+      oldRegistry = registry2;
+      newRegistry = registry1;
+    } else {
+      logCallback.saveExecutionLog("Current Ecs Service not associated with any of the 2 registries.");
+      newRegistry = registry1;
+      oldRegistry = registry2;
+    }
+    logCallback.saveExecutionLog(format("Current Ess service uses: [%s]", oldRegistry.getRegistryArn()));
+    commandExecutionDataBuilder.oldServiceDiscoveryArn(oldRegistry.getRegistryArn());
+    logCallback.saveExecutionLog(format("Using: [%s] for new service.", newRegistry.getRegistryArn()));
+    commandExecutionDataBuilder.newServiceDiscoveryArn(newRegistry.getRegistryArn());
+    serviceRegistries.add(newRegistry);
   }
 
   public void setLoadBalancerToService(EcsSetupParams setupParams, SettingAttribute cloudProviderSetting,
@@ -656,6 +734,18 @@ public class EcsSetupCommandTaskHelper {
     }
   }
 
+  @VisibleForTesting
+  ServiceRegistry getServiceRegistryFromJson(String json, Logger logger) {
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      return mapper.readValue(json, ServiceRegistry.class);
+    } catch (IOException e) {
+      String errorMsg = "Failed to Deserialize json into AWS Service object";
+      logger.error(errorMsg);
+      throw new WingsException(ErrorCode.GENERAL_ERROR, errorMsg, USER).addParam("message", errorMsg);
+    }
+  }
+
   public Service getAwsServiceFromJson(String json, Logger logger) {
     ObjectMapper mapper = new ObjectMapper();
     try {
@@ -751,7 +841,7 @@ public class EcsSetupCommandTaskHelper {
         .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts));
 
     CreateServiceRequest createServiceRequest = getCreateServiceRequest(cloudProviderSetting, encryptedDataDetails,
-        setupParams, taskDefinition, containerServiceName, executionLogCallback, logger);
+        setupParams, taskDefinition, containerServiceName, executionLogCallback, logger, commandExecutionDataBuilder);
 
     executionLogCallback.saveExecutionLog(
         format("Creating ECS service %s in cluster %s ", containerServiceName, setupParams.getClusterName()),
@@ -933,7 +1023,7 @@ public class EcsSetupCommandTaskHelper {
       }
     }
 
-    return Optional.empty();
+    return empty();
   }
 
   public String getJsonForAwsServiceConfig(Service service, Logger logger) {
@@ -971,5 +1061,38 @@ public class EcsSetupCommandTaskHelper {
     }
 
     return action.get().getTargetGroupArn();
+  }
+
+  public void deleteExistingServicesOtherThanBlueVersion(EcsSetupParams setupParams,
+      SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback) {
+    List<Service> services = getServicesForClusterByMatchingPrefix((AwsConfig) cloudProviderSetting.getValue(),
+        setupParams, encryptedDataDetails, trim(setupParams.getTaskFamily()) + DELIMITER);
+
+    services = services.stream().filter(service -> isGreenVersion(service.getTags())).collect(toList());
+
+    if (isNotEmpty(services)) {
+      services.forEach(service -> {
+        executionLogCallback.saveExecutionLog("Deleting Old Service  {Green Version}: " + service.getServiceName());
+        awsHelperService.deleteService(setupParams.getRegion(), (AwsConfig) cloudProviderSetting.getValue(),
+            encryptedDataDetails,
+            new DeleteServiceRequest()
+                .withService(service.getServiceArn())
+                .withCluster(setupParams.getClusterName())
+                .withForce(true));
+        executionLogCallback.saveExecutionLog("Deletion successful");
+      });
+    }
+  }
+
+  private boolean isGreenVersion(List<Tag> tags) {
+    if (isEmpty(tags)) {
+      return false;
+    }
+    Optional<Tag> tag =
+        tags.stream()
+            .filter(serviceTag -> BG_VERSION.equals(serviceTag.getKey()) && BG_GREEN.equals(serviceTag.getValue()))
+            .findFirst();
+    return tag.isPresent();
   }
 }

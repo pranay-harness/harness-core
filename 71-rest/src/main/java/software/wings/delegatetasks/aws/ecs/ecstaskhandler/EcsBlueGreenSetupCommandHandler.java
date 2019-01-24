@@ -1,22 +1,13 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.commons.lang3.StringUtils.trim;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.common.Constants.BG_GREEN;
-import static software.wings.common.Constants.BG_VERSION;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.amazonaws.services.ecs.model.DeleteServiceRequest;
-import com.amazonaws.services.ecs.model.Service;
-import com.amazonaws.services.ecs.model.Tag;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
@@ -77,16 +68,13 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
     ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder =
         ecsBGServiceSetupRequest.getCommandUnitExecutionDataBuilder();
     commandExecutionDataBuilder.ecsRegion(setupParams.getRegion());
-
     setTargetGroupForProdListener(
         encryptedDataDetails, ecsBGServiceSetupRequest, setupParams, commandExecutionDataBuilder);
-
     createStageListenerNewServiceIfRequired(encryptedDataDetails, ecsBGServiceSetupRequest);
     commandExecutionDataBuilder.stageEcsListener(setupParams.getStageListenerArn());
     commandExecutionDataBuilder.targetGroupForNewService(setupParams.getTargetGroupArn());
     commandExecutionDataBuilder.targetGroupForExistingService(setupParams.getTargetGroupArn2());
 
-    // 1. Create new Task Definition
     TaskDefinition taskDefinition = ecsSetupCommandTaskHelper.createTaskDefinition(
         ecsBGServiceSetupRequest.getAwsConfig(), encryptedDataDetails, ecsBGServiceSetupRequest.getServiceVariables(),
         ecsBGServiceSetupRequest.getSafeDisplayServiceVariables(), executionLogCallback, setupParams);
@@ -234,12 +222,14 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
 
     return forwardAction.get().getTargetGroupArn();
   }
+
   private void createServiceForBlueGreen(EcsSetupParams setupParams, TaskDefinition taskDefinition,
       SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
       ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
       ExecutionLogCallback executionLogCallback) {
     // Delete existing services except Green version of this service.
-    deleteExistingServicesOtherThanBlueVersion(setupParams, cloudProviderSetting, encryptedDataDetails);
+    ecsSetupCommandTaskHelper.deleteExistingServicesOtherThanBlueVersion(
+        setupParams, cloudProviderSetting, encryptedDataDetails, executionLogCallback);
 
     String containerServiceName = ecsSetupCommandTaskHelper.createEcsService(setupParams, taskDefinition,
         cloudProviderSetting, encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback);
@@ -247,50 +237,11 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
     commandExecutionDataBuilder.containerServiceName(containerServiceName);
 
     ecsSetupCommandTaskHelper.storeCurrentServiceNameAndCountInfo((AwsConfig) cloudProviderSetting.getValue(),
-        setupParams, encryptedDataDetails, commandExecutionDataBuilder, awsHelperService, containerServiceName);
+        setupParams, encryptedDataDetails, commandExecutionDataBuilder, containerServiceName);
 
     ecsSetupCommandTaskHelper.backupAutoScalarConfig(setupParams, cloudProviderSetting, encryptedDataDetails,
         containerServiceName, commandExecutionDataBuilder, executionLogCallback);
 
     ecsSetupCommandTaskHelper.logLoadBalancerInfo(executionLogCallback, setupParams);
-  }
-
-  private void deleteExistingServicesOtherThanBlueVersion(EcsSetupParams setupParams,
-      SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
-    List<Service> services =
-        ecsSetupCommandTaskHelper.getServicesForClusterByMatchingPrefix((AwsConfig) cloudProviderSetting.getValue(),
-            setupParams, encryptedDataDetails, trim(setupParams.getTaskFamily()) + DELIMITER);
-
-    services = services.stream().filter(service -> isGreenVersion(service.getTags())).collect(toList());
-
-    if (isNotEmpty(services)) {
-      services.forEach(service -> {
-        executionLogCallback.saveExecutionLog("Deleting Old Service  {Green Version}: " + service.getServiceName());
-        awsHelperService.deleteService(setupParams.getRegion(), (AwsConfig) cloudProviderSetting.getValue(),
-            encryptedDataDetails,
-            new DeleteServiceRequest()
-                .withService(service.getServiceArn())
-                .withCluster(setupParams.getClusterName())
-                .withForce(true));
-        executionLogCallback.saveExecutionLog("Deletion successful");
-      });
-    }
-  }
-
-  private boolean isGreenVersion(List<Tag> tags) {
-    if (isEmpty(tags)) {
-      return false;
-    }
-
-    Optional<Tag> tag =
-        tags.stream()
-            .filter(serviceTag -> BG_VERSION.equals(serviceTag.getKey()) && BG_GREEN.equals(serviceTag.getValue()))
-            .findFirst();
-
-    if (tag.isPresent()) {
-      return true;
-    }
-
-    return false;
   }
 }

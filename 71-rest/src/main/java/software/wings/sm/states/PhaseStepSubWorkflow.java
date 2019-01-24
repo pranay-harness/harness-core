@@ -299,12 +299,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         PcfRouteSwapExecutionSummary pcfRouteSwapExecutionSummary = (PcfRouteSwapExecutionSummary) first.get();
         return asList(pcfRouteSwapExecutionSummary.getPcfRouteSwapContextForRollback());
       }
+      case ECS_UPDATE_LISTENER_BG:
+      case ECS_UPDATE_ROUTE_53_DNS_WEIGHT:
       case AMI_SWITCH_AUTOSCALING_GROUP_ROUTES: {
-        // All the data required is already there on the service setup element.
-        // We don't need to pass something unnecessarily.
-        return emptyList();
-      }
-      case ECS_UPDATE_LISTENER_BG: {
         // All the data required is already there on the service setup element.
         // We don't need to pass something unnecessarily.
         return emptyList();
@@ -402,6 +399,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case AMI_AUTOSCALING_GROUP_SETUP:
       case AMI_DEPLOY_AUTOSCALING_GROUP:
       case AMI_SWITCH_AUTOSCALING_GROUP_ROUTES:
+      case ECS_UPDATE_ROUTE_53_DNS_WEIGHT:
       case HELM_DEPLOY:
       case PCF_SETUP:
       case PCF_RESIZE:

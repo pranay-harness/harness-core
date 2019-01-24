@@ -206,7 +206,9 @@ public interface Constants {
 
   String ECS_DAEMON_SERVICE_SETUP = "ECS Daemon Service Setup";
 
-  String ECS_BG_SERVICE_SETUP = "ECS Blue Green Service Setup";
+  String ECS_BG_SERVICE_SETUP_ELB = "Setup Load Balancer";
+
+  String ECS_BG_SERVICE_SETUP_ROUTE_53 = "Setup Route 53";
 
   String ECS_DAEMON_SCHEDULING_STRATEGY = "DAEMON";
 
@@ -237,6 +239,12 @@ public interface Constants {
   String PCF_MAP_ROUTE = "Map Route";
 
   String ECS_SWAP_TARGET_GROUPS = "Swap Target Groups";
+
+  String ECS_ROUTE53_DNS_WEIGHTS = "Swap Route 53 DNS";
+
+  String CHANGE_ROUTE53_DNS_WEIGHTS = "Change Route 53 Weights";
+
+  String ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS = "Rollback Route 53 Weights";
 
   String ECS_SWAP_TARGET_GROUPS_ROLLBACK = "Rollback Swap Target Groups";
 
@@ -959,9 +967,12 @@ public interface Constants {
 
   String VALUES_YAML_KEY = "values.yaml";
 
+  // ECS BG
   String BG_VERSION = "BG_VERSION";
   String BG_GREEN = "GREEN";
   String BG_BLUE = "BLUE";
+  String ECS_BG_TYPE_DNS = "DNS";
+  String ECS_BG_TYPE_ELB = "ELB";
 
   /**
    * Quartz job detail key names
