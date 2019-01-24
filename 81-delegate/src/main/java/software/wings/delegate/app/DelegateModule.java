@@ -79,6 +79,8 @@ import software.wings.helpers.ext.azure.AcrServiceImpl;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.BambooServiceImpl;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+import software.wings.helpers.ext.customrepository.CustomRepositoryService;
+import software.wings.helpers.ext.customrepository.CustomRepositoryServiceImpl;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
 import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
@@ -109,6 +111,8 @@ import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.sftp.SftpService;
 import software.wings.helpers.ext.sftp.SftpServiceImpl;
+import software.wings.helpers.ext.shell.response.ShellExecutionService;
+import software.wings.helpers.ext.shell.response.ShellExecutionServiceImpl;
 import software.wings.helpers.ext.smb.SmbService;
 import software.wings.helpers.ext.smb.SmbServiceImpl;
 import software.wings.service.EcrClassicBuildServiceImpl;
@@ -380,6 +384,8 @@ public class DelegateModule extends DependencyModule {
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceImpl.class);
     bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
     bind(DockerRestClientFactory.class).to(DockerRestClientFactoryImpl.class);
+    bind(ShellExecutionService.class).to(ShellExecutionServiceImpl.class);
+    bind(CustomRepositoryService.class).to(CustomRepositoryServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

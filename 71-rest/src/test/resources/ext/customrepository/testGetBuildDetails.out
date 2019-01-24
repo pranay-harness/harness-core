@@ -1,0 +1,19 @@
+{
+   "total": 100,
+   "offset": 20,
+   "limit": 40,
+   "result": [
+     {
+       "buildNo": "21",
+       "metadata": {
+         "tag1": "value1"
+       }
+     },
+     {
+       "buildNo": "22",
+       "metadata": {
+         "tag1": "value1"
+       }
+     }
+   ]
+ }
