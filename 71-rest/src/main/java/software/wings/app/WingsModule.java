@@ -188,6 +188,7 @@ import software.wings.service.impl.aws.manager.AwsEcrHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsEcsHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsElbHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsIamHelperServiceManagerImpl;
+import software.wings.service.impl.aws.manager.AwsRoute53HelperServiceManagerImpl;
 import software.wings.service.impl.dynatrace.DynaTraceServiceImpl;
 import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
@@ -332,6 +333,7 @@ import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
@@ -540,6 +542,7 @@ public class WingsModule extends DependencyModule {
     bind(InstanceStatService.class).to(InstanceStatServiceImpl.class);
     bind(StatsCollector.class).to(StatsCollectorImpl.class);
     bind(LogLabelingService.class).to(LogLabelingServiceImpl.class);
+    bind(AwsRoute53HelperServiceManager.class).to(AwsRoute53HelperServiceManagerImpl.class);
 
     bind(SamlUserGroupSync.class);
     bind(SmbService.class).to(SmbServiceImpl.class);

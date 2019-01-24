@@ -56,7 +56,11 @@ public class Workflow extends Base {
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
   @Transient private String serviceId; // Only for UI payload to support BasicOrchestration workflow
-  @Transient private String infraMappingId; //// Only for UI payload to support BasicOrchestration workflow
+  @Transient private String infraMappingId; // Only for UI payload to support BasicOrchestration workflow
+  @Transient
+  @Getter
+  @Setter
+  private WorkflowCreationFlags creationFlags; // Only for UI payload to support BasicOrchestration workflow
 
   private transient List<String> templatizedServiceIds = new ArrayList<>();
 
@@ -276,11 +280,17 @@ public class Workflow extends Base {
     private List<TemplateExpression> templateExpressions;
     private List<String> linkedTemplateUuids;
     private boolean syncFromGit;
+    private String ecsBGType;
 
     private WorkflowBuilder() {}
 
     public static WorkflowBuilder aWorkflow() {
       return new WorkflowBuilder();
+    }
+
+    public WorkflowBuilder withECSBGType(String ecsBGType) {
+      this.ecsBGType = ecsBGType;
+      return this;
     }
 
     public WorkflowBuilder withName(String name) {

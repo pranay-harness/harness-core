@@ -10,7 +10,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
@@ -57,7 +56,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
   @Inject private transient SettingsService settingsService;
   @Inject private transient ActivityService activityService;
   @Inject private transient PcfStateHelper pcfStateHelper;
-  @Inject @Transient protected transient LogService logService;
+  @Inject private transient LogService logService;
 
   public static final String PCF_BG_SWAP_ROUTE_COMMAND = "PCF BG Swap Route";
 

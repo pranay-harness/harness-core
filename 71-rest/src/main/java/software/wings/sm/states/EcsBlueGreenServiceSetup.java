@@ -1,14 +1,13 @@
 package software.wings.sm.states;
 
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
-import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
+import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ContainerServiceElement;
@@ -26,14 +25,9 @@ import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.sm.ExecutionContext;
 
-/**
- * Created by peeyushaggarwal on 2/3/17.
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EcsBlueGreenServiceSetup extends ContainerServiceSetup {
-  // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/ECSLoadBalancerModal.js
-
-  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsBlueGreenServiceSetup.class);
+  private static final Logger logger = LoggerFactory.getLogger(EcsBlueGreenServiceSetup.class);
 
   private String ecsServiceName;
   private boolean useLoadBalancer;
@@ -46,15 +40,10 @@ public class EcsBlueGreenServiceSetup extends ContainerServiceSetup {
   private String targetPort;
   @Attributes(title = "Stage Listener Port", required = false) private String stageListenerPort;
   private String commandName = "Setup Service Cluster";
-  @Inject EcsStateHelper ecsStateHelper;
+  @Inject private transient EcsStateHelper ecsStateHelper;
 
-  /**
-   * Instantiates a new state.
-   *
-   * @param name the name
-   */
   public EcsBlueGreenServiceSetup(String name) {
-    super(name, ECS_DAEMON_SERVICE_SETUP.name());
+    super(name, ECS_BG_SERVICE_SETUP.name());
   }
 
   @Override

@@ -46,6 +46,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthR
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
+import com.amazonaws.services.elasticloadbalancingv2.model.ModifyListenerRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroupNotFoundException;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
@@ -640,5 +641,39 @@ public class AwsElbHelperServiceDelegateImpl
 
     CreateListenerResult result = client.createListener(createListenerRequest);
     return result.getListeners().get(0);
+  }
+
+  @Override
+  public void updateListenersForEcsBG(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String prodListenerArn, String stageListenerArn, String region) {
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
+        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+
+    DescribeListenersResult prodListenerResult =
+        client.describeListeners(new DescribeListenersRequest().withListenerArns(prodListenerArn));
+
+    DescribeListenersResult stageListenerResult =
+        client.describeListeners(new DescribeListenersRequest().withListenerArns(stageListenerArn));
+
+    Listener prodListener = prodListenerResult.getListeners().get(0);
+    Listener stageListener = stageListenerResult.getListeners().get(0);
+
+    client.modifyListener(new ModifyListenerRequest()
+                              .withListenerArn(prodListener.getListenerArn())
+                              .withDefaultActions(stageListener.getDefaultActions()));
+
+    client.modifyListener(new ModifyListenerRequest()
+                              .withListenerArn(stageListener.getListenerArn())
+                              .withDefaultActions(prodListener.getDefaultActions()));
+  }
+
+  @Override
+  public DescribeListenersResult describeListenerResult(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String listenerArn, String region) {
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
+        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+    return client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));
   }
 }

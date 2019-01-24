@@ -39,6 +39,13 @@ public class EcsSetupParams extends ContainerSetupParams {
   private boolean blueGreen;
   private String stageListenerPort;
 
+  // Only for ECS BG route 53 DNS swap
+  private boolean useRoute53DNSSwap;
+  private String serviceDiscoveryService1JSON;
+  private String serviceDiscoveryService2JSON;
+  private String parentRecordHostedZoneId;
+  private String parentRecordName;
+
   public static final class EcsSetupParamsBuilder {
     private String taskFamily;
     private String serviceName;
@@ -74,6 +81,13 @@ public class EcsSetupParams extends ContainerSetupParams {
     private String prodListenerArn;
     private String stageListenerArn;
     private String stageListenerPort;
+
+    // Only for ECS BG route 53 DNS swap
+    private boolean useRoute53DNSSwap;
+    private String serviceDiscoveryService1JSON;
+    private String serviceDiscoveryService2JSON;
+    private String parentRecordHostedZoneId;
+    private String parentRecordName;
 
     private EcsSetupParamsBuilder() {}
 
@@ -252,6 +266,31 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public EcsSetupParamsBuilder withUseDNSRoute53Swap(boolean useRoute53DNSSwap) {
+      this.useRoute53DNSSwap = useRoute53DNSSwap;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withServiceDiscoveryService1JSON(String serviceDiscoveryService1JSON) {
+      this.serviceDiscoveryService1JSON = serviceDiscoveryService1JSON;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withServiceDiscoveryService2JSON(String serviceDiscoveryService2JSON) {
+      this.serviceDiscoveryService2JSON = serviceDiscoveryService2JSON;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withParentRecordHostedZoneId(String parentRecordHostedZoneId) {
+      this.parentRecordHostedZoneId = parentRecordHostedZoneId;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withParentRecordName(String parentRecordName) {
+      this.parentRecordName = parentRecordName;
+      return this;
+    }
+
     public EcsSetupParams build() {
       EcsSetupParams ecsSetupParams = new EcsSetupParams();
       ecsSetupParams.setTaskFamily(taskFamily);
@@ -288,6 +327,11 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setProdListenerArn(prodListenerArn);
       ecsSetupParams.setStageListenerArn(stageListenerArn);
       ecsSetupParams.setStageListenerPort(stageListenerPort);
+      ecsSetupParams.setUseRoute53DNSSwap(useRoute53DNSSwap);
+      ecsSetupParams.setServiceDiscoveryService1JSON(serviceDiscoveryService1JSON);
+      ecsSetupParams.setServiceDiscoveryService2JSON(serviceDiscoveryService2JSON);
+      ecsSetupParams.setParentRecordHostedZoneId(parentRecordHostedZoneId);
+      ecsSetupParams.setParentRecordName(parentRecordName);
       return ecsSetupParams;
     }
   }

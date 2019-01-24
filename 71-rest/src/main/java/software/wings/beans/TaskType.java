@@ -45,6 +45,7 @@ import software.wings.delegatetasks.aws.AwsEcsTask;
 import software.wings.delegatetasks.aws.AwsElbTask;
 import software.wings.delegatetasks.aws.AwsIamTask;
 import software.wings.delegatetasks.aws.AwsLambdaTask;
+import software.wings.delegatetasks.aws.AwsRoute53Task;
 import software.wings.delegatetasks.aws.ecs.EcsCommandTask;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
@@ -304,7 +305,8 @@ public enum TaskType {
   CONNECTIVITY_VALIDATION(
       TaskGroup.CONNECTIVITY_VALIDATION, ConnectivityValidationTask.class, ConnectivityBasicValidation.class),
   GIT_FETCH_FILES_TASK(TaskGroup.GIT, GitFetchFilesTask.class, GitFetchFilesValidation.class),
-  BUILD_SOURCE_TASK(TaskGroup.BUILD_SOURCE, BuildSourceTask.class, BuildSourceTaskValidation.class);
+  BUILD_SOURCE_TASK(TaskGroup.BUILD_SOURCE, BuildSourceTask.class, BuildSourceTaskValidation.class),
+  AWS_ROUTE53_TASK(TaskGroup.AWS, AwsRoute53Task.class, AwsConnectionValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

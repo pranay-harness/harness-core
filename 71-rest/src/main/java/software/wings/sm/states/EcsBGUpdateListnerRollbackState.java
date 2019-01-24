@@ -21,7 +21,6 @@ public class EcsBGUpdateListnerRollbackState extends EcsBGUpdateListnerState {
     configData.setServiceNameDownsized(containerServiceElement.getEcsBGSetupData().getDownsizedServiceName());
     configData.setServiceCountDownsized(containerServiceElement.getEcsBGSetupData().getDownsizedServiceCount());
     configData.setTargetGroupForNewService(containerServiceElement.getTargetGroupForNewService());
-
     return configData;
   }
 }

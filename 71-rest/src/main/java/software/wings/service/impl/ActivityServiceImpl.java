@@ -129,6 +129,7 @@ public class ActivityServiceImpl implements ActivityService {
         case AWS_AMI_SWITCH_ROUTES:
         case KUBERNETES_SWAP_SERVICE_SELECTORS:
         case AWS_ECS_UPDATE_LISTENER_BG:
+        case AWS_ECS_UPDATE_ROUTE_53_DNS_WEIGHT:
           rv.add(CommandUnitDetails.builder()
                      .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
                      .name(activity.getCommandUnitType().getName())

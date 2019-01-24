@@ -17,5 +17,11 @@ public class EcsCommandRequest {
   private AwsConfig AwsConfig;
   @NotEmpty private EcsCommandType EcsCommandType;
 
-  public enum EcsCommandType { LISTENER_UPDATE_BG, BG_SERVICE_SETUP, SERVICE_SETUP }
+  public enum EcsCommandType {
+    LISTENER_UPDATE_BG,
+    BG_SERVICE_SETUP,
+    SERVICE_SETUP,
+    ROUTE53_BG_SERVICE_SETUP,
+    ROUTE53_DNS_WEIGHT_UPDATE
+  }
 }

@@ -45,4 +45,11 @@ public class EcsSetupStateConfig {
   private String ecsServiceArn;
   private String orchestrationWorkflowType;
   private List<AwsAutoScalarConfig> awsAutoScalarConfigs;
+
+  // Only for ECS BG route 53 DNS swap
+  private boolean useRoute53DNSSwap;
+  private String serviceDiscoveryService1JSON;
+  private String serviceDiscoveryService2JSON;
+  private String parentRecordHostedZoneId;
+  private String parentRecordName;
 }

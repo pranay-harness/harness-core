@@ -107,6 +107,7 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
@@ -124,6 +125,7 @@ import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManage
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.service.intfc.security.SecretManager;
@@ -184,6 +186,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
+  @Inject private AwsRoute53HelperServiceManager awsRoute53HelperServiceManager;
   @Inject private YamlPushService yamlPushService;
   @Inject private AzureHelperService azureHelperService;
   @Inject private TriggerService triggerService;
@@ -1472,6 +1475,23 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return infrastructureProvider.listTargetGroups(computeProviderSetting, region, loadbalancerName, appId);
     }
     return Collections.emptyMap();
+  }
+
+  @Override
+  public List<AwsRoute53HostedZoneData> listHostedZones(String appId, String infraMappingId) {
+    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
+    notNullCheck("Service Infrastructure", infrastructureMapping);
+
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (infrastructureMapping instanceof EcsInfrastructureMapping) {
+      String region = ((EcsInfrastructureMapping) infrastructureMapping).getRegion();
+      AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+      List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, appId, null);
+      return awsRoute53HelperServiceManager.listHostedZones(awsConfig, encryptionDetails, region, appId);
+    }
+    return emptyList();
   }
 
   @Override

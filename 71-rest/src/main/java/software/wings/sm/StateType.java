@@ -8,6 +8,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
+import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
@@ -18,6 +19,7 @@ import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
+import static software.wings.beans.PhaseStepType.ECS_UPDATE_ROUTE_53_DNS_WEIGHT;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
@@ -32,6 +34,7 @@ import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.common.Constants.AWS_CODE_DEPLOY;
 import static software.wings.common.Constants.AWS_LAMBDA;
 import static software.wings.common.Constants.DE_PROVISION_CLOUD_FORMATION;
+import static software.wings.common.Constants.ECS_ROUTE53_DNS_WEIGHTS;
 import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS;
 import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS_ROLLBACK;
 import static software.wings.common.Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK;
@@ -44,6 +47,7 @@ import static software.wings.common.Constants.ROLLBACK_AWS_CODE_DEPLOY;
 import static software.wings.common.Constants.ROLLBACK_AWS_LAMBDA;
 import static software.wings.common.Constants.ROLLBACK_CLOUD_FORMATION;
 import static software.wings.common.Constants.ROLLBACK_CONTAINERS;
+import static software.wings.common.Constants.ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS;
 import static software.wings.common.Constants.ROLLBACK_ECS_SETUP;
 import static software.wings.common.Constants.ROLLBACK_KUBERNETES_SETUP;
 import static software.wings.common.Constants.ROLLBACK_TERRAFORM_NAME;
@@ -107,9 +111,12 @@ import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.DynatraceState;
+import software.wings.sm.states.EcsBGRollbackRoute53DNSWeightState;
 import software.wings.sm.states.EcsBGUpdateListnerRollbackState;
 import software.wings.sm.states.EcsBGUpdateListnerState;
+import software.wings.sm.states.EcsBGUpdateRoute53DNSWeightState;
 import software.wings.sm.states.EcsBlueGreenServiceSetup;
+import software.wings.sm.states.EcsBlueGreenServiceSetupRoute53DNS;
 import software.wings.sm.states.EcsDaemonServiceSetup;
 import software.wings.sm.states.EcsServiceDeploy;
 import software.wings.sm.states.EcsServiceRollback;
@@ -424,30 +431,38 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),
       ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Constants.ECS_SERVICE_SETUP,
-      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+  ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Constants.ECS_SERVICE_SETUP, Lists.newArrayList(AWS_ECS),
+      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, CLOUD, ROLLBACK_ECS_SETUP,
-      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+  ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, CLOUD, ROLLBACK_ECS_SETUP, Lists.newArrayList(AWS_ECS),
+      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, CLOUD, Constants.ECS_DAEMON_SERVICE_SETUP,
-      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+      Lists.newArrayList(AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_BG_SERVICE_SETUP(EcsBlueGreenServiceSetup.class, CLOUD, Constants.ECS_BG_SERVICE_SETUP,
-      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+  ECS_BG_SERVICE_SETUP(EcsBlueGreenServiceSetup.class, CLOUD, Constants.ECS_BG_SERVICE_SETUP_ELB,
+      Lists.newArrayList(AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, UPGRADE_CONTAINERS,
-      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+  ECS_BG_SERVICE_SETUP_ROUTE53(EcsBlueGreenServiceSetupRoute53DNS.class, CLOUD, Constants.ECS_BG_SERVICE_SETUP_ROUTE_53,
+      Lists.newArrayList(AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, ROLLBACK_CONTAINERS,
-      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, UPGRADE_CONTAINERS, Lists.newArrayList(AWS_ECS),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  ECS_LISTENER_UPDATE(EcsBGUpdateListnerState.class, FLOW_CONTROLS, ECS_SWAP_TARGET_GROUPS,
-      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), singletonList(ECS_UPDATE_LISTENER_BG),
-      ORCHESTRATION_STENCILS),
+  ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, ROLLBACK_CONTAINERS, Lists.newArrayList(AWS_ECS),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+
+  ECS_LISTENER_UPDATE(EcsBGUpdateListnerState.class, FLOW_CONTROLS, ECS_SWAP_TARGET_GROUPS, Lists.newArrayList(AWS_ECS),
+      singletonList(ECS_UPDATE_LISTENER_BG), ORCHESTRATION_STENCILS),
 
   ECS_LISTENER_UPDATE_ROLLBACK(EcsBGUpdateListnerRollbackState.class, FLOW_CONTROLS, ECS_SWAP_TARGET_GROUPS_ROLLBACK,
-      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), singletonList(ECS_UPDATE_LISTENER_BG),
+      Lists.newArrayList(AWS_ECS), singletonList(ECS_UPDATE_LISTENER_BG), ORCHESTRATION_STENCILS),
+
+  ECS_ROUTE53_DNS_WEIGHT_UPDATE(EcsBGUpdateRoute53DNSWeightState.class, FLOW_CONTROLS, ECS_ROUTE53_DNS_WEIGHTS,
+      Lists.newArrayList(AWS_ECS), singletonList(ECS_UPDATE_ROUTE_53_DNS_WEIGHT), ORCHESTRATION_STENCILS),
+
+  ECS_ROUTE53_DNS_WEIGHT_UPDATE_ROLLBACK(EcsBGRollbackRoute53DNSWeightState.class, FLOW_CONTROLS,
+      ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS, Lists.newArrayList(AWS_ECS), singletonList(ECS_UPDATE_ROUTE_53_DNS_WEIGHT),
       ORCHESTRATION_STENCILS),
 
   KUBERNETES_SETUP(KubernetesSetup.class, CLOUD, KUBERNETES_SERVICE_SETUP,
@@ -476,7 +491,7 @@ public enum StateType implements StateTypeDescriptor {
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   ECS_STEADY_STATE_CHECK(EcsSteadyStateCheck.class, COMMANDS, Constants.ECS_STEADY_STATE_CHECK,
-      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+      Lists.newArrayList(AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES),

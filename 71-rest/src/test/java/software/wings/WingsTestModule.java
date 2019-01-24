@@ -35,6 +35,7 @@ import software.wings.service.impl.aws.delegate.AwsAppAutoScalingHelperServiceDe
 import software.wings.service.impl.aws.delegate.AwsAsgHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsCFHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsEc2HelperServiceDelegateImpl;
+import software.wings.service.impl.aws.delegate.AwsEcsHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsElbHelperServiceDelegateImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
@@ -55,6 +56,7 @@ import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceD
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
@@ -94,7 +96,7 @@ public class WingsTestModule extends AbstractModule {
     bind(AwsElbHelperServiceDelegate.class).to(AwsElbHelperServiceDelegateImpl.class);
     bind(AwsAsgHelperServiceDelegate.class).to(AwsAsgHelperServiceDelegateImpl.class);
     bind(AwsEc2HelperServiceDelegate.class).to(AwsEc2HelperServiceDelegateImpl.class);
-    // bind(PcfDeploymentManager.class).to(PcfDeploymentManagerImpl.class);
+    bind(AwsEcsHelperServiceDelegate.class).to(AwsEcsHelperServiceDelegateImpl.class);
 
     bind(PcfClient.class).to(PcfClientImpl.class);
     DelegateLogService mockDelegateLogService = mock(DelegateLogService.class);
