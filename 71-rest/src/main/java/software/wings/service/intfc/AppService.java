@@ -7,6 +7,7 @@ import software.wings.beans.Application;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Application Service.
@@ -97,6 +98,14 @@ public interface AppService extends OwnedByAccount, Exterminator {
    * @return the app ids by account id
    */
   List<String> getAppIdsByAccountId(String accountId);
+
+  /**
+   * Gets app ids by account id.
+   *
+   * @param accountId the account id
+   * @return the app ids by account id
+   */
+  Set<String> getAppIdsAsSetByAccountId(String accountId);
 
   /**
    * Gets app names by account id.

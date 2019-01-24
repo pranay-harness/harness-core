@@ -84,6 +84,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -412,6 +413,16 @@ public class AppServiceImpl implements AppService {
         .stream()
         .map(applicationKey -> applicationKey.getId().toString())
         .collect(toList());
+  }
+
+  @Override
+  public Set<String> getAppIdsAsSetByAccountId(String accountId) {
+    return wingsPersistence.createQuery(Application.class)
+        .filter("accountId", accountId)
+        .asKeyList()
+        .stream()
+        .map(applicationKey -> applicationKey.getId().toString())
+        .collect(Collectors.toSet());
   }
 
   @Override
