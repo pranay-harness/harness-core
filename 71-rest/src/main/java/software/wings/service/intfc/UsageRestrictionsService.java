@@ -21,11 +21,11 @@ import java.util.Set;
 public interface UsageRestrictionsService {
   /**
    *
+   * @param accountId
    * @param appEnvRestrictions
-   * @param allAppIdsInAccount
    * @return
    */
-  Map<String, Set<String>> getAppEnvMap(Set<AppEnvRestriction> appEnvRestrictions, Set<String> allAppIdsInAccount);
+  Map<String, Set<String>> getAppEnvMap(String accountId, Set<AppEnvRestriction> appEnvRestrictions, Action action);
 
   /**
    * Derive the user restrictions from user permissions.
@@ -45,12 +45,11 @@ public interface UsageRestrictionsService {
    * @param envIdFromRequest current env context
    * @param entityUsageRestrictions
    * @param restrictionsFromUserPermissions
-   * @param allAppIdsInAccount
    * @param appEnvMapFromPermissions       @return boolean if the user needs to be provided access or not
    */
   boolean hasAccess(String accountId, boolean isAccountAdmin, String appIdFromRequest, String envIdFromRequest,
       UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions,
-      Map<String, Set<String>> appEnvMapFromPermissions, Set<String> allAppIdsInAccount);
+      Map<String, Set<String>> appEnvMapFromPermissions);
 
   /**
    * Lists all the applications and environments that the user has update permissions on.
@@ -72,9 +71,6 @@ public interface UsageRestrictionsService {
    */
   UsageRestrictions getDefaultUsageRestrictions(String accountId, String appId, String envId);
 
-  boolean userHasPermissionsToChangeEntity(
-      String accountId, UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions);
-
   /**
    * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
    * @param accountId account id
@@ -82,8 +78,8 @@ public interface UsageRestrictionsService {
    * @param restrictionsFromUserPermissions restrictions from user permissions
    * @return boolean
    */
-  boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
-      UsageRestrictions restrictionsFromUserPermissions, Set<String> allAppsInAccount);
+  boolean userHasPermissionsToChangeEntity(
+      String accountId, UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions);
 
   /**
    * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
@@ -92,16 +88,6 @@ public interface UsageRestrictionsService {
    * @return boolean
    */
   boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions);
-
-  /**
-   * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
-   * @param accountId account id
-   * @param entityUsageRestrictions entity usage restrictions
-   * @param allAppsInAccount
-   * @return boolean
-   */
-  boolean userHasPermissionsToChangeEntity(
-      String accountId, UsageRestrictions entityUsageRestrictions, Set<String> allAppsInAccount);
 
   /**
    * Checks if user can update an entity
