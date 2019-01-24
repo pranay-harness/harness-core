@@ -7,6 +7,7 @@ import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.CreatedAtAccess.CREATED_AT_KEY;
 import static java.util.Arrays.asList;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
@@ -167,16 +168,18 @@ public class ActivityResource {
       @QueryParam("endTime") long endTime, @BeanParam PageRequest<ThirdPartyApiCallLog> request) {
     Preconditions.checkState(endTime >= startTime, "End time should be greater than start time");
 
+    request.addFilter("appId", EQ, appId);
+    request.addFilter("stateExecutionId", EQ, stateExecutionId);
     if (startTime > 0) {
-      request.addFilter("createdAt", GE, startTime);
+      request.addFilter(CREATED_AT_KEY, GE, startTime);
     }
 
     if (endTime > 0) {
-      request.addFilter("createdAt", LT_EQ, endTime);
+      request.addFilter(CREATED_AT_KEY, LT_EQ, endTime);
     }
 
     if (isEmpty(request.getOrders())) {
-      request.setOrders(asList(aSortOrder().withField(ThirdPartyApiCallLog.CREATED_AT_KEY, DESC).build()));
+      request.setOrders(asList(aSortOrder().withField(CREATED_AT_KEY, DESC).build()));
     }
     return new RestResponse<>(dataStoreService.list(ThirdPartyApiCallLog.class, request));
   }
