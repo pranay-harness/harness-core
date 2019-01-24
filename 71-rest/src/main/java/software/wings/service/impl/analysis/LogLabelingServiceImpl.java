@@ -32,7 +32,6 @@ import java.util.Random;
 @Singleton
 public class LogLabelingServiceImpl implements LogLabelingService {
   private static final Logger logger = LoggerFactory.getLogger(LogLabelingServiceImpl.class);
-
   private static final int MAX_CASSIFICATION_COUNT = 3;
   private static final int MAX_LOG_RETURN_SIZE = 10;
   @Inject DataStoreService dataStoreService;
@@ -45,15 +44,19 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     }
 
     Query<LogDataRecord> logQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                                        .field("createdAt")
+                                        .greaterThan(1514808000000l)
                                         .field("clusterLevel")
                                         .notIn(Arrays.asList("H0", "H1", "H2", "HF"))
                                         .project("uuid", true)
                                         .project("logMessage", true)
-                                        .project("timesLabeled", true);
+                                        .project("timesLabeled", true)
+                                        .order("-createdAt");
 
     logQuery.or(logQuery.criteria("timesLabeled").lessThanOrEq(MAX_CASSIFICATION_COUNT),
         logQuery.criteria("timesLabeled").doesNotExist());
-    List<LogDataRecord> logDataRecords = logQuery.asList(new FindOptions().limit(100));
+
+    List<LogDataRecord> logDataRecords = logQuery.asList(new FindOptions().limit(1000));
     List<LogDataRecord> returnList = new ArrayList<>();
     if (logDataRecords.size() <= MAX_CASSIFICATION_COUNT) {
       returnList.addAll(logDataRecords);
