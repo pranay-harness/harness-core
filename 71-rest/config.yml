@@ -106,7 +106,7 @@ apiUrl:
 deployMode: AWS
 envPath:
 
-kubectlVersion: v1.12.2
+kubectlVersion: v1.13.2
 
 portal:
   url: https://localhost:8000

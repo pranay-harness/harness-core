@@ -18,10 +18,10 @@ import java.util.concurrent.TimeUnit;
 public class InstallUtils {
   private static final Logger logger = LoggerFactory.getLogger(InstallUtils.class);
 
-  private static final String defaultKubectlVersion = "v1.12.2";
+  private static final String defaultKubectlVersion = "v1.13.2";
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
 
-  private static final String goTemplateClientVersion = "v0.1";
+  private static final String goTemplateClientVersion = "v0.2";
   private static final String goTemplateClientBaseDir = "./client-tools/go-template/";
 
   private static String kubectlPath = "kubectl";
@@ -57,7 +57,7 @@ public class InstallUtils {
 
       String kubectlDirectory = kubectlBaseDir + version;
 
-      if (Files.exists(Paths.get(kubectlDirectory + "/kubectl"))) {
+      if (validateKubectlExists(kubectlDirectory)) {
         kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
         logger.info("kubectl version {} already installed", version);
         return;
@@ -95,6 +95,33 @@ public class InstallUtils {
     }
   }
 
+  private static boolean validateKubectlExists(String kubectlDirectory) {
+    try {
+      if (!Files.exists(Paths.get(kubectlDirectory + "/kubectl"))) {
+        return false;
+      }
+
+      String script = "./kubectl version --short --client\n";
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(1, TimeUnit.MINUTES)
+                                            .directory(new File(kubectlDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+
+      if (result.getExitValue() == 0) {
+        logger.info(result.outputString());
+        return true;
+      } else {
+        logger.error(result.outputString());
+        return false;
+      }
+    } catch (Exception e) {
+      logger.error("Error checking kubectl", e);
+      return false;
+    }
+  }
+
   private static String getKubectlDownloadUrl(String managerDomain, String version) {
     return "https://" + managerDomain + "/storage/harness-download/kubernetes-release/release/" + version + "/bin/"
         + getOsPath() + "/amd64/kubectl";
@@ -109,7 +136,7 @@ public class InstallUtils {
 
       String goTemplateClientDirectory = goTemplateClientBaseDir + goTemplateClientVersion;
 
-      if (Files.exists(Paths.get(goTemplateClientDirectory + "/go-template"))) {
+      if (validateGoTemplateClientExists(goTemplateClientDirectory)) {
         goTemplateToolPath =
             Paths.get(goTemplateClientDirectory + "/go-template").toAbsolutePath().normalize().toString();
         logger.info("go-template version {} already installed", goTemplateClientVersion);
@@ -127,7 +154,7 @@ public class InstallUtils {
 
       String script = "curl $PROXY_CURL -LO " + downloadUrl + "\n"
           + "chmod +x ./go-template\n"
-          + "./go-template help\n";
+          + "./go-template -v\n";
 
       ProcessExecutor processExecutor = new ProcessExecutor()
                                             .timeout(10, TimeUnit.MINUTES)
@@ -147,6 +174,33 @@ public class InstallUtils {
       }
     } catch (Exception e) {
       logger.error("Error installing go-template", e);
+    }
+  }
+
+  private static boolean validateGoTemplateClientExists(String goTemplateClientDirectory) {
+    try {
+      if (!Files.exists(Paths.get(goTemplateClientDirectory + "/go-template"))) {
+        return false;
+      }
+
+      String script = "./go-template -v\n";
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(1, TimeUnit.MINUTES)
+                                            .directory(new File(goTemplateClientDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+
+      if (result.getExitValue() == 0) {
+        logger.info(result.outputString());
+        return true;
+      } else {
+        logger.error(result.outputString());
+        return false;
+      }
+    } catch (Exception e) {
+      logger.error("Error checking go-template", e);
+      return false;
     }
   }
 
