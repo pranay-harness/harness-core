@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -25,7 +26,6 @@ import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.time.Instant;

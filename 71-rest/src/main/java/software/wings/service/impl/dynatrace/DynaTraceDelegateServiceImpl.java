@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -26,7 +27,6 @@ import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.DynatraceState;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;

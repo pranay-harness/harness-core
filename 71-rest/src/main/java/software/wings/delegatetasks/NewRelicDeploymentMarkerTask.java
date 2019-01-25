@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
@@ -16,7 +17,6 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.util.function.Consumer;

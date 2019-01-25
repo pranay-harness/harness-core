@@ -23,6 +23,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.expression.RegexFunctor;
+import io.harness.serializer.JsonUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,7 +34,6 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
 import software.wings.stencils.EnumData;
 import software.wings.utils.EcsConvention;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;

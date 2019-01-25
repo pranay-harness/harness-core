@@ -7,9 +7,9 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.serializer.JsonUtils;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.utils.JsonUtils;
 
 /**
  * Created by peeyushaggarwal on 4/25/16.

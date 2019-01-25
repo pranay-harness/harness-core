@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import io.harness.serializer.JsonUtils;
 import org.mongodb.morphia.query.CountOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.util.HashMap;

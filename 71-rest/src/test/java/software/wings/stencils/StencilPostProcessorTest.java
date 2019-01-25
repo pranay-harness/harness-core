@@ -17,13 +17,13 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.serializer.JsonUtils;
 import lombok.Value;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.utils.JsonUtils;
 
 import java.util.Collections;
 import java.util.HashMap;

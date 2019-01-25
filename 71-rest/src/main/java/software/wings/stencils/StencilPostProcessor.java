@@ -15,9 +15,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.harness.serializer.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.utils.JsonUtils;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;

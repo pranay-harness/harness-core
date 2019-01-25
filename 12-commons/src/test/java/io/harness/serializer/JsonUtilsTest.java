@@ -1,4 +1,4 @@
-package software.wings.utils;
+package io.harness.serializer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,11 +9,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.jayway.jsonpath.DocumentContext;
+import io.harness.serializer.JsonUtilsTest.Base.BaseType;
 import net.javacrumbs.jsonunit.fluent.JsonFluentAssert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.utils.JsonUtilsTest.Base.BaseType;
 
 import java.util.List;
 
@@ -65,28 +65,28 @@ public class JsonUtilsTest {
     String jsona = JsonUtils.asJson(baseA);
 
     JsonFluentAssert.assertThatJson(jsona).isEqualTo(
-        "{\"baseType\":\"A\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseA\"}");
+        "{\"baseType\":\"A\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseA\"}");
 
     BaseB baseB = new BaseB();
     String jsonb = JsonUtils.asJson(baseB);
 
     JsonFluentAssert.assertThatJson(jsonb).isEqualTo(
-        "{\"baseType\":\"B\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseB\"}");
+        "{\"baseType\":\"B\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseB\"}");
 
     assertThat(
-        JsonUtils.asObject("{\"baseType\":\"A\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseA\"}", Base.class))
+        JsonUtils.asObject("{\"baseType\":\"A\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseA\"}", Base.class))
         .isInstanceOf(BaseA.class)
         .extracting(Base::getBaseType)
         .containsExactly(BaseType.A);
     assertThat(
-        JsonUtils.asObject("{\"baseType\":\"B\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseB\"}", Base.class))
+        JsonUtils.asObject("{\"baseType\":\"B\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseB\"}", Base.class))
         .isInstanceOf(BaseB.class)
         .extracting(Base::getBaseType)
         .containsExactly(BaseType.B);
   }
 
   @Test
-  public void shouldReturnCorrectObjectInCaseOfInheritenceWithoutInterface() {
+  public void shouldReturnCorrectObjectInCaseOfInheritanceWithoutInterface() {
     TypeA typeA = new TypeA();
     typeA.setX("A");
     String jsona = JsonUtils.asJson(typeA);
@@ -115,13 +115,13 @@ public class JsonUtilsTest {
     String jsona = JsonUtils.asJson(new Object[] {baseA}, JsonUtils.mapperForCloning);
 
     JsonFluentAssert.assertThatJson(jsona).isEqualTo(
-        "[[\"software.wings.utils.JsonUtilsTest$BaseA\",{\"baseType\":\"A\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseA\"}]]");
+        "[[\"io.harness.serializer.JsonUtilsTest$BaseA\",{\"baseType\":\"A\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseA\"}]]");
 
     BaseB baseB = new BaseB();
     String jsonb = JsonUtils.asJson(new Object[] {baseB}, JsonUtils.mapperForCloning);
 
     JsonFluentAssert.assertThatJson(jsonb).isEqualTo(
-        "[[\"software.wings.utils.JsonUtilsTest$BaseB\",{\"baseType\":\"B\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseB\"}]]");
+        "[[\"io.harness.serializer.JsonUtilsTest$BaseB\",{\"baseType\":\"B\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseB\"}]]");
 
     assertThat(JsonUtils.asObject(jsona, new TypeReference<Object[]>() {}, JsonUtils.mapperForCloning))
         .hasSize(1)

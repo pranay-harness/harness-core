@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.GoogleDataStoreAware;
+import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +34,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;

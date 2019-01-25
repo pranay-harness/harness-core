@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -27,7 +28,6 @@ import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;

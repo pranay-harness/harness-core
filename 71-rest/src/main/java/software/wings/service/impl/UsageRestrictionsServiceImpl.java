@@ -19,6 +19,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.serializer.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -63,7 +64,6 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.settings.UsageRestrictionsReferenceSummary;
 import software.wings.settings.UsageRestrictionsReferenceSummary.IdNameReference;
-import software.wings.utils.JsonUtils;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;

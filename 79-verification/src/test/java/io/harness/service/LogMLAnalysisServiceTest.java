@@ -19,6 +19,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LogAnalysisService;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -56,7 +57,6 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ElkAnalysisState;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

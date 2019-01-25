@@ -3,10 +3,10 @@ package software.wings.appdynamics;
 import static org.junit.Assert.assertEquals;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.serializer.JsonUtils;
 import org.junit.Test;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
-import software.wings.utils.JsonUtils;
 
 import java.util.List;
 

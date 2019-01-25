@@ -11,6 +11,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.serializer.JsonUtils;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -25,7 +26,6 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.utils.BoundedInputStream;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Validator;
 
 import java.io.File;

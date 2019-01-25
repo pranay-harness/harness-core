@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
@@ -22,7 +23,6 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.util.Collections;

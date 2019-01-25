@@ -1,4 +1,4 @@
-package software.wings.utils;
+package io.harness.serializer;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;

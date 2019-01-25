@@ -29,6 +29,7 @@ import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import io.harness.exception.WingsException;
 import io.harness.security.VerificationTokenGenerator;
+import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.service.intfc.LearningEngineService;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -45,7 +46,6 @@ import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
-import software.wings.utils.JsonSubtypeResolver;
 import software.wings.utils.WingsIntegrationTestConstants;
 
 import java.io.UnsupportedEncodingException;

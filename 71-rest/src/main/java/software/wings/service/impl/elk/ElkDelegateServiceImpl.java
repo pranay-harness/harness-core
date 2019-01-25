@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.serializer.JsonUtils;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.codec.binary.Base64;
@@ -40,7 +41,6 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;

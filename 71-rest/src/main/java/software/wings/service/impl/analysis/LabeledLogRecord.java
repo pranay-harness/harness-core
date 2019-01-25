@@ -11,13 +11,13 @@ import com.google.common.hash.Hashing;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.persistence.GoogleDataStoreAware;
+import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.utils.JsonUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;

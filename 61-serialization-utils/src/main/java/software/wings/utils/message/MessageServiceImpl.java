@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.filefilter.AndFileFilter;
@@ -26,7 +27,6 @@ import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;

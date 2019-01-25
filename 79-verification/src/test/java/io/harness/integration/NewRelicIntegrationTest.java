@@ -40,6 +40,7 @@ import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.apache.commons.lang3.StringUtils;
@@ -81,7 +82,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationStateTest;
 import software.wings.sm.states.DatadogState;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

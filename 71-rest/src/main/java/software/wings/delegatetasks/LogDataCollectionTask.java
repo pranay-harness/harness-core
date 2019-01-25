@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
@@ -34,7 +35,6 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.log.LogResponseParser;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;

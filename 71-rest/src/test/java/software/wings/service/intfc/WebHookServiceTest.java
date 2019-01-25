@@ -28,6 +28,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -51,7 +52,6 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.utils.CryptoUtil;
-import software.wings.utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;

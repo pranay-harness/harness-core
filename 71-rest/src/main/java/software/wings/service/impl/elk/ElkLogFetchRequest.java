@@ -3,13 +3,13 @@ package software.wings.service.impl.elk;
 import static java.util.Arrays.asList;
 
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import lombok.Builder;
 import lombok.Data;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -55,6 +55,7 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.Notifier;
@@ -122,7 +123,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.utils.CacheHelper;
-import software.wings.utils.JsonSubtypeResolver;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
 
 import java.util.ArrayList;

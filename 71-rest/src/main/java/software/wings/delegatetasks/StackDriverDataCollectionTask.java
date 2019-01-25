@@ -16,6 +16,7 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
@@ -37,7 +38,6 @@ import software.wings.service.impl.stackdriver.StackDriverNameSpace;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
