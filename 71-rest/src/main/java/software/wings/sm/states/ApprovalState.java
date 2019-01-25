@@ -331,6 +331,7 @@ public class ApprovalState extends State {
     ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
     jiraHelperService.deleteWebhook(
         approvalStateParams.getJiraApprovalParams(), executionData.getWebhookUrl(), app.getAppId(), app.getAccountId());
+    // Todo@Pooja : delete JiraPolling job in case of pipeline abort.
   }
 
   @Override
