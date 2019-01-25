@@ -46,6 +46,7 @@ import software.wings.beans.Idempotent;
 import software.wings.beans.Log;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationBatch;
+import software.wings.beans.Permit;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.RestResponse;
@@ -57,6 +58,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.command.Command;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -114,6 +116,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.YamlChangeSet;
+import software.wings.yaml.gitSync.YamlChangeSet.Status;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -131,6 +134,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -196,7 +200,7 @@ public class AccountExportImportResource {
       // Runtime data/instance/status etc.
       StateExecutionInstance.class, ServiceInstance.class, WorkflowExecution.class, InstanceStatsSnapshot.class,
       StateMachine.class, SweepingOutput.class, ContainerTask.class, GitSyncError.class, ManualSyncJob.class,
-      SyncStatus.class, Activity.class, GitCommit.class, YamlChangeSet.class, Instance.class, TriggerExecution.class,
+      SyncStatus.class, Activity.class, Permit.class, Command.class, Instance.class, TriggerExecution.class,
       PipelineExecution.class, ResourceConstraintInstance.class, Artifact.class, Host.class,
       DelegateConnectionResult.class, DelegateConnection.class, DeploymentSummary.class, NotificationBatch.class));
 
@@ -285,12 +289,8 @@ public class AccountExportImportResource {
       exportToStream(zipOutputStream, applications, applicationsCollectionName);
     }
 
-    List<DBObject> orFilterList = new ArrayList<>();
-    orFilterList.add(accountIdFilter);
-    orFilterList.add(appIdsFilter);
-
     DBObject accountOrAppIdsFilter = new BasicDBObject();
-    accountOrAppIdsFilter.put("$or", orFilterList);
+    accountOrAppIdsFilter.put("$or", Arrays.asList(accountIdFilter, appIdsFilter));
 
     // 5. Export config file content that are persisted in the Mongo GridFs. "configs.files" and "configs.chunks"
     // are not managed by Morphia, need to handle it separately and only export those entries associated with
@@ -302,8 +302,17 @@ public class AccountExportImportResource {
       if (isExportable(toBeExported, entry.getKey())) {
         Class<? extends Base> entityClazz = entry.getValue();
         if (entityClazz != null) {
+          final DBObject exportFilter;
+          // 'gitCommits' and 'yamlChangeSet' need special export filter.
+          if (GitCommit.class == entityClazz) {
+            exportFilter = getGitCommitExportFilter(accountIdFilter);
+          } else if (YamlChangeSet.class == entityClazz) {
+            exportFilter = getYamlChangeSetExportFilter(accountIdFilter);
+          } else {
+            exportFilter = accountOrAppIdsFilter;
+          }
           String collectionName = getCollectionName(entityClazz);
-          List<String> records = mongoExportImport.exportRecords(accountOrAppIdsFilter, collectionName);
+          List<String> records = mongoExportImport.exportRecords(exportFilter, collectionName);
           log.info("{} '{}' records have been exported.", records.size(), collectionName);
           exportToStream(zipOutputStream, records, collectionName);
         }
@@ -338,6 +347,19 @@ public class AccountExportImportResource {
     JsonArray jsonArray = convertStringListToJsonArray(records);
     String jsonString = gson.toJson(jsonArray);
     zipOutputStream.write(jsonString.getBytes(Charset.defaultCharset()));
+  }
+
+  private DBObject getGitCommitExportFilter(DBObject accountIdFilter) {
+    // 'gitCommits' within last 1 month should be exported.
+    DBObject createdAtFilter = new BasicDBObject(
+        "createdAt", new BasicDBObject("$gt", System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30)));
+    return new BasicDBObject("$and", Arrays.asList(accountIdFilter, createdAtFilter));
+  }
+
+  private DBObject getYamlChangeSetExportFilter(DBObject accountIdFilter) {
+    // 'yamlChangeSet' in QUEUED status should be exported.
+    DBObject statusQueuedFilter = new BasicDBObject("status", Status.QUEUED.name());
+    return new BasicDBObject("$and", Arrays.asList(accountIdFilter, statusQueuedFilter));
   }
 
   private void exportConfigFilesContent(ZipOutputStream zipOutputStream, DBObject accountOrAppIdsFilter)
