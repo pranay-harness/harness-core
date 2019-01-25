@@ -100,4 +100,10 @@ public class ManifestHelperTest {
       assertThat(e.getMessage()).isEqualTo("Error processing yaml manifest. metadata.name not found in spec.");
     }
   }
+
+  @Test
+  public void testNormalizeFolderPath() {
+    assertThat(ManifestHelper.normalizeFolderPath("abc")).isEqualTo("abc/");
+    assertThat(ManifestHelper.normalizeFolderPath("abc/")).isEqualTo("abc/");
+  }
 }

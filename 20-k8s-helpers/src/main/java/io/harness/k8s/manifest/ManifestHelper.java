@@ -16,6 +16,7 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -137,7 +138,7 @@ public class ManifestHelper {
       return values_filename;
     }
 
-    return normalizeFilePath(filePath) + values_filename;
+    return normalizeFolderPath(filePath) + values_filename;
   }
 
   public static boolean validateValuesFileContents(String valuesFileContent) {
@@ -158,11 +159,11 @@ public class ManifestHelper {
     }
   }
 
-  public static String normalizeFilePath(String filePath) {
-    if (isBlank(filePath)) {
-      return filePath;
+  public static String normalizeFolderPath(String folderPath) {
+    if (isBlank(folderPath)) {
+      return folderPath;
     }
 
-    return filePath.endsWith("/") ? filePath : filePath + "/";
+    return folderPath.endsWith(File.separator) ? folderPath : folderPath + File.separator;
   }
 }
