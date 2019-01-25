@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.workflow;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.EntityType.CF_AWS_CONFIG_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
@@ -26,6 +27,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.PipelineStage.WorkflowVariable;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
@@ -90,33 +92,18 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       workflow = workflowService.readWorkflowByName(appId, yaml.getWorkflowName());
       notNullCheck("Invalid workflow with the given name:" + yaml.getWorkflowName(), workflow, USER);
       properties.put("workflowId", workflow.getUuid());
-      if (workflow.checkEnvironmentTemplatized()) {
-        logger.info("Workflow environment templatized. Workflow envId of appId {} and workflowId {} is {}", appId,
-            workflow.getUuid(), workflow.getEnvId());
-      }
-      properties.put("envId", workflow.getEnvId());
+
+      String envId = resolveEnvironmentId(yaml, appId, properties, workflowVariables, workflow);
+
       if (isNotEmpty(yaml.getWorkflowVariables())) {
-        final String[] envId = new String[1];
         yaml.getWorkflowVariables().forEach((PipelineStage.WorkflowVariable variable) -> {
           String entityType = variable.getEntityType();
           String variableName = variable.getName();
           String variableValue = variable.getValue();
           if (entityType != null) {
             if (ENVIRONMENT.name().equals(entityType)) {
-              if (matchesVariablePattern(variableValue)) {
-                workflowVariables.put(variableName, variableValue);
-                logger.info("Environment parameterized in pipeline and the value is {}", variableValue);
-                properties.put("envId", variableValue);
-                return;
-              }
-              Environment environment = environmentService.getEnvironmentByName(appId, variableValue, false);
-              if (environment != null) {
-                envId[0] = environment.getUuid();
-                workflowVariables.put(variableName, envId[0]);
-                properties.put("envId", envId[0]);
-              } else {
-                notNullCheck("Environment [" + variableValue + "] does not exist", environment, USER);
-              }
+              // This is already taken care in resolveEnvironmentId method
+              return;
             } else if (SERVICE.name().equals(entityType)) {
               if (matchesVariablePattern(variableValue)) {
                 workflowVariables.put(variableName, variableValue);
@@ -134,7 +121,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
                 return;
               }
               InfrastructureMapping infrastructureMapping =
-                  infrastructureMappingService.getInfraMappingByName(appId, envId[0], variableValue);
+                  infrastructureMappingService.getInfraMappingByName(appId, envId, variableValue);
               if (infrastructureMapping != null) {
                 workflowVariables.put(variableName, infrastructureMapping.getUuid());
               } else {
@@ -185,6 +172,48 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     stage.setPipelineStageElements(Lists.newArrayList(pipelineStageElement));
 
     return stage;
+  }
+
+  private String resolveEnvironmentId(Yaml yaml, String appId, Map<String, Object> properties,
+      Map<String, String> workflowVariables, Workflow workflow) {
+    String envId = null;
+
+    if (workflow.checkEnvironmentTemplatized()) {
+      logger.info("Workflow environment templatized. Workflow envId of appId {} and workflowId {} is {}", appId,
+          workflow.getUuid(), workflow.getEnvId());
+
+      if (isNotEmpty(yaml.getWorkflowVariables())) {
+        WorkflowVariable workflowEnvVariable =
+            yaml.getWorkflowVariables()
+                .stream()
+                .filter((WorkflowVariable variable) -> ENVIRONMENT.name().equals(variable.getEntityType()))
+                .findFirst()
+                .orElse(null);
+
+        if (workflowEnvVariable != null) {
+          if (matchesVariablePattern(workflowEnvVariable.getValue())) {
+            workflowVariables.put(workflowEnvVariable.getName(), workflowEnvVariable.getValue());
+            logger.info("Environment parameterized in pipeline and the value is {}", workflowEnvVariable.getValue());
+            properties.put("envId", workflowEnvVariable.getValue());
+          } else {
+            Environment environment =
+                environmentService.getEnvironmentByName(appId, workflowEnvVariable.getValue(), false);
+            notNullCheck("Environment [" + workflowEnvVariable.getValue() + "] does not exist", environment, USER);
+
+            envId = environment.getUuid();
+            workflowVariables.put(workflowEnvVariable.getName(), envId);
+            properties.put("envId", envId);
+          }
+        }
+      }
+    }
+
+    if (isBlank(envId)) {
+      envId = workflow.getEnvId();
+      properties.put("envId", envId);
+    }
+
+    return envId;
   }
 
   @Override
