@@ -46,7 +46,7 @@ public class GraphNode {
 
   private List<ElementExecutionSummary> elementStatusSummary;
   private List<InstanceStatusSummary> instanceStatusSummary;
-  private List<TemplateExpression> templateExpressions;
+  @Deprecated private List<TemplateExpression> templateExpressions;
   private List<NameValuePair> variableOverrides;
   private List<Variable> templateVariables;
   private String templateUuid;

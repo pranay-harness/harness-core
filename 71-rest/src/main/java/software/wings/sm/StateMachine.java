@@ -303,6 +303,9 @@ public class StateMachine extends Base {
 
       State state = stateTypeDesc.newInstance(node.getName());
 
+      // This is temporary until this field is removed
+      state.setTemplateExpressions(node.getTemplateExpressions());
+
       // populate properties
       if (node.getProperties() != null) {
         MapperUtils.mapObject(node.getProperties(), state);
@@ -311,7 +314,6 @@ public class StateMachine extends Base {
       state.setId(node.getId());
       state.setRollback(node.isRollback());
 
-      state.setTemplateExpressions(node.getTemplateExpressions());
       state.setTemplateVariables(node.getTemplateVariables());
       state.setTemplateUuid(node.getTemplateUuid());
       state.setTemplateVersion(node.getTemplateVersion());
