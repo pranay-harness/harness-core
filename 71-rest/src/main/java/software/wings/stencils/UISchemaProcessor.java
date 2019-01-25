@@ -5,11 +5,11 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.JenkinsArtifactStream;
-import software.wings.utils.JsonUtils;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;

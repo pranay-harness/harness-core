@@ -8,9 +8,9 @@ import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import software.wings.beans.Graph;
 import software.wings.common.Constants;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.net.URL;

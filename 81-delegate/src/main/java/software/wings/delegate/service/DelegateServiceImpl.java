@@ -70,6 +70,7 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.security.TokenGenerator;
+import io.harness.serializer.JsonUtils;
 import io.harness.version.VersionInfoManager;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
@@ -116,7 +117,6 @@ import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.ManagerClientFactory;
 import software.wings.service.intfc.FileService.FileBucket;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.message.Message;
 import software.wings.utils.message.MessageService;
 

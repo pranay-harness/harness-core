@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -19,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.utils.JsonUtils;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;

@@ -29,6 +29,7 @@ import io.harness.jobs.LogAnalysisManagerJob.LogAnalysisTask;
 import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -69,7 +70,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ApprovalState;
-import software.wings.utils.JsonUtils;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -24,6 +24,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -46,7 +47,6 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.List;

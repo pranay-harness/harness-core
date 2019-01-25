@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.VerificationBaseTest;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.junit.Before;
@@ -26,7 +27,6 @@ import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAn
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 
 import java.util.HashMap;
 import java.util.Map;

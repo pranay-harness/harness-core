@@ -14,6 +14,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.quartz.DisallowConcurrentExecution;
@@ -43,7 +44,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.MetricDataAnalysisService;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;

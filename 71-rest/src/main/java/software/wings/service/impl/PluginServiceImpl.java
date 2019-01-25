@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AccountPlugin;
@@ -55,7 +56,6 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PluginService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.JsonUtils;
 
 import java.net.URL;
 import java.util.HashMap;

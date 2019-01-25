@@ -79,6 +79,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
@@ -177,7 +178,6 @@ import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
-import software.wings.utils.JsonUtils;
 
 import java.net.URL;
 import java.util.ArrayList;

@@ -54,6 +54,7 @@ import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.VerificationServiceExecutorService;
 import io.harness.security.VerificationServiceAuthenticationFilter;
+import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.service.intfc.LearningEngineService;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
@@ -73,7 +74,6 @@ import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.jersey.JsonViews;
 import software.wings.security.ThreadLocalUserProvider;
-import software.wings.utils.JsonSubtypeResolver;
 
 import java.util.Set;
 import javax.validation.Validation;

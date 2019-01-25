@@ -1,11 +1,11 @@
 package software.wings.service.impl.analysis;
 
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.WingsBaseTest;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

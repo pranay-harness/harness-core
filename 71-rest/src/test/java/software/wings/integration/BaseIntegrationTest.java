@@ -33,6 +33,7 @@ import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.persistence.ReadPref;
+import io.harness.serializer.JsonSubtypeResolver;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.glassfish.jersey.client.ClientConfig;
@@ -68,7 +69,6 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.utils.JsonSubtypeResolver;
 import software.wings.utils.WingsIntegrationTestConstants;
 
 import java.net.UnknownHostException;

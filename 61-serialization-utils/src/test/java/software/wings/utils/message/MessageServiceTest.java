@@ -16,10 +16,10 @@ import static software.wings.utils.message.MessengerType.WATCHER;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
-import software.wings.utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;

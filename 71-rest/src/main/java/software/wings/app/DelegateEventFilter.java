@@ -5,6 +5,7 @@ import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aD
 
 import com.google.inject.Inject;
 
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
@@ -15,7 +16,6 @@ import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.FeatureName;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.utils.JsonUtils;
 
 import java.util.List;
 

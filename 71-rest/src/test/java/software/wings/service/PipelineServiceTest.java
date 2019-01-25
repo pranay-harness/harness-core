@@ -60,6 +60,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.persistence.HQuery;
 import io.harness.resource.Loader;
+import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -103,7 +104,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.util.ArrayList;

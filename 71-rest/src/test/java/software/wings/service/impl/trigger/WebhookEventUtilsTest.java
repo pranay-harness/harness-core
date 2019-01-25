@@ -12,6 +12,7 @@ import static software.wings.service.impl.trigger.WebhookEventUtils.X_GIT_LAB_EV
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -20,7 +21,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 import software.wings.beans.trigger.WebhookSource.GitLabEventType;
-import software.wings.utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;

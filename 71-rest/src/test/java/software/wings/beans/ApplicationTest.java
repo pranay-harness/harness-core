@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.serializer.JsonUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.utils.JsonUtils;
 
 /**
  * Test case.

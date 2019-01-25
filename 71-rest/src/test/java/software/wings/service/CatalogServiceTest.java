@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.serializer.JsonUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -13,7 +14,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.CatalogItem;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.utils.JsonUtils;
 
 import java.util.List;
 import java.util.Map;

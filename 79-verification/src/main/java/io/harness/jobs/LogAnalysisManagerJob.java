@@ -9,6 +9,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
@@ -26,7 +27,6 @@ import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.utils.JsonUtils;
 
 import java.util.Collections;
 import java.util.Set;

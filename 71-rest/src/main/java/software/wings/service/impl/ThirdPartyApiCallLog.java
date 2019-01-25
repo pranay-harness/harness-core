@@ -28,6 +28,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.GoogleDataStoreAware;
+import io.harness.serializer.JsonUtils;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -40,7 +41,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;

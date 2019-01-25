@@ -17,6 +17,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
@@ -44,7 +45,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;

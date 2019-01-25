@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -35,7 +36,6 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.intfc.AppService;
-import software.wings.utils.JsonUtils;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;

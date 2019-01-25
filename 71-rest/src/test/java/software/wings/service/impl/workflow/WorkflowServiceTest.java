@@ -171,6 +171,7 @@ import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.serializer.JsonUtils;
 import io.harness.waiter.NotifyEventListener;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -260,7 +261,6 @@ import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.util.HashMap;

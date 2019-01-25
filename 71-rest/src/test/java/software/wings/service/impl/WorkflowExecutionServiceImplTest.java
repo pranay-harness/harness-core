@@ -56,6 +56,7 @@ import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.serializer.JsonUtils;
 import io.harness.threading.Puller;
 import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.WaitNotifyEngine;
@@ -129,7 +130,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;

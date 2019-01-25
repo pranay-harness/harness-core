@@ -2,6 +2,7 @@ package software.wings.api;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.serializer.JsonUtils;
 import io.harness.serializer.XmlUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +15,6 @@ import org.w3c.dom.Document;
 import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.StateExecutionData;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.Map;

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +24,6 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.Map;

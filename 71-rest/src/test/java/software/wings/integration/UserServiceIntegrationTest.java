@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
+import io.harness.serializer.JsonUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,7 +40,6 @@ import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

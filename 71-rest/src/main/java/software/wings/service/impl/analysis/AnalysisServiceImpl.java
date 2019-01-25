@@ -33,6 +33,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
 import io.harness.metrics.HarnessMetricRegistry;
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
@@ -81,7 +82,6 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;

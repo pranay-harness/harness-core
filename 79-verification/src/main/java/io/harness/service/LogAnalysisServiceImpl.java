@@ -25,6 +25,7 @@ import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -64,7 +65,6 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;

@@ -20,6 +20,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.network.Http;
+import io.harness.serializer.JsonUtils;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -44,7 +45,6 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.net.URLEncoder;

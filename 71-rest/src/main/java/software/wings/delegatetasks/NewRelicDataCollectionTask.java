@@ -21,6 +21,7 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,6 @@ import software.wings.service.impl.newrelic.NewRelicWebTransactions;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;

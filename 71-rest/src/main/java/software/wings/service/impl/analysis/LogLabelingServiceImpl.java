@@ -10,6 +10,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.serializer.JsonUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -22,7 +23,6 @@ import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.LogLabelingService;
-import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;

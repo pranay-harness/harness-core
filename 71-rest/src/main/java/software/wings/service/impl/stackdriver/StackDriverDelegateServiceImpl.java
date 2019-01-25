@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,6 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
-import software.wings.utils.JsonUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

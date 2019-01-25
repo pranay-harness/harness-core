@@ -13,6 +13,7 @@ import io.harness.eraro.Level;
 import io.harness.eraro.MessageManager;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.config.service.AtmosphereHandlerService;
 import org.atmosphere.cpr.AtmosphereRequest;
@@ -30,7 +31,6 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.List;

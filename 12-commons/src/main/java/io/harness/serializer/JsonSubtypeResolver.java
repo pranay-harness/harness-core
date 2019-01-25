@@ -1,4 +1,4 @@
-package software.wings.utils;
+package io.harness.serializer;
 
 import static java.util.stream.Collectors.toList;
 
@@ -35,7 +35,7 @@ public class JsonSubtypeResolver extends SubtypeResolver {
           .expireAfterWrite(10, TimeUnit.MINUTES)
           .build(new CacheLoader<Class<?>, List<NamedType>>() {
             public List<NamedType> load(Class<?> key) {
-              Reflections reflections = new Reflections("software.wings");
+              Reflections reflections = new Reflections("software.wings", "io.harness");
               return reflections.getSubTypesOf(key)
                   .stream()
                   .filter(subClass -> subClass.isAnnotationPresent(JsonTypeName.class))

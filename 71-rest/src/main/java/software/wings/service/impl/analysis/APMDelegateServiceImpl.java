@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.serializer.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -18,7 +19,6 @@ import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.APMVerificationState.Method;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.HashMap;

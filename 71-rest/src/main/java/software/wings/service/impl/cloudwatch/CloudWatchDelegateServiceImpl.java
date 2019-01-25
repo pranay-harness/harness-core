@@ -23,6 +23,7 @@ import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -42,7 +43,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;

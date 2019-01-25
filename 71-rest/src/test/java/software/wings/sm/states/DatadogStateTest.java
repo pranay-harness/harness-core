@@ -7,12 +7,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.apm.APMMetricInfo;
-import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;

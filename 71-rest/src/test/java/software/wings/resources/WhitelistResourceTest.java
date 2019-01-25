@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.serializer.JsonUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -26,7 +27,6 @@ import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistStatus;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.WhitelistService;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
