@@ -2,6 +2,7 @@ package software.wings.service.impl.ldap;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
  * Impl for Ldap Delegate Service  {@link LdapDelegateService}.
  * Created by Pranjal on 08/21/2018
  */
+@Singleton
 public class LdapDelegateServiceImpl implements LdapDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(LdapDelegateServiceImpl.class);
   @Inject private EncryptionService encryptionService;

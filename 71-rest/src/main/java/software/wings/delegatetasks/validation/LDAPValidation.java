@@ -82,7 +82,7 @@ public class LDAPValidation extends AbstractSecretManagerValidation {
       logger.info("LTVF: Response received is: {}, task id is: {}", response, delegateTaskId);
       logger.info("Validated LDAP delegate task {}, result is {}", delegateTaskId, validated);
     } catch (Exception e) {
-      logger.error("Failed to validate the ldap connection.");
+      logger.error("Failed to validate the ldap connection.", e);
     }
 
     return singletonList(
