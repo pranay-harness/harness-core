@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
-import static io.harness.k8s.manifest.ManifestHelper.normalizeFilePath;
+import static io.harness.k8s.manifest.ManifestHelper.normalizeFolderPath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -159,7 +159,7 @@ public class K8sStateHelper {
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), null);
 
-      gitFileConfig.setFilePath(normalizeFilePath(gitFileConfig.getFilePath()));
+      gitFileConfig.setFilePath(normalizeFolderPath(gitFileConfig.getFilePath()));
       manifestConfigBuilder.gitFileConfig(gitFileConfig);
       manifestConfigBuilder.gitConfig(gitConfig);
       manifestConfigBuilder.encryptedDataDetails(encryptionDetails);
@@ -224,7 +224,6 @@ public class K8sStateHelper {
       if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
         GitFileConfig gitFileConfig =
             gitFileConfigHelperService.renderGitFileConfig(context, applicationManifest.getGitFileConfig());
-        gitFileConfig.setFilePath(normalizeFilePath(gitFileConfig.getFilePath()));
         GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
         notNullCheck("Git config not found", gitConfig);
         List<EncryptedDataDetail> encryptionDetails =
