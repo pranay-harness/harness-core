@@ -3,7 +3,9 @@ package io.harness.expression;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
 
 import io.harness.CategoryTest;
 import io.harness.exception.FunctorException;
@@ -12,6 +14,8 @@ import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -221,6 +225,46 @@ public class ExpressionEvaluatorTest extends CategoryTest {
         .isEqualTo(false);
 
     assertThat(expressionEvaluator.evaluate("regex.match('York', ${bob.address.city})", persons)).isEqualTo(true);
+  }
+
+  @Test
+  public void shouldAccessJson() {
+    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+    expressionEvaluator.addFunctor("json", new JsonFunctor());
+
+    Map<String, Object> context = ImmutableMap.<String, Object>builder()
+                                      .put("body", "{ \"item\": \"value\", \"level1\": { \"level2\" : \"value\" } }")
+                                      .build();
+    assertThat(expressionEvaluator.substitute("${json.object(body).item}", context)).isEqualTo("value");
+    assertThat(expressionEvaluator.substitute("${json.object(body).level1.level2}", context)).isEqualTo("value");
+  }
+
+  @Test
+  public void shouldSelectJsonPath() throws IOException {
+    URL url = getClass().getResource("/store.json");
+    String json = Resources.toString(url, Charsets.UTF_8);
+
+    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+    expressionEvaluator.addFunctor("json", new JsonFunctor());
+
+    Map<String, Object> context = ImmutableMap.<String, Object>builder().put("body", json).build();
+
+    assertThat(expressionEvaluator.substitute("${json.select(\"$..book[2]\", body).isbn}", context))
+        .isEqualTo("0-553-21311-3");
+  }
+
+  @Test
+  public void shouldListJsonPath() throws IOException {
+    URL url = getClass().getResource("/store.json");
+    String json = Resources.toString(url, Charsets.UTF_8);
+
+    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+    expressionEvaluator.addFunctor("json", new JsonFunctor());
+
+    Map<String, Object> context = ImmutableMap.<String, Object>builder().put("body", json).build();
+
+    assertThat(expressionEvaluator.substitute("${json.list(\"store.book\", body).get(2).isbn}", context))
+        .isEqualTo("0-553-21311-3");
   }
 
   @Test
