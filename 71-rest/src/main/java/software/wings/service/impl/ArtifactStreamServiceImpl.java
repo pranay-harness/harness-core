@@ -268,6 +268,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
+  public boolean artifactStreamsExistForService(String appId, String serviceId) {
+    return wingsPersistence.createQuery(ArtifactStream.class)
+               .filter(ArtifactStream.APP_ID_KEY, appId)
+               .filter(ArtifactStream.SERVICE_ID_KEY, serviceId)
+               .getKey()
+        != null;
+  }
+
+  @Override
   public List<ArtifactStream> getArtifactStreamsForService(String appId, String serviceId) {
     PageRequest pageRequest = aPageRequest()
                                   .addFilter("appId", EQ, appId)
