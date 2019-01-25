@@ -219,4 +219,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public void deleteByAccountId(String accountId) {}
 }

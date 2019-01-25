@@ -3,12 +3,13 @@ package io.harness.limits.configuration;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.lib.Limit;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-public interface LimitConfigurationService {
+public interface LimitConfigurationService extends OwnedByAccount {
   /**
    * First tries to get a limit configured with given accountId.
    * If no limit is configured for this accountId, then it gets a "default limit"

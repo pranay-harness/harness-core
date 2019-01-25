@@ -3,13 +3,14 @@ package software.wings.service.intfc;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.beans.Role;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
 
 /**
  * Created by anubhaw on 3/28/16.
  */
-public interface RoleService {
+public interface RoleService extends OwnedByAccount {
   /**
    * List.
    *

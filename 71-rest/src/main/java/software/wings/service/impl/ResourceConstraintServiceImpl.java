@@ -9,7 +9,6 @@ import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.sm.states.ResourceConstraintState.HoldingScope.WORKFLOW;
 
 import com.google.common.base.Joiner;
@@ -136,7 +135,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(ResourceConstraint.class).filter(ACCOUNT_ID_KEY, accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(ResourceConstraint.class).filter(ACCOUNT_ID, accountId));
   }
 
   @Override

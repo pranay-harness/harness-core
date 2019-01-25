@@ -85,6 +85,10 @@ public class AlertCheckJob implements Job {
     jobScheduler.ensureJob__UnderConstruction(job, triggerBuilder.build());
   }
 
+  public static void delete(PersistentScheduler jobScheduler, String accountId) {
+    jobScheduler.deleteJob(accountId, GROUP);
+  }
+
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     executorService.submit(

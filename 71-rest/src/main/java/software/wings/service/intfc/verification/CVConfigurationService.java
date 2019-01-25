@@ -1,6 +1,7 @@
 package software.wings.service.intfc.verification;
 
 import io.harness.beans.PageRequest;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
@@ -10,7 +11,7 @@ import java.util.List;
  * @author Vaibhav Tulsyan
  * 09/Oct/2018
  */
-public interface CVConfigurationService {
+public interface CVConfigurationService extends OwnedByAccount {
   String saveConfiguration(String accountId, String appId, StateType stateType, Object params);
   <T extends CVConfiguration> T getConfiguration(String serviceConfigurationId);
   <T extends CVConfiguration> T getConfiguration(String name, String appId, String envId);

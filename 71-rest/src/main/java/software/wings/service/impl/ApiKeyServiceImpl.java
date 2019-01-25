@@ -6,7 +6,6 @@ import static io.harness.exception.WingsException.USER;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -61,7 +60,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Override
   public String get(String uuid, String accountId) {
     ApiKeyEntry entry =
-        wingsPersistence.createQuery(ApiKeyEntry.class).filter(ACCOUNT_ID_KEY, accountId).filter(ID_KEY, uuid).get();
+        wingsPersistence.createQuery(ApiKeyEntry.class).filter(ACCOUNT_ID, accountId).filter(ID_KEY, uuid).get();
     Validator.notNullCheck("apiKeyEntry", entry);
     return new String(getSimpleEncryption(accountId).decryptChars(entry.getEncryptedKey()));
   }
@@ -73,7 +72,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public void validate(String key, String accountId) {
-    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter("accountId", EQ, accountId).build();
+    PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ACCOUNT_ID, EQ, accountId).build();
     if (!wingsPersistence.query(ApiKeyEntry.class, pageRequest)
              .getResponse()
              .stream()
@@ -82,5 +81,10 @@ public class ApiKeyServiceImpl implements ApiKeyService {
              .contains(true)) {
       throw new UnauthorizedException("Invalid Api Key", USER);
     }
+  }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(ApiKeyEntry.class).filter(ACCOUNT_ID, accountId));
   }
 }

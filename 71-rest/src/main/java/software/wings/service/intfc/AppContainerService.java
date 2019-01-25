@@ -8,6 +8,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.AppContainer;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.io.File;
 import java.io.InputStream;
@@ -17,7 +18,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 5/4/16.
  */
-public interface AppContainerService {
+public interface AppContainerService extends OwnedByAccount {
   /**
    * Save.
    *

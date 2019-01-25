@@ -87,6 +87,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.LearningEngineService;
+import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -145,11 +146,12 @@ public class SecureResourceTest {
   private static HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupService.class);
   private static SecretManager secretManager = mock(SecretManager.class);
   private static UsageMetricsEventPublisher usageMetricsEventPublisher = mock(UsageMetricsEventPublisher.class);
+  private static SSOSettingService ssoSettingService = mock(SSOSettingService.class);
 
-  private static AuthService authService =
-      new AuthServiceImpl(genericDbCache, wingsPersistence, userService, userGroupService, usageRestrictionsService,
-          workflowService, envService, cacheHelper, configuration, learningEngineService, authHandler,
-          featureFlagService, harnessUserGroupService, secretManager, usageMetricsEventPublisher);
+  private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
+      userGroupService, usageRestrictionsService, workflowService, envService, cacheHelper, configuration,
+      learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager,
+      usageMetricsEventPublisher, whitelistService, ssoSettingService);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(auditService, auditHelper, authService, authHandler,
       appService, userService, featureFlagService, whitelistService, harnessUserGroupService);

@@ -8,6 +8,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -15,7 +16,7 @@ import javax.validation.Valid;
 /**
  * Created by rishi on 10/30/16.
  */
-public interface NotificationSetupService {
+public interface NotificationSetupService extends OwnedByAccount {
   /**
    * List notification groups list.
    *

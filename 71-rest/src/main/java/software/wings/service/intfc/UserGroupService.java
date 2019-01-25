@@ -8,6 +8,7 @@ import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOType;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +17,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by rishi
  */
-public interface UserGroupService {
+public interface UserGroupService extends OwnedByAccount {
   /**
    * Save.
    *

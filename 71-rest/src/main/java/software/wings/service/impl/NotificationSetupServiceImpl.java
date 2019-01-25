@@ -8,7 +8,6 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
@@ -83,13 +82,13 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public List<NotificationGroup> listNotificationGroups(String accountId) {
-    return listNotificationGroups(aPageRequest().addFilter("accountId", Operator.EQ, accountId).build()).getResponse();
+    return listNotificationGroups(aPageRequest().addFilter(ACCOUNT_ID, Operator.EQ, accountId).build()).getResponse();
   }
 
   @Override
   public List<NotificationGroup> listNotificationGroups(String accountId, Role role, String name) {
     return listNotificationGroups(aPageRequest()
-                                      .addFilter("accountId", Operator.EQ, accountId)
+                                      .addFilter(ACCOUNT_ID, Operator.EQ, accountId)
                                       .addFilter("roles", Operator.IN, role)
                                       .addFilter("name", Operator.EQ, name)
                                       .build())
@@ -169,7 +168,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     List<String> inUse = new ArrayList<>();
 
     wingsPersistence.createQuery(Application.class)
-        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(ACCOUNT_ID, accountId)
         .asKeyList()
         .stream()
         .map(key -> key.getId().toString())
@@ -200,14 +199,14 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public List<NotificationGroup> listNotificationGroups(String accountId, String name) {
     return listNotificationGroups(
-        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFilter("name", Operator.EQ, name).build())
+        aPageRequest().addFilter(ACCOUNT_ID, Operator.EQ, accountId).addFilter("name", Operator.EQ, name).build())
         .getResponse();
   }
 
   @Override
   public List<NotificationGroup> listDefaultNotificationGroup(String accountId) {
     return listNotificationGroups(aPageRequest()
-                                      .addFilter("accountId", Operator.EQ, accountId)
+                                      .addFilter(ACCOUNT_ID, Operator.EQ, accountId)
                                       .addFilter("defaultNotificationGroupForAccount", Operator.EQ, true)
                                       .build())
         .getResponse();
@@ -282,5 +281,10 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     }
 
     return emailAddresses;
+  }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(NotificationGroup.class).filter(ACCOUNT_ID, accountId));
   }
 }

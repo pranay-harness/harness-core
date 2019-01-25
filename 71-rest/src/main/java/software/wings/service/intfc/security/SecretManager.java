@@ -10,6 +10,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.security.SecretText;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.BoundedInputStream;
@@ -23,7 +24,7 @@ import java.util.Optional;
 /**
  * Created by rsingh on 10/30/17.
  */
-public interface SecretManager {
+public interface SecretManager extends OwnedByAccount {
   String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Manager";
   String ENCRYPTED_FIELD_MASK = "*******";
 

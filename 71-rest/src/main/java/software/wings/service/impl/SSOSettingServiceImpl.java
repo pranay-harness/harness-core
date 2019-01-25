@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -66,7 +65,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   public SamlSettings getSamlSettingsByAccountId(String accountId) {
     return wingsPersistence.createQuery(SamlSettings.class)
-        .field("accountId")
+        .field(ACCOUNT_ID)
         .equal(accountId)
         .field("type")
         .equal(SSOType.SAML)
@@ -165,7 +164,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Override
   public LdapSettings getLdapSettingsByAccountId(@NotBlank String accountId) {
     return wingsPersistence.createQuery(LdapSettings.class)
-        .field("accountId")
+        .field(ACCOUNT_ID)
         .equal(accountId)
         .field("type")
         .equal(SSOType.LDAP)
@@ -213,8 +212,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public void sendSSONotReachableNotification(String accountId, SSOSettings settings) {
-    List<Delegate> delegates = delegateService.list(
-        PageRequestBuilder.aPageRequest().addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId).build());
+    List<Delegate> delegates =
+        delegateService.list(PageRequestBuilder.aPageRequest().addFilter(ACCOUNT_ID, Operator.EQ, accountId).build());
     String hostNamesForDelegates = "\n" + delegates.stream().map(Delegate::getHostName).collect(joining("\n"));
 
     String hostNamesForDelegatesHtml =
@@ -256,5 +255,10 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     }
 
     return false;
+  }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(SSOSettings.class).filter(ACCOUNT_ID, accountId));
   }
 }

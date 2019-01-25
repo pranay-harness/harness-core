@@ -83,8 +83,8 @@ public class WhitelistServiceImpl implements WhitelistService {
 
   @Override
   public PageResponse<Whitelist> list(String accountId, PageRequest<Whitelist> req) {
-    Validator.notNullCheck("accountId", accountId);
-    req.addFilter("accountId", EQ, accountId);
+    Validator.notNullCheck(ACCOUNT_ID, accountId);
+    req.addFilter(ACCOUNT_ID, EQ, accountId);
     return wingsPersistence.query(Whitelist.class, req);
   }
 
@@ -220,7 +220,7 @@ public class WhitelistServiceImpl implements WhitelistService {
 
     Query<Whitelist> query = wingsPersistence.createQuery(Whitelist.class)
                                  .filter(ID_KEY, whitelist.getUuid())
-                                 .filter("accountId", whitelist.getAccountId());
+                                 .filter(ACCOUNT_ID, whitelist.getAccountId());
     wingsPersistence.update(query, operations);
     evictWhitelistConfigCache(whitelist.getAccountId());
     return get(whitelist.getAccountId(), whitelist.getUuid());
@@ -238,5 +238,13 @@ public class WhitelistServiceImpl implements WhitelistService {
       evictWhitelistConfigCache(whitelist.getAccountId());
     }
     return delete;
+  }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    List<Whitelist> whitelists = wingsPersistence.createQuery(Whitelist.class).filter(ACCOUNT_ID, accountId).asList();
+    for (Whitelist whitelist : whitelists) {
+      delete(accountId, whitelist.getUuid());
+    }
   }
 }

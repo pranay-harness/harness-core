@@ -67,7 +67,7 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Override
   public AppContainer get(String accountId, String platformId) {
     return wingsPersistence.createQuery(AppContainer.class)
-        .filter("accountId", accountId)
+        .filter(ACCOUNT_ID, accountId)
         .filter(Mapper.ID_KEY, platformId)
         .get();
   }
@@ -78,7 +78,7 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Override
   public AppContainer getByName(String accountId, String appContainerName) {
     return wingsPersistence.createQuery(AppContainer.class)
-        .filter("accountId", accountId)
+        .filter(ACCOUNT_ID, accountId)
         .filter("name", appContainerName)
         .get();
   }
@@ -191,5 +191,14 @@ public class AppContainerServiceImpl implements AppContainerService {
     File file = new File(Files.createTempDir(), appContainer.getFileName());
     fileService.download(appContainer.getFileUuid(), file, PLATFORMS);
     return file;
+  }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    List<AppContainer> appContainerList =
+        wingsPersistence.createQuery(AppContainer.class).filter(ACCOUNT_ID, accountId).asList();
+    for (AppContainer appContainer : appContainerList) {
+      delete(accountId, appContainer.getUuid());
+    }
   }
 }

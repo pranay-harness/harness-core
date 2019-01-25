@@ -4,13 +4,14 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.security.access.Whitelist;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
 
 /**
  * @author rktummala on 04/06/2018
  */
-public interface WhitelistService {
+public interface WhitelistService extends OwnedByAccount {
   /**
    * Save.
    *

@@ -65,6 +65,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
+import software.wings.scheduler.LimitVicinityCheckerJob;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
@@ -254,6 +255,8 @@ public class AccountServiceImpl implements AccountService {
     if (wingsPersistence.delete(Account.class, accountId)) {
       dbCache.invalidate(Account.class, accountId);
       InstanceStatsCollectorJob.delete(jobScheduler, accountId);
+      AlertCheckJob.delete(jobScheduler, accountId);
+      LimitVicinityCheckerJob.delete(jobScheduler, accountId);
       executorService.submit(() -> {
         List<OwnedByAccount> services = descendingServices(OwnedByAccount.class);
         services.forEach(service -> service.deleteByAccountId(accountId));

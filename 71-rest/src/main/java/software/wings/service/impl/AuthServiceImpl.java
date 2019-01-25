@@ -79,9 +79,11 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.LearningEngineService;
+import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CacheHelper;
 
@@ -121,6 +123,8 @@ public class AuthServiceImpl implements AuthService {
   private HarnessUserGroupService harnessUserGroupService;
   private SecretManager secretManager;
   private UsageMetricsEventPublisher usageMetricsEventPublisher;
+  private WhitelistService whitelistService;
+  private SSOSettingService ssoSettingService;
   @Inject private ExecutorService executorService;
 
   @Inject
@@ -129,7 +133,8 @@ public class AuthServiceImpl implements AuthService {
       WorkflowService workflowService, EnvironmentService environmentService, CacheHelper cacheHelper,
       MainConfiguration configuration, LearningEngineService learningEngineService, AuthHandler authHandler,
       FeatureFlagService featureFlagService, HarnessUserGroupService harnessUserGroupService,
-      SecretManager secretManager, UsageMetricsEventPublisher usageMetricsEventPublisher) {
+      SecretManager secretManager, UsageMetricsEventPublisher usageMetricsEventPublisher,
+      WhitelistService whitelistService, SSOSettingService ssoSettingService) {
     this.dbCache = dbCache;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
@@ -145,6 +150,8 @@ public class AuthServiceImpl implements AuthService {
     this.harnessUserGroupService = harnessUserGroupService;
     this.secretManager = secretManager;
     this.usageMetricsEventPublisher = usageMetricsEventPublisher;
+    this.whitelistService = whitelistService;
+    this.ssoSettingService = ssoSettingService;
   }
 
   @Override
@@ -835,5 +842,13 @@ public class AuthServiceImpl implements AuthService {
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken could not be generated");
     }
+  }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    whitelistService.deleteByAccountId(accountId);
+    ssoSettingService.deleteByAccountId(accountId);
+    userService.deleteByAccountId(accountId);
+    userGroupService.deleteByAccountId(accountId);
   }
 }
