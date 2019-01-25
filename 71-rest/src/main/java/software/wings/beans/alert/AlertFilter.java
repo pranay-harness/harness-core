@@ -1,7 +1,5 @@
 package software.wings.beans.alert;
 
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -19,9 +17,7 @@ public class AlertFilter {
 
   @NonNull Operator operator;
   @NonNull AlertType alertType;
-  @NonNull @Getter(AccessLevel.NONE) private final Map<String, Set<String>> conditions;
-
-  private enum Operator { MATCHING, NOT_MATCHING }
+  @NonNull Map<String, Set<String>> conditions;
 
   public boolean hasCondition(String conditionKey) {
     return conditions.containsKey(Objects.requireNonNull(conditionKey));
@@ -30,4 +26,6 @@ public class AlertFilter {
   public Set<String> getConditionValue(String conditionKey) {
     return conditions.getOrDefault(Objects.requireNonNull(conditionKey), Collections.emptySet());
   }
+
+  private enum Operator { MATCHING, NOT_MATCHING }
 }
