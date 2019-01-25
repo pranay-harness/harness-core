@@ -248,63 +248,63 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * App dynamics state type.
    */
-  APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, asList(), ORCHESTRATION_STENCILS),
+  APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * New relic state type.
    */
-  NEW_RELIC(NewRelicState.class, VERIFICATIONS, 3, asList(), ORCHESTRATION_STENCILS),
+  NEW_RELIC(NewRelicState.class, VERIFICATIONS, 3, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * dyna trace state type.
    */
-  DYNA_TRACE(DynatraceState.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS),
+  DYNA_TRACE(DynatraceState.class, VERIFICATIONS, 4, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Prometheus state type.
    */
-  PROMETHEUS(PrometheusState.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
+  PROMETHEUS(PrometheusState.class, VERIFICATIONS, 5, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Splunk state type.
    */
-  SPLUNK(SplunkState.class, VERIFICATIONS, 6, asList(), ORCHESTRATION_STENCILS),
+  SPLUNK(SplunkState.class, VERIFICATIONS, 6, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Splunk V2 state type.
    */
-  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 7, asList(), ORCHESTRATION_STENCILS),
+  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 7, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Elk state type.
    */
-  ELK(ElkAnalysisState.class, VERIFICATIONS, 8, "ELK", emptyList(), ORCHESTRATION_STENCILS),
+  ELK(ElkAnalysisState.class, VERIFICATIONS, 8, "ELK", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * LOGZ state type.
    */
-  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 9, "LOGZ", emptyList(), ORCHESTRATION_STENCILS),
+  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 9, "LOGZ", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Sumo state type.
    */
-  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 10, "SumoLogic", emptyList(), ORCHESTRATION_STENCILS),
+  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 10, "SumoLogic", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Sumo state type.
    */
-  DATA_DOG(DatadogState.class, VERIFICATIONS, 11, "Datadog", emptyList(), ORCHESTRATION_STENCILS),
+  DATA_DOG(DatadogState.class, VERIFICATIONS, 11, "Datadog", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 12, "CloudWatch", asList(), ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 12, "CloudWatch", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * New relic deployment marker state type.
    */
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 13, "NewRelic Deployment Marker",
-      asList(), ORCHESTRATION_STENCILS),
+      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   AWS_LAMBDA_VERIFICATION(
       AwsLambdaVerification.class, VERIFICATIONS, 14, "AWS Lambda Verification", asList(), ORCHESTRATION_STENCILS),
@@ -312,23 +312,26 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Generic APM verification state type.
    */
-  APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 15, "APM Verification", asList(), ORCHESTRATION_STENCILS),
+  APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 15, "APM Verification", asList(K8S_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
 
    * Generic LOG verification state type.
    */
-  LOG_VERIFICATION(CustomLogVerificationState.class, VERIFICATIONS, -1, "Log Verification", asList(), NONE),
+  LOG_VERIFICATION(
+      CustomLogVerificationState.class, VERIFICATIONS, -1, "Log Verification", asList(K8S_PHASE_STEP), NONE),
 
   /**
    * Bugsnag verification state type.
    */
-  BUG_SNAG(BugsnagState.class, VERIFICATIONS, 17, "Bugsnag", asList(), ORCHESTRATION_STENCILS),
+  BUG_SNAG(BugsnagState.class, VERIFICATIONS, 17, "Bugsnag", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * StackDriver state type.
    */
-  STACK_DRIVER(StackDriverState.class, VERIFICATIONS, 18, "StackDriver", asList(), ORCHESTRATION_STENCILS),
+  STACK_DRIVER(
+      StackDriverState.class, VERIFICATIONS, 18, "StackDriver", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.
@@ -538,7 +541,7 @@ public enum StateType implements StateTypeDescriptor {
   CLOUD_FORMATION_DELETE_STACK(CloudFormationDeleteStackState.class, PROVISIONERS, DE_PROVISION_CLOUD_FORMATION,
       asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_SWAP_SERVICE_SELECTORS(KubernetesSwapServiceSelectors.class, KUBERNETES,
+  KUBERNETES_SWAP_SERVICE_SELECTORS(KubernetesSwapServiceSelectors.class, KUBERNETES, 0,
       Constants.KUBERNETES_SWAP_SERVICE_SELECTORS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
           InfrastructureMappingType.GCP_KUBERNETES),
@@ -550,32 +553,32 @@ public enum StateType implements StateTypeDescriptor {
   TERRAFORM_ROLLBACK(TerraformRollbackState.class, PROVISIONERS, ROLLBACK_TERRAFORM_NAME,
       singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
-  K8S_DEPLOYMENT_ROLLING(K8sRollingDeploy.class, KUBERNETES, Constants.K8S_DEPLOYMENT_ROLLING,
+  K8S_DEPLOYMENT_ROLLING(K8sRollingDeploy.class, KUBERNETES, 0, Constants.K8S_DEPLOYMENT_ROLLING,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_SCALE(K8sScale.class, KUBERNETES, Constants.K8S_SCALE,
+  K8S_SCALE(K8sScale.class, KUBERNETES, 0, Constants.K8S_SCALE,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sRollingDeployRollback.class, KUBERNETES, K8S_DEPLOYMENT_ROLLING_ROLLBAK,
+  K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sRollingDeployRollback.class, KUBERNETES, 0, K8S_DEPLOYMENT_ROLLING_ROLLBAK,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_BLUE_GREEN_DEPLOY(K8sBlueGreenDeploy.class, KUBERNETES, Constants.K8S_BLUE_GREEN_DEPLOY,
+  K8S_BLUE_GREEN_DEPLOY(K8sBlueGreenDeploy.class, KUBERNETES, 0, Constants.K8S_BLUE_GREEN_DEPLOY,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_CANARY_SETUP(K8sCanarySetup.class, KUBERNETES, Constants.K8S_CANARY_SETUP,
+  K8S_CANARY_SETUP(K8sCanarySetup.class, KUBERNETES, 0, Constants.K8S_CANARY_SETUP,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_CANARY_ROLLBACK(K8sCanaryRollback.class, KUBERNETES, Constants.K8S_CANARY_ROLLBACK,
+  K8S_CANARY_ROLLBACK(K8sCanaryRollback.class, KUBERNETES, 0, Constants.K8S_CANARY_ROLLBACK,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
