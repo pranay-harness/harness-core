@@ -30,11 +30,6 @@ public class StressTest extends PersistenceTest {
 
   private MongoQueue<TestQueuableObject> queue;
 
-  /**
-   * Setup.
-   *
-   * @throws UnknownHostException the unknown host exception
-   */
   @Before
   public void setup() throws UnknownHostException {
     queue = new MongoQueue<>(TestQueuableObject.class);
@@ -42,9 +37,6 @@ public class StressTest extends PersistenceTest {
     on(queue).set("versionInfoManager", versionInfoManager);
   }
 
-  /**
-   * Should get with negative wait.
-   */
   @Test
   @RealMongo
   @Bypass
