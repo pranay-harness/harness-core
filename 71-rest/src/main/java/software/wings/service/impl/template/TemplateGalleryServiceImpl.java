@@ -7,7 +7,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.slf4j.LoggerFactory.getLogger;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.template.TemplateGallery.NAME_KEY;
@@ -87,7 +86,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   @Override
   public TemplateGallery get(String accountId, String galleryName) {
     return wingsPersistence.createQuery(TemplateGallery.class)
-        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(ACCOUNT_ID, accountId)
         .filter(NAME_KEY, galleryName.trim())
         .get();
   }
@@ -100,7 +99,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   @Override
   public TemplateGallery getByAccount(String accountId) {
     List<TemplateGallery> templateGalleries =
-        wingsPersistence.createQuery(TemplateGallery.class).filter(ACCOUNT_ID_KEY, accountId).asList();
+        wingsPersistence.createQuery(TemplateGallery.class).filter(ACCOUNT_ID, accountId).asList();
     if (isNotEmpty(templateGalleries)) {
       return templateGalleries.get(0);
     }
@@ -193,16 +192,16 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   private void deleteGalleryContents(String accountId, String galleryId) {
     wingsPersistence.delete(wingsPersistence.createQuery(TemplateFolder.class)
                                 .filter(TemplateFolder.GALLERY_ID_KEY, galleryId)
-                                .filter(ACCOUNT_ID_KEY, accountId));
+                                .filter(ACCOUNT_ID, accountId));
     wingsPersistence.delete(wingsPersistence.createQuery(Template.class)
                                 .filter(Template.GALLERY_ID_KEY, galleryId)
-                                .filter(ACCOUNT_ID_KEY, accountId));
+                                .filter(ACCOUNT_ID, accountId));
     wingsPersistence.delete(wingsPersistence.createQuery(VersionedTemplate.class)
                                 .filter(Template.GALLERY_ID_KEY, galleryId)
-                                .filter(ACCOUNT_ID_KEY, accountId));
+                                .filter(ACCOUNT_ID, accountId));
     wingsPersistence.delete(wingsPersistence.createQuery(TemplateVersion.class)
                                 .filter(Template.GALLERY_ID_KEY, galleryId)
-                                .filter(ACCOUNT_ID_KEY, accountId));
+                                .filter(ACCOUNT_ID, accountId));
   }
 
   @Override
@@ -272,11 +271,11 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(TemplateGallery.class).filter(ACCOUNT_ID_KEY, accountId));
-    wingsPersistence.delete(wingsPersistence.createQuery(TemplateFolder.class).filter(ACCOUNT_ID_KEY, accountId));
-    wingsPersistence.delete(wingsPersistence.createQuery(Template.class).filter(ACCOUNT_ID_KEY, accountId));
-    wingsPersistence.delete(wingsPersistence.createQuery(VersionedTemplate.class).filter(ACCOUNT_ID_KEY, accountId));
-    wingsPersistence.delete(wingsPersistence.createQuery(TemplateVersion.class).filter(ACCOUNT_ID_KEY, accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(TemplateGallery.class).filter(ACCOUNT_ID, accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(TemplateFolder.class).filter(ACCOUNT_ID, accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(Template.class).filter(ACCOUNT_ID, accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(VersionedTemplate.class).filter(ACCOUNT_ID, accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(TemplateVersion.class).filter(ACCOUNT_ID, accountId));
   }
 
   @Override

@@ -13,7 +13,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -252,7 +251,7 @@ public class SettingsServiceImpl implements SettingsService {
 
   private Map<String, String> listAccountOrAppDefaults(String accountId, String appId) {
     List<SettingAttribute> settingAttributes = wingsPersistence.createQuery(SettingAttribute.class)
-                                                   .filter(ACCOUNT_ID_KEY, accountId)
+                                                   .filter(ACCOUNT_ID, accountId)
                                                    .filter(APP_ID_KEY, appId)
                                                    .filter(VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())
                                                    .asList();
@@ -676,7 +675,7 @@ public class SettingsServiceImpl implements SettingsService {
     List<SettingAttribute> settingAttributes = new ArrayList<>();
 
     try (HIterator<SettingAttribute> iterator = new HIterator(wingsPersistence.createQuery(SettingAttribute.class)
-                                                                  .filter(ACCOUNT_ID_KEY, accountId)
+                                                                  .filter(ACCOUNT_ID, accountId)
                                                                   .filter(APP_ID_KEY, appId)
                                                                   .filter(ENV_ID_KEY, envId)
                                                                   .filter(VALUE_TYPE_KEY, type)

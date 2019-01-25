@@ -18,6 +18,7 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +30,7 @@ import javax.validation.Valid;
 /**
  * Created by peeyushaggarwal on 11/28/16.
  */
-public interface DelegateService {
+public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
   List<String> getKubernetesDelegateNames(String accountId);

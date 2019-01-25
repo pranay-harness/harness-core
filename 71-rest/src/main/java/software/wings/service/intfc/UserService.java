@@ -15,6 +15,7 @@ import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
 import software.wings.security.SecretManager;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -23,7 +24,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 3/28/16.
  */
-public interface UserService {
+public interface UserService extends OwnedByAccount {
   /**
    * Register a new user with basic account information. Create the account if that
    * account did not exist.

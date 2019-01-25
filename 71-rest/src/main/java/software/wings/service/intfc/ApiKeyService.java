@@ -4,8 +4,9 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ApiKeyEntry;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
-public interface ApiKeyService {
+public interface ApiKeyService extends OwnedByAccount {
   PageResponse<ApiKeyEntry> list(PageRequest<ApiKeyEntry> request);
   String generate(@NotEmpty String accountId);
   void delete(@NotEmpty String uuid);

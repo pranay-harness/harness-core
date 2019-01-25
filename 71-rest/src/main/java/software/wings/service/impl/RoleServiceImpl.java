@@ -101,21 +101,26 @@ public class RoleServiceImpl implements RoleService {
   public Role getAccountAdminRole(String accountId) {
     return wingsPersistence.createQuery(Role.class)
         .filter("roleType", RoleType.ACCOUNT_ADMIN)
-        .filter("accountId", accountId)
+        .filter(ACCOUNT_ID, accountId)
         .get();
   }
 
   @Override
   public List<Role> getAccountRoles(String accountId) {
-    return wingsPersistence.createQuery(Role.class).filter("accountId", accountId).asList();
+    return wingsPersistence.createQuery(Role.class).filter(ACCOUNT_ID, accountId).asList();
   }
 
   @Override
   public Role getAppAdminRole(String accountId, String appId) {
     return wingsPersistence.createQuery(Role.class)
         .filter("roleType", RoleType.APPLICATION_ADMIN)
-        .filter("accountId", accountId)
+        .filter(ACCOUNT_ID, accountId)
         .filter("appId", appId)
         .get();
+  }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(Role.class).filter(ACCOUNT_ID, accountId));
   }
 }

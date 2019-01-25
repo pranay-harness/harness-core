@@ -79,7 +79,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup save(UserGroup userGroup) {
-    Validator.notNullCheck("accountId", userGroup.getAccountId());
+    Validator.notNullCheck(ACCOUNT_ID, userGroup.getAccountId());
     UserGroup savedUserGroup = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(UserGroup.class, userGroup), "name", userGroup.getName());
     Account account = accountService.get(userGroup.getAccountId());
@@ -92,10 +92,10 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public PageResponse<UserGroup> list(String accountId, PageRequest<UserGroup> req, boolean loadUsers) {
-    Validator.notNullCheck("accountId", accountId, USER);
+    Validator.notNullCheck(ACCOUNT_ID, accountId, USER);
     Account account = accountService.get(accountId);
     Validator.notNullCheck("account", account, USER);
-    req.addFilter("accountId", Operator.EQ, accountId);
+    req.addFilter(ACCOUNT_ID, Operator.EQ, accountId);
     PageResponse<UserGroup> res = wingsPersistence.query(UserGroup.class, req);
     List<UserGroup> userGroupList = res.getResponse();
     // Using a custom comparator since our mongo apis don't support alphabetical sorting with case insensitivity.
@@ -124,6 +124,14 @@ public class UserGroupServiceImpl implements UserGroupService {
       return Collections.emptyList();
     }
     return userGroupList.stream().map(userGroup -> getUserGroupSummary(userGroup)).collect(toList());
+  }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    List<UserGroup> userGroups = wingsPersistence.createQuery(UserGroup.class).filter(ACCOUNT_ID, accountId).asList();
+    for (UserGroup userGroup : userGroups) {
+      delete(accountId, userGroup.getUuid());
+    }
   }
 
   private static class UserGroupComparator implements Comparator<UserGroup>, Serializable {
@@ -278,10 +286,10 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   private UserGroup update(UserGroup userGroup, UpdateOperations<UserGroup> operations) {
     Validator.notNullCheck("uuid", userGroup.getUuid());
-    Validator.notNullCheck("accountId", userGroup.getAccountId());
+    Validator.notNullCheck(ACCOUNT_ID, userGroup.getAccountId());
     Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
                                  .filter(ID_KEY, userGroup.getUuid())
-                                 .filter("accountId", userGroup.getAccountId());
+                                 .filter(ACCOUNT_ID, userGroup.getAccountId());
     wingsPersistence.update(query, operations);
     return get(userGroup.getAccountId(), userGroup.getUuid());
   }
@@ -321,7 +329,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public List<UserGroup> getUserGroupsByAccountId(String accountId, User user) {
     PageRequest<UserGroup> pageRequest = aPageRequest()
-                                             .addFilter("accountId", Operator.EQ, accountId)
+                                             .addFilter(ACCOUNT_ID, Operator.EQ, accountId)
                                              .addFilter("memberIds", Operator.HAS, user.getUuid())
                                              .build();
     PageResponse<UserGroup> pageResponse = list(accountId, pageRequest, true);
@@ -446,7 +454,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public List<UserGroup> getUserGroupsBySsoId(String accountId, String ssoId) {
     PageRequest<UserGroup> pageRequest = aPageRequest()
-                                             .addFilter("accountId", Operator.EQ, accountId)
+                                             .addFilter(ACCOUNT_ID, Operator.EQ, accountId)
                                              .addFilter("isSsoLinked", Operator.EQ, true)
                                              .addFilter("linkedSsoId", Operator.EQ, ssoId)
                                              .build();

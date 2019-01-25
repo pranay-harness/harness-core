@@ -6,13 +6,14 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.Iterator;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 // TODO: Create settings helper classes such as LdapHelper, SamlHelper, etc.
-public interface SSOSettingService {
+public interface SSOSettingService extends OwnedByAccount {
   SamlSettings getSamlSettingsByIdpUrl(@NotNull String idpUrl);
 
   SamlSettings getSamlSettingsByAccountId(@NotNull String accountId);
