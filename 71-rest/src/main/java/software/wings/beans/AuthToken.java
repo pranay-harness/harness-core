@@ -9,11 +9,9 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.simpleframework.xml.Transient;
 
+import java.time.OffsetDateTime;
 import java.util.Date;
 
-/**
- * Created by anubhaw on 3/14/16.
- */
 @Entity(value = "authTokens", noClassnameStored = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -23,7 +21,12 @@ public class AuthToken extends Base {
   private long expireAt;
   private String jwtToken;
   private boolean refreshed;
+
+  // TODO: remove this a after February 10th 2019
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date ttl;
+
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
 
   /**
    * Instantiates a new auth token.
@@ -36,6 +39,5 @@ public class AuthToken extends Base {
     setUuid(secureRandAlphaNumString(32));
     setAppId(Base.GLOBAL_APP_ID);
     expireAt = System.currentTimeMillis() + tokenExpiryInMillis;
-    ttl = new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000);
   }
 }
