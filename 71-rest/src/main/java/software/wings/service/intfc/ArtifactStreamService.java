@@ -98,6 +98,8 @@ public interface ArtifactStreamService extends OwnedByService {
    */
   Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId);
 
+  boolean artifactStreamsExistForService(String appId, String serviceId);
+
   List<ArtifactStream> getArtifactStreamsForService(String appId, String serviceId);
 
   Map<String, String> fetchArtifactSourceProperties(String accountId, String appId, String artifactStreamId);

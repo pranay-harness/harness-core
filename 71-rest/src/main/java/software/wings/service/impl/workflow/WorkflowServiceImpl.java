@@ -226,8 +226,11 @@ import javax.validation.executable.ValidateOnExecution;
 public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceImpl.class);
 
-  private static final List<String> kubernetesArtifactNeededStateTypes = Arrays.asList(KUBERNETES_SETUP.name(),
-      KUBERNETES_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name(), K8S_CANARY_SETUP.name(), K8S_BLUE_GREEN_DEPLOY.name());
+  private static final List<String> kubernetesArtifactNeededStateTypes =
+      Arrays.asList(KUBERNETES_SETUP.name(), KUBERNETES_DEPLOY.name());
+
+  private static final List<String> k8sV2ArtifactNeededStateTypes =
+      Arrays.asList(K8S_DEPLOYMENT_ROLLING.name(), K8S_CANARY_SETUP.name(), K8S_BLUE_GREEN_DEPLOY.name());
 
   private static final List<String> ecsArtifactNeededStateTypes =
       Arrays.asList(ECS_SERVICE_DEPLOY.name(), ECS_SERVICE_SETUP.name(), ECS_DAEMON_SERVICE_SETUP.name());
@@ -2145,6 +2148,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             }
           }
         }
+      } else if (k8sV2ArtifactNeededStateTypes.contains(step.getType())
+          && artifactStreamService.artifactStreamsExistForService(appId, serviceId)) {
+        artifactNeeded = true;
+        break;
       }
     }
 
