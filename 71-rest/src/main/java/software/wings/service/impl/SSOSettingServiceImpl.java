@@ -10,6 +10,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -45,6 +46,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
+@Singleton
 public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SecretManager secretManager;
