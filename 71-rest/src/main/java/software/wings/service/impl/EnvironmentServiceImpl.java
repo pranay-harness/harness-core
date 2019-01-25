@@ -524,7 +524,12 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     List<Environment> list = wingsPersistence.getAllEntities(pageRequest, () -> list(pageRequest, false));
 
-    return list.stream().collect(Collectors.groupingBy(Base::getAppId));
+    List<Base> emptyList = new ArrayList<>();
+
+    final Map<String, List<Base>> appEnvMap = list.stream().collect(Collectors.groupingBy(Base::getAppId));
+    appIds.forEach(appId -> appEnvMap.putIfAbsent(appId, emptyList));
+
+    return appEnvMap;
   }
 
   @Override
