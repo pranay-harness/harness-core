@@ -69,7 +69,7 @@ public class WorkflowExecution extends Base {
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);
 
-  @Indexed private String workflowId;
+  private String workflowId;
 
   private String stateMachineId;
   @Indexed private String envId;
