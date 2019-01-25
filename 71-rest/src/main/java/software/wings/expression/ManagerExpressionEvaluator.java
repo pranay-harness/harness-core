@@ -3,6 +3,7 @@ package software.wings.expression;
 import com.google.inject.Singleton;
 
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.JsonFunctor;
 import io.harness.expression.RegexFunctor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ public class ManagerExpressionEvaluator extends ExpressionEvaluator {
 
   public ManagerExpressionEvaluator() {
     addFunctor("regex", new RegexFunctor());
+    addFunctor("json", new JsonFunctor());
     addFunctor("aws", new AwsFunctor());
   }
 }
