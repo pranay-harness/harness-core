@@ -17,35 +17,35 @@ import java.util.Objects;
  */
 @Entity(value = "serviceInstance", noClassnameStored = true)
 public class ServiceInstance extends Base {
-  @Indexed private String envId;
+  private String envId;
 
   @Property("serviceTemplate") private String serviceTemplateId;
 
   private String serviceTemplateName;
 
-  @Indexed private String serviceId;
+  private String serviceId;
 
-  @Indexed private String serviceName;
+  private String serviceName;
 
   @Indexed private String hostId;
-  @Indexed private String hostName;
+  private String hostName;
   @Indexed private String publicDns;
   @Indexed private String infraMappingId;
   private String infraMappingType;
 
   private String artifactStreamId;
-  @Indexed private String artifactStreamName;
+  private String artifactStreamName;
   private String artifactId;
-  @Indexed private String artifactName;
-  @Indexed private long artifactDeployedOn;
-  @Indexed private ExecutionStatus artifactDeploymentStatus;
+  private String artifactName;
+  private long artifactDeployedOn;
+  private ExecutionStatus artifactDeploymentStatus;
   private String artifactDeploymentActivityId;
 
   private String lastActivityId;
   private ExecutionStatus lastActivityStatus;
   private long lastActivityCreatedAt;
-  @Indexed private String commandName;
-  @Indexed private String commandType;
+  private String commandName;
+  private String commandType;
   private long lastDeployedOn;
 
   /**
