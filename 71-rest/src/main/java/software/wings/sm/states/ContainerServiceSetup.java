@@ -80,6 +80,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 9/29/17
@@ -175,7 +176,8 @@ public abstract class ContainerServiceSetup extends State {
       StateExecutionData executionData =
           buildStateExecutionData(app, service, clusterName, activity, containerSetupParams);
 
-      Map<String, String> serviceVariables = context.getServiceVariables();
+      Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
+          Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
       Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
       if (serviceVariables != null) {

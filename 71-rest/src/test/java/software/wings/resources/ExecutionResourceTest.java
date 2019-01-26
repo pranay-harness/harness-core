@@ -26,9 +26,6 @@ import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
 
-/**
- * Created by rishi on 12/25/16.
- */
 public class ExecutionResourceTest {
   private static final AppService appService = mock(AppService.class);
   private static final WorkflowExecutionService workflowExecutionService = mock(WorkflowExecutionService.class);

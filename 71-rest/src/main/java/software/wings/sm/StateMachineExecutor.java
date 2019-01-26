@@ -68,6 +68,9 @@ import io.harness.observer.Subject;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.KryoUtils;
 import io.harness.serializer.MapperUtils;
+import io.harness.state.inspection.ExpressionVariableUsage;
+import io.harness.state.inspection.StateInspectionListener;
+import io.harness.state.inspection.StateInspectionService;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -129,7 +132,7 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Singleton
-public class StateMachineExecutor {
+public class StateMachineExecutor implements StateInspectionListener {
   private static final Logger logger = LoggerFactory.getLogger(StateMachineExecutor.class);
 
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
@@ -144,6 +147,7 @@ public class StateMachineExecutor {
   @Inject private Injector injector;
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private NotificationService notificationService;
+  @Inject private StateInspectionService stateInspectionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
@@ -470,6 +474,21 @@ public class StateMachineExecutor {
       injector.injectMembers(currentState);
       invokeAdvisors(context, currentState);
       executionResponse = currentState.execute(context);
+
+      final Map<String, Map<Object, Integer>> usage = context.getVariableResolverTracker().getUsage();
+      if (isNotEmpty(usage)) {
+        List<ExpressionVariableUsage.Item> items = new ArrayList<>();
+        usage.forEach((expression, values)
+                          -> values.forEach((expressionValue, count)
+                                                -> items.add(ExpressionVariableUsage.Item.builder()
+                                                                 .expression(expression)
+                                                                 .value(expressionValue.toString())
+                                                                 .count(count)
+                                                                 .build())));
+
+        stateInspectionService.append(
+            context.getStateExecutionInstance().getUuid(), ExpressionVariableUsage.builder().variables(items).build());
+      }
 
       handleExecuteResponse(context, executionResponse);
     } catch (WingsException exception) {
@@ -977,6 +996,7 @@ public class StateMachineExecutor {
     cloned.setEndTs(null);
     cloned.setCreatedAt(0);
     cloned.setLastUpdatedAt(0);
+    cloned.setHasInspection(false);
     return cloned;
   }
 
@@ -1523,6 +1543,18 @@ public class StateMachineExecutor {
     if (context.getStateExecutionInstance() != null) {
       exception.addContext(StateExecutionInstance.class, context.getStateExecutionInstance().getUuid());
     }
+  }
+
+  @Override
+  public void appendedDataFor(String stateExecutionInstanceId) {
+    final Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                                    .filter(StateExecutionInstance.ID_KEY, stateExecutionInstanceId);
+
+    final UpdateOperations<StateExecutionInstance> updateOperations =
+        wingsPersistence.createUpdateOperations(StateExecutionInstance.class)
+            .set(StateExecutionInstance.HAS_INSPECTION_KEY, true);
+
+    wingsPersistence.update(query, updateOperations);
   }
 
   private static class SmExecutionDispatcher implements Runnable {

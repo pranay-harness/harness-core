@@ -82,6 +82,7 @@ import software.wings.utils.Misc;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ShellScriptState extends State {
   private static final Logger logger = LoggerFactory.getLogger(ShellScriptState.class);
@@ -244,7 +245,8 @@ public class ShellScriptState extends State {
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
     String serviceTemplateId = infrastructureMapping == null ? null : infrastructureMapping.getServiceTemplateId();
 
-    Map<String, String> serviceVariables = context.getServiceVariables();
+    Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
+        Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
     if (serviceVariables != null) {

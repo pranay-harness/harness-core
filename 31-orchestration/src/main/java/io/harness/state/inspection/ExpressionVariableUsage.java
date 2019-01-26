@@ -1,5 +1,25 @@
 package io.harness.state.inspection;
 
-import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 
-public interface ExpressionVariableUsage { Map<String, Integer> getExpressionVariableUsage(); }
+import java.util.List;
+
+@Value
+@Builder
+public class ExpressionVariableUsage implements StateInspectionData {
+  @Value
+  @Builder
+  public static class Item {
+    private String expression;
+    private String value;
+    private int count;
+  }
+
+  private List<Item> variables;
+
+  @Override
+  public String key() {
+    return "expressionVariableUsage";
+  }
+}

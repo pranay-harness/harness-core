@@ -76,6 +76,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PcfSetupState extends State {
@@ -248,7 +249,8 @@ public class PcfSetupState extends State {
                                         : Misc.normalizeExpression(ServiceVersionConvention.getPrefix(
                                               app.getName(), serviceElement.getName(), env.getName()));
 
-    Map<String, String> serviceVariables = context.getServiceVariables();
+    Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
+        Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     if (serviceVariables != null) {
       serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
     }

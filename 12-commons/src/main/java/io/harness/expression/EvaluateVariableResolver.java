@@ -22,24 +22,22 @@ public class EvaluateVariableResolver extends StrLookup {
 
   @Override
   public String lookup(String variable) {
-    Object value = null;
+    String name = prefix + ++varIndex + suffix;
     try {
       if (isNotEmpty(objectPrefixes)) {
         variable = NormalizeVariableResolver.expand(variable, context, objectPrefixes);
       }
-      value = expressionEvaluator.evaluate(variable, context);
-      if (variableResolverTracker != null) {
-        variableResolverTracker.observed(variable, value);
+      final Object evaluated = expressionEvaluator.evaluate(variable, context);
+      context.set(name, evaluated);
+      if (variableResolverTracker != null && evaluated != null) {
+        variableResolverTracker.observed(variable, context.get(name));
       }
     } catch (JexlException exception) {
       if (exception.getCause() instanceof FunctorException) {
         throw(FunctorException) exception.getCause();
       }
-      value = "${" + variable + "}";
+      context.set(name, "${" + variable + "}");
     }
-
-    String name = prefix + ++varIndex + suffix;
-    context.set(name, value);
     return name;
   }
 }

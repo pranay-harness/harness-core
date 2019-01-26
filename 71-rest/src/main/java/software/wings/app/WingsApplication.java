@@ -56,6 +56,8 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonSubtypeResolver;
+import io.harness.state.inspection.StateInspectionService;
+import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.Notifier;
@@ -447,13 +449,16 @@ public class WingsApplication extends Application<MainConfiguration> {
     maintenanceController.register(new HazelcastListener());
 
     SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
+    StateInspectionServiceImpl stateInspectionService =
+        (StateInspectionServiceImpl) injector.getInstance(Key.get(StateInspectionService.class));
     StateMachineExecutor stateMachineExecutor = injector.getInstance(Key.get(StateMachineExecutor.class));
-    WorkflowServiceImpl workflowService = (WorkflowServiceImpl) injector.getInstance(Key.get(WorkflowService.class));
     WorkflowExecutionServiceImpl workflowExecutionService =
         (WorkflowExecutionServiceImpl) injector.getInstance(Key.get(WorkflowExecutionService.class));
+    WorkflowServiceImpl workflowService = (WorkflowServiceImpl) injector.getInstance(Key.get(WorkflowService.class));
 
     settingsService.getManipulationSubject().register(workflowService);
     stateMachineExecutor.getStatusUpdateSubject().register(workflowExecutionService);
+    stateInspectionService.getSubject().register(stateMachineExecutor);
   }
 
   private void registerCronJobs(Injector injector) {

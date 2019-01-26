@@ -17,6 +17,8 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
+import io.harness.state.inspection.StateInspection;
+import io.harness.state.inspection.StateInspectionService;
 import io.swagger.annotations.Api;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalAuthorization;
@@ -67,6 +69,7 @@ import javax.ws.rs.QueryParam;
 public class ExecutionResource {
   @Inject private AppService appService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private StateInspectionService stateInspectionService;
   @Inject private AuthHandler authHandler;
 
   /**
@@ -342,6 +345,25 @@ public class ExecutionResource {
       @PathParam("workflowExecutionId") String workflowExecutionId,
       @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
     return new RestResponse<>(workflowExecutionService.getExecutionInterrupts(appId, stateExecutionInstanceId));
+  }
+
+  /**
+   * Gets execution history list.
+   *
+   * @param appId                    the app id
+   * @param workflowExecutionId      the workflow execution id
+   * @param stateExecutionInstanceId the state execution instance id
+   * @return the execution history list
+   */
+  @GET
+  @Path("{workflowExecutionId}/inspection/{stateExecutionInstanceId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
+  public RestResponse<StateInspection> getExecutionInspection(@QueryParam("appId") String appId,
+      @PathParam("workflowExecutionId") String workflowExecutionId,
+      @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
+    return new RestResponse<>(stateInspectionService.get(stateExecutionInstanceId));
   }
 
   /**
