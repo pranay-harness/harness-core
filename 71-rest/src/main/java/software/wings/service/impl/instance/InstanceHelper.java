@@ -565,7 +565,9 @@ public class InstanceHelper {
   public String manualSync(String appId, String infraMappingId) {
     String syncJobId = UUIDGenerator.generateUuid();
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
-    instanceService.saveManualSyncJob(ManualSyncJob.builder().uuid(syncJobId).appId(appId).build());
+    String accountId = infrastructureMapping.getAccountId();
+    instanceService.saveManualSyncJob(
+        ManualSyncJob.builder().uuid(syncJobId).accountId(accountId).appId(appId).build());
     executorService.submit(() -> {
       try {
         syncNow(appId, infrastructureMapping);
@@ -616,7 +618,7 @@ public class InstanceHelper {
     }
   }
 
-  public List<Boolean> getManualSyncJobsStatus(Set<String> manualSyncJobIdSet) {
-    return instanceService.getManualSyncJobsStatus(manualSyncJobIdSet);
+  public List<Boolean> getManualSyncJobsStatus(String accountId, Set<String> manualSyncJobIdSet) {
+    return instanceService.getManualSyncJobsStatus(accountId, manualSyncJobIdSet);
   }
 }
