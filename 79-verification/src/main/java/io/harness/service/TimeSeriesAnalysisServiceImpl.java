@@ -305,9 +305,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     wingsPersistence.save(mlAnalysisResponse);
     wingsPersistence.save(riskSummary);
 
-    if (!isEmpty(mlAnalysisResponse.getOverallMetricScores())) {
-      double finalOverallScore =
-          mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(val -> val).average().orElse(0.0);
+    Map<String, Double> overAllScoreByMetricName = mlAnalysisResponse.getOverallMetricScores();
+    if (!isEmpty(overAllScoreByMetricName)) {
+      double finalOverallScore = Collections.max(overAllScoreByMetricName.values());
       if (!isEmpty(cvConfigId) && finalOverallScore >= MEDIUM_RISK_CUTOFF) {
         logger.warn("Risk detected for cvConfigId {}, stateType {}, finalOverallScore {}", cvConfigId, stateType,
             finalOverallScore);
