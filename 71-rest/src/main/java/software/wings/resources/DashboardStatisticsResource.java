@@ -192,7 +192,7 @@ public class DashboardStatisticsResource {
   @ExceptionMetered
   public RestResponse<List<Boolean>> getManualSyncJobStatus(
       @QueryParam("accountId") String accountId, @QueryParam("jobs") Set<String> manualSyncJobIdSet) {
-    return new RestResponse<>(instanceHelper.getManualSyncJobsStatus(manualSyncJobIdSet));
+    return new RestResponse<>(instanceHelper.getManualSyncJobsStatus(accountId, manualSyncJobIdSet));
   }
 
   /**

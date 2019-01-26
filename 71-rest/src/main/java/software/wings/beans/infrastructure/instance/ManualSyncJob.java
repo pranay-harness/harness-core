@@ -19,9 +19,12 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "manualSyncJobStatus", noClassnameStored = true)
 public class ManualSyncJob extends Base {
+  private String accountId;
+
   @Builder
-  public ManualSyncJob(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath) {
+  public ManualSyncJob(String uuid, String accountId, String appId, EmbeddedUser createdBy, long createdAt,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    this.accountId = accountId;
   }
 }

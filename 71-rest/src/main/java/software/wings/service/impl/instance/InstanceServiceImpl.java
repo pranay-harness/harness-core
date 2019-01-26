@@ -333,9 +333,12 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
-  public List<Boolean> getManualSyncJobsStatus(Set<String> manualJobIdSet) {
-    List<Key<ManualSyncJob>> keyList =
-        wingsPersistence.createQuery(ManualSyncJob.class).field("_id").in(manualJobIdSet).asKeyList();
+  public List<Boolean> getManualSyncJobsStatus(String accountId, Set<String> manualJobIdSet) {
+    List<Key<ManualSyncJob>> keyList = wingsPersistence.createQuery(ManualSyncJob.class)
+                                           .filter(ACCOUNT_ID, accountId)
+                                           .field("_id")
+                                           .in(manualJobIdSet)
+                                           .asKeyList();
     Set<Object> jobIdSetInDB = keyList.stream().map(key -> key.getId()).collect(Collectors.toSet());
     List<Boolean> result = Lists.newArrayList();
     manualJobIdSet.forEach(jobId -> result.add(!jobIdSetInDB.contains(jobId)));

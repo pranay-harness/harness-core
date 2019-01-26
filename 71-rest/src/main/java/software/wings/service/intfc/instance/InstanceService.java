@@ -123,5 +123,5 @@ public interface InstanceService
   void saveManualSyncJob(ManualSyncJob manualSyncJob);
   void deleteManualSyncJob(String appId, String manualSyncJobId);
 
-  List<Boolean> getManualSyncJobsStatus(Set<String> manualJobIdSet);
+  List<Boolean> getManualSyncJobsStatus(String accountId, Set<String> manualJobIdSet);
 }
