@@ -53,6 +53,7 @@ import com.google.common.collect.Lists;
 import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -215,7 +216,8 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     when(portalConfig.getUrl()).thenReturn("http://www.url.com");
     when(artifactService.get(any(), any())).thenReturn(anArtifact().build());
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
-    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
+    when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
+        .thenAnswer(i -> i.getArguments()[0]);
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
   }
 

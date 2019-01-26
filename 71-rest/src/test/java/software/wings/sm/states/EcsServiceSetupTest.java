@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -274,7 +275,8 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("evaluator", evaluator);
     on(context).set("variableProcessor", variableProcessor);
-    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
+    when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
+        .thenAnswer(i -> i.getArguments()[0]);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
   }

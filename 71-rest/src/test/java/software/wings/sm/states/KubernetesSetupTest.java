@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -275,7 +276,8 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
-    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
+    when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
+        .thenAnswer(i -> i.getArguments()[0]);
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);

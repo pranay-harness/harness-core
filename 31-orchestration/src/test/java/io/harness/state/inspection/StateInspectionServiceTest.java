@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.RealMongo;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -18,7 +17,6 @@ public class StateInspectionServiceTest extends OrchestrationTest {
   @Inject private StateInspectionService stateInspectionService;
 
   @Test
-  @RealMongo
   public void shouldMerge() throws IOException {
     final String uuid = generateUuid();
     stateInspectionService.append(uuid, asList(DummyStateInspectionData.builder().value("dummy value").build()));

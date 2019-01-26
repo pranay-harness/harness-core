@@ -57,6 +57,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .project(StateExecutionInstance.STATE_NAME_KEY, true)
                                  .project(StateExecutionInstance.STATE_TYPE_KEY, true)
                                  .project(StateExecutionInstance.STATUS_KEY, true)
+                                 .project(StateExecutionInstance.HAS_INSPECTION_KEY, true)
                                  .fetch())) {
       while (stateExecutionInstances.hasNext()) {
         StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();

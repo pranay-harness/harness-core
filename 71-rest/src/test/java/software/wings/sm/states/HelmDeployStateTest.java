@@ -44,6 +44,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import com.google.common.collect.Lists;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -213,7 +214,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
                         .helmCommandResponse(HelmReleaseHistoryCommandResponse.builder().build())
                         .build());
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
-    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
+    when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
+        .thenAnswer(i -> i.getArguments()[0]);
 
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);

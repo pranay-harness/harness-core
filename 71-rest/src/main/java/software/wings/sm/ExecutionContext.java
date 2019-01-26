@@ -68,7 +68,7 @@ public interface ExecutionContext {
 
   String getStateExecutionInstanceName();
 
-  Map<String, String> getServiceVariables();
+  Map<String, Object> getServiceVariables();
 
   Map<String, String> getSafeDisplayServiceVariables();
 

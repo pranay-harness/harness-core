@@ -19,7 +19,10 @@ import com.google.inject.Injector;
 
 import io.harness.expression.LateBindingMap;
 import io.harness.expression.LateBindingValue;
+import io.harness.expression.SecretString;
+import io.harness.expression.VariableResolverTracker;
 import lombok.Builder;
+import lombok.Getter;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,6 +98,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
   private transient Map<String, Object> contextMap;
+  @Getter private transient VariableResolverTracker variableResolverTracker = new VariableResolverTracker();
 
   /**
    * Instantiates a new execution context impl.
@@ -351,7 +355,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   public String renderExpression(String expression, Map<String, Object> context) {
-    return evaluator.substitute(expression, context, normalizeStateName(stateExecutionInstance.getDisplayName()));
+    return evaluator.substitute(
+        expression, context, variableResolverTracker, normalizeStateName(stateExecutionInstance.getDisplayName()));
   }
 
   public Object evaluateExpression(String expression, Map<String, Object> context) {
@@ -495,7 +500,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       executionContext.managerDecryptionService.decrypt(serviceVariable,
           executionContext.secretManager.getEncryptionDetails(
               serviceVariable, executionContext.getAppId(), executionContext.getWorkflowExecutionId()));
-      final String value = new String(serviceVariable.getValue());
+      final SecretString value = SecretString.builder().value(new String(serviceVariable.getValue())).build();
       ((Map<String, Object>) executionContext.contextMap.get(SERVICE_VARIABLE)).put(serviceVariable.getName(), value);
       return value;
     }
@@ -700,25 +705,31 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
-  public Map<String, String> getServiceVariables() {
+  public Map<String, Object> getServiceVariables() {
     return getServiceVariables(OBTAIN_VALUE);
   }
 
   @Override
   public Map<String, String> getSafeDisplayServiceVariables() {
-    return getServiceVariables(MASKED);
+    Map<String, Object> map = getServiceVariables(MASKED);
+    return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
   }
 
   @SuppressWarnings("unchecked")
-  private Map<String, String> getServiceVariables(EncryptedFieldMode encryptedFieldMode) {
+  private Map<String, Object> getServiceVariables(EncryptedFieldMode encryptedFieldMode) {
     List<ServiceVariable> serviceVariables = prepareServiceVariables(
         encryptedFieldMode == MASKED ? EncryptedFieldComputeMode.MASKED : EncryptedFieldComputeMode.OBTAIN_VALUE);
 
-    Map<String, String> variables = new HashMap<>();
+    Map<String, Object> variables = new HashMap<>();
     if (isNotEmpty(serviceVariables)) {
-      serviceVariables.forEach(serviceVariable
-          -> variables.put(
-              renderExpression(serviceVariable.getName()), renderExpression(new String(serviceVariable.getValue()))));
+      serviceVariables.forEach(serviceVariable -> {
+        String name = renderExpression(serviceVariable.getName());
+        if (serviceVariable.isDecrypted()) {
+          variables.put(name, SecretString.builder().value(new String(serviceVariable.getValue())).build());
+        } else {
+          variables.put(name, renderExpression(new String(serviceVariable.getValue())));
+        }
+      });
     }
 
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);

@@ -105,6 +105,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -256,7 +257,8 @@ public class CommandState extends State {
         artifact = findArtifact(service.getUuid(), context);
       }
 
-      Map<String, String> serviceVariables = context.getServiceVariables();
+      Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
+          Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
       Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
       if (serviceVariables != null) {

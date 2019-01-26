@@ -40,6 +40,8 @@ public class GraphNode {
   private int executionHistoryCount;
   private int interruptHistoryCount;
 
+  private boolean hasInspection;
+
   @Default boolean valid = true;
   private String validationMessage;
   private Map<String, String> inValidFieldMessages;

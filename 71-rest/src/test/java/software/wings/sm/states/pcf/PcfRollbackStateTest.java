@@ -7,6 +7,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -27,6 +29,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -94,7 +97,8 @@ public class PcfRollbackStateTest extends WingsBaseTest {
     setInternalState(pcfRollbackState, "secretManager", secretManager);
     context = new ExecutionContextImpl(stateExecutionInstance);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
-    when(evaluator.substitute(any(), any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
+    when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
+        .thenAnswer(i -> i.getArguments()[0]);
   }
 
   @Test
