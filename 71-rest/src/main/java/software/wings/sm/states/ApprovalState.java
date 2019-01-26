@@ -6,6 +6,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
@@ -33,6 +34,7 @@ import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.JiraExecutionData;
+import software.wings.api.WorkflowElement;
 import software.wings.beans.Application;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -114,6 +116,8 @@ public class ApprovalState extends State {
           .build();
     }
 
+    setPipelineVariables(context);
+
     Application app = ((ExecutionContextImpl) context).getApp();
     Map<String, String> placeholderValues = getPlaceholderValues(context, "", PAUSED);
     // Open an alert
@@ -146,6 +150,21 @@ public class ApprovalState extends State {
         return executeUserGroupApproval(userGroups, app.getAccountId(), placeholderValues, approvalId, executionData);
       default:
         throw new WingsException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
+    }
+  }
+
+  private void setPipelineVariables(ExecutionContext context) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Map<String, Object> variables = new HashMap<>();
+    if (isNotEmpty(workflowStandardParams.getWorkflowVariables())) {
+      workflowStandardParams.getWorkflowVariables().forEach((s, s2) -> { variables.put(s, s2); });
+      if (isNotEmpty(variables)) {
+        if (workflowStandardParams.getWorkflowElement() == null) {
+          workflowStandardParams.setWorkflowElement(WorkflowElement.builder().variables(variables).build());
+        } else {
+          workflowStandardParams.getWorkflowElement().setVariables(variables);
+        }
+      }
     }
   }
 
@@ -238,6 +257,7 @@ public class ApprovalState extends State {
   private ExecutionResponse handleAsyncJira(ExecutionContext context, ApprovalStateExecutionData executionData,
       ApprovalStateExecutionData approvalNotifyResponse) {
     JiraApprovalParams jiraApprovalParams = approvalStateParams.getJiraApprovalParams();
+    setPipelineVariables(context);
     jiraApprovalParams.setIssueId(context.renderExpression(jiraApprovalParams.getIssueId()));
     Application app = ((ExecutionContextImpl) context).getApp();
     JiraExecutionData jiraExecutionData = jiraHelperService.deleteWebhook(
