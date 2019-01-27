@@ -13,6 +13,7 @@ import static software.wings.beans.VariableType.TEXT;
 import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
+import io.harness.delegates.beans.ScriptType;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
@@ -27,7 +28,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.api.ScriptType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.BuildWorkflow;
@@ -45,6 +45,7 @@ import software.wings.service.impl.WorkflowExecutionServiceImpl;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.ws.rs.core.GenericType;
 
 //@Ignore
@@ -109,8 +110,8 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
     assertThat(workflowExecution.getWorkflowId()).isEqualTo(buildWorkflow.getUuid());
     // cleanup - unlink template and delete template
     Map<String, WorkflowPhase> map = ((BuildWorkflow) buildWorkflow.getOrchestrationWorkflow()).getWorkflowPhaseIdMap();
-    for (String id : map.keySet()) {
-      WorkflowPhase phase = map.get(id);
+    for (Entry<String, WorkflowPhase> entry : map.entrySet()) {
+      WorkflowPhase phase = entry.getValue();
       if (phase.getName().equalsIgnoreCase("Phase 1")) {
         List<PhaseStep> phaseSteps = phase.getPhaseSteps();
         for (PhaseStep phaseStep : phaseSteps) {

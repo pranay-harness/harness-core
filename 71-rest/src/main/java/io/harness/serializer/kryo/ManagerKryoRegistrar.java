@@ -2,7 +2,9 @@ package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.serializer.KryoRegistrar;
+import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
+import software.wings.beans.ApprovalDetails.Action;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateResponse;
@@ -26,5 +28,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsRoute53ListHostedZonesRequest.class, 7108);
     kryo.register(AwsRoute53ListHostedZonesResponse.class, 7109);
     kryo.register(AwsRoute53HostedZoneData.class, 7110);
+    kryo.register(Action.class, 7111);
+    kryo.register(ShellScriptApprovalExecutionData.class, 7112);
   }
 }

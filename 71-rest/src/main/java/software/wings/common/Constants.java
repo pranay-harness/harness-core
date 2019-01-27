@@ -979,4 +979,12 @@ public interface Constants {
    */
   String ACCOUNT_ID_KEY = "accountId";
   String APP_ID_KEY = "appId";
+  String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
+
+  /**
+   * Script as Approval
+   */
+  String SCRIPT_APPROVAL_COMMAND = "Execute Approval Script";
+  String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
+  String SCRIPT_APPROVAL_JOB_GROUP = "SHELL_SCRIPT_APPROVAL_JOB";
 }

@@ -11,9 +11,7 @@ public class StaticLimit implements io.harness.limits.lib.StaticLimit {
   private final LimitType limitType = LimitType.STATIC;
 
   public static StaticLimit copy(io.harness.limits.lib.StaticLimit limit) {
-    StaticLimit copy = new StaticLimit(limit.getCount());
-
-    return copy;
+    return new StaticLimit(limit.getCount());
   }
 
   // for morphia
