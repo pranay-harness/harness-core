@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.api.EnhancedRandom;
-import software.wings.api.ScriptType;
+import io.harness.delegates.beans.ScriptType;
 import software.wings.beans.Account;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateBuilder;

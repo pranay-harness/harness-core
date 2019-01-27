@@ -1,8 +1,8 @@
 package software.wings.utils;
 
+import static io.harness.delegates.beans.ScriptType.POWERSHELL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static software.wings.api.ScriptType.POWERSHELL;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.AWS_AMI;

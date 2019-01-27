@@ -2,10 +2,10 @@ package software.wings.service.impl.template;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.delegates.beans.ScriptType.POWERSHELL;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static software.wings.api.ScriptType.POWERSHELL;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;

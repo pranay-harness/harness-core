@@ -20,6 +20,7 @@ import static software.wings.utils.WingsTestConstants.S3_URL;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import io.harness.delegates.beans.ScriptType;
 import io.harness.exception.WingsException;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -30,7 +31,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.ScriptType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.Builder;

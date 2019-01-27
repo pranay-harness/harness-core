@@ -9,7 +9,7 @@ import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_TYPE
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_FILES;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_PATTERNS;
 
-import software.wings.api.ScriptType;
+import io.harness.delegates.beans.ScriptType;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnit.AbstractYaml;

@@ -15,12 +15,12 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 
+import io.harness.delegates.beans.ScriptType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
-import software.wings.api.ScriptType;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;

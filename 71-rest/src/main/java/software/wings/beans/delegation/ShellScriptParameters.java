@@ -3,11 +3,11 @@ package software.wings.beans.delegation;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegates.beans.ScriptType;
 import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Setter;
 import lombok.Value;
-import software.wings.api.ScriptType;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.local.executors.ShellExecutorConfig;

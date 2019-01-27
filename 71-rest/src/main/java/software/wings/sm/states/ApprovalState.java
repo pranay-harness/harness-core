@@ -4,18 +4,28 @@ import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
+import static io.harness.beans.ExecutionStatus.REJECTED;
+import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.event.model.EventConstants.ENVIRONMENT_ID;
+import static io.harness.event.model.EventConstants.ENVIRONMENT_NAME;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
+import static software.wings.common.Constants.SCRIPT_APPROVAL_COMMAND;
+import static software.wings.common.Constants.SCRIPT_APPROVAL_JOB_GROUP;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
@@ -34,8 +44,13 @@ import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.JiraExecutionData;
+import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.api.WorkflowElement;
+import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
+import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.User;
@@ -44,12 +59,17 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.approval.ApprovalStateParams;
 import software.wings.beans.approval.JiraApprovalParams;
+import software.wings.beans.approval.ShellScriptApprovalParams;
+import software.wings.beans.command.Command.Builder;
+import software.wings.beans.command.CommandType;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.scheduler.JiraPollingJob;
+import software.wings.scheduler.ScriptApprovalJob;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.JiraHelperService;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
@@ -63,6 +83,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
@@ -78,6 +99,8 @@ public class ApprovalState extends State {
   @Getter @Setter private List<String> userGroups = new ArrayList<>();
   @Getter @Setter private boolean disable;
 
+  public enum ApprovalStateType { JIRA, USER_GROUP, SHELL_SCRIPT }
+
   @Inject private AlertService alertService;
   @Inject private NotificationService notificationService;
   @Inject private WorkflowExecutionService workflowExecutionService;
@@ -88,12 +111,11 @@ public class ApprovalState extends State {
   @Inject private UserGroupService userGroupService;
   @Inject private UserService userService;
   @Inject private JiraHelperService jiraHelperService;
+  @Inject private transient ActivityService activityService;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
 
   @Getter @Setter ApprovalStateParams approvalStateParams;
   @Getter @Setter ApprovalStateType approvalStateType = USER_GROUP;
-
-  public enum ApprovalStateType { JIRA, USER_GROUP }
 
   public ApprovalState(String name) {
     super(name, StateType.APPROVAL.name());
@@ -148,6 +170,9 @@ public class ApprovalState extends State {
         return executeJiraApproval(context, executionData, approvalId);
       case USER_GROUP:
         return executeUserGroupApproval(userGroups, app.getAccountId(), placeholderValues, approvalId, executionData);
+      case SHELL_SCRIPT:
+        return executeShellScriptApproval(context, app.getAccountId(), app.getUuid(), approvalId,
+            approvalStateParams.getShellScriptApprovalParams(), executionData);
       default:
         throw new WingsException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
     }
@@ -166,6 +191,66 @@ public class ApprovalState extends State {
         }
       }
     }
+  }
+
+  private String createActivity(ExecutionContext executionContext) {
+    Application app = ((ExecutionContextImpl) executionContext).getApp();
+    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+
+    ActivityBuilder activityBuilder =
+        Activity.builder()
+            .applicationName(app.getName())
+            .commandName(getName())
+            .type(Type.Other)
+            .workflowType(executionContext.getWorkflowType())
+            .workflowExecutionName(executionContext.getWorkflowExecutionName())
+            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+            .commandType(getStateType())
+            .workflowExecutionId(executionContext.getWorkflowExecutionId())
+            .workflowId(executionContext.getWorkflowId())
+            .commandUnits(
+                asList(Builder.aCommand().withName(SCRIPT_APPROVAL_COMMAND).withCommandType(CommandType.OTHER).build()))
+            .status(RUNNING);
+
+    if (executionContext.getOrchestrationWorkflowType() != null
+        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
+      activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
+    } else {
+      activityBuilder.environmentId(env != null ? env.getUuid() : ENVIRONMENT_ID)
+          .environmentName(env != null ? env.getName() : ENVIRONMENT_NAME)
+          .environmentType(env != null ? env.getEnvironmentType() : ALL);
+    }
+
+    Activity activity = activityBuilder.build();
+    activity.setAppId(app.getUuid());
+    return activityService.save(activity).getUuid();
+  }
+
+  private ExecutionResponse executeShellScriptApproval(ExecutionContext context, String accountId, String appId,
+      String approvalId, ShellScriptApprovalParams parameters, ApprovalStateExecutionData executionData) {
+    parameters.setScriptString(context.renderExpression(parameters.getScriptString()));
+    String activityId = createActivity(context);
+
+    ScriptApprovalJob.doRetryJob(
+        serviceJobScheduler, accountId, appId, approvalId, context.getWorkflowExecutionId(), activityId, parameters);
+
+    ExecutionResponse executionResponse = anExecutionResponse()
+                                              .withAsync(true)
+                                              .withExecutionStatus(RUNNING)
+                                              .withErrorMessage("Waiting for Approval")
+                                              .withCorrelationIds(asList(approvalId))
+                                              .build();
+
+    Environment env = ((ExecutionContextImpl) context).getEnv();
+    if (env == null) {
+      executionResponse.setStateExecutionData(executionData);
+    } else {
+      executionResponse.setStateExecutionData(
+          ShellScriptApprovalExecutionData.builder().activityId(activityId).approvalId(approvalId).build());
+    }
+
+    return executionResponse;
   }
 
   private ExecutionResponse executeJiraApproval(
@@ -221,11 +306,6 @@ public class ApprovalState extends State {
     ApprovalStateExecutionData approvalNotifyResponse =
         (ApprovalStateExecutionData) response.values().iterator().next();
 
-    ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
-    executionData.setApprovedBy(approvalNotifyResponse.getApprovedBy());
-    executionData.setComments(approvalNotifyResponse.getComments());
-    executionData.setApprovedOn(System.currentTimeMillis());
-
     // Close the alert
     Application app = ((ExecutionContextImpl) context).getApp();
     ApprovalNeededAlert approvalNeededAlert = ApprovalNeededAlert.builder()
@@ -234,6 +314,15 @@ public class ApprovalState extends State {
                                                   .build();
     populateApprovalAlert(approvalNeededAlert, context);
     alertService.closeAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded, approvalNeededAlert);
+
+    if (context.getStateExecutionData() instanceof ShellScriptApprovalExecutionData) {
+      return handleAsyncShellScript(context, context.getStateExecutionData(), approvalNotifyResponse);
+    }
+
+    ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
+    executionData.setApprovedBy(approvalNotifyResponse.getApprovedBy());
+    executionData.setComments(approvalNotifyResponse.getComments());
+    executionData.setApprovedOn(System.currentTimeMillis());
 
     Map<String, String> placeholderValues = new HashMap<>();
     if (approvalNotifyResponse.getApprovedBy() != null) {
@@ -249,8 +338,50 @@ public class ApprovalState extends State {
         return handleAsyncJira(context, executionData, approvalNotifyResponse);
       case USER_GROUP:
         return handleAsyncUserGroup(userGroups, placeholderValues, context, executionData, approvalNotifyResponse);
+      case SHELL_SCRIPT:
+        return handleAsyncShellScript(context, context.getStateExecutionData(), approvalNotifyResponse);
       default:
-        throw new WingsException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
+        throw new WingsException("Invalid ApprovalStateType");
+    }
+  }
+
+  private ExecutionResponse handleAsyncShellScript(
+      ExecutionContext context, StateExecutionData executionData, ApprovalStateExecutionData approvalNotifyResponse) {
+    String errorMessage = "";
+    if (approvalNotifyResponse.getStatus() == REJECTED) {
+      errorMessage = "Rejected by Script";
+    } else if (approvalNotifyResponse.getStatus() == SUCCESS) {
+      errorMessage = "Approved by Script";
+    } else if (approvalNotifyResponse.getStatus() == PAUSED) {
+      errorMessage = "Waiting for Approval";
+    }
+
+    setPipelineVariables(context);
+    Environment env = ((ExecutionContextImpl) context).getEnv();
+
+    // If the Approval is in a pipeline, ApprovalStateExecutionData is expected.
+    if (env == null) {
+      ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder()
+                                                                  .approvalId(approvalNotifyResponse.getApprovalId())
+                                                                  .appId(context.getAppId())
+                                                                  .comments(errorMessage)
+                                                                  .build();
+
+      if (approvalNotifyResponse.getStatus() == SUCCESS || approvalNotifyResponse.getStatus() == REJECTED) {
+        approvalStateExecutionData.setApprovedOn(approvalNotifyResponse.getApprovedOn());
+      }
+
+      return anExecutionResponse()
+          .withStateExecutionData(approvalStateExecutionData)
+          .withExecutionStatus(approvalNotifyResponse.getStatus())
+          .withErrorMessage(errorMessage)
+          .build();
+    } else {
+      return anExecutionResponse()
+          .withStateExecutionData(executionData)
+          .withExecutionStatus(approvalNotifyResponse.getStatus())
+          .withErrorMessage(errorMessage)
+          .build();
     }
   }
 
@@ -342,9 +473,17 @@ public class ApprovalState extends State {
       case USER_GROUP:
         sendEmailToUserGroupMembers(userGroups, app.getAccountId(), notificationMessageType, placeholderValues);
         return;
+      case SHELL_SCRIPT:
+        handleAbortScriptApproval(context.getStateExecutionData());
+        return;
       default:
         throw new WingsException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
     }
+  }
+
+  private void handleAbortScriptApproval(StateExecutionData stateExecutionData) {
+    ShellScriptApprovalExecutionData executionData = (ShellScriptApprovalExecutionData) stateExecutionData;
+    serviceJobScheduler.deleteJob(executionData.getApprovalId(), SCRIPT_APPROVAL_JOB_GROUP);
   }
 
   private void handleAbortEventJira(ExecutionContext context, Application app) {

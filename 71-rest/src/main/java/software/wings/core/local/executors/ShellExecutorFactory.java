@@ -3,7 +3,7 @@ package software.wings.core.local.executors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import software.wings.api.ScriptType;
+import io.harness.delegates.beans.ScriptType;
 import software.wings.delegatetasks.DelegateLogService;
 
 @Singleton

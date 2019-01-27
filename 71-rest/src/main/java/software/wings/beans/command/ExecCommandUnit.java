@@ -8,13 +8,13 @@ import com.google.common.base.MoreObjects;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegates.beans.ScriptType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.ScriptType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.stencils.DefaultValue;
 

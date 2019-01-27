@@ -1,4 +1,4 @@
-package software.wings.api;
+package io.harness.delegates.beans;
 
 public enum ScriptType {
   BASH("Bash Script"),

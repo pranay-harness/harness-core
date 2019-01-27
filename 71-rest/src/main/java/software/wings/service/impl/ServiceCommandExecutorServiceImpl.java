@@ -7,11 +7,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegates.beans.ScriptType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
-import software.wings.api.ScriptType;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
