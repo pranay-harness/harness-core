@@ -562,12 +562,19 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     @Override
     public Object bind() {
-      executionContext.contextMap.remove(ENVIRONMENT_VARIABLE);
-
       Map<String, Object> variables = new HashMap<>();
 
+      final Environment environment = executionContext.getEnv();
+
+      if (environment == null) {
+        executionContext.contextMap.put(ENVIRONMENT_VARIABLE, variables);
+        return variables;
+      }
+
+      executionContext.contextMap.remove(ENVIRONMENT_VARIABLE);
+
       final List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
-          executionContext.getAppId(), executionContext.getEnv().getUuid(), OBTAIN_VALUE);
+          executionContext.getAppId(), environment.getUuid(), OBTAIN_VALUE);
 
       executionContext.prepareServiceVariables(EncryptedFieldComputeMode.OBTAIN_META);
 
