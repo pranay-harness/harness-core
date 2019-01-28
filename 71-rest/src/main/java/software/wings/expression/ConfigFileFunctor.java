@@ -4,6 +4,8 @@ import io.harness.data.encoding.EncodingUtils;
 import io.harness.exception.FunctorException;
 import io.harness.expression.ExpressionFunctor;
 import lombok.Builder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -12,6 +14,8 @@ import java.nio.charset.Charset;
 
 @Builder
 public class ConfigFileFunctor implements ExpressionFunctor {
+  private static final Logger logger = LoggerFactory.getLogger(ConfigFileFunctor.class);
+
   private ServiceTemplateService serviceTemplateService;
   private ConfigService configService;
   private String appId;
@@ -35,11 +39,17 @@ public class ConfigFileFunctor implements ExpressionFunctor {
   }
 
   private byte[] getConfigFileContent(String relativeFilePath) {
+    logger.info("Get content for file: {}", relativeFilePath);
     ConfigFile configFile =
         serviceTemplateService.computedConfigFileByRelativeFilePath(appId, envId, serviceTemplateId, relativeFilePath);
     if (configFile == null) {
       throw new FunctorException("Config file " + relativeFilePath + " not found");
     }
+
+    logger.info("ConfigFile details: relativePath:{}, encrypted:{}, encryptedFileId:{}, fileId:{}",
+        configFile.getRelativeFilePath(), configFile.isEncrypted(), configFile.getEncryptedFileId(),
+        configFile.getUuid());
+
     return configService.getFileContent(appId, configFile);
   }
 }

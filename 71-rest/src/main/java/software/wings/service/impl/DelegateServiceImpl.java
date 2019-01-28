@@ -1367,10 +1367,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtil,
               delegateTask.getArtifactStreamId());
       if (delegateTask.getParameters().length == 1 && delegateTask.getParameters()[0] instanceof TaskParameters) {
+        logger.info("Applying ManagerPreExecutionExpressionEvaluator for delegateTask {}", delegateTask.getUuid());
         ExpressionReflectionUtils.applyExpression(delegateTask.getParameters()[0],
             value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
       }
     } catch (FunctorException | CriticalExpressionEvaluationException exception) {
+      logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(ACCOUNT_ID, delegateTask.getAccountId())
                                           .filter(ID_KEY, delegateTask.getUuid());
