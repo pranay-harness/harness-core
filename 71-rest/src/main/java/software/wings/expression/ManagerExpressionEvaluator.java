@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.JsonFunctor;
 import io.harness.expression.RegexFunctor;
+import io.harness.expression.XmlFunctor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,7 @@ public class ManagerExpressionEvaluator extends ExpressionEvaluator {
   public ManagerExpressionEvaluator() {
     addFunctor("regex", new RegexFunctor());
     addFunctor("json", new JsonFunctor());
+    addFunctor("xml", new XmlFunctor());
     addFunctor("aws", new AwsFunctor());
   }
 }

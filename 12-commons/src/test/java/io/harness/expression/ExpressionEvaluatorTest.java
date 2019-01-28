@@ -228,15 +228,16 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
-  public void shouldAccessJson() {
+  public void shouldAccessJson() throws IOException {
+    URL url = getClass().getResource("/store.json");
+    String json = Resources.toString(url, Charsets.UTF_8);
+
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     expressionEvaluator.addFunctor("json", new JsonFunctor());
 
-    Map<String, Object> context = ImmutableMap.<String, Object>builder()
-                                      .put("body", "{ \"item\": \"value\", \"level1\": { \"level2\" : \"value\" } }")
-                                      .build();
-    assertThat(expressionEvaluator.substitute("${json.object(body).item}", context)).isEqualTo("value");
-    assertThat(expressionEvaluator.substitute("${json.object(body).level1.level2}", context)).isEqualTo("value");
+    Map<String, Object> context = ImmutableMap.<String, Object>builder().put("body", json).build();
+
+    assertThat(expressionEvaluator.substitute("${json.object(body).store.bicycle.color}", context)).isEqualTo("red");
   }
 
   @Test
@@ -265,6 +266,20 @@ public class ExpressionEvaluatorTest extends CategoryTest {
 
     assertThat(expressionEvaluator.substitute("${json.list(\"store.book\", body).get(2).isbn}", context))
         .isEqualTo("0-553-21311-3");
+  }
+
+  @Test
+  public void shouldSelectXPath() throws IOException {
+    URL url = getClass().getResource("/store.xml");
+    String json = Resources.toString(url, Charsets.UTF_8);
+
+    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+    expressionEvaluator.addFunctor("xml", new XmlFunctor());
+
+    Map<String, Object> context = ImmutableMap.<String, Object>builder().put("body", json).build();
+
+    assertThat(expressionEvaluator.substitute("${xml.select(\"/bookstore/book[1]/title\", body)}", context))
+        .isEqualTo("Everyday Italian");
   }
 
   @Test
