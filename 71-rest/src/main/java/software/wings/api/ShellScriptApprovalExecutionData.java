@@ -43,10 +43,15 @@ public class ShellScriptApprovalExecutionData extends StateExecutionData impleme
         ExecutionDataValue.builder().displayName("Activity Id").value(activityId).build());
     putNotNull(executionDetails, "name", ExecutionDataValue.builder().displayName("Name").value(name).build());
 
-    putNotNull(executionDetails, "approvalAction",
-        ExecutionDataValue.builder().displayName("Approval Action").value(approvalAction).build());
-    putNotNull(executionDetails, "executionStatus",
-        ExecutionDataValue.builder().displayName("Execution Status").value(executionStatus).build());
+    if (approvalAction != null) {
+      putNotNull(executionDetails, "approvalAction",
+          ExecutionDataValue.builder().displayName("Approval Action").value(approvalAction.name()).build());
+    }
+
+    if (executionStatus != null) {
+      putNotNull(executionDetails, "executionStatus",
+          ExecutionDataValue.builder().displayName("Execution Status").value(executionStatus.name()).build());
+    }
 
     if (isNotEmpty(sweepingOutputEnvVariables)) {
       putNotNull(executionDetails, "sweepingOutputEnvVariables",

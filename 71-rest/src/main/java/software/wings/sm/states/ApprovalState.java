@@ -36,6 +36,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -242,8 +243,7 @@ public class ApprovalState extends State {
                                               .withCorrelationIds(asList(approvalId))
                                               .build();
 
-    Environment env = ((ExecutionContextImpl) context).getEnv();
-    if (env == null) {
+    if (EmptyPredicate.isNotEmpty(context.getPipelineStateElementId())) {
       executionResponse.setStateExecutionData(executionData);
     } else {
       executionResponse.setStateExecutionData(
@@ -352,15 +352,20 @@ public class ApprovalState extends State {
       errorMessage = "Rejected by Script";
     } else if (approvalNotifyResponse.getStatus() == SUCCESS) {
       errorMessage = "Approved by Script";
-    } else if (approvalNotifyResponse.getStatus() == PAUSED) {
+    } else {
       errorMessage = "Waiting for Approval";
     }
 
     setPipelineVariables(context);
-    Environment env = ((ExecutionContextImpl) context).getEnv();
 
     // If the Approval is in a pipeline, ApprovalStateExecutionData is expected.
-    if (env == null) {
+    if (executionData instanceof ShellScriptApprovalExecutionData) {
+      return anExecutionResponse()
+          .withStateExecutionData(executionData)
+          .withExecutionStatus(approvalNotifyResponse.getStatus())
+          .withErrorMessage(errorMessage)
+          .build();
+    } else {
       ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder()
                                                                   .approvalId(approvalNotifyResponse.getApprovalId())
                                                                   .appId(context.getAppId())
@@ -373,12 +378,6 @@ public class ApprovalState extends State {
 
       return anExecutionResponse()
           .withStateExecutionData(approvalStateExecutionData)
-          .withExecutionStatus(approvalNotifyResponse.getStatus())
-          .withErrorMessage(errorMessage)
-          .build();
-    } else {
-      return anExecutionResponse()
-          .withStateExecutionData(executionData)
           .withExecutionStatus(approvalNotifyResponse.getStatus())
           .withErrorMessage(errorMessage)
           .build();
