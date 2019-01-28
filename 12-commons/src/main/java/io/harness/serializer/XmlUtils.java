@@ -23,8 +23,6 @@ import javax.xml.xpath.XPathFactory;
 
 /**
  * The Class XmlUtils.
- *
- * @author Rishi
  */
 public class XmlUtils {
   private static final Logger logger = LoggerFactory.getLogger(XmlUtils.class);
