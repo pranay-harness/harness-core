@@ -96,103 +96,96 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
     }
 
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
-      try {
-        int retry = 0;
-        while (!completed.get() && retry < RETRIES) {
-          try {
-            final List<LogElement> logElements = new ArrayList<>();
-            for (String host : dataCollectionInfo.getHosts()) {
-              String query = dataCollectionInfo.getQuery();
+      int retry = 0;
+      while (!completed.get() && retry < RETRIES) {
+        try {
+          final List<LogElement> logElements = new ArrayList<>();
+          for (String host : dataCollectionInfo.getHosts()) {
+            String query = dataCollectionInfo.getQuery();
 
-              /* Heart beat */
-              final LogElement sumoHeartBeatElement = new LogElement();
-              sumoHeartBeatElement.setQuery(query);
-              sumoHeartBeatElement.setClusterLabel("-3");
-              sumoHeartBeatElement.setHost(host);
-              sumoHeartBeatElement.setCount(0);
-              sumoHeartBeatElement.setLogMessage("");
-              sumoHeartBeatElement.setTimeStamp(0);
-              sumoHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
-              logElements.add(sumoHeartBeatElement);
+            /* Heart beat */
+            final LogElement sumoHeartBeatElement = new LogElement();
+            sumoHeartBeatElement.setQuery(query);
+            sumoHeartBeatElement.setClusterLabel("-3");
+            sumoHeartBeatElement.setHost(host);
+            sumoHeartBeatElement.setCount(0);
+            sumoHeartBeatElement.setLogMessage("");
+            sumoHeartBeatElement.setTimeStamp(0);
+            sumoHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
+            logElements.add(sumoHeartBeatElement);
 
-              ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-              final long collectionEndTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
+            ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
+            final long collectionEndTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
 
-              try {
-                List<LogElement> logElementsResponse = sumoDelegateService.getResponse(
-                    dataCollectionInfo.getSumoConfig(), query, "1m", dataCollectionInfo.getEncryptedDataDetails(),
-                    dataCollectionInfo.getHostnameField(), host, collectionStartTime, collectionEndTime,
-                    DEFAULT_TIME_ZONE, 1000, logCollectionMinute, apiCallLog);
-                logElements.addAll(logElementsResponse);
-              } catch (CancellationException e) {
-                logger.info("Ugh. Search job was cancelled. Retrying ...");
-                if (++retry == RETRIES) {
-                  taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                  taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
-                  completed.set(true);
-                  break;
-                }
-                sleep(RETRY_SLEEP);
-                continue;
-              }
-            }
-
-            boolean response = logAnalysisStoreService.save(StateType.SUMO, dataCollectionInfo.getAccountId(),
-                dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-                dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-                dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
-            if (!response) {
+            try {
+              List<LogElement> logElementsResponse =
+                  sumoDelegateService.getResponse(dataCollectionInfo.getSumoConfig(), query, "1m",
+                      dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getHostnameField(), host,
+                      collectionStartTime, collectionEndTime, DEFAULT_TIME_ZONE, 1000, logCollectionMinute, apiCallLog);
+              logElements.addAll(logElementsResponse);
+            } catch (CancellationException e) {
+              logger.info("Ugh. Search job was cancelled. Retrying ...");
               if (++retry == RETRIES) {
                 taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                taskResult.setErrorMessage("Cannot save log records. Server returned error");
+                taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
                 completed.set(true);
                 break;
               }
+              sleep(RETRY_SLEEP);
               continue;
             }
-            logger.info("sent sumo search records to server. Num of events: " + logElements.size()
-                + " application: " + dataCollectionInfo.getApplicationId()
-                + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
-            break;
-          } catch (Exception e) {
+          }
+
+          boolean response = logAnalysisStoreService.save(StateType.SUMO, dataCollectionInfo.getAccountId(),
+              dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
+              dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
+              dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
+          if (!response) {
             if (++retry == RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+              taskResult.setErrorMessage("Cannot save log records. Server returned error");
               completed.set(true);
-              throw e;
-            } else {
-              /*
-               * Save the exception from the first attempt. This is usually
-               * more meaningful to trouble shoot.
-               */
-              if (retry == 1) {
-                taskResult.setErrorMessage(Misc.getMessage(e));
-              }
-              logger.warn("error fetching sumo logs for stateExecutionId {}. retrying in {}s",
-                  dataCollectionInfo.getStateExecutionId(), RETRY_SLEEP, e);
-              sleep(RETRY_SLEEP);
+              break;
             }
+            continue;
+          }
+          logger.info("sent sumo search records to server. Num of events: " + logElements.size()
+              + " application: " + dataCollectionInfo.getApplicationId()
+              + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
+          break;
+        } catch (Throwable ex) {
+          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+            logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                logCollectionMinute, ex);
+            taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+            completed.set(true);
+            break;
+          } else {
+            /*
+             * Save the exception from the first attempt. This is usually
+             * more meaningful to trouble shoot.
+             */
+            if (retry == 1) {
+              taskResult.setErrorMessage(Misc.getMessage(ex));
+            }
+            logger.warn("error fetching sumo logs for stateExecutionId {}. retrying in {}s",
+                dataCollectionInfo.getStateExecutionId(), RETRY_SLEEP, ex);
+            sleep(RETRY_SLEEP);
           }
         }
-        collectionStartTime += TimeUnit.MINUTES.toMillis(1);
-        logCollectionMinute++;
-        dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
-        if (dataCollectionInfo.getCollectionTime() <= 0) {
-          // We are done with all data collection, so setting task status to success and quitting.
-          logger.info(
-              "Completed SumoLogic collection task. So setting task status to success and quitting. StateExecutionId {}",
-              dataCollectionInfo.getStateExecutionId());
-          completed.set(true);
-          taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
-        }
-
-      } catch (Exception e) {
+      }
+      collectionStartTime += TimeUnit.MINUTES.toMillis(1);
+      logCollectionMinute++;
+      dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
+      if (dataCollectionInfo.getCollectionTime() <= 0) {
+        // We are done with all data collection, so setting task status to success and quitting.
+        logger.info(
+            "Completed SumoLogic collection task. So setting task status to success and quitting. StateExecutionId {}",
+            dataCollectionInfo.getStateExecutionId());
         completed.set(true);
-        if (taskResult.getStatus() != DataCollectionTaskStatus.FAILURE) {
-          taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-          taskResult.setErrorMessage("error fetching sumo logs for minute " + logCollectionMinute);
-        }
-        logger.error("error fetching sumo logs  for stateExecutionId {}", dataCollectionInfo.getStateExecutionId(), e);
+        taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
       }
 
       if (completed.get()) {

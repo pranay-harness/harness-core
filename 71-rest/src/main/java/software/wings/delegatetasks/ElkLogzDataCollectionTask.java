@@ -97,6 +97,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
     }
 
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
       try {
         for (String hostName : dataCollectionInfo.getHosts()) {
@@ -206,20 +207,22 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                   + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute
                   + " host: " + hostName);
               break;
-            } catch (RuntimeException e) {
-              if (++retry >= RETRIES) {
+            } catch (Throwable ex) {
+              if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+                logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                    logCollectionMinute, ex);
                 taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                 completed.set(true);
-                throw e;
+                throw ex;
               } else {
                 /*
                  * Save the exception from the first attempt. This is usually
                  * more meaningful to trouble shoot.
                  */
                 if (retry == 1) {
-                  taskResult.setErrorMessage(Misc.getMessage(e));
+                  taskResult.setErrorMessage(Misc.getMessage(ex));
                 }
-                logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP + "s", e);
+                logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP + "s", ex);
                 sleep(RETRY_SLEEP);
               }
             }
@@ -237,7 +240,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         }
         // dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
 
-      } catch (Exception e) {
+      } catch (Throwable e) {
         completed.set(true);
         if (taskResult.getStatus() != DataCollectionTaskStatus.FAILURE) {
           taskResult.setStatus(DataCollectionTaskStatus.FAILURE);

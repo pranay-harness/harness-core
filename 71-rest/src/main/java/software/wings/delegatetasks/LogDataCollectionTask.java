@@ -10,7 +10,6 @@ import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
-import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -103,12 +102,11 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   }
 
   private APMRestClient getRestClient(final String baseUrl) {
-    final Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .addConverterFactory(JacksonConverterFactory.create())
-            .client(Http.getOkHttpClientWithNoProxyValueSet(baseUrl).connectTimeout(120, TimeUnit.SECONDS).build())
-            .build();
+    final Retrofit retrofit = new Retrofit.Builder()
+                                  .baseUrl(baseUrl)
+                                  .addConverterFactory(JacksonConverterFactory.create())
+                                  .client(getUnsafeHttpClient(baseUrl))
+                                  .build();
     return retrofit.create(APMRestClient.class);
   }
 
@@ -200,6 +198,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
       }
     }
 
+    @SuppressWarnings("PMD")
     public void run() {
       int retry = 0;
       while (!completed.get() && retry < RETRIES) {
@@ -257,12 +256,13 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
             taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
           }
           break;
-        } catch (Exception ex) {
-          if (++retry >= RETRIES) {
+        } catch (Throwable ex) {
+          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+            logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                logCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
-            throw new WingsException(
-                "Error collecting logs for stateExecutionId: " + dataCollectionInfo.getStateExecutionId());
+            break;
           } else {
             /*
              * Save the exception from the first attempt. This is usually
@@ -275,6 +275,11 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
             sleep(RETRY_SLEEP);
           }
         }
+      }
+
+      if (completed.get()) {
+        logger.info("Shutting down log collection {}", dataCollectionInfo.getStateExecutionId());
+        shutDownCollection();
       }
     }
   }

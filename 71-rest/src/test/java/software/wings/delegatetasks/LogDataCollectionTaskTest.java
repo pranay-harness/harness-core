@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class LogDataCollectionTaskTest {
@@ -40,6 +42,7 @@ public class LogDataCollectionTaskTest {
   CustomLogDataCollectionInfo dataCollectionInfo;
   @Mock private LogAnalysisStoreService logAnalysisStoreService;
   @Mock private DelegateLogService delegateLogService;
+  @Mock private ScheduledFuture future;
   private LogDataCollectionTask dataCollectionTask;
 
   public void setup(Map<String, Map<String, ResponseMapper>> logDefinition, Set<String> hosts) {
@@ -64,6 +67,9 @@ public class LogDataCollectionTaskTest {
                             .build();
     dataCollectionTask = new LogDataCollectionTask(delegateId, task, null, null);
     MockitoAnnotations.initMocks(this);
+
+    when(future.cancel(anyBoolean())).thenReturn(true);
+    setInternalState(dataCollectionTask, "future", future);
     setInternalState(dataCollectionTask, "delegateLogService", delegateLogService);
     setInternalState(dataCollectionTask, "logAnalysisStoreService", logAnalysisStoreService);
   }

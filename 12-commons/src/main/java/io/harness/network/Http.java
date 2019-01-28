@@ -142,13 +142,18 @@ public class Http {
     return new TrustManager[] {new SslTrustManager()};
   }
 
-  public static synchronized OkHttpClient getUnsafeOkHttpClient(String url) {
+  public static OkHttpClient getUnsafeOkHttpClient(String url) {
+    return getUnsafeOkHttpClient(url, 15, 15);
+  }
+
+  public static synchronized OkHttpClient getUnsafeOkHttpClient(
+      String url, long connectTimeOutSeconds, long readTimeOutSeconds) {
     try {
       OkHttpClient.Builder builder = getOkHttpClientBuilder()
                                          .sslSocketFactory(Http.getSslContext().getSocketFactory())
                                          .hostnameVerifier((s, sslSession) -> true)
-                                         .connectTimeout(15, TimeUnit.SECONDS)
-                                         .readTimeout(15, TimeUnit.SECONDS);
+                                         .connectTimeout(connectTimeOutSeconds, TimeUnit.SECONDS)
+                                         .readTimeout(readTimeOutSeconds, TimeUnit.SECONDS);
 
       Proxy proxy = checkAndGetNonProxyIfApplicable(url);
       if (proxy != null) {

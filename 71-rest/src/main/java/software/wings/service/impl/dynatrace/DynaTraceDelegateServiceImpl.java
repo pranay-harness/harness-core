@@ -1,12 +1,13 @@
 package software.wings.service.impl.dynatrace;
 
+import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
-import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
@@ -138,12 +139,11 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
   }
 
   private DynaTraceRestClient getDynaTraceRestClient(final DynaTraceConfig dynaTraceConfig) {
-    final Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(dynaTraceConfig.getDynaTraceUrl())
-            .addConverterFactory(JacksonConverterFactory.create())
-            .client(Http.getOkHttpClientWithNoProxyValueSet(dynaTraceConfig.getDynaTraceUrl()).build())
-            .build();
+    final Retrofit retrofit = new Retrofit.Builder()
+                                  .baseUrl(dynaTraceConfig.getDynaTraceUrl())
+                                  .addConverterFactory(JacksonConverterFactory.create())
+                                  .client(getUnsafeHttpClient(dynaTraceConfig.getDynaTraceUrl()))
+                                  .build();
     return retrofit.create(DynaTraceRestClient.class);
   }
 

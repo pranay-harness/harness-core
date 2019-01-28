@@ -9,6 +9,8 @@ import com.google.inject.name.Named;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.network.Http;
+import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import software.wings.beans.DelegateTask;
@@ -168,5 +170,9 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
 
   protected int getPeriodMinutes() {
     return COLLECTION_PERIOD_MINS;
+  }
+
+  public static OkHttpClient getUnsafeHttpClient(String baseUrl) {
+    return Http.getUnsafeOkHttpClient(baseUrl, 15, 60);
   }
 }

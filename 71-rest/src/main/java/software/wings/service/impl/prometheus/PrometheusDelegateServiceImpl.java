@@ -1,13 +1,13 @@
 package software.wings.service.impl.prometheus;
 
 import static software.wings.common.Constants.URL_STRING;
+import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
-import io.harness.network.Http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -79,7 +79,7 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(prometheusConfig.getUrl())
                                   .addConverterFactory(JacksonConverterFactory.create())
-                                  .client(Http.getOkHttpClientWithNoProxyValueSet(prometheusConfig.getUrl()).build())
+                                  .client(getUnsafeHttpClient(prometheusConfig.getUrl()))
                                   .build();
     return retrofit.create(PrometheusRestClient.class);
   }

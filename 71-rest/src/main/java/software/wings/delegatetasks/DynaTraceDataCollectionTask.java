@@ -108,76 +108,72 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
     }
 
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
-      try {
-        int retry = 0;
-        while (!completed.get() && retry < RETRIES) {
-          try {
-            List<DynaTraceMetricDataResponse> metricsData = getMetricsData();
-            TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
-            // HeartBeat
-            records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
-                NewRelicMetricDataRecord.builder()
-                    .stateType(getStateType())
-                    .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                    .appId(dataCollectionInfo.getApplicationId())
-                    .workflowId(dataCollectionInfo.getWorkflowId())
-                    .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
-                    .serviceId(dataCollectionInfo.getServiceId())
-                    .cvConfigId(dataCollectionInfo.getCvConfigId())
-                    .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                    .dataCollectionMinute(getCollectionMinute(System.currentTimeMillis(), null, true))
-                    .timeStamp(collectionStartTime)
-                    .level(ClusterLevel.H0)
-                    .groupName(DEFAULT_GROUP_NAME)
-                    .build());
+      int retry = 0;
+      while (!completed.get() && retry < RETRIES) {
+        try {
+          List<DynaTraceMetricDataResponse> metricsData = getMetricsData();
+          TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
+          // HeartBeat
+          records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
+              NewRelicMetricDataRecord.builder()
+                  .stateType(getStateType())
+                  .name(HARNESS_HEARTBEAT_METRIC_NAME)
+                  .appId(dataCollectionInfo.getApplicationId())
+                  .workflowId(dataCollectionInfo.getWorkflowId())
+                  .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+                  .serviceId(dataCollectionInfo.getServiceId())
+                  .cvConfigId(dataCollectionInfo.getCvConfigId())
+                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                  .dataCollectionMinute(getCollectionMinute(System.currentTimeMillis(), null, true))
+                  .timeStamp(collectionStartTime)
+                  .level(ClusterLevel.H0)
+                  .groupName(DEFAULT_GROUP_NAME)
+                  .build());
 
-            records.putAll(processMetricData(metricsData));
-            List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
-            if (!saveMetrics(dynaTraceConfig.getAccountId(), dataCollectionInfo.getApplicationId(),
-                    dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
-              logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
-                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
-            } else {
-              logger.info("Sent {} Dynatrace metric records to the server for minute {}", recordsToSave.size(),
-                  dataCollectionMinute);
-            }
+          records.putAll(processMetricData(metricsData));
+          List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
+          if (!saveMetrics(dynaTraceConfig.getAccountId(), dataCollectionInfo.getApplicationId(),
+                  dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
+            logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+                dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+          } else {
+            logger.info("Sent {} Dynatrace metric records to the server for minute {}", recordsToSave.size(),
+                dataCollectionMinute);
+          }
 
-            dataCollectionMinute++;
-            collectionStartTime += TimeUnit.MINUTES.toMillis(1);
-            if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime() || is247Task) {
-              // We are done with all data collection, so setting task status to success and quitting.
-              logger.info(
-                  "Completed Dynatrace collection task. So setting task status to success and quitting. StateExecutionId {}",
-                  dataCollectionInfo.getStateExecutionId());
-              completed.set(true);
-              taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
-            }
+          dataCollectionMinute++;
+          collectionStartTime += TimeUnit.MINUTES.toMillis(1);
+          if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime() || is247Task) {
+            // We are done with all data collection, so setting task status to success and quitting.
+            logger.info(
+                "Completed Dynatrace collection task. So setting task status to success and quitting. StateExecutionId {}",
+                dataCollectionInfo.getStateExecutionId());
+            completed.set(true);
+            taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+          }
+          break;
+
+        } catch (Throwable ex) {
+          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+            logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                dataCollectionMinute, ex);
+            taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+            completed.set(true);
             break;
-
-          } catch (Exception ex) {
-            if (++retry >= RETRIES) {
-              taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-              completed.set(true);
-              break;
-            } else {
-              if (retry == 1) {
-                if (ex instanceof WingsException) {
-                  taskResult.setErrorMessage(Misc.getMessage(ex));
-                }
+          } else {
+            if (retry == 1) {
+              if (ex instanceof WingsException) {
+                taskResult.setErrorMessage(Misc.getMessage(ex));
               }
-              logger.warn("error fetching Dynatrace metrics for minute " + dataCollectionMinute + ". retrying in "
-                      + RETRY_SLEEP + "s",
-                  ex);
-              sleep(RETRY_SLEEP);
             }
+            logger.warn("error fetching Dynatrace metrics for minute " + dataCollectionMinute + ". retrying in "
+                    + RETRY_SLEEP + "s",
+                ex);
+            sleep(RETRY_SLEEP);
           }
         }
-      } catch (Exception e) {
-        completed.set(true);
-        taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-        taskResult.setErrorMessage("error fetching Dynatrace metrics for minute " + dataCollectionMinute);
-        logger.error("error fetching Dynatrace metrics for minute " + dataCollectionMinute, e);
       }
 
       if (completed.get()) {

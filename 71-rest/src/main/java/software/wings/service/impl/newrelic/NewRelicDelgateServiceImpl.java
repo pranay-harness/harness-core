@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static software.wings.common.Constants.PAYLOAD;
 import static software.wings.common.Constants.URL_STRING;
+import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 
@@ -19,10 +20,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
-import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -178,7 +176,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       apiCallLog.setTitle("Fetching applications from " + newRelicConfig.getNewRelicUrl());
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       final Call<NewRelicApplicationsResponse> request =
-          getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listAllApplications(pageCount);
+          getNewRelicRestClient(newRelicConfig)
+              .listAllApplications(getApiKey(newRelicConfig, encryptedDataDetails), pageCount);
       apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                        .name(URL_STRING)
                                        .value(request.request().url().toString())
@@ -232,8 +231,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       apiCallLog.setTitle("Fetching application instances from " + newRelicConfig.getNewRelicUrl());
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       final Call<NewRelicApplicationInstancesResponse> request =
-          getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
-              .listAppInstances(newRelicApplicationId, pageCount);
+          getNewRelicRestClient(newRelicConfig)
+              .listAppInstances(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId, pageCount);
       apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                        .name(URL_STRING)
                                        .value(request.request().url().toString())
@@ -297,7 +296,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           apiCallLog.setTitle("Fetching web transactions names from " + newRelicConfig.getNewRelicUrl());
           apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
           final Call<NewRelicMetricResponse> request =
-              getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listMetricNames(newRelicAppId, txnName);
+              getNewRelicRestClient(newRelicConfig)
+                  .listMetricNames(getApiKey(newRelicConfig, encryptedDataDetails), newRelicAppId, txnName);
           apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                            .name(URL_STRING)
                                            .value(request.request().url().toString())
@@ -477,12 +477,13 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
     final Call<NewRelicMetricDataResponse> request = instanceId > 0
-        ? getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
-              .getInstanceMetricData(newRelicApplicationId, instanceId, dateFormatter.format(new Date(fromTime)),
-                  dateFormatter.format(new Date(toTime)), updatedMetrics)
-        : getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
-              .getApplicationMetricData(newRelicApplicationId, summarize, dateFormatter.format(new Date(fromTime)),
-                  dateFormatter.format(new Date(toTime)), updatedMetrics);
+        ? getNewRelicRestClient(newRelicConfig)
+              .getInstanceMetricData(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId, instanceId,
+                  dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)), updatedMetrics)
+        : getNewRelicRestClient(newRelicConfig)
+              .getApplicationMetricData(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId,
+                  summarize, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)),
+                  updatedMetrics);
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name(URL_STRING)
                                      .value(request.request().url().toString())
@@ -528,7 +529,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     apiCallLog.addFieldToRequest(
         ThirdPartyApiCallField.builder().name(PAYLOAD).value(JsonUtils.asJson(body)).type(FieldType.JSON).build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    final Call<Object> request = getNewRelicRestClient(config, encryptedDataDetails).postDeploymentMarker(url, body);
+    final Call<Object> request =
+        getNewRelicRestClient(config).postDeploymentMarker(getApiKey(config, encryptedDataDetails), url, body);
 
     Response<Object> response;
     try {
@@ -557,7 +559,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, NewRelicSetupTestNodeData setupTestNodeData, long instanceId,
-      ThirdPartyApiCallLog apiCallLog) throws IOException {
+      ThirdPartyApiCallLog apiCallLog) {
     try {
       List<NewRelicMetric> txnsWithData =
           getTxnsWithData(newRelicConfig, encryptedDataDetails, setupTestNodeData.getNewRelicAppId(), apiCallLog);
@@ -589,31 +591,19 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
   }
 
-  private NewRelicRestClient getNewRelicRestClient(
-      final NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(newRelicConfig, encryptedDataDetails);
-    OkHttpClient.Builder httpClient =
-        Http.getOkHttpClientWithNoProxyValueSet(newRelicConfig.getNewRelicUrl()).connectTimeout(120, TimeUnit.SECONDS);
-    httpClient.addInterceptor(chain -> {
-      Request original = chain.request();
-
-      Request request = original.newBuilder()
-                            .header("Accept", "application/json")
-                            .header("Content-Type", "application/json")
-                            .header("X-Api-Key", new String(newRelicConfig.getApiKey()))
-                            .method(original.method(), original.body())
-                            .build();
-
-      return chain.proceed(request);
-    });
-
+  private NewRelicRestClient getNewRelicRestClient(final NewRelicConfig newRelicConfig) {
     final String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
                                                                          : newRelicConfig.getNewRelicUrl() + "/";
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(baseUrl)
                                   .addConverterFactory(JacksonConverterFactory.create())
-                                  .client(httpClient.build())
+                                  .client(getUnsafeHttpClient(baseUrl))
                                   .build();
     return retrofit.create(NewRelicRestClient.class);
+  }
+
+  private String getApiKey(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    encryptionService.decrypt(newRelicConfig, encryptedDataDetails);
+    return String.valueOf(newRelicConfig.getApiKey());
   }
 }
