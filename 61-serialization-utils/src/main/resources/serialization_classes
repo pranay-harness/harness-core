@@ -678,6 +678,7 @@ io.harness.k8s.model.K8sPod, 5622
 io.harness.k8s.model.K8sContainer, 5623
 software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters, 5624
 software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse, 5625
+software.wings.beans.notification.NotificationSettings, 5626
 # Do not use this class to register classes to kryo. This creates semantic dependencies.
 # and lower layers cant test it. Use KryoRegistrar to register the classes.
 # Refer ManagerKryoRegistrar, PersistenceRegistrar for usage example
