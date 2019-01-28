@@ -100,56 +100,52 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
     }
 
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
-      try {
-        int retry = 0;
-        while (!completed.get() && retry < RETRIES) {
-          try {
-            logger.info("starting metric data collection for {} for minute {} is247Task {}", dataCollectionInfo,
-                dataCollectionMinute, is247Task);
-            TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataRecords = getMetricsData();
+      int retry = 0;
+      while (!completed.get() && retry < RETRIES) {
+        try {
+          logger.info("starting metric data collection for {} for minute {} is247Task {}", dataCollectionInfo,
+              dataCollectionMinute, is247Task);
+          TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataRecords = getMetricsData();
 
-            List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(metricDataRecords);
-            if (!saveMetrics(prometheusConfig.getAccountId(), dataCollectionInfo.getApplicationId(),
-                    dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
-              logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
-                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
-            } else {
-              logger.info("Sent {} Prometheus metric records to the server for minute {}", recordsToSave.size(),
-                  dataCollectionMinute);
-            }
-            dataCollectionMinute++;
-            collectionStartTime += TimeUnit.MINUTES.toMillis(1);
-            if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime() || is247Task) {
-              // We are done with all data collection, so setting task status to success and quitting.
-              logger.info(
-                  "Completed Prometheus collection task. So setting task status to success and quitting. StateExecutionId {}",
-                  dataCollectionInfo.getStateExecutionId());
-              completed.set(true);
-              taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
-            }
+          List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(metricDataRecords);
+          if (!saveMetrics(prometheusConfig.getAccountId(), dataCollectionInfo.getApplicationId(),
+                  dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
+            logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+                dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+          } else {
+            logger.info("Sent {} Prometheus metric records to the server for minute {}", recordsToSave.size(),
+                dataCollectionMinute);
+          }
+          dataCollectionMinute++;
+          collectionStartTime += TimeUnit.MINUTES.toMillis(1);
+          if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime() || is247Task) {
+            // We are done with all data collection, so setting task status to success and quitting.
+            logger.info(
+                "Completed Prometheus collection task. So setting task status to success and quitting. StateExecutionId {}",
+                dataCollectionInfo.getStateExecutionId());
+            completed.set(true);
+            taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+          }
+          break;
+        } catch (Throwable ex) {
+          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+            logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                dataCollectionMinute, ex);
+            taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+            completed.set(true);
             break;
-          } catch (Exception ex) {
-            if (++retry >= RETRIES) {
-              taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-              completed.set(true);
-              break;
-            } else {
-              if (retry == 1) {
-                taskResult.setErrorMessage(Misc.getMessage(ex));
-              }
-              logger.warn("error fetching Prometheus metrics for minute " + dataCollectionMinute + ". retrying in "
-                      + RETRY_SLEEP + "s",
-                  ex);
-              sleep(RETRY_SLEEP);
+          } else {
+            if (retry == 1) {
+              taskResult.setErrorMessage(Misc.getMessage(ex));
             }
+            logger.warn("error fetching Prometheus metrics for minute " + dataCollectionMinute + ". retrying in "
+                    + RETRY_SLEEP + "s",
+                ex);
+            sleep(RETRY_SLEEP);
           }
         }
-      } catch (Exception e) {
-        completed.set(true);
-        taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-        taskResult.setErrorMessage("error fetching Prometheus metrics for minute " + dataCollectionMinute);
-        logger.error("error fetching Prometheus metrics for minute " + dataCollectionMinute, e);
       }
 
       if (completed.get()) {

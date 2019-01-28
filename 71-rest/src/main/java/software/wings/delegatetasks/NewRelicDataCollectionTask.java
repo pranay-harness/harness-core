@@ -381,111 +381,104 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
-      try {
-        int retry = 0;
-        long startTime = System.currentTimeMillis();
-        final long windowEndTimeManager = windowStartTimeManager + TimeUnit.MINUTES.toMillis(PERIOD_MINS);
-        int collectionLength = timeDeltaInMins(windowEndTimeManager, windowStartTimeManager);
-        int dataCollectionMinuteEnd = dataCollectionMinute + collectionLength - 1;
-        logger.info("Running new relic data collection for minute {}, state execution {}", dataCollectionMinuteEnd,
-            dataCollectionInfo.getStateExecutionId());
+      int retry = 0;
+      long startTime = System.currentTimeMillis();
+      final long windowEndTimeManager = windowStartTimeManager + TimeUnit.MINUTES.toMillis(PERIOD_MINS);
+      int collectionLength = timeDeltaInMins(windowEndTimeManager, windowStartTimeManager);
+      int dataCollectionMinuteEnd = dataCollectionMinute + collectionLength - 1;
+      logger.info("Running new relic data collection for minute {}, state execution {}", dataCollectionMinuteEnd,
+          dataCollectionInfo.getStateExecutionId());
 
-        while (!completed.get() && retry < RETRIES) {
-          try {
-            Set<NewRelicMetric> txnsToCollect = getTxnsToCollect();
-            logger.info("Found total new relic metrics " + txnsToCollect.size());
-            List<NewRelicApplicationInstance> instances = newRelicDelegateService.getApplicationInstances(
-                dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
-                dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
-            logger.info("Got {} new relic nodes.", instances.size());
+      while (!completed.get() && retry < RETRIES) {
+        try {
+          Set<NewRelicMetric> txnsToCollect = getTxnsToCollect();
+          logger.info("Found total new relic metrics " + txnsToCollect.size());
+          List<NewRelicApplicationInstance> instances = newRelicDelegateService.getApplicationInstances(
+              dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
+              dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+          logger.info("Got {} new relic nodes.", instances.size());
 
-            Map<String, List<Set<String>>> metricBatches = batchMetricsToCollect(txnsToCollect);
-            logger.info("Found total new relic metric batches " + metricBatches.size());
+          Map<String, List<Set<String>>> metricBatches = batchMetricsToCollect(txnsToCollect);
+          logger.info("Found total new relic metric batches " + metricBatches.size());
 
-            List<Callable<Boolean>> callables = new ArrayList<>();
-            if (isPredictiveAnalysis()) {
-              final long endTimeForCollection = is247Task
-                  ? windowStartTimeManager + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime())
-                  : windowEndTimeManager;
+          List<Callable<Boolean>> callables = new ArrayList<>();
+          if (isPredictiveAnalysis()) {
+            final long endTimeForCollection = is247Task
+                ? windowStartTimeManager + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime())
+                : windowEndTimeManager;
 
-              logger.info(
-                  "AnalysisType is Predictive. So we're collecting metrics by application instead of host/node");
-              callables.add(() -> fetchAndSaveMetricsForNode(instances.get(0), metricBatches, endTimeForCollection));
-            } else {
-              for (NewRelicApplicationInstance node : instances) {
-                if (!dataCollectionInfo.getHosts().keySet().contains(node.getHost())) {
-                  logger.info("Skipping host {} for stateExecutionId {} ", node.getHost(),
-                      dataCollectionInfo.getStateExecutionId());
-                  continue;
-                }
-
-                logger.info("Going to collect for host {} for stateExecutionId {}, for metrics {}", node.getHost(),
-                    dataCollectionInfo.getStateExecutionId(), metricBatches);
-                callables.add(() -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager));
+            logger.info("AnalysisType is Predictive. So we're collecting metrics by application instead of host/node");
+            callables.add(() -> fetchAndSaveMetricsForNode(instances.get(0), metricBatches, endTimeForCollection));
+          } else {
+            for (NewRelicApplicationInstance node : instances) {
+              if (!dataCollectionInfo.getHosts().keySet().contains(node.getHost())) {
+                logger.info("Skipping host {} for stateExecutionId {} ", node.getHost(),
+                    dataCollectionInfo.getStateExecutionId());
+                continue;
               }
-            }
-            logger.info("submitting parallel tasks {}", callables.size());
-            List<Optional<Boolean>> results = executeParrallel(callables);
-            for (Optional<Boolean> result : results) {
-              if (!result.isPresent() || !result.get()) {
-                logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
-                    dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
-              }
-            }
 
-            int dataCollectionMinForHeartbeat = dataCollectionMinuteEnd;
-            if (is247Task) {
-              dataCollectionMinForHeartbeat = maxDataCollectionMin24x7 != 0
-                  ? maxDataCollectionMin24x7
-                  : (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime())
-                      + dataCollectionInfo.getCollectionTime();
-            }
-
-            if (!saveHeartBeats(dataCollectionMinForHeartbeat)) {
-              logger.error("Error saving heartbeat to the database. DatacollectionMin: {} StateexecutionId: {}",
-                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
-            }
-
-            logger.info("done processing parallel tasks {}", callables.size());
-            windowStartTimeManager = windowEndTimeManager;
-
-            dataCollectionMinute = dataCollectionMinuteEnd + 1;
-
-            if (is247Task || dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
-              // We are done with all data collection, so setting task status to success and quitting.
-              logger.info("Completed NewRelic collection task. So setting task status to success and quitting");
-              completed.set(true);
-              taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
-            }
-            logger.info("Time take for data collection: " + (System.currentTimeMillis() - startTime));
-            break;
-          } catch (Exception ex) {
-            if (++retry >= RETRIES) {
-              taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-              completed.set(true);
-              break;
-            } else {
-              /*
-               * Save the exception from the first attempt. This is usually
-               * more meaningful to trouble shoot.
-               */
-              if (retry == 1) {
-                taskResult.setErrorMessage(Misc.getMessage(ex));
-              }
-              logger.warn("error fetching new relic metrics for minute " + dataCollectionMinute + ". retrying in "
-                      + RETRY_SLEEP + "s",
-                  ex);
-              sleep(RETRY_SLEEP);
+              logger.info("Going to collect for host {} for stateExecutionId {}, for metrics {}", node.getHost(),
+                  dataCollectionInfo.getStateExecutionId(), metricBatches);
+              callables.add(() -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager));
             }
           }
+          logger.info("submitting parallel tasks {}", callables.size());
+          List<Optional<Boolean>> results = executeParrallel(callables);
+          for (Optional<Boolean> result : results) {
+            if (!result.isPresent() || !result.get()) {
+              logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+            }
+          }
+
+          int dataCollectionMinForHeartbeat = dataCollectionMinuteEnd;
+          if (is247Task) {
+            dataCollectionMinForHeartbeat = maxDataCollectionMin24x7 != 0
+                ? maxDataCollectionMin24x7
+                : (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime())
+                    + dataCollectionInfo.getCollectionTime();
+          }
+
+          if (!saveHeartBeats(dataCollectionMinForHeartbeat)) {
+            logger.error("Error saving heartbeat to the database. DatacollectionMin: {} StateexecutionId: {}",
+                dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+          }
+
+          logger.info("done processing parallel tasks {}", callables.size());
+          windowStartTimeManager = windowEndTimeManager;
+
+          dataCollectionMinute = dataCollectionMinuteEnd + 1;
+
+          if (is247Task || dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+            // We are done with all data collection, so setting task status to success and quitting.
+            logger.info("Completed NewRelic collection task. So setting task status to success and quitting");
+            completed.set(true);
+            taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+          }
+          logger.info("Time take for data collection: " + (System.currentTimeMillis() - startTime));
+          break;
+        } catch (Throwable ex) {
+          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+            logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                dataCollectionMinute, ex);
+            taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+            completed.set(true);
+            break;
+          } else {
+            /*
+             * Save the exception from the first attempt. This is usually
+             * more meaningful to trouble shoot.
+             */
+            if (retry == 1) {
+              taskResult.setErrorMessage(Misc.getMessage(ex));
+            }
+            logger.warn("error fetching new relic metrics for {} for minute {}. retrying in {}s",
+                dataCollectionInfo.getStateExecutionId(), dataCollectionMinute, RETRY_SLEEP, ex);
+            sleep(RETRY_SLEEP);
+          }
         }
-      } catch (Exception e) {
-        completed.set(true);
-        taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-        taskResult.setErrorMessage(
-            "error fetching new relic metrics for minute " + dataCollectionMinute + " reason: " + Misc.getMessage(e));
-        logger.error("error fetching new relic metrics for minute " + dataCollectionMinute, e);
       }
 
       if (completed.get()) {

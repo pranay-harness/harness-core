@@ -109,77 +109,70 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
     }
 
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
       encryptionService.decrypt(dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails());
-      try {
-        int retry = 0;
-        while (!completed.get() && retry < RETRIES) {
-          try {
+      int retry = 0;
+      while (!completed.get() && retry < RETRIES) {
+        try {
+          logger.info("starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
+
+          TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataRecords = getMetricsData();
+          // HeartBeat
+          metricDataRecords.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
+              NewRelicMetricDataRecord.builder()
+                  .stateType(getStateType())
+                  .name(HARNESS_HEARTBEAT_METRIC_NAME)
+                  .appId(getAppId())
+                  .workflowId(dataCollectionInfo.getWorkflowId())
+                  .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+                  .serviceId(dataCollectionInfo.getServiceId())
+                  .cvConfigId(dataCollectionInfo.getCvConfigId())
+                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                  .dataCollectionMinute(dataCollectionMinute)
+                  .timeStamp(collectionStartTime)
+                  .level(ClusterLevel.H0)
+                  .groupName(DEFAULT_GROUP_NAME)
+                  .build());
+
+          List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(metricDataRecords);
+          if (!saveMetrics(dataCollectionInfo.getGcpConfig().getAccountId(), dataCollectionInfo.getAppId(),
+                  dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
+            retry = RETRIES;
+            taskResult.setErrorMessage("Cannot save new stack driver metric records to Harness. Server returned error");
+            throw new RuntimeException("Cannot save new stack driver metric records to Harness. Server returned error");
+          }
+          logger.info("Sent {} stack driver metric records to the server for minute {}", recordsToSave.size(),
+              dataCollectionMinute);
+
+          dataCollectionMinute++;
+          collectionStartTime += TimeUnit.MINUTES.toMillis(1);
+          if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+            // We are done with all data collection, so setting task status to success and quitting.
             logger.info(
-                "starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
-
-            TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataRecords = getMetricsData();
-            // HeartBeat
-            metricDataRecords.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
-                NewRelicMetricDataRecord.builder()
-                    .stateType(getStateType())
-                    .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                    .appId(getAppId())
-                    .workflowId(dataCollectionInfo.getWorkflowId())
-                    .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
-                    .serviceId(dataCollectionInfo.getServiceId())
-                    .cvConfigId(dataCollectionInfo.getCvConfigId())
-                    .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                    .dataCollectionMinute(dataCollectionMinute)
-                    .timeStamp(collectionStartTime)
-                    .level(ClusterLevel.H0)
-                    .groupName(DEFAULT_GROUP_NAME)
-                    .build());
-
-            List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(metricDataRecords);
-            if (!saveMetrics(dataCollectionInfo.getGcpConfig().getAccountId(), dataCollectionInfo.getAppId(),
-                    dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
-              retry = RETRIES;
-              taskResult.setErrorMessage(
-                  "Cannot save new stack driver metric records to Harness. Server returned error");
-              throw new RuntimeException(
-                  "Cannot save new stack driver metric records to Harness. Server returned error");
-            }
-            logger.info("Sent {} stack driver metric records to the server for minute {}", recordsToSave.size(),
-                dataCollectionMinute);
-
-            dataCollectionMinute++;
-            collectionStartTime += TimeUnit.MINUTES.toMillis(1);
-            if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
-              // We are done with all data collection, so setting task status to success and quitting.
-              logger.info(
-                  "Completed stack driver collection task. So setting task status to success and quitting. StateExecutionId {}",
-                  dataCollectionInfo.getStateExecutionId());
-              completed.set(true);
-              taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
-            }
+                "Completed stack driver collection task. So setting task status to success and quitting. StateExecutionId {}",
+                dataCollectionInfo.getStateExecutionId());
+            completed.set(true);
+            taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+          }
+          break;
+        } catch (Throwable ex) {
+          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+            logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                dataCollectionMinute, ex);
+            taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+            completed.set(true);
             break;
-          } catch (RuntimeException | IOException ex) {
-            if (++retry >= RETRIES) {
-              taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-              completed.set(true);
-              break;
-            } else {
-              if (retry == 1) {
-                taskResult.setErrorMessage(Misc.getMessage(ex));
-              }
-              logger.warn("error fetching stack driver metrics for minute " + dataCollectionMinute + ". retrying in "
-                      + RETRY_SLEEP + "s",
-                  ex);
-              sleep(RETRY_SLEEP);
+          } else {
+            if (retry == 1) {
+              taskResult.setErrorMessage(Misc.getMessage(ex));
             }
+            logger.warn("error fetching stack driver metrics for minute " + dataCollectionMinute + ". retrying in "
+                    + RETRY_SLEEP + "s",
+                ex);
+            sleep(RETRY_SLEEP);
           }
         }
-      } catch (RuntimeException e) {
-        completed.set(true);
-        taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-        taskResult.setErrorMessage("error fetching stack driver metrics for minute " + dataCollectionMinute);
-        logger.error("error fetching stack driver metrics for minute " + dataCollectionMinute, e);
       }
 
       if (completed.get()) {

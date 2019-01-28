@@ -314,86 +314,80 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
     @SuppressFBWarnings({"DMI_ARGUMENTS_WRONG_ORDER"})
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
-      try {
-        int retry = 0;
-        while (!completed.get() && retry < RETRIES) {
-          try {
-            logger.info(
-                "starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
-            AppdynamicsTier appdynamicsTier =
-                appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, dataCollectionInfo.getAppId(),
-                    dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails());
-            Preconditions.checkNotNull(dataCollectionInfo, "No trier found for dataCollectionInfo");
-            setHostIdsIfNecessary();
-            List<AppdynamicsMetricData> metricsData = getMetricsData();
-            logger.info(
-                "Got {} metrics from appdynamics for {}", metricsData.size(), dataCollectionInfo.getStateExecutionId());
-            TreeBasedTable<String, Long, Map<String, NewRelicMetricDataRecord>> records = TreeBasedTable.create();
-            records.putAll(processMetricData(metricsData));
+      int retry = 0;
+      while (!completed.get() && retry < RETRIES) {
+        try {
+          logger.info("starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
+          AppdynamicsTier appdynamicsTier =
+              appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, dataCollectionInfo.getAppId(),
+                  dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails());
+          Preconditions.checkNotNull(dataCollectionInfo, "No trier found for dataCollectionInfo");
+          setHostIdsIfNecessary();
+          List<AppdynamicsMetricData> metricsData = getMetricsData();
+          logger.info(
+              "Got {} metrics from appdynamics for {}", metricsData.size(), dataCollectionInfo.getStateExecutionId());
+          TreeBasedTable<String, Long, Map<String, NewRelicMetricDataRecord>> records = TreeBasedTable.create();
+          records.putAll(processMetricData(metricsData));
 
-            // HeartBeat
-            records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L, new HashMap<>());
-            records.get(HARNESS_HEARTBEAT_METRIC_NAME, 0L)
-                .put("heartbeatHost",
-                    NewRelicMetricDataRecord.builder()
-                        .stateType(getStateType())
-                        .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                        .appId(dataCollectionInfo.getApplicationId())
-                        .workflowId(dataCollectionInfo.getWorkflowId())
-                        .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
-                        .serviceId(dataCollectionInfo.getServiceId())
-                        .cvConfigId(dataCollectionInfo.getCvConfigId())
-                        .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                        .dataCollectionMinute(getCollectionMinute(System.currentTimeMillis(), true))
-                        .timeStamp(collectionStartTime)
-                        .cvConfigId(dataCollectionInfo.getCvConfigId())
-                        .level(ClusterLevel.H0)
-                        .groupName(appdynamicsTier.getName())
-                        .build());
+          // HeartBeat
+          records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L, new HashMap<>());
+          records.get(HARNESS_HEARTBEAT_METRIC_NAME, 0L)
+              .put("heartbeatHost",
+                  NewRelicMetricDataRecord.builder()
+                      .stateType(getStateType())
+                      .name(HARNESS_HEARTBEAT_METRIC_NAME)
+                      .appId(dataCollectionInfo.getApplicationId())
+                      .workflowId(dataCollectionInfo.getWorkflowId())
+                      .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+                      .serviceId(dataCollectionInfo.getServiceId())
+                      .cvConfigId(dataCollectionInfo.getCvConfigId())
+                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                      .dataCollectionMinute(getCollectionMinute(System.currentTimeMillis(), true))
+                      .timeStamp(collectionStartTime)
+                      .cvConfigId(dataCollectionInfo.getCvConfigId())
+                      .level(ClusterLevel.H0)
+                      .groupName(appdynamicsTier.getName())
+                      .build());
 
-            List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
-            if (!saveMetrics(appDynamicsConfig.getAccountId(), dataCollectionInfo.getApplicationId(),
-                    dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
-              logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
-                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
-            } else {
-              logger.info("Sent {} appdynamics metric records to the server for minute {} for state {}",
-                  recordsToSave.size(), dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
-            }
-            dataCollectionMinute++;
-            collectionStartTime += TimeUnit.MINUTES.toMillis(1);
-            dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
-            if (dataCollectionInfo.getCollectionTime() <= 0 || is247Task) {
-              // We are done with all data collection, so setting task status to success and quitting.
-              logger.info("Completed AppDynamics collection task. So setting task status to success and quitting");
-              completed.set(true);
-              taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
-            }
+          List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
+          if (!saveMetrics(appDynamicsConfig.getAccountId(), dataCollectionInfo.getApplicationId(),
+                  dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
+            logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+                dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+          } else {
+            logger.info("Sent {} appdynamics metric records to the server for minute {} for state {}",
+                recordsToSave.size(), dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+          }
+          dataCollectionMinute++;
+          collectionStartTime += TimeUnit.MINUTES.toMillis(1);
+          dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
+          if (dataCollectionInfo.getCollectionTime() <= 0 || is247Task) {
+            // We are done with all data collection, so setting task status to success and quitting.
+            logger.info("Completed AppDynamics collection task. So setting task status to success and quitting");
+            completed.set(true);
+            taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+          }
+          break;
+
+        } catch (Throwable ex) {
+          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+            logger.error("error fetching  metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                dataCollectionMinute, ex);
+            taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+            completed.set(true);
             break;
-
-          } catch (RuntimeException ex) {
-            if (++retry >= RETRIES) {
-              taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-              completed.set(true);
-              break;
-            } else {
-              if (retry == 1) {
-                taskResult.setErrorMessage(Misc.getMessage(ex));
-              }
-              logger.info(
-                  "error fetching appdynamics metrics for minute {} for state {}. retrying in " + RETRY_SLEEP + "s",
-                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId(), ex);
-              sleep(RETRY_SLEEP);
+          } else {
+            if (retry == 1) {
+              taskResult.setErrorMessage(Misc.getMessage(ex));
             }
+            logger.info(
+                "error fetching appdynamics metrics for minute {} for state {}. retrying in " + RETRY_SLEEP + "s",
+                dataCollectionMinute, dataCollectionInfo.getStateExecutionId(), ex);
+            sleep(RETRY_SLEEP);
           }
         }
-
-      } catch (RuntimeException | IOException | CloneNotSupportedException e) {
-        completed.set(true);
-        taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-        taskResult.setErrorMessage("error fetching appdynamics metrics for minute " + dataCollectionMinute);
-        logger.error("error fetching appdynamics metrics for minute " + dataCollectionMinute, e);
       }
 
       if (completed.get()) {

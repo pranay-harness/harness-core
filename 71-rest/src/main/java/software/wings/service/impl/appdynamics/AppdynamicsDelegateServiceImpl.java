@@ -6,6 +6,7 @@ import static io.harness.network.Http.validUrl;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.RETRIES;
+import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Preconditions;
@@ -14,7 +15,6 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.network.Http;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
@@ -594,7 +594,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
             .baseUrl(appDynamicsConfig.getControllerUrl().endsWith("/") ? appDynamicsConfig.getControllerUrl()
                                                                         : appDynamicsConfig.getControllerUrl() + "/")
             .addConverterFactory(JacksonConverterFactory.create())
-            .client(Http.getUnsafeOkHttpClient(appDynamicsConfig.getControllerUrl()))
+            .client(getUnsafeHttpClient(appDynamicsConfig.getControllerUrl()))
             .build();
     return retrofit.create(AppdynamicsRestClient.class);
   }

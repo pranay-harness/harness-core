@@ -103,91 +103,84 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
     }
 
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
-      try {
-        int retry = 0;
-        while (!completed.get() && retry < RETRIES) {
-          try {
-            final List<LogElement> logElements = new ArrayList<>();
-            final List<Callable<List<LogElement>>> callables = new ArrayList<>();
-            for (String host : dataCollectionInfo.getHosts()) {
-              String query = dataCollectionInfo.getQuery();
-              /* Heart beat */
-              final LogElement splunkHeartBeatElement = new LogElement();
-              splunkHeartBeatElement.setQuery(query);
-              splunkHeartBeatElement.setClusterLabel("-3");
-              splunkHeartBeatElement.setHost(host);
-              splunkHeartBeatElement.setCount(0);
-              splunkHeartBeatElement.setLogMessage("");
-              splunkHeartBeatElement.setTimeStamp(0);
-              splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
-              logElements.add(splunkHeartBeatElement);
-              callables.add(() -> fetchLogsForHost(host, query, logCollectionMinute));
-            }
+      int retry = 0;
+      while (!completed.get() && retry < RETRIES) {
+        try {
+          final List<LogElement> logElements = new ArrayList<>();
+          final List<Callable<List<LogElement>>> callables = new ArrayList<>();
+          for (String host : dataCollectionInfo.getHosts()) {
+            String query = dataCollectionInfo.getQuery();
+            /* Heart beat */
+            final LogElement splunkHeartBeatElement = new LogElement();
+            splunkHeartBeatElement.setQuery(query);
+            splunkHeartBeatElement.setClusterLabel("-3");
+            splunkHeartBeatElement.setHost(host);
+            splunkHeartBeatElement.setCount(0);
+            splunkHeartBeatElement.setLogMessage("");
+            splunkHeartBeatElement.setTimeStamp(0);
+            splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
+            logElements.add(splunkHeartBeatElement);
+            callables.add(() -> fetchLogsForHost(host, query, logCollectionMinute));
+          }
 
-            List<Optional<List<LogElement>>> results = executeParrallel(callables);
-            results.forEach(result -> {
-              if (result.isPresent()) {
-                logElements.addAll(result.get());
-              }
-            });
-
-            boolean response = logAnalysisStoreService.save(StateType.SPLUNKV2, dataCollectionInfo.getAccountId(),
-                dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-                dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-                dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
-            if (!response) {
-              if (++retry == RETRIES) {
-                taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                // TODO capture error code and send back for all collectors
-                taskResult.setErrorMessage("Cannot save log records. Server returned error ");
-                completed.set(true);
-                break;
-              }
-              continue;
+          List<Optional<List<LogElement>>> results = executeParrallel(callables);
+          results.forEach(result -> {
+            if (result.isPresent()) {
+              logElements.addAll(result.get());
             }
-            logger.info("sent splunk search records to server. Num of events: " + logElements.size()
-                + " application: " + dataCollectionInfo.getApplicationId()
-                + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
-            break;
-          } catch (Exception e) {
+          });
+
+          boolean response = logAnalysisStoreService.save(StateType.SPLUNKV2, dataCollectionInfo.getAccountId(),
+              dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
+              dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
+              dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
+          if (!response) {
             if (++retry == RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+              // TODO capture error code and send back for all collectors
+              taskResult.setErrorMessage("Cannot save log records. Server returned error ");
               completed.set(true);
-              throw e;
-            } else {
-              /*
-               * Save the exception from the first attempt. This is usually
-               * more meaningful to trouble shoot.
-               */
-              if (retry == 1) {
-                taskResult.setErrorMessage(Misc.getMessage(e));
-              }
-              logger.warn("error fetching splunk logs. retrying in " + RETRY_SLEEP + "s", e);
-              sleep(RETRY_SLEEP);
+              break;
             }
+            continue;
+          }
+          logger.info("sent splunk search records to server. Num of events: " + logElements.size()
+              + " application: " + dataCollectionInfo.getApplicationId()
+              + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
+          break;
+        } catch (Throwable ex) {
+          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+            logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                logCollectionMinute, ex);
+            taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+            completed.set(true);
+            break;
+          } else {
+            /*
+             * Save the exception from the first attempt. This is usually
+             * more meaningful to trouble shoot.
+             */
+            if (retry == 1) {
+              taskResult.setErrorMessage(Misc.getMessage(ex));
+            }
+            logger.warn("error fetching splunk logs. retrying in " + RETRY_SLEEP + "s", ex);
+            sleep(RETRY_SLEEP);
           }
         }
-        startTime += TimeUnit.MINUTES.toMillis(1);
-        endTime = startTime + TimeUnit.MINUTES.toMillis(1);
-        logCollectionMinute++;
-        dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
-        if (dataCollectionInfo.getCollectionTime() <= 0) {
-          // We are done with all data collection, so setting task status to success and quitting.
-          logger.info(
-              "Completed Splunk collection task. So setting task status to success and quitting. StateExecutionId {}",
-              dataCollectionInfo.getStateExecutionId());
-          completed.set(true);
-          taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
-        }
-
-      } catch (Exception e) {
+      }
+      startTime += TimeUnit.MINUTES.toMillis(1);
+      endTime = startTime + TimeUnit.MINUTES.toMillis(1);
+      logCollectionMinute++;
+      dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
+      if (dataCollectionInfo.getCollectionTime() <= 0) {
+        // We are done with all data collection, so setting task status to success and quitting.
+        logger.info(
+            "Completed Splunk collection task. So setting task status to success and quitting. StateExecutionId {}",
+            dataCollectionInfo.getStateExecutionId());
         completed.set(true);
-        if (taskResult.getStatus() != DataCollectionTaskStatus.FAILURE) {
-          taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-          taskResult.setErrorMessage("error fetching splunk logs for minute " + logCollectionMinute);
-        }
-        logger.error("error fetching splunk logs", e);
+        taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
       }
 
       if (completed.get()) {

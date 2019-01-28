@@ -101,6 +101,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
     }
 
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
       encryptionService.decrypt(dataCollectionInfo.getAwsConfig(), dataCollectionInfo.getEncryptedDataDetails());
       int retry = 0;
@@ -149,8 +150,10 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
             taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
           }
           break;
-        } catch (IOException ex) {
-          if (++retry >= RETRIES) {
+        } catch (Throwable ex) {
+          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+            logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                dataCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
             break;
