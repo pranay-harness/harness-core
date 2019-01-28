@@ -1,7 +1,5 @@
 package software.wings.service.impl.newrelic;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -13,11 +11,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
-import software.wings.beans.CountsByStatuses;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateExecutionData;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -63,23 +59,6 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
         executionDetails, "errorMsg", ExecutionDataValue.builder().displayName("Message").value(getErrorMsg()).build());
     final int total = timeDuration;
     putNotNull(executionDetails, "total", ExecutionDataValue.builder().displayName("Total").value(total).build());
-    final List<NewRelicMetricAnalysisRecord> analysisRecords =
-        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionInstanceId, workflowExecutionId);
-
-    int elapsedMinutes = isEmpty(analysisRecords) ? 0 : analysisRecords.get(0).getAnalysisMinute();
-    final CountsByStatuses breakdown = new CountsByStatuses();
-    switch (getStatus()) {
-      case FAILED:
-      case ERROR:
-        breakdown.setFailed(total);
-        break;
-      case SUCCESS:
-        breakdown.setSuccess(total);
-        break;
-      default:
-        breakdown.setSuccess(Math.min(elapsedMinutes, total));
-        break;
-    }
     Set<String> crypticHostnames = Sets.newHashSet("testNode", "controlNode-1", "controlNode-2", "controlNode-3",
         "controlNode-4", "controlNode-5", "controlNode-6", "controlNode-7");
     Set<String> oldHostNames = lastExecutionNodes;
@@ -90,8 +69,6 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
     if (newHostNames != null) {
       newHostNames.removeAll(crypticHostnames);
     }
-    putNotNull(
-        executionDetails, "breakdown", ExecutionDataValue.builder().displayName("breakdown").value(breakdown).build());
     putNotNull(executionDetails, "timeDuration",
         ExecutionDataValue.builder().displayName("Analysis duration").value(timeDuration).build());
     putNotNull(executionDetails, "newVersionNodes",

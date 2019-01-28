@@ -5,13 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.ExecutionDataValue;
-import software.wings.beans.CountsByStatuses;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -49,26 +47,6 @@ public class LogAnalysisExecutionData extends StateExecutionData {
         executionDetails, "errorMsg", ExecutionDataValue.builder().displayName("Message").value(getErrorMsg()).build());
     final int total = timeDuration + SplunkDataCollectionTask.DELAY_MINUTES + 1;
     putNotNull(executionDetails, "total", ExecutionDataValue.builder().displayName("Total").value(total).build());
-    int elapsedMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs());
-    if (elapsedMinutes < SplunkDataCollectionTask.DELAY_MINUTES + 1) {
-      elapsedMinutes = 0;
-    } else {
-      elapsedMinutes = elapsedMinutes - (SplunkDataCollectionTask.DELAY_MINUTES + 1);
-    }
-    final CountsByStatuses breakdown = new CountsByStatuses();
-    switch (getStatus()) {
-      case FAILED:
-        breakdown.setFailed(total);
-        break;
-      case SUCCESS:
-        breakdown.setSuccess(total);
-        break;
-      default:
-        breakdown.setSuccess(Math.min(elapsedMinutes, total));
-        break;
-    }
-    putNotNull(
-        executionDetails, "breakdown", ExecutionDataValue.builder().displayName("breakdown").value(breakdown).build());
     putNotNull(executionDetails, "timeDuration",
         ExecutionDataValue.builder().displayName("Analysis duration").value(timeDuration).build());
     putNotNull(executionDetails, "queries", ExecutionDataValue.builder().displayName("Queries").value(query).build());
