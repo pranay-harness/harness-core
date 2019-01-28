@@ -197,7 +197,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "pranjal@harness.io", intermittent = true)
+  @Repeat(times = 5, successes = 1)
   public void getNewRelicDataForNode() {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
@@ -215,6 +215,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         new GenericType<RestResponse<List<NewRelicApplicationInstance>>>() {});
     List<NewRelicApplicationInstance> nodes = nodesResponse.getResource();
     assertFalse(nodes.isEmpty());
+    long toTime = System.currentTimeMillis();
 
     for (NewRelicApplicationInstance node : nodes) {
       NewRelicSetupTestNodeData testNodeData =
@@ -225,10 +226,13 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
               .instanceName(generateUuid())
               .hostExpression("${host.hostName}")
               .workflowId(workflowId)
+              .toTime(toTime)
+              .fromTime(toTime - TimeUnit.MINUTES.toMillis(120))
               .instanceElement(anInstanceElement()
                                    .withHost(HostElement.Builder.aHostElement().withHostName(node.getHost()).build())
                                    .build())
               .build();
+
       target =
           client.target(API_BASE + "/newrelic/node-data?settingId=" + newRelicConfigId + "&accountId=" + accountId);
       RestResponse<VerificationNodeDataSetupResponse> metricResponse =
