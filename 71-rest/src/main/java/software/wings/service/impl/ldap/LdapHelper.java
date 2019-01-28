@@ -22,6 +22,8 @@ import org.ldaptive.auth.AuthenticationResponse;
 import org.ldaptive.auth.Authenticator;
 import org.ldaptive.auth.BindAuthenticationHandler;
 import org.ldaptive.auth.SearchDnResolver;
+import org.ldaptive.ssl.AllowAnyTrustManager;
+import org.ldaptive.ssl.SslConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.sso.LdapGroupSettings;
@@ -75,6 +77,10 @@ public class LdapHelper {
     config.setResponseTimeout(Duration.ofMillis(connectionConfig.getResponseTimeout()));
     config.setConnectionInitializer(getConnectionInitializer(connectionConfig));
     config.setUseSSL(connectionConfig.isSslEnabled());
+    // Allowing self-signed certificates to be used for LDAP SSL connection.
+    SslConfig sslConfig = new SslConfig(new AllowAnyTrustManager());
+    sslConfig.setHostnameVerifier((s, sslSession) -> true);
+    config.setSslConfig(sslConfig);
     return config;
   }
 
