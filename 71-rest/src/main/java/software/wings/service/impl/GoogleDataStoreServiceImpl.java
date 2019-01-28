@@ -18,6 +18,7 @@ import com.google.cloud.datastore.StructuredQuery.OrderBy;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+@Singleton
 public class GoogleDataStoreServiceImpl implements DataStoreService {
   private static int DATA_STORE_BATCH_SIZE = 500;
   private static final Logger logger = LoggerFactory.getLogger(GoogleDataStoreServiceImpl.class);

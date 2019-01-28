@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
@@ -47,6 +48,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
+@Singleton
 public class SSOServiceImpl implements SSOService {
   @Inject AccountService accountService;
   @Inject SSOSettingService ssoSettingService;
