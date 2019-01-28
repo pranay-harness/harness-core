@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.service.impl.LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -17,6 +18,7 @@ import software.wings.service.intfc.DataStoreService;
 
 import java.util.List;
 
+@Singleton
 public class MongoDataStoreServiceImpl implements DataStoreService {
   private static final Logger logger = LoggerFactory.getLogger(MongoDataStoreServiceImpl.class);
   private WingsPersistence wingsPersistence;

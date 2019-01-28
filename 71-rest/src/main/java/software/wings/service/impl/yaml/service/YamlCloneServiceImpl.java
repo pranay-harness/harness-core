@@ -10,6 +10,7 @@ import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
@@ -44,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Singleton
 public class YamlCloneServiceImpl implements YamlCloneService {
   public static final String YAML_EXTENSION = ".yaml";
   @Inject private YamlResourceService yamlResourceService;

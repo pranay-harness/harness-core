@@ -40,6 +40,7 @@ import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.PageRequest;
@@ -125,6 +126,7 @@ import javax.ws.rs.core.HttpHeaders;
  * The type Yaml git sync service.
  */
 @ValidateOnExecution
+@Singleton
 public class YamlGitServiceImpl implements YamlGitService {
   private static final Logger logger = LoggerFactory.getLogger(YamlGitServiceImpl.class);
 
