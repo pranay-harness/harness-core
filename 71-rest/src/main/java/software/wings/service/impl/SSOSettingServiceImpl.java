@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -111,7 +112,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin) {
-    return wingsPersistence.createQuery(SamlSettings.class).field("origin").equal(origin).iterator();
+    return wingsPersistence.createQuery(SamlSettings.class, excludeAuthority).field("origin").equal(origin).iterator();
   }
 
   @Override
