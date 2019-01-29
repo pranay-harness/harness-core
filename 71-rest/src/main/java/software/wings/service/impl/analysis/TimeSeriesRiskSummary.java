@@ -34,9 +34,9 @@ import java.util.Map;
  */
 
 @Entity(value = "timeSeriesRiskSummary", noClassnameStored = true)
-@Indexes(
-    @Index(fields = { @Field("cvConfigId")
-                      , @Field("analysisMinute") }, options = @IndexOptions(name = "minuteIndex")))
+@Indexes(@Index(fields = { @Field("appId")
+                           , @Field("cvConfigId"), @Field("analysisMinute") },
+    options = @IndexOptions(name = "minuteIndex")))
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
