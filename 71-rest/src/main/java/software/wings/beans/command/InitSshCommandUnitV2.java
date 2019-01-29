@@ -1,6 +1,5 @@
 package software.wings.beans.command;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -35,28 +34,28 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
   /**
    * The constant INITIALIZE_UNIT.
    */
-  public static final transient String INITIALIZE_UNIT = "Initialize";
+  private static final transient String INITIALIZE_UNIT = "Initialize";
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   static {
     try {
       StringTemplateLoader stringLoader = new StringTemplateLoader();
 
       InputStream execLauncherInputStream =
-          InitSshCommandUnitV2.class.getClassLoader().getResourceAsStream("commandtemplates/execlauncherv2.ftl");
+          InitSshCommandUnitV2.class.getClassLoader().getResourceAsStream("commandtemplates/execlauncherv2.sh.ftl");
       if (execLauncherInputStream == null) {
-        throw new RuntimeException("execlauncherv2.ftl file is missing.");
+        throw new RuntimeException("execlauncherv2.sh.ftl file is missing.");
       }
 
-      stringLoader.putTemplate("execlauncherv2.ftl",
+      stringLoader.putTemplate("execlauncherv2.sh.ftl",
           convertToUnixStyleLineEndings(IOUtils.toString(execLauncherInputStream, StandardCharsets.UTF_8)));
 
       InputStream tailWrapperInputStream =
-          InitSshCommandUnitV2.class.getClassLoader().getResourceAsStream("commandtemplates/tailwrapperv2.ftl");
+          InitSshCommandUnitV2.class.getClassLoader().getResourceAsStream("commandtemplates/tailwrapperv2.sh.ftl");
       if (tailWrapperInputStream == null) {
-        throw new RuntimeException("tailwrapperv2.ftl file is missing.");
+        throw new RuntimeException("tailwrapperv2.sh.ftl file is missing.");
       }
 
-      stringLoader.putTemplate("tailwrapperv2.ftl",
+      stringLoader.putTemplate("tailwrapperv2.sh.ftl",
           convertToUnixStyleLineEndings(IOUtils.toString(tailWrapperInputStream, StandardCharsets.UTF_8)));
       cfg.setTemplateLoader(stringLoader);
     } catch (IOException e) {
@@ -144,43 +143,49 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
 
   private String getInitCommand(String scriptWorkingDirectory) throws IOException, TemplateException {
     try (StringWriter stringWriter = new StringWriter()) {
-      cfg.getTemplate("execlauncherv2.ftl")
-          .process(of("envVariables", envVariables, "safeEnvVariables", safeDisplayEnvVariables,
-                       "scriptWorkingDirectory", scriptWorkingDirectory),
-              stringWriter);
+      Map<String, Object> templateParams = ImmutableMap.<String, Object>builder()
+                                               .put("executionId", activityId)
+                                               .put("executionStagingDir", executionStagingDir)
+                                               .put("envVariables", envVariables)
+                                               .put("safeEnvVariables", safeDisplayEnvVariables)
+                                               .put("scriptWorkingDirectory", scriptWorkingDirectory)
+                                               .build();
+      cfg.getTemplate("execlauncherv2.sh.ftl").process(templateParams, stringWriter);
       return stringWriter.toString();
     }
   }
 
   private void createPreparedCommands(Command command) throws IOException, TemplateException {
-    String preparedCommand;
     for (CommandUnit unit : command.getCommandUnits()) {
       if (unit instanceof Command) {
         createPreparedCommands((Command) unit);
       } else {
         if (unit instanceof ExecCommandUnit) {
-          String commandDir = isNotBlank(((ExecCommandUnit) unit).getCommandPath())
-              ? "'" + ((ExecCommandUnit) unit).getCommandPath().trim() + "'"
-              : "";
-          if (isEmpty(((ExecCommandUnit) unit).getTailPatterns())) {
-            preparedCommand = getInitCommand(commandDir) + ((ExecCommandUnit) unit).getCommandString();
+          ExecCommandUnit execCommandUnit = (ExecCommandUnit) unit;
+          String commandDir =
+              isNotBlank(execCommandUnit.getCommandPath()) ? "'" + execCommandUnit.getCommandPath().trim() + "'" : "";
+          StringBuilder preparedCommand = new StringBuilder(getInitCommand(commandDir));
+          if (isEmpty(execCommandUnit.getTailPatterns())) {
+            preparedCommand.append(execCommandUnit.getCommandString());
           } else {
-            preparedCommand = getInitCommand(commandDir);
             try (StringWriter stringWriter = new StringWriter()) {
-              cfg.getTemplate("tailwrapperv2.ftl")
-                  .process(ImmutableMap.of("tailPatterns", ((ExecCommandUnit) unit).getTailPatterns(), "executionId",
-                               activityId, "executionStagingDir", executionStagingDir, "commandString",
-                               ((ExecCommandUnit) unit).getCommandString()),
-                      stringWriter);
-              preparedCommand = preparedCommand + " " + stringWriter.toString();
+              Map<String, Object> templateParams = ImmutableMap.<String, Object>builder()
+                                                       .put("tailPatterns", execCommandUnit.getTailPatterns())
+                                                       .put("executionId", activityId)
+                                                       .put("executionStagingDir", executionStagingDir)
+                                                       .put("commandString", execCommandUnit.getCommandString())
+                                                       .build();
+              cfg.getTemplate("tailwrapperv2.sh.ftl").process(templateParams, stringWriter);
+              preparedCommand.append(' ').append(stringWriter.toString());
             }
           }
 
-          ((ExecCommandUnit) unit).setPreparedCommand(preparedCommand);
+          execCommandUnit.setPreparedCommand(preparedCommand.toString());
         }
       }
     }
   }
+
   /**
    * Sets command.
    *
