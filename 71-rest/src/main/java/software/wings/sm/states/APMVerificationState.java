@@ -20,7 +20,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
@@ -61,8 +60,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class APMVerificationState extends AbstractMetricAnalysisState {
-  @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(APMVerificationState.class);
-  @Transient @SchemaIgnore protected static final String URL_BODY_APPENDER = "__harness-body__";
+  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(APMVerificationState.class);
+  @SchemaIgnore protected static final String URL_BODY_APPENDER = "__harness-body__";
 
   public APMVerificationState(String name) {
     super(name, StateType.APM_VERIFICATION);

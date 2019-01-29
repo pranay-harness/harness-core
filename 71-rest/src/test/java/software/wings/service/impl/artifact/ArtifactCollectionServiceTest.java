@@ -23,7 +23,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.AcrArtifactStream;
@@ -52,7 +51,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   public static final String LATEST_BUILD_NUMBER = "latest";
   @Inject @Spy private WingsPersistence wingsPersistence;
   @InjectMocks @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
-  @Inject @Transient private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private ArtifactCollectionUtil artifactCollectionUtil;
 
   @Mock ArtifactStreamService artifactStreamService;
   @Mock private ArtifactService artifactService;

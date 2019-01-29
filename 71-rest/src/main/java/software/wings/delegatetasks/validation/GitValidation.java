@@ -5,7 +5,6 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -22,8 +21,8 @@ import java.util.function.Consumer;
  */
 public class GitValidation extends AbstractDelegateValidateTask {
   private static final Logger logger = LoggerFactory.getLogger(GitValidation.class);
-  @Inject @Transient private transient GitClient gitClient;
-  @Inject @Transient private transient EncryptionService encryptionService;
+  @Inject private transient GitClient gitClient;
+  @Inject private transient EncryptionService encryptionService;
 
   public GitValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
