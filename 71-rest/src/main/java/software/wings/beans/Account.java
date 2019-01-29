@@ -51,6 +51,10 @@ public class Account extends Base {
 
   private String newClusterUrl;
 
+  // Set this flag when creating an empty account for data import.
+  // It's a transient field and won't be persisted.
+  @Transient private boolean forImport;
+
   /**
    * If this flag is set, all encryption/decryption activities will go through LOCAL security manager.
    * No VAULT/KMS secret manager can be configured. This helps for accounts whose delegate can't access
@@ -84,6 +88,14 @@ public class Account extends Base {
 
   public void setNewClusterUrl(String newClusterUrl) {
     this.newClusterUrl = newClusterUrl;
+  }
+
+  public boolean isForImport() {
+    return forImport;
+  }
+
+  public void setForImport(boolean forImport) {
+    this.forImport = forImport;
   }
 
   public boolean isLocalEncryptionEnabled() {

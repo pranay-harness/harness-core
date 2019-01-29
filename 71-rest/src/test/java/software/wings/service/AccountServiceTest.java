@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -11,6 +12,9 @@ import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.Constants.HARNESS_NAME;
+import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
+import static software.wings.utils.WingsTestConstants.ILLEGAL_ACCOUNT_NAME;
+import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -23,17 +27,16 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.AccountStatus;
-import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
@@ -41,7 +44,6 @@ import software.wings.beans.StringValue.Builder;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
-import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
@@ -56,6 +58,7 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,10 +73,10 @@ import java.util.stream.Collectors;
 public class AccountServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private SettingsService settingsService;
-  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private TemplateGalleryService templateGalleryService;
   @Mock private UserPermissionInfo mockUserPermissionInfo;
   @Mock private AuthService authService;
+  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
 
   @InjectMocks @Inject private LicenseService licenseService;
   @InjectMocks @Inject private AccountService accountService;
@@ -90,18 +93,32 @@ public class AccountServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldSaveAccount() {
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
-    licenseInfo.setAccountType(AccountType.PAID);
-    licenseInfo.setLicenseUnits(100);
-    licenseInfo.setExpireAfterDays(1);
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
-                                              .withLicenseInfo(licenseInfo)
+                                              .withLicenseInfo(getLicenseInfo())
                                               .build());
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
+  }
+
+  @Test
+  public void testRegisterNewUser_invalidAccountName_shouldFail() {
+    Account account = anAccount()
+                          .withCompanyName(COMPANY_NAME)
+                          .withAccountName(ILLEGAL_ACCOUNT_NAME)
+                          .withLicenseInfo(getLicenseInfo())
+                          .build();
+
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(configuration.getPortal().getAllowedDomainsList()).thenReturn(new ArrayList<>());
+
+    try {
+      accountService.save(account);
+      fail("Exception is expected when inviting with invalid account name");
+    } catch (WingsException e) {
+      // Ignore, exception expected here.
+    }
   }
 
   @Test
