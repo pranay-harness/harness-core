@@ -3,6 +3,7 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
@@ -19,6 +20,7 @@ import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import java.util.List;
 import java.util.Optional;
 
+@Singleton
 public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
   @Inject private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
   @Inject private AwsHelperService awsHelperService;

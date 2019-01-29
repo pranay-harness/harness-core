@@ -9,6 +9,7 @@ import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
@@ -45,6 +46,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Singleton
 public class ContainerServiceImpl implements ContainerService {
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceImpl.class);
 

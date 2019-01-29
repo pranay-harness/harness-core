@@ -3,6 +3,8 @@ package software.wings.helpers.ext.pcf;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
+import com.google.inject.Singleton;
+
 import io.harness.data.structure.EmptyPredicate;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -56,6 +58,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Singleton
 public class PcfClientImpl implements PcfClient {
   private static final Logger logger = LoggerFactory.getLogger(PcfClientImpl.class);
 

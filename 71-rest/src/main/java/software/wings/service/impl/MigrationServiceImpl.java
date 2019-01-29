@@ -12,6 +12,7 @@ import static software.wings.beans.Schema.SchemaBuilder.aSchema;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -41,6 +42,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Singleton
 public class MigrationServiceImpl implements MigrationService {
   private static final Logger logger = LoggerFactory.getLogger(MigrationServiceImpl.class);
 
