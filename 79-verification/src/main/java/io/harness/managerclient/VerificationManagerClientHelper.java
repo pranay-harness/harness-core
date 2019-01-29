@@ -1,5 +1,8 @@
 package io.harness.managerclient;
 
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
@@ -57,6 +60,7 @@ public class VerificationManagerClientHelper {
         call = call.clone();
         logger.info(
             "Error while calling manager for call {}, retryCount: {}", call.request().toString(), retryCount, ex);
+        sleep(ofMillis(1000));
       }
     }
     logger.error("Error while calling manager for call {} after all retries", call.request().toString());
