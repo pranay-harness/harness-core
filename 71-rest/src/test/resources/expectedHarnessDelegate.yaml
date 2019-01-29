@@ -23,7 +23,7 @@ roleRef:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: harness-proxy-pass
+  name: harness-delegate-proxy
   namespace: harness-delegate
 type: Opaque
 data:
@@ -97,12 +97,12 @@ spec:
         - name: PROXY_USER
           valueFrom:
             secretKeyRef:
-              name: harness-proxy-pass
+              name: harness-delegate-proxy
               key: PROXY_USER
         - name: PROXY_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: harness-proxy-pass
+              name: harness-delegate-proxy
               key: PROXY_PASSWORD
         - name: POLL_FOR_TASKS
           value: "false"
