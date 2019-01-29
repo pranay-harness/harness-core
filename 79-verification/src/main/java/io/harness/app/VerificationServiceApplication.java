@@ -179,6 +179,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     registerManagedBeans(environment, injector);
 
+    initializeServiceSecretKeys(injector);
+
     registerJerseyProviders(environment);
 
     registerCharsetResponseFilter(environment, injector);
@@ -189,8 +191,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
     environment.healthChecks().register("Verification Service", new VerificationServiceHealthCheck());
 
     startPlugins(injector);
-
-    initializeServiceSecretKeys(injector);
 
     registerCronJobs(injector);
 
