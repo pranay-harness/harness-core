@@ -1,6 +1,5 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
-import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
@@ -21,7 +20,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -163,32 +161,16 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
             .namespace(previousRollbackEligibleRelease.getManagedWorkload().getNamespace())
             .toRevision(previousRollbackEligibleRelease.getManagedWorkloadRevision());
 
-    try (LogOutputStream logOutputStream =
-             new LogOutputStream() {
-               @Override
-               protected void processLine(String line) {
-                 executionLogCallback.saveExecutionLog(line, INFO);
-               }
-             };
+    ProcessResult result = K8sTaskHelper.executeCommand(
+        rolloutUndoCommand, k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
 
-         LogOutputStream logErrorStream =
-             new LogOutputStream() {
-               @Override
-               protected void processLine(String line) {
-                 executionLogCallback.saveExecutionLog(line, ERROR);
-               }
-             }) {
-      ProcessResult result = rolloutUndoCommand.execute(
-          k8sDelegateTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream, true);
-
-      if (result.getExitValue() == 0) {
-        executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-        return true;
-      } else {
-        executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
-        logger.warn("Failed to rollback resource. Error {}", result.getOutput());
-        return false;
-      }
+    if (result.getExitValue() == 0) {
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return true;
+    } else {
+      executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+      logger.warn("Failed to rollback resource. Error {}", result.getOutput());
+      return false;
     }
   }
 }

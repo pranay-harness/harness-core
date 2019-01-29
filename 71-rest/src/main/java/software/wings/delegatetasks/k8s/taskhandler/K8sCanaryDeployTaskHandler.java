@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
@@ -14,6 +15,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Apply;
 import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
+import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 
 import com.google.inject.Inject;
@@ -22,6 +24,8 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
+import io.harness.k8s.model.HarnessLabelValues;
+import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
@@ -41,9 +45,9 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.k8s.request.K8sCanarySetupTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
-import software.wings.helpers.ext.k8s.response.K8sCanarySetupResponse;
+import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -55,8 +59,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(K8sCanarySetupTaskHandler.class);
+public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
+  private static final Logger logger = LoggerFactory.getLogger(K8sCanaryDeployTaskHandler.class);
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private GitService gitService;
@@ -67,107 +71,118 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
   private Kubectl client;
   private ReleaseHistory releaseHistory;
   private Release currentRelease;
-  private KubernetesResource managedWorkload;
+  private KubernetesResource canaryWorkload;
   private List<KubernetesResource> resources;
-  private Integer currentInstances;
+  private Integer targetInstances;
   private KubernetesResourceId previousManagedWorkload;
   private String releaseName;
 
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
-    if (!(k8sTaskParameters instanceof K8sCanarySetupTaskParameters)) {
+    if (!(k8sTaskParameters instanceof K8sCanaryDeployTaskParameters)) {
       throw new InvalidArgumentsException(
-          Pair.of("k8sTaskParameters", "Must be instance of K8sCanarySetupTaskParameters"));
+          Pair.of("k8sTaskParameters", "Must be instance of K8sCanaryDeployTaskParameters"));
     }
 
-    K8sCanarySetupTaskParameters k8sCanarySetupTaskParameters = (K8sCanarySetupTaskParameters) k8sTaskParameters;
+    K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters = (K8sCanaryDeployTaskParameters) k8sTaskParameters;
 
-    releaseName = k8sCanarySetupTaskParameters.getReleaseName();
+    releaseName = k8sCanaryDeployTaskParameters.getReleaseName();
 
     List<ManifestFile> manifestFiles =
-        k8sTaskHelper.fetchManifestFiles(k8sCanarySetupTaskParameters.getK8sDelegateManifestConfig(),
-            getLogCallBack(k8sCanarySetupTaskParameters, FetchFiles), gitService, encryptionService);
+        k8sTaskHelper.fetchManifestFiles(k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(),
+            getLogCallBack(k8sCanaryDeployTaskParameters, FetchFiles), gitService, encryptionService);
     if (manifestFiles == null) {
-      return getFailureResponse(k8sCanarySetupTaskParameters.getActivityId());
+      return getFailureResponse();
     }
-    k8sCanarySetupTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFiles);
+    k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFiles);
 
     boolean success =
-        init(k8sCanarySetupTaskParameters, k8sDelegateTaskParams, getLogCallBack(k8sCanarySetupTaskParameters, Init));
+        init(k8sCanaryDeployTaskParameters, k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, Init));
     if (!success) {
-      return getFailureResponse(k8sCanarySetupTaskParameters.getActivityId());
+      return getFailureResponse();
     }
 
-    success = prepareForCanary(k8sDelegateTaskParams, getLogCallBack(k8sCanarySetupTaskParameters, Prepare));
+    success = prepareForCanary(
+        k8sDelegateTaskParams, k8sCanaryDeployTaskParameters, getLogCallBack(k8sCanaryDeployTaskParameters, Prepare));
     if (!success) {
-      return getFailureResponse(k8sCanarySetupTaskParameters.getActivityId());
+      return getFailureResponse();
     }
-
-    currentRelease.setManagedWorkload(managedWorkload.getResourceId().cloneInternal());
 
     success = k8sTaskHelper.applyManifests(
-        client, resources, k8sDelegateTaskParams, getLogCallBack(k8sCanarySetupTaskParameters, Apply));
+        client, resources, k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, Apply));
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
       kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-          k8sCanarySetupTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
-      return getFailureResponse(k8sCanarySetupTaskParameters.getActivityId());
+          k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      return getFailureResponse();
     }
 
-    currentRelease.setManagedWorkloadRevision(
-        k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
+    success = k8sTaskHelper.doStatusCheck(client, canaryWorkload.getResourceId(), k8sDelegateTaskParams,
+        k8sTaskHelper.getExecutionLogCallback(k8sCanaryDeployTaskParameters, WaitForSteadyState));
+    if (!success) {
+      releaseHistory.setReleaseStatus(Status.Failed);
+      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+          k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      return getFailureResponse();
+    }
 
-    wrapUp(k8sDelegateTaskParams, getLogCallBack(k8sCanarySetupTaskParameters, WrapUp));
+    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithTrack(
+        kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, "canary");
 
-    releaseHistory.setReleaseStatus(Status.Succeeded);
-    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-        k8sCanarySetupTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    wrapUp(k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, WrapUp));
 
-    K8sCanarySetupResponse k8sCanarySetupResponse =
-        K8sCanarySetupResponse.builder()
+    success = kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+        k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    if (!success) {
+      logger.error("Failed to save release history");
+      return getFailureResponse();
+    }
+
+    K8sCanaryDeployResponse k8sCanaryDeployResponse =
+        K8sCanaryDeployResponse.builder()
             .releaseNumber(currentRelease.getNumber())
-            .currentInstances(currentInstances)
-            .currentReleaseWorkload(managedWorkload != null ? managedWorkload.getResourceId().kindNameRef() : "")
-            .previousReleaseWorkload(previousManagedWorkload != null ? previousManagedWorkload.kindNameRef() : "")
+            .k8sPodList(podList)
+            .currentInstances(targetInstances)
+            .canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef())
             .build();
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-        .k8sTaskResponse(k8sCanarySetupResponse)
+        .k8sTaskResponse(k8sCanaryDeployResponse)
         .build();
   }
 
-  private K8sTaskExecutionResponse getFailureResponse(String activityId) {
-    K8sCanarySetupResponse k8sCanarySetupResponse = K8sCanarySetupResponse.builder().build();
+  private K8sTaskExecutionResponse getFailureResponse() {
+    K8sCanaryDeployResponse k8sCanaryDeployResponse = K8sCanaryDeployResponse.builder().build();
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-        .k8sTaskResponse(k8sCanarySetupResponse)
+        .k8sTaskResponse(k8sCanaryDeployResponse)
         .build();
   }
 
-  private ExecutionLogCallback getLogCallBack(K8sCanarySetupTaskParameters request, String commandUnit) {
+  private ExecutionLogCallback getLogCallBack(K8sCanaryDeployTaskParameters request, String commandUnit) {
     return new ExecutionLogCallback(
         delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), commandUnit);
   }
 
-  private boolean init(K8sCanarySetupTaskParameters k8sCanarySetupTaskParameters,
+  private boolean init(K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
     kubernetesConfig =
-        containerDeploymentDelegateHelper.getKubernetesConfig(k8sCanarySetupTaskParameters.getK8sClusterConfig());
+        containerDeploymentDelegateHelper.getKubernetesConfig(k8sCanaryDeployTaskParameters.getK8sClusterConfig());
 
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
     String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-        kubernetesConfig, Collections.emptyList(), k8sCanarySetupTaskParameters.getReleaseName());
+        kubernetesConfig, Collections.emptyList(), k8sCanaryDeployTaskParameters.getReleaseName());
 
     releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     try {
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
-          k8sCanarySetupTaskParameters.getK8sDelegateManifestConfig().getManifestFiles(),
-          k8sCanarySetupTaskParameters.getValuesYamlList(), executionLogCallback);
+          k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().getManifestFiles(),
+          k8sCanaryDeployTaskParameters.getValuesYamlList(), executionLogCallback);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
     } catch (Exception e) {
@@ -183,10 +198,10 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
     return k8sTaskHelper.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
   }
 
-  private boolean prepareForCanary(
-      K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
+  private boolean prepareForCanary(K8sDelegateTaskParams k8sDelegateTaskParams,
+      K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters, ExecutionLogCallback executionLogCallback) {
     try {
-      markVersionedResources(resources, true);
+      markVersionedResources(resources, false);
 
       executionLogCallback.saveExecutionLog(
           "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
@@ -213,25 +228,56 @@ public class K8sCanarySetupTaskHandler extends K8sTaskHandler {
 
       executionLogCallback.saveExecutionLog("\nVersioning resources.");
 
-      addRevisionNumber(resources, currentRelease.getNumber(), true);
-      managedWorkload = getManagedWorkload(resources);
-      managedWorkload.addReleaseLabelsInPodSpec(releaseName, currentRelease.getNumber());
-      managedWorkload.addRevisionNumberInDeploymentSelector(currentRelease.getNumber(), true);
-
-      executionLogCallback.saveExecutionLog(
-          "\nManaged Workload is: " + color(managedWorkload.getResourceId().kindNameRef(), LogColor.Cyan, Bold));
+      addRevisionNumber(resources, currentRelease.getNumber(), false);
+      canaryWorkload = getManagedWorkload(resources);
 
       k8sTaskHelper.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 
-      if (releaseHistory.getLastSuccessfulRelease() != null
-          && releaseHistory.getLastSuccessfulRelease().getManagedWorkload() != null) {
-        previousManagedWorkload = releaseHistory.getLastSuccessfulRelease().getManagedWorkload();
-        currentInstances = k8sTaskHelper.getCurrentReplicas(
-            client, releaseHistory.getLastSuccessfulRelease().getManagedWorkload(), k8sDelegateTaskParams);
-        if (currentInstances != null) {
-          executionLogCallback.saveExecutionLog("\nCurrent instance count is " + currentInstances);
-        }
+      Integer currentInstances =
+          k8sTaskHelper.getCurrentReplicas(client, canaryWorkload.getResourceId(), k8sDelegateTaskParams);
+      if (currentInstances != null) {
+        executionLogCallback.saveExecutionLog("\nCurrent replica count is " + currentInstances);
       }
+
+      if (currentInstances == null) {
+        currentInstances = canaryWorkload.getReplicaCount();
+      }
+
+      if (currentInstances == null) {
+        currentInstances = 1;
+      }
+
+      targetInstances = currentInstances;
+
+      switch (k8sCanaryDeployTaskParameters.getInstanceUnitType()) {
+        case COUNT:
+          targetInstances = k8sCanaryDeployTaskParameters.getInstances();
+          break;
+
+        case PERCENTAGE:
+          Integer maxInstances;
+          if (k8sCanaryDeployTaskParameters.getMaxInstances().isPresent()) {
+            maxInstances = k8sCanaryDeployTaskParameters.getMaxInstances().get();
+          } else {
+            maxInstances = currentInstances;
+          }
+          targetInstances = (int) Math.round(k8sCanaryDeployTaskParameters.getInstances() * maxInstances / 100.0);
+          break;
+
+        default:
+          unhandled(k8sCanaryDeployTaskParameters.getInstanceUnitType());
+      }
+
+      canaryWorkload.appendSuffixInName("-canary");
+      canaryWorkload.addReleaseLabelsInPodSpec(releaseName, currentRelease.getNumber(), HarnessLabelValues.trackCanary);
+      canaryWorkload.addTrackLabelInDeploymentSelector(HarnessLabelValues.trackCanary);
+      canaryWorkload.setReplicaCount(targetInstances);
+
+      executionLogCallback.saveExecutionLog(
+          "\nCanary Workload is: " + color(canaryWorkload.getResourceId().kindNameRef(), LogColor.Cyan, Bold));
+
+      executionLogCallback.saveExecutionLog("\nTarget replica count for Canary is " + targetInstances);
+
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return false;

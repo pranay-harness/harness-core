@@ -11,6 +11,7 @@ public class K8sDummyCommandUnit extends AbstractCommandUnit {
   public static final String Prepare = "Prepare";
   public static final String Apply = "Apply";
   public static final String Scale = "Scale";
+  public static final String Delete = "Delete";
   public static final String Rollback = "Rollback";
   public static final String WaitForSteadyState = "Wait for Steady State";
   public static final String WrapUp = "Wrap Up";

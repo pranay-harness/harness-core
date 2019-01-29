@@ -9,6 +9,8 @@ import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateResponse;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
+import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sDeleteResponse;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.impl.aws.model.AwsRoute53ListHostedZonesRequest;
 import software.wings.service.impl.aws.model.AwsRoute53ListHostedZonesResponse;
@@ -30,5 +32,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsRoute53HostedZoneData.class, 7110);
     kryo.register(Action.class, 7111);
     kryo.register(ShellScriptApprovalExecutionData.class, 7112);
+    kryo.register(K8sDeleteTaskParameters.class, 7113);
+    kryo.register(K8sDeleteResponse.class, 7114);
   }
 }

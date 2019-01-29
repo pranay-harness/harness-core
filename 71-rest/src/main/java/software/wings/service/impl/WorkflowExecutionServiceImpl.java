@@ -2318,8 +2318,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           if (isNotEmpty(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries())) {
             instanceStatusSummaries.addAll(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries());
           }
-        } else if (nextStateType == StateType.K8S_DEPLOYMENT_ROLLING || nextStateType == StateType.K8S_BLUE_GREEN_DEPLOY
-            || nextStateType == StateType.K8S_SCALE) {
+        } else if (nextStateType == StateType.K8S_DEPLOYMENT_ROLLING || nextStateType == StateType.K8S_CANARY_DEPLOY
+            || nextStateType == StateType.K8S_BLUE_GREEN_DEPLOY || nextStateType == StateType.K8S_SCALE) {
           StateExecutionData stateExecutionData = next.getStateExecutionData();
           if (stateExecutionData instanceof K8sStateExecutionData) {
             K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) stateExecutionData;

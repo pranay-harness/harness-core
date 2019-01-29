@@ -1319,24 +1319,29 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void saveReleaseHistory(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+  public boolean saveReleaseHistory(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String releaseName, String releaseHistory) {
-    ConfigMap configMap = getConfigMap(kubernetesConfig, encryptedDataDetails, releaseName);
-    if (configMap == null) {
-      configMap = new ConfigMapBuilder()
-                      .withNewMetadata()
-                      .withName(releaseName)
-                      .withNamespace(kubernetesConfig.getNamespace())
-                      .endMetadata()
-                      .withData(ImmutableMap.of(ReleaseHistoryKeyName, releaseHistory))
-                      .build();
-    } else {
-      Map data = configMap.getData();
-      data.put(ReleaseHistoryKeyName, releaseHistory);
-      configMap.setData(data);
+    try {
+      ConfigMap configMap = getConfigMap(kubernetesConfig, encryptedDataDetails, releaseName);
+      if (configMap == null) {
+        configMap = new ConfigMapBuilder()
+                        .withNewMetadata()
+                        .withName(releaseName)
+                        .withNamespace(kubernetesConfig.getNamespace())
+                        .endMetadata()
+                        .withData(ImmutableMap.of(ReleaseHistoryKeyName, releaseHistory))
+                        .build();
+      } else {
+        Map data = configMap.getData();
+        data.put(ReleaseHistoryKeyName, releaseHistory);
+        configMap.setData(data);
+      }
+      createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
+      return true;
+    } catch (Exception e) {
+      logger.error("Failed to save release History", e);
+      return false;
     }
-
-    createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
   }
 
   @Override

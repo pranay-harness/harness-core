@@ -159,8 +159,8 @@ import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.k8s.K8sBlueGreenDeploy;
-import software.wings.sm.states.k8s.K8sCanaryRollback;
-import software.wings.sm.states.k8s.K8sCanarySetup;
+import software.wings.sm.states.k8s.K8sCanaryDeploy;
+import software.wings.sm.states.k8s.K8sDelete;
 import software.wings.sm.states.k8s.K8sRollingDeploy;
 import software.wings.sm.states.k8s.K8sRollingDeployRollback;
 import software.wings.sm.states.k8s.K8sScale;
@@ -573,12 +573,12 @@ public enum StateType implements StateTypeDescriptor {
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_CANARY_SETUP(K8sCanarySetup.class, KUBERNETES, 0, Constants.K8S_CANARY_SETUP,
+  K8S_CANARY_DEPLOY(K8sCanaryDeploy.class, KUBERNETES, 0, Constants.K8S_CANARY_DEPLOY,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_CANARY_ROLLBACK(K8sCanaryRollback.class, KUBERNETES, 0, Constants.K8S_CANARY_ROLLBACK,
+  K8S_DELETE(K8sDelete.class, KUBERNETES, 0, Constants.K8S_DELETE,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),

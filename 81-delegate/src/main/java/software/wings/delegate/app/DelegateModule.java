@@ -54,8 +54,8 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsListenerUpdateBGTaskHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sBlueGreenDeployTaskHandler;
-import software.wings.delegatetasks.k8s.taskhandler.K8sCanaryRollbackTaskHandler;
-import software.wings.delegatetasks.k8s.taskhandler.K8sCanarySetupTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sCanaryDeployTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sDeleteTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sInstanceSyncTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sRollingDeployRollbackTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sRollingDeployTaskHandler;
@@ -457,14 +457,14 @@ public class DelegateModule extends DependencyModule {
         .to(K8sRollingDeployTaskHandler.class);
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK.name())
         .to(K8sRollingDeployRollbackTaskHandler.class);
-    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.CANARY_SETUP.name()).to(K8sCanarySetupTaskHandler.class);
-    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.CANARY_ROLLBACK.name())
-        .to(K8sCanaryRollbackTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.CANARY_DEPLOY.name())
+        .to(K8sCanaryDeployTaskHandler.class);
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.SCALE.name()).to(K8sScaleTaskHandler.class);
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.BLUE_GREEN_DEPLOY.name())
         .to(K8sBlueGreenDeployTaskHandler.class);
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.INSTANCE_SYNC.name())
         .to(K8sInstanceSyncTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.DELETE.name()).to(K8sDeleteTaskHandler.class);
   }
 
   @Override

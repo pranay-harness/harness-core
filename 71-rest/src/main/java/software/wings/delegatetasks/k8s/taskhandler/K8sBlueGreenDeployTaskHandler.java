@@ -5,6 +5,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static io.harness.k8s.model.Kind.Service;
+import static java.util.Arrays.asList;
 import static software.wings.beans.Log.LogColor.Cyan;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -24,7 +25,6 @@ import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.Service;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.k8s.kubectl.DeleteCommand;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
@@ -40,8 +40,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -81,7 +79,6 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   private List<KubernetesResource> resources;
   int primaryRevision;
   int stageRevision;
-  private K8sBlueGreenDeployResponse k8sBlueGreenDeployResponse;
   private String releaseName;
 
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -96,27 +93,25 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     releaseName = k8sBlueGreenDeployTaskParameters.getReleaseName();
 
-    k8sBlueGreenDeployResponse = K8sBlueGreenDeployResponse.builder().build();
-
     List<ManifestFile> manifestFiles =
         k8sTaskHelper.fetchManifestFiles(k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(),
             k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, FetchFiles), gitService,
             encryptionService);
     if (manifestFiles == null) {
-      return k8sTaskHelper.getK8sTaskExecutionResponse(k8sBlueGreenDeployResponse, FAILURE);
+      return getFailureResponse();
     }
     k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFiles);
 
     boolean success = init(k8sBlueGreenDeployTaskParameters, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, Init));
     if (!success) {
-      return k8sTaskHelper.getK8sTaskExecutionResponse(k8sBlueGreenDeployResponse, FAILURE);
+      return getFailureResponse();
     }
 
     success = prepareForBlueGreen(k8sBlueGreenDeployTaskParameters, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, Prepare));
     if (!success) {
-      return k8sTaskHelper.getK8sTaskExecutionResponse(k8sBlueGreenDeployResponse, FAILURE);
+      return getFailureResponse();
     }
 
     currentRelease.setManagedWorkload(managedWorkload.getResourceId().cloneInternal());
@@ -127,8 +122,11 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       releaseHistory.setReleaseStatus(Status.Failed);
       kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
           k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
-      return k8sTaskHelper.getK8sTaskExecutionResponse(k8sBlueGreenDeployResponse, FAILURE);
+      return getFailureResponse();
     }
+
+    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+        k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     currentRelease.setManagedWorkloadRevision(
         k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
@@ -139,7 +137,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       releaseHistory.setReleaseStatus(Status.Failed);
       kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
           k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
-      return k8sTaskHelper.getK8sTaskExecutionResponse(k8sBlueGreenDeployResponse, FAILURE);
+      return getFailureResponse();
     }
 
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, WrapUp));
@@ -148,12 +146,16 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, currentRelease.getNumber());
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+    success = kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
         k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    if (!success) {
+      logger.error("Failed to save release history");
+      return getFailureResponse();
+    }
 
-    k8sBlueGreenDeployResponse.setReleaseNumber(currentRelease.getNumber());
-    k8sBlueGreenDeployResponse.setK8sPodList(podList);
-    return k8sTaskHelper.getK8sTaskExecutionResponse(k8sBlueGreenDeployResponse, SUCCESS);
+    return k8sTaskHelper.getK8sTaskExecutionResponse(
+        K8sBlueGreenDeployResponse.builder().releaseNumber(currentRelease.getNumber()).k8sPodList(podList).build(),
+        SUCCESS);
   }
 
   private boolean init(K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters,
@@ -281,8 +283,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
       addRevisionNumber(resources, currentRelease.getNumber(), true);
       managedWorkload = getManagedWorkload(resources);
-      managedWorkload.addReleaseLabelsInPodSpec(releaseName, currentRelease.getNumber());
-      managedWorkload.addRevisionNumberInDeploymentSelector(currentRelease.getNumber(), false);
+      managedWorkload.addReleaseLabelsInPodSpec(releaseName, currentRelease.getNumber(), "");
+      managedWorkload.addRevisionNumberInDeploymentSelector(currentRelease.getNumber());
 
       if (currentRelease.getNumber() == 1) {
         primaryService.get().addRevisionSelectorInService(currentRelease.getNumber());
@@ -329,27 +331,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         for (int resourceIndex = release.getResources().size() - 1; resourceIndex >= 0; resourceIndex--) {
           KubernetesResourceId resourceId = release.getResources().get(resourceIndex);
           if (resourceId.isVersioned()) {
-            DeleteCommand deleteCommand =
-                client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
-
-            ProcessResult result = deleteCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(),
-                new LogOutputStream() {
-                  @Override
-                  protected void processLine(String line) {
-                    executionLogCallback.saveExecutionLog(line, INFO);
-                  }
-                },
-                new LogOutputStream() {
-                  @Override
-                  protected void processLine(String line) {
-                    executionLogCallback.saveExecutionLog(line, ERROR);
-                  }
-                },
-                true);
-
-            if (result.getExitValue() != 0) {
-              logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
-            }
+            k8sTaskHelper.delete(client, k8sDelegateTaskParams, asList(resourceId), executionLogCallback);
           }
         }
       }
@@ -376,5 +358,13 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     k8sTaskHelper.describe(client, k8sDelegateTaskParams, executionLogCallback);
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+  }
+
+  private K8sTaskExecutionResponse getFailureResponse() {
+    K8sBlueGreenDeployResponse k8sBlueGreenDeployResponse = K8sBlueGreenDeployResponse.builder().build();
+    return K8sTaskExecutionResponse.builder()
+        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+        .k8sTaskResponse(k8sBlueGreenDeployResponse)
+        .build();
   }
 }

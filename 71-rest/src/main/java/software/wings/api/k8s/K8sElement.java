@@ -13,4 +13,6 @@ public class K8sElement {
   String stageServiceName;
   String currentReleaseWorkload;
   String previousReleaseWorkload;
+  String canaryWorkload;
+  boolean isCanary;
 }

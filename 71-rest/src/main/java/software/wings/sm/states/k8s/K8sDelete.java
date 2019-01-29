@@ -1,28 +1,30 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
-import static software.wings.sm.StateType.K8S_CANARY_ROLLBACK;
+import static software.wings.sm.StateType.K8S_DELETE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.helpers.ext.k8s.request.K8sCanaryRollbackTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -45,8 +47,8 @@ import software.wings.utils.Misc;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class K8sCanaryRollback extends State {
-  private static final transient Logger logger = LoggerFactory.getLogger(K8sCanaryRollback.class);
+public class K8sDelete extends State {
+  private static final transient Logger logger = LoggerFactory.getLogger(K8sDelete.class);
 
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
@@ -61,37 +63,27 @@ public class K8sCanaryRollback extends State {
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
 
-  public static final String K8S_CANARY_ROLLBACK_COMMAND_NAME = "Canary Rollback";
+  public static final String K8S_DELETE_COMMAND_NAME = "Delete";
 
-  public K8sCanaryRollback(String name) {
-    super(name, K8S_CANARY_ROLLBACK.name());
+  public K8sDelete(String name) {
+    super(name, K8S_DELETE.name());
   }
+
+  @Getter @Setter @Attributes(title = "Resources") private String resources;
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
+      ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
-      if (k8sContextElement == null || k8sContextElement.getReleaseNumber() == null) {
-        return anExecutionResponse()
-            .withExecutionStatus(SKIPPED)
-            .withStateExecutionData(
-                aStateExecutionData().withErrorMsg("No context found for rollback. Skipping.").build())
-            .build();
-      }
+      Activity activity = createActivity(context);
 
-      Activity activity =
-          k8sStateHelper.createK8sActivity(context, K8S_CANARY_ROLLBACK_COMMAND_NAME, getStateType(), activityService,
-              ImmutableList.of(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init),
-                  new K8sDummyCommandUnit(K8sDummyCommandUnit.Rollback)));
-
-      K8sTaskParameters k8sTaskParameters = K8sCanaryRollbackTaskParameters.builder()
+      K8sTaskParameters k8sTaskParameters = K8sDeleteTaskParameters.builder()
                                                 .activityId(activity.getUuid())
-                                                .releaseName(k8sContextElement.getReleaseName())
-                                                .releaseNumber(k8sContextElement.getReleaseNumber())
-                                                .targetReplicas(k8sContextElement.getTargetInstances())
-                                                .commandName(K8S_CANARY_ROLLBACK_COMMAND_NAME)
-                                                .k8sTaskType(K8sTaskType.CANARY_ROLLBACK)
+                                                .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
+                                                .commandName(K8S_DELETE_COMMAND_NAME)
+                                                .k8sTaskType(K8sTaskType.DELETE)
+                                                .resources(context.renderExpression(this.resources))
                                                 .timeoutIntervalInMin(10)
                                                 .build();
 
@@ -121,13 +113,19 @@ public class K8sCanaryRollback extends State {
 
       return anExecutionResponse()
           .withExecutionStatus(executionStatus)
-          .withStateExecutionData(stateExecutionData)
+          .withStateExecutionData(context.getStateExecutionData())
           .build();
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(Misc.getMessage(e), e);
     }
+  }
+
+  private Activity createActivity(ExecutionContext context) {
+    return k8sStateHelper.createK8sActivity(context, K8S_DELETE_COMMAND_NAME, getStateType(), activityService,
+        ImmutableList.of(
+            new K8sDummyCommandUnit(K8sDummyCommandUnit.Init), new K8sDummyCommandUnit(K8sDummyCommandUnit.Delete)));
   }
 
   @Override
