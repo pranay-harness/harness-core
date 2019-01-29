@@ -2,6 +2,8 @@ package software.wings.beans.artifact;
 
 import com.google.common.collect.Maps;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -38,7 +40,9 @@ public class ArtifactStreamAttributes {
   private String artifactoryDockerRepositoryServer;
   private String nexusDockerPort;
 
-  private String customScript;
+  @Getter @Setter private String customScriptTimeout;
+  @Getter @Setter private String accountId;
+  @Getter @Setter private String customArtifactStreamScript;
 
   /**
    * Gets job name.
@@ -311,14 +315,6 @@ public class ArtifactStreamAttributes {
     this.nexusDockerPort = nexusDockerPort;
   }
 
-  public String getCustomScript() {
-    return customScript;
-  }
-
-  public void setCustomScript(String customScript) {
-    this.customScript = customScript;
-  }
-
   /**
    * The type Builder.
    */
@@ -347,7 +343,9 @@ public class ArtifactStreamAttributes {
     private boolean copyArtifactEnabledForArtifactory;
     private String artifactoryDockerRepositoryServer;
     private String nexusDockerPort;
-    private String customScript;
+    private String customScriptTimeout;
+    private String accountId;
+    private String customArtifactStreamScript;
 
     private Builder() {}
 
@@ -526,43 +524,19 @@ public class ArtifactStreamAttributes {
       return this;
     }
 
-    public Builder withCustomScript(String customScript) {
-      this.customScript = customScript;
+    public Builder withCustomScriptTimeout(String customScriptTimeout) {
+      this.customScriptTimeout = customScriptTimeout;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return anArtifactStreamAttributes()
-          .withJobName(jobName)
-          .withImageName(imageName)
-          .withSubscriptionId(subscriptionId)
-          .withRegistryName(registryName)
-          .withRepositoryName(repositoryName)
-          .withRegistryHostName(registryHostName)
-          .withArtifactStreamType(artifactStreamType)
-          .withServerSetting(serverSetting)
-          .withGroupId(groupId)
-          .withArtifactStreamId(artifactStreamId)
-          .withArtifactName(artifactName)
-          .withArtifactType(artifactType)
-          .withArtifactPattern(artifactPattern)
-          .withRegion(region)
-          .withRepositoryType(repositoryType)
-          .withMetadataOnly(metadataOnly)
-          .withTags(tags)
-          .withPlatform(platform)
-          .withFilters(filters)
-          .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails)
-          .withMetadata(metadata)
-          .withCopyArtifactEnabledForArtifactory(copyArtifactEnabledForArtifactory)
-          .withArtifactoryDockerRepositoryServer(artifactoryDockerRepositoryServer)
-          .withNexusDockerPort(nexusDockerPort)
-          .withCustomScript(customScript);
+    public Builder withCustomArtifactStreamScript(String customArtifactStreamScript) {
+      this.customArtifactStreamScript = customArtifactStreamScript;
+      return this;
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
     }
 
     /**
@@ -596,7 +570,6 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(copyArtifactEnabledForArtifactory);
       artifactStreamAttributes.setArtifactoryDockerRepositoryServer(artifactoryDockerRepositoryServer);
       artifactStreamAttributes.setNexusDockerPort(nexusDockerPort);
-      artifactStreamAttributes.setCustomScript(customScript);
       return artifactStreamAttributes;
     }
   }

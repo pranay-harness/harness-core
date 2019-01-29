@@ -49,6 +49,7 @@ public class Artifact extends Base {
   public static final String ERROR_MSG_KEY = "errorMessage";
   public static final String DISPLAY_NAME_KEY = "displayName";
   public static final String SERVICE_ID_KEY = "serviceIds";
+  public static final String ARTIFACT_SOURCE_NAME_KEY = "artifactSourceName";
 
   @Indexed private String artifactStreamId;
   @Indexed private String artifactSourceName;
@@ -62,7 +63,7 @@ public class Artifact extends Base {
   private String description;
   private String errorMessage;
   private ContentStatus contentStatus;
-  transient Map<String, String> source;
+  private transient Map<String, String> source;
 
   /**
    * Gets buildNo.

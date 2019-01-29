@@ -79,8 +79,7 @@ public class ArtifactCollectionState extends State {
 
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
 
-    Artifact lastCollectedArtifact =
-        fetchCollectedArtifact(context, artifactStream.getUuid(), artifactStream.getSourceName(), evaluatedBuildNo);
+    Artifact lastCollectedArtifact = fetchCollectedArtifact(artifactStream, evaluatedBuildNo);
 
     if (lastCollectedArtifact != null) {
       ArtifactCollectionExecutionData artifactCollectionExecutionData =
@@ -129,8 +128,7 @@ public class ArtifactCollectionState extends State {
 
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
 
-    Artifact lastCollectedArtifact =
-        fetchCollectedArtifact(context, artifactStream.getUuid(), artifactStream.getSourceName(), evaluatedBuildNo);
+    Artifact lastCollectedArtifact = fetchCollectedArtifact(artifactStream, evaluatedBuildNo);
 
     ArtifactCollectionExecutionData artifactCollectionExecutionData =
         ArtifactCollectionExecutionData.builder().artifactStreamId(artifactStreamId).build();
@@ -236,14 +234,11 @@ public class ArtifactCollectionState extends State {
     return super.getTimeoutMillis();
   }
 
-  private Artifact fetchCollectedArtifact(
-      ExecutionContext context, String artifactStreamId, String sourceName, String buildNo) {
+  private Artifact fetchCollectedArtifact(ArtifactStream artifactStream, String buildNo) {
     if (isBlank(buildNo)) {
-      return artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(
-          context.getAppId(), artifactStreamId, sourceName);
+      return artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(artifactStream);
     } else {
-      return artifactService.getArtifactByBuildNumber(
-          context.getAppId(), artifactStreamId, sourceName, buildNo, isRegex());
+      return artifactService.getArtifactByBuildNumber(artifactStream, buildNo, isRegex());
     }
   }
 }

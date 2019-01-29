@@ -15,5 +15,6 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 public class ShellExecutionResponse {
   int exitValue;
+  String message;
   Map<String, String> shellExecutionData;
 }

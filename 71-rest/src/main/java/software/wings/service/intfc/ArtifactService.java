@@ -5,9 +5,11 @@ import static software.wings.beans.artifact.Artifact.Status;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.Query;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 
 import java.io.File;
@@ -137,46 +139,13 @@ public interface ArtifactService extends OwnedByArtifactStream {
    */
   boolean delete(String appId, String artifactId);
 
-  /**
-   * Fetch latest artifact for artifact stream artifact.
-   *
-   * @param appId              the app id
-   * @param artifactStreamId   the artifact stream id
-   * @param artifactSourceName the artifact source name
-   * @return the artifact
-   */
-  Artifact fetchLatestArtifactForArtifactStream(String appId, String artifactStreamId, String artifactSourceName);
+  Artifact fetchLatestArtifactForArtifactStream(ArtifactStream artifactStream);
 
-  /**
-   * Fetch latest artifact for artifact stream artifact.
-   *
-   * @param appId              the app id
-   * @param artifactStreamId   the artifact stream id
-   * @param artifactSourceName the artifact source name
-   * @return the artifact
-   */
-  Artifact fetchLastCollectedApprovedArtifactForArtifactStream(
-      String appId, String artifactStreamId, String artifactSourceName);
+  Artifact fetchLastCollectedApprovedArtifactForArtifactStream(ArtifactStream artifactStream);
 
-  /**
-   * Fetches last collected artifact that is in system so that artifact check takes care of downloading the artifact
-   * @param appId
-   * @param artifactStreamId
-   * @param artifactSourceName
-   * @return
-   */
-  Artifact fetchLastCollectedArtifact(String appId, String artifactStreamId, String artifactSourceName);
+  Artifact fetchLastCollectedArtifact(ArtifactStream artifactStream);
 
-  /**
-   * Gets artifact by build number.
-   *
-   * @param appId            the app id
-   * @param artifactStreamId the artifact stream id
-   * @param buildNumber      the build number
-   * @return the artifact by build number
-   */
-  Artifact getArtifactByBuildNumber(
-      String appId, String artifactStreamId, String artifactSource, String buildNumber, boolean regex);
+  Artifact getArtifactByBuildNumber(ArtifactStream artifactStream, String buildNumber, boolean regex);
 
   /**
    * Starts Artifact collection and returns
@@ -200,4 +169,6 @@ public interface ArtifactService extends OwnedByArtifactStream {
   void deleteArtifacts(int retentionSize);
 
   List<Artifact> fetchArtifacts(String appId, Set<String> artifactUuids);
+
+  Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream);
 }

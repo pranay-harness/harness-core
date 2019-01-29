@@ -4,14 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static software.wings.beans.artifact.Artifact.Status.APPROVED;
-import static software.wings.beans.artifact.Artifact.Status.FAILED;
-import static software.wings.beans.artifact.Artifact.Status.QUEUED;
-import static software.wings.beans.artifact.Artifact.Status.READY;
-import static software.wings.beans.artifact.Artifact.Status.REJECTED;
-import static software.wings.beans.artifact.Artifact.Status.RUNNING;
-import static software.wings.beans.artifact.Artifact.Status.WAITING;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
@@ -27,7 +19,6 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
-import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Service;
@@ -170,8 +161,7 @@ public class BuildSourceCallback implements NotifyCallback {
       return;
     }
     BuildDetails lastSuccessfulBuild = builds.get(0);
-    Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(
-        appId, artifactStream.getUuid(), artifactStream.getSourceName());
+    Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(artifactStream);
     int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
         ? parseInt(lastCollectedArtifact.getMetadata().get(BUILD_NO))
         : 0;
@@ -214,7 +204,8 @@ public class BuildSourceCallback implements NotifyCallback {
   private Set<String> getNewBuildNumbers(ArtifactStream artifactStream, List<BuildDetails> builds) {
     Map<String, BuildDetails> buildNoDetails =
         builds.parallelStream().collect(Collectors.toMap(BuildDetails::getNumber, Function.identity()));
-    try (HIterator<Artifact> iterator = new HIterator(getArtifactQuery(artifactStream).fetch())) {
+    try (HIterator<Artifact> iterator =
+             new HIterator(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
       while (iterator.hasNext()) {
         buildNoDetails.remove(iterator.next().getBuildNo());
       }
@@ -225,23 +216,13 @@ public class BuildSourceCallback implements NotifyCallback {
   private Set<String> getNewArtifactPaths(ArtifactStream artifactStream, List<BuildDetails> builds) {
     Map<String, BuildDetails> buildArtifactPathDetails =
         builds.parallelStream().collect(Collectors.toMap(BuildDetails::getArtifactPath, Function.identity()));
-    try (HIterator<Artifact> iterator = new HIterator<>(getArtifactQuery(artifactStream).fetch())) {
+    try (HIterator<Artifact> iterator =
+             new HIterator<>(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
       while (iterator.hasNext()) {
         buildArtifactPathDetails.remove(iterator.next().getArtifactPath());
       }
     }
     return buildArtifactPathDetails.keySet();
-  }
-
-  private Query<Artifact> getArtifactQuery(ArtifactStream artifactStream) {
-    return wingsPersistence.createQuery(Artifact.class)
-        .project("metadata", true)
-        .filter(Artifact.APP_ID_KEY, artifactStream.getAppId())
-        .filter("artifactStreamId", artifactStream.getUuid())
-        .filter("artifactSourceName", artifactStream.getSourceName())
-        .field("status")
-        .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
-        .disableValidation();
   }
 
   private Service getService(String appId, ArtifactStream artifactStream) {

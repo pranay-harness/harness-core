@@ -5,17 +5,11 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static software.wings.beans.artifact.Artifact.Status.APPROVED;
-import static software.wings.beans.artifact.Artifact.Status.FAILED;
-import static software.wings.beans.artifact.Artifact.Status.QUEUED;
-import static software.wings.beans.artifact.Artifact.Status.READY;
-import static software.wings.beans.artifact.Artifact.Status.REJECTED;
-import static software.wings.beans.artifact.Artifact.Status.RUNNING;
-import static software.wings.beans.artifact.Artifact.Status.WAITING;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
@@ -34,7 +28,6 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HIterator;
-import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Service;
@@ -47,6 +40,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.MavenVersionCompareUtil;
 
@@ -74,11 +68,12 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private CustomBuildSourceService customBuildSourceService;
 
   public static final Duration timeout = Duration.ofMinutes(10);
 
-  private static final List<String> metadataOnlyStreams = Collections.unmodifiableList(
-      asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), SMB.name(), SFTP.name()));
+  private static final List<String> metadataOnlyStreams = Collections.unmodifiableList(asList(DOCKER.name(), ECR.name(),
+      GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), SMB.name(), SFTP.name(), CUSTOM.name()));
 
   @Override
   public Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails) {
@@ -133,8 +128,14 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   private void collectMetaDataOnlyArtifacts(ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     logger.debug("Collecting build details for artifact stream id {} type {} and source name {} ",
         artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
-    List<BuildDetails> builds = buildSourceService.getBuilds(
-        artifactStream.getAppId(), artifactStream.getUuid(), artifactStream.getSettingId());
+    List<BuildDetails> builds;
+    if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      builds = customBuildSourceService.getBuilds(artifactStream.getAppId(), artifactStream.getUuid());
+    } else {
+      builds = buildSourceService.getBuilds(
+          artifactStream.getAppId(), artifactStream.getUuid(), artifactStream.getSettingId());
+    }
+
     if (!isEmpty(builds)) {
       Set<String> newBuildNumbers = getNewBuildNumbers(artifactStream, builds);
       builds.forEach((BuildDetails buildDetails1) -> {
@@ -153,8 +154,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     logger.debug("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStream.getUuid(),
         artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
     BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(appId, artifactStream, artifactStream.getUuid());
-    Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(
-        appId, artifactStream.getUuid(), artifactStream.getSourceName());
+    Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(artifactStream);
     int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
         ? parseInt(lastCollectedArtifact.getMetadata().get(BUILD_NO))
         : 0;
@@ -212,7 +212,8 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   private Set<String> getNewBuildNumbers(ArtifactStream artifactStream, List<BuildDetails> builds) {
     Map<String, BuildDetails> buildNoDetails =
         builds.parallelStream().collect(Collectors.toMap(BuildDetails::getNumber, Function.identity()));
-    try (HIterator<Artifact> iterator = new HIterator(getArtifactQuery(artifactStream).fetch())) {
+    try (HIterator<Artifact> iterator =
+             new HIterator(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
       while (iterator.hasNext()) {
         buildNoDetails.remove(iterator.next().getBuildNo());
       }
@@ -223,23 +224,13 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   private Set<String> getNewArtifactPaths(ArtifactStream artifactStream, List<BuildDetails> builds) {
     Map<String, BuildDetails> buildArtifactPathDetails =
         builds.parallelStream().collect(Collectors.toMap(BuildDetails::getArtifactPath, Function.identity()));
-    try (HIterator<Artifact> iterator = new HIterator<>(getArtifactQuery(artifactStream).fetch())) {
+    try (HIterator<Artifact> iterator =
+             new HIterator(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
       while (iterator.hasNext()) {
         buildArtifactPathDetails.remove(iterator.next().getArtifactPath());
       }
     }
     return buildArtifactPathDetails.keySet();
-  }
-
-  private Query<Artifact> getArtifactQuery(ArtifactStream artifactStream) {
-    return wingsPersistence.createQuery(Artifact.class)
-        .project("metadata", true)
-        .filter(Artifact.APP_ID_KEY, artifactStream.getAppId())
-        .filter("artifactStreamId", artifactStream.getUuid())
-        .filter("artifactSourceName", artifactStream.getSourceName())
-        .field("status")
-        .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
-        .disableValidation();
   }
 
   private Service getService(String appId, ArtifactStream artifactStream) {

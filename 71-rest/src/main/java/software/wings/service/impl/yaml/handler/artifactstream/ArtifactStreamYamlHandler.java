@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -75,8 +76,10 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
   }
 
   protected void toYaml(Y yaml, B bean) {
-    yaml.setServerName(getSettingName(bean.getSettingId()));
-    yaml.setMetadataOnly(bean.isMetadataOnly());
+    if (!CUSTOM.name().equals(yaml.getType())) {
+      yaml.setServerName(getSettingName(bean.getSettingId()));
+      yaml.setMetadataOnly(bean.isMetadataOnly());
+    }
     yaml.setHarnessApiVersion(getHarnessApiVersion());
   }
 
@@ -108,8 +111,10 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
     String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     bean.setName(name);
     bean.setAutoPopulate(false);
-    bean.setSettingId(getSettingId(changeContext.getChange().getAccountId(), appId, yaml.getServerName()));
-    bean.setMetadataOnly(yaml.isMetadataOnly());
+    if (!CUSTOM.name().equals(yaml.getType())) {
+      bean.setSettingId(getSettingId(changeContext.getChange().getAccountId(), appId, yaml.getServerName()));
+      bean.setMetadataOnly(yaml.isMetadataOnly());
+    }
   }
 
   protected abstract B getNewArtifactStreamObject();

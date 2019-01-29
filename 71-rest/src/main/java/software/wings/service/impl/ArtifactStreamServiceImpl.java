@@ -14,6 +14,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
@@ -48,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -325,6 +327,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
+    String accountId = appService.getAccountIdByAppId(appId);
     Service service = serviceResourceService.get(appId, serviceId, false);
     // Observed NPE in logs due to invalid service id provided by the ui due to a stale screen.
     if (service == null) {
@@ -338,11 +341,25 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                          .put(GCR.name(), GCR.name())
                                                          .put(ARTIFACTORY.name(), ARTIFACTORY.name())
                                                          .put(NEXUS.name(), NEXUS.name());
+
+      if (featureFlagService.isEnabled(FeatureName.CUSTOM_ARTIFACT_SOURCE, accountId)) {
+        builder.put(CUSTOM.name(), CUSTOM.name());
+      }
       return builder.build();
     } else if (service.getArtifactType().equals(ArtifactType.AWS_LAMBDA)) {
-      return ImmutableMap.of(AMAZON_S3.name(), AMAZON_S3.name());
+      ImmutableMap.Builder<String, String> builder =
+          new ImmutableMap.Builder<String, String>().put(AMAZON_S3.name(), AMAZON_S3.name());
+      if (featureFlagService.isEnabled(FeatureName.CUSTOM_ARTIFACT_SOURCE, accountId)) {
+        builder.put(CUSTOM.name(), CUSTOM.name());
+      }
+      return builder.build();
     } else if (service.getArtifactType().equals(ArtifactType.AMI)) {
-      return ImmutableMap.of(AMI.name(), AMI.name());
+      ImmutableMap.Builder<String, String> builder =
+          new ImmutableMap.Builder<String, String>().put(AMI.name(), AMI.name());
+      if (featureFlagService.isEnabled(FeatureName.CUSTOM_ARTIFACT_SOURCE, accountId)) {
+        builder.put(CUSTOM.name(), CUSTOM.name());
+      }
+      return builder.build();
     } else if (service.getArtifactType().equals(ArtifactType.OTHER)) {
       ImmutableMap.Builder<String, String> builder =
           new ImmutableMap.Builder<String, String>()
@@ -359,6 +376,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
               .put(SMB.name(), SMB.name())
               .put(AMI.name(), AMI.name())
               .put(SFTP.name(), SFTP.name());
+      if (featureFlagService.isEnabled(FeatureName.CUSTOM_ARTIFACT_SOURCE, accountId)) {
+        builder.put(CUSTOM.name(), CUSTOM.name());
+      }
       return builder.build();
     }
 
@@ -373,6 +393,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .put(SMB.name(), SMB.name())
             .put(AMI.name(), AMI.name())
             .put(SFTP.name(), SFTP.name());
+
+    if (featureFlagService.isEnabled(FeatureName.CUSTOM_ARTIFACT_SOURCE, accountId)) {
+      builder.put(CUSTOM.name(), CUSTOM.name());
+    }
     return builder.build();
   }
 

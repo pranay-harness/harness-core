@@ -348,8 +348,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldFetchLatestArtifactForArtifactStream() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
-    Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(
-        savedArtifact.getAppId(), savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName());
+    Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(jenkinsArtifactStream);
     assertThat(latestArtifact)
         .isNotNull()
         .extracting(Artifact::getArtifactSourceName)
@@ -361,8 +360,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact artifact = artifactBuilder.build();
     Artifact savedArtifact = artifactService.create(artifact);
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
-    Artifact latestArtifact = artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(
-        savedArtifact.getAppId(), savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName());
+    Artifact latestArtifact =
+        artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(jenkinsArtifactStream);
     assertThat(latestArtifact)
         .isNotNull()
         .extracting(Artifact::getArtifactSourceName)
@@ -373,8 +372,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldFetchLastCollectedArtifactForArtifactStream() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.build());
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), RUNNING);
-    Artifact latestArtifact = artifactService.fetchLastCollectedArtifact(
-        savedArtifact.getAppId(), savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName());
+    Artifact latestArtifact = artifactService.fetchLastCollectedArtifact(jenkinsArtifactStream);
     assertThat(latestArtifact)
         .isNotNull()
         .extracting(Artifact::getArtifactSourceName)
@@ -385,8 +383,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldGetArtifactByBuildNumberSource() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.build());
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
-    Artifact latestArtifact = artifactService.getArtifactByBuildNumber(savedArtifact.getAppId(),
-        savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName(), savedArtifact.getBuildNo(), false);
+    Artifact latestArtifact =
+        artifactService.getArtifactByBuildNumber(jenkinsArtifactStream, savedArtifact.getBuildNo(), false);
     assertThat(latestArtifact)
         .isNotNull()
         .extracting(Artifact::getArtifactSourceName)

@@ -13,6 +13,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
@@ -45,6 +46,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.Service;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
@@ -53,6 +55,9 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
+import software.wings.beans.artifact.CustomArtifactStream;
+import software.wings.beans.artifact.CustomArtifactStream.Action;
+import software.wings.beans.artifact.CustomArtifactStream.Script;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
@@ -64,10 +69,13 @@ import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.utils.ArtifactType;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -80,12 +88,31 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private BuildSourceService buildSourceService;
   @Mock private TriggerService triggerService;
   @Mock private SettingsService settingsService;
+  @Mock private ServiceResourceService serviceResourceService;
   @InjectMocks @Inject private ArtifactStreamService artifactStreamService;
+
+  @Test
+  public void shouldGetSupportedBuildSourceTypes() {
+    // For DOCKER Service Artifact Type
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.DOCKER).uuid(SERVICE_ID).build())
+        .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.OTHER).uuid(SERVICE_ID).build());
+
+    Map<String, String> supportedBuildSourceTypes =
+        artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
+    assertThat(supportedBuildSourceTypes.containsKey(CUSTOM));
+    assertThat(supportedBuildSourceTypes.containsValue(CUSTOM));
+
+    supportedBuildSourceTypes = artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
+    assertThat(supportedBuildSourceTypes.containsKey(CUSTOM));
+    assertThat(supportedBuildSourceTypes.containsValue(CUSTOM));
+  }
 
   @Before
   public void setUp() {
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
   }
+
   @Test
   public void shouldAddJenkinsArtifactStream() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
@@ -1556,5 +1583,52 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .extracting(ArtifactStream::getUuid)
         .isNotNull()
         .contains(savedArtifactSteam.getUuid());
+  }
+
+  @Test
+  public void shouldCRUDCustomArtifactStream() {
+    ArtifactStream customArtifactStream =
+        CustomArtifactStream.builder()
+            .appId(APP_ID)
+            .serviceId(SERVICE_ID)
+            .name("Custom Artifact Stream" + System.currentTimeMillis())
+            .scripts(Arrays.asList(CustomArtifactStream.Script.builder()
+                                       .action(Action.FETCH_VERSIONS)
+                                       .scriptString("echo Hello World!! and echo ${secrets.getValue(My Secret)}")
+                                       .build()))
+            .build();
+
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(customArtifactStream);
+
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    assertThat(savedArtifactSteam.getSourceName()).isEqualTo(savedArtifactSteam.getName());
+    assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ArtifactStreamType.CUSTOM.name());
+    CustomArtifactStream savedCustomArtifactStream = (CustomArtifactStream) savedArtifactSteam;
+    assertThat(savedCustomArtifactStream.getScripts()).isNotEmpty();
+    Script script = savedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
+    assertThat(script.getAction()).isEqualTo(Action.FETCH_VERSIONS);
+    assertThat(script.getScriptString()).isEqualTo("echo Hello World!! and echo ${secrets.getValue(My Secret)}");
+
+    assertThat(artifactStreamService.fetchArtifactStreamsForService(APP_ID, SERVICE_ID))
+        .isNotEmpty()
+        .extracting(ArtifactStream::getUuid)
+        .isNotNull()
+        .contains(savedArtifactSteam.getUuid());
+
+    script.setScriptString("Welcome to harness");
+    savedCustomArtifactStream.setScripts(Arrays.asList(script));
+
+    ArtifactStream updatedArtifactStream = artifactStreamService.update(savedArtifactSteam);
+
+    assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
+    assertThat(updatedArtifactStream.getSourceName()).isEqualTo(updatedArtifactStream.getName());
+    assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(ArtifactStreamType.CUSTOM.name());
+    CustomArtifactStream updatedCustomArtifactStream = (CustomArtifactStream) savedArtifactSteam;
+    Script updatedScript = updatedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
+    assertThat(updatedScript.getScriptString()).isEqualTo("Welcome to harness");
+
+    artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
+
+    assertThat(artifactStreamService.get(APP_ID, updatedArtifactStream.getUuid())).isNull();
   }
 }

@@ -20,6 +20,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
+import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
@@ -168,5 +169,5 @@ public class ManagerMorphiaClasses {
       YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class,
       ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class,
       AbstractLogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
-      AlertNotificationRule.class);
+      AlertNotificationRule.class, CustomArtifactStream.class);
 }

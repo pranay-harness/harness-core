@@ -6,6 +6,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.utils.Validator.notNullCheck;
@@ -41,6 +42,7 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -71,6 +73,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
   @Inject private GcsService gcsService;
+  @Inject private CustomBuildSourceService customBuildSourceService;
   private static final Logger logger = LoggerFactory.getLogger(BuildSourceServiceImpl.class);
 
   @Override
@@ -164,6 +167,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   @Override
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
+    ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
+    if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      return customBuildSourceService.getBuilds(appId, artifactStreamId);
+    }
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
       logger.warn("Artifact Server {} was deleted of artifactStreamId {}", settingId, artifactStreamId);
@@ -172,7 +179,6 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
-    ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
     Service service = getService(appId, artifactStream);
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
@@ -207,11 +213,12 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, String settingId) {
+    ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
+
     SettingAttribute settingAttribute = settingsService.get(settingId);
+
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-
-    ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
 
     Service service = getService(appId, artifactStream);
 

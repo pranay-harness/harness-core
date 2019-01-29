@@ -69,6 +69,7 @@ import software.wings.delegatetasks.validation.CollaborationProviderTaskValidati
 import software.wings.delegatetasks.validation.CommandValidation;
 import software.wings.delegatetasks.validation.ConnectivityBasicValidation;
 import software.wings.delegatetasks.validation.ContainerValidation;
+import software.wings.delegatetasks.validation.CustomArtifactSourceValidation;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.delegatetasks.validation.DockerValidation;
@@ -308,7 +309,8 @@ public enum TaskType {
   GIT_FETCH_FILES_TASK(TaskGroup.GIT, GitFetchFilesTask.class, GitFetchFilesValidation.class),
   BUILD_SOURCE_TASK(TaskGroup.BUILD_SOURCE, BuildSourceTask.class, BuildSourceTaskValidation.class),
   AWS_ROUTE53_TASK(TaskGroup.AWS, AwsRoute53Task.class, AwsConnectionValidation.class),
-  SHELL_SCRIPT_APPROVAL(TaskGroup.SCRIPT, ShellScriptApprovalTask.class, ShellScriptApprovalValidation.class);
+  SHELL_SCRIPT_APPROVAL(TaskGroup.SCRIPT, ShellScriptApprovalTask.class, ShellScriptApprovalValidation.class),
+  CUSTOM_GET_BUILDS(TaskGroup.CUSTOM, ServiceImplDelegateTask.class, CustomArtifactSourceValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

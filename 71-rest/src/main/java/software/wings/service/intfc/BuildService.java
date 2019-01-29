@@ -28,8 +28,10 @@ public interface BuildService<T> {
    * @param config                   the jenkins config
    * @return the builds
    */
-  List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, T config,
-      List<EncryptedDataDetail> encryptionDetails);
+  default List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, T config,
+      List<EncryptedDataDetail> encryptionDetails) {
+    throw new UnsupportedOperationException();
+  }
 
   /***
    * Gets specified limited builds
@@ -45,6 +47,10 @@ public interface BuildService<T> {
     return getBuilds(appId, artifactStreamAttributes, config, encryptionDetails);
   }
 
+  default List<BuildDetails> getBuilds(ArtifactStreamAttributes artifactStreamAttributes) {
+    throw new UnsupportedOperationException("Supported only for Custom Artifact Source");
+  }
+
   /**
    * Gets jobs.
    *
@@ -52,8 +58,10 @@ public interface BuildService<T> {
    * @param parentJobName parent job name if any
    * @return the jobs
    */
-  List<JobDetails> getJobs(
-      T jenkinsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName);
+  default List<JobDetails> getJobs(
+      T jenkinsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets artifact paths.
@@ -63,7 +71,10 @@ public interface BuildService<T> {
    * @param config  the jenkins config
    * @return the artifact paths
    */
-  List<String> getArtifactPaths(String jobName, String groupId, T config, List<EncryptedDataDetail> encryptionDetails);
+  default List<String> getArtifactPaths(
+      String jobName, String groupId, T config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets last successful build.
@@ -73,8 +84,10 @@ public interface BuildService<T> {
    * @param config                   the jenkins config
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes, T config,
-      List<EncryptedDataDetail> encryptionDetails);
+  default BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes, T config,
+      List<EncryptedDataDetail> encryptionDetails) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets plans.
@@ -82,7 +95,9 @@ public interface BuildService<T> {
    * @param config the  config
    * @return the plans
    */
-  Map<String, String> getPlans(T config, List<EncryptedDataDetail> encryptionDetails);
+  default Map<String, String> getPlans(T config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Get buckets
@@ -91,7 +106,9 @@ public interface BuildService<T> {
    * @param projectId GCS project id
    * @return the buckets
    */
-  Map<String, String> getBuckets(T config, String projectId, List<EncryptedDataDetail> encryptionDetails);
+  default Map<String, String> getBuckets(T config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Get SMB paths
@@ -99,14 +116,19 @@ public interface BuildService<T> {
    * @param config the  config
    * @return the smb paths
    */
-  List<String> getSmbPaths(T config, List<EncryptedDataDetail> encryptionDetails);
+  default List<String> getSmbPaths(T config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new UnsupportedOperationException();
+  }
   /**
    * Get SFTP paths
    *
    * @param config the  config
    * @return the sftp paths
    */
-  List<String> getArtifactPathsByStreamType(T config, List<EncryptedDataDetail> encryptionDetails, String streamType);
+  default List<String> getArtifactPathsByStreamType(
+      T config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets plans.
@@ -115,8 +137,10 @@ public interface BuildService<T> {
    * @param config
    * @return the plans
    */
-  Map<String, String> getPlans(
-      T config, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType, String repositoryType);
+  default Map<String, String> getPlans(
+      T config, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType, String repositoryType) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets group Id paths.
@@ -125,7 +149,9 @@ public interface BuildService<T> {
    * @param config   the config
    * @return the groupId paths
    */
-  List<String> getGroupIds(String repoType, T config, List<EncryptedDataDetail> encryptionDetails);
+  default List<String> getGroupIds(String repoType, T config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Validates Artifact Server
@@ -133,7 +159,9 @@ public interface BuildService<T> {
    * @param config
    * @throws WingsException if not valid
    */
-  boolean validateArtifactServer(T config, List<EncryptedDataDetail> encryptedDataDetails);
+  default boolean validateArtifactServer(T config, List<EncryptedDataDetail> encryptedDataDetails) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets the all the Job details
@@ -141,7 +169,7 @@ public interface BuildService<T> {
    * @return
    */
   default JobDetails getJob(String jobName, T config, List<EncryptedDataDetail> encryptionDetails) {
-    return null;
+    throw new UnsupportedOperationException();
   }
   /**
    * Validates Artifact Stream
@@ -149,8 +177,10 @@ public interface BuildService<T> {
    * @param artifactStreamAttributes
    * @throws WingsException if not valid
    */
-  boolean validateArtifactSource(
-      T config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes);
+  default boolean validateArtifactSource(
+      T config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes) {
+    throw new UnsupportedOperationException();
+  }
 
   default List<JobDetails> wrapJobNameWithJobDetails(Collection<String> jobNames) {
     List<JobDetails> jobDetailsList = Lists.newArrayListWithExpectedSize(jobNames.size());
