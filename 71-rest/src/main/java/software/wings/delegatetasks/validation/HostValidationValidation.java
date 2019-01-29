@@ -8,7 +8,6 @@ import static software.wings.utils.SshHelperUtil.getSshSessionConfig;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
@@ -35,9 +34,9 @@ import java.util.function.Consumer;
 public class HostValidationValidation extends AbstractDelegateValidateTask {
   private static final Logger logger = LoggerFactory.getLogger(HostValidationValidation.class);
 
-  @Inject @Transient private transient EncryptionService encryptionService;
-  @Inject @Transient private transient TimeLimiter timeLimiter;
-  @Inject @Transient private transient Clock clock;
+  @Inject private transient EncryptionService encryptionService;
+  @Inject private transient TimeLimiter timeLimiter;
+  @Inject private transient Clock clock;
 
   public HostValidationValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {

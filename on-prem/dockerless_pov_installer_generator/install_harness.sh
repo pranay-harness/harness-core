@@ -145,9 +145,33 @@ function replaceconfigs(){
     sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${mongoUrl}|" $VERIFICATION_DIR/verification-config.yml
 
     sed -i "s|<\!-- apiurl -->|<script>window.apiUrl = '$API_URL/api'</script>|" $UI_DIR/static/index.html
-
 }
 
+function disableJSFeatures() {
+
+    UI_DISABLED_FEATURES_FILE="config/ui/disabledFeatures.properties"
+
+    if [ -f "${UI_DISABLED_FEATURES_FILE}" ]
+    then
+      echo "${UI_DISABLED_FEATURES_FILE} found."
+
+      while IFS='=' read -r key value
+      do
+        if [[ -n "${value}" ]];
+        then
+           echo "value for ${key} is ${value} hence corresponding feature will be disabled"
+           sed -i "s|${key}|${value}|"  "$UI_DIR/static/index.html"
+        else
+            echo "value for ${key} is empty hence corresponding feature will not be disabled"
+        fi
+
+      done < "${UI_DISABLED_FEATURES_FILE}"
+      unset IFS
+
+    else
+      echo "${UI_DISABLED_FEATURES_FILE} not found."
+    fi
+}
 
 function stopAllServices(){
     if [[ `pkill -9 java` ]];then
@@ -178,6 +202,7 @@ function generateNginxScript(){
     replace RUNTIME_DIR $runtime_dir harness_nginx.conf $NGINX_DIR
     replace MANAGER_PORT $managerPort harness_nginx.conf $NGINX_DIR
     replace VERIFICATION_PORT $verificationPort harness_nginx.conf $NGINX_DIR
+    replace NGINX_PORT $NGINX_PORT harness_nginx.conf $NGINX_DIR
 
     if [[ ${newinstallation} == "true" ]];then
         echo "############Ngnix conf file is located at $NGINX_DIR, please add it to your nginx service and restart the nginx service########"
@@ -305,6 +330,7 @@ checkIfMongoIsRunning
 stopAllServices
 copyToRuntimeDirectory
 replaceconfigs
+disableJSFeatures
 startManager
 startVerification
 startLE

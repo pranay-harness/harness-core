@@ -37,22 +37,15 @@ else
    replace harness_license $1 ${CONFIG_PROPERTIES_FILE} $INSTALLER_DIR
 fi
 
-JRE_SOURCE_URL_1=https://app.harness.io/storage/wingsdelegates/jre/8u131
-JRE_SOURCE_URL_2=https://app.harness.io/storage/wingsdelegates/jre/8u191
-JRE_SOLARIS_1=jre-8u131-solaris-x64.tar.gz
-JRE_MACOSX_1=jre-8u131-macosx-x64.tar.gz
-JRE_LINUX_1=jre-8u131-linux-x64.tar.gz
-JRE_SOLARIS_2=jre-8u191-solaris-x64.tar.gz
-JRE_MACOSX_2=jre-8u191-macosx-x64.tar.gz
-JRE_LINUX_2=jre-8u191-linux-x64.tar.gz
+JRE_SOURCE_URL=https://app.harness.io/storage/wingsdelegates/jre/8u191
+JRE_SOLARIS=jre-8u191-solaris-x64.tar.gz
+JRE_MACOSX=jre-8u191-macosx-x64.tar.gz
+JRE_LINUX=jre-8u191-linux-x64.tar.gz
 JRE_LINUX_DIR=jre1.8.0_191/
 
-curl "${JRE_SOURCE_URL_1}/${JRE_SOLARIS_1}" > "${JRE_SOLARIS_1}"
-curl "${JRE_SOURCE_URL_1}/${JRE_MACOSX_1}" > "${JRE_MACOSX_1}"
-curl "${JRE_SOURCE_URL_1}/${JRE_LINUX_1}" > "${JRE_LINUX_1}"
-curl "${JRE_SOURCE_URL_2}/${JRE_SOLARIS_2}" > "${JRE_SOLARIS_2}"
-curl "${JRE_SOURCE_URL_2}/${JRE_MACOSX_2}" > "${JRE_MACOSX_2}"
-curl "${JRE_SOURCE_URL_2}/${JRE_LINUX_2}" > "${JRE_LINUX_2}"
+curl "${JRE_SOURCE_URL}/${JRE_SOLARIS}" > "${JRE_SOLARIS}"
+curl "${JRE_SOURCE_URL}/${JRE_MACOSX}" > "${JRE_MACOSX}"
+curl "${JRE_SOURCE_URL}/${JRE_LINUX}" > "${JRE_LINUX}"
 
 
 function setupDelegateJars(){
@@ -61,11 +54,7 @@ function setupDelegateJars(){
     DELEGATE_VERSION=$(getProperty "version.properties" "DELEGATE_VERSION")
     WATCHER_VERSION=$(getProperty "version.properties" "WATCHER_VERSION")
 
-    mkdir -p $STORAGE_DIR/wingsdelegates/jre/8u131/
     mkdir -p $STORAGE_DIR/wingsdelegates/jre/8u191/
-    cp jre-8u131-solaris-x64.tar.gz $STORAGE_DIR/wingsdelegates/jre/8u131/
-    cp jre-8u131-macosx-x64.tar.gz $STORAGE_DIR/wingsdelegates/jre/8u131/
-    cp jre-8u131-linux-x64.tar.gz $STORAGE_DIR/wingsdelegates/jre/8u131/
 
     cp jre-8u191-solaris-x64.tar.gz $STORAGE_DIR/wingsdelegates/jre/8u191/
     cp jre-8u191-macosx-x64.tar.gz $STORAGE_DIR/wingsdelegates/jre/8u191/
@@ -102,10 +91,10 @@ function setUpArtifacts(){
 }
 
 function setUpJRE(){
-    cp $JRE_LINUX_2 $INSTALLER_DIR
+    cp $JRE_LINUX $INSTALLER_DIR
     cd $INSTALLER_DIR
-    tar -xvf $JRE_LINUX_1
-    rm -f $JRE_LINUX_1
+    tar -xvf $JRE_LINUX
+    rm -f $JRE_LINUX
     ln -s $JRE_LINUX_DIR jre
     cd -
 }

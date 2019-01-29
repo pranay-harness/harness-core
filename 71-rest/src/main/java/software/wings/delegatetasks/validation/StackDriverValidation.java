@@ -8,7 +8,6 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.monitoring.v3.MonitoringScopes;
 import com.google.inject.Inject;
 
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -31,7 +30,7 @@ import java.util.function.Consumer;
 public class StackDriverValidation extends AbstractSecretManagerValidation {
   private static final Logger logger = LoggerFactory.getLogger(StackDriverValidation.class);
 
-  @Inject @Transient private transient EncryptionService encryptionService;
+  @Inject private transient EncryptionService encryptionService;
 
   public StackDriverValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
