@@ -13,6 +13,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import lombok.Getter;
+import lombok.Setter;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -20,9 +22,8 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.PipelineSummary;
@@ -31,6 +32,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,8 +48,6 @@ import java.util.Map;
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowExecution extends Base {
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecution.class);
-
   public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";
   public static final String DEPLOYMENT_TRIGGERED_ID_KEY = "deploymentTriggerId";
   public static final String DISPLAY_NAME_KEY = "displayName";
@@ -60,11 +60,11 @@ public class WorkflowExecution extends Base {
   public static final String TRIGGERED_BY = "triggeredBy";
   public static final String UUID_KEY = "uuid";
   public static final String WORKFLOW_ID_KEY = "workflowId";
-  public static final String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
   public static final String ENV_ID_KEY = "envId";
   public static final String WORKFLOW_TYPE_ID_KEY = "workflowType";
   public static final String EXECUTION_ARGS = "executionArgs";
   public static final String SERVICE_EXECUTION_SUMMARIES = "serviceExecutionSummaries";
+  public static final String ARTIFACTS_KEY = "artifacts";
 
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);
@@ -115,6 +115,8 @@ public class WorkflowExecution extends Base {
   private boolean isBaseline;
 
   private String deploymentTriggerId;
+
+  @Getter @Setter private List<Artifact> artifacts = new ArrayList();
 
   public String getDeploymentTriggerId() {
     return deploymentTriggerId;

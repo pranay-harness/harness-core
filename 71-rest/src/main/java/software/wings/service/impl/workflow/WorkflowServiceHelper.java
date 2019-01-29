@@ -1875,6 +1875,7 @@ public class WorkflowServiceHelper {
         }
       }
     }
+
     // Add all missing workflow variables from pipeline variables
     for (String variableName : workflowVariableNames) {
       if (!resolvedWorkflowVariables.containsKey(variableName)) {
