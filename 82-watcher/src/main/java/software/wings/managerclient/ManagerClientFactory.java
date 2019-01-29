@@ -12,6 +12,7 @@ import io.harness.network.Http;
 import io.harness.security.TokenGenerator;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
+import okhttp3.Request.Builder;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -69,8 +70,13 @@ public class ManagerClientFactory implements Provider<ManagerClient> {
           .retryOnConnectionFailure(true)
           .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
-          .addInterceptor(
-              chain -> chain.proceed(chain.request().newBuilder().addHeader("User-Agent", "watcher").build()))
+          .addInterceptor(chain -> {
+            Builder request = chain.request().newBuilder().addHeader("User-Agent", "watcher");
+            if (chain.request().url().uri().getPath().contains("delegateScripts")) {
+              request.addHeader("Version", chain.request().url().queryParameter("delegateVersion"));
+            }
+            return chain.proceed(request.build());
+          })
           .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))
           .hostnameVerifier((hostname, session) -> true)
           .build();
