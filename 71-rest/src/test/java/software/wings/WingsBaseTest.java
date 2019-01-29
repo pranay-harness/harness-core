@@ -119,7 +119,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setAccountType(AccountType.PAID);
     licenseInfo.setLicenseUnits(100);
-    licenseInfo.setExpireAfterDays(1);
+    licenseInfo.setExpireAfterDays(15);
     return licenseInfo;
   }
 }

@@ -1530,6 +1530,8 @@ public class UserServiceImpl implements UserService {
   }
 
   private Account setupAccount(Account account) {
+    // HAR-8645: Always set default appId for account creation to pass validation
+    account.setAppId(GLOBAL_APP_ID);
     return accountService.save(account);
   }
 
