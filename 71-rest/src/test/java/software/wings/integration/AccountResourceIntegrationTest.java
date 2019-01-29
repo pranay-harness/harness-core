@@ -85,7 +85,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     Account createdAccount = restResponse.getResource();
     assertThat(restResponse.getResource().getAccountName()).isEqualTo(randomString);
 
-    target = client.target(API_BASE + "/account/" + createdAccount.getUuid());
+    target = client.target(API_BASE + "/account/delete/" + createdAccount.getUuid());
     getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
     assertThat(response).isNotNull();
     if (response.getStatus() != Status.OK.getStatusCode()) {

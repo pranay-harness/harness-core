@@ -159,9 +159,6 @@ public class UserServiceImpl implements UserService {
   public static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
   private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
-  private static final String ILLEGAL_ACCOUNT_NAME_CHARACTERS = "[~!@#$%^*\\[\\]{}<>'\"/:;\\\\]";
-  private static final int MAX_ACCOUNT_NAME_LENGTH = 50;
-
   /**
    * The Executor service.
    */
@@ -1533,46 +1530,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private Account setupAccount(Account account) {
-    // Validate if account/company name is valid.
-    validateAccount(account);
-
-    account.setAppId(GLOBAL_APP_ID);
     return accountService.save(account);
-  }
-
-  private void validateAccount(Account account) {
-    String companyName = account.getCompanyName();
-    String accountName = account.getAccountName();
-    if (isBlank(companyName)) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Company Name can't be empty.");
-    } else if (companyName.length() > MAX_ACCOUNT_NAME_LENGTH) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "Company Name exceeds " + MAX_ACCOUNT_NAME_LENGTH + " max-allowed characters.");
-    } else {
-      String[] parts = companyName.split(ILLEGAL_ACCOUNT_NAME_CHARACTERS, 2);
-      if (parts.length > 1) {
-        throw new WingsException(GENERAL_ERROR, USER)
-            .addParam("message", "Company Name '" + companyName + "' contains illegal characters.");
-      }
-    }
-
-    if (isBlank(accountName)) {
-      throw new WingsException(GENERAL_ERROR).addParam("message", "Account Name can't be empty.");
-    } else if (accountName.length() > MAX_ACCOUNT_NAME_LENGTH) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "Account Name exceeds " + MAX_ACCOUNT_NAME_LENGTH + " max-allowed characters.");
-    } else {
-      String[] parts = accountName.split(ILLEGAL_ACCOUNT_NAME_CHARACTERS, 2);
-      if (parts.length > 1) {
-        throw new WingsException(GENERAL_ERROR, USER)
-            .addParam("message", "Account Name '" + accountName + "' contains illegal characters");
-      }
-    }
-
-    if (accountService.exists(account.getAccountName())) {
-      throw new WingsException(GENERAL_ERROR)
-          .addParam("message", "Account Name is already taken, please try a different one.");
-    }
   }
 
   private List<UserGroup> getAccountAdminGroup(String accountId) {

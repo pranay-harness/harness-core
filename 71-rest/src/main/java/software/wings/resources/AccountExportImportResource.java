@@ -409,7 +409,6 @@ public class AccountExportImportResource {
   public RestResponse<ImportStatusReport> importAccountData(@QueryParam("accountId") final String accountId,
       @QueryParam("mode") @DefaultValue("UPSERT") ImportMode importMode,
       @QueryParam("disableSchemaCheck") boolean disableSchemaCheck,
-      @QueryParam("disableNaturalKeyCheck") boolean disableNaturalKeyCheck,
       @FormDataParam("file") final InputStream uploadInputStream) throws Exception {
     log.info("Started importing data for account '{}'.", accountId);
     Map<String, String> zipEntryDataMap = readZipEntries(uploadInputStream);
@@ -427,16 +426,16 @@ public class AccountExportImportResource {
     String accountCollectionName = getCollectionName(Account.class);
     JsonArray accounts = getJsonArray(zipEntryDataMap, accountCollectionName);
     if (accounts != null) {
-      importStatuses.add(mongoExportImport.importRecords(accountCollectionName, convertJsonArrayToStringList(accounts),
-          importMode, new String[] {"accountName"}, disableNaturalKeyCheck));
+      importStatuses.add(mongoExportImport.importRecords(
+          accountCollectionName, convertJsonArrayToStringList(accounts), importMode, new String[] {"accountName"}));
     }
 
     // 3. Import users
     String userCollectionName = getCollectionName(User.class);
     JsonArray users = getJsonArray(zipEntryDataMap, userCollectionName);
     if (users != null) {
-      importStatuses.add(mongoExportImport.importRecords(
-          userCollectionName, convertJsonArrayToStringList(users), importMode, disableNaturalKeyCheck));
+      importStatuses.add(
+          mongoExportImport.importRecords(userCollectionName, convertJsonArrayToStringList(users), importMode));
     }
 
     // 4. Import applications
@@ -444,20 +443,20 @@ public class AccountExportImportResource {
     JsonArray applications = getJsonArray(zipEntryDataMap, applicationsCollectionName);
     if (applications != null) {
       importStatuses.add(mongoExportImport.importRecords(
-          applicationsCollectionName, convertJsonArrayToStringList(applications), importMode, disableNaturalKeyCheck));
+          applicationsCollectionName, convertJsonArrayToStringList(applications), importMode));
     }
 
     // 5. Import all "encryptedRecords", "configs.file" and "configs.chunks" content
     String encryptedDataCollectionName = getCollectionName(EncryptedData.class);
     JsonArray encryptedData = getJsonArray(zipEntryDataMap, encryptedDataCollectionName);
     if (encryptedData != null) {
-      importStatuses.add(mongoExportImport.importRecords(encryptedDataCollectionName,
-          convertJsonArrayToStringList(encryptedData), importMode, disableNaturalKeyCheck));
+      importStatuses.add(mongoExportImport.importRecords(
+          encryptedDataCollectionName, convertJsonArrayToStringList(encryptedData), importMode));
     }
     JsonArray configFiles = getJsonArray(zipEntryDataMap, COLLECTION_CONFIG_FILES);
     if (configFiles != null) {
       ImportStatus importStatus = mongoExportImport.importRecords(
-          COLLECTION_CONFIG_FILES, convertJsonArrayToStringList(configFiles), importMode, disableNaturalKeyCheck);
+          COLLECTION_CONFIG_FILES, convertJsonArrayToStringList(configFiles), importMode);
       if (importStatus != null) {
         importStatuses.add(importStatus);
       }
@@ -465,7 +464,7 @@ public class AccountExportImportResource {
     JsonArray configChunks = getJsonArray(zipEntryDataMap, COLLECTION_CONFIG_CHUNKS);
     if (configChunks != null) {
       ImportStatus importStatus = mongoExportImport.importRecords(
-          COLLECTION_CONFIG_CHUNKS, convertJsonArrayToStringList(configChunks), importMode, disableNaturalKeyCheck);
+          COLLECTION_CONFIG_CHUNKS, convertJsonArrayToStringList(configChunks), importMode);
       if (importStatus != null) {
         importStatuses.add(importStatus);
       }
@@ -480,8 +479,8 @@ public class AccountExportImportResource {
       } else if (jsonArray == null) {
         log.info("No data found for collection '{}' to import.", collectionName);
       } else {
-        ImportStatus importStatus = mongoExportImport.importRecords(
-            collectionName, convertJsonArrayToStringList(jsonArray), importMode, disableNaturalKeyCheck);
+        ImportStatus importStatus =
+            mongoExportImport.importRecords(collectionName, convertJsonArrayToStringList(jsonArray), importMode);
         if (importStatus != null) {
           importStatuses.add(importStatus);
         }

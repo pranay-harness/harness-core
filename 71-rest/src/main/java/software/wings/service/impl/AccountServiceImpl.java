@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
@@ -103,6 +104,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
+
 /**
  * Created by peeyushaggarwal on 10/11/16.
  */
@@ -112,6 +114,8 @@ public class AccountServiceImpl implements AccountService {
   private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
   private static final int SIZE_PER_SERVICES_REQUEST = 25;
   private static final String UNLIMITED_PAGE_SIZE = "UNLIMITED";
+  private static final String ILLEGAL_ACCOUNT_NAME_CHARACTERS = "[~!@#$%^*\\[\\]{}<>'\"/:;\\\\]";
+  private static final int MAX_ACCOUNT_NAME_LENGTH = 50;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
@@ -140,18 +144,64 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account save(@Valid Account account) {
+    // Validate if account/company name is valid.
+    validateAccount(account);
+
+    account.setAppId(GLOBAL_APP_ID);
     account.setAccountKey(generateSecretKey());
     if (isEmpty(account.getUuid())) {
       account.setUuid(UUIDGenerator.generateUuid());
     }
-
     licenseService.addLicenseInfo(account);
 
     wingsPersistence.save(account);
-    createDefaultAccountEntities(account);
-    AlertCheckJob.add(jobScheduler, account.getUuid());
-    InstanceStatsCollectorJob.add(jobScheduler, account.getUuid());
+
+    // When an account is just created for import, no need to create default account entities.
+    // As the import process will do all these instead.
+    if (!account.isForImport()) {
+      createDefaultAccountEntities(account);
+      // Schedule default account level jobs.
+      AlertCheckJob.add(jobScheduler, account.getUuid());
+      InstanceStatsCollectorJob.add(jobScheduler, account.getUuid());
+      LimitVicinityCheckerJob.add(jobScheduler, account.getUuid());
+    }
+
     return account;
+  }
+
+  private void validateAccount(Account account) {
+    String companyName = account.getCompanyName();
+    String accountName = account.getAccountName();
+    if (isBlank(companyName)) {
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Company Name can't be empty.");
+    } else if (companyName.length() > MAX_ACCOUNT_NAME_LENGTH) {
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam("message", "Company Name exceeds " + MAX_ACCOUNT_NAME_LENGTH + " max-allowed characters.");
+    } else {
+      String[] parts = companyName.split(ILLEGAL_ACCOUNT_NAME_CHARACTERS, 2);
+      if (parts.length > 1) {
+        throw new WingsException(GENERAL_ERROR, USER)
+            .addParam("message", "Company Name '" + companyName + "' contains illegal characters.");
+      }
+    }
+
+    if (isBlank(accountName)) {
+      throw new WingsException(GENERAL_ERROR).addParam("message", "Account Name can't be empty.");
+    } else if (accountName.length() > MAX_ACCOUNT_NAME_LENGTH) {
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam("message", "Account Name exceeds " + MAX_ACCOUNT_NAME_LENGTH + " max-allowed characters.");
+    } else {
+      String[] parts = accountName.split(ILLEGAL_ACCOUNT_NAME_CHARACTERS, 2);
+      if (parts.length > 1) {
+        throw new WingsException(GENERAL_ERROR, USER)
+            .addParam("message", "Account Name '" + accountName + "' contains illegal characters");
+      }
+    }
+
+    if (exists(account.getAccountName())) {
+      throw new WingsException(GENERAL_ERROR)
+          .addParam("message", "Account Name is already taken, please try a different one.");
+    }
   }
 
   private void createDefaultAccountEntities(Account account) {

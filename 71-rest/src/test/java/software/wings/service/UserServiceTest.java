@@ -41,7 +41,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.FREEMIUM_ENV_PATH;
-import static software.wings.utils.WingsTestConstants.ILLEGAL_ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.INVALID_USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -576,26 +575,6 @@ public class UserServiceTest extends WingsBaseTest {
     try {
       userService.inviteUsers(userInvite);
       fail("Exception is expected when inviting with invalid user email");
-    } catch (WingsException e) {
-      // Ignore, exception expected here.
-    }
-  }
-
-  @Test
-  public void testRegisterNewUser_invalidAccountName_shouldFail() {
-    User user = userBuilder.withUuid(USER_ID)
-                    .withEmailVerified(false)
-                    .withCompanyName(COMPANY_NAME)
-                    .withAccountName(ILLEGAL_ACCOUNT_NAME)
-                    .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
-                    .build();
-
-    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
-    when(configuration.getPortal().getAllowedDomainsList()).thenReturn(new ArrayList<>());
-
-    try {
-      userService.register(user);
-      fail("Exception is expected when inviting with invalid account name");
     } catch (WingsException e) {
       // Ignore, exception expected here.
     }

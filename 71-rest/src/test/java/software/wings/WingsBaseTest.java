@@ -8,7 +8,10 @@ import io.harness.exception.KmsOperationException;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.VaultConfig;
 import software.wings.rules.WingsRule;
 import software.wings.security.EncryptionType;
@@ -109,5 +112,14 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     kmsConfig.setAccessKey(generateUuid());
     kmsConfig.setSecretKey(generateUuid());
     return kmsConfig;
+  }
+
+  protected LicenseInfo getLicenseInfo() {
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setAccountType(AccountType.PAID);
+    licenseInfo.setLicenseUnits(100);
+    licenseInfo.setExpireAfterDays(1);
+    return licenseInfo;
   }
 }

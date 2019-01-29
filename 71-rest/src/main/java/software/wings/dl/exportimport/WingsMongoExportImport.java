@@ -57,12 +57,7 @@ public class WingsMongoExportImport {
   }
 
   public ImportStatus importRecords(String collectionName, List<String> records, ImportMode mode) {
-    return importRecords(collectionName, records, mode, null, false);
-  }
-
-  public ImportStatus importRecords(
-      String collectionName, List<String> records, ImportMode mode, boolean disableNaturalKeyCheck) {
-    return importRecords(collectionName, records, mode, null, disableNaturalKeyCheck);
+    return importRecords(collectionName, records, mode, null);
   }
 
   /**
@@ -73,8 +68,8 @@ public class WingsMongoExportImport {
    *
    * @param  mode one of the supported import mode such as DRY_RUN/UPSERT etc.
    */
-  public ImportStatus importRecords(String collectionName, List<String> records, ImportMode mode,
-      String[] naturalKeyFields, boolean disableNaturalKeyCheck) {
+  public ImportStatus importRecords(
+      String collectionName, List<String> records, ImportMode mode, String[] naturalKeyFields) {
     DBCollection collection = wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE, ReadPref.NORMAL)
                                   .getDB()
                                   .getCollection(collectionName);
@@ -92,53 +87,39 @@ public class WingsMongoExportImport {
 
       long recordCountFromNaturalKey = 0;
       DBObject naturalKeyQuery = null;
-      if (!disableNaturalKeyCheck) {
-        if (EmptyPredicate.isEmpty(naturalKeyFields)) {
-          naturalKeyQuery = getDefaultNaturalKeyQuery(importRecord);
-        } else {
-          naturalKeyQuery = getNaturalKeyQueryFromKeyFields(naturalKeyFields, importRecord);
-        }
-        recordCountFromNaturalKey = collection.getCount(naturalKeyQuery);
-        if (recordCountFromNaturalKey > 1) {
-          // This usually means this entity has no naturaly key. E.g 'secretChangeLogs' collection
-          log.debug("Record {} in collection {} matched {} records using natural key query {}.", id, collectionName,
-              recordCountFromNaturalKey, naturalKeyQuery);
-          recordCountFromNaturalKey = 1;
-        }
-        naturalKeyClashCount += recordCountFromNaturalKey;
+      if (EmptyPredicate.isEmpty(naturalKeyFields)) {
+        naturalKeyQuery = getDefaultNaturalKeyQuery(importRecord);
+      } else {
+        naturalKeyQuery = getNaturalKeyQueryFromKeyFields(naturalKeyFields, importRecord);
       }
+      recordCountFromNaturalKey = collection.getCount(naturalKeyQuery);
+      if (recordCountFromNaturalKey > 1) {
+        // This usually means this entity has no naturaly key. E.g 'secretChangeLogs' collection
+        log.debug("Record {} in collection {} matched {} records using natural key query {}.", id, collectionName,
+            recordCountFromNaturalKey, naturalKeyQuery);
+        recordCountFromNaturalKey = 1;
+      }
+      naturalKeyClashCount += recordCountFromNaturalKey;
 
       switch (mode) {
         case DRY_RUN:
           break;
         case INSERT:
-          if (disableNaturalKeyCheck) {
-            if (recordCountFromId == 0) {
-              collection.insert(importRecord, WriteConcern.ACKNOWLEDGED);
-              importedRecords++;
-            }
-          } else {
-            if (recordCountFromId == 0 && recordCountFromNaturalKey == 0) {
-              // Totally new record, it can be inserted directly.
-              collection.insert(importRecord, WriteConcern.ACKNOWLEDGED);
-              importedRecords++;
-            }
+          if (recordCountFromId == 0 && recordCountFromNaturalKey == 0) {
+            // Totally new record, it can be inserted directly.
+            collection.insert(importRecord, WriteConcern.ACKNOWLEDGED);
+            importedRecords++;
           }
           break;
         case UPSERT:
           // We should not UPSERT record if same ID record exists, but with different natural key.
-          if (disableNaturalKeyCheck) {
+          if (recordCountFromId == recordCountFromNaturalKey) {
             collection.save(importRecord, WriteConcern.ACKNOWLEDGED);
             importedRecords++;
           } else {
-            if (recordCountFromId == recordCountFromNaturalKey) {
-              collection.save(importRecord, WriteConcern.ACKNOWLEDGED);
-              importedRecords++;
-            } else {
-              log.debug(
-                  "Record {} in collection {} matched {} records using natural key query {} but matches {} record using id query.",
-                  id, collectionName, recordCountFromNaturalKey, naturalKeyQuery, recordCountFromId);
-            }
+            log.debug(
+                "Record {} in collection {} matched {} records using natural key query {} but matches {} record using id query.",
+                id, collectionName, recordCountFromNaturalKey, naturalKeyQuery, recordCountFromId);
           }
           break;
         default:
@@ -147,22 +128,17 @@ public class WingsMongoExportImport {
     }
 
     if (importedRecords + idClashCount + naturalKeyClashCount > 0) {
+      log.info("{} '{}' records have the same ID as existing records.", idClashCount, collectionName);
+      log.info("{} '{}' records have the same natural key as existing records.", naturalKeyClashCount, collectionName);
       log.info("{} out of {} '{}' records have been imported successfully in {} mode.", importedRecords, totalRecords,
           collectionName, mode);
-      log.info("{} '{}' records have the same ID as existing records.", idClashCount, collectionName);
-      if (!disableNaturalKeyCheck) {
-        log.info(
-            "{} '{}' records have the same natural key as existing records.", naturalKeyClashCount, collectionName);
-      }
-      return ImportStatus.builder()
-          .collectionName(collectionName)
-          .imported(importedRecords)
-          .idClashes(idClashCount)
-          .naturalKeyClashes(naturalKeyClashCount)
-          .build();
-    } else {
-      return null;
     }
+    return ImportStatus.builder()
+        .collectionName(collectionName)
+        .imported(importedRecords)
+        .idClashes(idClashCount)
+        .naturalKeyClashes(naturalKeyClashCount)
+        .build();
   }
 
   private DBObject getNaturalKeyQueryFromKeyFields(String[] naturalKeyFields, DBObject importRecord) {
