@@ -1,6 +1,7 @@
 package migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.persistence.CreatedAtAccess.CREATED_AT_KEY;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
@@ -26,6 +27,8 @@ import software.wings.app.MainConfiguration;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.DataStoreService;
+
+import java.util.concurrent.TimeUnit;
 
 public class NewRelicMetricDataBackupMigration implements Migration {
   private static Logger logger = LoggerFactory.getLogger(NewRelicMetricDataBackupMigration.class);
@@ -63,10 +66,10 @@ public class NewRelicMetricDataBackupMigration implements Migration {
     logger.info("Move NewRelicMetricDataRecord to google data store from time {}", minTime);
     PageRequest<NewRelicMetricDataRecord> pageRequest =
         aPageRequest()
-            .addFilter("timeStamp", Operator.LT_EQ, minTime)
+            .addFilter(CREATED_AT_KEY, Operator.LT_EQ, minTime + TimeUnit.DAYS.toMillis(1))
             .withLimit("1000")
             .withOffset("0")
-            .addOrder(NewRelicMetricDataRecord.CREATED_AT_KEY, OrderType.DESC)
+            .addOrder(CREATED_AT_KEY, OrderType.DESC)
             .build();
 
     int previousOffSet = 0;
