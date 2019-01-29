@@ -15,9 +15,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
-import software.wings.beans.AccountType;
-import software.wings.beans.Base;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.RestResponse;
 
 import javax.ws.rs.client.WebTarget;
@@ -62,18 +59,12 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void shallCreateAndDeleteAccount() {
     Account account = new Account();
-    account.setLicenseInfo(LicenseInfo.builder()
-                               .accountType(AccountType.PAID)
-                               .accountStatus(AccountStatus.ACTIVE)
-                               .licenseUnits(100)
-                               .expireAfterDays(30)
-                               .build());
+    account.setLicenseInfo(getLicenseInfo());
     long timeMillis = System.currentTimeMillis();
     String randomString = "" + timeMillis;
     account.setCompanyName(randomString);
     account.setAccountName(randomString);
     account.setAccountKey(randomString);
-    account.setAppId(Base.GLOBAL_APP_ID);
 
     WebTarget target = client.target(API_BASE + "/users/account");
     Response response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));
