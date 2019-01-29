@@ -116,8 +116,7 @@ public class ArtifactCollectionStateTest {
         .thenReturn(
             Application.Builder.anApplication().withAppId(APP_ID).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-    when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(
-             APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME))
+    when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(jenkinsArtifactStream))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     when(delayEventHelper.delay(anyInt(), any())).thenReturn("anyGUID");
   }
@@ -133,9 +132,7 @@ public class ArtifactCollectionStateTest {
 
   @Test
   public void shouldExecuteWithDelayQueue() {
-    when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(
-             APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME))
-        .thenReturn(null);
+    when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(jenkinsArtifactStream)).thenReturn(null);
     ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
     assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
     verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
@@ -153,7 +150,7 @@ public class ArtifactCollectionStateTest {
   @Test
   public void shouldArtifactCollectionEvaluateBuildNo() {
     artifactCollectionState.setBuildNo("${regex.extract('...', ${workflow.variables.sourceCommitHash})}");
-    when(artifactService.getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "0fc", false))
+    when(artifactService.getArtifactByBuildNumber(jenkinsArtifactStream, "0fc", false))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     artifactCollectionState.handleAsyncResponse(executionContext,
         ImmutableMap.of(
@@ -165,7 +162,7 @@ public class ArtifactCollectionStateTest {
   @Ignore // for srinivas to modify; need to simulate real Jenkins
   public void shouldArtifactCollectionEvaluateBuildNoFromDescription() {
     artifactCollectionState.setBuildNo("${regex.replace('tag: ([\\w-]+)', '$1', ${Jenkins.description}}");
-    when(artifactService.getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "0fc", false))
+    when(artifactService.getArtifactByBuildNumber(jenkinsArtifactStream, "0fc", false))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     artifactCollectionState.handleAsyncResponse(executionContext,
         ImmutableMap.of(

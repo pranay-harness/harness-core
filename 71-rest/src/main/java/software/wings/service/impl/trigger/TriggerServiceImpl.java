@@ -469,15 +469,14 @@ public class TriggerServiceImpl implements TriggerService {
     notNullCheck("ArtifactStream was deleted", artifactStream, USER);
     Artifact lastCollectedArtifact;
     if (isEmpty(artifactSelection.getArtifactFilter())) {
-      lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(
-          appId, artifactSelection.getArtifactStreamId(), artifactStream.getSourceName());
+      lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
       if (lastCollectedArtifact != null
           && lastCollectedArtifact.getServiceIds().contains(artifactSelection.getServiceId())) {
         artifacts.add(lastCollectedArtifact);
       }
     } else {
-      lastCollectedArtifact = artifactService.getArtifactByBuildNumber(appId, artifactSelection.getArtifactStreamId(),
-          artifactStream.getSourceName(), artifactSelection.getArtifactFilter(), artifactSelection.isRegex());
+      lastCollectedArtifact = artifactService.getArtifactByBuildNumber(
+          artifactStream, artifactSelection.getArtifactFilter(), artifactSelection.isRegex());
       if (lastCollectedArtifact != null) {
         artifacts.add(lastCollectedArtifact);
       }
@@ -1128,8 +1127,8 @@ public class TriggerServiceImpl implements TriggerService {
       String appId, ArtifactSelection artifactSelection, String buildNumber) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactSelection.getArtifactStreamId());
     Validator.notNullCheck("Artifact Source doesn't exist", artifactStream, USER);
-    Artifact collectedArtifactForBuildNumber = artifactService.getArtifactByBuildNumber(
-        appId, artifactSelection.getArtifactStreamId(), artifactStream.getSourceName(), buildNumber, false);
+    Artifact collectedArtifactForBuildNumber =
+        artifactService.getArtifactByBuildNumber(artifactStream, buildNumber, false);
 
     return collectedArtifactForBuildNumber != null
         ? collectedArtifactForBuildNumber

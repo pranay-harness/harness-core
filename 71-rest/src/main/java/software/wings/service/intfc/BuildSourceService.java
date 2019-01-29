@@ -25,7 +25,9 @@ public interface BuildSourceService {
    * @param parentJobName the jenkins parent job name (if any)
    * @return the jobs
    */
-  Set<JobDetails> getJobs(@NotEmpty String appId, @NotEmpty String settingId, @Nullable String parentJobName);
+  default Set<JobDetails> getJobs(@NotEmpty String appId, @NotEmpty String settingId, @Nullable String parentJobName) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets plans.
@@ -35,7 +37,9 @@ public interface BuildSourceService {
    * @param artifactStreamType artifact stream type
    * @return the plans
    */
-  Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId, String artifactStreamType);
+  default Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId, String artifactStreamType) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Get project.
@@ -44,7 +48,9 @@ public interface BuildSourceService {
    * @param settingId the setting id
    * @return the project (now GCS only)
    */
-  String getProject(String appId, String settingId);
+  default String getProject(String appId, String settingId) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Get buckets.
@@ -54,7 +60,9 @@ public interface BuildSourceService {
    * @param settingId the setting id
    * @return the project (now GCS only)
    */
-  Map<String, String> getBuckets(String appId, String projectId, String settingId);
+  default Map<String, String> getBuckets(String appId, String projectId, String settingId) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Get SMB paths.
@@ -63,7 +71,9 @@ public interface BuildSourceService {
    * @param settingId the setting id
    * @return the paths (now SMB only)
    */
-  List<String> getSmbPaths(String appId, String settingId);
+  default List<String> getSmbPaths(String appId, String settingId) {
+    throw new UnsupportedOperationException();
+  }
   /**
    * Get Artifact paths by stream id.
    *
@@ -72,7 +82,9 @@ public interface BuildSourceService {
    * @param streamType artifact stream type
    * @return the paths
    */
-  List<String> getArtifactPathsByStreamType(String appId, String settingId, String streamType);
+  default List<String> getArtifactPathsByStreamType(String appId, String settingId, String streamType) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets plans.
@@ -82,8 +94,10 @@ public interface BuildSourceService {
    * @param artifactStreamType artifact stream type
    * @return the plans
    */
-  Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId, @NotEmpty String serviceId,
-      String artifactStreamType, String repositoryType);
+  default Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId, @NotEmpty String serviceId,
+      String artifactStreamType, String repositoryType) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets artifact paths.
@@ -95,8 +109,10 @@ public interface BuildSourceService {
    * @param artifactStreamType artifact stream type
    * @return the artifact paths
    */
-  Set<String> getArtifactPaths(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId,
-      String groupId, String artifactStreamType);
+  default Set<String> getArtifactPaths(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId,
+      String groupId, String artifactStreamType) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets builds.
@@ -106,7 +122,9 @@ public interface BuildSourceService {
    * @param settingId        the setting id
    * @return the builds
    */
-  List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId);
+  default List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId) {
+    throw new UnsupportedOperationException();
+  }
 
   /***
    * Gets builds with the limit
@@ -116,7 +134,13 @@ public interface BuildSourceService {
    * @param limit
    * @return
    */
-  List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit);
+  default List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<BuildDetails> getBuilds(String appId, String artifactStreamId) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets last successful build.
@@ -126,7 +150,9 @@ public interface BuildSourceService {
    * @param settingId        the setting id
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, String settingId);
+  default BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, String settingId) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets group Id paths.
@@ -136,7 +162,9 @@ public interface BuildSourceService {
    * @param settingId the setting id
    * @return the groupId paths
    */
-  Set<String> getGroupIds(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId);
+  default Set<String> getGroupIds(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Valiate Artifact Stream
@@ -147,8 +175,10 @@ public interface BuildSourceService {
    * @return the boolean
    * @throws WingsException if Artifact Stream not valid
    */
-  boolean validateArtifactSource(
-      @NotEmpty String appId, @NotEmpty String settingId, ArtifactStreamAttributes artifactStreamAttributes);
+  default boolean validateArtifactSource(
+      @NotEmpty String appId, @NotEmpty String settingId, ArtifactStreamAttributes artifactStreamAttributes) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Get Job details
@@ -157,7 +187,9 @@ public interface BuildSourceService {
    * @param jobName
    * @return
    */
-  JobDetails getJob(@NotEmpty String appId, @NotEmpty String settingId, @NotEmpty String jobName);
+  default JobDetails getJob(@NotEmpty String appId, @NotEmpty String settingId, @NotEmpty String jobName) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets build service.
@@ -166,7 +198,9 @@ public interface BuildSourceService {
    * @param appId            the app id
    * @return the build service
    */
-  BuildService getBuildService(SettingAttribute settingAttribute, String appId);
+  default BuildService getBuildService(SettingAttribute settingAttribute, String appId) {
+    throw new UnsupportedOperationException();
+  }
 
   /***
    * Collects an artifact
@@ -175,5 +209,7 @@ public interface BuildSourceService {
    * @param buildDetails
    * @return
    */
-  Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails);
+  default Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails) {
+    throw new UnsupportedOperationException();
+  }
 }

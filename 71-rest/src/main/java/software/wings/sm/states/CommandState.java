@@ -56,6 +56,7 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
@@ -349,32 +350,35 @@ public class CommandState extends State {
         // Observed NPE in alerts
         if (artifactStream == null) {
           throw new WingsException(format("Unable to find artifact stream for service %s, artifact %s",
-                                       service.getName(), artifact.getUuid()),
+                                       service.getName(), artifact.getArtifactSourceName()),
               WingsException.USER);
         }
 
         ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
         artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
-        SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
-        if (settingAttribute == null) {
-          throw new WingsException(
-              format("Unable to find setting attribute for artifact stream %s", artifactStream.getUuid()),
-              WingsException.USER);
+        if (!ArtifactStreamType.CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+          SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+          if (settingAttribute == null) {
+            throw new WingsException(format("Unable to find Connector/Cloud Provider for artifact stream %s",
+                                         artifactStream.getSourceName()),
+                WingsException.USER);
+          }
+          artifactStreamAttributes.setServerSetting(settingAttribute);
+          artifactStreamAttributes.setArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
+              (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
+              context.getWorkflowExecutionId()));
+          commandExecutionContextBuilder.withArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
+              (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
+              context.getWorkflowExecutionId()));
         }
-        artifactStreamAttributes.setServerSetting(settingAttribute);
         artifactStreamAttributes.setMedatadataOnly(artifactStream.isMetadataOnly());
         artifactStreamAttributes.setMetadata(artifact.getMetadata());
-        artifactStreamAttributes.setArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
-            (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
-            context.getWorkflowExecutionId()));
+
         if (featureFlagService.isEnabled(FeatureName.COPY_ARTIFACT, accountId)) {
           artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(true);
         }
         artifactStreamAttributes.setArtifactType(service.getArtifactType());
         commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
-        commandExecutionContextBuilder.withArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
-            (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
-            context.getWorkflowExecutionId()));
 
         activityBuilder.artifactStreamId(artifactStream.getUuid())
             .artifactStreamName(artifactStream.getSourceName())

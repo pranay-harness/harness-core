@@ -10,12 +10,20 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.jayway.jsonpath.DocumentContext;
 import io.harness.serializer.JsonUtilsTest.Base.BaseType;
+import io.harness.serializer.JsonUtilsTest.CustomResponse.Result;
 import net.javacrumbs.jsonunit.fluent.JsonFluentAssert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class JsonUtilsTest.
@@ -145,6 +153,73 @@ public class JsonUtilsTest {
         .isEqualTo(
             "{\"type\":\"object\",\"properties\":{\"baseType\":{\"enum\":[\"A\",\"B\",\"C\"],\"type\":\"string\"},\"name\":{\"type\":\"string\"}},"
             + "\"title\":\"BaseA\",\"required\":[\"name\"]}");
+  }
+
+  @Test
+  public void testGetBuildDetails() throws IOException {
+    File file = new File("testGetBuildDetails.json");
+    String json = "{\n"
+        + "  \"total\": 100,\n"
+        + "  \"offset\": 20,\n"
+        + "  \"limit\": 40,\n"
+        + "  \"result\": [\n"
+        + "    {\n"
+        + "      \"buildNo\": \"21\",\n"
+        + "      \"metadata\": {\n"
+        + "        \"tag1\": \"value1\"\n"
+        + "      }\n"
+        + "    },\n"
+        + "    {\n"
+        + "      \"buildNo\": \"22\",\n"
+        + "      \"metadata\": {\n"
+        + "        \"tag1\": \"value1\"\n"
+        + "      }\n"
+        + "    }\n"
+        + "  ]\n"
+        + "}";
+    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+    writer.write(json);
+
+    writer.close();
+
+    final CustomResponse customResponse = (CustomResponse) JsonUtils.readFromFile(file, CustomResponse.class);
+
+    assertThat(customResponse).isNotNull();
+    assertThat(customResponse.getResult()).isNotEmpty();
+    assertThat(customResponse.getResult()).extracting(Result::getBuildNo).contains("21", "22");
+  }
+
+  public static class CustomResponse {
+    private List<Result> result = new ArrayList<>();
+
+    public List<Result> getResult() {
+      return result;
+    }
+
+    public void setResult(List<Result> result) {
+      this.result = result;
+    }
+
+    public static class Result {
+      String buildNo;
+      Map<String, String> metadata = new HashMap<>();
+
+      public String getBuildNo() {
+        return buildNo;
+      }
+
+      public void setBuildNo(String buildNo) {
+        this.buildNo = buildNo;
+      }
+
+      public Map<String, String> getMetadata() {
+        return metadata;
+      }
+
+      public void setMetadata(Map<String, String> metadata) {
+        this.metadata = metadata;
+      }
+    }
   }
 
   /**

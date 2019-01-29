@@ -1,10 +1,14 @@
 package software.wings.beans.command;
 
 import static java.util.stream.Collectors.toMap;
+import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -15,12 +19,15 @@ import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.tuple.Pair;
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppContainer;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
@@ -38,7 +45,7 @@ import java.util.stream.Stream;
 @JsonTypeName("SCP")
 public class ScpCommandUnit extends SshCommandUnit {
   private static final Logger logger = LoggerFactory.getLogger(ScpCommandUnit.class);
-
+  @Inject @Transient private transient DelegateLogService delegateLogService;
   @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
   private ScpFileCategory fileCategory;
@@ -82,6 +89,9 @@ public class ScpCommandUnit extends SshCommandUnit {
                   + " and artifact type: " + artifactStreamAttributes.getArtifactType());
               return CommandExecutionStatus.SUCCESS;
             }
+          } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.CUSTOM.name())) {
+            saveExecutionLog(context, ERROR, "Copy Artifact is not supported for Custom Repository artifacts");
+            throw new InvalidRequestException("Copy Artifact is not supported for Custom Repository artifacts");
           }
         } else {
           context.getArtifactFiles().forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
@@ -93,6 +103,7 @@ public class ScpCommandUnit extends SshCommandUnit {
         fileIds.add(Pair.of(appContainer.getFileUuid(), null));
         break;
       default:
+        saveExecutionLog(context, ERROR, "Unsupported file category for copy step");
         throw new InvalidRequestException("Unsupported file category for copy step");
     }
     return context.copyGridFsFiles(destinationDirectoryPath, fileBucket, fileIds);
@@ -106,6 +117,19 @@ public class ScpCommandUnit extends SshCommandUnit {
       return true;
     }
     return false;
+  }
+
+  private void saveExecutionLog(ShellCommandExecutionContext context, LogLevel logLevel, String line) {
+    delegateLogService.save(context.getAccountId(),
+        aLog()
+            .withAppId(context.getAppId())
+            .withActivityId(context.getActivityId())
+            .withHostName(context.getHost().getPublicDns())
+            .withLogLevel(logLevel)
+            .withCommandUnitName(getName())
+            .withLogLine(line)
+            .withExecutionResult(RUNNING)
+            .build());
   }
 
   @SchemaIgnore

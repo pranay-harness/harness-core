@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -47,7 +48,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable 
   private String settingId;
   @EntityName private String name;
   private boolean autoPopulate;
-  @Indexed private String serviceId;
+  @NotEmpty @Indexed private String serviceId;
   transient @Deprecated private boolean autoDownload;
   transient @Deprecated private boolean autoApproveForProduction;
   private boolean metadataOnly;
@@ -92,6 +93,10 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable 
       super(type, harnessApiVersion);
       this.serverName = serverName;
       this.metadataOnly = metadataOnly;
+    }
+
+    public Yaml(String type, String harnessApiVersion) {
+      super(type, harnessApiVersion);
     }
   }
 }

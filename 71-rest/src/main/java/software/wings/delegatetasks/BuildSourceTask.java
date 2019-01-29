@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceRequest;
@@ -61,12 +62,16 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
 
       List<BuildDetails> buildDetails = new ArrayList<>();
       if (buildSourceRequestType.equals(BuildSourceRequestType.GET_BUILDS)) {
-        boolean enforceLimitOnResults =
-            limit != -1 && "ARTIFACTORY".equals(artifactStreamType); // TODO: supported for Artifactory only
+        if (ArtifactStreamType.CUSTOM.name().equals(artifactStreamType)) {
+          buildDetails = service.getBuilds(artifactStreamAttributes);
+        } else {
+          boolean enforceLimitOnResults =
+              limit != -1 && "ARTIFACTORY".equals(artifactStreamType); // TODO: supported for Artifactory only
+          buildDetails = enforceLimitOnResults
+              ? service.getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails, limit)
+              : service.getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
+        }
 
-        buildDetails = enforceLimitOnResults
-            ? service.getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails, limit)
-            : service.getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
       } else {
         BuildDetails lastSuccessfulBuild =
             service.getLastSuccessfulBuild(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);

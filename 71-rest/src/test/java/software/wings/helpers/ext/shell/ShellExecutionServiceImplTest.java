@@ -31,7 +31,7 @@ public class ShellExecutionServiceImplTest extends WingsBaseTest {
   @Test
   public void testExecuteScriptTimeout() {
     ShellExecutionRequest shellExecutionRequest =
-        ShellExecutionRequest.builder().scriptString("sleep 10").workingDirectory("/tmp").timeoutMillis(1000).build();
+        ShellExecutionRequest.builder().scriptString("sleep 10").workingDirectory("/tmp").timeoutSeconds(1).build();
     ShellExecutionResponse shellExecutionResponse = shellExecutionService.execute(shellExecutionRequest);
     assertThat(shellExecutionResponse).isNotNull();
     assertThat(shellExecutionResponse.getExitValue()).isNotEqualTo(0);

@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.CREATED_AT_KEY;
+import static software.wings.beans.artifact.Artifact.ARTIFACT_SOURCE_NAME_KEY;
 import static software.wings.beans.artifact.Artifact.ARTIFACT_STREAM_ID_KEY;
 import static software.wings.beans.artifact.Artifact.CONTENT_STATUS_KEY;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DELETED;
@@ -33,6 +34,7 @@ import static software.wings.beans.artifact.Artifact.Status.WAITING;
 import static software.wings.beans.artifact.ArtifactStream.ARTIFACT_STREAM_TYPE_KEY;
 import static software.wings.beans.artifact.ArtifactStream.METADATA_ONLY_KEY;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
@@ -393,43 +395,46 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public Artifact fetchLatestArtifactForArtifactStream(
-      String appId, String artifactStreamId, String artifactSourceName) {
-    return getArtifact(appId, artifactStreamId, artifactSourceName,
-        asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED));
+  public Artifact fetchLatestArtifactForArtifactStream(ArtifactStream artifactStream) {
+    return getArtifact(artifactStream, asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED));
   }
 
-  private Artifact getArtifact(
-      String appId, String artifactStreamId, String artifactSourceName, List<Status> statuses) {
-    return wingsPersistence.createQuery(Artifact.class)
-        .filter("appId", appId)
-        .filter("artifactStreamId", artifactStreamId)
-        .filter("artifactSourceName", artifactSourceName)
-        .order("-createdAt")
-        .field("status")
-        .hasAnyOf(statuses)
-        .get();
-  }
-
-  @Override
-  public Artifact fetchLastCollectedApprovedArtifactForArtifactStream(
-      String appId, String artifactStreamId, String artifactSourceName) {
-    return getArtifact(appId, artifactStreamId, artifactSourceName, asList(READY, APPROVED));
+  private Artifact getArtifact(ArtifactStream artifactStream, List<Status> statuses) {
+    Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class)
+                                        .filter(APP_ID_KEY, artifactStream.getAppId())
+                                        .filter(ARTIFACT_STREAM_ID_KEY, artifactStream.getUuid());
+    // For the custom artifact stream name as set artifact source name. Name can be changed so, it can not be unique
+    if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      return artifactQuery.order("-createdAt").field(STATUS_KEY).hasAnyOf(statuses).get();
+    }
+    // For the custom artifact stream name as set artifact source name. Name can be changed so, it can not be unique
+    artifactQuery.filter(ARTIFACT_SOURCE_NAME_KEY, artifactStream.getSourceName());
+    return artifactQuery.order("-createdAt").field(STATUS_KEY).hasAnyOf(statuses).get();
   }
 
   @Override
-  public Artifact fetchLastCollectedArtifact(String appId, String artifactStreamId, String artifactSourceName) {
-    return getArtifact(appId, artifactStreamId, artifactSourceName, asList(READY, QUEUED, RUNNING, WAITING, APPROVED));
+  public Artifact fetchLastCollectedApprovedArtifactForArtifactStream(ArtifactStream artifactStream) {
+    return getArtifact(artifactStream, asList(READY, APPROVED));
   }
 
   @Override
-  public Artifact getArtifactByBuildNumber(
-      String appId, String artifactStreamId, String artifactSource, String buildNumber, boolean regex) {
-    return wingsPersistence.createQuery(Artifact.class)
-        .filter("appId", appId)
-        .filter("artifactStreamId", artifactStreamId)
-        .filter("artifactSourceName", artifactSource)
-        .filter("metadata.buildNo", regex ? compile(buildNumber) : buildNumber)
+  public Artifact fetchLastCollectedArtifact(ArtifactStream artifactStream) {
+    return getArtifact(artifactStream, asList(READY, QUEUED, RUNNING, WAITING, APPROVED));
+  }
+
+  @Override
+  public Artifact getArtifactByBuildNumber(ArtifactStream artifactStream, String buildNumber, boolean regex) {
+    Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class)
+                                        .filter(APP_ID_KEY, artifactStream.getAppId())
+                                        .filter(ARTIFACT_STREAM_ID_KEY, artifactStream.getUuid());
+    if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      return artifactQuery.filter("metadata.buildNo", regex ? compile(buildNumber) : buildNumber)
+          .order("-createdAt")
+          .disableValidation()
+          .get();
+    }
+    artifactQuery.filter(ARTIFACT_SOURCE_NAME_KEY, artifactStream.getSourceName());
+    return artifactQuery.filter("metadata.buildNo", regex ? compile(buildNumber) : buildNumber)
         .order("-createdAt")
         .disableValidation()
         .get();
@@ -569,5 +574,20 @@ public class ArtifactServiceImpl implements ArtifactService {
         .field(ID_KEY)
         .in(artifactUuids)
         .asList();
+  }
+
+  public Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream) {
+    Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class)
+                                        .project("metadata", true)
+                                        .filter(APP_ID_KEY, artifactStream.getAppId())
+                                        .filter("artifactStreamId", artifactStream.getUuid())
+                                        .field("status")
+                                        .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
+                                        .disableValidation();
+    if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      return artifactQuery;
+    }
+    artifactQuery.filter("artifactSourceName", artifactStream.getSourceName());
+    return artifactQuery;
   }
 }

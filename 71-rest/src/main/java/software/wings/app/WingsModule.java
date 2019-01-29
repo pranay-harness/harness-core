@@ -181,6 +181,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactServiceImpl;
+import software.wings.service.impl.artifact.CustomBuildSourceServiceImpl;
 import software.wings.service.impl.aws.manager.AwsAsgHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsCFHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsCodeDeployHelperServiceManagerImpl;
@@ -327,6 +328,7 @@ import software.wings.service.intfc.analysis.LogLabelingService;
 import software.wings.service.intfc.analysis.LogVerificationService;
 import software.wings.service.intfc.analysis.LogVerificationServiceImpl;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
@@ -608,6 +610,7 @@ public class WingsModule extends DependencyModule {
     bind(ArtifactCollectionService.class)
         .annotatedWith(Names.named("ArtifactCollectionService"))
         .to(ArtifactCollectionServiceImpl.class);
+    bind(CustomBuildSourceService.class).to(CustomBuildSourceServiceImpl.class);
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
     bind(AwsLambdaService.class).to(AwsLambdaServiceImpl.class);

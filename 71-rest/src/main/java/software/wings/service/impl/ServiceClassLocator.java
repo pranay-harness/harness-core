@@ -10,6 +10,7 @@ import software.wings.service.intfc.AmiBuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildService;
+import software.wings.service.intfc.CustomBuildService;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.GcrBuildService;
@@ -62,6 +63,8 @@ public class ServiceClassLocator {
         return SftpBuildService.class;
       case ACR:
         return AcrBuildService.class;
+      case CUSTOM:
+        return CustomBuildService.class;
       default:
         throw new WingsException("Unsupported artifact stream type: " + artifactStreamType);
     }

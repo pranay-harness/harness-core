@@ -16,5 +16,6 @@ public enum ArtifactStreamType {
   AMI,
   GCS,
   SMB,
-  SFTP
+  SFTP,
+  CUSTOM
 }

@@ -324,6 +324,7 @@ public class DelegateTask extends Base {
     private String envId;
     private String infrastructureMappingId;
     private long timeout = DEFAULT_SYNC_CALL_TIMEOUT;
+    private List<String> tags;
 
     public String getAccountId() {
       return accountId;
@@ -365,12 +366,21 @@ public class DelegateTask extends Base {
       this.timeout = timeout;
     }
 
+    public List<String> getTags() {
+      return tags;
+    }
+
+    public void setTags(List<String> tags) {
+      this.tags = tags;
+    }
+
     public static final class Builder {
       private String accountId;
       private String appId;
       private String envId;
       private String infrastructureMappingId;
       private long timeout = DEFAULT_SYNC_CALL_TIMEOUT;
+      private List<String> tags;
 
       private Builder() {}
 
@@ -403,13 +413,19 @@ public class DelegateTask extends Base {
         return this;
       }
 
+      public Builder withTags(List<String> tags) {
+        this.tags = tags;
+        return this;
+      }
+
       public Builder but() {
         return aContext()
             .withAccountId(accountId)
             .withAppId(appId)
             .withEnvId(envId)
             .withTimeout(timeout)
-            .withInfrastructureMappingId(infrastructureMappingId);
+            .withInfrastructureMappingId(infrastructureMappingId)
+            .withTags(tags);
       }
 
       public SyncTaskContext build() {
@@ -419,6 +435,7 @@ public class DelegateTask extends Base {
         syncTaskContext.setEnvId(envId);
         syncTaskContext.setInfrastructureMappingId(infrastructureMappingId);
         syncTaskContext.setTimeout(timeout);
+        syncTaskContext.setTags(tags);
         return syncTaskContext;
       }
     }

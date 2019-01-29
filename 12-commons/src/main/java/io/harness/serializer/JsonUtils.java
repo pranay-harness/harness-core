@@ -30,6 +30,7 @@ import com.jayway.jsonpath.spi.mapper.MappingProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
@@ -405,7 +406,14 @@ public class JsonUtils {
       String json = Resources.toString(url, Charsets.UTF_8);
       return JsonUtils.asObject(json, HashMap.class);
     } catch (Exception exception) {
-      throw new RuntimeException("Error in initializing CommandUnitType-" + file, exception);
+      throw new RuntimeException("Error in initializing file-" + file, exception);
+    }
+  }
+  public static Object readFromFile(File file, Class<?> clazz) {
+    try {
+      return mapper.readValue(file, clazz);
+    } catch (Exception exception) {
+      throw new RuntimeException("Error reading the file -" + file.getAbsolutePath(), exception);
     }
   }
 }

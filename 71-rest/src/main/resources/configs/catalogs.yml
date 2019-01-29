@@ -68,13 +68,15 @@ ARTIFACT_STREAM_TYPE:
     - name: ACR
       value: Azure Container Registry
     - name: AMI
-      value: AMI
+      value: AMI Repository
     - name: GCS
       value: Google Cloud Storage
     - name: SMB
-      value: SMB
+      value: Samba Server
     - name: SFTP
-      value: SFTP
+      value: SFTP Server
+    - name: CUSTOM
+      value: Custom Repository
 
 
 DEPLOYMENT_STRATEGY:

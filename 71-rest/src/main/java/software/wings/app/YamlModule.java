@@ -23,6 +23,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
@@ -69,6 +70,7 @@ import software.wings.service.impl.yaml.handler.artifactstream.AmiArtifactStream
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactoryArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.BambooArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.CustomArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.DockerArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.EcrArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.GcrArtifactStreamYamlHandler;
@@ -206,6 +208,7 @@ public class YamlModule extends AbstractModule {
     artifactStreamYamlHelperMapBinder.addBinding(GCS.name()).to(GcsArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(SMB.name()).to(SmbArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(SFTP.name()).to(SftpArtifactStreamYamlHandler.class);
+    artifactStreamYamlHelperMapBinder.addBinding(CUSTOM.name()).to(CustomArtifactStreamYamlHandler.class);
 
     MapBinder<String, InfraMappingYamlHandler> infraMappingYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfraMappingYamlHandler.class);

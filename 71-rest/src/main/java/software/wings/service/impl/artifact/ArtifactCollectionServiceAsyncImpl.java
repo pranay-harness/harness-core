@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
@@ -10,6 +11,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
@@ -21,7 +23,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -37,6 +38,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.delegatetasks.buildsource.BuildSourceCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceRequest;
 import software.wings.delegatetasks.buildsource.BuildSourceRequest.BuildSourceRequestType;
@@ -59,6 +61,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /***
  * Service responsible to glue all artifact
@@ -113,53 +116,81 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   public void collectNewArtifactsAsync(String appId, ArtifactStream artifactStream, String permitId) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
-    SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
-    if (settingAttribute == null) {
-      logger.warn("Artifact Server {} was deleted of artifactStreamId {}", artifactStream.getSettingId(),
-          artifactStream.getUuid());
-      // TODO:: mark inactive maybe
-      artifactStreamService.updateFailedCronAttempts(
-          artifactStream.getAppId(), artifactStream.getUuid(), artifactStream.getFailedCronAttempts() + 1);
-      return;
+    String accountId;
+    BuildSourceRequest buildSourceRequest;
+    if (CUSTOM.name().equals(artifactStreamType)) {
+      ArtifactStreamAttributes artifactStreamAttributes =
+          artifactCollectionUtil.renderCustomArtifactScriptString((CustomArtifactStream) artifactStream);
+      accountId = artifactStreamAttributes.getAccountId();
+      BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
+      logger.debug("Collecting build details for artifact stream id {} type {} and source name {} ",
+          artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+
+      buildSourceRequest = BuildSourceRequest.builder()
+                               .accountId(artifactStreamAttributes.getAccountId())
+                               .appId(appId)
+                               .artifactStreamAttributes(artifactStreamAttributes)
+                               .artifactStreamType(artifactStreamType)
+                               .buildSourceRequestType(requestType)
+                               .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
+                               .build();
+    } else {
+      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+      if (settingAttribute == null) {
+        logger.warn("Artifact Server {} was deleted of artifactStreamId {}", artifactStream.getSettingId(),
+            artifactStream.getUuid());
+        // TODO:: mark inactive maybe
+        artifactStreamService.updateFailedCronAttempts(
+            artifactStream.getAppId(), artifactStream.getUuid(), artifactStream.getFailedCronAttempts() + 1);
+        return;
+      }
+      accountId = settingAttribute.getAccountId();
+      SettingValue settingValue = settingAttribute.getValue();
+
+      List<EncryptedDataDetail> encryptedDataDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
+
+      Service service = getService(appId, artifactStream);
+
+      ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
+
+      BuildSourceRequestType requestType = getRequestType(artifactStream, service.getArtifactType());
+      logger.debug("Collecting build details for artifact stream id {} type {} and source name {} ",
+          artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+
+      buildSourceRequest = BuildSourceRequest.builder()
+                               .accountId(settingAttribute.getAccountId())
+                               .appId(service.getAppId())
+                               .artifactStreamAttributes(artifactStreamAttributes)
+                               .artifactStreamType(artifactStreamType)
+                               .settingValue(settingValue)
+                               .encryptedDataDetails(encryptedDataDetails)
+                               .buildSourceRequestType(requestType)
+                               .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
+                               .build();
     }
-    SettingValue settingValue = settingAttribute.getValue();
-
-    List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
-
-    Service service = getService(appId, artifactStream);
-
-    ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
-
-    BuildSourceRequestType requestType = getRequestType(artifactStream, service.getArtifactType());
-    logger.debug("Collecting build details for artifact stream id {} type {} and source name {} ",
-        artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
-    BuildSourceRequest buildSourceRequest = BuildSourceRequest.builder()
-                                                .accountId(settingAttribute.getAccountId())
-                                                .appId(service.getAppId())
-                                                .artifactStreamAttributes(artifactStreamAttributes)
-                                                .artifactStreamType(artifactStreamType)
-                                                .settingValue(settingValue)
-                                                .encryptedDataDetails(encryptedDataDetails)
-                                                .buildSourceRequestType(requestType)
-                                                .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
-                                                .build();
 
     String waitId = generateUuid();
 
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.BUILD_SOURCE_TASK)
-                                    .withAccountId(settingAttribute.getAccountId())
-                                    .withAppId(GLOBAL_APP_ID)
-                                    .withWaitId(waitId)
-                                    .withParameters(new Object[] {buildSourceRequest})
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(1))
-                                    .build();
+    DelegateTask.Builder delegateTaskBuilder = aDelegateTask()
+                                                   .withTaskType(TaskType.BUILD_SOURCE_TASK)
+                                                   .withAccountId(accountId)
+                                                   .withAppId(GLOBAL_APP_ID)
+                                                   .withWaitId(waitId)
+                                                   .withParameters(new Object[] {buildSourceRequest})
+                                                   .withTimeout(TimeUnit.MINUTES.toMillis(1));
 
-    waitNotifyEngine.waitForAll(new BuildSourceCallback(settingAttribute.getAccountId(), service.getAppId(),
-                                    artifactStream.getUuid(), permitId),
-        waitId);
-    delegateService.queueTask(delegateTask);
+    if (CUSTOM.name().equals(artifactStreamType)) {
+      List<String> tags = ((CustomArtifactStream) artifactStream).getTags();
+      if (isNotEmpty(tags)) {
+        // To remove if any empty tags in case saved for custom artifact stream
+        tags = tags.stream().filter(s -> isNotEmpty(s)).distinct().collect(Collectors.toList());
+        delegateTaskBuilder.withTags(tags);
+      }
+    }
+
+    waitNotifyEngine.waitForAll(new BuildSourceCallback(accountId, appId, artifactStream.getUuid(), permitId), waitId);
+    delegateService.queueTask(delegateTaskBuilder.build());
   }
 
   private int getLimit(String artifactStreamType, BuildSourceRequestType requestType) {
@@ -171,7 +202,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   public Artifact collectNewArtifacts(String appId, ArtifactStream artifactStream, String buildNumber) {
     List<BuildDetails> builds =
         buildSourceService.getBuilds(appId, artifactStream.getUuid(), artifactStream.getSettingId());
-    if (EmptyPredicate.isNotEmpty(builds)) {
+    if (isNotEmpty(builds)) {
       Optional<BuildDetails> buildDetails =
           builds.stream().filter(build -> buildNumber.equals(build.getNumber())).findFirst();
       if (buildDetails.isPresent()) {

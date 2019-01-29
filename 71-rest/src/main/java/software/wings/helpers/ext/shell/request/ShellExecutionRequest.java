@@ -11,5 +11,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class ShellExecutionRequest {
   @NotEmpty private String scriptString;
   private String workingDirectory;
-  @Builder.Default private long timeoutMillis = 60000;
+  @Builder.Default private long timeoutSeconds = 60;
 }

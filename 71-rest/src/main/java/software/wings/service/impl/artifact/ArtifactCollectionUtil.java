@@ -2,6 +2,7 @@ package software.wings.service.impl.artifact;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -9,6 +10,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
@@ -31,10 +33,12 @@ import com.google.inject.Singleton;
 
 import io.harness.artifact.ArtifactUtilities;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.network.Http;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
@@ -43,7 +47,11 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.CustomArtifactStream;
+import software.wings.beans.artifact.CustomArtifactStream.Action;
+import software.wings.beans.artifact.CustomArtifactStream.Script;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
@@ -53,12 +61,14 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.expression.SecretFunctor;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -67,7 +77,9 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.Validator;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -84,6 +96,8 @@ public class ArtifactCollectionUtil {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private AwsEcrHelperServiceManager awsEcrHelperServiceManager;
+  @Inject private AppService appService;
+  @Inject private ExpressionEvaluator evaluator;
 
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionUtil.class);
 
@@ -303,6 +317,8 @@ public class ArtifactCollectionUtil {
           .registryUrl(registryUrl)
           .username(nexusConfig.getUsername())
           .password(new String(nexusConfig.getPassword()));
+    } else if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
+      imageDetailsBuilder.sourceName(artifactStream.getSourceName());
     } else {
       throw new InvalidRequestException(
           artifactStream.getArtifactStreamType() + " artifact source can't be used for containers");
@@ -333,5 +349,36 @@ public class ArtifactCollectionUtil {
   private String getAmazonEcrAuthToken(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String awsAccount, String region, String appId) {
     return awsEcrHelperServiceManager.getAmazonEcrAuthToken(awsConfig, encryptionDetails, awsAccount, region, appId);
+  }
+
+  public ArtifactStreamAttributes renderCustomArtifactScriptString(CustomArtifactStream customArtifactStream) {
+    Application app = appService.get(customArtifactStream.getAppId());
+    Validator.notNullCheck("Application does not exist", app, USER);
+
+    Map<String, Object> context = new HashMap<>();
+    context.put("secrets",
+        SecretFunctor.builder()
+            .managerDecryptionService(managerDecryptionService)
+            .secretManager(secretManager)
+            .accountId(app.getAccountId())
+            .build());
+
+    // Find the FETCH VERSION Script from artifact stream
+    Script versionScript =
+        customArtifactStream.getScripts()
+            .stream()
+            .filter(script -> script.getAction() == null || script.getAction().equals(Action.FETCH_VERSIONS))
+            .findFirst()
+            .orElse(null);
+
+    Validator.notNullCheck("Fetch Version script is missing", versionScript, USER);
+
+    ArtifactStreamAttributes artifactStreamAttributes = customArtifactStream.getArtifactStreamAttributes();
+
+    String scriptString = versionScript.getScriptString();
+    Validator.notNullCheck("Script string can not be empty", scriptString, USER);
+    artifactStreamAttributes.setCustomArtifactStreamScript(evaluator.substitute(scriptString, context));
+    artifactStreamAttributes.setAccountId(app.getAccountId());
+    return artifactStreamAttributes;
   }
 }
