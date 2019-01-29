@@ -1,5 +1,6 @@
 package io.harness.k8s.model;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ObjectYamlUtils.encodeDot;
@@ -28,7 +29,6 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -69,7 +69,7 @@ public class KubernetesResource {
     return this;
   }
 
-  public KubernetesResource addRevisionNumberInDeploymentSelector(int revisionNumber, boolean isCanary) {
+  public KubernetesResource addRevisionNumberInDeploymentSelector(int revisionNumber) {
     HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
     Deployment deployment = (Deployment) resource;
 
@@ -91,10 +91,29 @@ public class KubernetesResource {
 
     deployment.getSpec().getSelector().setMatchLabels(matchLabels);
 
-    DeploymentSpec deploymentSpec = deployment.getSpec();
-    if (isCanary) {
-      deploymentSpec.setReplicas(0);
+    try {
+      this.spec = KubernetesHelper.toYaml(resource);
+      this.value = readYaml(this.spec).get(0);
+    } catch (IOException e) {
+      // do nothing
+      noop();
     }
+
+    return this;
+  }
+
+  public KubernetesResource addTrackLabelInDeploymentSelector(String track) {
+    HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
+    Deployment deployment = (Deployment) resource;
+
+    Map<String, String> matchLabels = deployment.getSpec().getSelector().getMatchLabels();
+    if (matchLabels == null) {
+      matchLabels = new HashMap<>();
+    }
+
+    matchLabels.put(HarnessLabels.track, track);
+
+    deployment.getSpec().getSelector().setMatchLabels(matchLabels);
 
     try {
       this.spec = KubernetesHelper.toYaml(resource);
@@ -105,6 +124,29 @@ public class KubernetesResource {
     }
 
     return this;
+  }
+
+  public KubernetesResource setReplicaCount(Integer replicas) {
+    HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
+    Deployment deployment = (Deployment) resource;
+
+    deployment.getSpec().setReplicas(replicas);
+
+    try {
+      this.spec = KubernetesHelper.toYaml(resource);
+      this.value = readYaml(this.spec).get(0);
+    } catch (IOException e) {
+      // do nothing
+      noop();
+    }
+
+    return this;
+  }
+
+  public Integer getReplicaCount() {
+    HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
+    Deployment deployment = (Deployment) resource;
+    return deployment.getSpec().getReplicas();
   }
 
   public KubernetesResource addRevisionSelectorInService(int revisionNumber) {
@@ -146,7 +188,13 @@ public class KubernetesResource {
     return this;
   }
 
-  public KubernetesResource addReleaseLabelsInPodSpec(String releaseName, int revisionNumber) {
+  public KubernetesResource appendSuffixInName(String suffix) {
+    UnaryOperator<Object> addSuffix = t -> t + suffix;
+    this.transformName(addSuffix);
+    return this;
+  }
+
+  public KubernetesResource addReleaseLabelsInPodSpec(String releaseName, int revisionNumber, String track) {
     HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
 
     PodTemplateSpec podTemplateSpec = getPodTemplateSpec(resource);
@@ -158,6 +206,10 @@ public class KubernetesResource {
 
     podLabels.put(HarnessLabels.releaseName, String.valueOf(releaseName));
     podLabels.put(HarnessLabels.revision, String.valueOf(revisionNumber));
+    if (!isEmpty(track)) {
+      podLabels.put(HarnessLabels.track, track);
+    }
+
     podTemplateSpec.getMetadata().setLabels(podLabels);
 
     try {

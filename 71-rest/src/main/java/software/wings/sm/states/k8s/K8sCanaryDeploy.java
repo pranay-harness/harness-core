@@ -3,7 +3,7 @@ package software.wings.sm.states.k8s;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static java.lang.Integer.parseInt;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.K8S_CANARY_SETUP;
+import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
 
 import com.google.inject.Inject;
 
@@ -15,20 +15,22 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.helpers.ext.k8s.request.K8sCanarySetupTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.k8s.response.K8sCanarySetupResponse;
+import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -48,8 +50,8 @@ import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class K8sCanarySetup extends State implements K8sStateExecutor {
-  private static final transient Logger logger = LoggerFactory.getLogger(K8sCanarySetup.class);
+public class K8sCanaryDeploy extends State implements K8sStateExecutor {
+  private static final transient Logger logger = LoggerFactory.getLogger(K8sCanaryDeploy.class);
 
   @Inject private transient ActivityService activityService;
   @Inject private transient SecretManager secretManager;
@@ -62,18 +64,18 @@ public class K8sCanarySetup extends State implements K8sStateExecutor {
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
 
-  public static final String K8S_CANARY_SETUP_COMMAND_NAME = "Canary Setup";
+  public static final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deploy";
 
-  public K8sCanarySetup(String name) {
-    super(name, K8S_CANARY_SETUP.name());
+  public K8sCanaryDeploy(String name) {
+    super(name, K8S_CANARY_DEPLOY.name());
   }
 
-  @Getter @Setter @Attributes(title = "Instance Count") private String defaultInstanceCount;
-  @Getter @Setter @Attributes(title = "Prefer Existing Instance Count") private boolean preferExistingInstanceCount;
+  @Getter @Setter @Attributes(title = "Instances") private String instances;
+  @Getter @Setter @Attributes(title = "Instance Unit Type") private InstanceUnitType instanceUnitType;
 
   @Override
   public String commandName() {
-    return K8S_CANARY_SETUP_COMMAND_NAME;
+    return K8S_CANARY_DEPLOY_COMMAND_NAME;
   }
 
   @Override
@@ -83,7 +85,7 @@ public class K8sCanarySetup extends State implements K8sStateExecutor {
 
   @Override
   public void validateParameters(ExecutionContext context) {
-    parseInt(context.renderExpression(this.defaultInstanceCount));
+    parseInt(context.renderExpression(this.instances));
   }
 
   @Override
@@ -97,11 +99,13 @@ public class K8sCanarySetup extends State implements K8sStateExecutor {
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
     K8sTaskParameters k8sTaskParameters =
-        K8sCanarySetupTaskParameters.builder()
+        K8sCanaryDeployTaskParameters.builder()
             .activityId(activityId)
             .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
-            .commandName(K8S_CANARY_SETUP_COMMAND_NAME)
-            .k8sTaskType(K8sTaskType.CANARY_SETUP)
+            .commandName(K8S_CANARY_DEPLOY_COMMAND_NAME)
+            .k8sTaskType(K8sTaskType.CANARY_DEPLOY)
+            .instances(Integer.valueOf(context.renderExpression(this.instances)))
+            .instanceUnitType(this.instanceUnitType)
             .timeoutIntervalInMin(10)
             .k8sDelegateManifestConfig(
                 k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
@@ -126,16 +130,16 @@ public class K8sCanarySetup extends State implements K8sStateExecutor {
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                              : ExecutionStatus.FAILED;
 
-    K8sCanarySetupResponse k8sCanarySetupResponse = (K8sCanarySetupResponse) executionResponse.getK8sTaskResponse();
+    K8sCanaryDeployResponse k8sCanaryDeployResponse = (K8sCanaryDeployResponse) executionResponse.getK8sTaskResponse();
 
-    Integer targetInstances = parseInt(context.renderExpression(this.defaultInstanceCount));
-    if (preferExistingInstanceCount && k8sCanarySetupResponse.getCurrentInstances() != null) {
-      targetInstances = k8sCanarySetupResponse.getCurrentInstances();
+    Integer targetInstances = parseInt(context.renderExpression(this.instances));
+    if (k8sCanaryDeployResponse.getCurrentInstances() != null) {
+      targetInstances = k8sCanaryDeployResponse.getCurrentInstances();
     }
 
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
 
-    stateExecutionData.setReleaseNumber(k8sCanarySetupResponse.getReleaseNumber());
+    stateExecutionData.setReleaseNumber(k8sCanaryDeployResponse.getReleaseNumber());
     stateExecutionData.setTargetInstances(targetInstances);
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
@@ -143,17 +147,25 @@ public class K8sCanarySetup extends State implements K8sStateExecutor {
     String activityId = stateExecutionData.getActivityId();
     activityService.updateStatus(activityId, appId, executionStatus);
 
+    InstanceElementListParam instanceElementListParam =
+        k8sStateHelper.getInstanceElementListParam(k8sCanaryDeployResponse.getK8sPodList());
+
+    stateExecutionData.setNewInstanceStatusSummaries(
+        k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
+
     k8sStateHelper.saveK8sElement(context,
         K8sElement.builder()
-            .releaseNumber(k8sCanarySetupResponse.getReleaseNumber())
+            .releaseNumber(k8sCanaryDeployResponse.getReleaseNumber())
             .targetInstances(targetInstances)
-            .currentReleaseWorkload(k8sCanarySetupResponse.getCurrentReleaseWorkload())
-            .previousReleaseWorkload(k8sCanarySetupResponse.getPreviousReleaseWorkload())
+            .isCanary(true)
+            .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
             .build());
 
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(context.getStateExecutionData())
+        .addContextElement(instanceElementListParam)
+        .addNotifyElement(instanceElementListParam)
         .build();
   }
 
@@ -171,6 +183,7 @@ public class K8sCanarySetup extends State implements K8sStateExecutor {
     canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init));
     canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Prepare));
     canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply));
+    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState));
     canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WrapUp));
 
     return canaryCommandUnits;

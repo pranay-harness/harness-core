@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sContextElement.K8sContextElementBuilder;
+import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -88,10 +89,17 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateHelper.getApplicationManifests(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
+    boolean inCanaryFlow = false;
+    K8sElement k8sElement = k8sStateHelper.getK8sElement(context);
+    if (k8sElement != null) {
+      inCanaryFlow = k8sElement.isCanary();
+    }
+
     K8sTaskParameters k8sTaskParameters =
         K8sRollingDeployTaskParameters.builder()
             .activityId(activityId)
             .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
+            .isInCanaryWorkflow(inCanaryFlow)
             .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .timeoutIntervalInMin(10)

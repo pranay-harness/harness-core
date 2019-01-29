@@ -26,6 +26,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
+import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.Release;
@@ -90,27 +91,30 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
             k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, FetchFiles), gitService,
             encryptionService);
     if (manifestFiles == null) {
-      return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
+      return getFailureResponse();
     }
     k8sRollingDeployTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFiles);
 
     boolean success = init(k8sRollingDeployTaskParameters, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Init));
     if (!success) {
-      return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
+      return getFailureResponse();
     }
 
-    success = prepareForRolling(
-        k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Prepare));
+    success = prepareForRolling(k8sRollingDeployTaskParameters, k8sDelegateTaskParams,
+        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Prepare));
     if (!success) {
-      return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
+      return getFailureResponse();
     }
 
     success = k8sTaskHelper.applyManifests(client, resources, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply));
     if (!success) {
-      return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
+      return getFailureResponse();
     }
+
+    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+        k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     List<K8sPod> podList = Collections.EMPTY_LIST;
 
@@ -128,7 +132,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         releaseHistory.setReleaseStatus(Status.Failed);
         kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
             k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
-        return getFailureResponse(k8sRollingDeployTaskParameters.getActivityId());
+        return getFailureResponse();
       }
 
       podList =
@@ -138,8 +142,12 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WrapUp));
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+    success = kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
         k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    if (!success) {
+      logger.error("Failed to save release history");
+      return getFailureResponse();
+    }
 
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder().releaseNumber(release.getNumber()).k8sPodList(podList).build();
@@ -150,7 +158,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         .build();
   }
 
-  private K8sTaskExecutionResponse getFailureResponse(String activityId) {
+  private K8sTaskExecutionResponse getFailureResponse() {
     K8sRollingDeployResponse rollingSetupResponse = K8sRollingDeployResponse.builder().build();
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -190,7 +198,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     }
   }
 
-  private boolean prepareForRolling(
+  private boolean prepareForRolling(K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
     try {
       markVersionedResources(resources);
@@ -208,8 +216,14 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         return false;
       }
 
-      release = releaseHistory.createNewRelease(
-          resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));
+      if (!k8sRollingDeployTaskParameters.isInCanaryWorkflow()) {
+        release = releaseHistory.createNewRelease(
+            resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));
+
+      } else {
+        release = releaseHistory.getLatestRelease();
+        release.setResources(resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));
+      }
 
       executionLogCallback.saveExecutionLog("\nCurrent release number is: " + release.getNumber());
 
@@ -226,7 +240,11 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         executionLogCallback.saveExecutionLog("\nVersioning resources.");
 
         addRevisionNumber(resources, release.getNumber());
-        managedWorkload.addReleaseLabelsInPodSpec(releaseName, release.getNumber());
+        managedWorkload.addReleaseLabelsInPodSpec(releaseName, release.getNumber(),
+            k8sRollingDeployTaskParameters.isInCanaryWorkflow() ? HarnessLabelValues.trackStable : "");
+        if (k8sRollingDeployTaskParameters.isInCanaryWorkflow()) {
+          managedWorkload.addTrackLabelInDeploymentSelector(HarnessLabelValues.trackStable);
+        }
       }
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);

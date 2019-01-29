@@ -341,14 +341,14 @@ public class K8sStateHelper {
   }
 
   public void saveK8sElement(ExecutionContext context, K8sElement k8sElement) {
-    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.PHASE)
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
                                    .name("k8s")
                                    .output(KryoUtils.asDeflatedBytes(k8sElement))
                                    .build());
   }
 
   public K8sElement getK8sElement(ExecutionContext context) {
-    SweepingOutput sweepingOutputInput = context.prepareSweepingOutputBuilder(Scope.PHASE).name("k8s").build();
+    SweepingOutput sweepingOutputInput = context.prepareSweepingOutputBuilder(Scope.WORKFLOW).name("k8s").build();
     SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
         sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
         sweepingOutputInput.getPhaseExecutionId());

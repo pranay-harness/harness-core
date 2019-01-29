@@ -258,8 +258,9 @@ public interface Constants {
   String K8S_DEPLOYMENT_ROLLING_ROLLBAK = "Rollback Deployment";
   String K8S_BLUE_GREEN_DEPLOY = "Blue/Green Deployment";
   String K8S_SCALE = "Scale";
+  String K8S_DELETE = "Delete";
   String K8S_SETUP = "Setup";
-  String K8S_CANARY_SETUP = "Canary Setup";
+  String K8S_CANARY_DEPLOY = "Canary Deployment";
   String K8S_CANARY_ROLLBACK = "Canary Rollback";
   String K8S_ROLLBACK = "Rollback";
 

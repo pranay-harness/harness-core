@@ -46,7 +46,7 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class K8sRollingDeployRollback extends State {
-  private static final transient Logger logger = LoggerFactory.getLogger(K8sCanaryRollback.class);
+  private static final transient Logger logger = LoggerFactory.getLogger(K8sRollingDeployRollback.class);
 
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
