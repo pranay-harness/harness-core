@@ -16,6 +16,7 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.ListObjectsV2Request;
@@ -44,9 +45,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * @author rktummala 07/30/17
- */
+@Singleton
 public class AmazonS3ServiceImpl implements AmazonS3Service {
   private static final Logger logger = LoggerFactory.getLogger(AmazonS3ServiceImpl.class);
   @Inject AwsHelperService awsHelperService;
