@@ -151,6 +151,8 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   }
 
   @Override
+  // This API is used only for testing, we do not need index for the running field. If you start using the
+  // API in production, please consider adding such.
   public long count(final Filter filter) {
     final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
 
