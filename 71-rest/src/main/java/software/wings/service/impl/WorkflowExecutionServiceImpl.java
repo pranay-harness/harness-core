@@ -47,6 +47,7 @@ import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.DEPLOYMENT;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.WorkflowExecution.PIPELINE_EXECUTION_ID_KEY;
 import static software.wings.beans.WorkflowExecution.STATUS_KEY;
@@ -102,7 +103,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Value;
 import org.json.JSONObject;
-import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -1072,7 +1072,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.ROLLING
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.MULTI_SERVICE
-        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BUILD
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == BUILD
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BLUE_GREEN) {
       stdParams = new CanaryWorkflowStandardParams();
 
@@ -1160,127 +1160,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
 
-    if (executionArgs.isTriggeredFromPipeline()) {
-      if (executionArgs.getPipelineId() != null) {
-        pipeline =
-            wingsPersistence.getWithAppId(Pipeline.class, workflowExecution.getAppId(), executionArgs.getPipelineId());
-        workflowExecution.setPipelineSummary(
-            PipelineSummary.builder().pipelineId(pipeline.getUuid()).pipelineName(pipeline.getName()).build());
-        keywords.add(pipeline.getName());
-      }
-      if (workflowExecution.getPipelineExecutionId() != null) {
-        WorkflowExecution pipelineExecution =
-            wingsPersistence.createQuery(WorkflowExecution.class)
-                .project(WorkflowExecution.TRIGGERED_BY, true)
-                .project(WorkflowExecution.CREATED_BY_KEY, true)
-                .project(WorkflowExecution.DEPLOYMENT_TRIGGERED_ID_KEY, true)
-                .filter(WorkflowExecution.APP_ID_KEY, workflowExecution.getAppId())
-                .filter(WorkflowExecution.ID_KEY, workflowExecution.getPipelineExecutionId())
-                .get();
-        if (pipelineExecution != null) {
-          workflowExecution.setTriggeredBy(pipelineExecution.getTriggeredBy());
-          workflowExecution.setDeploymentTriggerId(pipelineExecution.getDeploymentTriggerId());
-          workflowExecution.setCreatedBy(pipelineExecution.getCreatedBy());
-        }
-      }
-    }
+    populateArtifactsAndServices(workflowExecution, stdParams, keywords, executionArgs);
+
+    populatePipelineSummary(workflowExecution, keywords, executionArgs);
 
     Application app = appService.get(workflowExecution.getAppId());
     workflowExecution.setAppName(app.getName());
     keywords.add(workflowExecution.getAppName());
 
-    if (isNotEmpty(workflowExecution.getEnvIds())) {
-      List<EnvSummary> environmentSummaries =
-          environmentService.obtainEnvironmentSummaries(workflowExecution.getAppId(), workflowExecution.getEnvIds());
-      if (isNotEmpty(environmentSummaries)) {
-        for (EnvSummary envSummary : environmentSummaries) {
-          workflowExecution.setEnvironments(environmentSummaries);
-          if (envSummary.getUuid().equals(workflowExecution.getEnvId())) {
-            workflowExecution.setEnvName(envSummary.getName());
-            workflowExecution.setEnvType(envSummary.getEnvironmentType());
-          }
-          keywords.add(workflowExecution.getEnvType());
-          keywords.add(workflowExecution.getEnvName());
-        }
-      }
-    }
+    refreshEnvSummary(workflowExecution, keywords);
 
-    User user = UserThreadLocal.get();
-    if (user != null) {
-      EmbeddedUser triggeredBy =
-          EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
-      workflowExecution.setTriggeredBy(triggeredBy);
-      workflowExecution.setCreatedBy(triggeredBy);
-    } else if (trigger != null) {
-      // Triggered by Auto Trigger
-      workflowExecution.setTriggeredBy(
-          EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
-      workflowExecution.setCreatedBy(EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
-      workflowExecution.setDeploymentTriggerId(trigger.getUuid());
-    }
-    if (workflowExecution.getCreatedBy() != null) {
-      keywords.add(workflowExecution.getCreatedBy().getName());
-      keywords.add(workflowExecution.getCreatedBy().getEmail());
-    }
-    stdParams.setCurrentUser(workflowExecution.getCreatedBy());
+    populateCurrentUser(workflowExecution, stdParams, trigger, keywords);
 
-    if (executionArgs.getServiceInstances() != null) {
-      List<String> serviceInstanceIds =
-          executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(toList());
-      PageRequest<ServiceInstance> pageRequest = aPageRequest()
-                                                     .addFilter("appId", EQ, workflowExecution.getAppId())
-                                                     .addFilter("uuid", IN, serviceInstanceIds.toArray())
-                                                     .build();
-      List<ServiceInstance> serviceInstances = serviceInstanceService.list(pageRequest).getResponse();
+    populateServiceInstances(workflowExecution, keywords, executionArgs);
 
-      if (serviceInstances == null || serviceInstances.size() != serviceInstanceIds.size()) {
-        logger.error("Service instances argument and valid service instance retrieved size not matching");
-        throw new InvalidRequestException("Invalid service instances");
-      }
-      executionArgs.setServiceInstanceIdNames(serviceInstances.stream().collect(toMap(ServiceInstance::getUuid,
-          serviceInstance -> serviceInstance.getHostName() + ":" + serviceInstance.getServiceName())));
-
-      keywords.addAll(serviceInstances.stream().map(ServiceInstance::getHostName).collect(toList()));
-      keywords.addAll(serviceInstances.stream().map(ServiceInstance::getServiceName).collect(toList()));
-    }
-
-    if (isNotEmpty(executionArgs.getArtifacts())) {
-      List<String> artifactIds = executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList());
-      PageRequest<Artifact> pageRequest = aPageRequest()
-                                              .addFilter("appId", EQ, workflowExecution.getAppId())
-                                              .addFilter("uuid", IN, artifactIds.toArray())
-                                              .build();
-      List<Artifact> artifacts = artifactService.list(pageRequest, false).getResponse();
-
-      if (artifacts == null || artifacts.size() != artifactIds.size()) {
-        logger.error("Artifact argument and valid artifact retrieved size not matching");
-        throw new InvalidRequestException("Invalid artifact");
-      }
-
-      // TODO: get rid of artifactIdNames when UI moves to artifact list
-      executionArgs.setArtifactIdNames(artifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
-      artifacts.forEach(artifact -> {
-        artifact.setArtifactFiles(null);
-        artifact.setCreatedBy(null);
-        artifact.setLastUpdatedBy(null);
-        keywords.add(artifact.getArtifactSourceName());
-        keywords.add(artifact.getDescription());
-        keywords.add(artifact.getRevision());
-        keywords.add(artifact.getMetadata());
-      });
-      executionArgs.setArtifacts(artifacts);
-      List<ServiceElement> services = new ArrayList<>();
-      artifacts.forEach(artifact -> {
-        artifact.getServiceIds().forEach(serviceId -> {
-          Service service = serviceResourceService.get(artifact.getAppId(), serviceId, false);
-          ServiceElement se = new ServiceElement();
-          MapperUtils.mapObject(service, se);
-          services.add(se);
-          keywords.add(se.getName());
-        });
-      });
-      stdParams.setServices(services);
-    }
     workflowExecution.setErrorStrategy(executionArgs.getErrorStrategy());
 
     workflowExecution.setKeywords(trimList(keywords));
@@ -1294,6 +1187,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     logger.info("Created workflow execution {}", workflowExecution.getUuid());
 
+    updateWorkflowElement(workflowExecution, stdParams, workflow);
+
+    LinkedList<ContextElement> elements = new LinkedList<>();
+    elements.push(stdParams);
+    if (contextElements != null) {
+      for (ContextElement contextElement : contextElements) {
+        elements.push(contextElement);
+      }
+    }
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(workflowExecution.getAppId());
     stateExecutionInstance.setExecutionName(workflowExecution.getName());
@@ -1314,11 +1216,56 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecutionAdvisor != null) {
       stateExecutionInstance.setExecutionEventAdvisors(asList(workflowExecutionAdvisor));
     }
+    stateExecutionInstance.setContextElements(elements);
 
+    stateExecutionInstance = stateMachineExecutor.queue(stateMachine, stateExecutionInstance);
+
+    WorkflowExecution savedWorkflowExecution;
+    if (workflowExecution.getWorkflowType() != ORCHESTRATION) {
+      stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
+      updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING);
+      savedWorkflowExecution = wingsPersistence.getWithAppId(
+          WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+      if (workflowExecution.getWorkflowType() == PIPELINE) {
+        savePipelineSweepingOutPut(workflowExecution, pipeline, savedWorkflowExecution);
+      }
+    } else {
+      // create queue event
+      executionEventQueue.send(ExecutionEvent.builder()
+                                   .appId(workflowExecution.getAppId())
+                                   .workflowId(workflowExecution.getWorkflowId())
+                                   .infraMappingIds(workflowExecution.getInfraMappingIds())
+                                   .build());
+      savedWorkflowExecution = wingsPersistence.getWithAppId(
+          WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+    }
+
+    return savedWorkflowExecution;
+  }
+
+  private void savePipelineSweepingOutPut(
+      WorkflowExecution workflowExecution, Pipeline pipeline, WorkflowExecution savedWorkflowExecution) {
+    PipelineElement pipelineElement = PipelineElement.builder()
+                                          .displayName(workflowExecution.getDisplayName())
+                                          .name(pipeline.getName())
+                                          .description(pipeline.getDescription())
+                                          .startTs(savedWorkflowExecution.getStartTs())
+                                          .build();
+    sweepingOutputService.save(SweepingOutputServiceImpl
+                                   .prepareSweepingOutputBuilder(workflowExecution.getAppId(),
+                                       workflowExecution.getUuid(), null, null, Scope.PIPELINE)
+                                   .name("pipeline")
+                                   .output(KryoUtils.asDeflatedBytes(pipelineElement))
+                                   .build());
+  }
+
+  private void updateWorkflowElement(
+      WorkflowExecution workflowExecution, WorkflowStandardParams stdParams, Workflow workflow) {
     stdParams.setErrorStrategy(workflowExecution.getErrorStrategy());
     String workflowUrl = mainConfiguration.getPortal().getUrl() + "/"
         + format(mainConfiguration.getPortal().getExecutionUrlPattern(), workflowExecution.getAppId(),
               workflowExecution.getEnvId(), workflowExecution.getUuid());
+
     if (stdParams.getWorkflowElement() == null) {
       stdParams.setWorkflowElement(WorkflowElement.builder()
                                        .uuid(workflowExecution.getUuid())
@@ -1339,49 +1286,156 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             : workflowExecution.getPipelineExecutionId());
     lastGoodReleaseInfo(stdParams.getWorkflowElement(), workflowExecution);
     stdParams.getWorkflowElement().setDescription(workflow != null ? workflow.getDescription() : null);
+  }
 
-    LinkedList<ContextElement> elements = new LinkedList<>();
-    elements.push(stdParams);
-    if (contextElements != null) {
-      for (ContextElement contextElement : contextElements) {
-        elements.push(contextElement);
+  private void populateServiceInstances(
+      WorkflowExecution workflowExecution, List<Object> keywords, ExecutionArgs executionArgs) {
+    if (executionArgs.getServiceInstances() != null) {
+      List<String> serviceInstanceIds =
+          executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(toList());
+      PageRequest<ServiceInstance> pageRequest = aPageRequest()
+                                                     .addFilter("appId", EQ, workflowExecution.getAppId())
+                                                     .addFilter("uuid", IN, serviceInstanceIds.toArray())
+                                                     .build();
+      List<ServiceInstance> serviceInstances = serviceInstanceService.list(pageRequest).getResponse();
+
+      if (serviceInstances == null || serviceInstances.size() != serviceInstanceIds.size()) {
+        logger.error("Service instances argument and valid service instance retrieved size not matching");
+        throw new InvalidRequestException("Invalid service instances");
+      }
+      executionArgs.setServiceInstanceIdNames(serviceInstances.stream().collect(toMap(ServiceInstance::getUuid,
+          serviceInstance -> serviceInstance.getHostName() + ":" + serviceInstance.getServiceName())));
+
+      keywords.addAll(serviceInstances.stream().map(ServiceInstance::getHostName).collect(toList()));
+      keywords.addAll(serviceInstances.stream().map(ServiceInstance::getServiceName).collect(toList()));
+    }
+  }
+
+  private void populateCurrentUser(
+      WorkflowExecution workflowExecution, WorkflowStandardParams stdParams, Trigger trigger, List<Object> keywords) {
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      EmbeddedUser triggeredBy =
+          EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
+      workflowExecution.setTriggeredBy(triggeredBy);
+      workflowExecution.setCreatedBy(triggeredBy);
+    } else if (trigger != null) {
+      // Triggered by Auto Trigger
+      workflowExecution.setTriggeredBy(
+          EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
+      workflowExecution.setCreatedBy(EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
+      workflowExecution.setDeploymentTriggerId(trigger.getUuid());
+    }
+    if (workflowExecution.getCreatedBy() != null) {
+      keywords.add(workflowExecution.getCreatedBy().getName());
+      keywords.add(workflowExecution.getCreatedBy().getEmail());
+    }
+    stdParams.setCurrentUser(workflowExecution.getCreatedBy());
+  }
+
+  private void refreshEnvSummary(WorkflowExecution workflowExecution, List<Object> keywords) {
+    if (isNotEmpty(workflowExecution.getEnvIds())) {
+      List<EnvSummary> environmentSummaries =
+          environmentService.obtainEnvironmentSummaries(workflowExecution.getAppId(), workflowExecution.getEnvIds());
+      if (isNotEmpty(environmentSummaries)) {
+        for (EnvSummary envSummary : environmentSummaries) {
+          workflowExecution.setEnvironments(environmentSummaries);
+          if (envSummary.getUuid().equals(workflowExecution.getEnvId())) {
+            workflowExecution.setEnvName(envSummary.getName());
+            workflowExecution.setEnvType(envSummary.getEnvironmentType());
+          }
+          keywords.add(workflowExecution.getEnvType());
+          keywords.add(workflowExecution.getEnvName());
+        }
       }
     }
-    stateExecutionInstance.setContextElements(elements);
-    stateExecutionInstance = stateMachineExecutor.queue(stateMachine, stateExecutionInstance);
+  }
 
-    WorkflowExecution savedWorkflowExecution;
-    if (workflowExecution.getWorkflowType() != ORCHESTRATION) {
-      stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
-      updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING);
-      savedWorkflowExecution = wingsPersistence.getWithAppId(
-          WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
-      if (workflowExecution.getWorkflowType() == PIPELINE) {
-        PipelineElement pipelineElement = PipelineElement.builder()
-                                              .displayName(workflowExecution.getDisplayName())
-                                              .name(pipeline.getName())
-                                              .description(pipeline.getDescription())
-                                              .startTs(savedWorkflowExecution.getStartTs())
+  private void populatePipelineSummary(
+      WorkflowExecution workflowExecution, List<Object> keywords, ExecutionArgs executionArgs) {
+    if (executionArgs.isTriggeredFromPipeline()) {
+      if (executionArgs.getPipelineId() != null) {
+        Pipeline pipeline =
+            wingsPersistence.getWithAppId(Pipeline.class, workflowExecution.getAppId(), executionArgs.getPipelineId());
+        workflowExecution.setPipelineSummary(
+            PipelineSummary.builder().pipelineId(pipeline.getUuid()).pipelineName(pipeline.getName()).build());
+        keywords.add(pipeline.getName());
+      }
+      if (workflowExecution.getPipelineExecutionId() != null) {
+        WorkflowExecution pipelineExecution =
+            wingsPersistence.createQuery(WorkflowExecution.class)
+                .project(WorkflowExecution.TRIGGERED_BY, true)
+                .project(WorkflowExecution.CREATED_BY_KEY, true)
+                .project(WorkflowExecution.DEPLOYMENT_TRIGGERED_ID_KEY, true)
+                .project(WorkflowExecution.ARTIFACTS_KEY, true)
+                .filter(WorkflowExecution.APP_ID_KEY, workflowExecution.getAppId())
+                .filter(WorkflowExecution.ID_KEY, workflowExecution.getPipelineExecutionId())
+                .get();
+        if (pipelineExecution != null) {
+          workflowExecution.setTriggeredBy(pipelineExecution.getTriggeredBy());
+          workflowExecution.setDeploymentTriggerId(pipelineExecution.getDeploymentTriggerId());
+          workflowExecution.setCreatedBy(pipelineExecution.getCreatedBy());
+        }
+      }
+    }
+  }
+
+  private void populateArtifactsAndServices(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
+      List<Object> keywords, ExecutionArgs executionArgs) {
+    if (isNotEmpty(executionArgs.getArtifacts())) {
+      List<String> artifactIds = executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList());
+
+      PageRequest<Artifact> pageRequest = aPageRequest()
+                                              .addFilter("appId", EQ, workflowExecution.getAppId())
+                                              .addFilter("uuid", IN, artifactIds.toArray())
                                               .build();
-        sweepingOutputService.save(SweepingOutputServiceImpl
-                                       .prepareSweepingOutputBuilder(workflowExecution.getAppId(),
-                                           workflowExecution.getUuid(), null, null, Scope.PIPELINE)
-                                       .name("pipeline")
-                                       .output(KryoUtils.asDeflatedBytes(pipelineElement))
-                                       .build());
-      }
-    } else {
-      // create queue event
-      executionEventQueue.send(ExecutionEvent.builder()
-                                   .appId(workflowExecution.getAppId())
-                                   .workflowId(workflowExecution.getWorkflowId())
-                                   .infraMappingIds(workflowExecution.getInfraMappingIds())
-                                   .build());
-      savedWorkflowExecution = wingsPersistence.getWithAppId(
-          WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
-    }
+      List<Artifact> artifacts = artifactService.list(pageRequest, false).getResponse();
 
-    return savedWorkflowExecution;
+      if (artifacts == null || artifacts.size() != artifactIds.size()) {
+        logger.error("Artifact argument and valid artifact retrieved size not matching");
+        throw new InvalidRequestException("Invalid artifact");
+      }
+
+      // Filter out the artifacts that does not belong to the workflow
+      List<String> serviceIds =
+          isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
+      List<Artifact> filteredArtifacts = new ArrayList<>();
+      for (Artifact artifact : artifacts) {
+        if (serviceIds.containsAll(artifact.getServiceIds())) {
+          filteredArtifacts.add(artifact);
+        } else {
+          logger.warn("Artifact ServiceId  {} does not contain in serviceIds {}", artifact.getServiceIds(), serviceIds);
+        }
+      }
+
+      // TODO: get rid of artifactIdNames when UI moves to artifact list
+      executionArgs.setArtifactIdNames(
+          filteredArtifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
+      filteredArtifacts.forEach(artifact -> {
+        artifact.setArtifactFiles(null);
+        artifact.setCreatedBy(null);
+        artifact.setLastUpdatedBy(null);
+        keywords.add(artifact.getArtifactSourceName());
+        keywords.add(artifact.getDescription());
+        keywords.add(artifact.getRevision());
+        keywords.add(artifact.getMetadata());
+      });
+
+      executionArgs.setArtifacts(artifacts);
+      workflowExecution.setArtifacts(filteredArtifacts);
+
+      List<ServiceElement> services = new ArrayList<>();
+      filteredArtifacts.forEach(artifact -> artifact.getServiceIds().forEach(serviceId -> {
+        Service service = serviceResourceService.get(artifact.getAppId(), serviceId, false);
+        ServiceElement se = new ServiceElement();
+        MapperUtils.mapObject(service, se);
+        services.add(se);
+        keywords.add(se.getName());
+      }));
+
+      // Set the services in the context
+      stdParams.setServices(services);
+    }
   }
 
   private void lastGoodReleaseInfo(WorkflowElement workflowElement, WorkflowExecution workflowExecution) {
@@ -1393,8 +1447,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowElement.setLastGoodReleaseNo(workflowExecutionLast.getReleaseNo());
     }
   }
-
-  private static final FindAndModifyOptions updateStartStatusOptions = new FindAndModifyOptions();
 
   @Override
   public void updateStartStatus(String appId, String workflowExecutionId, ExecutionStatus status) {
@@ -1409,7 +1461,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .set(WorkflowExecution.STATUS_KEY, status)
             .set(WorkflowExecution.START_TS_KEY, System.currentTimeMillis());
 
-    wingsPersistence.findAndModify(query, updateOps, updateStartStatusOptions);
+    wingsPersistence.update(query, updateOps);
   }
 
   @Override
@@ -2740,6 +2792,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return approvalAuthorization;
   }
 
+  /**
+   * Do
+   * @param appId
+   * @param workflowExecutionId
+   * @return
+   */
   @Override
   public WorkflowExecution getWorkflowExecutionSummary(String appId, String workflowExecutionId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
@@ -2758,5 +2816,49 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .filter(WorkflowExecution.APP_ID_KEY, appId)
         .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
         .get();
+  }
+
+  @Override
+  public void refreshCollectedArtifacts(String appId, String pipelineExecutionId, String workflowExecutionId) {
+    WorkflowExecution pipelineWorkflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                      .project(WorkflowExecution.ARTIFACTS_KEY, true)
+                                                      .filter(WorkflowExecution.APP_ID_KEY, appId)
+                                                      .filter(WorkflowExecution.ID_KEY, pipelineExecutionId)
+                                                      .get();
+
+    WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                              .project(WorkflowExecution.ARTIFACTS_KEY, true)
+                                              .filter(WorkflowExecution.APP_ID_KEY, appId)
+                                              .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
+                                              .get();
+
+    // Workflow Step Artifacts
+    List<Artifact> artifacts = workflowExecution.getArtifacts();
+    if (isEmpty(artifacts)) {
+      return;
+    }
+
+    // Pipeline Execution Artifacts collected so far
+    List<Artifact> collectedArtifacts = pipelineWorkflowExecution.getArtifacts();
+
+    Set<String> collectedArtifactIds = collectedArtifacts.stream().map(Artifact::getUuid).collect(Collectors.toSet());
+    Set<String> artifactIds = artifacts.stream().map(Artifact::getUuid).collect(Collectors.toSet());
+    if (collectedArtifactIds.containsAll(artifactIds)) {
+      return;
+    }
+
+    collectedArtifacts.addAll(artifacts);
+    collectedArtifacts =
+        collectedArtifacts.stream().filter(distinctByKey(artifact -> artifact.getUuid())).collect(toList());
+
+    Query<WorkflowExecution> updatedQuery = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                .project(WorkflowExecution.ARTIFACTS_KEY, true)
+                                                .filter(WorkflowExecution.APP_ID_KEY, appId)
+                                                .filter(WorkflowExecution.ID_KEY, pipelineExecutionId);
+
+    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                        .set(WorkflowExecution.ARTIFACTS_KEY, collectedArtifacts);
+
+    wingsPersistence.update(updatedQuery, updateOps);
   }
 }

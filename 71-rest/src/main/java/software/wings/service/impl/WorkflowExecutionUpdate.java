@@ -180,7 +180,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       }
     }
     if (ExecutionStatus.isFinalStatus(status)) {
-      alertService.deploymentCompleted(appId, context.getWorkflowExecutionId());
       try {
         WorkflowExecution workflowExecution =
             workflowExecutionService.getWorkflowExecutionSummary(appId, workflowExecutionId);
@@ -207,6 +206,11 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
               executionDuration, accountID, accountName, workflowId, workflowName, appId, applicationName);
           usageMetricsEventPublisher.publishDeploymentMetadataEvent(
               status, manual, accountID, accountName, workflowId, workflowName, appId, applicationName);
+
+          if (workflowExecution.getPipelineExecutionId() != null) {
+            workflowExecutionService.refreshCollectedArtifacts(
+                appId, workflowExecution.getPipelineExecutionId(), workflowExecutionId);
+          }
         }
       } catch (Exception e) {
         logger.error(

@@ -151,4 +151,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   WorkflowExecution getWorkflowExecutionSummary(String appId, String workflowExecutionId);
   WorkflowExecution getWorkflowExecutionForVerificationService(String appId, String workflowExecutionId);
+
+  void refreshCollectedArtifacts(String appId, String pipelineExecutionId, String workflowExecutionId);
 }

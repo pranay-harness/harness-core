@@ -21,7 +21,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
@@ -51,8 +50,8 @@ public class Artifact extends Base {
   public static final String SERVICE_ID_KEY = "serviceIds";
   public static final String ARTIFACT_SOURCE_NAME_KEY = "artifactSourceName";
 
-  @Indexed private String artifactStreamId;
-  @Indexed private String artifactSourceName;
+  private String artifactStreamId;
+  private String artifactSourceName;
   private Map<String, String> metadata = Maps.newHashMap();
   @NotEmpty private String displayName;
   private String revision;

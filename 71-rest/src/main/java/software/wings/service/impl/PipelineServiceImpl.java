@@ -410,7 +410,6 @@ public class PipelineServiceImpl implements PipelineService {
           Map<String, String> resolvedWorkflowStepVariables =
               WorkflowServiceHelper.overrideWorkflowVariables(workflow.getOrchestrationWorkflow().getUserVariables(),
                   pipelineStageElement.getWorkflowVariables(), pipelineVariables);
-
           if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
             resolveServices(services, serviceIds, resolvedWorkflowStepVariables, workflow);
             resolveInfraMappings(infraMappingIds, resolvedWorkflowStepVariables, workflow);
