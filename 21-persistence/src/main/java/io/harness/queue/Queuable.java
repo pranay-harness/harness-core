@@ -14,14 +14,10 @@ import org.mongodb.morphia.utils.IndexType;
 import java.util.Date;
 
 @Indexes({
-  @Index(options = @IndexOptions(name = "next"),
-      fields =
-      {
-        @Field(value = "priority", type = IndexType.DESC)
-        , @Field("created"), @Field("earliestGet"), @Field("running"), @Field("resetTimestamp"), @Field("version")
-      })
-  ,
-      @Index(options = @IndexOptions(name = "count"), fields = { @Field("running") }),
+  @Index(options = @IndexOptions(name = "next"), fields = {
+    @Field(value = "priority", type = IndexType.DESC)
+    , @Field("created"), @Field("earliestGet"), @Field("running"), @Field("resetTimestamp"), @Field("version")
+  })
 })
 public abstract class Queuable implements PersistentEntity {
   public static final String CREATED_KEY = "created";
