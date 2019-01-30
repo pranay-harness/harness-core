@@ -18,6 +18,8 @@ import io.harness.limits.counter.service.CounterService;
 import io.harness.limits.counter.service.CounterServiceImpl;
 import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
+import io.harness.notifications.AlertNotificationRuleChecker;
+import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.scheduler.PersistentScheduler;
@@ -647,6 +649,7 @@ public class WingsModule extends DependencyModule {
     }
 
     bind(FileService.class).to(FileServiceImpl.class);
+    bind(AlertNotificationRuleChecker.class).to(AlertNotificationRuleCheckerImpl.class);
 
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);

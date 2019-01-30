@@ -980,6 +980,8 @@ public interface Constants {
    */
   String ACCOUNT_ID_KEY = "accountId";
   String APP_ID_KEY = "appId";
+
+  String DEFAULT_USER_GROUP_DESCRIPTION = "Default account admin user group";
   String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
 
   /**

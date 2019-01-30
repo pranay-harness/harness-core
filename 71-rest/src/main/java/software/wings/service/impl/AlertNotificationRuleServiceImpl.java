@@ -6,23 +6,30 @@ import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.alerts.AlertCategory;
 import software.wings.beans.alert.AlertNotificationRule;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertNotificationRuleService;
+import software.wings.service.intfc.UserGroupService;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import javax.annotation.Nonnull;
 
 @Singleton
 public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleService {
   private static final Logger logger = LoggerFactory.getLogger(AlertNotificationRuleServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private UserGroupService userGroupService;
 
   @Override
   public AlertNotificationRule create(AlertNotificationRule rule) {
@@ -54,6 +61,25 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
     return wingsPersistence.saveAndGet(AlertNotificationRule.class, rule);
   }
 
+  @Override
+  public AlertNotificationRule createDefaultRule(String accountId) {
+    UserGroup userGroup = userGroupService.getDefaultUserGroup(accountId);
+
+    Set<String> userGroupsToNotify = new HashSet<>();
+    if (null != userGroup) {
+      userGroupsToNotify.add(userGroup.getUuid());
+    } else {
+      logger.error(
+          "No default User group found. accountId={}. Default alert notification rule will not have any notifiers.",
+          accountId);
+    }
+    AlertNotificationRule defaultRule =
+        new AlertNotificationRule(accountId, AlertCategory.All, null, userGroupsToNotify);
+    defaultRule = create(defaultRule);
+
+    return defaultRule;
+  }
+
   private void validateUpdate(AlertNotificationRule rule) {
     Optional<AlertNotificationRule> existingRule = getById(rule.getAccountId(), rule.getUuid());
     if (!existingRule.isPresent()) {
@@ -76,11 +102,11 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
   }
 
   @Override
-  public List<AlertNotificationRule> getAll(String accountId) {
+  public @Nonnull List<AlertNotificationRule> getAll(String accountId) {
     Query<AlertNotificationRule> query =
         wingsPersistence.createQuery(AlertNotificationRule.class).filter(ACCOUNT_ID_KEY, accountId);
 
-    return query.asList();
+    return CollectionUtils.emptyIfNull(query.asList());
   }
 
   @Override

@@ -107,6 +107,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
     return message.replaceAll("<<<", "*<")
         .replaceAll("\\|-\\|", "|")
         .replaceAll(">>>", ">*")
+        .replaceAll("\\\\n", "\n")
         .replaceAll("\\\\\\*", "*");
   }
 

@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import io.swagger.annotations.Api;
@@ -12,6 +13,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AlertNotificationRuleService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -51,7 +53,14 @@ public class AlertNotificationRuleResource {
 
   @GET
   public RestResponse<List<AlertNotificationRule>> list(@QueryParam("accountId") String accountId) {
-    return new RestResponse<>(alertNotificationRuleService.getAll(accountId));
+    List<AlertNotificationRule> allRules = alertNotificationRuleService.getAll(accountId);
+
+    allRules = new ImmutableList.Builder<AlertNotificationRule>()
+                   .addAll(allRules.stream().filter(rule -> !rule.isDefault()).collect(Collectors.toList()))
+                   .addAll(allRules.stream().filter(AlertNotificationRule::isDefault).collect(Collectors.toList()))
+                   .build();
+
+    return new RestResponse<>(allRules);
   }
 
   @DELETE

@@ -32,6 +32,7 @@ import software.wings.beans.NotificationRule;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.User;
+import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.security.UserGroup;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
@@ -79,13 +80,33 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     }
 
     for (NotificationRule notificationRule : notificationRules) {
-      List<UserGroup> userGroups =
-          notificationRule.getUserGroupIds().stream().map(id -> userGroupService.get(accountId, id)).collect(toList());
+      List<UserGroup> userGroups = notificationRule.getUserGroupIds()
+                                       .stream()
+                                       .distinct()
+                                       .map(id -> userGroupService.get(accountId, id))
+                                       .filter(Objects::nonNull)
+                                       .collect(toList());
 
       dispatch(singletonList(notification), userGroups);
 
       // TODO(jatin): delete this once (userGroup -> notificationGroup) Migration is done
       dispatch(singletonList(notification), notificationRule.getNotificationGroups());
+    }
+  }
+
+  @Override
+  public void dispatch(Notification notification, List<AlertNotificationRule> rules) {
+    String accountId = notification.getAccountId();
+    if (StringUtils.isEmpty(accountId)) {
+      throw new IllegalStateException(
+          "[dispatch-alertNotificationRule] No AccountId present in notification. Notification: " + notification);
+    }
+
+    for (AlertNotificationRule rule : rules) {
+      List<UserGroup> userGroups =
+          rule.getUserGroupsToNotify().stream().map(id -> userGroupService.get(accountId, id)).collect(toList());
+
+      dispatch(singletonList(notification), userGroups);
     }
   }
 

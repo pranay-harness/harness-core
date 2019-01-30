@@ -18,6 +18,9 @@ public class GenericEventPublisher implements EventPublisher {
 
   @Override
   public void publishEvent(Event event) throws EventPublishException {
+    if (null == event.getEventType()) {
+      throw new IllegalArgumentException("eventType can not ne bull. Event will not be queued. Event: " + event);
+    }
     QueableEvent queableEvent = QueableEvent.builder().event(event).build();
     eventQueue.send(queableEvent);
   }

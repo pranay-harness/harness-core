@@ -73,6 +73,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertNotificationRuleService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
@@ -139,6 +140,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject protected CacheHelper cacheHelper;
   @Inject private SampleDataProviderService sampleDataProviderService;
+  @Inject private AlertNotificationRuleService notificationRuleService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -211,6 +213,7 @@ public class AccountServiceImpl implements AccountService {
         .forEach(role -> createDefaultNotificationGroup(account, role));
     createSystemAppContainers(account);
     authHandler.createDefaultUserGroups(account);
+    notificationRuleService.createDefaultRule(account.getUuid());
 
     executorService.submit(
         () -> templateGalleryService.copyHarnessTemplatesToAccountV2(account.getUuid(), account.getAccountName()));

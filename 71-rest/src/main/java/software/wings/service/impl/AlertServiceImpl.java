@@ -16,9 +16,14 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.model.Event;
+import io.harness.event.model.EventData;
+import io.harness.event.model.EventType;
+import io.harness.event.publisher.EventPublisher;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -32,6 +37,7 @@ import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.event.AlertEvent;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
@@ -50,6 +56,7 @@ public class AlertServiceImpl implements AlertService {
   @Inject private ExecutorService executorService;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private Injector injector;
+  @Inject private EventPublisher eventPublisher;
 
   @Override
   public PageResponse<Alert> list(PageRequest<Alert> pageRequest) {
@@ -99,6 +106,7 @@ public class AlertServiceImpl implements AlertService {
   private void openAlertsInternal(String accountId, String appId, AlertType alertType, List<AlertData> alertData) {
     alertData.forEach(data -> openInternal(accountId, appId, alertType, data));
   }
+
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
     if (findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
       return;
@@ -115,7 +123,19 @@ public class AlertServiceImpl implements AlertService {
             .withCategory(alertType.getCategory())
             .withSeverity(alertType.getSeverity())
             .build());
+
+    try {
+      Event.builder().eventData(alertEventData(persistedAlert)).eventType(EventType.OPEN_ALERT).build();
+      //      eventPublisher.publishEvent(event);
+    } catch (Exception e) {
+      logger.error("Could not publish alert event. Alert: {}", persistedAlert);
+    }
+
     logger.info("Alert opened: {}", persistedAlert);
+  }
+
+  private static EventData alertEventData(Alert alert) throws JsonProcessingException {
+    return EventData.builder().eventInfo(new AlertEvent(alert)).build();
   }
 
   private void activeDelegateUpdatedInternal(String accountId, String delegateId) {
