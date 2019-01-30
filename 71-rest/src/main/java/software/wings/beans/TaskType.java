@@ -85,6 +85,7 @@ import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
 import software.wings.delegatetasks.validation.JiraValidation;
 import software.wings.delegatetasks.validation.K8sCommandValidation;
+import software.wings.delegatetasks.validation.KmsValidation;
 import software.wings.delegatetasks.validation.KubernetesSteadyStateCheckValidation;
 import software.wings.delegatetasks.validation.KubernetesSwapServiceSelectorsValidation;
 import software.wings.delegatetasks.validation.LDAPValidation;
@@ -93,6 +94,7 @@ import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
 import software.wings.delegatetasks.validation.PCFCommandValidation;
 import software.wings.delegatetasks.validation.PrometheusValidation;
+import software.wings.delegatetasks.validation.SecretManagerDecryptValidation;
 import software.wings.delegatetasks.validation.SecretManagerValidation;
 import software.wings.delegatetasks.validation.SftpValidation;
 import software.wings.delegatetasks.validation.ShellScriptValidation;
@@ -102,6 +104,7 @@ import software.wings.delegatetasks.validation.StackDriverValidation;
 import software.wings.delegatetasks.validation.SumoValidation;
 import software.wings.delegatetasks.validation.TerraformValidation;
 import software.wings.delegatetasks.validation.TriggerValidation;
+import software.wings.delegatetasks.validation.VaultValidation;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -229,18 +232,14 @@ public enum TaskType {
       TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class, ArtifactoryValidation.class),
   ARTIFACTORY_VALIDATE_ARTIFACT_STREAM(
       TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class, ArtifactoryValidation.class),
-
-  // Secret manager validation
-  KMS_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
-  KMS_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
-  VAULT_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
-  VAULT_DELETE_SECRET(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
-  VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
-  VAULT_GET_CHANGELOG(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
-  VAULT_RENEW_TOKEN(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
-  SECRET_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
-  SECRET_DECRYPT_REF(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
-
+  KMS_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, KmsValidation.class),
+  KMS_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, KmsValidation.class),
+  GIT_COMMAND(TaskGroup.GIT, GitCommandTask.class, GitValidation.class),
+  VAULT_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, VaultValidation.class),
+  VAULT_DELETE_SECRET(TaskGroup.KMS, ServiceImplDelegateTask.class, VaultValidation.class),
+  VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, VaultValidation.class),
+  VAULT_GET_CHANGELOG(TaskGroup.KMS, ServiceImplDelegateTask.class, VaultValidation.class),
+  VAULT_RENEW_TOKEN(TaskGroup.KMS, ServiceImplDelegateTask.class, VaultValidation.class),
   HOST_VALIDATION(TaskGroup.HOST_VALIDATION, ServiceImplDelegateTask.class, HostValidationValidation.class),
   CONTAINER_ACTIVE_SERVICE_COUNTS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
@@ -287,9 +286,11 @@ public enum TaskType {
   TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK(
       TaskGroup.TERRAFORM, TerraformInputVariablesObtainTask.class, TerraformValidation.class),
   TERRAFORM_FETCH_TARGETS_TASK(TaskGroup.TERRAFORM, TerraformFetchTargetsTask.class, TerraformValidation.class),
+  SECRET_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   KUBERNETES_SWAP_SERVICE_SELECTORS_TASK(
       TaskGroup.CONTAINER, KubernetesSwapServiceSelectorsTask.class, KubernetesSwapServiceSelectorsValidation.class),
   ECS_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER, EcsSteadyStateCheckTask.class, AwsConnectionValidation.class),
+  SECRET_DECRYPT_REF(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerDecryptValidation.class),
   AWS_ECR_TASK(TaskGroup.AWS, AwsEcrTask.class, AwsConnectionValidation.class),
   AWS_ELB_TASK(TaskGroup.AWS, AwsElbTask.class, AwsConnectionValidation.class),
   AWS_ECS_TASK(TaskGroup.AWS, AwsEcsTask.class, AwsConnectionValidation.class),
@@ -305,7 +306,6 @@ public enum TaskType {
   JIRA(TaskGroup.JIRA, JiraTask.class, JiraValidation.class),
   CONNECTIVITY_VALIDATION(
       TaskGroup.CONNECTIVITY_VALIDATION, ConnectivityValidationTask.class, ConnectivityBasicValidation.class),
-  GIT_COMMAND(TaskGroup.GIT, GitCommandTask.class, GitValidation.class),
   GIT_FETCH_FILES_TASK(TaskGroup.GIT, GitFetchFilesTask.class, GitFetchFilesValidation.class),
   BUILD_SOURCE_TASK(TaskGroup.BUILD_SOURCE, BuildSourceTask.class, BuildSourceTaskValidation.class),
   AWS_ROUTE53_TASK(TaskGroup.AWS, AwsRoute53Task.class, AwsConnectionValidation.class),
