@@ -550,11 +550,9 @@ public class K8sTaskHelper {
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels);
   }
 
-  public List<K8sPod> getPodDetailsWithRevision(
-      KubernetesConfig kubernetesConfig, String namespace, String releaseName, Integer revision) {
-    Map<String, String> labels = (revision != null && revision != 0)
-        ? ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.revision, revision.toString())
-        : ImmutableMap.of(HarnessLabels.releaseName, releaseName);
+  public List<K8sPod> getPodDetailsWithColor(
+      KubernetesConfig kubernetesConfig, String namespace, String releaseName, String color) {
+    Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.color, color);
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels);
   }
 

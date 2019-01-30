@@ -20,6 +20,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidArgumentsException;
@@ -27,6 +28,7 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabelValues;
+import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.Release;
@@ -56,6 +58,7 @@ import software.wings.utils.Misc;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -240,10 +243,17 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         executionLogCallback.saveExecutionLog("\nVersioning resources.");
 
         addRevisionNumber(resources, release.getNumber());
-        managedWorkload.addReleaseLabelsInPodSpec(releaseName, release.getNumber(),
-            k8sRollingDeployTaskParameters.isInCanaryWorkflow() ? HarnessLabelValues.trackStable : "");
+
+        Map<String, String> podLabels = k8sRollingDeployTaskParameters.isInCanaryWorkflow()
+            ? ImmutableMap.of(
+                  HarnessLabels.releaseName, releaseName, HarnessLabels.track, HarnessLabelValues.trackStable)
+            : ImmutableMap.of(HarnessLabels.releaseName, releaseName);
+
+        managedWorkload.addLabelsInPodSpec(podLabels);
+
         if (k8sRollingDeployTaskParameters.isInCanaryWorkflow()) {
-          managedWorkload.addTrackLabelInDeploymentSelector(HarnessLabelValues.trackStable);
+          managedWorkload.addLabelsInDeploymentSelector(
+              ImmutableMap.of(HarnessLabels.track, HarnessLabelValues.trackStable));
         }
       }
     } catch (Exception e) {

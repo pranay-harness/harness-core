@@ -186,7 +186,7 @@ public class VersionUtilsTest {
 
   @Test
   public void configMapWithDirectApplyAndPodVolumeTest() throws Exception {
-    URL url = this.getClass().getResource("/configmap-direct-apply-pod-env.yaml");
+    URL url = this.getClass().getResource("/configmap-skip-versioning-pod-env.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
 
     List<KubernetesResource> resources = processYaml(fileContents);

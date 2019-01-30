@@ -27,12 +27,11 @@ public class VersionUtils {
   private static Set<String> workloadKinds =
       ImmutableSet.of(Deployment.name(), DaemonSet.name(), StatefulSet.name(), Pod.name(), Job.name());
 
-  private static boolean shouldVersion(KubernetesResource resource, boolean includeDeployment) {
-    if ((includeDeployment && StringUtils.equals(resource.getResourceId().getKind(), Deployment.name()))
-        || versionedKinds.contains(resource.getResourceId().getKind())) {
-      String isDirectApply =
-          (String) resource.getField("metadata.annotations." + encodeDot(HarnessAnnotations.directApply));
-      if (StringUtils.equalsIgnoreCase(isDirectApply, "true")) {
+  private static boolean shouldVersion(KubernetesResource resource) {
+    if (versionedKinds.contains(resource.getResourceId().getKind())) {
+      String skipVersioning =
+          (String) resource.getField("metadata.annotations." + encodeDot(HarnessAnnotations.skipVersioning));
+      if (StringUtils.equalsIgnoreCase(skipVersioning, "true")) {
         return false;
       }
       return true;
@@ -48,27 +47,19 @@ public class VersionUtils {
   }
 
   public static void markVersionedResources(List<KubernetesResource> resources) {
-    markVersionedResources(resources, false);
-  }
-
-  public static void markVersionedResources(List<KubernetesResource> resources, boolean includeDeployment) {
     for (KubernetesResource resource : resources) {
-      if (shouldVersion(resource, includeDeployment)) {
+      if (shouldVersion(resource)) {
         resource.getResourceId().setVersioned(true);
       }
     }
   }
 
   public static void addRevisionNumber(List<KubernetesResource> resources, int revision) {
-    addRevisionNumber(resources, revision, false);
-  }
-
-  public static void addRevisionNumber(List<KubernetesResource> resources, int revision, boolean includeDeployment) {
     Set<KubernetesResourceId> versionedResources = new HashSet<>();
     UnaryOperator<Object> appendRevision = t -> t + revisionSeparator + revision;
 
     for (KubernetesResource resource : resources) {
-      if (shouldVersion(resource, includeDeployment)) {
+      if (shouldVersion(resource)) {
         versionedResources.add(resource.getResourceId().cloneInternal());
         resource.transformName(appendRevision);
         resource.getResourceId().setVersioned(true);

@@ -1,12 +1,15 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
+import static io.harness.k8s.manifest.ManifestHelper.getPrimaryService;
+import static io.harness.k8s.manifest.ManifestHelper.getStageService;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
-import static io.harness.k8s.model.Kind.Service;
 import static java.util.Arrays.asList;
-import static software.wings.beans.Log.LogColor.Cyan;
+import static software.wings.beans.Log.LogColor.Blue;
+import static software.wings.beans.Log.LogColor.Green;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -21,6 +24,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.Service;
@@ -28,6 +32,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
+import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
@@ -41,6 +46,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.Log.LogColor;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -59,7 +65,6 @@ import software.wings.utils.Misc;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -77,8 +82,10 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   private Release currentRelease;
   private KubernetesResource managedWorkload;
   private List<KubernetesResource> resources;
-  int primaryRevision;
-  int stageRevision;
+  private KubernetesResource primaryService;
+  private KubernetesResource stageService;
+  private String primaryColor;
+  private String stageColor;
   private String releaseName;
 
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -142,8 +149,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, WrapUp));
 
-    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithRevision(
-        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, currentRelease.getNumber());
+    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithColor(
+        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, stageColor);
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
     success = kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
@@ -153,8 +160,12 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    return k8sTaskHelper.getK8sTaskExecutionResponse(
-        K8sBlueGreenDeployResponse.builder().releaseNumber(currentRelease.getNumber()).k8sPodList(podList).build(),
+    return k8sTaskHelper.getK8sTaskExecutionResponse(K8sBlueGreenDeployResponse.builder()
+                                                         .releaseNumber(currentRelease.getNumber())
+                                                         .k8sPodList(podList)
+                                                         .primaryServiceName(primaryService.getResourceId().getName())
+                                                         .stageServiceName(stageService.getResourceId().getName())
+                                                         .build(),
         SUCCESS);
   }
 
@@ -192,11 +203,6 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     return k8sTaskHelper.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
   }
 
-  private boolean matchServiceName(KubernetesResourceId resourceId, String serviceName) {
-    return StringUtils.equals(resourceId.getKind(), Service.name())
-        && StringUtils.equals(resourceId.getName(), serviceName);
-  }
-
   private boolean prepareForBlueGreen(K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
     try {
@@ -215,57 +221,35 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         return false;
       }
 
-      markVersionedResources(resources, true);
+      markVersionedResources(resources);
 
       executionLogCallback.saveExecutionLog(
           "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
 
-      Optional<KubernetesResource> primaryService =
-          resources.stream()
-              .filter(resource
-                  -> matchServiceName(
-                      resource.getResourceId(), k8sBlueGreenDeployTaskParameters.getPrimaryServiceName()))
-              .findFirst();
-
-      if (!primaryService.isPresent()) {
-        executionLogCallback.saveExecutionLog("Primary Service ["
-                + k8sBlueGreenDeployTaskParameters.getPrimaryServiceName() + "] not found in manifests. Failing.",
-            ERROR, FAILURE);
-        return false;
-      }
-
-      Optional<KubernetesResource> stageService =
-          resources.stream()
-              .filter(resource
-                  -> matchServiceName(resource.getResourceId(), k8sBlueGreenDeployTaskParameters.getStageServiceName()))
-              .findFirst();
-      if (!stageService.isPresent()) {
-        executionLogCallback.saveExecutionLog("Stage Service [" + k8sBlueGreenDeployTaskParameters.getStageServiceName()
-                + "] not found in manifests. Failing.",
-            ERROR, FAILURE);
-        return false;
-      }
+      primaryService = getPrimaryService(resources);
+      stageService = getStageService(resources);
 
       Service primaryServiceInCluster;
       Service stageServiceInCluster;
 
       try {
         primaryServiceInCluster = kubernetesContainerService.getService(
-            kubernetesConfig, Collections.emptyList(), k8sBlueGreenDeployTaskParameters.getPrimaryServiceName());
+            kubernetesConfig, Collections.emptyList(), primaryService.getResourceId().getName());
         if (primaryServiceInCluster == null) {
-          executionLogCallback.saveExecutionLog("Primary Service ["
-              + k8sBlueGreenDeployTaskParameters.getPrimaryServiceName() + "] not found in cluster.");
+          executionLogCallback.saveExecutionLog(
+              "Primary Service [" + primaryService.getResourceId().getName() + "] not found in cluster.");
         }
 
         stageServiceInCluster = kubernetesContainerService.getService(
-            kubernetesConfig, Collections.emptyList(), k8sBlueGreenDeployTaskParameters.getStageServiceName());
+            kubernetesConfig, Collections.emptyList(), stageService.getResourceId().getName());
         if (stageServiceInCluster == null) {
           executionLogCallback.saveExecutionLog(
-              "Stage Service [" + k8sBlueGreenDeployTaskParameters.getStageServiceName() + "] not found in cluster.");
+              "Stage Service [" + stageService.getResourceId().getName() + "] not found in cluster.");
         }
 
-        primaryRevision = getRevisionFromService(primaryServiceInCluster);
-        stageRevision = getRevisionFromService(stageServiceInCluster);
+        primaryColor = (primaryServiceInCluster != null) ? getColorFromService(primaryServiceInCluster)
+                                                         : HarnessLabelValues.colorDefault;
+        stageColor = getInverseColor(primaryColor);
 
       } catch (Exception e) {
         executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, FAILURE);
@@ -281,30 +265,18 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
       executionLogCallback.saveExecutionLog("\nVersioning resources.");
 
-      addRevisionNumber(resources, currentRelease.getNumber(), true);
+      addRevisionNumber(resources, currentRelease.getNumber());
       managedWorkload = getManagedWorkload(resources);
-      managedWorkload.addReleaseLabelsInPodSpec(releaseName, currentRelease.getNumber(), "");
-      managedWorkload.addRevisionNumberInDeploymentSelector(currentRelease.getNumber());
+      managedWorkload.appendSuffixInName('-' + stageColor);
+      managedWorkload.addLabelsInPodSpec(
+          ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.color, stageColor));
+      managedWorkload.addLabelsInDeploymentSelector(ImmutableMap.of(HarnessLabels.color, stageColor));
 
-      if (currentRelease.getNumber() == 1) {
-        primaryService.get().addRevisionSelectorInService(currentRelease.getNumber());
-        executionLogCallback.saveExecutionLog("Setting Primary Service ["
-            + color(primaryService.get().getResourceId().getName(), Cyan, Bold) + "] at revision "
-            + currentRelease.getNumber());
-      } else {
-        primaryService.get().addRevisionSelectorInService(primaryRevision);
-        executionLogCallback.saveExecutionLog("Primary Service ["
-            + color(primaryService.get().getResourceId().getName(), Cyan, Bold) + "] remains at revision "
-            + primaryRevision);
-      }
+      primaryService.addColorSelectorInService(primaryColor);
+      stageService.addColorSelectorInService(stageColor);
 
-      stageService.get().addRevisionSelectorInService(currentRelease.getNumber());
-      executionLogCallback.saveExecutionLog("Setting Stage Service ["
-          + color(stageService.get().getResourceId().getName(), Cyan, Bold) + "] at revision "
-          + currentRelease.getNumber());
-
-      executionLogCallback.saveExecutionLog(
-          "\nManaged Workload is: " + color(managedWorkload.getResourceId().kindNameRef(), Cyan, Bold));
+      executionLogCallback.saveExecutionLog("\nWorkload to deploy is: "
+          + color(managedWorkload.getResourceId().kindNameRef(), getLogColor(stageColor), Bold));
 
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, FAILURE);
@@ -316,18 +288,19 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
   public void cleanupForBlueGreen(K8sDelegateTaskParams k8sDelegateTaskParams, ReleaseHistory releaseHistory,
       ExecutionLogCallback executionLogCallback) throws Exception {
-    if (primaryRevision == 0) {
+    if (StringUtils.equals(primaryColor, stageColor)) {
       return;
     }
 
-    executionLogCallback.saveExecutionLog("Primary Service is at revision: " + primaryRevision);
-    executionLogCallback.saveExecutionLog("Stage Service is at revision: " + stageRevision);
+    executionLogCallback.saveExecutionLog("Primary Service is at color: " + encodeColor(primaryColor));
+    executionLogCallback.saveExecutionLog("Stage Service is at color: " + encodeColor(stageColor));
 
     executionLogCallback.saveExecutionLog("\nCleaning up non primary releases");
 
     for (int releaseIndex = releaseHistory.getReleases().size() - 1; releaseIndex >= 0; releaseIndex--) {
       Release release = releaseHistory.getReleases().get(releaseIndex);
-      if (release.getNumber() != primaryRevision && release.getNumber() != currentRelease.getNumber()) {
+      if (release.getNumber() != currentRelease.getNumber()
+          && release.getManagedWorkload().getName().endsWith(stageColor)) {
         for (int resourceIndex = release.getResources().size() - 1; resourceIndex >= 0; resourceIndex--) {
           KubernetesResourceId resourceId = release.getResources().get(resourceIndex);
           if (resourceId.isVersioned()) {
@@ -336,19 +309,9 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         }
       }
     }
-    releaseHistory.getReleases().removeIf(
-        release -> release.getNumber() != primaryRevision && currentRelease.getNumber() != release.getNumber());
-  }
-
-  private int getRevisionFromService(Service service) {
-    if (service == null) {
-      return 0;
-    }
-    String revision = service.getSpec().getSelector().get(HarnessLabels.revision);
-    if (StringUtils.isEmpty(revision)) {
-      return 0;
-    }
-    return Integer.parseInt(revision);
+    releaseHistory.getReleases().removeIf(release
+        -> release.getNumber() != currentRelease.getNumber()
+            && release.getManagedWorkload().getName().endsWith(stageColor));
   }
 
   private void wrapUp(K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback)
@@ -358,6 +321,46 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     k8sTaskHelper.describe(client, k8sDelegateTaskParams, executionLogCallback);
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+  }
+
+  private String getColorFromService(Service service) {
+    return service.getSpec().getSelector().get(HarnessLabels.color);
+  }
+
+  private String getInverseColor(String color) {
+    switch (color) {
+      case HarnessLabelValues.colorBlue:
+        return HarnessLabelValues.colorGreen;
+      case HarnessLabelValues.colorGreen:
+        return HarnessLabelValues.colorBlue;
+      default:
+        unhandled(color);
+    }
+    return null;
+  }
+
+  private String encodeColor(String color) {
+    switch (color) {
+      case HarnessLabelValues.colorBlue:
+        return color(color, Blue, Bold);
+      case HarnessLabelValues.colorGreen:
+        return color(color, Green, Bold);
+      default:
+        unhandled(color);
+    }
+    return null;
+  }
+
+  private LogColor getLogColor(String color) {
+    switch (color) {
+      case HarnessLabelValues.colorBlue:
+        return LogColor.Blue;
+      case HarnessLabelValues.colorGreen:
+        return LogColor.Green;
+      default:
+        unhandled(color);
+    }
+    return null;
   }
 
   private K8sTaskExecutionResponse getFailureResponse() {

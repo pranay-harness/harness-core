@@ -12,6 +12,7 @@ import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.KubernetesYamlException;
+import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import org.apache.commons.lang3.StringUtils;
@@ -131,6 +132,36 @@ public class ManifestHelper {
       return result.get(0);
     }
     return null;
+  }
+
+  public static KubernetesResource getPrimaryService(List<KubernetesResource> resources) {
+    List<KubernetesResource> filteredResources =
+        resources.stream().filter(KubernetesResource::isPrimaryService).collect(Collectors.toList());
+    if (filteredResources.size() != 1) {
+      if (filteredResources.size() > 1) {
+        throw new KubernetesYamlException(
+            "More than one service is marked Primary. Please specify only one with annotation "
+            + HarnessAnnotations.primaryService);
+      }
+      throw new KubernetesYamlException("No primary service is found in manifests. Please specify one with annotation "
+          + HarnessAnnotations.primaryService);
+    }
+    return filteredResources.get(0);
+  }
+
+  public static KubernetesResource getStageService(List<KubernetesResource> resources) {
+    List<KubernetesResource> filteredResources =
+        resources.stream().filter(KubernetesResource::isStageService).collect(Collectors.toList());
+    if (filteredResources.size() != 1) {
+      if (filteredResources.size() > 1) {
+        throw new KubernetesYamlException(
+            "More than one service is marked Stage. Please specify only one with annotation "
+            + HarnessAnnotations.stageService);
+      }
+      throw new KubernetesYamlException("No stage service is found in manifests. Please specify one with annotation "
+          + HarnessAnnotations.stageService);
+    }
+    return filteredResources.get(0);
   }
 
   public static String getValuesYamlGitFilePath(String filePath) {

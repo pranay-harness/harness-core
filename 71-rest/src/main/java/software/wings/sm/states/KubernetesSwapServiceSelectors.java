@@ -50,6 +50,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 
@@ -67,6 +68,7 @@ public class KubernetesSwapServiceSelectors extends State {
   @Inject private transient DelegateService delegateService;
   @Inject private transient ActivityService activityService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
+  @Inject private transient K8sStateHelper k8sStateHelper;
 
   @Getter @Setter @Attributes(title = "Service One") private String service1;
 
@@ -188,6 +190,9 @@ public class KubernetesSwapServiceSelectors extends State {
     if (StringUtils.isEmpty(service1) || StringUtils.isEmpty(service2)) {
       throw new InvalidRequestException("Service Name cannot be empty");
     }
+
+    // this is needed to have ${k8s) in context
+    k8sStateHelper.getK8sElement(context);
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
