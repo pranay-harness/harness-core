@@ -12,5 +12,5 @@ public interface AlertNotificationRuleService extends OwnedByAccount {
 
   List<AlertNotificationRule> getAll(String accountId);
 
-  void deleteById(String ruleId);
+  void deleteById(String ruleId, String accountId);
 }

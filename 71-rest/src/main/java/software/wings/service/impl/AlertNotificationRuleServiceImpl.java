@@ -6,7 +6,7 @@ import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
 
   private void validateCreate(AlertNotificationRule rule) {
     if (rule.isDefault() && isDefaultAlertNotificationRuleCreated(rule.getAccountId())) {
-      throw new WingsException("Default alert notification rule already exists");
+      throw new InvalidRequestException("Default alert notification rule already exists");
     }
   }
 
@@ -57,11 +57,12 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
   private void validateUpdate(AlertNotificationRule rule) {
     Optional<AlertNotificationRule> existingRule = getById(rule.getAccountId(), rule.getUuid());
     if (!existingRule.isPresent()) {
-      throw new WingsException("Can not update alert notification rule. No such alert notification rule exists");
+      throw new InvalidRequestException(
+          "Can not update alert notification rule. No such alert notification rule exists");
     }
     if (!existingRule.get().isDefault() && rule.isDefault()
         && isDefaultAlertNotificationRuleCreated(rule.getAccountId())) {
-      throw new WingsException(
+      throw new InvalidRequestException(
           "Can not update alert notification rule. Default alert notification rule already exists");
     }
   }
@@ -83,8 +84,14 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
   }
 
   @Override
-  public void deleteById(String ruleId) {
-    wingsPersistence.delete(AlertNotificationRule.class, ruleId);
+  public void deleteById(String ruleId, String accountId) {
+    Optional<AlertNotificationRule> defaultAlertNotificationRule = getDefaultAlertNotificationRule(accountId);
+    if (defaultAlertNotificationRule.isPresent() && defaultAlertNotificationRule.get().getUuid().equals(ruleId)) {
+      throw new InvalidRequestException("Default alert notification rule can not be deleted");
+    }
+    wingsPersistence.delete(wingsPersistence.createQuery(AlertNotificationRule.class)
+                                .filter(ACCOUNT_ID_KEY, accountId)
+                                .filter(ID_KEY, ruleId));
   }
 
   @Override

@@ -58,7 +58,7 @@ public class AlertNotificationRuleResource {
   @Path("{alertNotificationRuleId}")
   public RestResponse deleteAlertNotificationRule(
       @PathParam("alertNotificationRuleId") String ruleId, @QueryParam("accountId") String accountId) {
-    alertNotificationRuleService.deleteById(ruleId);
+    alertNotificationRuleService.deleteById(ruleId, accountId);
     return new RestResponse<>();
   }
 }
