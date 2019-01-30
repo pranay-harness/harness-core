@@ -42,7 +42,13 @@ import java.util.List;
         @Field("appId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
       }, options = @IndexOptions(name = "instance_index4", background = true)), @Index(fields = {
         @Field("appId"), @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
-      }, options = @IndexOptions(name = "instance_index5", background = true))
+      }, options = @IndexOptions(name = "instance_index5", background = true)), @Index(fields = {
+        @Field("appId"), @Field("isDeleted")
+      }, options = @IndexOptions(name = "instance_index6", background = true)), @Index(fields = {
+        @Field("accountId"), @Field("isDeleted")
+      }, options = @IndexOptions(name = "instance_index7", background = true)), @Index(fields = {
+        @Field("appId"), @Field("serviceId"), @Field("isDeleted")
+      }, options = @IndexOptions(name = "instance_index8", background = true))
 })
 public class Instance extends Base {
   @NotEmpty private InstanceType instanceType;

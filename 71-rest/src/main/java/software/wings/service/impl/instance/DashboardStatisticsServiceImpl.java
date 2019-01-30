@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -124,10 +125,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Override
   public InstanceSummaryStats getAppInstanceSummaryStats(
       String accountId, List<String> appIds, List<String> groupByEntityTypes, long timestamp) {
-    if (timestamp == 0) {
-      timestamp = System.currentTimeMillis();
-    }
-
     Query<Instance> query;
     try {
       query = getInstanceQueryAtTime(accountId, appIds, timestamp);
@@ -179,7 +176,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
             grouping(entityNameColumn, grouping("$first", entityNameColumn)))
         .project(projection("_id").suppress(), projection("entityId", "_id." + entityIdColumn),
             projection("entityName", entityNameColumn), projection("count"))
-        .sort(ascending("_id." + entityIdColumn))
+        .sort(descending("count"))
         .aggregate(FlatEntitySummaryStats.class)
         .forEachRemaining(flatEntitySummaryStats -> {
           EntitySummaryStats entitySummaryStats = getEntitySummaryStats(flatEntitySummaryStats, groupByEntityType);
@@ -237,10 +234,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Override
   public InstanceSummaryStats getServiceInstanceSummaryStats(
       String accountId, String serviceId, List<String> groupByEntityTypes, long timestamp) {
-    if (timestamp == 0) {
-      timestamp = System.currentTimeMillis();
-    }
-
     Query<Instance> query;
     List<String> appIds = null;
     try {
@@ -303,10 +296,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   @Override
   public @Nonnull List<Instance> getAppInstancesForAccount(String accountId, long timestamp) {
-    if (timestamp == 0) {
-      timestamp = System.currentTimeMillis();
-    }
-
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     return getInstancesForAccount(accountId, timestamp, query);
   }
@@ -314,9 +303,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<Instance> getInstancesForAccount(String accountId, long timestamp, Query<Instance> query) {
     List<Instance> instanceList = new ArrayList<>();
     query.field("accountId").equal(accountId);
-    query.field(Instance.CREATED_AT_KEY).lessThanOrEq(timestamp);
-    query.and(
-        query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
+    if (timestamp > 0) {
+      query.field(Instance.CREATED_AT_KEY).lessThanOrEq(timestamp);
+      query.and(
+          query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
+    } else {
+      query.filter("isDeleted", false);
+    }
+
     int counter = 0;
     try (HIterator<Instance> iterator = new HIterator<>(query.fetch())) {
       while (iterator.hasNext()) {
@@ -362,9 +356,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Override
   public List<InstanceStatsByService> getAppInstanceStatsByService(
       String accountId, List<String> appIds, long timestamp) {
-    if (timestamp == 0) {
-      timestamp = System.currentTimeMillis();
-    }
     Query<Instance> query;
     try {
       query = getInstanceQueryAtTime(accountId, appIds, timestamp);
@@ -405,10 +396,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   @Override
   public List<InstanceStatsByEnvironment> getServiceInstances(String accountId, String serviceId, long timestamp) {
-    if (timestamp == 0) {
-      timestamp = System.currentTimeMillis();
-    }
-
     Query<Instance> query;
     try {
       query = getInstanceQueryAtTime(accountId, serviceId, timestamp);
@@ -442,10 +429,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Override
   public PageResponse<InstanceSummaryStatsByService> getAppInstanceSummaryStatsByService(
       String accountId, List<String> appIds, long timestamp, int offset, int limit) {
-    if (timestamp == 0) {
-      timestamp = System.currentTimeMillis();
-    }
-
     Query<Instance> query;
     try {
       query = getInstanceQueryAtTime(accountId, appIds, timestamp);
@@ -490,19 +473,29 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private Query<Instance> getInstanceQueryAtTime(String accountId, String serviceId, long timestamp) {
-    Query<Instance> query = getInstanceQuery(accountId, serviceId, true);
-    query.field(Instance.CREATED_AT_KEY).lessThanOrEq(timestamp);
-    query.and(
-        query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
+    Query<Instance> query;
+    if (timestamp > 0) {
+      query = getInstanceQuery(accountId, serviceId, true);
+      query.field(Instance.CREATED_AT_KEY).lessThanOrEq(timestamp);
+      query.and(
+          query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
+    } else {
+      query = getInstanceQuery(accountId, serviceId, false);
+    }
     return query;
   }
 
   private Query<Instance> getInstanceQueryAtTime(String accountId, List<String> appIds, long timestamp)
       throws HarnessException {
-    Query<Instance> query = getInstanceQuery(accountId, appIds, true, timestamp);
-    query.field(Instance.CREATED_AT_KEY).lessThanOrEq(timestamp);
-    query.and(
-        query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
+    Query<Instance> query;
+    if (timestamp > 0) {
+      query = getInstanceQuery(accountId, appIds, true, timestamp);
+      query.field(Instance.CREATED_AT_KEY).lessThanOrEq(timestamp);
+      query.and(
+          query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
+    } else {
+      query = getInstanceQuery(accountId, appIds, false, timestamp);
+    }
     return query;
   }
 
@@ -734,7 +727,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<CurrentActiveInstances> getCurrentActiveInstances(String accountId, String appId, String serviceId) {
     Query<Instance> query;
     try {
-      query = getInstanceQuery(accountId, null, false, 0L).filter("appId", appId).filter("serviceId", serviceId);
+      query = getInstanceQuery(accountId, asList(appId), false, 0L);
+      query.filter("serviceId", serviceId);
     } catch (Exception exception) {
       handleException(exception);
       return Lists.newArrayList();
@@ -1023,9 +1017,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private Query<Instance> getInstanceQuery(
       String accountId, List<String> appIds, boolean includeDeleted, long timestamp) throws HarnessException {
     Query query = wingsPersistence.createQuery(Instance.class);
-    if (!includeDeleted) {
-      query.filter("isDeleted", false);
-    }
     if (isNotEmpty(appIds)) {
       query.field("appId").in(appIds);
     } else {
@@ -1045,7 +1036,18 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
             }
 
             if (isNotEmpty(allowedAppIds)) {
-              query.field("appId").in(allowedAppIds);
+              // This is an optimization. Instead of a large IN() Query, if the user has access to all apps,
+              // we could just pull it using accountId. For example, QA has 212 apps in our account.
+              if (allowedAppIds.size() > 10) {
+                List<String> allApps = appService.getAppIdsByAccountId(accountId);
+                if (allowedAppIds.size() == allApps.size()) {
+                  query.filter("accountId", accountId);
+                } else {
+                  query.field("appId").in(allowedAppIds);
+                }
+              } else {
+                query.field("appId").in(allowedAppIds);
+              }
             } else {
               throw new HarnessException(NO_APPS_ASSIGNED);
             }
@@ -1071,6 +1073,10 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       } else {
         throw new HarnessException(NO_APPS_ASSIGNED);
       }
+    }
+
+    if (!includeDeleted) {
+      query.filter("isDeleted", false);
     }
 
     return query;
