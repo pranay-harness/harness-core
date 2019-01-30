@@ -743,6 +743,18 @@ public class UserResource {
 
   @PublicApi
   @PUT
+  @Path("invites/{inviteId}/signin")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> completeInviteAndSignIn(@QueryParam("accountId") @NotEmpty String accountId,
+      @PathParam("inviteId") @NotEmpty String inviteId, @NotNull UserInvite userInvite) {
+    userInvite.setAccountId(accountId);
+    userInvite.setUuid(inviteId);
+    return new RestResponse<>(userService.completeInviteAndSignIn(userInvite));
+  }
+
+  @PublicApi
+  @PUT
   @Path("invites/trial/{inviteId}")
   @Timed
   @ExceptionMetered

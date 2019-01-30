@@ -294,6 +294,14 @@ public interface UserService extends OwnedByAccount {
   UserInvite completeInvite(UserInvite userInvite);
 
   /**
+   * Complete the user invite and login the user in one call.
+   *
+   * @param userInvite the user invite
+   * @return the logged-in user
+   */
+  User completeInviteAndSignIn(UserInvite userInvite);
+
+  /**
    * Complete the trial user signup. Both the trial account and the account admin user will be created
    * as part of this operation.
    *

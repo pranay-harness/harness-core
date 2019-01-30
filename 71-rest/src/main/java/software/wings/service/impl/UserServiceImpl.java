@@ -842,6 +842,12 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public User completeInviteAndSignIn(UserInvite userInvite) {
+    completeInvite(userInvite);
+    return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
+  }
+
+  @Override
   public User completeTrialSignupAndSignIn(User user, UserInvite userInvite) {
     completeTrialSignup(user, userInvite);
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
