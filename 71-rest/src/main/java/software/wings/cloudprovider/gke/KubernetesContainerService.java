@@ -56,7 +56,7 @@ public interface KubernetesContainerService {
   List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
       int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned,
-      ExecutionLogCallback executionLogCallback, boolean wait, long startTime);
+      ExecutionLogCallback executionLogCallback, boolean wait, long startTime, String namespace);
 
   Optional<Integer> getControllerPodCount(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
@@ -146,4 +146,7 @@ public interface KubernetesContainerService {
 
   List<Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String namespace, Map<String, String> labels);
+
+  HasMetadata getController(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String namespace);
 }
