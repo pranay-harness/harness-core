@@ -160,16 +160,6 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     assertEquals(0, restResponse.getResponseMessages().size());
     assertFalse(restResponse.getResource().isEmpty());
-
-    //    int totalTxns = 0;
-    //    for (NewRelicApplication app : restResponse.getResource()) {
-    //      assertTrue(app.getId() > 0);
-    //      Set<NewRelicMetric> txnNameToCollect = newRelicDelegateService.getTxnNameToCollect(
-    //          newRelicConfig, secretManager.getEncryptionDetails(newRelicConfig, null, null), app.getId(), null);
-    //      totalTxns += txnNameToCollect.size();
-    //    }
-    //
-    //    assertTrue(totalTxns > 0);
   }
 
   @Test
@@ -198,7 +188,6 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
-  @Owner(emails = "pranjal@harness.io", intermittent = true)
   public void getNewRelicDataForNode() {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
@@ -216,7 +205,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         new GenericType<RestResponse<List<NewRelicApplicationInstance>>>() {});
     List<NewRelicApplicationInstance> nodes = nodesResponse.getResource();
     assertFalse(nodes.isEmpty());
-    long toTime = System.currentTimeMillis();
+    long toTime = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(60);
 
     for (NewRelicApplicationInstance node : nodes) {
       NewRelicSetupTestNodeData testNodeData =

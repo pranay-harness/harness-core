@@ -307,10 +307,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     Map<String, Double> overAllScoreByMetricName = mlAnalysisResponse.getOverallMetricScores();
     if (!isEmpty(overAllScoreByMetricName)) {
-      double finalOverallScore = Collections.max(overAllScoreByMetricName.values());
+      String metricName = Collections.max(overAllScoreByMetricName.entrySet(), Map.Entry.comparingByValue()).getKey();
+      Double finalOverallScore = overAllScoreByMetricName.get(metricName);
       if (!isEmpty(cvConfigId) && finalOverallScore >= MEDIUM_RISK_CUTOFF) {
-        logger.warn("Risk detected for cvConfigId {}, stateType {}, finalOverallScore {}", cvConfigId, stateType,
-            finalOverallScore);
+        logger.warn(
+            "Risk detected for cvConfigId {}, stateType {}, finalOverallScore {} aggregatedRisk {} metricName {}",
+            cvConfigId, stateType, finalOverallScore, mlAnalysisResponse.getAggregatedRisk(), metricName);
       }
     }
     logger.info("inserted MetricAnalysisRecord to persistence layer for "

@@ -264,7 +264,6 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         throw new WingsException(
             ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
       }
-
       pageCount++;
     }
 
@@ -476,38 +475,47 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         + updatedMetrics.size() + " transactions from " + newRelicConfig.getNewRelicUrl() + urlToCall);
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
-    final Call<NewRelicMetricDataResponse> request = instanceId > 0
-        ? getNewRelicRestClient(newRelicConfig)
-              .getInstanceMetricData(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId, instanceId,
-                  dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)), updatedMetrics)
-        : getNewRelicRestClient(newRelicConfig)
-              .getApplicationMetricData(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId,
-                  summarize, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)),
-                  updatedMetrics);
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name(URL_STRING)
-                                     .value(request.request().url().toString())
-                                     .type(FieldType.URL)
-                                     .build());
-    Response<NewRelicMetricDataResponse> response;
-    try {
-      response = request.execute();
-    } catch (Exception e) {
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-      delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-      throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
-          + e.getMessage() + " Request: " + request.request().url().toString());
+    Response<NewRelicMetricDataResponse> response = null;
+    for (int retry = 0; retry <= NUM_OF_RETRIES; retry++) {
+      final Call<NewRelicMetricDataResponse> request = instanceId > 0
+          ? getNewRelicRestClient(newRelicConfig)
+                .getInstanceMetricData(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId,
+                    instanceId, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)),
+                    updatedMetrics)
+          : getNewRelicRestClient(newRelicConfig)
+                .getApplicationMetricData(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId,
+                    summarize, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)),
+                    updatedMetrics);
+      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                       .name(URL_STRING)
+                                       .value(request.request().url().toString())
+                                       .type(FieldType.URL)
+                                       .build());
+      try {
+        response = request.execute();
+      } catch (Exception e) {
+        if (retry < NUM_OF_RETRIES) {
+          logger.warn(format("Unsuccessful response while fetching data from NewRelic. trial num: %d", retry), e);
+          sleep(ofMillis(1000));
+        } else {
+          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+          apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+          delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+          logger.error(format("txn name fetch failed after %d retries ", retry), e);
+          throw new WingsException("Unsuccessful response while fetching data from NewRelic failed after "
+              + NUM_OF_RETRIES + " retries. Error message: " + e.getMessage()
+              + " Request: " + request.request().url().toString());
+        }
+      }
+      if (response.isSuccessful()) {
+        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        if (response.isSuccessful()) {
+          apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
+          delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+          return response.body().getMetric_data();
+        }
+      }
     }
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    if (response.isSuccessful()) {
-      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-      delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-      return response.body().getMetric_data();
-    }
-
-    apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-    delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
     String errMsg = "Unsuccessful response from NewRelic. Response Code " + response.code()
         + " Error: " + response.errorBody().string();
     throw new WingsException(ErrorCode.NEWRELIC_ERROR, errMsg, USER);
