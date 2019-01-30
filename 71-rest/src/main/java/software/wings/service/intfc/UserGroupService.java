@@ -12,6 +12,7 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -103,6 +104,14 @@ public interface UserGroupService extends OwnedByAccount {
   boolean existsLinkedUserGroup(@NotBlank String ssoId);
 
   boolean delete(String accountId, String userGroupId);
+
+  /**
+   * Gets default "Account Administrator" user group for an account.
+   *
+   * @param accountId
+   * @return
+   */
+  @Nullable UserGroup getDefaultUserGroup(String accountId);
 
   /**
    * Clone the given User Group with a new name

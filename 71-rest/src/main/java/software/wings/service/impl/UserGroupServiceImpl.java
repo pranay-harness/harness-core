@@ -10,6 +10,8 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.common.Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
+import static software.wings.common.Constants.DEFAULT_USER_GROUP_DESCRIPTION;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -57,6 +59,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -306,6 +309,17 @@ public class UserGroupServiceImpl implements UserGroupService {
       evictUserPermissionInfoCacheForUserGroup(userGroup);
     }
     return deleted;
+  }
+
+  @Override
+  public @Nullable UserGroup getDefaultUserGroup(String accountId) {
+    return wingsPersistence.createQuery(UserGroup.class)
+        .filter("accountId", accountId)
+        .field("name")
+        .equal(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
+        .field("description")
+        .equal(DEFAULT_USER_GROUP_DESCRIPTION)
+        .get();
   }
 
   @Override

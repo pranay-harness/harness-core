@@ -115,6 +115,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
         .linkedSsoType(linkedSsoType)
         .linkedSsoId(linkedSsoId)
         .linkedSsoDisplayName(linkedSsoDisplayName)
+        .notificationSettings(notificationSettings)
         .ssoGroupId(ssoGroupId)
         .ssoGroupName(ssoGroupName)
         .build();

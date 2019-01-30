@@ -14,4 +14,10 @@ import java.util.Map;
 public class EventData {
   private Map<String, String> properties = new HashMap<>();
   private double value;
+
+  /**
+   * Any model that you want to put in the queue should implement EventInfo
+   * and on the handler side, you can cast it to your model
+   */
+  private EventInfo eventInfo;
 }

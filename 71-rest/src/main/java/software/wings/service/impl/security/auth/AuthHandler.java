@@ -61,6 +61,7 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupBuilder;
+import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.security.AccountPermissionSummary;
@@ -1124,7 +1125,8 @@ public class AuthHandler {
                                             .accountPermissions(accountPermissions)
                                             .appPermissions(appPermissions)
                                             .notificationSettings(notificationSettings)
-                                            .description("Default account admin user group");
+                                            .description(Constants.DEFAULT_USER_GROUP_DESCRIPTION);
+
     if (user != null) {
       userGroupBuilder.memberIds(asList(user.getUuid()));
     }

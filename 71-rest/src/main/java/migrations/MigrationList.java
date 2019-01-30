@@ -16,6 +16,7 @@ import migrations.all.AppKeywordsMigration;
 import migrations.all.AuthTokenTtlMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
 import migrations.all.CleanupOrphanInstances;
+import migrations.all.CreateDefaultAlertNotificationRule;
 import migrations.all.DanglingAppEnvReferenceRemovalMigration;
 import migrations.all.DanglingUserInviteCleanupMigration;
 import migrations.all.DeleteLETaskDelCronMigration;
@@ -184,6 +185,7 @@ public class MigrationList {
         .add(Pair.of(221, AddLimitVicinityCheckJobToAllAccounts.class))
         .add(Pair.of(222, HelmValuesYamlToManifestFileMigration.class))
         .add(Pair.of(223, InitWorkflowCounters.class))
+        .add(Pair.of(224, CreateDefaultAlertNotificationRule.class))
         .build();
   }
 }

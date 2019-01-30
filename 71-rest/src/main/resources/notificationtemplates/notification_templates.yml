@@ -47,6 +47,21 @@ ALL_DELEGATE_DOWN_NOTIFICATION:
           subject: No Active Delegates
           body: All delegates are down. No Active Delegates for Account ${ACCOUNT_ID}
 
+DELEGATE_DOWN_ALERT_NOTIFICATION:
+    web: ${alert_message}
+    slack: >
+        *Harness Alert:* :small_red_triangle_down: ${alert_message}
+    email:
+        subject: One of your Harness Delegates went down
+        body: ${alert_message}
+
+GENERIC_ALERT_NOTIFICATION:
+    web: ${alert_message}
+    slack: >
+        *Harness Alert:* ${alert_message}
+    email:
+        subject: Harness Alert - ${alert_message}
+        body: ${alert_message}
 
 APPROVAL_NEEDED_NOTIFICATION:
       web: Approval Required - ${WORKFLOW_NAME} in ${APP_NAME} is waiting for approval.

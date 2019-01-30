@@ -5,6 +5,7 @@ import io.harness.serializer.KryoRegistrar;
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
+import software.wings.beans.NotificationChannelType;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateResponse;
@@ -34,5 +35,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ShellScriptApprovalExecutionData.class, 7112);
     kryo.register(K8sDeleteTaskParameters.class, 7113);
     kryo.register(K8sDeleteResponse.class, 7114);
+    kryo.register(NotificationChannelType.class, 7115);
   }
 }

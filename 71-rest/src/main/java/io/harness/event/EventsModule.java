@@ -6,6 +6,7 @@ import com.google.inject.name.Names;
 
 import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.impl.MarketoHandler;
+import io.harness.event.handler.impl.notifications.AlertNotificationHandler;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.listener.EventListener;
 import io.harness.event.publisher.EventPublisher;
@@ -38,6 +39,10 @@ public class EventsModule extends AbstractModule {
       eventHandlerMapBinder.addBinding("MarketoHandler")
           .toInstance(new MarketoHandler(mainConfiguration.getMarketoConfig(), eventListener));
     }
+
+    eventHandlerMapBinder.addBinding(AlertNotificationHandler.class.getSimpleName())
+        .toInstance(new AlertNotificationHandler(eventListener));
+
     HarnessMetricsRegistryHandler harnessMetricsRegistryHandler = new HarnessMetricsRegistryHandler();
     eventHandlerMapBinder.addBinding("HarnessMetricsRegistryHandler").toInstance(harnessMetricsRegistryHandler);
   }
