@@ -1,25 +1,70 @@
 package software.wings.verification;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.inject.Inject;
+
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
+import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.StateType;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration.AppDynamicsCVConfigurationYaml;
 
 import java.util.List;
+import java.util.Set;
 
 public class AppDynamicsCVConfigurationYamlHandler
     extends CVConfigurationYamlHandler<AppDynamicsCVConfigurationYaml, AppDynamicsCVServiceConfiguration> {
+  private static final Logger logger = LoggerFactory.getLogger(AppDynamicsCVConfigurationYamlHandler.class);
+  @Inject AppdynamicsService appdynamicsService;
+
   @Override
   public AppDynamicsCVConfigurationYaml toYaml(AppDynamicsCVServiceConfiguration bean, String appId) {
     AppDynamicsCVConfigurationYaml yaml = AppDynamicsCVConfigurationYaml.builder().build();
     super.toYaml(yaml, bean);
-    yaml.setAppDynamicsApplicationId(bean.getAppDynamicsApplicationId());
-    yaml.setTierId(bean.getTierId());
+
     yaml.setType(StateType.APP_DYNAMICS.name());
+
+    try {
+      List<NewRelicApplication> apps = appdynamicsService.getApplications(bean.getConnectorId());
+      NewRelicApplication appDynamicsApp = null;
+      for (NewRelicApplication app : apps) {
+        if (String.valueOf(app.getId()).equals(bean.getAppDynamicsApplicationId())) {
+          yaml.setAppDynamicsApplicationName(app.getName());
+          appDynamicsApp = app;
+          break;
+        }
+      }
+      if (appDynamicsApp != null) {
+        Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(bean.getConnectorId(), appDynamicsApp.getId());
+        for (AppdynamicsTier tier : tiers) {
+          if (String.valueOf(tier.getId()).equals(bean.getTierId())) {
+            yaml.setTierName(tier.getName());
+            break;
+          }
+        }
+      }
+      if (isEmpty(yaml.getAppDynamicsApplicationName()) || isEmpty(yaml.getTierName())) {
+        final String errMsg = String.format(
+            "AppDynamics ApplicationName or TierName is empty during conversion to yaml. ApplicationId %s, tierID %s",
+            bean.getAppDynamicsApplicationId(), bean.getTierId());
+        logger.error(errMsg);
+        throw new InvalidRequestException(errMsg);
+      }
+    } catch (Exception ex) {
+      throw new WingsException(ex.getMessage());
+    }
+
     return yaml;
   }
 
@@ -33,11 +78,7 @@ public class AppDynamicsCVConfigurationYamlHandler
     notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, USER);
 
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-    String serviceId = changeContext.getYaml().getServiceId();
     String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
-
-    notNullCheck("EnvironmentId null in yaml for CVConfiguration", envId, USER);
-    notNullCheck("ServiceId null in yaml for CVConfiguration", serviceId, USER);
 
     CVConfiguration previous = cvConfigurationService.getConfiguration(name, appId, envId);
 
@@ -68,8 +109,39 @@ public class AppDynamicsCVConfigurationYamlHandler
       ChangeContext<AppDynamicsCVConfigurationYaml> changeContext, String appId) throws HarnessException {
     AppDynamicsCVConfigurationYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
+    SettingAttribute appDConnector =
+        settingsService.getSettingAttributeByName(yaml.getAccountId(), yaml.getConnectorName());
+
     super.toBean(changeContext, bean, appId, yamlFilePath);
-    bean.setAppDynamicsApplicationId(yaml.getAppDynamicsApplicationId());
-    bean.setTierId(yaml.getTierId());
+    try {
+      List<NewRelicApplication> apps = appdynamicsService.getApplications(appDConnector.getUuid());
+      NewRelicApplication appDynamicsApp = null;
+      for (NewRelicApplication app : apps) {
+        if (app.getName().equals(yaml.getAppDynamicsApplicationName())) {
+          bean.setAppDynamicsApplicationId(String.valueOf(app.getId()));
+          appDynamicsApp = app;
+          break;
+        }
+      }
+      if (appDynamicsApp != null) {
+        Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(appDConnector.getUuid(), appDynamicsApp.getId());
+        for (AppdynamicsTier tier : tiers) {
+          if (tier.getName().equals(yaml.getTierName())) {
+            bean.setTierId(String.valueOf(tier.getId()));
+            break;
+          }
+        }
+      }
+      if (isEmpty(bean.getAppDynamicsApplicationId()) || isEmpty(bean.getTierId())) {
+        final String errMsg = String.format(
+            "AppDynamics ApplicationName or TierName is incorrect during edit from yaml. ApplicationName %s, tierName %s",
+            yaml.getAppDynamicsApplicationName(), yaml.getTierName());
+        logger.error(errMsg);
+        throw new WingsException(errMsg);
+      }
+    } catch (Exception ex) {
+      throw new WingsException(ex.getMessage());
+    }
+    bean.setStateType(StateType.APP_DYNAMICS);
   }
 }

@@ -44,14 +44,14 @@ public class CVConfiguration extends Base {
   public abstract static class CVConfigurationYaml extends BaseEntityYaml {
     private String name;
     private String accountId;
-    private String connectorId;
-    private String envId;
-    private String serviceId;
-    private StateType stateType;
+    private String connectorName;
+    private String envName;
+    private String serviceName;
+    private String harnessApplicationName;
     private AnalysisTolerance analysisTolerance;
     private boolean enabled24x7;
 
     public CVConfigurationYaml(String type, String harnessApiVersion, String name, String accountId, String connectorId,
-        String envId, String serviceId, String stateType, String analysisTolerance) {}
+        String envId, String serviceId, String analysisTolerance) {}
   }
 }

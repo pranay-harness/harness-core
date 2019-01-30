@@ -2,10 +2,19 @@ package software.wings.verification;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
+import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration.CVConfigurationYaml;
 
@@ -13,6 +22,10 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     extends BaseYamlHandler<Y, B> {
   @Inject YamlHelper yamlHelper;
   @Inject CVConfigurationService cvConfigurationService;
+  @Inject SettingsService settingsService;
+  @Inject AppService appService;
+  @Inject EnvironmentService environmentService;
+  @Inject ServiceResourceService serviceResourceService;
 
   @Override
   public void delete(ChangeContext<Y> changeContext) throws HarnessException {}
@@ -20,11 +33,17 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
   public void toYaml(CVConfigurationYaml yaml, CVConfiguration bean) {
     yaml.setAccountId(bean.getAccountId());
     yaml.setAnalysisTolerance(bean.getAnalysisTolerance());
-    yaml.setConnectorId(bean.getConnectorId());
-    yaml.setEnvId(bean.getEnvId());
+    yaml.setConnectorName(settingsService.get(bean.getConnectorId()).getName());
     yaml.setName(bean.getName());
-    yaml.setServiceId(bean.getServiceId());
-    yaml.setStateType(bean.getStateType());
+    yaml.setEnabled24x7(bean.isEnabled24x7());
+
+    Application application = appService.get(bean.getAppId());
+    Environment environment = environmentService.get(application.getUuid(), bean.getEnvId());
+    Service service = serviceResourceService.get(application.getUuid(), bean.getServiceId());
+
+    yaml.setHarnessApplicationName(application.getName());
+    yaml.setEnvName(environment.getName());
+    yaml.setServiceName(service.getName());
   }
 
   public void toBean(ChangeContext<Y> changeContext, B bean, String appId, String yamlPath) {
@@ -33,12 +52,28 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     bean.setAppId(appId);
     bean.setName(name);
 
+    Application harnessApp = appService.getAppByName(yaml.getAccountId(), yaml.getHarnessApplicationName());
+    if (harnessApp == null) {
+      throw new WingsException("Invalid Harness ApplicationName provided in Yaml for CVConfiguration.");
+    }
+    Environment environment = environmentService.getEnvironmentByName(harnessApp.getUuid(), yaml.getEnvName());
+    if (environment == null) {
+      throw new WingsException("Invalid Environment name in Yaml for CVConfiguration.");
+    }
+
+    Service service = serviceResourceService.getServiceByName(harnessApp.getUuid(), yaml.getServiceName());
+    if (service == null) {
+      throw new WingsException("Invalid Service name in Yaml for CVConfiguration.");
+    }
     bean.setAccountId(yaml.getAccountId());
-    bean.setEnvId(yaml.getEnvId());
+    bean.setEnvId(environment.getUuid());
     bean.setEnabled24x7(yaml.isEnabled24x7());
-    bean.setStateType(yaml.getStateType());
     bean.setAnalysisTolerance(yaml.getAnalysisTolerance());
-    bean.setServiceId(yaml.getServiceId());
-    bean.setConnectorId(yaml.getConnectorId());
+    bean.setServiceId(service.getUuid());
+    bean.setConnectorId(getConnector(yaml).getUuid());
+  }
+
+  SettingAttribute getConnector(CVConfigurationYaml yaml) {
+    return settingsService.getSettingAttributeByName(yaml.getAccountId(), yaml.getConnectorName());
   }
 }
