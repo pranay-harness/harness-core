@@ -976,9 +976,11 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void logout(User user) {
+    logger.info("LMI: Logging out user: [{}] and token: [{}]", user.getEmail(), user.getToken());
     authService.invalidateToken(user.getToken());
     evictUserFromCache(user.getUuid());
     Account account = user.getAccounts().get(0);
+    logger.info("LMI: Publishing metrics for the user: [{}] and account: [{}]", user.getEmail(), account);
     usageMetricsEventPublisher.publishUserLogoutEvent(account.getUuid(), account.getAccountName());
   }
 
@@ -1333,6 +1335,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void evictUserFromCache(String userId) {
+    logger.info("LMI: Evicting user from cache with userId: [{}]", userId);
     cacheHelper.getUserCache().remove(userId);
   }
 

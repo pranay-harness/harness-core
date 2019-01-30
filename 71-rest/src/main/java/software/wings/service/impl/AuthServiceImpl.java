@@ -414,7 +414,9 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void invalidateToken(String utoken) {
+    logger.info("LMI: Deleting token: [{}] from db", utoken);
     wingsPersistence.delete(AuthToken.class, utoken);
+    logger.info("LMI: Deleting token: [{}] from cache", utoken);
     dbCache.invalidate(AuthToken.class, utoken);
   }
 

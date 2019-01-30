@@ -18,6 +18,8 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
@@ -61,6 +63,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private ApiKeyService apiKeyService;
   private AuditHelper auditHelper;
   private ExternalApiRateLimitingService rateLimitingService;
+
+  private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
 
   @Inject
   public AuthenticationFilter(AuthService authService, WingsPersistence wingsPersistence,
@@ -109,6 +113,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     if (authorization.startsWith("Bearer")) {
+      logger.info("LMI: Inside auth filter");
       User user = validateBearerToken(containerRequestContext);
       containerRequestContext.setProperty("USER", user);
       updateUserInAuditRecord(user);
@@ -130,12 +135,16 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
   private User validateBearerToken(ContainerRequestContext containerRequestContext) {
     String tokenString = extractToken(containerRequestContext, "Bearer");
+    logger.info("LMI: Validate bearer token");
     AuthToken authToken = authService.validateToken(tokenString);
     User user = authToken.getUser();
+
     if (user != null) {
+      logger.info("LMI: Inside validateBearerToken assigned user: [{}] for token: [{}]", user.getEmail(), tokenString);
       user.setToken(tokenString);
       return user;
     }
+    logger.info("LMI: Inside validateBearerToken, no user found for the given bearer token [{}]", tokenString);
     throw new WingsException(INVALID_TOKEN, USER);
   }
 
