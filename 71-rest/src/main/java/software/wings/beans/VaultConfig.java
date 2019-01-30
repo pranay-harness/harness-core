@@ -1,6 +1,5 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -68,10 +67,4 @@ public class VaultConfig extends Base implements EncryptionConfig {
   @SchemaIgnore @Transient private EncryptionType encryptionType;
 
   @SchemaIgnore @Transient private String encryptedBy;
-
-  @JsonIgnore
-  @SchemaIgnore
-  public String getValidationCriteria() {
-    return getVaultUrl();
-  }
 }

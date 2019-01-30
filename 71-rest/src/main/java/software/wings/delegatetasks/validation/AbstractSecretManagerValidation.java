@@ -1,23 +1,30 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;
+import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 
 import com.google.common.base.Preconditions;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.kms.AWSKMS;
+import com.amazonaws.services.kms.AWSKMSClientBuilder;
+import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.helpers.ext.vault.VaultRestClientFactory;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionConfig;
+import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.Misc;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -25,31 +32,7 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractSecretManagerValidation extends AbstractDelegateValidateTask {
   private static final Logger logger = LoggerFactory.getLogger(AbstractDelegateValidateTask.class);
-  private static final Map<Regions, String> AWS_REGION_URL_MAP = new ConcurrentHashMap<>();
-  static {
-    // See AWS doc https://docs.aws.amazon.com/general/latest/gr/rande.html
-    AWS_REGION_URL_MAP.put(Regions.US_EAST_1, "https://apigateway.us-east-1.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.US_EAST_2, "https://apigateway.us-east-2.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.US_WEST_1, "https://apigateway.us-west-1.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.US_WEST_2, "https://apigateway.us-west-2.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.AP_SOUTH_1, "https://apigateway.ap-south-1.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.AP_NORTHEAST_1, "https://apigateway.ap-northeast-1.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.AP_NORTHEAST_2, "https://apigateway.ap-northeast-2.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.AP_SOUTHEAST_1, "https://apigateway.ap-southeast-1.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.AP_SOUTHEAST_2, "https://apigateway.ap-southeast-2.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.CA_CENTRAL_1, "https://apigateway.ca-central-1.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.CN_NORTH_1, "https://apigateway.cn-north-1.amazonaws.com.cn");
-    AWS_REGION_URL_MAP.put(Regions.CN_NORTHWEST_1, "https://apigateway.cn-northwest-1.amazonaws.com.cn");
-    AWS_REGION_URL_MAP.put(Regions.EU_CENTRAL_1, "https://apigateway.eu-central-1.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.EU_WEST_1, "https://apigateway.eu-west-1.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.EU_WEST_2, "https://apigateway.eu-west-2.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.EU_WEST_3, "https://apigateway.eu-west-3.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.SA_EAST_1, "https://apigateway.sa-east-1.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.US_GOV_EAST_1, "https://apigateway.us-gov-east-1.amazonaws.com");
-    AWS_REGION_URL_MAP.put(Regions.GovCloud, "https://apigateway.us-gov-west-1.amazonaws.com");
-  }
-
-  AbstractSecretManagerValidation(
+  public AbstractSecretManagerValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
     super(delegateId, delegateTask, postExecute);
   }
@@ -67,21 +50,38 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
     Preconditions.checkNotNull(encryptionConfig);
     if (encryptionConfig instanceof KmsConfig) {
       KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
-      Regions regions = Regions.US_EAST_1;
-      if (kmsConfig.getRegion() != null) {
-        regions = Regions.fromName(kmsConfig.getRegion());
+      AWSKMS kmsClient =
+          AWSKMSClientBuilder.standard()
+              .withCredentials(new AWSStaticCredentialsProvider(
+                  new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
+              .withRegion(kmsConfig.getRegion() == null ? Regions.US_EAST_1 : Regions.fromName(kmsConfig.getRegion()))
+              .build();
+      GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest();
+      dataKeyRequest.setKeyId(kmsConfig.getKmsArn());
+      dataKeyRequest.setKeySpec("AES_128");
+      try {
+        kmsClient.generateDataKey(dataKeyRequest);
+        return DelegateConnectionResult.builder().criteria(kmsConfig.getValidationCriteria()).validated(true).build();
+      } catch (Exception e) {
+        logger.info("can't reach to kms {} in region {}", kmsConfig.getUuid(), kmsConfig.getRegion());
+        return DelegateConnectionResult.builder().criteria(kmsConfig.getValidationCriteria()).validated(false).build();
       }
-      // If it's an unknown region, will default to US_EAST_1's URL.
-      String kmsUrl = AWS_REGION_URL_MAP.containsKey(regions) ? AWS_REGION_URL_MAP.get(regions)
-                                                              : AWS_REGION_URL_MAP.get(Regions.US_EAST_1);
-      return validateSecretManagerUrl(kmsUrl, kmsConfig.getName(), kmsConfig.getValidationCriteria());
-    } else if (encryptionConfig instanceof VaultConfig) {
-      VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
-      return validateSecretManagerUrl(
-          vaultConfig.getVaultUrl(), vaultConfig.getName(), vaultConfig.getValidationCriteria());
-    } else {
-      throw new IllegalStateException("Invalid encryptionConfig " + encryptionConfig);
     }
+    if (encryptionConfig instanceof VaultConfig) {
+      VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
+      try {
+        String fullPath = VaultRestClientFactory.getFullPath(
+            vaultConfig.getBasePath(), VAULT_VAILDATION_URL, SettingVariableTypes.VAULT);
+        boolean isSuccessful =
+            VaultRestClientFactory.create(vaultConfig)
+                .writeSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath, Boolean.TRUE.toString());
+        return DelegateConnectionResult.builder().criteria(vaultConfig.getVaultUrl()).validated(isSuccessful).build();
+      } catch (IOException e) {
+        logger.info("Can not reach to vault at {}, reason: {} ", vaultConfig.getVaultUrl(), Misc.getMessage(e), e);
+        return DelegateConnectionResult.builder().criteria(vaultConfig.getVaultUrl()).validated(false).build();
+      }
+    }
+    throw new IllegalStateException("Invalid encryptionConfig " + encryptionConfig);
   }
 
   @Override
@@ -95,15 +95,9 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
   }
 
   protected EncryptionConfig getEncryptionConfig() {
-    for (Object parameter : getParameters()) {
-      if (parameter instanceof KmsConfig) {
-        return (KmsConfig) parameter;
-      } else if (parameter instanceof VaultConfig) {
-        return (VaultConfig) parameter;
-      } else if (parameter instanceof EncryptedDataDetail) {
-        return ((EncryptedDataDetail) parameter).getEncryptionConfig();
-      } else if (parameter instanceof List) {
-        List details = (List) parameter;
+    for (Object parmeter : getParameters()) {
+      if (parmeter instanceof List) {
+        List details = (List) parmeter;
         for (Object detail : details) {
           if (detail instanceof EncryptedDataDetail) {
             return ((EncryptedDataDetail) detail).getEncryptionConfig();
@@ -112,26 +106,5 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
       }
     }
     return null;
-  }
-
-  @Override
-  public List<String> getCriteria() {
-    EncryptionConfig encryptionConfig = getEncryptionConfig();
-    if (encryptionConfig instanceof KmsConfig) {
-      KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
-      return singletonList(kmsConfig.getValidationCriteria());
-    } else if (encryptionConfig instanceof VaultConfig) {
-      VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
-      return singletonList(vaultConfig.getValidationCriteria());
-    } else {
-      throw new IllegalStateException("Unsupported encryption config: " + encryptionConfig);
-    }
-  }
-
-  private DelegateConnectionResult validateSecretManagerUrl(
-      String secretManagerUrl, String secretManagerName, String validationCriteria) {
-    boolean urlReachable = connectableHttpUrl(secretManagerUrl);
-    logger.info("Finished validating Vault config '{}' with URL {}.", secretManagerName, secretManagerUrl);
-    return DelegateConnectionResult.builder().criteria(validationCriteria).validated(urlReachable).build();
   }
 }
