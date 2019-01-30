@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
+import io.harness.notifications.NotificationReceiverInfo;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,13 +32,16 @@ import javax.validation.constraints.NotNull;
                                                                              , @Field("name") }))
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 @Deprecated
-public class NotificationGroup extends Base {
+public class NotificationGroup extends Base implements NotificationReceiverInfo {
   public static final String NAME_KEY = "name";
 
   @NotEmpty private String accountId;
   @NotNull private String name;
   private boolean editable = true;
+
+  // roles to notify
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
+
   private boolean defaultNotificationGroupForAccount;
   @NotNull private Map<NotificationChannelType, List<String>> addressesByChannelType = new HashMap<>();
 
@@ -136,18 +140,6 @@ public class NotificationGroup extends Base {
    */
   public void setRoles(List<Role> roles) {
     this.roles = roles;
-  }
-
-  /**
-   * Adds role to User object.
-   *
-   * @param role role to assign to User.
-   */
-  public void addRole(Role role) {
-    if (roles == null) {
-      roles = new ArrayList<>();
-    }
-    roles.add(role);
   }
 
   /**

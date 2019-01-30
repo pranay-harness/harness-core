@@ -1,11 +1,11 @@
 package software.wings.beans.notification;
 
-import io.harness.data.structure.CollectionUtils;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.collections4.MapUtils;
 import software.wings.beans.NotificationChannelType;
 
 import java.util.List;
@@ -23,11 +23,11 @@ public class NotificationSettings {
   public NotificationSettings(
       boolean useIndividualEmails, @Nonnull Map<NotificationChannelType, List<String>> addressesByChannelType) {
     this.useIndividualEmails = useIndividualEmails;
-    this.addressesByChannelType = CollectionUtils.emptyIfNull(addressesByChannelType);
+    this.addressesByChannelType = MapUtils.emptyIfNull(addressesByChannelType);
   }
 
   @Nonnull
   public Map<NotificationChannelType, List<String>> getAddressesByChannelType() {
-    return CollectionUtils.emptyIfNull(addressesByChannelType);
+    return MapUtils.emptyIfNull(addressesByChannelType);
   }
 }

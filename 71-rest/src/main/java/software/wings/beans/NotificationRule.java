@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.google.common.base.MoreObjects;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.structure.CollectionUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,11 +31,15 @@ public class NotificationRule {
 
   @Deprecated @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
 
-  @NotNull @Getter @Setter private List<String> userGroupIds = new ArrayList<>();
+  @NotNull @Setter private List<String> userGroupIds = new ArrayList<>();
 
   private boolean batchNotifications;
 
   private boolean active = true;
+
+  public List<String> getUserGroupIds() {
+    return CollectionUtils.emptyIfNull(userGroupIds);
+  }
 
   /**
    * Gets notification groups.
