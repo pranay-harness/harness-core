@@ -11,4 +11,8 @@ import java.util.List;
 public class K8sBlueGreenDeployResponse implements K8sTaskResponse {
   Integer releaseNumber;
   List<K8sPod> k8sPodList;
+  String primaryServiceName;
+  String stageServiceName;
+  String primaryWorkload;
+  String stageWorkload;
 }

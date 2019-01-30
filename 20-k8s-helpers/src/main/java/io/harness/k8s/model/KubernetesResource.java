@@ -1,6 +1,5 @@
 package io.harness.k8s.model;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ObjectYamlUtils.encodeDot;
@@ -69,40 +68,7 @@ public class KubernetesResource {
     return this;
   }
 
-  public KubernetesResource addRevisionNumberInDeploymentSelector(int revisionNumber) {
-    HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
-    Deployment deployment = (Deployment) resource;
-
-    Map<String, String> deploymentLabels = deployment.getMetadata().getLabels();
-    if (deploymentLabels == null) {
-      deploymentLabels = new HashMap<>();
-    }
-
-    deploymentLabels.put(HarnessLabels.revision, String.valueOf(revisionNumber));
-
-    deployment.getMetadata().setLabels(deploymentLabels);
-
-    Map<String, String> matchLabels = deployment.getSpec().getSelector().getMatchLabels();
-    if (matchLabels == null) {
-      matchLabels = new HashMap<>();
-    }
-
-    matchLabels.put(HarnessLabels.revision, String.valueOf(revisionNumber));
-
-    deployment.getSpec().getSelector().setMatchLabels(matchLabels);
-
-    try {
-      this.spec = KubernetesHelper.toYaml(resource);
-      this.value = readYaml(this.spec).get(0);
-    } catch (IOException e) {
-      // do nothing
-      noop();
-    }
-
-    return this;
-  }
-
-  public KubernetesResource addTrackLabelInDeploymentSelector(String track) {
+  public KubernetesResource addLabelsInDeploymentSelector(Map<String, String> labels) {
     HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
     Deployment deployment = (Deployment) resource;
 
@@ -111,7 +77,7 @@ public class KubernetesResource {
       matchLabels = new HashMap<>();
     }
 
-    matchLabels.put(HarnessLabels.track, track);
+    matchLabels.putAll(labels);
 
     deployment.getSpec().getSelector().setMatchLabels(matchLabels);
 
@@ -149,7 +115,27 @@ public class KubernetesResource {
     return deployment.getSpec().getReplicas();
   }
 
-  public KubernetesResource addRevisionSelectorInService(int revisionNumber) {
+  public boolean isPrimaryService() {
+    if (StringUtils.equals(Kind.Service.name(), this.getResourceId().getKind())) {
+      String isPrimary = (String) this.getField("metadata.annotations." + encodeDot(HarnessAnnotations.primaryService));
+      if (StringUtils.equalsIgnoreCase(isPrimary, "true")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean isStageService() {
+    if (StringUtils.equals(Kind.Service.name(), this.getResourceId().getKind())) {
+      String isStage = (String) this.getField("metadata.annotations." + encodeDot(HarnessAnnotations.stageService));
+      if (StringUtils.equalsIgnoreCase(isStage, "true")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public KubernetesResource addColorSelectorInService(String color) {
     HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
     Service service = (Service) resource;
 
@@ -158,7 +144,7 @@ public class KubernetesResource {
       selectors = new HashMap<>();
     }
 
-    selectors.put(HarnessLabels.revision, String.valueOf(revisionNumber));
+    selectors.put(HarnessLabels.color, String.valueOf(color));
 
     service.getSpec().setSelector(selectors);
 
@@ -194,7 +180,7 @@ public class KubernetesResource {
     return this;
   }
 
-  public KubernetesResource addReleaseLabelsInPodSpec(String releaseName, int revisionNumber, String track) {
+  public KubernetesResource addLabelsInPodSpec(Map<String, String> labels) {
     HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
 
     PodTemplateSpec podTemplateSpec = getPodTemplateSpec(resource);
@@ -204,11 +190,7 @@ public class KubernetesResource {
       podLabels = new HashMap<>();
     }
 
-    podLabels.put(HarnessLabels.releaseName, String.valueOf(releaseName));
-    podLabels.put(HarnessLabels.revision, String.valueOf(revisionNumber));
-    if (!isEmpty(track)) {
-      podLabels.put(HarnessLabels.track, track);
-    }
+    podLabels.putAll(labels);
 
     podTemplateSpec.getMetadata().setLabels(podLabels);
 

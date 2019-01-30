@@ -18,6 +18,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidArgumentsException;
@@ -25,6 +26,7 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabelValues;
+import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
@@ -201,7 +203,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
   private boolean prepareForCanary(K8sDelegateTaskParams k8sDelegateTaskParams,
       K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters, ExecutionLogCallback executionLogCallback) {
     try {
-      markVersionedResources(resources, false);
+      markVersionedResources(resources);
 
       executionLogCallback.saveExecutionLog(
           "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
@@ -228,7 +230,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
       executionLogCallback.saveExecutionLog("\nVersioning resources.");
 
-      addRevisionNumber(resources, currentRelease.getNumber(), false);
+      addRevisionNumber(resources, currentRelease.getNumber());
       canaryWorkload = getManagedWorkload(resources);
 
       k8sTaskHelper.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
@@ -269,8 +271,10 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       }
 
       canaryWorkload.appendSuffixInName("-canary");
-      canaryWorkload.addReleaseLabelsInPodSpec(releaseName, currentRelease.getNumber(), HarnessLabelValues.trackCanary);
-      canaryWorkload.addTrackLabelInDeploymentSelector(HarnessLabelValues.trackCanary);
+      canaryWorkload.addLabelsInPodSpec(
+          ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.track, HarnessLabelValues.trackCanary));
+      canaryWorkload.addLabelsInDeploymentSelector(
+          ImmutableMap.of(HarnessLabels.track, HarnessLabelValues.trackCanary));
       canaryWorkload.setReplicaCount(targetInstances);
 
       executionLogCallback.saveExecutionLog(

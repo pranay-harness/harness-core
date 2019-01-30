@@ -1,20 +1,14 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
-import static io.harness.exception.WingsException.USER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
-import io.harness.exception.InvalidRequestException;
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElementListParam;
@@ -69,9 +63,6 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
     super(name, K8S_BLUE_GREEN_DEPLOY.name());
   }
 
-  @Getter @Setter @Attributes(title = "Primary Service Name") private String primaryServiceName;
-  @Getter @Setter @Attributes(title = "Stage Service Name") private String stageServiceName;
-
   @Override
   public String commandName() {
     return K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME;
@@ -83,15 +74,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
   }
 
   @Override
-  public void validateParameters(ExecutionContext context) {
-    if (StringUtils.isEmpty(this.primaryServiceName)) {
-      throw new InvalidRequestException("Primary Service not specified.", USER);
-    }
-
-    if (StringUtils.isEmpty(this.stageServiceName)) {
-      throw new InvalidRequestException("Stage Service not specified.", USER);
-    }
-  }
+  public void validateParameters(ExecutionContext context) {}
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -103,9 +86,6 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateHelper.getApplicationManifests(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
-    String renderedPrimaryServiceName = context.renderExpression(this.primaryServiceName);
-    String renderedStageServiceName = context.renderExpression(this.stageServiceName);
-
     K8sTaskParameters k8sTaskParameters =
         K8sBlueGreenDeployTaskParameters.builder()
             .activityId(activityId)
@@ -116,8 +96,6 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
             .k8sDelegateManifestConfig(
                 k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
             .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context, valuesFiles))
-            .primaryServiceName(renderedPrimaryServiceName)
-            .stageServiceName(renderedStageServiceName)
             .build();
 
     return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
@@ -156,8 +134,8 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
     k8sStateHelper.saveK8sElement(context,
         K8sElement.builder()
             .releaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber())
-            .primaryServiceName(context.renderExpression(this.primaryServiceName))
-            .stageServiceName(context.renderExpression(this.stageServiceName))
+            .primaryServiceName(k8sBlueGreenDeployResponse.getPrimaryServiceName())
+            .stageServiceName(k8sBlueGreenDeployResponse.getStageServiceName())
             .build());
 
     return anExecutionResponse()

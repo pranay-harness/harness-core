@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: special-config
   annotations:
-    harness.io/direct-apply: true
+    harness.io/skip-versioning: true
 data:
   special.how: very
   special.type: charm
