@@ -135,7 +135,7 @@ public class ArtifactCollectionUtil {
   private Map<String, String> getMetadata(ArtifactStream artifactStream, BuildDetails buildDetails) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
-    Map<String, String> metadata = buildDetails.getMetadata();
+    Map<String, String> metadata = buildDetails.getMetadata() == null ? new HashMap<>() : buildDetails.getMetadata();
     if (artifactStreamType.equals(ARTIFACTORY.name())) {
       if (buildDetails.getArtifactPath() != null) {
         metadata.put(ARTIFACT_PATH, buildDetails.getArtifactPath());
