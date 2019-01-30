@@ -108,7 +108,7 @@ public class FileIo {
 
   public static boolean acquireLock(File file, Duration wait) {
     File lockFile = new File(file.getPath() + ".lock");
-    final long finishAt = lockFile.exists() ? lockFile.lastModified() : System.currentTimeMillis() + wait.toMillis();
+    final long finishAt = (lockFile.exists() ? lockFile.lastModified() : System.currentTimeMillis()) + wait.toMillis();
     boolean wasInterrupted = false;
     try {
       while (lockFile.exists()) {
