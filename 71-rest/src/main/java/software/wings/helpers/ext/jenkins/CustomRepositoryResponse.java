@@ -19,6 +19,6 @@ public class CustomRepositoryResponse {
   @Builder
   public static class Result {
     String buildNo;
-    Map<String, String> metadata = new HashMap<>();
+    @Builder.Default Map<String, String> metadata = new HashMap<>();
   }
 }
