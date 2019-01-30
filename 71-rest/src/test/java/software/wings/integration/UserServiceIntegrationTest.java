@@ -221,6 +221,34 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  public void testUserInviteSignupAndSignInSuccess() {
+    final String name = "Mark Lu";
+    final String email = "abc" + System.currentTimeMillis() + "@harness.io";
+    final char[] pwd = "somepwd".toCharArray();
+    UserInvite userInvite = inviteUser(accountId, name, email);
+    assertNotNull(userInvite.getUuid());
+    assertFalse(userInvite.isCompleted());
+    assertEquals(email, userInvite.getEmail());
+
+    userInvite.setName(name);
+    userInvite.setPassword(pwd);
+    userInvite.setAgreement(true);
+    completeUserInviteAndSignIn(accountId, userInvite.getUuid(), userInvite);
+
+    UserInvite retrievedUserInvite = wingsPersistence.get(UserInvite.class, userInvite.getUuid());
+    assertTrue(retrievedUserInvite.isCompleted());
+
+    // Delete the user just created as a cleanup
+    User user = userService.getUserByEmail(email);
+    userService.delete(accountId, user.getUuid());
+
+    // Verify user is deleted
+    assertNull(userService.getUserByEmail(email));
+    // Verify user invite is deleted
+    assertNull(wingsPersistence.createQuery(UserInvite.class).filter("email", email).get());
+  }
+
+  @Test
   public void testSignupSuccessWithSpaces() throws IOException {
     final String name = "  Brad  Pitt    ";
     final String email = "xyz" + System.currentTimeMillis() + "@harness.io";
@@ -447,6 +475,29 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
         API_BASE + "/users/invites/trial/" + inviteId + "?account=" + accountName + "&company=" + companyName);
     RestResponse<UserInvite> response =
         target.request().put(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<UserInvite>>() {});
+    assertEquals(0, response.getResponseMessages().size());
+    assertNotNull(response.getResource());
+
+    return response.getResource();
+  }
+
+  private UserInvite inviteUser(String accountId, String name, String email) {
+    String userInviteJson =
+        "{\"name\":\"" + name + "\", \"accountId\":\"" + accountId + "\", \"emails\":[\"" + email + "\"]}";
+    WebTarget target = client.target(API_BASE + "/users/invites?accountId=" + accountId);
+    RestResponse<List<UserInvite>> response = getRequestBuilderWithAuthHeader(target).post(
+        entity(userInviteJson, APPLICATION_JSON), new GenericType<RestResponse<List<UserInvite>>>() {});
+    assertEquals(0, response.getResponseMessages().size());
+    assertNotNull(response.getResource());
+    assertEquals(1, response.getResource().size());
+
+    return response.getResource().get(0);
+  }
+
+  private User completeUserInviteAndSignIn(String accountId, String inviteId, UserInvite userInvite) {
+    WebTarget target = client.target(API_BASE + "/users/invites/" + inviteId + "?accountId=" + accountId);
+    RestResponse<User> response =
+        target.request().put(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<User>>() {});
     assertEquals(0, response.getResponseMessages().size());
     assertNotNull(response.getResource());
 
