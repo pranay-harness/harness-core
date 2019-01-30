@@ -22,6 +22,7 @@ import org.ldaptive.auth.AuthenticationResponse;
 import org.ldaptive.auth.Authenticator;
 import org.ldaptive.auth.BindAuthenticationHandler;
 import org.ldaptive.auth.SearchDnResolver;
+import org.ldaptive.ssl.AllowAnyHostnameVerifier;
 import org.ldaptive.ssl.AllowAnyTrustManager;
 import org.ldaptive.ssl.SslConfig;
 import org.slf4j.Logger;
@@ -79,7 +80,7 @@ public class LdapHelper {
     config.setUseSSL(connectionConfig.isSslEnabled());
     // Allowing self-signed certificates to be used for LDAP SSL connection.
     SslConfig sslConfig = new SslConfig(new AllowAnyTrustManager());
-    sslConfig.setHostnameVerifier((s, sslSession) -> true);
+    sslConfig.setHostnameVerifier(new AllowAnyHostnameVerifier());
     config.setSslConfig(sslConfig);
     return config;
   }
