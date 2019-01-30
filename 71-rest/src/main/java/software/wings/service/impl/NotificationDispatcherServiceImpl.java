@@ -1,8 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -21,6 +19,10 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
+import io.harness.notifications.NotificationReceiverInfo;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Notification;
@@ -30,6 +32,7 @@ import software.wings.beans.NotificationRule;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.User;
+import software.wings.beans.security.UserGroup;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.helpers.ext.mail.EmailData;
@@ -38,6 +41,7 @@ import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SlackNotificationService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Misc;
@@ -61,48 +65,54 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   @Inject private SettingsService settingsService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private UserService userService;
+  @Inject private UserGroupService userGroupService;
 
   @Override
   public void dispatchNotification(Notification notification, List<NotificationRule> notificationRules) {
     if (notificationRules == null) {
       return;
     }
+
+    String accountId = notification.getAccountId();
+    if (StringUtils.isEmpty(accountId)) {
+      throw new IllegalStateException("No AccountId present in notification. Notification: " + notification);
+    }
+
     for (NotificationRule notificationRule : notificationRules) {
+      List<UserGroup> userGroups =
+          notificationRule.getUserGroupIds().stream().map(id -> userGroupService.get(accountId, id)).collect(toList());
+
+      dispatch(singletonList(notification), userGroups);
+
+      // TODO(jatin): delete this once (userGroup -> notificationGroup) Migration is done
       dispatch(singletonList(notification), notificationRule.getNotificationGroups());
     }
   }
 
-  private void dispatch(List<Notification> notifications, List<NotificationGroup> notificationGroups) {
-    if (notificationGroups == null || isEmpty(notifications)) {
+  private <T extends NotificationReceiverInfo> void dispatch(
+      List<Notification> notifications, List<T> notificationGroups) {
+    if (isEmpty(notificationGroups) || isEmpty(notifications)) {
       return;
     }
-    String appId = notifications.get(0).getAppId();
-    notificationGroups =
+
+    List<NotificationReceiverInfo> notificationReceivers =
         notificationGroups.stream()
-            .map(
-                notificationGroup -> notificationSetupService.readNotificationGroup(appId, notificationGroup.getUuid()))
             .filter(Objects::nonNull)
-            .filter(notificationGroup -> notificationGroup.getAddressesByChannelType() != null)
+            .filter((NotificationReceiverInfo it) -> it.getAddressesByChannelType() != null)
             .collect(toList());
 
-    for (NotificationGroup notificationGroup : notificationGroups) {
-      if (notificationGroup.getRoles() != null) {
-        // Then collect all the email ids and send for the verified email addresses
-        notificationGroup.getRoles().forEach(role -> {
-          PageRequest<User> request = aPageRequest()
-                                          .withLimit(PageRequest.UNLIMITED)
-                                          .addFilter("appId", EQ, notificationGroup.getAppId())
-                                          .addFilter("roles", IN, role)
-                                          .addFieldsIncluded("email", "emailVerified")
-                                          .build();
-          PageResponse<User> users = userService.list(request);
-          List<String> toAddresses = users.stream().filter(User::isEmailVerified).map(User::getEmail).collect(toList());
-          logger.info("Dispatching notifications to all the users of role {}", role.getRoleType().getDisplayName());
-          dispatchEmail(notifications, toAddresses);
-        });
+    for (NotificationReceiverInfo notificationReceiver : notificationReceivers) {
+      if (notificationReceiver instanceof NotificationGroup) {
+        handleNotificationGroupRoles((NotificationGroup) notificationReceiver, notifications);
+      } else if (notificationReceiver instanceof UserGroup) {
+        handleUserGroups((UserGroup) notificationReceiver, notifications);
+      } else {
+        logger.error("Unhandled implementation of NotificationReceiverInfo. Class: {}",
+            notificationReceiver.getClass().getSimpleName());
       }
+
       for (Entry<NotificationChannelType, List<String>> entry :
-          notificationGroup.getAddressesByChannelType().entrySet()) {
+          notificationReceiver.getAddressesByChannelType().entrySet()) {
         if (entry.getKey() == NotificationChannelType.EMAIL) {
           try {
             dispatchEmail(notifications, entry.getValue());
@@ -119,6 +129,42 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
         }
       }
     }
+  }
+
+  private void handleUserGroups(UserGroup userGroup, List<Notification> notifications) {
+    if (null == userGroup.getNotificationSettings()) {
+      return;
+    }
+
+    if (userGroup.getNotificationSettings().isUseIndividualEmails()) {
+      List<String> emails =
+          userGroup.getMembers().stream().filter(User::isEmailVerified).map(User::getEmail).collect(toList());
+
+      logger.info(
+          "[isUseIndividualEmails=true] Dispatching notifications to all the users of userGroup. uuid={} name={}",
+          userGroup.getUuid(), userGroup.getName());
+      dispatchEmail(notifications, emails);
+    }
+  }
+
+  // TODO(jatin): delete this after UserGroups are used instead of notification groups
+  private void handleNotificationGroupRoles(NotificationGroup notificationGroup, List<Notification> notifications) {
+    if (CollectionUtils.isEmpty(notificationGroup.getRoles())) {
+      return;
+    }
+
+    notificationGroup.getRoles().forEach(role -> {
+      PageRequest<User> request = aPageRequest()
+                                      .withLimit(PageRequest.UNLIMITED)
+                                      .addFilter("roles", Operator.IN, role)
+                                      .addFieldsIncluded("email", "emailVerified")
+                                      .build();
+
+      PageResponse<User> users = userService.list(request);
+      List<String> toAddresses = users.stream().filter(User::isEmailVerified).map(User::getEmail).collect(toList());
+      logger.info("Dispatching notifications to all the users of role {}", role.getRoleType().getDisplayName());
+      dispatchEmail(notifications, toAddresses);
+    });
   }
 
   private void dispatchSlackMessage(List<Notification> notifications, List<String> channels) {

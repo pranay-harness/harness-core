@@ -56,6 +56,7 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
@@ -1115,11 +1116,14 @@ public class AuthHandler {
                                       .build();
     appPermissions.add(appPermission);
 
+    NotificationSettings notificationSettings = new NotificationSettings(true, Collections.emptyMap());
+
     UserGroupBuilder userGroupBuilder = UserGroup.builder()
                                             .accountId(accountId)
                                             .name(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
                                             .accountPermissions(accountPermissions)
                                             .appPermissions(appPermissions)
+                                            .notificationSettings(notificationSettings)
                                             .description("Default account admin user group");
     if (user != null) {
       userGroupBuilder.memberIds(asList(user.getUuid()));
@@ -1289,8 +1293,8 @@ public class AuthHandler {
     }
   }
 
-  public void createDefaultUserGroups(Account account, User user) {
-    UserGroup defaultAdminUserGroup = buildDefaultAdminUserGroup(account.getUuid(), user);
+  public void createDefaultUserGroups(Account account) {
+    UserGroup defaultAdminUserGroup = buildDefaultAdminUserGroup(account.getUuid(), null);
     userGroupService.save(defaultAdminUserGroup);
 
     // By default, we don't associate any users to the support groups

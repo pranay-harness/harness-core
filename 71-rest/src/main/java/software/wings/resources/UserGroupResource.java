@@ -212,7 +212,7 @@ public class UserGroupResource {
    *
    * @param accountId   the account id
    * @param userGroupId  the userGroupId
-   * @param userGroup the userGroup
+   * @param settings notification settings to add to user group
    * @return the rest response
    */
   @PUT

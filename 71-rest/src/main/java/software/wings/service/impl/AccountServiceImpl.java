@@ -210,7 +210,7 @@ public class AccountServiceImpl implements AccountService {
         .filter(role -> RoleType.ACCOUNT_ADMIN.equals(role.getRoleType()))
         .forEach(role -> createDefaultNotificationGroup(account, role));
     createSystemAppContainers(account);
-    authHandler.createDefaultUserGroups(account, null);
+    authHandler.createDefaultUserGroups(account);
 
     executorService.submit(
         () -> templateGalleryService.copyHarnessTemplatesToAccountV2(account.getUuid(), account.getAccountName()));

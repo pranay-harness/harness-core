@@ -2,7 +2,6 @@ package io.harness.data.structure;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,9 +45,5 @@ public class CollectionUtils {
 
   public static <T> List<T> emptyIfNull(List<T> collection) {
     return collection == null ? new ArrayList<>() : collection;
-  }
-
-  public static <K, V> Map<K, V> emptyIfNull(Map<K, V> collection) {
-    return collection == null ? new HashMap<>() : collection;
   }
 }

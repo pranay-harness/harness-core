@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.event.model.QueableEvent;
+import io.harness.notifications.NotificationReceiverInfo;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
@@ -169,5 +170,5 @@ public class ManagerMorphiaClasses {
       YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class,
       ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class,
       AbstractLogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
-      AlertNotificationRule.class, CustomArtifactStream.class);
+      AlertNotificationRule.class, CustomArtifactStream.class, NotificationReceiverInfo.class);
 }

@@ -252,12 +252,14 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   private void sendNotifaction(Environment savedEnvironment, NotificationMessageType entityCreateNotification) {
-    notificationService.sendNotificationAsync(anInformationNotification()
-                                                  .withAppId(savedEnvironment.getAppId())
-                                                  .withNotificationTemplateId(entityCreateNotification.name())
-                                                  .withNotificationTemplateVariables(ImmutableMap.of("ENTITY_TYPE",
-                                                      "Environment", "ENTITY_NAME", savedEnvironment.getName()))
-                                                  .build());
+    notificationService.sendNotificationAsync(
+        anInformationNotification()
+            .withAccountId(appService.getAccountIdByAppId(savedEnvironment.getAppId()))
+            .withAppId(savedEnvironment.getAppId())
+            .withNotificationTemplateId(entityCreateNotification.name())
+            .withNotificationTemplateVariables(
+                ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", savedEnvironment.getName()))
+            .build());
   }
 
   @Override
