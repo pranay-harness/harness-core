@@ -18,6 +18,7 @@ import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -70,6 +71,7 @@ import java.util.stream.Collectors;
 /**
  * Created by rsingh on 9/26/17.
  */
+@Singleton
 public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService {
   private static final Logger logger = LoggerFactory.getLogger(MetricDataAnalysisServiceImpl.class);
 

@@ -5,6 +5,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import java.util.List;
 /**
  * Created by Pranjal on 08/31/2018
  */
+@Singleton
 public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements SplunkAnalysisService {
   private static final Logger logger = LoggerFactory.getLogger(SplunkAnalysisServiceImpl.class);
 

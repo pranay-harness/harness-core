@@ -7,6 +7,7 @@ import static software.wings.utils.Misc.generateSecretKey;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
 import org.apache.commons.lang3.StringUtils;
@@ -34,6 +35,7 @@ import java.util.Properties;
 /**
  * Created by rsingh on 1/9/18.
  */
+@Singleton
 public class LearningEngineAnalysisServiceImpl implements LearningEngineService {
   private static final Logger logger = LoggerFactory.getLogger(LearningEngineAnalysisServiceImpl.class);
 

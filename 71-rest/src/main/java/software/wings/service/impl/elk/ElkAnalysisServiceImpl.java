@@ -5,6 +5,7 @@ import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkRes
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
@@ -34,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 8/23/17.
  */
+@Singleton
 public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAnalysisService {
   private static final Logger logger = LoggerFactory.getLogger(ElkAnalysisServiceImpl.class);
 

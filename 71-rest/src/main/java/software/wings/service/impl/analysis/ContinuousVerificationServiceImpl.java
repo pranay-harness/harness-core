@@ -19,6 +19,7 @@ import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeri
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -36,6 +37,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
@@ -91,6 +93,7 @@ import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
+@Singleton
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuthService authService;
@@ -100,7 +103,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private DataStoreService dataStoreService;
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
-  private static final int PAGE_LIMIT = 500;
+  private static final int PAGE_LIMIT = 999;
   private static final int START_OFFSET = 0;
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
 
@@ -356,7 +359,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return results;
     }
     List<String> allowedApplications = getAllowedApplicationsForUser(user, accountId);
-    if (isEmpty(allowedApplications)) {
+    Service service = wingsPersistence.get(Service.class, serviceId);
+    if (isEmpty(allowedApplications) || service == null || !allowedApplications.contains(service.getAppId())) {
       logger.info(
           "Returning empty results from getCVDeploymentData since user {} does not have permissions for any applications",
           user);
@@ -364,7 +368,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
     PageRequest<WorkflowExecution> workflowExecutionPageRequest =
         PageRequestBuilder.aPageRequest()
-            .addFilter("appId", Operator.IN, allowedApplications.toArray())
+            .addFilter("appId", Operator.EQ, service.getAppId())
             .addFilter("serviceIds", Operator.CONTAINS, serviceId)
             .addFieldsExcluded("serviceExecutionSummaries", "executionArgs", "keywords", "breakdown")
             .addFilter("startTs", Operator.GE, startTime)

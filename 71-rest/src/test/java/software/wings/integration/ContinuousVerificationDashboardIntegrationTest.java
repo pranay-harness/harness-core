@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
@@ -234,6 +235,8 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
             .build();
     wingsPersistence.save(execution1);
 
+    Service service = Service.builder().appId(appId).uuid(serviceId).build();
+    wingsPersistence.save(service);
     // Call
 
     long before = now - TimeUnit.MINUTES.toMillis(1), after = now + TimeUnit.MINUTES.toMillis(5);

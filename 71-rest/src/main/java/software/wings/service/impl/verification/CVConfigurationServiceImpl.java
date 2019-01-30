@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
@@ -46,7 +47,7 @@ import java.util.Set;
  * @author Vaibhav Tulsyan
  * 09/Oct/2018
  */
-
+@Singleton
 public class CVConfigurationServiceImpl implements CVConfigurationService {
   private static final Logger logger = LoggerFactory.getLogger(CVConfigurationServiceImpl.class);
 
