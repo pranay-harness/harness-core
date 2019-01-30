@@ -235,7 +235,7 @@ public class ContainerDeploymentDelegateHelper {
                         controller.getMetadata().getName(), 0,
                         kubernetesContainerService.getControllerPodCount(controller),
                         (int) TimeUnit.MINUTES.toMinutes(30), new ArrayList<>(), isNotVersioned, executionLogCallback,
-                        true, 0)
+                        true, 0, kubernetesConfig.getNamespace())
                     .stream();
               })
               .collect(Collectors.toList());

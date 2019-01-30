@@ -142,23 +142,27 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     // TODO - Use definition.getKind()
     HasMetadata controller = null;
     if (definition instanceof ReplicationController) {
-      controller =
-          rcOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((ReplicationController) definition);
+      controller = rcOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+                       .createOrReplace((ReplicationController) definition);
     } else if (definition instanceof Deployment) {
-      controller =
-          deploymentOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((Deployment) definition);
+      controller = deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+                       .createOrReplace((Deployment) definition);
     } else if (definition instanceof ReplicaSet) {
-      controller = replicaOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((ReplicaSet) definition);
+      controller = replicaOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+                       .createOrReplace((ReplicaSet) definition);
     } else if (definition instanceof StatefulSet) {
       HasMetadata existing = getController(kubernetesConfig, encryptedDataDetails, name);
       if (existing != null && existing.getKind().equals("StatefulSet")) {
-        controller =
-            statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).patch((StatefulSet) definition);
+        controller = statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+                         .withName(name)
+                         .patch((StatefulSet) definition);
       } else {
-        controller = statefulOperations(kubernetesConfig, encryptedDataDetails).create((StatefulSet) definition);
+        controller = statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+                         .create((StatefulSet) definition);
       }
     } else if (definition instanceof DaemonSet) {
-      controller = daemonOperations(kubernetesConfig, encryptedDataDetails).createOrReplace((DaemonSet) definition);
+      controller = daemonOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+                       .createOrReplace((DaemonSet) definition);
     }
     return controller;
   }
@@ -166,9 +170,15 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public HasMetadata getController(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    return getController(kubernetesConfig, encryptedDataDetails, name, kubernetesConfig.getNamespace());
+  }
+
+  @Override
+  public HasMetadata getController(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String name, String namespace) {
     try {
       return timeLimiter.callWithTimeout(
-          getControllerInternal(kubernetesConfig, encryptedDataDetails, name), 2, TimeUnit.MINUTES, true);
+          getControllerInternal(kubernetesConfig, encryptedDataDetails, name, namespace), 2, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
       logger.error(format("Timed out getting controller %s", name), e);
       throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Timed out while getting controller");
@@ -179,8 +189,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @SuppressFBWarnings("DE_MIGHT_IGNORE")
-  private Callable<HasMetadata> getControllerInternal(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+  private Callable<HasMetadata> getControllerInternal(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String name, String namespace) {
     return () -> {
       HasMetadata controller = null;
       logger.info("Trying to get controller for name {}", name);
@@ -190,14 +200,15 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         while (!success) {
           try {
             try {
-              controller = rcOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+              controller = rcOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
               allFailed = false;
             } catch (Exception e) {
               // Ignore
             }
             if (controller == null) {
               try {
-                controller = deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+                controller =
+                    deploymentOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
                 allFailed = false;
               } catch (Exception e) {
                 // Ignore
@@ -205,7 +216,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
             if (controller == null) {
               try {
-                controller = replicaOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+                controller = replicaOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
                 allFailed = false;
               } catch (Exception e) {
                 // Ignore
@@ -213,7 +224,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
             if (controller == null) {
               try {
-                controller = statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+                controller = statefulOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
                 allFailed = false;
               } catch (Exception e) {
                 // Ignore
@@ -221,14 +232,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
             if (controller == null) {
               try {
-                controller = daemonOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+                controller = daemonOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
                 allFailed = false;
               } catch (Exception e) {
                 // Ignore
               }
             }
             if (allFailed) {
-              controller = deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+              controller = deploymentOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
             } else {
               success = true;
             }
@@ -256,43 +267,60 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     List<? extends HasMetadata> controllers = new ArrayList<>();
     boolean allFailed = true;
     try {
-      controllers.addAll(
-          (List) rcOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+      controllers.addAll((List) rcOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+                             .withLabels(labels)
+                             .list()
+                             .getItems());
       allFailed = false;
     } catch (Exception e) {
       // Ignore
     }
     try {
       controllers.addAll(
-          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+              .withLabels(labels)
+              .list()
+              .getItems());
       allFailed = false;
     } catch (Exception e) {
       // Ignore
     }
     try {
       controllers.addAll(
-          (List) replicaOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+          (List) replicaOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+              .withLabels(labels)
+              .list()
+              .getItems());
       allFailed = false;
     } catch (Exception e) {
       // Ignore
     }
     try {
       controllers.addAll(
-          (List) statefulOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+          (List) statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+              .withLabels(labels)
+              .list()
+              .getItems());
       allFailed = false;
     } catch (Exception e) {
       // Ignore
     }
     try {
       controllers.addAll(
-          (List) daemonOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+          (List) daemonOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+              .withLabels(labels)
+              .list()
+              .getItems());
       allFailed = false;
     } catch (Exception e) {
       // Ignore
     }
     if (allFailed) {
       controllers.addAll(
-          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+              .withLabels(labels)
+              .list()
+              .getItems());
     }
     return controllers;
   }
@@ -305,37 +333,54 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     List<? extends HasMetadata> controllers = new ArrayList<>();
     boolean allFailed = true;
     try {
-      controllers.addAll((List) rcOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+      controllers.addAll((List) rcOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+                             .list()
+                             .getItems());
       allFailed = false;
     } catch (Exception e) {
       // Ignore
     }
     try {
-      controllers.addAll((List) deploymentOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+      controllers.addAll(
+          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+              .list()
+              .getItems());
       allFailed = false;
     } catch (Exception e) {
       // Ignore
     }
     try {
-      controllers.addAll((List) replicaOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+      controllers.addAll(
+          (List) replicaOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+              .list()
+              .getItems());
       allFailed = false;
     } catch (Exception e) {
       // Ignore
     }
     try {
-      controllers.addAll((List) statefulOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+      controllers.addAll(
+          (List) statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+              .list()
+              .getItems());
       allFailed = false;
     } catch (Exception e) {
       // Ignore
     }
     try {
-      controllers.addAll((List) daemonOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+      controllers.addAll(
+          (List) daemonOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+              .list()
+              .getItems());
       allFailed = false;
     } catch (Exception e) {
       // Ignore
     }
     if (allFailed) {
-      controllers.addAll((List) deploymentOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+      controllers.addAll(
+          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+              .list()
+              .getItems());
     }
     return controllers;
   }
@@ -347,15 +392,23 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     if (isNotBlank(name)) {
       HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, name);
       if (controller instanceof ReplicationController) {
-        rcOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+        rcOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace()).withName(name).delete();
       } else if (controller instanceof Deployment) {
-        deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+        deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+            .withName(name)
+            .delete();
       } else if (controller instanceof ReplicaSet) {
-        replicaOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+        replicaOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+            .withName(name)
+            .delete();
       } else if (controller instanceof StatefulSet) {
-        statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+        statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+            .withName(name)
+            .delete();
       } else if (controller instanceof DaemonSet) {
-        daemonOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+        daemonOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+            .withName(name)
+            .delete();
       }
     }
   }
@@ -419,13 +472,21 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             .addParam("args", "Could not find a controller named " + controllerName);
       }
       if (controller instanceof ReplicationController) {
-        rcOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
+        rcOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+            .withName(controllerName)
+            .scale(desiredCount);
       } else if (controller instanceof Deployment) {
-        deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
+        deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+            .withName(controllerName)
+            .scale(desiredCount);
       } else if (controller instanceof ReplicaSet) {
-        replicaOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
+        replicaOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+            .withName(controllerName)
+            .scale(desiredCount);
       } else if (controller instanceof StatefulSet) {
-        statefulOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
+        statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+            .withName(controllerName)
+            .scale(desiredCount);
       } else if (controller instanceof DaemonSet) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)
             .addParam("args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
@@ -438,20 +499,21 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           format("Controller [%s] in cluster [%s] stays at %s instances", controllerName, clusterName, previousCount));
     }
     return getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
-        desiredCount, serviceSteadyStateTimeout, originalPods, false, executionLogCallback, sizeChanged, startTime);
+        desiredCount, serviceSteadyStateTimeout, originalPods, false, executionLogCallback, sizeChanged, startTime,
+        kubernetesConfig.getNamespace());
   }
 
   @Override
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
       int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned,
-      ExecutionLogCallback executionLogCallback, boolean wait, long startTime) {
+      ExecutionLogCallback executionLogCallback, boolean wait, long startTime, String namespace) {
     List<Pod> pods = wait
         ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount,
-              serviceSteadyStateTimeout, originalPods, isNotVersioned, startTime, executionLogCallback)
+              serviceSteadyStateTimeout, originalPods, isNotVersioned, startTime, namespace, executionLogCallback)
         : originalPods;
     int controllerDesiredCount =
-        getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName));
+        getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace));
     Set<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toSet());
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
@@ -480,7 +542,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                                       .podName(podName)
                                                       .newContainer(!originalPodNames.contains(podName));
       Set<String> images = getControllerImages(
-          getPodTemplateSpec(getController(kubernetesConfig, encryptedDataDetails, controllerName)));
+          getPodTemplateSpec(getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace)));
 
       if (desiredCount > 0 && !podHasImages(pod, images)) {
         hasErrors = true;
@@ -676,45 +738,54 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private NonNamespaceOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
       RollableScalableResource<ReplicationController, DoneableReplicationController>>
-  rcOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  rcOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+    namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .replicationControllers()
-        .inNamespace(kubernetesConfig.getNamespace());
+        .inNamespace(namespace);
   }
 
   private NonNamespaceOperation<Deployment, DeploymentList, DoneableDeployment,
       ScalableResource<Deployment, DoneableDeployment>>
-  deploymentOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  deploymentOperations(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+    namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .extensions()
         .deployments()
-        .inNamespace(kubernetesConfig.getNamespace());
+        .inNamespace(namespace);
   }
 
   private NonNamespaceOperation<ReplicaSet, ReplicaSetList, DoneableReplicaSet,
       RollableScalableResource<ReplicaSet, DoneableReplicaSet>>
-  replicaOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  replicaOperations(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+    namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .extensions()
         .replicaSets()
-        .inNamespace(kubernetesConfig.getNamespace());
+        .inNamespace(namespace);
   }
 
   private NonNamespaceOperation<DaemonSet, DaemonSetList, DoneableDaemonSet, Resource<DaemonSet, DoneableDaemonSet>>
-  daemonOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  daemonOperations(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+    namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .extensions()
         .daemonSets()
-        .inNamespace(kubernetesConfig.getNamespace());
+        .inNamespace(namespace);
   }
 
   private NonNamespaceOperation<StatefulSet, StatefulSetList, DoneableStatefulSet,
       RollableScalableResource<StatefulSet, DoneableStatefulSet>>
-  statefulOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  statefulOperations(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+    namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .apps()
         .statefulSets()
-        .inNamespace(kubernetesConfig.getNamespace());
+        .inNamespace(namespace);
   }
 
   @Override
@@ -1074,9 +1145,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned, long startTime,
+      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned, long startTime, String namespace,
       ExecutionLogCallback executionLogCallback) {
-    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace);
     if (controller == null) {
       throw new InvalidArgumentsException(Pair.of(controllerName, "is null"));
     }
@@ -1094,7 +1165,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     AtomicBoolean haveImagesCountReached = new AtomicBoolean(false);
     AtomicBoolean runningCountReached = new AtomicBoolean(false);
     AtomicBoolean steadyStateCountReached = new AtomicBoolean(false);
-    String namespace = kubernetesConfig.getNamespace();
+
     try {
       int waitMinutes = serviceSteadyStateTimeout > 0 ? serviceSteadyStateTimeout : DEFAULT_STEADY_STATE_TIMEOUT;
       return timeLimiter.callWithTimeout(() -> {
@@ -1102,7 +1173,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
         while (true) {
           try {
-            HasMetadata currentController = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+            HasMetadata currentController =
+                getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace);
             if (currentController != null) {
               int controllerDesiredCount = getControllerPodCount(currentController);
               if (controllerDesiredCount != desiredCount) {
