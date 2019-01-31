@@ -369,8 +369,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     PageRequest<WorkflowExecution> workflowExecutionPageRequest =
         PageRequestBuilder.aPageRequest()
             .addFilter("appId", Operator.EQ, service.getAppId())
-            .addFilter("serviceIds", Operator.CONTAINS, serviceId)
-            .addFieldsExcluded("serviceExecutionSummaries", "executionArgs", "keywords", "breakdown")
+            .addFieldsExcluded(
+                "serviceExecutionSummaries", "executionArgs", "keywords", "breakdown", "statusInstanceBreakdownMap")
             .addFilter("startTs", Operator.GE, startTime)
             .addFilter("startTs", Operator.LT, endTime)
             .withLimit(String.valueOf(PAGE_LIMIT))
@@ -388,7 +388,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       workflowExecutionResponse = wingsPersistence.query(WorkflowExecution.class, workflowExecutionPageRequest);
     }
 
-    return results;
+    List<WorkflowExecution> resultList = new ArrayList<>();
+    results.forEach(workflowExecution -> {
+      if (workflowExecution.getServiceIds().contains(serviceId)) {
+        resultList.add(workflowExecution);
+      }
+    });
+    return resultList;
   }
 
   /**
