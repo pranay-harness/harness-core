@@ -21,6 +21,8 @@ import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteWfResponse;
+import software.wings.service.impl.aws.model.AwsLambdaFunctionRequest;
+import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse;
 import software.wings.service.impl.aws.model.AwsLambdaRequest;
 import software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType;
 import software.wings.service.impl.aws.model.AwsResponse;
@@ -60,7 +62,7 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
               .build();
         }
       }
-      case EXECUTE_LAMBA_WF: {
+      case EXECUTE_LAMBDA_WF: {
         try {
           AwsLambdaExecuteWfRequest awsLambdaExecuteWfRequest = (AwsLambdaExecuteWfRequest) request;
           ExecutionLogCallback logCallback = new ExecutionLogCallback(delegateLogService,
@@ -69,6 +71,13 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
           return awsLambdaHelperServiceDelegate.executeWf(awsLambdaExecuteWfRequest, logCallback);
         } catch (Exception ex) {
           return AwsLambdaExecuteWfResponse.builder().executionStatus(FAILED).errorMessage(getMessage(ex)).build();
+        }
+      }
+      case LIST_LAMBDA_FUNCTION: {
+        try {
+          return awsLambdaHelperServiceDelegate.getLambdaFunctions((AwsLambdaFunctionRequest) request);
+        } catch (Exception ex) {
+          return AwsLambdaFunctionResponse.builder().executionStatus(FAILED).errorMessage(getMessage(ex)).build();
         }
       }
       default: { throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER); }

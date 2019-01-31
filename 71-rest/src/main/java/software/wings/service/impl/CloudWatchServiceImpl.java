@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
@@ -37,6 +38,7 @@ import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.net.URL;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -115,6 +117,25 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     loadBalancers.addAll(awsInfrastructureProvider.listClassicLoadBalancers(settingAttribute, region, ""));
     loadBalancers.addAll(awsInfrastructureProvider.listLoadBalancers(settingAttribute, region, ""));
     return loadBalancers;
+  }
+
+  @Override
+  public List<String> getLambdaFunctionsNames(String settingId, String region) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
+      throw new WingsException("AWS account setting not found " + settingId);
+    }
+    return awsInfrastructureProvider.listLambdaFunctions(settingAttribute, region);
+  }
+
+  @Override
+  public Map<String, List<CloudWatchMetric>> createLambdaFunctionNames(List<String> lambdaFunctions) {
+    if (isEmpty(lambdaFunctions)) {
+      return null;
+    }
+    Map<String, List<CloudWatchMetric>> lambdaMetrics = new HashMap<>();
+    lambdaFunctions.forEach(function -> { lambdaMetrics.put(function, cloudWatchMetrics.get(AwsNameSpace.LAMBDA)); });
+    return lambdaMetrics;
   }
 
   @Override

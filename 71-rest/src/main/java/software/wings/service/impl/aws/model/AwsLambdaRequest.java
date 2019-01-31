@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class AwsLambdaRequest extends AwsRequest {
-  public enum AwsLambdaRequestType { EXECUTE_LAMBA_WF, EXECUTE_LAMBDA_FUNCTION }
+  public enum AwsLambdaRequestType { EXECUTE_LAMBDA_WF, EXECUTE_LAMBDA_FUNCTION, LIST_LAMBDA_FUNCTION }
 
   @NotNull private AwsLambdaRequestType requestType;
   @NotNull private String region;

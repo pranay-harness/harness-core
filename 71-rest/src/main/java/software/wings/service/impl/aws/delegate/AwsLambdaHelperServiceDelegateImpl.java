@@ -57,6 +57,9 @@ import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteWfResponse;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteWfResponse.AwsLambdaExecuteWfResponseBuilder;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionParams;
+import software.wings.service.impl.aws.model.AwsLambdaFunctionRequest;
+import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse;
+import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse.AwsLambdaFunctionResponseBuilder;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionResult;
 import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
@@ -73,7 +76,7 @@ public class AwsLambdaHelperServiceDelegateImpl
   private static final Logger logger = LoggerFactory.getLogger(AwsLambdaHelperServiceDelegateImpl.class);
 
   @VisibleForTesting
-  AWSLambdaClient getAmazonLambdaClient(
+  public AWSLambdaClient getAmazonLambdaClient(
       String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
     AWSLambdaClientBuilder builder = AWSLambdaClientBuilder.standard().withRegion(region);
     attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
@@ -119,6 +122,21 @@ public class AwsLambdaHelperServiceDelegateImpl
       handleAmazonClientException(amazonClientException);
     }
     return null;
+  }
+
+  @Override
+  public AwsLambdaFunctionResponse getLambdaFunctions(AwsLambdaFunctionRequest request) {
+    AwsConfig awsConfig = request.getAwsConfig();
+    List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+    AWSLambdaClient lambdaClient = getAmazonLambdaClient(
+        request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+    lambdaClient.listFunctions();
+    AwsLambdaFunctionResponseBuilder response = AwsLambdaFunctionResponse.builder();
+    List<String> lambdaFunctions = new ArrayList<>();
+    lambdaClient.listFunctions().getFunctions().forEach(
+        functionConfiguration -> { lambdaFunctions.add(functionConfiguration.getFunctionName()); });
+    return response.lambdaFunctions(lambdaFunctions).build();
   }
 
   @Override

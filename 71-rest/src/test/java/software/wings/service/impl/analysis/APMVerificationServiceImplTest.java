@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -40,6 +41,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
+import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -51,6 +53,7 @@ import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author Praveen 9/6/18
@@ -62,6 +65,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @Mock private DelegateService mockDelegateService;
   @Mock private WaitNotifyEngine mockWaitNotifyEngine;
   @Mock private SecretManager mockSecretManager;
+  @Mock private CloudWatchService cloudWatchService;
   @InjectMocks ContinuousVerificationServiceImpl service;
   @Inject WingsPersistence wingsPersistence;
 
@@ -350,6 +354,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
     when(mockWaitNotifyEngine.waitForAll(anyObject(), anyString())).thenReturn("waitId");
     when(mockSecretManager.getEncryptionDetails(awsConfig, "appId", null)).thenReturn(new ArrayList<>());
+    when(cloudWatchService.createLambdaFunctionNames(anyList())).thenReturn(new HashMap());
     // execute behavior
     boolean response = service.collect247Data("cvConfigId", StateType.CLOUD_WATCH, 1540419553000l, 1540420454000l);
     // verify

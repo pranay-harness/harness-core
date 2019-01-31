@@ -22,9 +22,11 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
+import software.wings.service.impl.aws.delegate.AwsLambdaHelperServiceDelegateImpl;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDelegateServiceImpl;
+import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
@@ -50,6 +52,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
 
   @Inject private MetricDataStoreService metricStoreService;
   @Inject private CloudWatchDelegateServiceImpl cloudWatchDelegateService;
+  @Inject private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
 
   public CloudWatchDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
@@ -199,10 +202,12 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                       String.valueOf(dataCollectionInfo.getAwsConfig().getSecretKey()))))
               .build();
 
-      if (isNotEmpty(dataCollectionInfo.getLambdaFunctionNames())) {
-        logger.info("for {} fetching metrics for lamda functions {}", dataCollectionInfo.getStateExecutionId(),
-            dataCollectionInfo.getLambdaFunctionNames());
-        dataCollectionInfo.getLambdaFunctionNames().forEach(
+      Map<String, List<CloudWatchMetric>> cloudWatchMetricsByLambdaFunction =
+          dataCollectionInfo.getLambdaFunctionNames();
+      if (isNotEmpty(cloudWatchMetricsByLambdaFunction)) {
+        logger.info("for {} fetching metrics for lambda functions {}", dataCollectionInfo.getStateExecutionId(),
+            cloudWatchMetricsByLambdaFunction);
+        cloudWatchMetricsByLambdaFunction.forEach(
             (functionName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
               callables.add(
                   ()

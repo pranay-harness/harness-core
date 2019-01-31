@@ -266,7 +266,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case CLOUD_WATCH:
         updateOperations
             .set("loadBalancerMetrics", ((CloudWatchCVServiceConfiguration) cvConfiguration).getLoadBalancerMetrics())
-            .set("region", ((CloudWatchCVServiceConfiguration) cvConfiguration).getRegion());
+            .set("region", ((CloudWatchCVServiceConfiguration) cvConfiguration).getRegion())
+            .set("lambdaFunctions", ((CloudWatchCVServiceConfiguration) cvConfiguration).getLambdaFunctions());
         break;
       case SUMO:
         updateOperations.set("query", ((LogsCVConfiguration) cvConfiguration).getQuery())

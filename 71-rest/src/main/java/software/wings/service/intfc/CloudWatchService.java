@@ -47,10 +47,14 @@ public interface CloudWatchService {
 
   Set<String> getLoadBalancerNames(String settingId, String region);
 
+  List<String> getLambdaFunctionsNames(String settingId, String region);
+
   /**
    * Api to fetch metric data for given node.
    * @param setupTestNodeData
    * @return
    */
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(CloudWatchSetupTestNodeData setupTestNodeData);
+
+  Map<String, List<CloudWatchMetric>> createLambdaFunctionNames(List<String> lambdaFunctions);
 }

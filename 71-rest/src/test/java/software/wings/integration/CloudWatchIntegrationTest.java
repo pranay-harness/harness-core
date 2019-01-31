@@ -22,6 +22,7 @@ import io.harness.rule.RepeatRule.Repeat;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
@@ -109,6 +110,20 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
     JSONObject response = jsonResponseObject.getJSONObject("resource");
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
     assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+  }
+
+  @Test
+  @Ignore("Will be enabled once AWS Access Key in Datagen has access to lambda functions")
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  public void testGetLambdaFunctionNames() throws Exception {
+    WebTarget target = client.target(API_BASE + "/cloudwatch/get-lambda-functions?accountId=" + accountId
+        + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());
+    RestResponse<List<String>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<String>>>() {});
+
+    List<String> lambdaFunctionNames = restResponse.getResource();
+
+    assertTrue("No lambda function found", lambdaFunctionNames.size() > 1);
   }
 
   private CloudWatchSetupTestNodeData getCloudWatchSetupTestNodedata() {
