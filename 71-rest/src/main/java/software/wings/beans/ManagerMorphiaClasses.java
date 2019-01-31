@@ -103,8 +103,8 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
-import software.wings.verification.log.AbstractLogsCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
+import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 import software.wings.yaml.YamlHistory;
@@ -169,6 +169,6 @@ public class ManagerMorphiaClasses {
       NewRelicCVServiceConfiguration.class, ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class,
       YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class,
       ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class,
-      AbstractLogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
+      LogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
       AlertNotificationRule.class, CustomArtifactStream.class, NotificationReceiverInfo.class);
 }

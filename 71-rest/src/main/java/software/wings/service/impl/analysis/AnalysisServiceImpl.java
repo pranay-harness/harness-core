@@ -926,18 +926,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     return stateExecutionInstance != null && !ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus());
   }
 
-  private int getLastProcessedMinute(String query, String appId, String stateExecutionId, StateType type) {
-    LogDataRecord logDataRecords = wingsPersistence.createQuery(LogDataRecord.class)
-                                       .filter("appId", appId)
-                                       .filter("stateExecutionId", stateExecutionId)
-                                       .filter("stateType", type)
-                                       .filter("clusterLevel", ClusterLevel.getFinal())
-                                       .filter("query", query)
-                                       .order("-logCollectionMinute")
-                                       .get();
-    return logDataRecords == null ? -1 : logDataRecords.getLogCollectionMinute();
-  }
-
   @Override
   public Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId) {
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
@@ -1084,18 +1072,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     analysisSummary.setRiskLevel(riskLevel);
     analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
     return analysisSummary;
-  }
-
-  private boolean deleteIfStale(String query, String appId, String stateExecutionId, StateType type, Set<String> hosts,
-      int logCollectionMinute, ClusterLevel clusterLevel, ClusterLevel heartBeat) {
-    int lastProcessedMinute = getLastProcessedMinute(query, appId, stateExecutionId, type);
-    if (logCollectionMinute <= lastProcessedMinute) {
-      logger.info("deleting stale data for stateExecutionID = " + stateExecutionId + " logCollectionMinute "
-          + logCollectionMinute);
-      deleteClusterLevel(type, stateExecutionId, appId, query, hosts, logCollectionMinute, clusterLevel, heartBeat);
-      return true;
-    }
-    return false;
   }
 
   public enum CLUSTER_TYPE { CONTROL, TEST, UNKNOWN, IGNORE }

@@ -62,7 +62,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @Mock private DelegateService mockDelegateService;
   @Mock private WaitNotifyEngine mockWaitNotifyEngine;
   @Mock private SecretManager mockSecretManager;
-  @InjectMocks APMVerificationServiceImpl service;
+  @InjectMocks ContinuousVerificationServiceImpl service;
   @Inject WingsPersistence wingsPersistence;
 
   @Before

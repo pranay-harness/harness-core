@@ -77,9 +77,13 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
   }
 
   @Override
+  protected boolean is24X7Task() {
+    return getTaskType().equals(TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA.name());
+  }
+
+  @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
-    return new CloudWatchMetricCollector(dataCollectionInfo, taskResult,
-        this.getTaskType().equals(TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA.name()));
+    return new CloudWatchMetricCollector(dataCollectionInfo, taskResult, is24X7Task());
   }
 
   private class CloudWatchMetricCollector implements Runnable {

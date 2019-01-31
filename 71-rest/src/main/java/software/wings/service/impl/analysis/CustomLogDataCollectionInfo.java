@@ -28,11 +28,11 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
   public CustomLogDataCollectionInfo(String baseUrl, String validationUrl,
       Map<String, Map<String, ResponseMapper>> responseDefinition, Map<String, String> headers,
       Map<String, String> options, int collectionFrequency, boolean shouldInspectHosts, String accountId,
-      String applicationId, String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
-      String query, long startTime, int startMinute, int collectionTime, String hostnameField, Set<String> hosts,
-      StateType stateType, List<EncryptedDataDetail> encryptedDataDetails) {
-    super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, query, startTime,
-        startMinute, collectionTime, hostnameField, hosts, stateType, encryptedDataDetails);
+      String applicationId, String stateExecutionId, String cvConfidId, String workflowId, String workflowExecutionId,
+      String serviceId, String query, long startTime, long endTime, int startMinute, int collectionTime,
+      String hostnameField, Set<String> hosts, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails) {
+    super(accountId, applicationId, stateExecutionId, cvConfidId, workflowId, workflowExecutionId, serviceId, query,
+        startTime, endTime, startMinute, collectionTime, hostnameField, hosts, stateType, encryptedDataDetails);
     this.baseUrl = baseUrl;
     this.validationUrl = validationUrl;
     this.logResponseDefinition = responseDefinition;

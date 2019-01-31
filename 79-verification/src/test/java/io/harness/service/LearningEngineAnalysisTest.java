@@ -390,7 +390,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
         (int) (currentMinute - CRON_POLL_INTERVAL_IN_MINUTES * numOfUnitsToBeAnalyized));
     wingsPersistence.save(timeSeriesMLAnalysisRecord);
 
-    continuousVerificationService.triggerDataAnalysis(accountId);
+    continuousVerificationService.triggerMetricDataAnalysis(accountId);
 
     List<LearningEngineAnalysisTask> analysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                                          .filter("appId", this.appId)
@@ -405,7 +405,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     assertEquals(
         analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
 
-    continuousVerificationService.triggerDataAnalysis(accountId);
+    continuousVerificationService.triggerMetricDataAnalysis(accountId);
     analysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                         .filter("appId", this.appId)
                         .order("-analysis_minute")
@@ -429,7 +429,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     analysisTask.setExecutionStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(analysisTask);
 
-    continuousVerificationService.triggerDataAnalysis(accountId);
+    continuousVerificationService.triggerMetricDataAnalysis(accountId);
 
     analysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                         .filter("appId", this.appId)

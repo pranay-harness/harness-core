@@ -11,8 +11,8 @@ import software.wings.beans.RestResponse;
 import software.wings.common.VerificationConstants;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
-import software.wings.service.intfc.analysis.APMVerificationService;
 import software.wings.sm.StateType;
 
 import javax.ws.rs.GET;
@@ -24,8 +24,8 @@ import javax.ws.rs.QueryParam;
 @Api("apm")
 @Path("/apm")
 @Produces("application/json")
-public class APMVerificationResource {
-  @Inject private APMVerificationService apmVerificationService;
+public class ContinuousVerificationResource {
+  @Inject private ContinuousVerificationService verificationService;
 
   /**
    * Api to fetch Metric data for given node.
@@ -42,7 +42,7 @@ public class APMVerificationResource {
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @QueryParam("serverConfigId") String serverConfigId,
       APMFetchConfig fetchConfig) {
-    return new RestResponse<>(apmVerificationService.getMetricsWithDataForNode(
+    return new RestResponse<>(verificationService.getMetricsWithDataForNode(
         accountId, serverConfigId, fetchConfig, StateType.APM_VERIFICATION));
   }
 
@@ -52,7 +52,7 @@ public class APMVerificationResource {
   @LearningEngineAuth
   public RestResponse<Boolean> sendNotifyForMetricAnalysis(
       @QueryParam("correlationId") String correlationId, MetricDataAnalysisResponse response) {
-    return new RestResponse<>(apmVerificationService.sendNotifyForMetricAnalysis(correlationId, response));
+    return new RestResponse<>(verificationService.sendNotifyForMetricAnalysis(correlationId, response));
   }
 
   @GET
@@ -62,6 +62,6 @@ public class APMVerificationResource {
   public RestResponse<Boolean> collect247CVData(@QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("stateType") StateType stateType, @QueryParam("startTime") long startTime,
       @QueryParam("endTime") long endTime) {
-    return new RestResponse<>(apmVerificationService.collect247Data(cvConfigId, stateType, startTime, endTime));
+    return new RestResponse<>(verificationService.collect247Data(cvConfigId, stateType, startTime, endTime));
   }
 }

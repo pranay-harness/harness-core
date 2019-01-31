@@ -19,5 +19,5 @@ public class LogRequest {
   private String workflowId;
   private String serviceId;
   private Set<String> nodes;
-  private int logCollectionMinute;
+  private long logCollectionMinute;
 }

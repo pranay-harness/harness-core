@@ -117,8 +117,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
   @Test
   public void saveLogDataWithNoState() throws Exception {
-    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, Collections.singletonList(new LogElement()));
+    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
+        workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId,
+        Collections.singletonList(new LogElement()));
 
     assertFalse(status);
   }
@@ -130,8 +131,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.ABORTED);
     wingsPersistence.save(stateExecutionInstance);
-    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, Collections.singletonList(new LogElement()));
+    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
+        workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId,
+        Collections.singletonList(new LogElement()));
 
     assertFalse(status);
   }
@@ -143,8 +145,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     wingsPersistence.save(stateExecutionInstance);
-    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, Collections.singletonList(new LogElement()));
+    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
+        workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId,
+        Collections.singletonList(new LogElement()));
 
     assertFalse(status);
   }
@@ -184,8 +187,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
     assertTrue(logDataRecords.isEmpty());
 
-    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
+        workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     assertTrue(status);
 
@@ -231,8 +234,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     final LogRequest logRequest = new LogRequest(
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
 
-    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
+        workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     assertTrue(status);
 
@@ -279,8 +282,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     final LogRequest logRequest = new LogRequest(
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
 
-    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
+        workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     assertTrue(status);
 
@@ -323,8 +326,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     LogElement logElement = new LogElement(query, "0", host, 0, 0, UUID.randomUUID().toString(), logCollectionMinute);
     logElements.add(logElement);
 
-    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
+        workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     assertTrue(status);
 
@@ -390,8 +393,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     LogElement logElement = new LogElement(query, "0", host, 0, 0, UUID.randomUUID().toString(), logCollectionMinute);
     logElements.add(logElement);
 
-    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-        serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
+        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     assertTrue(
         analysisService.isLogDataCollected(appId, stateExecutionId, query, logCollectionMinute, StateType.SPLUNKV2));
@@ -447,8 +450,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     LogElement logElement = new LogElement(query, "0", host, 0, 0, UUID.randomUUID().toString(), logCollectionMinute);
     logElements.add(logElement);
-    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-        serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
+        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     AnalysisService managerAnalysisService = new AnalysisServiceImpl();
     setInternalState(managerAnalysisService, "wingsPersistence", wingsPersistence);
@@ -498,7 +501,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     LogElement logElement = new LogElement(query, "0", host, 0, 0, UUID.randomUUID().toString(), logCollectionMinute);
     logElements.add(logElement);
-    assertTrue(analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId,
+    assertTrue(analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements));
 
     assertTrue(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,

@@ -165,8 +165,13 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
   protected abstract Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException;
 
   protected int getInitialDelayMinutes() {
+    if (is24X7Task()) {
+      return 0;
+    }
     return SplunkDataCollectionTask.DELAY_MINUTES;
   }
+
+  protected abstract boolean is24X7Task();
 
   protected int getPeriodMinutes() {
     return COLLECTION_PERIOD_MINS;

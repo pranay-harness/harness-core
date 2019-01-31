@@ -84,7 +84,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     if (analysisTask.getCluster_level() == null) {
       analysisTask.setCluster_level(getDefaultClusterLevel().getLevel());
     }
-    LearningEngineAnalysisTask learningEngineAnalysisTask =
+    Query<LearningEngineAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
             .filter("workflow_execution_id", analysisTask.getWorkflow_execution_id())
             .filter("state_execution_id", analysisTask.getState_execution_id())
@@ -95,11 +95,12 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .in(Lists.newArrayList(ExecutionStatus.RUNNING, ExecutionStatus.QUEUED, ExecutionStatus.SUCCESS))
             .filter("cluster_level", analysisTask.getCluster_level())
             .filter("ml_analysis_type", analysisTask.getMl_analysis_type())
-            // TODO can control_nodes be empty ???
-            .filter("control_nodes", analysisTask.getControl_nodes())
             .filter("group_name", analysisTask.getGroup_name())
-            .order("-createdAt")
-            .get();
+            .order("-createdAt");
+    if (!analysisTask.is24x7Task()) {
+      query.filter("control_nodes", analysisTask.getControl_nodes());
+    }
+    LearningEngineAnalysisTask learningEngineAnalysisTask = query.get();
 
     boolean isTaskCreated = false;
     if (learningEngineAnalysisTask == null) {
@@ -208,7 +209,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   }
 
   @Override
-  public void markCompleted(String workflowExecutionId, String stateExecutionId, int analysisMinute,
+  public void markCompleted(String workflowExecutionId, String stateExecutionId, long analysisMinute,
       MLAnalysisType type, ClusterLevel level) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                                   .filter("workflow_execution_id", workflowExecutionId)
@@ -245,7 +246,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public void markStatus(
-      String workflowExecutionId, String stateExecutionId, int analysisMinute, ExecutionStatus executionStatus) {
+      String workflowExecutionId, String stateExecutionId, long analysisMinute, ExecutionStatus executionStatus) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                                   .filter("workflow_execution_id", workflowExecutionId)
                                                   .filter("state_execution_id", stateExecutionId)

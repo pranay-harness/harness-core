@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.TaskType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
@@ -62,6 +63,11 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         .status(DataCollectionTaskStatus.SUCCESS)
         .stateType(dataCollectionInfo.getStateType())
         .build();
+  }
+
+  @Override
+  protected boolean is24X7Task() {
+    return getTaskType().equals(TaskType.ELK_COLLECT_24_7_LOG_DATA.name());
   }
 
   @Override
@@ -188,11 +194,11 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                                   .timeStamp(0)
                                   .logCollectionMinute(logCollectionMinute)
                                   .build());
-              boolean response =
-                  logAnalysisStoreService.save(dataCollectionInfo.getStateType(), dataCollectionInfo.getAccountId(),
-                      dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-                      dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-                      dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
+              boolean response = logAnalysisStoreService.save(dataCollectionInfo.getStateType(),
+                  dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
+                  dataCollectionInfo.getCvConfigId(), dataCollectionInfo.getStateExecutionId(),
+                  dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
+                  dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
               if (!response) {
                 if (++retry == RETRIES) {
                   taskResult.setStatus(DataCollectionTaskStatus.FAILURE);

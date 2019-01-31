@@ -26,7 +26,8 @@ public class MetricDataProcessorJob implements Job {
     final String accountId = jobExecutionContext.getMergedJobDataMap().getString("accountId");
     Preconditions.checkState(isNotEmpty(accountId), "account Id not found for " + jobExecutionContext);
 
-    logger.info("Executing APM Data collector Job for {}", accountId);
-    continuousVerificationService.triggerDataCollection(accountId);
+    logger.info("Executing APM & Logs Data collector Job for {}", accountId);
+    continuousVerificationService.triggerAPMDataCollection(accountId);
+    continuousVerificationService.triggerLogDataCollection(accountId);
   }
 }

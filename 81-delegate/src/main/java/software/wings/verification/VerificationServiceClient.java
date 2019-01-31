@@ -25,8 +25,9 @@ public interface VerificationServiceClient {
 
   @POST(LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveLogs(@Query("accountId") String accountId, @Query("appId") String appId,
-      @Query("stateExecutionId") String stateExecutionId, @Query("workflowId") String workflowId,
-      @Query("workflowExecutionId") String workflowExecutionId, @Query("serviceId") String serviceId,
-      @Query("clusterLevel") ClusterLevel clusterLevel, @Query("delegateTaskId") String delegateTaskId,
-      @Query("stateType") StateType stateType, @Body List<LogElement> metricData);
+      @Query("cvConfigId") String cvConfigId, @Query("stateExecutionId") String stateExecutionId,
+      @Query("workflowId") String workflowId, @Query("workflowExecutionId") String workflowExecutionId,
+      @Query("serviceId") String serviceId, @Query("clusterLevel") ClusterLevel clusterLevel,
+      @Query("delegateTaskId") String delegateTaskId, @Query("stateType") StateType stateType,
+      @Body List<LogElement> metricData);
 }

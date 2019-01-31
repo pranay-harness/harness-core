@@ -5,16 +5,15 @@ import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 import com.github.reinert.jjschema.Attributes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.stencils.DefaultValue;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ElkCVConfiguration extends AbstractLogsCVConfiguration {
-  @Attributes(required = true, title = "Query Type") @DefaultValue("TERM") private String queryType;
+public class ElkCVConfiguration extends LogsCVConfiguration {
+  @Attributes(required = true, title = "Query Type") @DefaultValue("TERM") private ElkQueryType queryType;
 
-  @Attributes(title = "Elastic search indices to search", required = true)
-  @DefaultValue("_all")
-  protected String indices;
+  @Attributes(title = "Elastic search indices to search", required = true) @DefaultValue("_all") protected String index;
 
   @Attributes(required = true, title = "Message Field") @DefaultValue("message") protected String messageField;
 

@@ -29,11 +29,12 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
   @Inject private TimeLimiter timeLimiter;
 
   @Override
-  public boolean save(StateType stateType, String accountId, String appId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, String serviceId, String delegateTaskId, List<LogElement> logs) throws IOException {
+  public boolean save(StateType stateType, String accountId, String appId, String cvConfigId, String stateExecutionId,
+      String workflowId, String workflowExecutionId, String serviceId, String delegateTaskId, List<LogElement> logs)
+      throws IOException {
     switch (stateType) {
       case SPLUNKV2:
-        return execute(verificationServiceClient.saveLogs(accountId, appId, stateExecutionId, workflowId,
+        return execute(verificationServiceClient.saveLogs(accountId, appId, cvConfigId, stateExecutionId, workflowId,
                            workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, StateType.SPLUNKV2, logs))
             .getResource();
       case SUMO:
@@ -44,8 +45,8 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
         try {
           RestResponse<Boolean> response = timeLimiter.callWithTimeout(
               ()
-                  -> execute(verificationServiceClient.saveLogs(accountId, appId, stateExecutionId, workflowId,
-                      workflowExecutionId, serviceId, ClusterLevel.L0, delegateTaskId, stateType, logs)),
+                  -> execute(verificationServiceClient.saveLogs(accountId, appId, cvConfigId, stateExecutionId,
+                      workflowId, workflowExecutionId, serviceId, ClusterLevel.L0, delegateTaskId, stateType, logs)),
               15, TimeUnit.SECONDS, true);
           if (response == null) {
             return false;

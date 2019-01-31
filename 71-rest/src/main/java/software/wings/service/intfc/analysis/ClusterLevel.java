@@ -30,6 +30,16 @@ public enum ClusterLevel {
         return H1;
       case L2:
         return H2;
+
+      case H0:
+        return H0;
+      case H1:
+        return H1;
+      case H2:
+        return H2;
+      case HF:
+        return HF;
+
       default:
         throw new RuntimeException("Cluster " + clusterLevel.name() + " does not have a heartbeat");
     }

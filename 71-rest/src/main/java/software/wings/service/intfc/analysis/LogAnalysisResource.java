@@ -19,20 +19,27 @@ public interface LogAnalysisResource {
    */
   String ANALYSIS_STATE_SAVE_LOG_URL = "/save-logs";
 
+  String ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL = "/save-24X7-clustered-logs";
   /**
    * url for python service to get collected logs
    */
   String ANALYSIS_STATE_GET_LOG_URL = "/get-logs";
+
+  String ANALYSIS_GET_24X7_LOG_URL = "/get-24X7-logs";
 
   /**
    * url for python service to save analyzed records
    */
   String ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL = "/save-analysis-records";
 
+  String ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL = "/save-24X7-analysis-records";
+
   /**
    * url for UI to get analysis summary
    */
   String ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL = "/get-analysis-records";
+
+  String ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL = "/get-24X7-analysis-records";
 
   /**
    * url for python service to get analyzed records

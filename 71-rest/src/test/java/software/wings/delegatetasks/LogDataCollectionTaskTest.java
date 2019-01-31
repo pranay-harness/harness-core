@@ -118,7 +118,7 @@ public class LogDataCollectionTaskTest {
     setup(logDefinition, new HashSet<>(Arrays.asList("test.hostname.2", "test.hostname.22", "test.hostname.12")));
     doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
     when(logAnalysisStoreService.save(any(StateType.class), anyString(), anyString(), anyString(), anyString(),
-             anyString(), anyString(), anyString(), any(List.class)))
+             anyString(), anyString(), anyString(), anyString(), any(List.class)))
         .thenReturn(true);
 
     // execute
@@ -129,7 +129,7 @@ public class LogDataCollectionTaskTest {
     // verify
     verify(logAnalysisStoreService, times(1))
         .save(any(StateType.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
-            anyString(), any(List.class));
+            anyString(), anyString(), any(List.class));
   }
 
   @Test
@@ -159,7 +159,7 @@ public class LogDataCollectionTaskTest {
     setup(logDefinition, new HashSet<>(Arrays.asList("test.hostname.2", "test.hostname.22", "test.hostname.12")));
     doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
     when(logAnalysisStoreService.save(any(StateType.class), anyString(), anyString(), anyString(), anyString(),
-             anyString(), anyString(), anyString(), any(List.class)))
+             anyString(), anyString(), anyString(), anyString(), any(List.class)))
         .thenThrow(new IOException("This is bad"))
         .thenReturn(true);
 
@@ -171,6 +171,6 @@ public class LogDataCollectionTaskTest {
     // verify
     verify(logAnalysisStoreService, times(2))
         .save(any(StateType.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
-            anyString(), any(List.class));
+            anyString(), anyString(), any(List.class));
   }
 }

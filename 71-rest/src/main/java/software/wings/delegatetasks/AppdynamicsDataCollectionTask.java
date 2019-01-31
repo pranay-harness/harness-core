@@ -87,12 +87,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
   }
 
   @Override
-  protected int getInitialDelayMinutes() {
-    if (this.getTaskType().equals(TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA.name())) {
-      // if it's a 24-7 collection task, we dont want to wait.
-      return 0;
-    }
-    return SplunkDataCollectionTask.DELAY_MINUTES;
+  protected boolean is24X7Task() {
+    return getTaskType().equals(TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA.name());
   }
 
   @Override
@@ -117,7 +113,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
     private int dataCollectionMinute;
     private final DataCollectionTaskResult taskResult;
     private AppDynamicsConfig appDynamicsConfig;
-    boolean is247Task;
+    private boolean is247Task;
     private int maxDataCollectionMin24x7;
 
     private AppdynamicsMetricCollector(

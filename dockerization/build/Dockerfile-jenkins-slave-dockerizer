@@ -8,6 +8,9 @@ ENV HOME /root
 RUN mkdir /root/.jenkins
 
 RUN apt-get update && \
+    apt-get install -y make
+
+RUN apt-get update && \
     apt-get install -qq -y --no-install-recommends \
       apt-transport-https \
       ca-certificates \

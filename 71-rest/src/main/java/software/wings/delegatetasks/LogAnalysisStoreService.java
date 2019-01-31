@@ -10,7 +10,7 @@ import java.util.List;
  * Created by rsingh on 5/18/17.
  */
 public interface LogAnalysisStoreService {
-  boolean save(StateType stateType, String accountId, String appId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, String serviceId, String delegateTaskId, List<LogElement> splunkLogs)
-      throws IOException;
+  boolean save(StateType stateType, String accountId, String appId, String cvConfigId, String stateExecutionId,
+      String workflowId, String workflowExecutionId, String serviceId, String delegateTaskId,
+      List<LogElement> splunkLogs) throws IOException;
 }

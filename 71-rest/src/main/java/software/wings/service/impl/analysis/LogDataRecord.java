@@ -49,6 +49,8 @@ public class LogDataRecord extends Base {
 
   @NotEmpty @Indexed private String stateExecutionId;
 
+  private @Indexed String cvConfigId;
+
   @NotEmpty private String query;
 
   @NotEmpty private String clusterLabel;
@@ -60,15 +62,15 @@ public class LogDataRecord extends Base {
   @NotEmpty private int count;
   @NotEmpty private String logMessage;
   @NotEmpty private String logMD5Hash;
-  @NotEmpty private ClusterLevel clusterLevel;
-  @NotEmpty private int logCollectionMinute;
+  @NotEmpty @Indexed private ClusterLevel clusterLevel;
+  @NotEmpty private long logCollectionMinute;
 
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 
-  public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId,
+  public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId, String cvConfigId,
       String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
       ClusterLevel clusterLevel, ClusterLevel heartbeat, List<LogElement> logElements) {
     final List<LogDataRecord> records = new ArrayList<>();
@@ -77,6 +79,7 @@ public class LogDataRecord extends Base {
       record.setStateType(stateType);
       record.setWorkflowId(workflowId);
       record.setWorkflowExecutionId(workflowExecutionId);
+      record.setCvConfigId(cvConfigId);
       record.setStateExecutionId(stateExecutionId);
       record.setQuery(logElement.getQuery());
       record.setAppId(applicationId);

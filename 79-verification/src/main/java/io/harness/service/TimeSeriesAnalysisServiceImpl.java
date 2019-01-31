@@ -1050,7 +1050,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public int getMaxCVCollectionMinute(String appId, String cvConfigId) {
+  public long getMaxCVCollectionMinute(String appId, String cvConfigId) {
     if (isGoogleMetricReadEnabled(appId)) {
       PageRequest<NewRelicMetricDataRecord> pageRequest = aPageRequest()
                                                               .withLimit("1")

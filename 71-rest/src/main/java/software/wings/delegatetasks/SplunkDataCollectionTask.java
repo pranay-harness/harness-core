@@ -67,6 +67,11 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
   }
 
   @Override
+  protected boolean is24X7Task() {
+    return false;
+  }
+
+  @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) {
     return new SplunkDataCollector(getTaskId(), dataCollectionInfo, logAnalysisStoreService, taskResult);
   }
@@ -133,9 +138,10 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
           });
 
           boolean response = logAnalysisStoreService.save(StateType.SPLUNKV2, dataCollectionInfo.getAccountId(),
-              dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-              dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-              dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
+              dataCollectionInfo.getApplicationId(), dataCollectionInfo.getCvConfigId(),
+              dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getWorkflowId(),
+              dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getServiceId(), delegateTaskId,
+              logElements);
           if (!response) {
             if (++retry == RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);

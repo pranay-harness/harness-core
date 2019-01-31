@@ -73,6 +73,7 @@ public class VerificationConstants {
   public static final String IGNORED_ERRORS_METRIC_NAME = "ignored_errors";
 
   public static final String HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";
+  public static final String DUMMY_HOST_NAME = "dummy";
 
   public static final String APPDYNAMICS_DEEPLINK_FORMAT =
       "#/location=METRIC_BROWSER&viewTree=true&axis=linear&showPoints=false&application={applicationId}"

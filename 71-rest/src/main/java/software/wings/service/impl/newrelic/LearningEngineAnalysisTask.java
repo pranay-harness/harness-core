@@ -49,7 +49,7 @@ public class LearningEngineAnalysisTask extends Base {
   private String service_id;
   private String auth_token;
   private int analysis_start_min;
-  private int analysis_minute;
+  private long analysis_minute;
   private int smooth_window;
   private int tolerance;
   private int min_rpm;
@@ -90,5 +90,5 @@ public class LearningEngineAnalysisTask extends Base {
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
 }

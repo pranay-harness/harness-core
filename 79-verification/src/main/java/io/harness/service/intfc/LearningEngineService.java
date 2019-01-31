@@ -33,9 +33,9 @@ public interface LearningEngineService {
   void markExpTaskCompleted(String taskId);
 
   void markStatus(
-      String workflowExecutionId, String stateExecutionId, int analysisMinute, ExecutionStatus executionStatus);
-  void markCompleted(
-      String workflowExecutionId, String stateExecutionId, int analysisMinute, MLAnalysisType type, ClusterLevel level);
+      String workflowExecutionId, String stateExecutionId, long analysisMinute, ExecutionStatus executionStatus);
+  void markCompleted(String workflowExecutionId, String stateExecutionId, long analysisMinute, MLAnalysisType type,
+      ClusterLevel level);
   void initializeServiceSecretKeys();
 
   String getServiceSecretKey(ServiceType serviceType);

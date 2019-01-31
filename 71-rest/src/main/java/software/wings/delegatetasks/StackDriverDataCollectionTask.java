@@ -87,9 +87,13 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
   }
 
   @Override
+  protected boolean is24X7Task() {
+    return getTaskType().equals(TaskType.STACKDRIVER_COLLECT_24_7_METRIC_DATA.name());
+  }
+
+  @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
-    return new StackDriverMetricCollector(dataCollectionInfo, taskResult,
-        this.getTaskType().equals(TaskType.STACKDRIVER_COLLECT_24_7_METRIC_DATA.name()));
+    return new StackDriverMetricCollector(dataCollectionInfo, taskResult, is24X7Task());
   }
 
   private class StackDriverMetricCollector implements Runnable {
