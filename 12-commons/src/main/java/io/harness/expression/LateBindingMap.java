@@ -9,7 +9,7 @@ public class LateBindingMap extends HashMap<String, Object> {
     if (object instanceof LateBindingValue) {
       // Remove the late binding value to avoid endless loop
       synchronized (this) {
-        remove((String) key);
+        remove(key);
       }
       object = ((LateBindingValue) object).bind();
       synchronized (this) {
