@@ -20,17 +20,21 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Singleton
 public class ShellExecutionServiceImpl implements ShellExecutionService {
   private static final Logger logger = LoggerFactory.getLogger(ShellExecutionServiceImpl.class);
   private static final String defaultParentWorkingDirectory = "./local-scripts/";
   private static final String ARTIFACT_RESULT_PATH = "ARTIFACT_RESULT_PATH";
+  private static final Pattern pattern = Pattern.compile("harness-(.*).sh: line ([0-9]*):");
 
   @Override
   public ShellExecutionResponse execute(ShellExecutionRequest shellExecutionRequest) {
@@ -60,7 +64,7 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
     String command =
         addEnvVariablesCollector(shellExecutionRequest.getScriptString(), scriptOutputFile.getAbsolutePath());
     final String[] message = new String[1];
-    message[0] = "";
+    Arrays.fill(message, "");
     try (FileOutputStream outputStream = new FileOutputStream(scriptFile)) {
       outputStream.write(command.getBytes(Charset.forName("UTF-8")));
       String[] commandList = new String[] {"/bin/bash", scriptFilename};
@@ -78,7 +82,11 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
                                             .redirectError(new LogOutputStream() {
                                               @Override
                                               protected void processLine(String line) {
-                                                message[0] += line;
+                                                if (message[0].equals("") && line != null) {
+                                                  Matcher matcher = pattern.matcher(line);
+                                                  String trimmed = matcher.replaceAll("");
+                                                  message[0] = trimmed;
+                                                }
                                                 logger.warn(line);
                                               }
                                             });
@@ -91,7 +99,7 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
         shellExecutionResponseBuilder.shellExecutionData(scriptData);
         logger.info("The script execution succeeded");
       } else {
-        throw new WingsException("Unknown error occurred during script execution, Reason: " + message[0]);
+        throw new WingsException("Error occurred during script execution, Reason: " + message[0]);
       }
     } catch (IOException | InterruptedException | TimeoutException e) {
       logger.error("Exception in Script execution ", e);
