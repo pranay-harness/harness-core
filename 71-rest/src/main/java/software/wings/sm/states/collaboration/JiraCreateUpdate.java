@@ -1,6 +1,5 @@
 package software.wings.sm.states.collaboration;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -13,7 +12,6 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
-import io.harness.serializer.KryoUtils;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
@@ -39,6 +37,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.utils.Validator;
 
 import java.util.Arrays;
@@ -49,7 +48,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import javax.validation.constraints.NotNull;
 
-public class JiraCreateUpdate extends State {
+public class JiraCreateUpdate extends State implements SweepingOutputStateMixin {
   private static final long JIRA_TASK_TIMEOUT_MILLIS = 60 * 1000;
   private static final String JIRA_ISSUE_ID = "issueId";
   private static final String JIRA_ISSUE_KEY = "issueKey";
@@ -197,18 +196,12 @@ public class JiraCreateUpdate extends State {
 
     JiraExecutionData jiraExecutionData = (JiraExecutionData) responseEntry.getValue();
     jiraExecutionData.setActivityId(activityId);
-    Map<String, String> sweepingOutputMap = new HashMap<>();
 
-    if (jiraExecutionData.getExecutionStatus() == ExecutionStatus.SUCCESS && isNotEmpty(sweepingOutputName)) {
+    if (jiraExecutionData.getExecutionStatus() == ExecutionStatus.SUCCESS) {
+      Map<String, String> sweepingOutputMap = new HashMap<>();
       sweepingOutputMap.put(JIRA_ISSUE_ID, jiraExecutionData.getIssueId());
       sweepingOutputMap.put(JIRA_ISSUE_KEY, jiraExecutionData.getIssueKey());
-
-      final SweepingOutput sweepingOutput = context.prepareSweepingOutputBuilder(sweepingOutputScope)
-                                                .name(sweepingOutputName)
-                                                .output(KryoUtils.asDeflatedBytes(sweepingOutputMap))
-                                                .build();
-
-      sweepingOutputService.save(sweepingOutput);
+      handleSweepingOutput(sweepingOutputService, context, sweepingOutputMap);
     }
 
     return anExecutionResponse()
