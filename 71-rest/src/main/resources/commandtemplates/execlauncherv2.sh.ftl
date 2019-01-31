@@ -150,7 +150,7 @@ harness_utils_start_tail_log_verification() {
 
 <#noparse>
   if [[ ${#filePathArray[@]} != ${#patternArray[@]} ]]; then
-    echo filePath array and pattern array must be the same size
+    echo Must have the same number of files and patterns
     return 1
   fi
 </#noparse>
