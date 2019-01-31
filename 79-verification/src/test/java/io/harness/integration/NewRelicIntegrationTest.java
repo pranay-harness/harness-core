@@ -186,8 +186,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     assertTrue(restResponse.getResource().size() >= 0);
   }
 
-  @Test
-  @Repeat(times = 5, successes = 1)
+  //  @Test
+  //  @Repeat(times = 5, successes = 1)
   public void getNewRelicDataForNode() {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
