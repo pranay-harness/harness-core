@@ -2,6 +2,8 @@ package software.wings.common;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import software.wings.beans.HttpMethod;
+
 import java.util.regex.Pattern;
 
 /**
@@ -990,4 +992,25 @@ public interface Constants {
   String SCRIPT_APPROVAL_COMMAND = "Execute Approval Script";
   String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
   String SCRIPT_APPROVAL_JOB_GROUP = "SHELL_SCRIPT_APPROVAL_JOB";
+
+  String RESOURCE_URI_CREATE_APP = "/api/apps";
+  String RESOURCE_URI_CREATE_SERVICE = "/api/services";
+  String RESOURCE_URI_CREATE_PROVISIONER = "/api/infrastructure-provisioners";
+  String RESOURCE_URI_CREATE_ENVIRONMENT = "/api/environments";
+  String RESOURCE_URI_CREATE_WORKFLOW = "/api/workflows";
+  String RESOURCE_URI_CREATE_PIPELINE = "/api/pipelines";
+
+  String RESOURCE_URI_CLONE_APP = "/api/apps/[^/]+/clone";
+  String RESOURCE_URI_CLONE_SERVICE = "/api/services/[^/]+/clone";
+  String RESOURCE_URI_CLONE_PROVISIONER = "/api/infrastructure-provisioners/[^/]+/clone";
+  String RESOURCE_URI_CLONE_ENVIRONMENT = "/api/environments/[^/]+/clone";
+  String RESOURCE_URI_CLONE_WORKFLOW = "/api/workflows/[^/]+/clone";
+  String RESOURCE_URI_CLONE_PIPELINE = "/api/pipelines/[^/]+/clone";
+
+  String RESOURCE_URI_UPDATE_ENVIRONMENT = "/api/environments/[^/]+";
+  String RESOURCE_URI_UPDATE_WORKFLOW = "/api/workflows/[^/]+/basic";
+  String RESOURCE_URI_UPDATE_PIPELINE = "/api/pipelines/[^/]+";
+
+  String HTTP_PUT = HttpMethod.PUT.name();
+  String HTTP_POST = HttpMethod.POST.name();
 }
