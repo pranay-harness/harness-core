@@ -492,20 +492,6 @@ public class InfrastructureMappingResource {
     return new RestResponse<>(infrastructureMappingService.lisRouteMapsForPcf(appId, computeProviderId, org, space));
   }
 
-  @POST
-  @Path("compute-providers/{computeProviderId}/pcf/create-route")
-  @Timed
-  @ExceptionMetered
-  @AuthRule(permissionType = ENV, action = UPDATE)
-  public RestResponse<String> createRouteForPcf(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
-      @QueryParam("org") String org, @QueryParam("space") String space,
-      @PathParam("computeProviderId") String computeProviderId, @QueryParam("host") String host,
-      @QueryParam("domain") String domain, @QueryParam("path") String path, @QueryParam("port") String port,
-      @QueryParam("useRandomPort") boolean useRandomPort, @QueryParam("tcpRoute") boolean tcpRoute) {
-    return new RestResponse<>(infrastructureMappingService.createRoute(
-        appId, computeProviderId, org, space, host, domain, path, tcpRoute, useRandomPort, port));
-  }
-
   private void populateDeploymentTypeIfRequired(String appId, InfrastructureMapping infrastructureMapping) {
     if (isBlank(infrastructureMapping.getDeploymentType())) {
       Service service = serviceResourceService.get(appId, infrastructureMapping.getServiceId());
