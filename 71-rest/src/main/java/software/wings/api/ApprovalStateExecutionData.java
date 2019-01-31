@@ -107,14 +107,12 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
     }
 
     if (approvedBy != null) {
-      StringBuilder approvedRejectedBy =
-          new StringBuilder(approvedBy.getName()).append(" (").append(approvedBy.getEmail()).append(")");
       if (getStatus().equals(ExecutionStatus.SUCCESS)) {
         putNotNull(executionDetails, "approvedBy",
-            ExecutionDataValue.builder().displayName("Approved By").value(approvedRejectedBy.toString()).build());
+            ExecutionDataValue.builder().displayName("Approved By").value(approvedBy).build());
       } else if (getStatus().equals(ExecutionStatus.REJECTED)) {
         putNotNull(executionDetails, "approvedBy",
-            ExecutionDataValue.builder().displayName("Rejected By").value(approvedRejectedBy.toString()).build());
+            ExecutionDataValue.builder().displayName("Rejected By").value(approvedBy).build());
       }
     }
 
