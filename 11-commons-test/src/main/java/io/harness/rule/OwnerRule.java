@@ -19,7 +19,7 @@ public class OwnerRule extends RepeatRule {
 
   private static List<String> active = asList("aaditi.joag@harness.io", "george@harness.io", "raghu@harness.io",
       "pranjal@harness.io", "praveen.sugavanam@harness.io", "puneet.saraswat@harness.io", "srinivas@harness.io",
-      "sriram@harness.io", "vaibhav.tulsyan@harness.io", "anubhaw@harness.io");
+      "sriram@harness.io", "vaibhav.tulsyan@harness.io", "anubhaw@harness.io", "mark.lu@harness.io");
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})
