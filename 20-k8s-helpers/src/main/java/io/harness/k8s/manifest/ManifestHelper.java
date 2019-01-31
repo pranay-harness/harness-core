@@ -17,7 +17,6 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -195,6 +194,6 @@ public class ManifestHelper {
       return folderPath;
     }
 
-    return folderPath.endsWith(File.separator) ? folderPath : folderPath + File.separator;
+    return folderPath.endsWith("/") ? folderPath : folderPath + "/";
   }
 }
