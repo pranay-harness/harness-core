@@ -25,7 +25,6 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.protocol.ResponseData;
-import io.harness.serializer.KryoUtils;
 import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -64,6 +63,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
 
 import java.util.ArrayList;
@@ -71,7 +71,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class JenkinsState extends State {
+public class JenkinsState extends State implements SweepingOutputStateMixin {
   private static final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
 
   public static final String COMMAND_UNIT_NAME = "Console Output";
@@ -420,14 +420,7 @@ public class JenkinsState extends State {
           ((ExecutionContextImpl) context).getApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
     }
 
-    if (isNotEmpty(sweepingOutputName)) {
-      final SweepingOutput sweepingOutput = context.prepareSweepingOutputBuilder(sweepingOutputScope)
-                                                .name(sweepingOutputName)
-                                                .output(KryoUtils.asDeflatedBytes(jenkinsExecutionData))
-                                                .build();
-
-      sweepingOutputService.save(sweepingOutput);
-    }
+    handleSweepingOutput(sweepingOutputService, context, jenkinsExecutionData);
 
     return anExecutionResponse()
         .withExecutionStatus(jenkinsExecutionResponse.getExecutionStatus())

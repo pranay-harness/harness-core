@@ -23,7 +23,6 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.delegates.beans.ScriptType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.serializer.KryoUtils;
 import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.Getter;
 import lombok.Setter;
@@ -75,6 +74,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Misc;
@@ -84,7 +84,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ShellScriptState extends State {
+public class ShellScriptState extends State implements SweepingOutputStateMixin {
   private static final Logger logger = LoggerFactory.getLogger(ShellScriptState.class);
   @Inject @Transient private transient ActivityService activityService;
   @Inject @Transient private transient DelegateService delegateService;
@@ -211,17 +211,13 @@ public class ShellScriptState extends State {
 
     updateActivityStatus(
         activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionResponse.getExecutionStatus());
-    if (isNotEmpty(sweepingOutputName) && saveSweepingOutputToContext) {
-      final SweepingOutput sweepingOutput =
-          context.prepareSweepingOutputBuilder(sweepingOutputScope)
-              .name(sweepingOutputName)
-              .output(KryoUtils.asDeflatedBytes(
-                  ((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
-                      .getSweepingOutputEnvVariables()))
-              .build();
 
-      sweepingOutputService.save(sweepingOutput);
+    if (saveSweepingOutputToContext) {
+      handleSweepingOutput(sweepingOutputService, context,
+          ((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
+              .getSweepingOutputEnvVariables());
     }
+
     return executionResponse;
   }
 
