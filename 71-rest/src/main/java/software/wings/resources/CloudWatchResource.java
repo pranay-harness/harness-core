@@ -69,4 +69,13 @@ public class CloudWatchResource {
       @QueryParam("accountId") final String accountId, @Valid CloudWatchSetupTestNodeData setupTestNodeData) {
     return new RestResponse<>(cloudWatchService.getMetricsWithDataForNode(setupTestNodeData));
   }
+
+  @GET
+  @Path("/get-lambda-functions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getLambdaFunctionsNames(@QueryParam("accountId") final String accountId,
+      @QueryParam("settingId") final String settingId, @QueryParam("region") final String region) {
+    return new RestResponse<>(cloudWatchService.getLambdaFunctionsNames(settingId, region));
+  }
 }

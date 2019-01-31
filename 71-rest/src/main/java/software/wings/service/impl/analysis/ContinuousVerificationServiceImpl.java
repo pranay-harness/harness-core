@@ -91,6 +91,7 @@ import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -161,6 +162,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private SettingsService settingsService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
+  @Inject private CloudWatchService cloudWatchService;
   @Inject private CV24x7DashboardService cv24x7DashboardService;
 
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
@@ -1360,6 +1362,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .encryptedDataDetails(secretManager.getEncryptionDetails(awsConfig, config.getAppId(), null))
             .analysisComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE)
             .loadBalancerMetrics(config.getLoadBalancerMetrics())
+            .lambdaFunctionNames(cloudWatchService.createLambdaFunctionNames(config.getLambdaFunctions()))
             .region(config.getRegion())
             .dataCollectionMinute(0)
             .build();

@@ -1,6 +1,6 @@
 package software.wings.service.impl.aws.model;
 
-import static software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType.EXECUTE_LAMBA_WF;
+import static software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType.EXECUTE_LAMBDA_WF;
 
 import lombok.Builder;
 import lombok.Data;
@@ -29,7 +29,7 @@ public class AwsLambdaExecuteWfRequest extends AwsLambdaRequest {
       List<AwsLambdaFunctionParams> functionParams, String roleArn, List<String> evaluatedAliases,
       Map<String, String> serviceVariables, AwsLambdaVpcConfig lambdaVpcConfig, String accountId, String appId,
       String activityId, String commandName) {
-    super(awsConfig, encryptionDetails, EXECUTE_LAMBA_WF, region);
+    super(awsConfig, encryptionDetails, EXECUTE_LAMBDA_WF, region);
     this.accountId = accountId;
     this.appId = appId;
     this.activityId = activityId;

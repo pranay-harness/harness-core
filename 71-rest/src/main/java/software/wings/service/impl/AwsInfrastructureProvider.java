@@ -45,6 +45,7 @@ import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Misc;
@@ -72,6 +73,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
+  @Inject private AwsLambdaHelperServiceManager awsLambdaHelperServiceManager;
   @Inject private ServiceResourceService serviceResourceService;
 
   @Override
@@ -269,6 +271,12 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsElbHelperServiceManager.listListenersForElb(
         awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, loadBalancerName, appId);
+  }
+
+  public List<String> listLambdaFunctions(SettingAttribute computeProviderSetting, String region) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsLambdaHelperServiceManager.listLambdaFunctions(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
   }
 
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {

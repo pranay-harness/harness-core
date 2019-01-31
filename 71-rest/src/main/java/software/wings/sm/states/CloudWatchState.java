@@ -219,7 +219,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     return rv;
   }
 
-  private Map<String, List<CloudWatchMetric>> createLambdaMetrics(
+  public static Map<String, List<CloudWatchMetric>> createLambdaMetrics(
       Set<String> functionNames, Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics) {
     if (isEmpty(functionNames)) {
       return null;
