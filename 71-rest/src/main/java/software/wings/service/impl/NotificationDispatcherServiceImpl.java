@@ -117,36 +117,47 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     }
 
     List<NotificationReceiverInfo> notificationReceivers =
-        notificationGroups.stream()
-            .filter(Objects::nonNull)
-            .filter((NotificationReceiverInfo it) -> it.getAddressesByChannelType() != null)
-            .collect(toList());
+        notificationGroups.stream().filter(Objects::nonNull).collect(toList());
+
+    String appId = notifications.get(0).getAppId();
 
     for (NotificationReceiverInfo notificationReceiver : notificationReceivers) {
       if (notificationReceiver instanceof NotificationGroup) {
-        handleNotificationGroupRoles((NotificationGroup) notificationReceiver, notifications);
+        NotificationGroup group = (NotificationGroup) notificationReceiver;
+        group = notificationSetupService.readNotificationGroup(appId, group.getUuid());
+        handleNotificationGroupRoles(group, notifications);
+        iterateOverAddressesAndNotifiy(notifications, group);
       } else if (notificationReceiver instanceof UserGroup) {
-        handleUserGroups((UserGroup) notificationReceiver, notifications);
+        UserGroup userGroup = (UserGroup) notificationReceiver;
+        handleUserGroups(userGroup, notifications);
+        iterateOverAddressesAndNotifiy(notifications, userGroup);
       } else {
         logger.error("Unhandled implementation of NotificationReceiverInfo. Class: {}",
             notificationReceiver.getClass().getSimpleName());
       }
+    }
+  }
 
-      for (Entry<NotificationChannelType, List<String>> entry :
-          notificationReceiver.getAddressesByChannelType().entrySet()) {
-        if (entry.getKey() == NotificationChannelType.EMAIL) {
-          try {
-            dispatchEmail(notifications, entry.getValue());
-          } catch (Exception e) {
-            logger.warn(Misc.getMessage(e));
-          }
+  private void iterateOverAddressesAndNotifiy(
+      List<Notification> notifications, NotificationReceiverInfo notificationReceiverInfo) {
+    if (null == notificationReceiverInfo.getAddressesByChannelType()) {
+      return;
+    }
+
+    for (Entry<NotificationChannelType, List<String>> entry :
+        notificationReceiverInfo.getAddressesByChannelType().entrySet()) {
+      if (entry.getKey() == NotificationChannelType.EMAIL) {
+        try {
+          dispatchEmail(notifications, entry.getValue());
+        } catch (Exception e) {
+          logger.warn(Misc.getMessage(e));
         }
-        if (entry.getKey() == NotificationChannelType.SLACK) {
-          try {
-            dispatchSlackMessage(notifications, entry.getValue());
-          } catch (Exception e) {
-            logger.warn(Misc.getMessage(e));
-          }
+      }
+      if (entry.getKey() == NotificationChannelType.SLACK) {
+        try {
+          dispatchSlackMessage(notifications, entry.getValue());
+        } catch (Exception e) {
+          logger.warn(Misc.getMessage(e));
         }
       }
     }
