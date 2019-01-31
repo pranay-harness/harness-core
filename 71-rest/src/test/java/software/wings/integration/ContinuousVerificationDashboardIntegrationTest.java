@@ -254,6 +254,52 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
+  public void getAllDeploymentRecordsWFWithoutServiceIds() {
+    // Setup
+    long now = System.currentTimeMillis();
+
+    WorkflowExecution execution1 =
+        WorkflowExecutionBuilder.aWorkflowExecution()
+            .withAppId(appId)
+            .withUuid(workflowExecutionId)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withStartTs(now)
+            .withServiceIds(Arrays.asList(serviceId))
+            .withPipelineSummary(
+                PipelineSummary.builder().pipelineId("pipelineId").pipelineName("pipelineName").build())
+            .build();
+    wingsPersistence.save(execution1);
+
+    WorkflowExecution execution2 =
+        WorkflowExecutionBuilder.aWorkflowExecution()
+            .withAppId(appId)
+            .withUuid(workflowExecutionId + "2")
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withStartTs(now)
+            .withPipelineSummary(
+                PipelineSummary.builder().pipelineId("pipelineId").pipelineName("pipelineName").build())
+            .build();
+    wingsPersistence.save(execution2);
+
+    Service service = Service.builder().appId(appId).uuid(serviceId).build();
+    wingsPersistence.save(service);
+    // Call
+
+    long before = now - TimeUnit.MINUTES.toMillis(1), after = now + TimeUnit.MINUTES.toMillis(5);
+    List<WorkflowExecution> workflowExecutionList = continuousVerificationService.getDeploymentsForService(
+        accountId, before, after, userService.getUserByEmail(WingsIntegrationTestConstants.adminUserEmail), serviceId);
+
+    // Verify
+    assertTrue("There's atleast one deployment execution", workflowExecutionList.size() > 0);
+    assertEquals("ExecutionId matches", workflowExecutionId, workflowExecutionList.get(0).getUuid());
+    assertEquals("Status is success", ExecutionStatus.SUCCESS, workflowExecutionList.get(0).getStatus());
+    assertEquals(
+        "pipeline id matches", "pipelineId", workflowExecutionList.get(0).getPipelineSummary().getPipelineId());
+    assertEquals(
+        "pipeline name matches", "pipelineName", workflowExecutionList.get(0).getPipelineSummary().getPipelineName());
+  }
+
+  @Test
   public void getAllCVRecordsHarnessAccount() {
     saveExecutions();
     when(featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)).thenReturn(true);
