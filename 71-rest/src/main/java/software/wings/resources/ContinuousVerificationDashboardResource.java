@@ -152,24 +152,17 @@ public class ContinuousVerificationDashboardResource {
   @Path(VerificationConstants.TIMESERIES)
   @Timed
   @ExceptionMetered
-  public RestResponse<SortedSet<TransactionTimeSeries>> getTimeSeriesOfHeatMapUnit(
-      @QueryParam("accountId") @Valid final String accountId, @QueryParam("startTime") long startTime,
-      @QueryParam("endTime") long endTime, @QueryParam("cvConfigId") String cvConfigId,
-      @QueryParam("historyStartTime") long historyStartTime) {
-    return new RestResponse<>(
-        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
-                                                                     .cvConfigId(cvConfigId)
-                                                                     .startTime(startTime)
-                                                                     .endTime(endTime)
-                                                                     .historyStartTime(historyStartTime)
-                                                                     .build()));
+  public RestResponse<SortedSet<TransactionTimeSeries>> getFilteredTimeSeriesOfHeatMapUnit(
+      @QueryParam("accountId") @Valid final String accountId, @Valid TimeSeriesFilter timeSeriesFilter) {
+    return new RestResponse<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(timeSeriesFilter));
   }
 
   @POST
   @Path(VerificationConstants.TIMESERIES)
   @Timed
   @ExceptionMetered
-  public RestResponse<SortedSet<TransactionTimeSeries>> getFilteredTimeSeriesOfHeatMapUnit(
+  @Deprecated
+  public RestResponse<SortedSet<TransactionTimeSeries>> getFilteredTimeSeriesOfHeatMapUnitPost(
       @QueryParam("accountId") @Valid final String accountId, @Valid TimeSeriesFilter timeSeriesFilter) {
     return new RestResponse<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(timeSeriesFilter));
   }
