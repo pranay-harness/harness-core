@@ -454,7 +454,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     List<WorkflowExecution> resultList = new ArrayList<>();
     results.forEach(workflowExecution -> {
-      if (workflowExecution.getServiceIds().contains(serviceId)) {
+      if (workflowExecution.getServiceIds() != null && workflowExecution.getServiceIds().contains(serviceId)) {
         resultList.add(workflowExecution);
       }
     });
