@@ -70,7 +70,7 @@ public class LogAnalysisManagerJob implements Job {
   }
 
   @AllArgsConstructor
-  public static class LogAnalysisTask implements Callable<Integer> {
+  public static class LogAnalysisTask implements Callable<Long> {
     private static final Logger logger = LoggerFactory.getLogger(LogAnalysisTask.class);
     private LogAnalysisService analysisService;
 
@@ -81,7 +81,7 @@ public class LogAnalysisManagerJob implements Job {
     private VerificationManagerClient managerClient;
     private VerificationManagerClientHelper managerClientHelper;
 
-    protected void preProcess(int logAnalysisMinute, String query, Set<String> nodes) {
+    protected void preProcess(long logAnalysisMinute, String query, Set<String> nodes) {
       if (context.getTestNodes() == null) {
         throw new RuntimeException("Test nodes empty! " + JsonUtils.asJson(context));
       }
@@ -117,11 +117,11 @@ public class LogAnalysisManagerJob implements Job {
     }
 
     @Override
-    public Integer call() {
+    public Long call() {
       boolean completeCron = false;
       boolean error = false;
       String errorMsg = "";
-      int logAnalysisMinute = -1;
+      long logAnalysisMinute = -1;
       try {
         logger.info("running log ml analysis for " + context.getStateExecutionId());
         /*
@@ -131,14 +131,14 @@ public class LogAnalysisManagerJob implements Job {
         boolean createExperiment = false;
         if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           logger.warn(" log ml analysis : state is not valid " + context.getStateExecutionId());
-          return -1;
+          return -1L;
         }
 
         if (analysisService.isProcessingComplete(context.getQuery(), context.getAppId(), context.getStateExecutionId(),
                 context.getStateType(), context.getTimeDuration())) {
           completeCron = true;
         } else {
-          int logAnalysisClusteringTestMinute =
+          long logAnalysisClusteringTestMinute =
               analysisService.getCollectionMinuteForLevel(context.getQuery(), context.getAppId(),
                   context.getStateExecutionId(), context.getStateType(), ClusterLevel.L1, getCollectedNodes());
           if (logAnalysisClusteringTestMinute != -1) {
@@ -204,7 +204,7 @@ public class LogAnalysisManagerJob implements Job {
             try {
               logger.info(
                   "send notification to state manager and delete cron with error : {} errorMsg : {}", error, errorMsg);
-              sendStateNotification(context, error, errorMsg, logAnalysisMinute);
+              sendStateNotification(context, error, errorMsg, (int) logAnalysisMinute);
             } catch (Exception e) {
               logger.error("Send notification failed for log analysis manager", e);
             } finally {
@@ -220,7 +220,7 @@ public class LogAnalysisManagerJob implements Job {
         }
       }
 
-      return -1;
+      return -1L;
     }
 
     private void sendStateNotification(AnalysisContext context, boolean error, String errorMsg, int logAnalysisMinute) {

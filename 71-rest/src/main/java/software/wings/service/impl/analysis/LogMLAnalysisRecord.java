@@ -1,10 +1,15 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.encoding.EncodingUtils.compressString;
+import static io.harness.data.encoding.EncodingUtils.deCompressString;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,11 +21,13 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.sm.StateType;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
@@ -39,6 +46,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class LogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
+  @Indexed private String cvConfigId;
 
   @NotEmpty private StateType stateType;
 
@@ -60,6 +68,9 @@ public class LogMLAnalysisRecord extends Base {
   private Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
+  private double overallScore;
+
+  @Transient
 
   @SchemaIgnore
   @JsonIgnore
@@ -97,5 +108,51 @@ public class LogMLAnalysisRecord extends Base {
     this.cluster_scores = cluster_scores;
     this.analysisDetailsCompressedJson = analysisDetailsCompressedJson;
     this.validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
+  }
+
+  public void decompressLogAnalysisRecord() {
+    if (isNotEmpty(this.getAnalysisDetailsCompressedJson())) {
+      try {
+        String decompressedAnalysisDetailsJson = deCompressString(this.getAnalysisDetailsCompressedJson());
+        LogMLAnalysisRecord logAnalysisDetails =
+            JsonUtils.asObject(decompressedAnalysisDetailsJson, LogMLAnalysisRecord.class);
+        this.setUnknown_events(logAnalysisDetails.getUnknown_events());
+        this.setTest_events(logAnalysisDetails.getTest_events());
+        this.setControl_events(logAnalysisDetails.getControl_events());
+        this.setControl_clusters(logAnalysisDetails.getControl_clusters());
+        this.setUnknown_clusters(logAnalysisDetails.getUnknown_clusters());
+        this.setTest_clusters(logAnalysisDetails.getTest_clusters());
+        this.setIgnore_clusters(logAnalysisDetails.getIgnore_clusters());
+
+      } catch (IOException e) {
+        throw new WingsException(e);
+      }
+    }
+  }
+
+  public void compressLogAnalysisRecord() {
+    LogMLAnalysisRecord logAnalysisDetails = LogMLAnalysisRecord.builder()
+                                                 .unknown_events(this.getUnknown_events())
+                                                 .test_events(this.getTest_events())
+                                                 .control_events(this.getControl_events())
+                                                 .control_clusters(this.getControl_clusters())
+                                                 .unknown_clusters(this.getUnknown_clusters())
+                                                 .test_clusters(this.getTest_clusters())
+                                                 .ignore_clusters(this.getIgnore_clusters())
+                                                 .build();
+
+    try {
+      this.setAnalysisDetailsCompressedJson(compressString(JsonUtils.asJson(logAnalysisDetails)));
+    } catch (IOException e) {
+      throw new WingsException("failed to compress analysis details", e);
+    }
+
+    this.setUnknown_events(null);
+    this.setTest_events(null);
+    this.setControl_events(null);
+    this.setControl_clusters(null);
+    this.setUnknown_clusters(null);
+    this.setTest_clusters(null);
+    this.setIgnore_clusters(null);
   }
 }

@@ -50,7 +50,7 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   private String service_id;
   private String auth_token;
   private int analysis_start_min;
-  private int analysis_minute;
+  private long analysis_minute;
   private int smooth_window;
   private int tolerance;
   private int min_rpm;

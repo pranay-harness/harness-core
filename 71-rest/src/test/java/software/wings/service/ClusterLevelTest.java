@@ -27,8 +27,8 @@ public class ClusterLevelTest extends WingsBaseTest {
   public static Collection<Object[]> data() {
     return asList(new Object[][] {{ClusterLevel.L0, ClusterLevel.H0, ClusterLevel.L1},
         {ClusterLevel.L1, ClusterLevel.H1, ClusterLevel.L2}, {ClusterLevel.L2, ClusterLevel.H2, ClusterLevel.L2},
-        {ClusterLevel.H0, null, ClusterLevel.H1}, {ClusterLevel.H1, null, ClusterLevel.H2},
-        {ClusterLevel.H2, null, ClusterLevel.HF}, {ClusterLevel.HF, null, ClusterLevel.HF}
+        {ClusterLevel.H0, ClusterLevel.H0, ClusterLevel.H1}, {ClusterLevel.H1, ClusterLevel.H1, ClusterLevel.H2},
+        {ClusterLevel.H2, ClusterLevel.H2, ClusterLevel.HF}, {ClusterLevel.HF, ClusterLevel.HF, ClusterLevel.HF}
 
     });
   }

@@ -34,6 +34,7 @@ import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
+import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
@@ -78,6 +79,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
       case CLOUD_WATCH:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), CloudWatchCVServiceConfiguration.class);
+        break;
+
+      case SUMO:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), LogsCVConfiguration.class);
         break;
 
       case ELK:
@@ -168,6 +173,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case CLOUD_WATCH:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), CloudWatchCVServiceConfiguration.class);
+        break;
+      case SUMO:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), LogsCVConfiguration.class);
         break;
       case ELK:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), ElkCVConfiguration.class);
@@ -260,11 +268,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("loadBalancerMetrics", ((CloudWatchCVServiceConfiguration) cvConfiguration).getLoadBalancerMetrics())
             .set("region", ((CloudWatchCVServiceConfiguration) cvConfiguration).getRegion());
         break;
+      case SUMO:
+        updateOperations.set("query", ((LogsCVConfiguration) cvConfiguration).getQuery())
+            .set("formattedQuery", ((LogsCVConfiguration) cvConfiguration).isFormattedQuery());
+        break;
       case ELK:
         updateOperations.set("query", ((ElkCVConfiguration) cvConfiguration).getQuery())
             .set("formattedQuery", ((ElkCVConfiguration) cvConfiguration).isFormattedQuery())
             .set("queryType", ((ElkCVConfiguration) cvConfiguration).getQueryType())
-            .set("indices", ((ElkCVConfiguration) cvConfiguration).getIndices())
+            .set("index", ((ElkCVConfiguration) cvConfiguration).getIndex())
             .set("messageField", ((ElkCVConfiguration) cvConfiguration).getMessageField())
             .set("timestampField", ((ElkCVConfiguration) cvConfiguration).getTimestampField())
             .set("timestampFormat", ((ElkCVConfiguration) cvConfiguration).getTimestampFormat());
@@ -340,6 +352,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                              .build();
         break;
 
+      case SUMO:
       case ELK:
         return;
 

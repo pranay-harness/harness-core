@@ -19,11 +19,13 @@ public class SumoDataCollectionInfo extends LogDataCollectionInfo {
   private SumoConfig sumoConfig;
 
   @Builder
-  public SumoDataCollectionInfo(SumoConfig sumoConfig, String accountId, String applicationId, String stateExecutionId,
-      String workflowId, String workflowExecutionId, String serviceId, String query, long startTime, int startMinute,
-      int collectionTime, String hostnameField, Set<String> hosts, List<EncryptedDataDetail> encryptedDataDetails) {
-    super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, query, startTime,
-        startMinute, collectionTime, hostnameField, hosts, StateType.SUMO, encryptedDataDetails);
+
+  public SumoDataCollectionInfo(String accountId, String applicationId, String stateExecutionId, String cvConfigId,
+      String workflowId, String workflowExecutionId, String serviceId, String query, long startTime, long endTime,
+      int startMinute, int collectionTime, String hostnameField, Set<String> hosts,
+      List<EncryptedDataDetail> encryptedDataDetails, SumoConfig sumoConfig) {
+    super(accountId, applicationId, stateExecutionId, cvConfigId, workflowId, workflowExecutionId, serviceId, query,
+        startTime, endTime, startMinute, collectionTime, hostnameField, hosts, StateType.SUMO, encryptedDataDetails);
     this.sumoConfig = sumoConfig;
   }
 }

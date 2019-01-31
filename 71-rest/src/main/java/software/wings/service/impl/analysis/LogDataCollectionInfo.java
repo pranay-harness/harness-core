@@ -17,11 +17,13 @@ public abstract class LogDataCollectionInfo {
   private String accountId;
   private String applicationId;
   private String stateExecutionId;
+  private String cvConfigId;
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
   private String query;
   private long startTime;
+  private long endTime;
   private int startMinute;
   private int collectionTime;
   private String hostnameField;

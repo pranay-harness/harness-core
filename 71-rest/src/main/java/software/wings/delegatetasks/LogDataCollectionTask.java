@@ -67,6 +67,11 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   }
 
   @Override
+  protected boolean is24X7Task() {
+    return false;
+  }
+
+  @Override
   protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     dataCollectionInfo = (CustomLogDataCollectionInfo) parameters[0];
     logger.info("Log collection - dataCollectionInfo: {}", dataCollectionInfo);
@@ -238,8 +243,9 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
             boolean response = logAnalysisStoreService.save(dataCollectionInfo.getStateType(),
                 dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
-                dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getWorkflowId(),
-                dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getServiceId(), delegateTaskId, logs);
+                dataCollectionInfo.getCvConfigId(), dataCollectionInfo.getStateExecutionId(),
+                dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
+                dataCollectionInfo.getServiceId(), delegateTaskId, logs);
             if (!response) {
               logger.error(
                   "Error while saving logs for stateExecutionId: {}", dataCollectionInfo.getStateExecutionId());

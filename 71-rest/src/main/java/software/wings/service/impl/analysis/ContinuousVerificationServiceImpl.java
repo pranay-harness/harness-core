@@ -3,21 +3,30 @@ package software.wings.service.impl.analysis;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.ERROR_METRIC_NAMES;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 import static software.wings.common.VerificationConstants.NEW_RELIC_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.PROMETHEUS_DEEPLINK_FORMAT;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.sm.states.DatadogState.metricEndpointsInfo;
 import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeriesDataPointsList;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -27,45 +36,90 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import io.harness.waiter.WaitNotifyEngine;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.APMFetchConfig;
+import software.wings.annotation.EncryptableSetting;
+import software.wings.api.MetricDataAnalysisResponse;
+import software.wings.beans.APMValidateCollectorConfig;
+import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.Base;
+import software.wings.beans.DatadogConfig;
+import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.DynaTraceConfig;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SumoConfig;
+import software.wings.beans.TaskType;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
+import software.wings.service.impl.apm.APMDataCollectionInfo;
+import software.wings.service.impl.apm.APMMetricInfo;
+import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
+import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
+import software.wings.service.impl.datadog.DataDogFetchConfig;
+import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
+import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
+import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
+import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
+import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DataStoreService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AppDynamicsState;
+import software.wings.sm.states.DatadogState;
+import software.wings.sm.states.DynatraceState;
 import software.wings.sm.states.NewRelicState;
+import software.wings.utils.Misc;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
 import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.dashboard.HeatMapUnit;
+import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
+import software.wings.verification.log.ElkCVConfiguration;
+import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
+import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -78,6 +132,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -101,6 +156,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private AppService appService;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private DataStoreService dataStoreService;
+  @Inject private DelegateProxyFactory delegateProxyFactory;
+  @Inject private SecretManager secretManager;
+  @Inject private SettingsService settingsService;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private DelegateService delegateService;
+  @Inject private CV24x7DashboardService cv24x7DashboardService;
+
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
   private static final int PAGE_LIMIT = 999;
@@ -500,22 +562,27 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                                                  .filter("appId", appId)
                                                  .filter("serviceId", serviceId)
                                                  .asList();
+
     if (isEmpty(cvConfigurations)) {
       logger.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
       return new ArrayList<>();
     }
 
     cvConfigurations.parallelStream().forEach(cvConfig -> {
-      cvConfigurationService.fillInServiceAndConnectorNames(cvConfig);
-      String envName = cvConfig.getEnvName();
-      logger.info("Environment name = " + envName);
-      final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
-      rv.add(heatMap);
+      if (!VerificationConstants.getLogAnalysisStates().contains(cvConfig.getStateType())) {
+        cvConfigurationService.fillInServiceAndConnectorNames(cvConfig);
+        String envName = cvConfig.getEnvName();
+        logger.info("Environment name = " + envName);
+        final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
+        rv.add(heatMap);
 
-      List<HeatMapUnit> units = createAllHeatMapUnits(appId, startTime, endTime, cvConfig);
-      List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
-      heatMap.getRiskLevelSummary().addAll(resolvedUnits);
+        List<HeatMapUnit> units = createAllHeatMapUnits(appId, startTime, endTime, cvConfig);
+        List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
+        heatMap.getRiskLevelSummary().addAll(resolvedUnits);
+      }
     });
+
+    rv.addAll(cv24x7DashboardService.getHeatMapForLogs(accountId, appId, serviceId, startTime, endTime, detailed));
 
     return rv;
   }
@@ -987,5 +1054,400 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         }
       }
     }
+  }
+
+  @Override
+  public VerificationNodeDataSetupResponse getMetricsWithDataForNode(
+      String accountId, String serverConfigId, Object fetchConfig, StateType type) {
+    try {
+      if (isEmpty(serverConfigId) || fetchConfig == null) {
+        throw new WingsException("Invalid Parameters passed while trying to get test data for APM");
+      }
+      SettingAttribute settingAttribute = settingsService.get(serverConfigId);
+      APMValidateCollectorConfig apmValidateCollectorConfig;
+      switch (type) {
+        case DATA_DOG:
+          DataDogFetchConfig config = (DataDogFetchConfig) fetchConfig;
+          DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
+          List<EncryptedDataDetail> encryptedDataDetails =
+              secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+
+          apmValidateCollectorConfig = datadogConfig.createAPMValidateCollectorConfig();
+          apmValidateCollectorConfig.setEncryptedDataDetails(encryptedDataDetails);
+          apmValidateCollectorConfig.getOptions().put("from", String.valueOf(config.getFromtime()));
+          apmValidateCollectorConfig.getOptions().put("to", String.valueOf(config.getToTime()));
+
+          Map<String, List<APMMetricInfo>> metricInfoByQuery =
+              metricEndpointsInfo(config.getDatadogServiceName(), Arrays.asList(config.getMetrics().split(",")), null);
+          List<Object> loadResponse = new ArrayList<>();
+
+          // loop for each metric
+          for (Entry<String, List<APMMetricInfo>> entry : metricInfoByQuery.entrySet()) {
+            String url = entry.getKey();
+            if (url.contains("${host}")) {
+              url = url.replace("${host}", config.getHostName());
+            }
+            apmValidateCollectorConfig.setUrl(url);
+            VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
+                getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig);
+            if (!verificationNodeDataSetupResponse.isProviderReachable()) {
+              // if not reachable then directly return. no need to process further
+              return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
+            }
+            // add load response only for metrics containing nodedata.
+            if (verificationNodeDataSetupResponse.getLoadResponse().isLoadPresent()) {
+              loadResponse.add(verificationNodeDataSetupResponse);
+            }
+          }
+
+          VerificationLoadResponse response = VerificationLoadResponse.builder()
+                                                  .loadResponse(loadResponse)
+                                                  .isLoadPresent(!isEmpty(loadResponse))
+                                                  .build();
+
+          return VerificationNodeDataSetupResponse.builder()
+              .providerReachable(true)
+              .loadResponse(response)
+              .dataForNode(loadResponse)
+              .build();
+
+        case APM_VERIFICATION:
+          APMFetchConfig apmFetchConfig = (APMFetchConfig) fetchConfig;
+          APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
+          apmValidateCollectorConfig =
+              APMValidateCollectorConfig.builder()
+                  .baseUrl(apmVerificationConfig.getUrl())
+                  .headers(apmVerificationConfig.collectionHeaders())
+                  .options(apmVerificationConfig.collectionParams())
+                  .url(apmFetchConfig.getUrl())
+                  .body(apmFetchConfig.getBody())
+                  .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
+                  .build();
+
+          return getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig);
+        default:
+          throw new WingsException("Invalid StateType provided" + type);
+      }
+    } catch (Exception e) {
+      String errorMsg = e.getCause() != null ? Misc.getMessage(e.getCause()) : Misc.getMessage(e);
+      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", errorMsg);
+    }
+  }
+
+  @Override
+  public boolean sendNotifyForMetricAnalysis(String correlationId, MetricDataAnalysisResponse response) {
+    try {
+      waitNotifyEngine.notify(correlationId, response);
+      return true;
+    } catch (Exception ex) {
+      logger.error("Exception while notifying correlationId {}", correlationId, ex);
+      return false;
+    }
+  }
+
+  @Override
+  public boolean collect247Data(String cvConfigId, StateType stateType, long startTime, long endTime) {
+    String waitId = generateUuid();
+    DelegateTask task;
+    CVConfiguration cvConfiguration =
+        wingsPersistence.createQuery(CVConfiguration.class).filter("_id", cvConfigId).get();
+    boolean isLogCollection = false;
+    switch (stateType) {
+      case APP_DYNAMICS:
+        AppDynamicsCVServiceConfiguration config = (AppDynamicsCVServiceConfiguration) cvConfiguration;
+        task = createAppDynamicsDelegateTask(config, waitId, startTime, endTime);
+        break;
+      case NEW_RELIC:
+        NewRelicCVServiceConfiguration nrConfig = (NewRelicCVServiceConfiguration) cvConfiguration;
+        task = createNewRelicDelegateTask(nrConfig, waitId, startTime, endTime);
+        break;
+      case DYNA_TRACE:
+        DynaTraceCVServiceConfiguration dynaTraceCVServiceConfiguration =
+            (DynaTraceCVServiceConfiguration) cvConfiguration;
+        task = createDynaTraceDelegateTask(dynaTraceCVServiceConfiguration, waitId, startTime, endTime);
+        break;
+      case PROMETHEUS:
+        PrometheusCVServiceConfiguration prometheusCVServiceConfiguration =
+            (PrometheusCVServiceConfiguration) cvConfiguration;
+        task = createPrometheusDelegateTask(prometheusCVServiceConfiguration, waitId, startTime, endTime);
+        break;
+      case DATA_DOG:
+        DatadogCVServiceConfiguration ddConfig = (DatadogCVServiceConfiguration) cvConfiguration;
+        task = createDatadogDelegateTask(ddConfig, waitId, startTime, endTime);
+        break;
+      case CLOUD_WATCH:
+        CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration =
+            (CloudWatchCVServiceConfiguration) cvConfiguration;
+        task = createCloudWatchDelegateTask(cloudWatchCVServiceConfiguration, waitId, startTime, endTime);
+        break;
+      case SUMO:
+        LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
+        task = createLogsCollectionDelegateTask(logsCVConfiguration, waitId, startTime, endTime);
+        isLogCollection = true;
+        break;
+      case ELK:
+        ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) cvConfiguration;
+        task = createElkDelegateTask(elkCVConfiguration, waitId, startTime, endTime);
+        isLogCollection = true;
+        break;
+      default:
+        logger.error("Calling collect 24x7 data for an unsupported state");
+        return false;
+    }
+    waitNotifyEngine.waitForAll(
+        new DataCollectionCallback(cvConfiguration.getAppId(),
+            getExecutionData(cvConfiguration, waitId, (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime)),
+            isLogCollection),
+        waitId);
+    logger.info("Queuing 24x7 data collection task for {}, cvConfigurationId: {}", stateType, cvConfigId);
+    delegateService.queueTask(task);
+    return true;
+  }
+
+  private MetricAnalysisExecutionData getExecutionData(
+      CVConfiguration cvConfiguration, String waitId, int timeDuration) {
+    return MetricAnalysisExecutionData.builder()
+        .appId(cvConfiguration.getAppId())
+        .workflowExecutionId(null)
+        .stateExecutionInstanceId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid())
+        .serverConfigId(cvConfiguration.getConnectorId())
+        .timeDuration(timeDuration)
+        .canaryNewHostNames(new HashSet<>())
+        .lastExecutionNodes(new HashSet<>())
+        .correlationId(waitId)
+        .build();
+  }
+
+  private DelegateTask createDynaTraceDelegateTask(
+      DynaTraceCVServiceConfiguration config, String waitId, long startTime, long endTime) {
+    DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    final DynaTraceDataCollectionInfo dataCollectionInfo =
+        DynaTraceDataCollectionInfo.builder()
+            .dynaTraceConfig(dynaTraceConfig)
+            .applicationId(config.getAppId())
+            .serviceId(config.getServiceId())
+            .cvConfigId(config.getUuid())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .timeSeriesDefinitions(Lists.newArrayList(DynaTraceTimeSeries.values()))
+            .serviceMethods(DynatraceState.splitServiceMethods(config.getServiceMethods()))
+            .startTime(startTime)
+            .collectionTime(timeDuration)
+            .dataCollectionMinute(0)
+            .encryptedDataDetails(secretManager.getEncryptionDetails(dynaTraceConfig, config.getAppId(), null))
+            .analysisComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE)
+            .build();
+    return createDelegateTask(
+        config, waitId, new Object[] {dataCollectionInfo}, TaskType.DYNATRACE_COLLECT_24_7_METRIC_DATA);
+  }
+
+  private DelegateTask createAppDynamicsDelegateTask(
+      AppDynamicsCVServiceConfiguration config, String waitId, long startTime, long endTime) {
+    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    final AppdynamicsDataCollectionInfo dataCollectionInfo =
+        AppdynamicsDataCollectionInfo.builder()
+            .appDynamicsConfig(appDynamicsConfig)
+            .applicationId(config.getAppId())
+            .serviceId(config.getServiceId())
+            .cvConfigId(config.getUuid())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .startTime(startTime)
+            .collectionTime(timeDuration)
+            .appId(Long.parseLong(config.getAppDynamicsApplicationId()))
+            .tierId(Long.parseLong(config.getTierId()))
+            .dataCollectionMinute(0)
+            .hosts(new HashMap<>())
+            .encryptedDataDetails(secretManager.getEncryptionDetails(appDynamicsConfig, config.getAppId(), null))
+            .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
+            .build();
+    return createDelegateTask(
+        config, waitId, new Object[] {dataCollectionInfo}, TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA);
+  }
+
+  private DelegateTask createNewRelicDelegateTask(
+      NewRelicCVServiceConfiguration config, String waitId, long startTime, long endTime) {
+    final NewRelicConfig newRelicConfig = (NewRelicConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    Map<String, String> hostsMap = new HashMap<>();
+    hostsMap.put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
+    final NewRelicDataCollectionInfo dataCollectionInfo =
+        NewRelicDataCollectionInfo.builder()
+            .newRelicConfig(newRelicConfig)
+            .applicationId(config.getAppId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .serviceId(config.getServiceId())
+            .startTime(startTime)
+            .cvConfigId(config.getUuid())
+            .collectionTime(timeDuration)
+            .newRelicAppId(Long.parseLong(config.getApplicationId()))
+            .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
+            .dataCollectionMinute(0)
+            .hosts(hostsMap)
+            .encryptedDataDetails(secretManager.getEncryptionDetails(newRelicConfig, config.getAppId(), null))
+            .settingAttributeId(config.getConnectorId())
+            .build();
+    return createDelegateTask(
+        config, waitId, new Object[] {dataCollectionInfo}, TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA);
+  }
+
+  private DelegateTask createPrometheusDelegateTask(
+      PrometheusCVServiceConfiguration config, String waitId, long startTime, long endTime) {
+    PrometheusConfig prometheusConfig = (PrometheusConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    final PrometheusDataCollectionInfo dataCollectionInfo =
+        PrometheusDataCollectionInfo.builder()
+            .prometheusConfig(prometheusConfig)
+            .applicationId(config.getAppId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .serviceId(config.getServiceId())
+            .cvConfigId(config.getUuid())
+            .startTime(startTime)
+            .collectionTime(timeDuration)
+            .timeSeriesToCollect(config.getTimeSeriesToAnalyze())
+            .hosts(new HashMap<>())
+            .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
+            .dataCollectionMinute(0)
+            .build();
+    return createDelegateTask(
+        config, waitId, new Object[] {dataCollectionInfo}, TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA);
+  }
+
+  private DelegateTask createDatadogDelegateTask(
+      DatadogCVServiceConfiguration config, String waitId, long startTime, long endTime) {
+    DatadogConfig datadogConfig = (DatadogConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    Map<String, String> hostsMap = new HashMap<>();
+    hostsMap.put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
+    final APMDataCollectionInfo dataCollectionInfo =
+        APMDataCollectionInfo.builder()
+            .baseUrl(datadogConfig.getUrl())
+            .validationUrl(DatadogConfig.validationUrl)
+            .encryptedDataDetails(secretManager.getEncryptionDetails(datadogConfig, config.getAppId(), null))
+            .hosts(hostsMap)
+            .stateType(StateType.DATA_DOG)
+            .applicationId(config.getAppId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .serviceId(config.getServiceId())
+            .startTime(startTime)
+            .cvConfigId(config.getUuid())
+            .dataCollectionMinute(0)
+            .metricEndpoints(DatadogState.metricEndpointsInfo(config.getDatadogServiceName(),
+                Arrays.asList(config.getMetrics().split(",")), config.getApplicationFilter()))
+            .accountId(config.getAccountId())
+            .strategy(AnalysisComparisonStrategy.PREDICTIVE)
+            .dataCollectionFrequency(1)
+            .dataCollectionTotalTime(timeDuration)
+            .build();
+    return createDelegateTask(
+        config, waitId, new Object[] {dataCollectionInfo}, TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK);
+  }
+
+  private DelegateTask createCloudWatchDelegateTask(
+      CloudWatchCVServiceConfiguration config, String waitId, long startTime, long endTime) {
+    AwsConfig awsConfig = (AwsConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    final CloudWatchDataCollectionInfo dataCollectionInfo =
+        CloudWatchDataCollectionInfo.builder()
+            .awsConfig(awsConfig)
+            .applicationId(config.getAppId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .serviceId(config.getServiceId())
+            .cvConfigId(config.getUuid())
+            .startTime(startTime)
+            .collectionTime(timeDuration)
+            .hosts(new HashMap<>())
+            .encryptedDataDetails(secretManager.getEncryptionDetails(awsConfig, config.getAppId(), null))
+            .analysisComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE)
+            .loadBalancerMetrics(config.getLoadBalancerMetrics())
+            .region(config.getRegion())
+            .dataCollectionMinute(0)
+            .build();
+    return createDelegateTask(
+        config, waitId, new Object[] {dataCollectionInfo}, TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA);
+  }
+
+  private DelegateTask createElkDelegateTask(ElkCVConfiguration config, String waitId, long startTime, long endTime) {
+    ElkConfig elkConfig = (ElkConfig) settingsService.get(config.getConnectorId()).getValue();
+    final ElkDataCollectionInfo dataCollectionInfo =
+        ElkDataCollectionInfo.builder()
+            .elkConfig(elkConfig)
+            .accountId(elkConfig.getAccountId())
+            .applicationId(config.getAppId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .cvConfigId(config.getUuid())
+            .serviceId(config.getServiceId())
+            .query(config.getQuery())
+            .formattedQuery(config.isFormattedQuery())
+            .indices(config.getIndex())
+            .messageField(config.getMessageField())
+            .timestampField(config.getTimestampField())
+            .timestampFieldFormat(config.getTimestampFormat())
+            .queryType(config.getQueryType())
+            .startTime(startTime)
+            .endTime(endTime)
+            .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, config.getAppId(), null))
+            .build();
+    return createDelegateTask(config, waitId, new Object[] {dataCollectionInfo}, TaskType.ELK_COLLECT_24_7_LOG_DATA);
+  }
+
+  private DelegateTask createLogsCollectionDelegateTask(
+      LogsCVConfiguration logsCVConfiguration, String waitId, long startTime, long endTime) {
+    switch (logsCVConfiguration.getStateType()) {
+      case SUMO:
+        SumoConfig sumoConfig = (SumoConfig) settingsService.get(logsCVConfiguration.getConnectorId()).getValue();
+        final SumoDataCollectionInfo dataCollectionInfo =
+            SumoDataCollectionInfo.builder()
+                .sumoConfig(sumoConfig)
+                .accountId(sumoConfig.getAccountId())
+                .applicationId(logsCVConfiguration.getAppId())
+                .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + logsCVConfiguration.getUuid())
+                .cvConfigId(logsCVConfiguration.getUuid())
+                .serviceId(logsCVConfiguration.getServiceId())
+                .query(logsCVConfiguration.getQuery())
+                .startTime(startTime)
+                .endTime(endTime)
+                .encryptedDataDetails(
+                    secretManager.getEncryptionDetails(sumoConfig, logsCVConfiguration.getAppId(), null))
+                .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+                .build();
+        return createDelegateTask(
+            logsCVConfiguration, waitId, new Object[] {dataCollectionInfo}, TaskType.SUMO_COLLECT_24_7_LOG_DATA);
+      default:
+        throw new IllegalStateException("Invalid state: " + logsCVConfiguration.getStateType());
+    }
+  }
+
+  private DelegateTask createDelegateTask(
+      CVConfiguration request, String waitId, Object[] dataCollectionInfo, TaskType taskType) {
+    return aDelegateTask()
+        .withTaskType(taskType)
+        .withAccountId(request.getAccountId())
+        .withAppId(request.getAppId())
+        .withEnvId(request.getEnvId())
+        .withWaitId(waitId)
+        .withParameters(dataCollectionInfo)
+        .withEnvId(request.getEnvId())
+        .withTimeout(TimeUnit.MINUTES.toMillis(30))
+        .build();
+  }
+
+  private VerificationNodeDataSetupResponse getVerificationNodeDataResponse(
+      String accountId, APMValidateCollectorConfig apmValidateCollectorConfig) {
+    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+    String apmResponse =
+        delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(apmValidateCollectorConfig);
+    JSONObject jsonObject = new JSONObject(apmResponse);
+    boolean hasLoad = false;
+    if (jsonObject.length() != 0) {
+      hasLoad = true;
+    }
+    VerificationLoadResponse loadResponse =
+        VerificationLoadResponse.builder().loadResponse(apmResponse).isLoadPresent(hasLoad).build();
+    return VerificationNodeDataSetupResponse.builder()
+        .providerReachable(hasLoad)
+        .loadResponse(loadResponse)
+        .dataForNode(apmResponse)
+        .build();
   }
 }

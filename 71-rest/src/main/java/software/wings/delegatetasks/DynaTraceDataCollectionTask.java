@@ -82,9 +82,13 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
   }
 
   @Override
+  protected boolean is24X7Task() {
+    return getTaskType().equals(TaskType.DYNATRACE_COLLECT_24_7_METRIC_DATA.name());
+  }
+
+  @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
-    return new DynaTraceMetricCollector(
-        dataCollectionInfo, taskResult, this.getTaskType().equals(TaskType.DYNATRACE_COLLECT_24_7_METRIC_DATA.name()));
+    return new DynaTraceMetricCollector(dataCollectionInfo, taskResult, is24X7Task());
   }
 
   private class DynaTraceMetricCollector implements Runnable {

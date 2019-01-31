@@ -19,5 +19,5 @@ public class LogElement {
   private long timeStamp;
   private int count;
   private String logMessage;
-  private int logCollectionMinute;
+  private long logCollectionMinute;
 }

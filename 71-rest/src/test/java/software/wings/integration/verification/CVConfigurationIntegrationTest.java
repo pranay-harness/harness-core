@@ -14,6 +14,7 @@ import static software.wings.sm.StateType.DYNA_TRACE;
 import static software.wings.sm.StateType.ELK;
 import static software.wings.sm.StateType.NEW_RELIC;
 import static software.wings.sm.StateType.PROMETHEUS;
+import static software.wings.sm.StateType.SUMO;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.Lists;
@@ -35,6 +36,7 @@ import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.intfc.AppService;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
@@ -42,6 +44,7 @@ import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
+import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
@@ -73,6 +76,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   private DatadogCVServiceConfiguration datadogCVServiceConfiguration;
   private CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration;
   private ElkCVConfiguration elkCVConfiguration;
+  private LogsCVConfiguration logsCVConfiguration;
 
   private SettingAttribute settingAttribute;
   private String settingAttributeId;
@@ -107,6 +111,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     createDatadogConfig();
     createCloudWatchConfig();
     createElkCVConfig(true);
+    createLogsCVConfig(true);
   }
 
   private void createCloudWatchConfig() {
@@ -222,11 +227,25 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     elkCVConfiguration.setQuery("query1");
     elkCVConfiguration.setFormattedQuery(true);
-    elkCVConfiguration.setQueryType("TERM");
-    elkCVConfiguration.setIndices("index1");
+    elkCVConfiguration.setQueryType(ElkQueryType.TERM);
+    elkCVConfiguration.setIndex("index1");
     elkCVConfiguration.setMessageField("message1");
     elkCVConfiguration.setTimestampField("timestamp1");
     elkCVConfiguration.setTimestampFormat("timestamp_format1");
+  }
+
+  private void createLogsCVConfig(boolean enabled24x7) {
+    logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setName("Config 1");
+    logsCVConfiguration.setAppId(appId);
+    logsCVConfiguration.setEnvId(envId);
+    logsCVConfiguration.setServiceId(serviceId);
+    logsCVConfiguration.setEnabled24x7(enabled24x7);
+    logsCVConfiguration.setConnectorId(settingAttributeId);
+    logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+
+    logsCVConfiguration.setQuery("query1");
+    logsCVConfiguration.setFormattedQuery(true);
   }
 
   @Test
@@ -529,8 +548,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     assertEquals("query1", fetchedObject.getQuery());
     assertEquals(true, fetchedObject.isFormattedQuery());
-    assertEquals("TERM", fetchedObject.getQueryType());
-    assertEquals("index1", fetchedObject.getIndices());
+    assertEquals(ElkQueryType.TERM, fetchedObject.getQueryType());
+    assertEquals("index1", fetchedObject.getIndex());
     assertEquals("message1", fetchedObject.getMessageField());
     assertEquals("timestamp1", fetchedObject.getTimestampField());
     assertEquals("timestamp_format1", fetchedObject.getTimestampFormat());
@@ -544,8 +563,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     assertEquals(1, allConifgs.size());
 
-    NewRelicCVServiceConfiguration obj =
-        JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), NewRelicCVServiceConfiguration.class);
+    ElkCVConfiguration obj = JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), ElkCVConfiguration.class);
 
     assertEquals(savedObjectUuid, obj.getUuid());
     assertEquals(accountId, obj.getAccountId());
@@ -563,10 +581,10 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     elkCVServiceConfiguration.setEnabled24x7(false);
 
     elkCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
-    elkCVServiceConfiguration.setQuery("query2");
     elkCVServiceConfiguration.setFormattedQuery(false);
-    elkCVServiceConfiguration.setQueryType("MATCH");
-    elkCVServiceConfiguration.setIndices("index2");
+    elkCVServiceConfiguration.setQuery("query2");
+    elkCVServiceConfiguration.setQueryType(ElkQueryType.MATCH);
+    elkCVServiceConfiguration.setIndex("index2");
     elkCVServiceConfiguration.setMessageField("message2");
     elkCVServiceConfiguration.setTimestampField("timestamp2");
     elkCVServiceConfiguration.setTimestampFormat("timestamp_format2");
@@ -581,11 +599,98 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
     assertEquals(false, fetchedObject.isFormattedQuery());
-    assertEquals("MATCH", fetchedObject.getQueryType());
-    assertEquals("index2", fetchedObject.getIndices());
+    assertEquals(ElkQueryType.MATCH, fetchedObject.getQueryType());
+    assertEquals("index2", fetchedObject.getIndex());
     assertEquals("message2", fetchedObject.getMessageField());
     assertEquals("timestamp2", fetchedObject.getTimestampField());
     assertEquals("timestamp_format2", fetchedObject.getTimestampFormat());
+
+    String delete_url =
+        API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;
+    target = client.target(delete_url);
+    RestResponse<Boolean> response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
+    assertEquals(true, response.getResource());
+
+    delete_url =
+        API_BASE + "/cv-configuration/" + UUID.randomUUID().toString() + "?accountId=" + accountId + "&appId=" + appId;
+    target = client.target(delete_url);
+    response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
+    assertEquals(false, response.getResource());
+  }
+
+  @Test
+  public <T extends CVConfiguration> void testLogsConfiguration() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SUMO;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+    RestResponse<LogsCVConfiguration> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
+    LogsCVConfiguration fetchedObject = getRequestResponse.getResource();
+
+    LogsCVConfiguration logsCVConfiguration = fetchedObject;
+    assertEquals(savedObjectUuid, fetchedObject.getUuid());
+    assertEquals(accountId, fetchedObject.getAccountId());
+    assertEquals(appId, fetchedObject.getAppId());
+    assertEquals(envId, fetchedObject.getEnvId());
+    assertEquals(serviceId, fetchedObject.getServiceId());
+    assertEquals(SUMO, fetchedObject.getStateType());
+    assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
+    assertEquals("someSettingAttributeName", logsCVConfiguration.getConnectorName());
+    assertEquals("someServiceName", logsCVConfiguration.getServiceName());
+
+    assertEquals("query1", fetchedObject.getQuery());
+    assertEquals(true, fetchedObject.isFormattedQuery());
+
+    url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId;
+    target = client.target(url);
+
+    RestResponse<List<Object>> allConfigResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
+    List<Object> allConifgs = allConfigResponse.getResource();
+
+    assertEquals(1, allConifgs.size());
+
+    LogsCVConfiguration obj = JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), LogsCVConfiguration.class);
+
+    assertEquals(savedObjectUuid, obj.getUuid());
+    assertEquals(accountId, obj.getAccountId());
+    assertEquals(appId, obj.getAppId());
+    assertEquals(envId, obj.getEnvId());
+    assertEquals(serviceId, obj.getServiceId());
+    assertEquals(SUMO, obj.getStateType());
+    assertEquals(AnalysisTolerance.MEDIUM, obj.getAnalysisTolerance());
+    assertEquals("Config 1", obj.getName());
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
+        + "&stateType=" + SUMO + "&serviceConfigurationId=" + savedObjectUuid;
+    target = client.target(url);
+    logsCVConfiguration.setName("Config 2");
+    logsCVConfiguration.setEnabled24x7(false);
+
+    logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
+    logsCVConfiguration.setFormattedQuery(false);
+    logsCVConfiguration.setQuery("query2");
+
+    getRequestBuilderWithAuthHeader(target).put(
+        entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
+    fetchedObject = getRequestResponse.getResource();
+    assertFalse(fetchedObject.isEnabled24x7());
+    assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
+    assertEquals("Config 2", fetchedObject.getName());
+    assertEquals("query2", fetchedObject.getQuery());
+    assertEquals(false, fetchedObject.isFormattedQuery());
 
     String delete_url =
         API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;

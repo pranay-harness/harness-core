@@ -61,19 +61,48 @@ public class LogVerificationResource {
 
   @Produces({"application/json", "application/v1+json"})
   @POST
+  @Path(LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Set<LogDataRecord>> getRawLogData(@QueryParam("appId") String appId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
+      @QueryParam("logCollectionMinute") int logCollectionMinute, @QueryParam("startMinute") int startMinute,
+      @QueryParam("endMinute") int endMinute, LogRequest logRequest) {
+    return new RestResponse<>(analysisService.getLogData(
+        appId, cvConfigId, clusterLevel, logCollectionMinute, startMinute, endMinute, logRequest));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   @Timed
   @DelegateAuth
   @ExceptionMetered
   @LearningEngineAuth
   public RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
-      @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
-      @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
-      @QueryParam("serviceId") String serviceId, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
-      @QueryParam("delegateTaskId") String delegateTaskId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("workflowId") String workflowId, @QueryParam("workflowExecutionId") String workflowExecutionId,
+      @QueryParam("appId") final String appId, @QueryParam("serviceId") String serviceId,
+      @QueryParam("clusterLevel") ClusterLevel clusterLevel, @QueryParam("delegateTaskId") String delegateTaskId,
+      @QueryParam("stateType") StateType stateType, List<LogElement> logData) {
+    return new RestResponse<>(analysisService.saveLogData(stateType, accountId, appId, cvConfigId, stateExecutionId,
+        workflowId, workflowExecutionId, serviceId, clusterLevel, delegateTaskId, logData));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path(LogAnalysisResource.ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL)
+  @Timed
+  @DelegateAuth
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Boolean> saveClusteredLogData(@QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("appId") String appId, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
+      @QueryParam("logCollectionMinute") int logCollectionMinute, @QueryParam("host") String host,
       List<LogElement> logData) {
-    return new RestResponse<>(analysisService.saveLogData(stateType, accountId, appId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, clusterLevel, delegateTaskId, logData));
+    return new RestResponse<>(
+        analysisService.saveClusteredLogData(appId, cvConfigId, clusterLevel, logCollectionMinute, host, logData));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -99,6 +128,19 @@ public class LogVerificationResource {
 
   @Produces({"application/json", "application/v1+json"})
   @POST
+  @Path(LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Boolean> saveLogAnalysisMLRecords(@QueryParam("appId") String appId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute,
+      @QueryParam("taskId") String taskId, LogMLAnalysisRecord mlAnalysisResponse) {
+    return new RestResponse<>(analysisService.save24X7LogAnalysisRecords(
+        appId, cvConfigId, analysisMinute, mlAnalysisResponse, Optional.of(taskId)));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL)
   @Timed
   @ExceptionMetered
@@ -108,6 +150,17 @@ public class LogVerificationResource {
     return new RestResponse<>(analysisService.getLogAnalysisRecords(mlAnalysisRequest.getApplicationId(),
         mlAnalysisRequest.getStateExecutionId(), mlAnalysisRequest.getQuery(), stateType,
         mlAnalysisRequest.getLogCollectionMinute()));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path(LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(@QueryParam("appId") String appId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute) {
+    return new RestResponse<>(analysisService.getLogAnalysisRecords(appId, cvConfigId, analysisMinute));
   }
 
   @POST

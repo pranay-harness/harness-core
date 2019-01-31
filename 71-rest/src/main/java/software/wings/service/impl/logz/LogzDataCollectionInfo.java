@@ -27,12 +27,13 @@ public class LogzDataCollectionInfo extends LogDataCollectionInfo {
   private ElkQueryType queryType;
 
   @Builder
-  public LogzDataCollectionInfo(LogzConfig logzConfig, String accountId, String applicationId, String stateExecutionId,
-      String workflowId, String workflowExecutionId, String serviceId, String query, String messageField,
-      String timestampField, String timestampFieldFormat, ElkQueryType queryType, long startTime, int startMinute,
-      int collectionTime, String hostnameField, Set<String> hosts, List<EncryptedDataDetail> encryptedDataDetails) {
-    super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, query, startTime,
-        startMinute, collectionTime, hostnameField, hosts, StateType.LOGZ, encryptedDataDetails);
+  public LogzDataCollectionInfo(String accountId, String applicationId, String stateExecutionId, String cvConfigId,
+      String workflowId, String workflowExecutionId, String serviceId, String query, long startTime, long endTime,
+      int startMinute, int collectionTime, String hostnameField, Set<String> hosts,
+      List<EncryptedDataDetail> encryptedDataDetails, LogzConfig logzConfig, String messageField, String timestampField,
+      String timestampFieldFormat, ElkQueryType queryType) {
+    super(accountId, applicationId, stateExecutionId, cvConfigId, workflowId, workflowExecutionId, serviceId, query,
+        startTime, endTime, startMinute, collectionTime, hostnameField, hosts, StateType.LOGZ, encryptedDataDetails);
     this.logzConfig = logzConfig;
     this.messageField = messageField;
     this.timestampField = timestampField;

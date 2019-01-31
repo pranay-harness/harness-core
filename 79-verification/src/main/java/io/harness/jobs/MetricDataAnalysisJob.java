@@ -27,6 +27,6 @@ public class MetricDataAnalysisJob implements Job {
     Preconditions.checkState(isNotEmpty(accountId), "account Id not found for " + jobExecutionContext);
 
     logger.info("Executing APM data analysis Job for {}", accountId);
-    continuousVerificationService.triggerDataAnalysis(accountId);
+    continuousVerificationService.triggerMetricDataAnalysis(accountId);
   }
 }

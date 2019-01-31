@@ -94,9 +94,13 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   }
 
   @Override
+  protected boolean is24X7Task() {
+    return getTaskType().equalsIgnoreCase(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name());
+  }
+
+  @Override
   protected int getInitialDelayMinutes() {
-    return this.getTaskType().equalsIgnoreCase(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name()) ? 0
-                                                                                                     : initialDelayMins;
+    return is24X7Task() ? 0 : initialDelayMins;
   }
 
   @Override

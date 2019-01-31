@@ -58,6 +58,6 @@ public interface VerificationManagerClient {
       @Query("featureName") FeatureName featureName, @Query("accountId") String accountId);
 
   @GET("apm" + VerificationConstants.COLLECT_24_7_DATA)
-  Call<RestResponse<Boolean>> triggerAPMDataCollection(@Query("cvConfigId") String cvConfigId,
+  Call<RestResponse<Boolean>> triggerCVDataCollection(@Query("cvConfigId") String cvConfigId,
       @Query("stateType") StateType stateType, @Query("startTime") long startTime, @Query("endTime") long endTime);
 }

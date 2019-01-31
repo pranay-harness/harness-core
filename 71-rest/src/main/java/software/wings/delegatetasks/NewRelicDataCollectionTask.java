@@ -108,12 +108,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   }
 
   @Override
-  protected int getInitialDelayMinutes() {
-    if (is247Task) {
-      // we're not going to wait before collection for 24x7 tasks
-      return 0;
-    }
-    return Math.min(dataCollectionInfo.getCollectionTime(), INITIAL_DELAY_MINUTES);
+  protected boolean is24X7Task() {
+    return is247Task;
   }
 
   @Override

@@ -76,9 +76,13 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
   }
 
   @Override
+  protected boolean is24X7Task() {
+    return getTaskType().equals(TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA.name());
+  }
+
+  @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
-    return new PrometheusMetricCollector(
-        dataCollectionInfo, taskResult, this.getTaskType().equals(TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA.name()));
+    return new PrometheusMetricCollector(dataCollectionInfo, taskResult, is24X7Task());
   }
 
   private class PrometheusMetricCollector implements Runnable {

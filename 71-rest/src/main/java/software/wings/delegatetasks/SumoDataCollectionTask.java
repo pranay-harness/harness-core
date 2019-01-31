@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -20,7 +21,6 @@ import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
@@ -68,31 +68,36 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
   }
 
   @Override
-  protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
-    return new SumoDataCollector(getTaskId(), dataCollectionInfo, logAnalysisStoreService, taskResult);
+  protected boolean is24X7Task() {
+    return getTaskType().equals(TaskType.SUMO_COLLECT_24_7_LOG_DATA.name());
   }
 
-  protected int getInitialDelayMinutes() {
-    return SplunkDataCollectionTask.DELAY_MINUTES + 1;
+  @Override
+  protected Runnable getDataCollector(DataCollectionTaskResult taskResult) {
+    return new SumoDataCollector(getTaskId(), dataCollectionInfo, logAnalysisStoreService, is24X7Task(), taskResult);
   }
 
   private class SumoDataCollector implements Runnable {
     private String delegateTaskId;
     private final SumoDataCollectionInfo dataCollectionInfo;
     private final LogAnalysisStoreService logAnalysisStoreService;
+    private final boolean is247Task;
     private long collectionStartTime;
     private int logCollectionMinute;
     private DataCollectionTaskResult taskResult;
 
     private SumoDataCollector(String delegateTaskId, SumoDataCollectionInfo dataCollectionInfo,
-        LogAnalysisStoreService logAnalysisStoreService, DataCollectionTaskResult taskResult) {
+        LogAnalysisStoreService logAnalysisStoreService, boolean is247Task, DataCollectionTaskResult taskResult) {
       this.delegateTaskId = delegateTaskId;
       this.dataCollectionInfo = dataCollectionInfo;
       this.logAnalysisStoreService = logAnalysisStoreService;
-      this.logCollectionMinute = dataCollectionInfo.getStartMinute();
+      this.is247Task = is247Task;
+      this.logCollectionMinute = is247Task ? (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime())
+                                           : dataCollectionInfo.getStartMinute();
       this.taskResult = taskResult;
-      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
-          + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
+      this.collectionStartTime = is247Task ? dataCollectionInfo.getStartTime()
+                                           : Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
+              + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
     }
 
     @Override
@@ -103,27 +108,16 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
         try {
           final List<LogElement> logElements = new ArrayList<>();
           for (String host : dataCollectionInfo.getHosts()) {
-            String query = dataCollectionInfo.getQuery();
-
-            /* Heart beat */
-            final LogElement sumoHeartBeatElement = new LogElement();
-            sumoHeartBeatElement.setQuery(query);
-            sumoHeartBeatElement.setClusterLabel("-3");
-            sumoHeartBeatElement.setHost(host);
-            sumoHeartBeatElement.setCount(0);
-            sumoHeartBeatElement.setLogMessage("");
-            sumoHeartBeatElement.setTimeStamp(0);
-            sumoHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
-            logElements.add(sumoHeartBeatElement);
+            addHeartBeat(host, logElements);
 
             ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-            final long collectionEndTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
+            final long collectionEndTime =
+                is247Task ? dataCollectionInfo.getEndTime() : collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
 
             try {
               List<LogElement> logElementsResponse =
-                  sumoDelegateService.getResponse(dataCollectionInfo.getSumoConfig(), query, "1m",
-                      dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getHostnameField(), host,
-                      collectionStartTime, collectionEndTime, DEFAULT_TIME_ZONE, 1000, logCollectionMinute, apiCallLog);
+                  sumoDelegateService.getResponse(dataCollectionInfo, "1m", host, collectionStartTime,
+                      collectionEndTime, is247Task, is247Task ? 10000 : 1000, logCollectionMinute, apiCallLog);
               logElements.addAll(logElementsResponse);
             } catch (CancellationException e) {
               logger.info("Ugh. Search job was cancelled. Retrying ...");
@@ -139,18 +133,21 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           }
 
           boolean response = logAnalysisStoreService.save(StateType.SUMO, dataCollectionInfo.getAccountId(),
-              dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-              dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-              dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
+              dataCollectionInfo.getApplicationId(), dataCollectionInfo.getCvConfigId(),
+              dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getWorkflowId(),
+              dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getServiceId(), delegateTaskId,
+              logElements);
           if (!response) {
             if (++retry == RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-              taskResult.setErrorMessage("Cannot save log records. Server returned error");
+              taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
               completed.set(true);
               break;
             }
+            sleep(RETRY_SLEEP);
             continue;
           }
+
           logger.info("sent sumo search records to server. Num of events: " + logElements.size()
               + " application: " + dataCollectionInfo.getApplicationId()
               + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
@@ -192,6 +189,33 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
         logger.info("Shutting down sumo data collection " + dataCollectionInfo.getStateExecutionId());
         shutDownCollection();
         return;
+      }
+    }
+
+    private void addHeartBeat(String host, List<LogElement> logElements) {
+      if (!is247Task) {
+        logElements.add(LogElement.builder()
+                            .query(dataCollectionInfo.getQuery())
+                            .clusterLabel("-3")
+                            .host(host)
+                            .count(0)
+                            .logMessage("")
+                            .timeStamp(0)
+                            .logCollectionMinute(logCollectionMinute)
+                            .build());
+      } else {
+        for (long heartBeatMin = TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime());
+             heartBeatMin <= TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime()); heartBeatMin++) {
+          logElements.add(LogElement.builder()
+                              .query(dataCollectionInfo.getQuery())
+                              .clusterLabel("-3")
+                              .host(host)
+                              .count(0)
+                              .logMessage("")
+                              .timeStamp(TimeUnit.MINUTES.toMillis(heartBeatMin))
+                              .logCollectionMinute((int) heartBeatMin)
+                              .build());
+        }
       }
     }
   }

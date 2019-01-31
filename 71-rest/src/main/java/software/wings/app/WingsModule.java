@@ -172,7 +172,6 @@ import software.wings.service.impl.WebHookServiceImpl;
 import software.wings.service.impl.WhitelistServiceImpl;
 import software.wings.service.impl.WorkflowExecutionBaselineServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
-import software.wings.service.impl.analysis.APMVerificationServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
@@ -225,6 +224,7 @@ import software.wings.service.impl.trigger.DeploymentTriggerServiceImpl;
 import software.wings.service.impl.trigger.TriggerExecutionServiceImpl;
 import software.wings.service.impl.trigger.TriggerProcessor;
 import software.wings.service.impl.trigger.TriggerServiceImpl;
+import software.wings.service.impl.verification.CV24x7DashboardServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
@@ -324,7 +324,6 @@ import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.analysis.APMVerificationService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogLabelingService;
 import software.wings.service.intfc.analysis.LogVerificationService;
@@ -365,6 +364,7 @@ import software.wings.service.intfc.stackdriver.StackDriverService;
 import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
+import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
@@ -484,6 +484,7 @@ public class WingsModule extends DependencyModule {
     bind(MetricDataAnalysisService.class).to(MetricDataAnalysisServiceImpl.class);
     bind(AnalysisService.class).to(AnalysisServiceImpl.class);
     bind(ContinuousVerificationService.class).to(ContinuousVerificationServiceImpl.class);
+    bind(CV24x7DashboardService.class).to(CV24x7DashboardServiceImpl.class);
     bind(ElkAnalysisService.class).to(ElkAnalysisServiceImpl.class);
     bind(PrometheusAnalysisService.class).to(PrometheusAnalysisServiceImpl.class);
     bind(SplunkAnalysisService.class).to(SplunkAnalysisServiceImpl.class);
@@ -622,7 +623,6 @@ public class WingsModule extends DependencyModule {
     bind(HelmDeployService.class).to(HelmDeployServiceUnsupported.class).in(Singleton.class);
     bind(PcfDeploymentManager.class).to(PcfDeploymentManagerUnsupported.class).in(Singleton.class);
 
-    bind(APMVerificationService.class).to(APMVerificationServiceImpl.class);
     bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
 

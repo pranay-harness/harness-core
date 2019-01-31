@@ -368,7 +368,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
       List<LogDataRecord> logDataRecords =
           readLogDataRecordsFromFile(file, appId, workflowId, workflowExecutionId, stateExecutionId);
-      Map<Integer, List<LogElement>> recordsByMinute = splitRecordsByMinute(logDataRecords);
+      Map<Long, List<LogElement>> recordsByMinute = splitRecordsByMinute(logDataRecords);
 
       final String serviceId = logDataRecords.get(0).getServiceId();
       final String query = ".*exception.*";
@@ -381,7 +381,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
 
-      for (int logCollectionMinute : recordsByMinute.keySet()) {
+      for (long logCollectionMinute : recordsByMinute.keySet()) {
         Thread.sleep(TimeUnit.SECONDS.toMillis(1));
         final LogClusterContext logClusterContext = LogClusterContext.builder()
                                                         .accountId(accountId)
@@ -428,8 +428,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     }
   }
 
-  private Map<Integer, List<LogElement>> splitRecordsByMinute(List<LogDataRecord> logDataRecords) {
-    final Map<Integer, List<LogElement>> rv = new HashMap<>();
+  private Map<Long, List<LogElement>> splitRecordsByMinute(List<LogDataRecord> logDataRecords) {
+    final Map<Long, List<LogElement>> rv = new HashMap<>();
     for (LogDataRecord logDataRecord : logDataRecords) {
       if (!rv.containsKey(logDataRecord.getLogCollectionMinute())) {
         rv.put(logDataRecord.getLogCollectionMinute(), new ArrayList<>());
@@ -514,7 +514,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     LogElement logElement = new LogElement(query, "0", host, 0, 0, "Hello World", logCollectionMinute);
     logElements.add(logElement);
 
-    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, prevStateExecutionId, workflowId,
+    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, prevStateExecutionId, workflowId,
         workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
@@ -548,8 +548,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     logElements.add(splunkHeartBeatElement);
 
-    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-        serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
+        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     ContinuousVerificationExecutionMetaData metaData = ContinuousVerificationExecutionMetaData.builder()
                                                            .stateType(StateType.SPLUNKV2)
@@ -634,8 +634,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     logElements.add(splunkHeartBeatElement);
 
-    analysisService.saveLogData(StateType.SUMO, accountId, appId, prevStateExecutionId, workflowId, workFlowExecutionId,
-        serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+    analysisService.saveLogData(StateType.SUMO, accountId, appId, null, prevStateExecutionId, workflowId,
+        workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(stateExecutionInstance);
@@ -675,8 +675,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     logElements.add(splunkHeartBeatElement);
 
-    analysisService.saveLogData(StateType.SUMO, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-        serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    analysisService.saveLogData(StateType.SUMO, accountId, appId, null, stateExecutionId, workflowId,
+        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
     return workFlowExecutionId;
   }
 
@@ -844,8 +844,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     logElements.add(elkBeatElement);
 
-    analysisService.saveLogData(StateType.ELK, accountId, appId, prevStateExecutionId, workflowId, workFlowExecutionId,
-        serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+    analysisService.saveLogData(StateType.ELK, accountId, appId, null, prevStateExecutionId, workflowId,
+        workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(stateExecutionInstance);
@@ -877,8 +877,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     elkBeatElement.setLogCollectionMinute(logCollectionMinute);
     logElements.add(elkBeatElement);
 
-    analysisService.saveLogData(StateType.ELK, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-        serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    analysisService.saveLogData(StateType.ELK, accountId, appId, null, stateExecutionId, workflowId,
+        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     AnalysisContext analysisContext = AnalysisContext.builder()
                                           .accountId(accountId)
@@ -964,7 +964,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
       }
     }
 
-    analysisService.saveLogData(StateType.SUMO, accountId, appId, prevStateExecutionId, workflowId,
+    analysisService.saveLogData(StateType.SUMO, accountId, appId, null, prevStateExecutionId, workflowId,
         prevWorkFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
@@ -1008,8 +1008,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
       }
     }
 
-    analysisService.saveLogData(StateType.SUMO, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-        serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    analysisService.saveLogData(StateType.SUMO, accountId, appId, null, stateExecutionId, workflowId,
+        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     AnalysisContext analysisContext = AnalysisContext.builder()
                                           .accountId(accountId)
@@ -1131,7 +1131,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
       logElements.add(logElement);
     }
 
-    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, prevStateExecutionId, workflowId,
+    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, prevStateExecutionId, workflowId,
         workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     ContinuousVerificationExecutionMetaData metaData = ContinuousVerificationExecutionMetaData.builder()
@@ -1345,7 +1345,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     }
 
     @Override
-    protected void preProcess(int logAnalysisMinute, String query, Set<String> nodes) {
+    protected void preProcess(long logAnalysisMinute, String query, Set<String> nodes) {
       super.preProcess(logAnalysisMinute, query, nodes);
       try {
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
@@ -1355,8 +1355,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     }
 
     @Override
-    public Integer call() {
-      Integer lastAnalysisMinute = super.call();
+    public Long call() {
+      Long lastAnalysisMinute = super.call();
       try {
         LogDataRecord record = null;
         while (record == null) {
@@ -1411,7 +1411,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     logElements.add(splunkHeartBeatElement);
 
-    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, prevStateExecutionId, workflowId,
+    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, prevStateExecutionId, workflowId,
         workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
@@ -1445,8 +1445,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     logElements.add(splunkHeartBeatElement);
 
-    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-        serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
+        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     String logmd5Hash = DigestUtils.md5Hex("hello");
 

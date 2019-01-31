@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.Constants.URL_STRING;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.delegatetasks.SumoDataCollectionTask.DEFAULT_TIME_ZONE;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
@@ -26,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.SumoConfig;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.delegatetasks.SumoDataCollectionTask;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -83,8 +83,12 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(duration);
     long endTime = Timestamp.currentMinuteBoundary();
     String query = "*exception*";
-    return getResponse(config, query, "5m", encryptedDataDetails, null, null, startTime, endTime,
-        SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, 0, null);
+    return getResponse(SumoDataCollectionInfo.builder()
+                           .sumoConfig(config)
+                           .query(query)
+                           .encryptedDataDetails(encryptedDataDetails)
+                           .build(),
+        "5m", null, startTime, endTime, false, 5, 0, null);
   }
 
   @Override
@@ -96,16 +100,25 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(5);
     long endTime = Timestamp.currentMinuteBoundary();
 
-    List<LogElement> responseWithoutHost = getResponse(config, query, "1m", encryptedDataDetails, null, null, startTime,
-        endTime, SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, 0, apiCallLog);
+    List<LogElement> responseWithoutHost = getResponse(SumoDataCollectionInfo.builder()
+                                                           .sumoConfig(config)
+                                                           .query(query)
+                                                           .encryptedDataDetails(encryptedDataDetails)
+                                                           .build(),
+        "1m", null, startTime, endTime, false, 5, 0, null);
+
     if (isEmpty(responseWithoutHost)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())
           .build();
     } else {
-      List<LogElement> responseWithHost = getResponse(config, query, "1m", encryptedDataDetails, hostNameField,
-          hostName, startTime, endTime, SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, 0, apiCallLog);
+      List<LogElement> responseWithHost = getResponse(SumoDataCollectionInfo.builder()
+                                                          .sumoConfig(config)
+                                                          .query(query)
+                                                          .encryptedDataDetails(encryptedDataDetails)
+                                                          .build(),
+          "1m", hostName, startTime, endTime, false, 5, 0, null);
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(
@@ -115,33 +128,12 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     }
   }
 
-  /**
-   * Method to fetch response based on query provided.
-   * This method do following steps:
-   *  - Gets a sumologic client
-   *  - Creates a search job based on given query
-   *  - Gets Search job Status Response
-   *  - Gets message count and create LogElement list
-   *  - Save Response in Third Party Call Logs
-   * @param config
-   * @param query
-   * @param timeSlice
-   * @param encryptedDataDetails
-   * @param hostNameField
-   * @param hostName
-   * @param startTime
-   * @param endTime
-   * @param timeZone
-   * @param maxMessageCount
-   * @param apiCallLog
-   * @return
-   */
-  public List<LogElement> getResponse(SumoConfig config, String query, String timeSlice,
-      List<EncryptedDataDetail> encryptedDataDetails, String hostNameField, String hostName, long startTime,
-      long endTime, String timeZone, int maxMessageCount, int logCollectionMinute, ThirdPartyApiCallLog apiCallLog) {
-    String searchQuery = query;
-    if (!isEmpty(hostNameField)) {
-      searchQuery = searchQuery + "| where " + hostNameField + " = \"" + hostName + "\" ";
+  public List<LogElement> getResponse(SumoDataCollectionInfo dataCollectionInfo, String timeSlice, String hostName,
+      long startTime, long endTime, boolean is247Task, int maxMessageCount, int logCollectionMinute,
+      ThirdPartyApiCallLog apiCallLog) {
+    String searchQuery = dataCollectionInfo.getQuery();
+    if (!isEmpty(dataCollectionInfo.getHostnameField())) {
+      searchQuery = searchQuery + "| where " + dataCollectionInfo.getHostnameField() + " = \"" + hostName + "\" ";
     }
     if (!isEmpty(timeSlice)) {
       searchQuery = searchQuery + " | timeslice " + timeSlice;
@@ -152,20 +144,22 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     Long requestTimeStamp = 0L;
     try {
       // Gets a sumologic client
-      SumoLogicClient sumoClient = getSumoClient(config, encryptedDataDetails, encryptionService);
+      SumoLogicClient sumoClient = getSumoClient(
+          dataCollectionInfo.getSumoConfig(), dataCollectionInfo.getEncryptedDataDetails(), encryptionService);
 
       requestTimeStamp = OffsetDateTime.now().toInstant().toEpochMilli();
 
       // Creates a search job based on given query
-      String searchJobId =
-          sumoClient.createSearchJob(searchQuery, String.valueOf(startTime), String.valueOf(endTime), timeZone);
+      String searchJobId = sumoClient.createSearchJob(
+          searchQuery, String.valueOf(startTime), String.valueOf(endTime), DEFAULT_TIME_ZONE);
       GetSearchJobStatusResponse searchJobStatusResponse = getSearchJobStatusResponse(sumoClient, searchJobId);
 
       Long responseTimeStamp = OffsetDateTime.now().toInstant().toEpochMilli();
 
       // SaveLogs is called for given job response.
-      saveThirdPartyCallLogs(apiCallLog, config, searchQuery, String.valueOf(startTime), String.valueOf(endTime),
-          searchJobStatusResponse, requestTimeStamp, responseTimeStamp, HttpStatus.SC_OK, FieldType.JSON);
+      saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(), searchQuery, String.valueOf(startTime),
+          String.valueOf(endTime), searchJobStatusResponse, requestTimeStamp, responseTimeStamp, HttpStatus.SC_OK,
+          FieldType.JSON);
 
       // SumoLogic may end up resulting lot of records that we may not need, so we have a maxMessageCount limit defined.
       // based on the max count. MessageCount value is set.
@@ -174,15 +168,15 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
           : searchJobStatusResponse.getMessageCount();
       logger.info("Search job Status Response received from SumoLogic with message Count : "
           + searchJobStatusResponse.getMessageCount());
-      return getMessagesForSearchJob(
-          query, hostName, messageCount, sumoClient, searchJobId, 0, 0, Math.min(messageCount, 5), logCollectionMinute);
+      return getMessagesForSearchJob(dataCollectionInfo.getQuery(), messageCount, sumoClient, searchJobId, 0, 0,
+          Math.min(messageCount, 5), logCollectionMinute, is247Task);
     } catch (InterruptedException e) {
       throw new WingsException("Unable to get client for given config");
     } catch (SumoServerException sumoServerException) {
       if (sumoServerException.getHTTPStatus() == SUMO_RATE_LIMIT_STATUS) {
-        saveThirdPartyCallLogs(apiCallLog, config, query, String.valueOf(startTime), String.valueOf(endTime),
-            sumoServerException.getErrorMessage(), requestTimeStamp, OffsetDateTime.now().toInstant().toEpochMilli(),
-            HttpStatus.SC_BAD_REQUEST, FieldType.TEXT);
+        saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(), searchQuery, String.valueOf(startTime),
+            String.valueOf(endTime), sumoServerException.getErrorMessage(), requestTimeStamp,
+            OffsetDateTime.now().toInstant().toEpochMilli(), HttpStatus.SC_BAD_REQUEST, FieldType.TEXT);
         int randomNum = ThreadLocalRandom.current().nextInt(1, 11);
         logger.info("Encountered Rate limiting from sumo. Sleeping {}seconds for logCollectionMin {}", 30 + randomNum,
             logCollectionMinute);
@@ -190,9 +184,9 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       }
       throw sumoServerException;
     } catch (Exception e) {
-      saveThirdPartyCallLogs(apiCallLog, config, query, String.valueOf(startTime), String.valueOf(endTime),
-          ExceptionUtils.getStackTrace(e), requestTimeStamp, OffsetDateTime.now().toInstant().toEpochMilli(),
-          HttpStatus.SC_BAD_REQUEST, FieldType.TEXT);
+      saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(), searchQuery, String.valueOf(startTime),
+          String.valueOf(endTime), ExceptionUtils.getStackTrace(e), requestTimeStamp,
+          OffsetDateTime.now().toInstant().toEpochMilli(), HttpStatus.SC_BAD_REQUEST, FieldType.TEXT);
       throw e;
     }
   }
@@ -227,17 +221,17 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
   /**
    * Method gets the actual messages for given query and returns List of LogElements.
    * @param query
-   * @param hostName
-   *@param messageCount
+   * @param messageCount
    * @param sumoClient
    * @param searchJobId
    * @param clusterLabel
    * @param messageOffset
    * @param messageLength       @return
-   */
-  private List<LogElement> getMessagesForSearchJob(String query, String hostName, int messageCount,
-      SumoLogicClient sumoClient, String searchJobId, int clusterLabel, int messageOffset, int messageLength,
-      int logCollectionMinute) {
+   * @param is247Task
+   * */
+  private List<LogElement> getMessagesForSearchJob(String query, int messageCount, SumoLogicClient sumoClient,
+      String searchJobId, int clusterLabel, int messageOffset, int messageLength, int logCollectionMinute,
+      boolean is247Task) {
     List<LogElement> logElements = new ArrayList<>();
     if (messageCount > 0) {
       do {
@@ -246,12 +240,13 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
         for (LogMessage logMessage : getMessagesForSearchJobResponse.getMessages()) {
           final LogElement sumoLogElement = new LogElement();
           sumoLogElement.setQuery(query);
-          sumoLogElement.setHost(hostName);
+          sumoLogElement.setHost(logMessage.getSourceHost());
           sumoLogElement.setClusterLabel(String.valueOf(clusterLabel++));
           sumoLogElement.setCount(1);
-          sumoLogElement.setLogCollectionMinute(logCollectionMinute);
           sumoLogElement.setLogMessage(logMessage.getProperties().get("_raw"));
           sumoLogElement.setTimeStamp(Long.parseLong(logMessage.getProperties().get("_timeslice")));
+          sumoLogElement.setLogCollectionMinute(
+              is247Task ? (int) TimeUnit.MILLISECONDS.toMinutes(sumoLogElement.getTimeStamp()) : logCollectionMinute);
           logElements.add(sumoLogElement);
         }
         messageCount -= messageLength;

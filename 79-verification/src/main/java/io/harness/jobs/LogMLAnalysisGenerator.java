@@ -44,13 +44,13 @@ public class LogMLAnalysisGenerator implements Runnable {
   private final Set<String> controlNodes;
   private final String query;
   private final boolean createExperiment;
-  private int logAnalysisMinute;
+  private long logAnalysisMinute;
   private LogAnalysisService analysisService;
   private LearningEngineService learningEngineService;
   private VerificationManagerClient managerClient;
   private VerificationManagerClientHelper managerClientHelper;
 
-  public LogMLAnalysisGenerator(AnalysisContext context, int logAnalysisMinute, boolean createExperiment,
+  public LogMLAnalysisGenerator(AnalysisContext context, long logAnalysisMinute, boolean createExperiment,
       LogAnalysisService analysisService, LearningEngineService learningEngineService,
       VerificationManagerClient managerClient, VerificationManagerClientHelper managerClientHelper) {
     this.context = context;

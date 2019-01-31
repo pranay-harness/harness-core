@@ -9,9 +9,9 @@ import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.datadog.DataDogFetchConfig;
-import software.wings.service.intfc.analysis.APMVerificationService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogState;
 
@@ -29,7 +29,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(PermissionAttribute.ResourceType.SETTING)
 public class DatadogResource {
-  @Inject private APMVerificationService verificationService;
+  @Inject private ContinuousVerificationService verificationService;
 
   @GET
   @Path("/metric-names")
