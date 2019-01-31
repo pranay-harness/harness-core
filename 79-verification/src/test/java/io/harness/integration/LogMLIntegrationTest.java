@@ -1359,19 +1359,23 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
       Long lastAnalysisMinute = super.call();
       try {
         LogDataRecord record = null;
-        while (record == null) {
-          Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        for (int i = 0; i < 10; i++) {
+          Thread.sleep(TimeUnit.SECONDS.toMillis(5));
           record = wingsPersistence.createQuery(LogDataRecord.class)
                        .filter("stateExecutionId", stateExecutionId)
                        .filter("clusterLevel", "HF")
                        .filter("logCollectionMinute", lastAnalysisMinute)
                        .get();
+          if (record != null) {
+            return lastAnalysisMinute;
+          }
         }
       } catch (InterruptedException e) {
         logger.error("", e);
       }
 
-      return lastAnalysisMinute;
+      throw new IllegalStateException(
+          "for stateExecutionId " + stateExecutionId + " logCollectionMinute " + lastAnalysisMinute + " no HF found");
     }
   }
 
