@@ -183,7 +183,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
 
   // TODO(jatin): delete this after UserGroups are used instead of notification groups
   private void handleNotificationGroupRoles(NotificationGroup notificationGroup, List<Notification> notifications) {
-    if (CollectionUtils.isEmpty(notificationGroup.getRoles())) {
+    if (notificationGroup == null || CollectionUtils.isEmpty(notificationGroup.getRoles())) {
       return;
     }
 
