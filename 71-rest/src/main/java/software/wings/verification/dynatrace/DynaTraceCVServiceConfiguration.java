@@ -4,6 +4,7 @@ import com.github.reinert.jjschema.Attributes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.verification.CVConfiguration;
 
@@ -14,6 +15,7 @@ import software.wings.verification.CVConfiguration;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class DynaTraceCVServiceConfiguration extends CVConfiguration {
   @Attributes(required = true, title = "Service Methods") private String serviceMethods;
 }

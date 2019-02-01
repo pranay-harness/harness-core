@@ -3,6 +3,7 @@ package software.wings.service.impl.newrelic;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
@@ -14,6 +15,7 @@ import software.wings.sm.StateType;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class NewRelicSetupTestNodeData extends SetupTestNodeData {
   private long newRelicAppId;
 

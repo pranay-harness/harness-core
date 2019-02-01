@@ -4,6 +4,7 @@ import static software.wings.beans.PreferenceType.DEPLOYMENT_PREFERENCE;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Data
 @JsonTypeName("DEPLOYMENT_PREFERENCE")
+@EqualsAndHashCode(callSuper = false)
 public class DeploymentPreference extends Preference {
   List<String> appIds;
   List<String> pipelineIds;

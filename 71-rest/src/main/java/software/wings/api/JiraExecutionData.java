@@ -4,6 +4,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import software.wings.delegatetasks.jira.JiraAction;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class JiraExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
   private ExecutionStatus executionStatus;
