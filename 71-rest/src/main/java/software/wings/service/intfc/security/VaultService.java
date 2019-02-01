@@ -15,6 +15,9 @@ import java.util.List;
  * Created by rsingh on 11/2/17.
  */
 public interface VaultService {
+  String VAULT_VAILDATION_URL = "harness_vault_validation";
+  String DEFAULT_BASE_PATH = "/harness";
+
   EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData encryptedData);
 

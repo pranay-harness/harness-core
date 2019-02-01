@@ -74,7 +74,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Singleton
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
-  public static final String VAULT_VAILDATION_URL = "harness_vault_validation";
   @Inject private KmsService kmsService;
   @Inject private AlertService alertService;
 
@@ -196,8 +195,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           .addParam("reason", "Can't create new Vault secret manager for a LOCAL encryption enabled account!");
     }
 
-    // First normalize the base path value.
-    String basePath = isEmpty(vaultConfig.getBasePath()) ? null : vaultConfig.getBasePath().trim();
+    // First normalize the base path value. Set default base path if it has not been specified from input.
+    String basePath = isEmpty(vaultConfig.getBasePath()) ? DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
     vaultConfig.setBasePath(basePath);
 
     VaultConfig savedVaultConfig = null;
