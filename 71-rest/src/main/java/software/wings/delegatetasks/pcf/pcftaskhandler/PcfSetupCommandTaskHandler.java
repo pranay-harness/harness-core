@@ -128,7 +128,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       pcfCommandTaskHelper.printApplicationDetail(newApplication, executionLogCallback);
 
       List<PcfAppSetupTimeDetails> downsizeAppDetails = pcfCommandTaskHelper.generateDownsizeDetails(
-          pcfRequestConfig, newReleaseName, pcfCommandSetupRequest.getMaxCount());
+          pcfRequestConfig, newReleaseName, getCount(pcfCommandSetupRequest));
       PcfSetupCommandResponse pcfSetupCommandResponse =
           PcfSetupCommandResponse.builder()
               .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -163,6 +163,14 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(Misc.getMessage(e))
           .build();
+    }
+  }
+
+  private Integer getCount(PcfCommandSetupRequest pcfCommandSetupRequest) {
+    if (pcfCommandSetupRequest.isUseCurrentCount()) {
+      return pcfCommandSetupRequest.getCurrentRunningCount();
+    } else {
+      return pcfCommandSetupRequest.getMaxCount();
     }
   }
 

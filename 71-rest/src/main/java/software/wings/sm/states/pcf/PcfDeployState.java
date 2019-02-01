@@ -7,6 +7,7 @@ import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
@@ -61,6 +62,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PcfDeployState extends State {
   @Inject private transient AppService appService;
   @Inject private transient ServiceResourceService serviceResourceService;
@@ -198,17 +200,23 @@ public class PcfDeployState extends State {
   }
 
   protected Integer getUpsizeUpdateCount(PcfSetupContextElement pcfSetupContextElement) {
-    return getInstanceCountToBeUpdated(
-        pcfSetupContextElement.getMaxInstanceCount(), instanceCount, instanceUnitType, true);
+    Integer count = pcfSetupContextElement.isUseCurrentRunningInstanceCount()
+        ? pcfSetupContextElement.getCurrentRunningInstanceCount()
+        : pcfSetupContextElement.getMaxInstanceCount();
+    return getInstanceCountToBeUpdated(count, instanceCount, instanceUnitType, true);
   }
 
   @VisibleForTesting
   protected Integer getDownsizeUpdateCount(Integer updateCount, PcfSetupContextElement pcfSetupContextElement) {
     // if downsizeInstanceCount is not set, use same updateCount as upsize
     Integer downsizeUpdateCount = updateCount;
+
+    Integer instanceCount = pcfSetupContextElement.isUseCurrentRunningInstanceCount()
+        ? pcfSetupContextElement.getCurrentRunningInstanceCount()
+        : pcfSetupContextElement.getMaxInstanceCount();
     if (downsizeInstanceCount != null) {
-      downsizeUpdateCount = getInstanceCountToBeUpdated(
-          pcfSetupContextElement.getMaxInstanceCount(), downsizeInstanceCount, downsizeInstanceUnitType, false);
+      downsizeUpdateCount =
+          getInstanceCountToBeUpdated(instanceCount, downsizeInstanceCount, downsizeInstanceUnitType, false);
     }
 
     return downsizeUpdateCount;

@@ -28,6 +28,8 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
   private Map<String, String> serviceVariables;
   private Map<String, String> safeDisplayServiceVariables;
   private Integer maxCount;
+  private Integer currentRunningCount;
+  private boolean useCurrentCount;
   private boolean blueGreen;
   private Integer olderActiveVersionCountToKeep;
 
@@ -36,7 +38,8 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
       String releaseNamePrefix, String manifestYaml, List<ArtifactFile> artifactFiles, List<String> tempRouteMap,
       List<String> routeMaps, Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
-      Integer timeoutIntervalInMin, Integer maxCount, boolean blueGreen, Integer olderActiveVersionCountToKeep) {
+      Integer timeoutIntervalInMin, Integer maxCount, Integer currentRunningCount, boolean useCurrentCount,
+      boolean blueGreen, Integer olderActiveVersionCountToKeep) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin);
     this.releaseNamePrefix = releaseNamePrefix;
@@ -49,5 +52,7 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
     this.maxCount = maxCount;
     this.blueGreen = blueGreen;
     this.olderActiveVersionCountToKeep = olderActiveVersionCountToKeep;
+    this.currentRunningCount = currentRunningCount;
+    this.useCurrentCount = useCurrentCount;
   }
 }

@@ -351,7 +351,11 @@ public class PcfClientImpl implements PcfClient {
       builder.randomRoute(true);
       String appName = pcfRequestConfig.getApplicationName();
       String appPrefix = appName.substring(0, appName.lastIndexOf("__"));
+
+      // '_' in routemap is not allowed, PCF lets us create route but while accessing it, fails
       appPrefix = appPrefix.replaceAll("__", "-");
+      appPrefix = appPrefix.replaceAll("_", "-");
+
       builder.host(appPrefix);
     }
   }

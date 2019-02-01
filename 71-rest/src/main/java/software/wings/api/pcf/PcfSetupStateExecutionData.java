@@ -30,6 +30,8 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements Re
   private PcfCommandRequest pcfCommandRequest;
   private String commandName;
   private Integer maxInstanceCount;
+  private boolean useCurrentRunningInstanceCount;
+  private Integer currentRunningInstanceCount;
   private List<String> routeMaps;
   private List<String> tempRouteMaps;
   private boolean rollback;
@@ -65,7 +67,7 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements Re
   @Override
   public PcfSetupExecutionSummary getStepExecutionSummary() {
     return PcfSetupExecutionSummary.builder()
-        .maxInstanceCount(maxInstanceCount)
+        .maxInstanceCount(useCurrentRunningInstanceCount ? currentRunningInstanceCount : maxInstanceCount)
         .organization(pcfCommandRequest.getOrganization())
         .space(pcfCommandRequest.getSpace())
         .build();

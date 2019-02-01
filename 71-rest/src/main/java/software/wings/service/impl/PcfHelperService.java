@@ -19,6 +19,7 @@ import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
+import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest.ActionType;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse;
@@ -150,6 +151,7 @@ public class PcfHelperService {
                                           .withParameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                                             .pcfConfig(pcfConfig)
                                                                             .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                                            .actionType(ActionType.FETCH_ORG)
                                                                             .timeoutIntervalInMin(2)
                                                                             .build(),
                                               encryptionDetails})
@@ -226,6 +228,7 @@ public class PcfHelperService {
                                                                             .pcfConfig(pcfConfig)
                                                                             .organization(organization)
                                                                             .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                                            .actionType(ActionType.FETCH_SPACE)
                                                                             .timeoutIntervalInMin(2)
                                                                             .build(),
                                               encryptionDetails})
@@ -261,6 +264,7 @@ public class PcfHelperService {
                                                                             .organization(organization)
                                                                             .space(space)
                                                                             .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                                            .actionType(ActionType.FETCH_ROUTE)
                                                                             .timeoutIntervalInMin(2)
                                                                             .build(),
                                               encryptionDetails})
@@ -274,6 +278,45 @@ public class PcfHelperService {
 
     if (CommandExecutionStatus.SUCCESS.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
       return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getRouteMaps();
+    } else {
+      logger.warn(pcfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
+    }
+  }
+
+  public Integer getRunningInstanceCount(PcfConfig pcfConfig, String organization, String space, String appPrefix) {
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
+    PcfCommandExecutionResponse pcfCommandExecutionResponse;
+    try {
+      pcfCommandExecutionResponse =
+          delegateService.executeTask(aDelegateTask()
+                                          .withTaskType(TaskType.PCF_COMMAND_TASK)
+                                          .withAccountId(pcfConfig.getAccountId())
+                                          .withAppId(GLOBAL_APP_ID)
+                                          .withAsync(false)
+                                          .withTimeout(TimeUnit.MINUTES.toMillis(2))
+                                          .withParameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                                            .pcfConfig(pcfConfig)
+                                                                            .organization(organization)
+                                                                            .space(space)
+                                                                            .actionType(ActionType.RUNNING_COUNT)
+                                                                            .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                                            .applicationNamePrefix(appPrefix)
+                                                                            .timeoutIntervalInMin(2)
+                                                                            .build(),
+                                              encryptionDetails})
+                                          .build());
+    } catch (InterruptedException e) {
+      pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
+                                        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                        .errorMessage(Misc.getMessage(e))
+                                        .build();
+    }
+
+    if (CommandExecutionStatus.SUCCESS.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
+      PcfInfraMappingDataResponse pcfInfraMappingDataResponse =
+          (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
+      return pcfInfraMappingDataResponse.getRunningInstanceCount();
     } else {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
       throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());

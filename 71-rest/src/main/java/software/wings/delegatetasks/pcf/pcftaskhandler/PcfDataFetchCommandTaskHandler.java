@@ -1,13 +1,19 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.WingsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.PcfConfig;
@@ -47,12 +53,27 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
     pcfCommandExecutionResponse.setPcfCommandResponse(pcfInfraMappingDataResponse);
 
     try {
-      if (StringUtils.isBlank(pcfInfraMappingDataRequest.getOrganization())) {
-        getOrgs(pcfDeploymentManager, pcfInfraMappingDataRequest, pcfInfraMappingDataResponse, pcfConfig);
-      } else if (StringUtils.isBlank(pcfInfraMappingDataRequest.getSpace())) {
-        getSpaces(pcfDeploymentManager, pcfInfraMappingDataRequest, pcfInfraMappingDataResponse, pcfConfig);
-      } else {
-        getRoutes(pcfDeploymentManager, pcfInfraMappingDataRequest, pcfInfraMappingDataResponse, pcfConfig);
+      switch (pcfInfraMappingDataRequest.getActionType()) {
+        case FETCH_ORG:
+          getOrgs(pcfDeploymentManager, pcfInfraMappingDataRequest, pcfInfraMappingDataResponse, pcfConfig);
+          break;
+
+        case FETCH_SPACE:
+          getSpaces(pcfDeploymentManager, pcfInfraMappingDataRequest, pcfInfraMappingDataResponse, pcfConfig);
+          break;
+
+        case FETCH_ROUTE:
+          getRoutes(pcfDeploymentManager, pcfInfraMappingDataRequest, pcfInfraMappingDataResponse, pcfConfig);
+          break;
+
+        case RUNNING_COUNT:
+          getRunningCount(pcfDeploymentManager, pcfInfraMappingDataRequest, pcfInfraMappingDataResponse, pcfConfig);
+          break;
+
+        default:
+          throw new WingsException(
+              ErrorCode.INVALID_ARGUMENT, "Invalid ActionType: " + pcfInfraMappingDataRequest.getActionType())
+              .addParam("message", "Invalid ActionType: " + pcfInfraMappingDataRequest.getActionType());
       }
 
       pcfInfraMappingDataResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
@@ -69,6 +90,41 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
     pcfCommandExecutionResponse.setCommandExecutionStatus(pcfInfraMappingDataResponse.getCommandExecutionStatus());
     pcfCommandExecutionResponse.setErrorMessage(pcfInfraMappingDataResponse.getOutput());
     return pcfCommandExecutionResponse;
+  }
+
+  private void getRunningCount(PcfDeploymentManager pcfDeploymentManager,
+      PcfInfraMappingDataRequest pcfInfraMappingDataRequest, PcfInfraMappingDataResponse pcfInfraMappingDataResponse,
+      PcfConfig pcfConfig) throws PivotalClientApiException {
+    Integer count = Integer.valueOf(0);
+
+    List<ApplicationSummary> applicationSummaries = pcfDeploymentManager.getPreviousReleases(
+        PcfRequestConfig.builder()
+            .endpointUrl(pcfConfig.getEndpointUrl())
+            .orgName(pcfInfraMappingDataRequest.getOrganization())
+            .spaceName(pcfInfraMappingDataRequest.getSpace())
+            .userName(pcfConfig.getUsername())
+            .password(String.valueOf(pcfConfig.getPassword()))
+            .timeOutIntervalInMins(pcfInfraMappingDataRequest.getTimeoutIntervalInMin())
+            .build(),
+        pcfInfraMappingDataRequest.getApplicationNamePrefix());
+
+    applicationSummaries = applicationSummaries.stream()
+                               .filter(applicationSummary
+                                   -> applicationSummary.getRunningInstances() > 0
+                                       && !"STOPPED".equals(applicationSummary.getRequestedState()))
+                               .collect(toList());
+
+    applicationSummaries =
+        applicationSummaries.stream()
+            .sorted(comparingInt(
+                applicationSummary -> pcfCommandTaskHelper.getRevisionFromReleaseName(applicationSummary.getName())))
+            .collect(toList());
+
+    if (isNotEmpty(applicationSummaries)) {
+      count = applicationSummaries.get(applicationSummaries.size() - 1).getRunningInstances();
+    }
+
+    pcfInfraMappingDataResponse.setRunningInstanceCount(count);
   }
 
   private void getRoutes(PcfDeploymentManager pcfDeploymentManager,

@@ -1759,6 +1759,36 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
+  public Integer getPcfRunningInstances(String appId, String infraMappingId, String appNameExpression) {
+    PcfInfrastructureMapping infrastructureMapping = (PcfInfrastructureMapping) get(appId, infraMappingId);
+    notNullCheck("Inframapping Doesnt Exists", infrastructureMapping);
+
+    Application app = appService.get(infrastructureMapping.getAppId());
+    Environment env = envService.get(infrastructureMapping.getAppId(), infrastructureMapping.getEnvId(), false);
+    Service service =
+        serviceResourceService.get(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId());
+
+    Map<String, Object> context = new HashMap<>();
+    context.put("app", app);
+    context.put("env", env);
+    context.put("service", service);
+
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    notNullCheck("Compute Provider Doesnt Exist", computeProviderSetting);
+
+    if (!(computeProviderSetting.getValue() instanceof PcfConfig)) {
+      throw new WingsException(INVALID_ARGUMENT, USER)
+          .addParam("args", "InvalidConfiguration, Needs Instance of PcfConfig");
+    }
+
+    appNameExpression = StringUtils.isNotBlank(appNameExpression)
+        ? Misc.normalizeExpression(evaluator.substitute(appNameExpression, context))
+        : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName());
+
+    return pcfHelperService.getRunningInstanceCount((PcfConfig) computeProviderSetting.getValue(),
+        infrastructureMapping.getOrganization(), infrastructureMapping.getSpace(), appNameExpression);
+  }
+
   private InfrastructureProvider getInfrastructureProviderByComputeProviderType(String computeProviderType) {
     return infrastructureProviders.get(computeProviderType);
   }
