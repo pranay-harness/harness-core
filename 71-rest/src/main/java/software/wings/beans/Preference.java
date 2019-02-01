@@ -5,10 +5,12 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "preferenceType")
 @JsonSubTypes({ @Type(value = DeploymentPreference.class, name = "DEPLOYMENT_PREFERENCE") })

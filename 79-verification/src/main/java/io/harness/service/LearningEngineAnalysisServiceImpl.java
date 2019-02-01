@@ -12,6 +12,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.beans.ExecutionStatus;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.service.intfc.LearningEngineService;
@@ -168,8 +169,12 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     if (task != null && task.getRetry() >= LearningEngineAnalysisTask.RETRIES) {
       // If some task has failed for more than 3 times, mark status as failed.
       logger.info("LearningEngine task {} has failed 3 or more times. Setting the status to FAILED", task.getUuid());
-      wingsPersistence.updateField(
-          LearningEngineAnalysisTask.class, task.getUuid(), "executionStatus", ExecutionStatus.FAILED);
+      try {
+        wingsPersistence.updateField(
+            LearningEngineAnalysisTask.class, task.getUuid(), "executionStatus", ExecutionStatus.FAILED);
+      } catch (DuplicateKeyException e) {
+        logger.info("task {} for state {} is already marked successful", task.getUuid(), task.getState_execution_id());
+      }
       return null;
     }
     return task;
