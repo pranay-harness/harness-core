@@ -21,7 +21,8 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();
-    KubernetesClusterConfig.Yaml yaml = KubernetesClusterConfig.Yaml.builder().build();
+    KubernetesClusterConfig.Yaml yaml =
+        KubernetesClusterConfig.Yaml.builder().harnessApiVersion(getHarnessApiVersion()).build();
 
     yaml.setUseKubernetesDelegate(kubernetesClusterConfig.isUseKubernetesDelegate());
     yaml.setDelegateName(kubernetesClusterConfig.getDelegateName());
