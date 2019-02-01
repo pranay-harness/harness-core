@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static java.util.Collections.emptyMap;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfSetupContextElement;
@@ -19,6 +20,7 @@ import software.wings.sm.StateType;
 import java.util.ArrayList;
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PcfRollbackState extends PcfDeployState {
   /**
    * Instantiates a new state.

@@ -97,13 +97,15 @@ public class PcfSetupState extends State {
   @Attributes(title = "PCF App Name")
   private String pcfAppName;
 
+  private boolean useCurrentRunningCount;
+  private Integer currentRunningCount;
   @Attributes(title = "Total Number of Instances", required = true) private Integer maxInstances;
 
   @Attributes(title = "Resize Strategy", required = true) private ResizeStrategy resizeStrategy;
 
   @Attributes(title = "Map Route") private String route;
 
-  @Attributes(title = "API Timeout Interval (Minutes)") private Integer timeoutIntervalInMinutes = 5;
+  @Attributes(title = "API Timeout Interval (Minutes)") @DefaultValue("5") private Integer timeoutIntervalInMinutes = 5;
 
   @Attributes(title = "Active Versions to Keep") @DefaultValue("3") private Integer olderActiveVersionCountToKeep;
 
@@ -172,6 +174,22 @@ public class PcfSetupState extends State {
 
   public void setOlderActiveVersionCountToKeep(Integer olderActiveVersionCountToKeep) {
     this.olderActiveVersionCountToKeep = olderActiveVersionCountToKeep;
+  }
+
+  public boolean isUseCurrentRunningCount() {
+    return useCurrentRunningCount;
+  }
+
+  public void setUseCurrentRunningCount(boolean useCurrentRunningCount) {
+    this.useCurrentRunningCount = useCurrentRunningCount;
+  }
+
+  public Integer getCurrentRunningCount() {
+    return currentRunningCount;
+  }
+
+  public void setCurrentRunningCount(Integer currentRunningCount) {
+    this.currentRunningCount = currentRunningCount;
   }
 
   @Override
@@ -273,28 +291,33 @@ public class PcfSetupState extends State {
             .serviceVariables(serviceVariables)
             .timeoutIntervalInMin(timeoutIntervalInMinutes == null ? Integer.valueOf(5) : timeoutIntervalInMinutes)
             .maxCount(maxInstances)
+            .useCurrentCount(useCurrentRunningCount)
+            .currentRunningCount(getCurrentRunningCountForSetupRequest())
             .blueGreen(blueGreen)
             .olderActiveVersionCountToKeep(
                 olderActiveVersionCountToKeep == null ? Integer.valueOf(3) : olderActiveVersionCountToKeep)
             .build();
 
-    PcfSetupStateExecutionData stateExecutionData = PcfSetupStateExecutionData.builder()
-                                                        .activityId(activity.getUuid())
-                                                        .accountId(app.getAccountId())
-                                                        .appId(app.getUuid())
-                                                        .envId(env.getUuid())
-                                                        .infraMappingId(pcfInfrastructureMapping.getUuid())
-                                                        .pcfCommandRequest(commandRequest)
-                                                        .commandName(PCF_SETUP_COMMAND)
-                                                        .maxInstanceCount(maxInstances)
-                                                        .accountId(app.getAccountId())
-                                                        .appId(app.getUuid())
-                                                        .serviceId(serviceElement.getUuid())
-                                                        .routeMaps(routeMaps)
-                                                        .tempRouteMaps(tempRouteMaps)
-                                                        .isStandardBlueGreen(blueGreen)
-                                                        .useTempRoutes(!isOriginalRoute)
-                                                        .build();
+    PcfSetupStateExecutionData stateExecutionData =
+        PcfSetupStateExecutionData.builder()
+            .activityId(activity.getUuid())
+            .accountId(app.getAccountId())
+            .appId(app.getUuid())
+            .envId(env.getUuid())
+            .infraMappingId(pcfInfrastructureMapping.getUuid())
+            .pcfCommandRequest(commandRequest)
+            .commandName(PCF_SETUP_COMMAND)
+            .maxInstanceCount(maxInstances)
+            .useCurrentRunningInstanceCount(useCurrentRunningCount)
+            .currentRunningInstanceCount(getCurrentRunningCountForSetupRequest())
+            .accountId(app.getAccountId())
+            .appId(app.getUuid())
+            .serviceId(serviceElement.getUuid())
+            .routeMaps(routeMaps)
+            .tempRouteMaps(tempRouteMaps)
+            .isStandardBlueGreen(blueGreen)
+            .useTempRoutes(!isOriginalRoute)
+            .build();
 
     DelegateTask delegateTask =
         pcfStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.PCF_COMMAND_TASK, activity.getUuid(),
@@ -307,6 +330,18 @@ public class PcfSetupState extends State {
         .withStateExecutionData(stateExecutionData)
         .withAsync(true)
         .build();
+  }
+
+  private Integer getCurrentRunningCountForSetupRequest() {
+    if (!useCurrentRunningCount) {
+      return null;
+    }
+
+    if (currentRunningCount == null || currentRunningCount.intValue() == 0) {
+      return Integer.valueOf(2);
+    }
+
+    return currentRunningCount;
   }
 
   private String getPrefix(String appName, String serviceName, String envName) {
@@ -356,7 +391,9 @@ public class PcfSetupState extends State {
         PcfSetupContextElement.builder()
             .serviceId(stateExecutionData.getServiceId())
             .commandName(PCF_SETUP_COMMAND)
-            .maxInstanceCount(maxInstances)
+            .maxInstanceCount(stateExecutionData.getMaxInstanceCount())
+            .useCurrentRunningInstanceCount(stateExecutionData.isUseCurrentRunningInstanceCount())
+            .currentRunningInstanceCount(stateExecutionData.getCurrentRunningInstanceCount())
             .resizeStrategy(resizeStrategy)
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .pcfCommandRequest(stateExecutionData.getPcfCommandRequest())
@@ -438,9 +475,10 @@ public class PcfSetupState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = newHashMap();
-    if (maxInstances == null || maxInstances < 0) {
+    if (!useCurrentRunningCount && (maxInstances == null || maxInstances < 0)) {
       invalidFields.put("maxInstances", "Maximum instances needs to be populated");
     }
+
     return invalidFields;
   }
 }

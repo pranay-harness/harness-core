@@ -36,6 +36,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
+import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest.ActionType;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
@@ -450,6 +451,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                                                        .pcfConfig(getPcfConfig())
                                                        .accountId(ACCOUNT_ID)
                                                        .timeoutIntervalInMin(5)
+                                                       .actionType(ActionType.FETCH_ORG)
                                                        .build();
 
     doReturn(Arrays.asList(ORG)).when(pcfDeploymentManager).getOrganizations(any());
@@ -470,6 +472,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertEquals(ORG, pcfInfraMappingDataResponse.getOrganizations().get(0));
 
     // Fetch Spaces for org
+    pcfCommandRequest.setActionType(ActionType.FETCH_SPACE);
     pcfCommandRequest.setOrganization(ORG);
     pcfCommandExecutionResponse = pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null);
 
@@ -481,6 +484,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertEquals(SPACE, pcfInfraMappingDataResponse.getSpaces().get(0));
 
     // Fetch Routes
+    pcfCommandRequest.setActionType(ActionType.FETCH_ROUTE);
     pcfCommandRequest.setSpace(SPACE);
     pcfCommandExecutionResponse = pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null);
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();

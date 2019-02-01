@@ -31,6 +31,8 @@ public class PcfSetupContextElement implements ContextElement {
   private String name;
   private String commandName;
   private Integer maxInstanceCount;
+  private boolean useCurrentRunningInstanceCount;
+  private Integer currentRunningInstanceCount;
   private ResizeStrategy resizeStrategy;
   private PcfCommandRequest pcfCommandRequest;
   private String ManifestYaml;

@@ -12,6 +12,7 @@ import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateRespon
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sDeleteResponse;
+import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionRequest;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
@@ -40,5 +41,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(NotificationChannelType.class, 7115);
     kryo.register(AwsLambdaFunctionRequest.class, 7116);
     kryo.register(AwsLambdaFunctionResponse.class, 7117);
+    kryo.register(PcfInfraMappingDataRequest.ActionType.class, 7118);
   }
 }

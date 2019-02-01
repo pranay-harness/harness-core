@@ -123,6 +123,16 @@ public class InfrastructureMappingResource {
         infrastructureMappingService.getContainerRunningInstances(appId, infraMappingId, serviceNameExpr));
   }
 
+  @GET
+  @Path("{infraMappingId}/pcf/runningcount")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Integer> getRunningCountForPcfApp(@QueryParam("appId") String appId,
+      @QueryParam("appNameExpr") String appNameExpr, @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(infrastructureMappingService.getPcfRunningInstances(appId, infraMappingId, appNameExpr));
+  }
+
   @PUT
   @Path("{infraMappingId}")
   @Timed

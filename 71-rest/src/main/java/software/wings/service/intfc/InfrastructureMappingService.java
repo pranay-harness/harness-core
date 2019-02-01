@@ -147,4 +147,6 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
       String domain, String path, boolean tcpRoute, boolean useRandomPort, String port);
 
   List<AwsRoute53HostedZoneData> listHostedZones(String appId, String infraMappingId);
+
+  Integer getPcfRunningInstances(String appId, String infraMappingId, String appNameExpression);
 }

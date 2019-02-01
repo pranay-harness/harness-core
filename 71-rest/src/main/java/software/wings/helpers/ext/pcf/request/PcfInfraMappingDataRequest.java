@@ -15,12 +15,15 @@ public class PcfInfraMappingDataRequest extends PcfCommandRequest {
   private Integer port;
   private boolean useRandomPort;
   private boolean tcpRoute;
+  private String applicationNamePrefix;
+  private ActionType actionType;
+  public enum ActionType { RUNNING_COUNT, FETCH_ORG, FETCH_SPACE, FETCH_ROUTE }
 
   @Builder
   public PcfInfraMappingDataRequest(String accountId, String appId, String commandName, String activityId,
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
       Integer timeoutIntervalInMin, String host, String domain, String path, Integer port, boolean useRandomPort,
-      boolean tcpRoute) {
+      boolean tcpRoute, String applicationNamePrefix, ActionType actionType) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin);
     this.pcfConfig = pcfConfig;
@@ -30,5 +33,7 @@ public class PcfInfraMappingDataRequest extends PcfCommandRequest {
     this.port = port;
     this.useRandomPort = useRandomPort;
     this.tcpRoute = tcpRoute;
+    this.applicationNamePrefix = applicationNamePrefix;
+    this.actionType = actionType;
   }
 }
