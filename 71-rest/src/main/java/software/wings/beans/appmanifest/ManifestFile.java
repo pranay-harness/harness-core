@@ -20,6 +20,7 @@ import software.wings.yaml.BaseEntityYaml;
                , @Field("fileName") }))
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class ManifestFile extends Base {
   public static final String FILE_NAME_KEY = "fileName";
   public static final String APPLICATION_MANIFEST_ID_KEY = "applicationManifestId";

@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
@@ -14,6 +15,7 @@ import java.util.List;
 @Entity(value = "notificationBatch", noClassnameStored = true)
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class NotificationBatch extends Base {
   private String batchId;
   private NotificationRule notificationRule;

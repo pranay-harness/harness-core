@@ -15,6 +15,7 @@ import org.mongodb.morphia.annotations.Entity;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "preferenceType")
 @JsonSubTypes({ @Type(value = DeploymentPreference.class, name = "DEPLOYMENT_PREFERENCE") })
 @Entity(value = "preferences")
+@EqualsAndHashCode(callSuper = false)
 public abstract class Preference extends Base {
   @NotEmpty private String name;
   @NotEmpty private String accountId;

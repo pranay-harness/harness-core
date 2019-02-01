@@ -6,6 +6,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.sm.StateExecutionData;
 
@@ -13,6 +14,7 @@ import java.util.Map;
 
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class ShellScriptApprovalExecutionData extends StateExecutionData implements ResponseData {
   private ExecutionStatus executionStatus;
   private Action approvalAction;

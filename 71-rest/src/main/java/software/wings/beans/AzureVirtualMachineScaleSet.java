@@ -2,8 +2,10 @@ package software.wings.beans;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class AzureVirtualMachineScaleSet extends AzureResourceReference {
   @Builder
   private AzureVirtualMachineScaleSet(
