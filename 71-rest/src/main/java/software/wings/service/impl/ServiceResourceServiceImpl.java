@@ -1896,7 +1896,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     if (isNotBlank(serviceId)) {
-      service = get(infraMapping.getAppId(), serviceId);
+      service = get(infraMapping.getAppId(), serviceId, false);
       if (service != null && service.getDeploymentType() != null) {
         return service.getDeploymentType();
       }
