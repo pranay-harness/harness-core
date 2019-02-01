@@ -177,8 +177,8 @@ public class HelmDeployState extends State {
     if (StateType.HELM_DEPLOY.name().equals(getStateType())) {
       if (gitFileConfig == null || gitFileConfig.getConnectorId() == null) {
         validateChartSpecification(helmChartSpecification);
-        evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
       }
+      evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
     }
 
     HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder()
