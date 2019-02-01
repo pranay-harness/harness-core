@@ -982,6 +982,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     // Setting  exclude hosts with same artifact
     stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
+    stdParams.setNotifyTriggeredUserOnly(executionArgs.isNotifyTriggeredUserOnly());
+
     User user = UserThreadLocal.get();
     if (user != null) {
       stdParams.setCurrentUser(
@@ -1098,6 +1100,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
     stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
+    stdParams.setNotifyTriggeredUserOnly(executionArgs.isNotifyTriggeredUserOnly());
 
     return triggerExecution(workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(),
         workflowExecutionUpdate, stdParams, trigger, null, workflow);

@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.EmbeddedUser;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.alert.AlertNotificationRule;
@@ -17,4 +18,6 @@ public interface NotificationDispatcherService {
   void dispatch(Notification notification, List<AlertNotificationRule> alertNotificationRules);
 
   EmailData obtainEmailData(String notificationTemplateId, Map<String, String> placeholderValues);
+
+  void dispatchNotificationToTriggeredByUserOnly(List<Notification> notifications, EmbeddedUser user);
 }

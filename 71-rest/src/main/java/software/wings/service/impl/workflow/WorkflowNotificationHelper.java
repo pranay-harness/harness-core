@@ -35,8 +35,7 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionScope;
-import software.wings.beans.FailureNotification;
-import software.wings.beans.InformationNotification;
+import software.wings.beans.Notification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
@@ -49,9 +48,11 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseSubWorkflow;
 
 import java.net.URISyntaxException;
@@ -96,29 +97,34 @@ public class WorkflowNotificationHelper {
 
     Map<String, String> placeHolderValues = getPlaceholderValues(context, app, env, status, null);
 
+    Notification notification;
     if (status == SUCCESS || status == PAUSED || status == RESUMED) {
-      InformationNotification notification = anInformationNotification()
-                                                 .withAccountId(app.getAccountId())
-                                                 .withAppId(context.getAppId())
-                                                 .withEntityId(context.getWorkflowExecutionId())
-                                                 .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
-                                                 .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
-                                                 .withNotificationTemplateVariables(placeHolderValues)
-                                                 .build();
-      notificationService.sendNotificationAsync(notification, notificationRules);
+      notification = anInformationNotification()
+                         .withAccountId(app.getAccountId())
+                         .withAppId(context.getAppId())
+                         .withEntityId(context.getWorkflowExecutionId())
+                         .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
+                         .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
+                         .withNotificationTemplateVariables(placeHolderValues)
+                         .build();
     } else {
-      FailureNotification notification =
-          aFailureNotification()
-              .withAccountId(app.getAccountId())
-              .withAppId(app.getUuid())
-              .withEnvironmentId(BUILD.equals(context.getOrchestrationWorkflowType()) ? null : env.getUuid())
-              .withEntityId(context.getWorkflowExecutionId())
-              .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
-              .withEntityName("Deployment")
-              .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
-              .withNotificationTemplateVariables(placeHolderValues)
-              .withExecutionId(context.getWorkflowExecutionId())
-              .build();
+      notification = aFailureNotification()
+                         .withAccountId(app.getAccountId())
+                         .withAppId(app.getUuid())
+                         .withEnvironmentId(BUILD.equals(context.getOrchestrationWorkflowType()) ? null : env.getUuid())
+                         .withEntityId(context.getWorkflowExecutionId())
+                         .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
+                         .withEntityName("Deployment")
+                         .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
+                         .withNotificationTemplateVariables(placeHolderValues)
+                         .withExecutionId(context.getWorkflowExecutionId())
+                         .build();
+    }
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    if (workflowStandardParams.isNotifyTriggeredUserOnly()) {
+      notificationService.sendNotificationToTriggeredByUserOnly(notification, workflowStandardParams.getCurrentUser());
+    } else {
       notificationService.sendNotificationAsync(notification, notificationRules);
     }
   }
@@ -138,31 +144,38 @@ public class WorkflowNotificationHelper {
 
     Map<String, String> placeHolderValues = getPlaceholderValues(context, app, env, status, phaseSubWorkflow);
 
+    Notification notification;
     if (status.equals(SUCCESS) || status.equals(PAUSED)) {
-      InformationNotification notification = anInformationNotification()
-                                                 .withAccountId(app.getAccountId())
-                                                 .withAppId(context.getAppId())
-                                                 .withEntityId(context.getWorkflowExecutionId())
-                                                 .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
-                                                 .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
-                                                 .withNotificationTemplateVariables(placeHolderValues)
-                                                 .build();
-      notificationService.sendNotificationAsync(notification, notificationRules);
+      notification = anInformationNotification()
+                         .withAccountId(app.getAccountId())
+                         .withAppId(context.getAppId())
+                         .withEntityId(context.getWorkflowExecutionId())
+                         .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
+                         .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
+                         .withNotificationTemplateVariables(placeHolderValues)
+                         .build();
     } else if (status.equals(FAILED)) {
-      FailureNotification notification = aFailureNotification()
-                                             .withAccountId(app.getAccountId())
-                                             .withAppId(app.getUuid())
-                                             .withEnvironmentId(env.getUuid())
-                                             .withEntityId(context.getWorkflowExecutionId())
-                                             .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
-                                             .withEntityName("Deployment")
-                                             .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
-                                             .withNotificationTemplateVariables(placeHolderValues)
-                                             .withExecutionId(context.getWorkflowExecutionId())
-                                             .build();
-      notificationService.sendNotificationAsync(notification, notificationRules);
+      notification = aFailureNotification()
+                         .withAccountId(app.getAccountId())
+                         .withAppId(app.getUuid())
+                         .withEnvironmentId(env.getUuid())
+                         .withEntityId(context.getWorkflowExecutionId())
+                         .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
+                         .withEntityName("Deployment")
+                         .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
+                         .withNotificationTemplateVariables(placeHolderValues)
+                         .withExecutionId(context.getWorkflowExecutionId())
+                         .build();
     } else {
       logger.info("No template found for workflow status " + status);
+      return;
+    }
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    if (workflowStandardParams.isNotifyTriggeredUserOnly()) {
+      notificationService.sendNotificationToTriggeredByUserOnly(notification, workflowStandardParams.getCurrentUser());
+    } else {
+      notificationService.sendNotificationAsync(notification, notificationRules);
     }
   }
 

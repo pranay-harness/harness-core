@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION_STATUS;
 
@@ -10,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
@@ -105,6 +107,11 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   private void sendNotification(Notification notification, List<NotificationRule> notificationRules) {
+    Notification savedNotification = renderAndSaveNotification(notification);
+    notificationDispatcherService.dispatchNotification(savedNotification, notificationRules);
+  }
+
+  private Notification renderAndSaveNotification(Notification notification) {
     if (isEmpty(notification.getAccountId()) && appService.exist(notification.getAppId())) {
       notification.setAccountId(appService.get(notification.getAppId()).getAccountId());
     }
@@ -135,12 +142,20 @@ public class NotificationServiceImpl implements NotificationService {
       notification.getNotificationTemplateVariables().putAll(placeHolderData);
     }
 
-    Notification savedNotification = wingsPersistence.saveAndGet(Notification.class, notification);
-    notificationDispatcherService.dispatchNotification(savedNotification, notificationRules);
+    return wingsPersistence.saveAndGet(Notification.class, notification);
   }
 
   @Override
   public void sendNotificationAsync(Notification notification) {
     sendNotificationAsync(notification, new ArrayList<>());
+  }
+
+  @Override
+  public void sendNotificationToTriggeredByUserOnly(Notification notification, EmbeddedUser embeddedUser) {
+    Notification savedNotification = renderAndSaveNotification(notification);
+
+    executorService.execute(()
+                                -> notificationDispatcherService.dispatchNotificationToTriggeredByUserOnly(
+                                    asList(savedNotification), embeddedUser));
   }
 }

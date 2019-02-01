@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.HQuery;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -138,5 +139,37 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
     channels.forEach(channel
         -> verify(slackNotificationService)
                .sendMessage(slackConfig, channel, HARNESS_NAME, ENTITY_CREATE_NOTIFICATION.name()));
+  }
+
+  @Test
+  public void testDispatchNotificationToTriggeredByUserOnly() {
+    EmbeddedUser embeddedUser = EmbeddedUser.builder().name("test").email("abc@harness.io").build();
+
+    EmailTemplate emailTemplate = new EmailTemplate();
+    emailTemplate.setBody(ENTITY_CREATE_NOTIFICATION.name());
+    emailTemplate.setSubject(ENTITY_CREATE_NOTIFICATION.name());
+
+    InformationNotification notification =
+        anInformationNotification()
+            .withAccountId(ACCOUNT_ID)
+            .withAppId(APP_ID)
+            .withEntityId(WORKFLOW_EXECUTION_ID)
+            .withEntityType(ORCHESTRATED_DEPLOYMENT)
+            .withNotificationTemplateId(ENTITY_CREATE_NOTIFICATION.name())
+            .withNotificationTemplateVariables(ImmutableMap.of(
+                "WORKFLOW_NAME", WORKFLOW_NAME, "ENV_NAME", ENV_NAME, "ARTIFACTS", ARTIFACTS, "DATE", "DATE"))
+            .build();
+
+    when(notificationMessageResolver.getEmailTemplate(ENTITY_CREATE_NOTIFICATION.name())).thenReturn(emailTemplate);
+
+    notificationDispatcherService.dispatchNotificationToTriggeredByUserOnly(asList(notification), embeddedUser);
+    verify(emailNotificationService)
+        .sendAsync(EmailData.builder()
+                       .to(Collections.singletonList("abc@harness.io"))
+                       .cc(Collections.emptyList())
+                       .subject(ENTITY_CREATE_NOTIFICATION.name())
+                       .body(ENTITY_CREATE_NOTIFICATION.name())
+                       .system(true)
+                       .build());
   }
 }

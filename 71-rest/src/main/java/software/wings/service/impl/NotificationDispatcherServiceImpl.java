@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -17,6 +18,7 @@ import static software.wings.common.NotificationMessageResolver.getDecoratedNoti
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -307,5 +309,14 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     String emailSubject = processEmailHtml(subject);
 
     return EmailData.builder().subject(emailSubject).body(emailBody).build();
+  }
+
+  @Override
+  public void dispatchNotificationToTriggeredByUserOnly(List<Notification> notifications, EmbeddedUser user) {
+    try {
+      dispatchEmail(notifications, asList(user.getEmail()));
+    } catch (Exception e) {
+      logger.warn(Misc.getMessage(e));
+    }
   }
 }
