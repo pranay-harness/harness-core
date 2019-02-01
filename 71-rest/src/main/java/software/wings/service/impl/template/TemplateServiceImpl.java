@@ -530,4 +530,10 @@ public class TemplateServiceImpl implements TemplateService {
       delete(accountId, template.getUuid());
     }
   }
+
+  public List<String> fetchTemplateProperties(@NotEmpty String templateId, String version) {
+    Template template = get(templateId, version);
+    AbstractTemplateProcessor abstractTemplateProcessor = getAbstractTemplateProcessor(template);
+    return abstractTemplateProcessor.fetchTemplateProperties();
+  }
 }

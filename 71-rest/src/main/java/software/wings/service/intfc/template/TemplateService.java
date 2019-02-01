@@ -57,4 +57,6 @@ public interface TemplateService extends OwnedByAccount {
   Template convertYamlToTemplate(String templatePath) throws IOException;
 
   void loadDefaultTemplates(List<String> templateFiles, String accountId, String accountName);
+
+  List<String> fetchTemplateProperties(@NotEmpty String templateId, String version);
 }

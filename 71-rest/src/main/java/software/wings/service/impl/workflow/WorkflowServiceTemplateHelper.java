@@ -85,6 +85,9 @@ public class WorkflowServiceTemplateHelper {
           templateHelper.updateVariables(step.getTemplateVariables(), oldTemplateVaraibles, true);
           if (step.getProperties() != null) {
             if (templateStep.getProperties() != null) {
+              List<String> templateProperties =
+                  templateService.fetchTemplateProperties(step.getTemplateUuid(), step.getTemplateVersion());
+              step.getProperties().keySet().removeAll(templateProperties);
               step.getProperties().putAll(templateStep.getProperties());
             }
           }
