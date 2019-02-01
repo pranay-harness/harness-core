@@ -536,6 +536,12 @@ public class EcsSetupCommandTaskHelper {
         serviceRegistries.addAll(advancedServiceConfig.getServiceRegistries());
       }
       setDeploymentConfiguration(createServiceRequest, advancedServiceConfig);
+      createServiceRequest.setTags(advancedServiceConfig.getTags());
+
+      // This will only work for Daemon service. Reason is, these tags are only propgates for tasks
+      // those are created with serviceCreation. We always create service with 0 count and
+      // then upsize it in all case other than daemon (where ECS launches tasks with service creation)
+      createServiceRequest.setPropagateTags(advancedServiceConfig.getPropagateTags());
     }
     setServiceRegistryForDNSSwap((AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails, setupParams,
         containerServiceName, serviceRegistries, executionLogCallback, logger, commandExecutionDataBuilder);
