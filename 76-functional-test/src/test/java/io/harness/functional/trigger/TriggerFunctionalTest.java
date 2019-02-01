@@ -21,7 +21,6 @@ import io.harness.generator.WorkflowGenerator.Workflows;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -53,7 +52,6 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Ignore
   public void shouldCreateWebHookTriggerForWorkflow() {
     owners.obtainService(() -> serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST));
 

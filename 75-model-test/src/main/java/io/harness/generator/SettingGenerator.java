@@ -31,6 +31,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.JiraConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -45,6 +46,7 @@ import java.util.EnumSet;
 public class SettingGenerator {
   private static final String HARNESS_NEXUS = "Harness Nexus";
   private static final String HARNESS_JENKINS = "Harness Jenkins";
+  private static final String HARNESS_JIRA = "Harness Jira";
   private static final String HARNESS_NEXUS_THREE = "Harness Nexus 3";
   private static final String HARNESS_ARTIFACTORY = "Harness Artifactory";
   private static final String HARNESS_BAMBOO = "Harness Bamboo";
@@ -68,7 +70,8 @@ public class SettingGenerator {
     HARNESS_NEXU3_CONNECTOR,
     HARNESS_ARTIFACTORY_CONNECTOR,
     HARNESS_DOCKER_REGISTRY,
-    HARNESS_GCP_EXPLORATION
+    HARNESS_GCP_EXPLORATION,
+    HARNESS_JIRA
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -99,6 +102,8 @@ public class SettingGenerator {
         return ensureHarnessDocker(seed, owners);
       case HARNESS_GCP_EXPLORATION:
         return ensureHarnessGcpExploration(seed, owners);
+      case HARNESS_JIRA:
+        return ensureHarnessJira(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -205,6 +210,25 @@ public class SettingGenerator {
                            .username("wingsbuild")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
                            .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+    return ensureSettingAttribute(seed, settingAttribute);
+  }
+
+  private SettingAttribute ensureHarnessJira(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withName(HARNESS_JIRA)
+            .withCategory(CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(JiraConfig.builder()
+                           .accountId(account.getUuid())
+                           .baseUrl("https://harness.atlassian.net")
+                           .username("jirauser@harness.io")
+                           .password(scmSecret.decryptToCharArray(new SecretName("harness_jira")))
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();

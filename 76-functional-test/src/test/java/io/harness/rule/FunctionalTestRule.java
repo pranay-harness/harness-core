@@ -15,6 +15,7 @@ import io.dropwizard.Configuration;
 import io.harness.configuration.ConfigurationType;
 import io.harness.event.EventsModule;
 import io.harness.factory.ClosingFactory;
+import io.harness.functional.ManagerExecutor;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
@@ -67,22 +68,20 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
-    List<Module> modules;
-    MongoClient mongoClient;
-    String dbName;
-    String mongoUri;
+    ManagerExecutor.ensureManager();
     RestResponse<MongoConfig> mongoConfigRestResponse =
         given()
             .queryParam("configurationType", ConfigurationType.MONGO)
             .get("/health/configuration")
             .as(new GenericType<RestResponse<MongoConfig>>() {}.getType());
 
-    mongoUri =
+    String mongoUri =
         new AsymmetricDecryptor(new ScmSecret()).decryptText(mongoConfigRestResponse.getResource().getEncryptedUri());
-    MongoClientURI clientUri = new MongoClientURI(mongoUri, mongoClientOptions);
-    dbName = clientUri.getDatabase();
 
-    mongoClient = new MongoClient(clientUri);
+    MongoClientURI clientUri = new MongoClientURI(mongoUri, mongoClientOptions);
+    String dbName = clientUri.getDatabase();
+
+    MongoClient mongoClient = new MongoClient(clientUri);
     closingFactory.addServer(mongoClient);
 
     Morphia morphia = new Morphia();
@@ -94,7 +93,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
     Configuration configuration = getConfiguration(mongoUri);
 
-    modules = getRequiredModules(configuration, distributedLockSvc);
+    List<Module> modules = getRequiredModules(configuration, distributedLockSvc);
     modules.add(new ManagerQueueModule());
 
     return modules;

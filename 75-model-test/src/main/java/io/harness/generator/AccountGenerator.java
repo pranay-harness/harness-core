@@ -19,6 +19,7 @@ import com.google.inject.Singleton;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.WingsException;
 import io.harness.generator.LicenseGenerator.Licenses;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -26,6 +27,8 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.Setter;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
@@ -46,22 +49,27 @@ import software.wings.service.intfc.UserService;
 
 @Singleton
 public class AccountGenerator {
+  private static final String adminUserUuid = "lv0euRhKRCyiXWzS7pOg6g";
   private static final String adminUserName = "Admin";
   private static final String adminUserEmail = "admin@harness.io";
   private static final SecretName adminPassword = new SecretName("user_admin_password");
 
+  private static final String readOnlyUserUuid = "nhLgdGgxS_iqa0KP5edC-w";
   private static final String readOnlyUserName = "readonlyuser";
   private static final String readOnlyEmail = "readonlyuser@harness.io";
   private static final SecretName readOnlyPassword = new SecretName("user_readonly_password");
 
+  private static final String rbac1UserUuid = "BnTbQTIJS4SkadzYv0BcbA";
   private static final String rbac1UserName = "rbac1";
   private static final String rbac1Email = "rbac1@harness.io";
   private static final SecretName rbac1Password = new SecretName("user_rbac1_password");
 
+  private static final String rbac2UserUuid = "19bYA-ooQZOTZQxf2N-VPA";
   private static final String rbac2UserName = "rbac2";
   private static final String rbac2Email = "rbac2@harness.io";
   private static final SecretName rbac2Password = new SecretName("user_rbac2_password");
 
+  private static final String defaultUserUuid = "0osgWsTZRsSZ8RWfjLRkEg";
   private static final String defaultUserName = "default";
   private static final String defaultEmail = "default@harness.io";
   private static final SecretName defaultPassword = new SecretName("user_default_password");
@@ -74,8 +82,10 @@ public class AccountGenerator {
   @Inject UserGroupService userGroupService;
   @Inject UserService userService;
   @Inject WingsPersistence wingsPersistence;
+  private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
 
   @Setter Account account;
+  private static final Logger logger = LoggerFactory.getLogger(AccountGenerator.class);
 
   public enum Accounts {
     GENERIC_TEST,
@@ -97,28 +107,21 @@ public class AccountGenerator {
   }
 
   public Account ensureGenericTest() {
-    String accountId = "kmpySmUISimoRrJL6NL73w";
-
-    if (this.account != null) {
-      return this.account;
-    }
-
+    String accountId = ACCOUNT_ID;
     Account accountObj = anAccount().withAccountName("Harness").withCompanyName("Harness").build();
     this.account = exists(accountObj);
-    if (this.account != null) {
-      return account;
+    if (this.account == null) {
+      accountObj = Account.Builder.anAccount()
+                       .withUuid(accountId)
+                       .withAccountName("Harness")
+                       .withCompanyName("Harness")
+                       .withLicenseInfo(LicenseInfo.builder()
+                                            .accountType(AccountType.PAID)
+                                            .accountStatus(AccountStatus.ACTIVE)
+                                            .expiryTime(-1)
+                                            .build())
+                       .build();
     }
-    accountObj = Account.Builder.anAccount()
-                     .withUuid(accountId)
-                     .withAccountName("Harness")
-                     .withCompanyName("Harness")
-                     .withLicenseInfo(LicenseInfo.builder()
-                                          .accountType(AccountType.PAID)
-                                          .accountStatus(AccountStatus.ACTIVE)
-                                          .expiryTime(-1)
-                                          .build())
-                     .build();
-
     final Seed seed = new Seed(0);
     licenseGenerator.ensurePredefined(seed, Licenses.TRIAL);
 
@@ -128,7 +131,12 @@ public class AccountGenerator {
     licenseInfo.setLicenseUnits(Constants.DEFAULT_PAID_LICENSE_UNITS);
     accountObj.setLicenseInfo(licenseInfo);
 
-    accountService.save(accountObj);
+    // TODO: fix this Hack here.
+    try {
+      accountService.save(accountObj);
+    } catch (WingsException we) {
+      logger.info(we.getMessage());
+    }
 
     // Update account key to make it work with delegate
     UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
@@ -147,15 +155,16 @@ public class AccountGenerator {
     wingsPersistence.update(wingsPersistence.createQuery(User.class), userUpdateOperations);
 
     UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
-    roleUpdateOperations.set("accountId", "kmpySmUISimoRrJL6NL73w");
+    roleUpdateOperations.set("accountId", ACCOUNT_ID);
     wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
 
-    User adminUser = addUser(adminUserName, adminUserEmail, scmSecret.decryptToCharArray(adminPassword), account);
-    addUser(defaultUserName, defaultEmail, scmSecret.decryptToCharArray(defaultPassword), account);
-    User readOnlyUser =
-        addUser(readOnlyUserName, readOnlyEmail, scmSecret.decryptToCharArray(readOnlyPassword), account);
-    addUser(rbac1UserName, rbac1Email, scmSecret.decryptToCharArray(rbac1Password), account);
-    addUser(rbac2UserName, rbac2Email, scmSecret.decryptToCharArray(rbac2Password), account);
+    User adminUser =
+        addUser(adminUserUuid, adminUserName, adminUserEmail, scmSecret.decryptToCharArray(adminPassword), account);
+    addUser(defaultUserUuid, defaultUserName, defaultEmail, scmSecret.decryptToCharArray(defaultPassword), account);
+    User readOnlyUser = addUser(
+        readOnlyUserUuid, readOnlyUserName, readOnlyEmail, scmSecret.decryptToCharArray(readOnlyPassword), account);
+    addUser(rbac1UserUuid, rbac1UserName, rbac1Email, scmSecret.decryptToCharArray(rbac1Password), account);
+    addUser(rbac2UserUuid, rbac2UserName, rbac2Email, scmSecret.decryptToCharArray(rbac2Password), account);
     addUserToUserGroup(adminUser, account.getUuid(), Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
     UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(
         account.getUuid(), readOnlyUser, Constants.DEFAULT_READ_ONLY_USER_GROUP_NAME);
@@ -194,8 +203,9 @@ public class AccountGenerator {
     harnessUserGroupService.save(harnessUserGroup);
   }
 
-  private User addUser(String userName, String email, char[] password, Account account) {
+  private User addUser(String uuid, String userName, String email, char[] password, Account account) {
     User user = anUser()
+                    .withUuid(uuid)
                     .withName(userName)
                     .withEmail(email)
                     .withPassword(password)
