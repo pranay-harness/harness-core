@@ -20,7 +20,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.WingsBaseTest;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.VaultConfig;
@@ -40,7 +39,7 @@ import java.util.List;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({SecretManagementDelegateServiceImpl.class, Http.class, VaultRestClientFactory.class})
-public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
+public class NewRelicTaskScopeValidationTest {
   @Mock private VaultRestClient vaultRestClient;
   private String newRelicUrl = "https://api.newrelic.com";
 
@@ -61,6 +60,7 @@ public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
   @Test
   public void validationVaultReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
+    PowerMockito.when(Http.connectableHttpUrl(vaultConfig.getVaultUrl())).thenReturn(true);
     when(vaultRestClient.writeSecret(anyString(), anyString(), anyString())).thenReturn(true);
 
     validate(true);
