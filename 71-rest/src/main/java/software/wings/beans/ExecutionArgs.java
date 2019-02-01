@@ -6,6 +6,8 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.EmbeddedUser;
+import lombok.Getter;
+import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.artifact.Artifact;
 
@@ -36,6 +38,7 @@ public class ExecutionArgs {
   private String notes;
   @Deprecated @JsonIgnore private EmbeddedUser triggeredBy;
   private boolean excludeHostsWithSameArtifact;
+  @Getter @Setter private boolean notifyTriggeredUserOnly;
 
   /**
    * Gets service id.

@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -68,4 +69,6 @@ public interface NotificationService extends OwnedByApplication {
    * @param notificationId the notification id
    */
   void markNotificationCompleted(@NotEmpty String appId, @NotEmpty String notificationId);
+
+  void sendNotificationToTriggeredByUserOnly(Notification notification, EmbeddedUser embeddedUser);
 }

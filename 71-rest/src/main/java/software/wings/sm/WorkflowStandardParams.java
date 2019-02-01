@@ -16,6 +16,8 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.annotations.Transient;
@@ -116,6 +118,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   private Map<String, String> workflowVariables;
 
   private boolean excludeHostsWithSameArtifact;
+  @Getter @Setter private boolean notifyTriggeredUserOnly;
 
   @JsonIgnore private EmbeddedUser currentUser;
 
@@ -614,6 +617,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     private boolean excludeHostsWithSameArtifact;
     private WorkflowElement workflowElement;
     private InfraMappingElement infraMappingElement;
+    private boolean notifyTriggeredUserOnly;
 
     private Builder() {}
 
@@ -729,6 +733,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       workflowStandardParams.setTimestampId(timestampId);
       workflowStandardParams.setCurrentUser(currentUser);
       workflowStandardParams.setExcludeHostsWithSameArtifact(excludeHostsWithSameArtifact);
+      workflowStandardParams.setNotifyTriggeredUserOnly(notifyTriggeredUserOnly);
       workflowStandardParams.setWorkflowElement(workflowElement);
       workflowStandardParams.setInfraMappingElementElement(infraMappingElement);
       return workflowStandardParams;

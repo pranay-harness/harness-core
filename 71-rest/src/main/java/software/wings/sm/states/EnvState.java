@@ -134,6 +134,7 @@ public class EnvState extends State {
     executionArgs.setPipelinePhaseElementId(context.getPipelineStateElementId());
     executionArgs.setWorkflowVariables(populatePipelineVariables(workflow, workflowStandardParams));
     executionArgs.setExcludeHostsWithSameArtifact(workflowStandardParams.isExcludeHostsWithSameArtifact());
+    executionArgs.setNotifyTriggeredUserOnly(workflowStandardParams.isNotifyTriggeredUserOnly());
 
     envStateExecutionData.setOrchestrationWorkflowType(
         workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
