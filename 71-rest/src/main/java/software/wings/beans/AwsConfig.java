@@ -7,7 +7,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -34,7 +33,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting {
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSecretKey;
 
   @Attributes(title = "Use Ec2 Iam role") private boolean useEc2IamCredentials;
-  @Attributes(title = "Ec2 Iam role tags") @Default private String tag;
+  @Attributes(title = "Ec2 Iam role tags") private String tag;
 
   /**
    * Instantiates a new Aws config.
