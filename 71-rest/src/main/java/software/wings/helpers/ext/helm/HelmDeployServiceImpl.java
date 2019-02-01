@@ -85,6 +85,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
 
       fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
+      addRepoForCommand(commandRequest);
+
       if (!helmCommandHelper.checkValidChartSpecification(commandRequest.getChartSpecification())) {
         String msg =
             new StringBuilder("Couldn't find valid helm chart specification from service or values.yaml from git\n")
@@ -467,6 +469,25 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       logger.error(msg);
       executionLogCallback.saveExecutionLog(msg);
       throw ex;
+    }
+  }
+
+  private void addRepoForCommand(HelmInstallCommandRequest helmCommandRequest)
+      throws InterruptedException, IOException, TimeoutException {
+    LogCallback executionLogCallback = helmCommandRequest.getExecutionLogCallback();
+
+    if (helmCommandRequest.getHelmCommandType() != HelmCommandType.INSTALL) {
+      return;
+    }
+
+    if (helmCommandRequest.getChartSpecification() != null
+        && isNotEmpty(helmCommandRequest.getChartSpecification().getChartUrl())
+        && isNotEmpty(helmCommandRequest.getRepoName())) {
+      executionLogCallback.saveExecutionLog(
+          "Adding helm repository " + helmCommandRequest.getChartSpecification().getChartUrl(), LogLevel.INFO,
+          CommandExecutionStatus.RUNNING);
+      HelmCommandResponse helmCommandResponse = addPublicRepo(helmCommandRequest);
+      executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
     }
   }
 }

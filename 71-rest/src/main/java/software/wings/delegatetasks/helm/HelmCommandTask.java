@@ -1,6 +1,5 @@
 package software.wings.delegatetasks.helm;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -23,15 +22,12 @@ import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.HelmDeployService;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
-import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.utils.Misc;
 
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -73,7 +69,6 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
           "Setting KubeConfig\nKUBECONFIG_PATH=" + configLocation, LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
       ensureHelmCliAndTillerInstalled(helmCommandRequest);
-      addPublicRepo(helmCommandRequest);
 
       executionLogCallback.saveExecutionLog(
           helmCommandHelper.getDeploymentMessage(helmCommandRequest), LogLevel.INFO, CommandExecutionStatus.RUNNING);
@@ -127,24 +122,5 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(helmCommandRequest);
     logger.info(helmCommandResponse.getOutput());
     executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
-  }
-
-  private void addPublicRepo(HelmCommandRequest helmCommandRequest)
-      throws InterruptedException, IOException, TimeoutException {
-    LogCallback executionLogCallback = helmCommandRequest.getExecutionLogCallback();
-
-    if (helmCommandRequest.getHelmCommandType() != HelmCommandType.INSTALL) {
-      return;
-    }
-
-    if (helmCommandRequest.getChartSpecification() != null
-        && isNotEmpty(helmCommandRequest.getChartSpecification().getChartUrl())
-        && isNotEmpty(helmCommandRequest.getRepoName())) {
-      executionLogCallback.saveExecutionLog(
-          "Adding helm repository " + helmCommandRequest.getChartSpecification().getChartUrl(), LogLevel.INFO,
-          CommandExecutionStatus.RUNNING);
-      HelmCommandResponse helmCommandResponse = helmDeployService.addPublicRepo(helmCommandRequest);
-      executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
-    }
   }
 }
