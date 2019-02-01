@@ -45,5 +45,6 @@ public class SecretUsageLog extends Base {
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @Builder.Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 }

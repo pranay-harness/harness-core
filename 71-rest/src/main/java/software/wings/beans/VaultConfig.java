@@ -56,7 +56,7 @@ public class VaultConfig extends Base implements EncryptionConfig {
    */
   @SchemaIgnore private int secretEngineVersion;
 
-  private boolean isDefault = true;
+  @Builder.Default private boolean isDefault = true;
 
   private long renewedAt;
 

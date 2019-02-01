@@ -32,6 +32,7 @@ import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -147,6 +148,13 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   public void testCreateUpdateDeleteVaultConfig_shouldSucceed() {
     // 1. Create a new Vault config.
     String vaultConfigId = createVaultConfig(vaultConfig);
+
+    // This will verify if no 'Base Path' is provided, the backend
+    if (isEmpty(vaultConfig.getBasePath())) {
+      VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
+      assertNotNull(savedVaultConfig);
+      assertEquals(VaultService.DEFAULT_BASE_PATH, savedVaultConfig.getBasePath());
+    }
 
     try {
       VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
