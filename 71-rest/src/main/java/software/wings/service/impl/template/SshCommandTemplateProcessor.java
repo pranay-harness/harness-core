@@ -159,4 +159,9 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
     }
     return command;
   }
+
+  @Override
+  public List<String> fetchTemplateProperties() {
+    return asList();
+  }
 }

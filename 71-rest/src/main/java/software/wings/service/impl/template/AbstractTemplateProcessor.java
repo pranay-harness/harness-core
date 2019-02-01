@@ -109,4 +109,6 @@ public abstract class AbstractTemplateProcessor {
   public abstract void updateLinkedEntities(Template template);
 
   public abstract Object constructEntityFromTemplate(Template template);
+
+  public abstract List<String> fetchTemplateProperties();
 }
