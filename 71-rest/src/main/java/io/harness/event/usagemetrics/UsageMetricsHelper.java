@@ -30,6 +30,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.dl.WingsPersistence;
 import software.wings.utils.Validator;
+import software.wings.verification.CVConfiguration;
 
 import java.util.HashMap;
 import java.util.List;
@@ -103,6 +104,16 @@ public class UsageMetricsHelper {
         .forEachRemaining(
             instanceCount -> instanceCountMap.put(instanceCount.getId().getAccountId(), instanceCount.getCount()));
     return instanceCountMap;
+  }
+
+  public CVConfiguration getCVConfig(String cvConfigId) {
+    CVConfiguration cvConfiguration = wingsPersistence.createQuery(CVConfiguration.class)
+                                          .project(CVConfiguration.NAME_KEY, true)
+                                          .project(CVConfiguration.SERVICE_ID_KEY, true)
+                                          .filter(CVConfiguration.ID_KEY, cvConfigId)
+                                          .get();
+    Validator.notNullCheck("CV Config does not exist", cvConfiguration, USER);
+    return cvConfiguration;
   }
 
   @Data

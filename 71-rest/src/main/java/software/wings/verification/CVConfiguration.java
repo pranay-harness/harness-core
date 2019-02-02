@@ -24,6 +24,9 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 public class CVConfiguration extends Base {
+  public static final String NAME_KEY = "name";
+  public static final String SERVICE_ID_KEY = "serviceId";
+
   @NotNull private String name;
   @NotNull @Indexed private String accountId;
   @NotNull private String connectorId;

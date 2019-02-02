@@ -31,9 +31,10 @@ public interface TimeSeriesAnalysisService {
   @ValidationGroups(Create.class) void saveAnalysisRecords(@Valid NewRelicMetricAnalysisRecord metricAnalysisRecord);
 
   @ValidationGroups(Create.class)
-  boolean saveAnalysisRecordsML(@NotNull StateType stateType, @NotNull String appId, @NotNull String stateExecutionId,
-      @NotNull String workflowExecutionId, String groupName, @NotNull Integer analysisMinute, @NotNull String taskId,
-      String baseLineExecutionId, String cvConfigId, @Valid MetricAnalysisRecord mlAnalysisResponse);
+  boolean saveAnalysisRecordsML(String accountId, @NotNull StateType stateType, @NotNull String appId,
+      @NotNull String stateExecutionId, @NotNull String workflowExecutionId, String groupName,
+      @NotNull Integer analysisMinute, @NotNull String taskId, String baseLineExecutionId, String cvConfigId,
+      @Valid MetricAnalysisRecord mlAnalysisResponse);
 
   @ValidationGroups(Create.class) void saveTimeSeriesMLScores(TimeSeriesMLScores scores);
 

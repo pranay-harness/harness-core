@@ -130,9 +130,9 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
 
   @Test
   public void testSaveMLAnalysisRecords() throws IOException {
-    when(
-        timeSeriesAnalysisService.saveAnalysisRecordsML(stateType, applicationId, stateExecutionId, workflowExecutionId,
-            groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId, timeSeriesMLAnalysisRecord))
+    when(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, applicationId, stateExecutionId,
+             workflowExecutionId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId,
+             timeSeriesMLAnalysisRecord))
         .thenReturn(true);
     RestResponse<Boolean> resp = timeSeriesResource.saveMLAnalysisRecords(accountId, applicationId, stateType,
         stateExecutionId, workflowExecutionId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId,
