@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -29,11 +29,12 @@ import io.harness.waiter.WaitNotifyEngine;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.jexl3.JexlException.Parsing;
 import org.apache.commons.jexl3.JexlException.Property;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
@@ -44,12 +45,15 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.NameValuePair;
+import software.wings.beans.SweepingOutput;
 import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
 import software.wings.common.Constants;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
@@ -59,12 +63,14 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -74,7 +80,7 @@ import java.util.Map;
  * @author Rishi
  */
 @Attributes
-public class HttpState extends State {
+public class HttpState extends State implements SweepingOutputStateMixin {
   private static final Logger logger = LoggerFactory.getLogger(HttpState.class);
 
   private static final String ASSERTION_ERROR_MSG =
@@ -90,15 +96,21 @@ public class HttpState extends State {
   @Attributes(title = "Header") private String header;
   @Attributes(title = "Body") private String body;
   @Attributes(title = "Assertion") private String assertion;
+
+  @Getter @Setter private List<NameValuePair> responseProcessingExpressions;
+
+  @Getter @Setter private String sweepingOutputName;
+  @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
+
   @SchemaIgnore private int socketTimeoutMillis = 10000;
 
-  @Inject private DelegateService delegateService;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject protected ManagerDecryptionService managerDecryptionService;
-  @Inject protected SecretManager secretManager;
-  @Inject protected ManagerExpressionEvaluator expressionEvaluator;
-
-  @Inject @Transient private transient ActivityService activityService;
+  @Inject private transient ActivityService activityService;
+  @Inject private transient DelegateService delegateService;
+  @Inject private transient ManagerExpressionEvaluator expressionEvaluator;
+  @Inject private transient SweepingOutputService sweepingOutputService;
+  @Inject private transient WaitNotifyEngine waitNotifyEngine;
+  @Inject protected transient ManagerDecryptionService managerDecryptionService;
+  @Inject protected transient SecretManager secretManager;
 
   public HttpState() {}
 
@@ -392,41 +404,7 @@ public class HttpState extends State {
       executionData.setAssertionStatement(assertion);
       executionData.setTemplateVariable(convertToVariableMap(getTemplateVariables()));
       ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-      boolean assertionStatus = true;
-      if (isNotBlank(assertion)) {
-        if (!executionData.getStatus().equals(ExecutionStatus.ERROR)) {
-          try {
-            // check if the request failed
-            assertionStatus = (boolean) context.evaluateExpression(assertion, executionData);
-
-            logger.info("assertion status: {}", assertionStatus);
-          } catch (ClassCastException e) {
-            logger.info("Invalid assertion " + Misc.getMessage(e), e);
-            executionData.setErrorMsg(ASSERTION_ERROR_MSG);
-            throw new InvalidRequestException(ASSERTION_ERROR_MSG, WingsException.USER);
-          } catch (JexlException e) {
-            logger.info("Error in httpStateAssertion", e);
-
-            String errorMsg;
-            if (e instanceof Parsing) {
-              Parsing p = (Parsing) e;
-              errorMsg = "Parsing error '" + p.getDetail() + "' in assertion.";
-            } else if (e instanceof Property) {
-              Property pr = (Property) e;
-              errorMsg = "Unresolvable property '" + pr.getProperty() + "' in assertion.";
-            } else {
-              errorMsg = getMessage(e);
-            }
-            executionData.setErrorMsg(errorMsg);
-            throw new InvalidRequestException(errorMsg, WingsException.USER);
-          } catch (Exception e) {
-            logger.info("Error in httpStateAssertion", e);
-            executionData.setErrorMsg(getMessage(e));
-            throw new InvalidRequestException(getMessage(e), WingsException.USER);
-          }
-        }
-      }
-      if (!assertionStatus || executionData.getStatus().equals(ExecutionStatus.ERROR)) {
+      if (!evaluateAssertion(context, executionData) || executionData.getStatus().equals(ExecutionStatus.ERROR)) {
         executionStatus = ExecutionStatus.FAILED;
       }
       executionResponse.setExecutionStatus(executionStatus);
@@ -434,6 +412,16 @@ public class HttpState extends State {
       executionData.setAssertionStatus(executionStatus.name());
       executionResponse.setStateExecutionData(executionData);
       executionResponse.setErrorMessage(errorMessage);
+
+      if (isNotEmpty(responseProcessingExpressions)) {
+        Map<String, Object> output = new HashMap<>();
+
+        responseProcessingExpressions.forEach(expression -> {
+          output.put(expression.getName(), context.renderExpression(expression.getValue(), executionData));
+        });
+
+        handleSweepingOutput(sweepingOutputService, context, output);
+      }
     }
     String activityId = null;
 
@@ -445,6 +433,46 @@ public class HttpState extends State {
         activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionResponse.getExecutionStatus());
 
     return executionResponse;
+  }
+
+  private boolean evaluateAssertion(ExecutionContext context, HttpStateExecutionData executionData) {
+    if (isBlank(assertion)) {
+      return true;
+    }
+
+    if (executionData.getStatus().equals(ExecutionStatus.ERROR)) {
+      return true;
+    }
+
+    try {
+      // check if the request failed
+      boolean assertionStatus = (boolean) context.evaluateExpression(assertion, executionData);
+      logger.info("assertion status: {}", assertionStatus);
+      return assertionStatus;
+    } catch (ClassCastException e) {
+      logger.info("Invalid assertion " + Misc.getMessage(e), e);
+      executionData.setErrorMsg(ASSERTION_ERROR_MSG);
+      throw new InvalidRequestException(ASSERTION_ERROR_MSG, WingsException.USER);
+    } catch (JexlException e) {
+      logger.info("Error in httpStateAssertion", e);
+
+      String errorMsg;
+      if (e instanceof Parsing) {
+        Parsing p = (Parsing) e;
+        errorMsg = "Parsing error '" + p.getDetail() + "' in assertion.";
+      } else if (e instanceof Property) {
+        Property pr = (Property) e;
+        errorMsg = "Unresolvable property '" + pr.getProperty() + "' in assertion.";
+      } else {
+        errorMsg = getMessage(e);
+      }
+      executionData.setErrorMsg(errorMsg);
+      throw new InvalidRequestException(errorMsg, WingsException.USER);
+    } catch (Exception e) {
+      logger.info("Error in httpStateAssertion", e);
+      executionData.setErrorMsg(getMessage(e));
+      throw new InvalidRequestException(getMessage(e), WingsException.USER);
+    }
   }
 
   /**
