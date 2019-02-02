@@ -28,6 +28,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -154,6 +155,8 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject protected StateExecutionService stateExecutionService;
 
   @Transient @Inject @SchemaIgnore protected ServiceResourceService serviceResourceService;
+
+  @Inject private transient ExpressionEvaluator evaluator;
 
   protected String hostnameField;
 
@@ -407,7 +410,11 @@ public abstract class AbstractAnalysisState extends State {
 
     Map<String, String> map = new HashMap<>();
     for (software.wings.cloudprovider.ContainerInfo containerInfo : containerInfos) {
-      map.put(containerInfo.getContainerId(), DEFAULT_GROUP_NAME);
+      Map<String, Object> containerMap = new HashMap<>();
+      containerMap.put("host", containerInfo);
+      String evaluatedHost = isEmpty(hostnameTemplate) ? containerInfo.getContainerId()
+                                                       : evaluator.substitute(hostnameTemplate, containerMap);
+      map.put(evaluatedHost, DEFAULT_GROUP_NAME);
     }
     return map;
   }
