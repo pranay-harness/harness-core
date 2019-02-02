@@ -233,6 +233,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public <T extends ContextElement> T getContextElement(ContextElementType contextElementType) {
+    if (stateExecutionInstance.getContextElements() == null) {
+      return null;
+    }
     return (T) stateExecutionInstance.getContextElements()
         .stream()
         .filter(contextElement -> contextElement.getElementType() == contextElementType)

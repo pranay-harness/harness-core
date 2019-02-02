@@ -13,7 +13,6 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
@@ -406,12 +405,7 @@ public class GraphRenderer {
       Map<String, StateExecutionInstance> instanceIdMap, Set<String> excludeFromAggregation) {
     final Session session = new Session(false, instanceIdMap, excludeFromAggregation);
 
-    GraphNode node = session.generateHierarchyNode();
-
-    // special treatment to avoid unnecessary hierarchy
-    adjustInfrastructureNode(node);
-
-    return node;
+    return session.generateHierarchyNode();
   }
 
   GraphNode convertToNode(StateExecutionInstance instance) {
@@ -570,48 +564,5 @@ public class GraphRenderer {
     }
 
     return instanceCount + " instances";
-  }
-
-  static boolean isInfrastructureNode(GraphNode node) {
-    return node != null && PHASE_STEP.name().equals(node.getType())
-        && (node.getName().equals(Constants.INFRASTRUCTURE_NODE_NAME)
-               || node.getName().equals(Constants.PROVISION_NODE_NAME))
-        && node.getGroup() != null && isNotEmpty(node.getGroup().getElements());
-  }
-
-  static void adjustInfrastructureNode(GraphNode node) {
-    if (node == null) {
-      return;
-    }
-
-    adjustInfrastructureNode(node.getGroup());
-
-    if (node.getNext() == null) {
-      return;
-    }
-
-    GraphNode next = node.getNext();
-    if (isInfrastructureNode(next)) {
-      GraphNode nextToNext = next.getNext();
-      GraphNode provisionStep = next.getGroup().getElements().get(0);
-      node.setNext(provisionStep);
-      provisionStep.setNext(nextToNext);
-    }
-    adjustInfrastructureNode(node.getNext());
-  }
-
-  static void adjustInfrastructureNode(GraphGroup group) {
-    if (group == null || isEmpty(group.getElements())) {
-      return;
-    }
-
-    GraphNode first = group.getElements().get(0);
-    if (isInfrastructureNode(first)) {
-      GraphNode nextToNext = first.getNext();
-      GraphNode provisionStep = first.getGroup().getElements().get(0);
-      provisionStep.setNext(nextToNext);
-      group.getElements().set(0, provisionStep);
-    }
-    group.getElements().forEach(GraphRenderer::adjustInfrastructureNode);
   }
 }

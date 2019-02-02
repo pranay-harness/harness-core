@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.containerservice.OSType;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
@@ -122,6 +123,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "rathnakara.malatesha@harness.io", intermittent = true)
   public void getHostsByResourceGroupAndTag() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
