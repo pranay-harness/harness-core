@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
@@ -48,8 +49,8 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
         artifactCollectionUtil.renderCustomArtifactScriptString(customArtifactStream);
 
     // Defaulting to the 60 secs
-    long timeout = artifactStreamAttributes.getCustomScriptTimeout() == null
-        ? 60
+    long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
+        ? Long.parseLong(CustomArtifactStream.DEFAULT_SCRIPT_TIME_OUT)
         : Long.parseLong(artifactStreamAttributes.getCustomScriptTimeout());
     List<String> tags = customArtifactStream.getTags();
     if (isNotEmpty(tags)) {

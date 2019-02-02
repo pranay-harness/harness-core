@@ -379,6 +379,7 @@ public class ArtifactCollectionUtil {
     Validator.notNullCheck("Script string can not be empty", scriptString, USER);
     artifactStreamAttributes.setCustomArtifactStreamScript(evaluator.substitute(scriptString, context));
     artifactStreamAttributes.setAccountId(app.getAccountId());
+    artifactStreamAttributes.setCustomScriptTimeout(versionScript.getTimeout());
     return artifactStreamAttributes;
   }
 }

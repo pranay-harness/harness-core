@@ -64,14 +64,27 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
         final CustomRepositoryResponse customRepositoryResponse =
             (CustomRepositoryResponse) JsonUtils.readFromFile(file, CustomRepositoryResponse.class);
         List<Result> results = customRepositoryResponse.getResults();
+        List<String> buildNumbers = new ArrayList<>();
         if (isNotEmpty(results)) {
-          results.forEach(result
-              -> buildDetails.add(
-                  aBuildDetails().withNumber(result.getBuildNo()).withMetadata(result.getMetadata()).build()));
+          results.forEach(result -> {
+            final String buildNo = result.getBuildNo();
+            if (isNotEmpty(buildNo)) {
+              if (buildNumbers.contains(buildNo)) {
+                logger.warn(
+                    "There is an entry with buildNo {} already exists. So, skipping the result. Please ensure that buildNo is unique across the results",
+                    buildNo);
+                return;
+              }
+              buildDetails.add(aBuildDetails().withNumber(buildNo).withMetadata(result.getMetadata()).build());
+              buildNumbers.add(buildNo);
+            } else {
+              logger.warn("There is an object in output without mandatory build number");
+            }
+          });
         } else {
-          logger.warn("Either the results are empty or not in the required format");
+          logger.warn("Results are empty");
         }
-        logger.info("Retrieving build details of Custom Repository");
+        logger.info("Retrieving build details of Custom Repository success");
       } catch (Exception ex) {
         String msg =
             "Failed to transform results to the Custom Repository Response. Please verify if the script output is in the required format. Reason ["

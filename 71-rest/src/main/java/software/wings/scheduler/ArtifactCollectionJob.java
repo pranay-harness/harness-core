@@ -32,6 +32,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PermitService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.utils.Misc;
 
 import java.time.Duration;
 import java.util.Date;
@@ -167,7 +168,7 @@ public class ArtifactCollectionJob implements Job {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {
       logger.warn("Failed to collect artifacts for appId {}, artifact stream {}. Reason {}", appId, artifactStreamId,
-          new WingsException(e).getMessage());
+          Misc.getMessage(e));
     }
     if (isNotEmpty(artifacts)) {
       logger.info("[{}] new artifacts collected", artifacts.size());

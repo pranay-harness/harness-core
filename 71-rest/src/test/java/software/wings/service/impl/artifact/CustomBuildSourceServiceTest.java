@@ -50,6 +50,7 @@ public class CustomBuildSourceServiceTest extends WingsBaseTest {
             .scripts(asList(CustomArtifactStream.Script.builder()
                                 .action(Action.FETCH_VERSIONS)
                                 .scriptString("echo Hello World!! and echo ${secrets.getValue(My Secret)}")
+                                .timeout("")
                                 .build()))
             .build();
 
