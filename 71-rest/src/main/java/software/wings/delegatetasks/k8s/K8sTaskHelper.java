@@ -342,8 +342,9 @@ public class K8sTaskHelper {
       try {
         String item = valuesFiles.get(i);
         validateValuesFileContents(item);
-        FileIo.writeUtf8StringToFile(k8sDelegateTaskParams.getWorkingDirectory() + '/' + i + values_filename, item);
-        valuesFilesOptionsBuilder.append(" -f ").append(i).append(values_filename);
+        String valuesFileName = format("values-%d.yaml", i);
+        FileIo.writeUtf8StringToFile(k8sDelegateTaskParams.getWorkingDirectory() + '/' + valuesFileName, item);
+        valuesFilesOptionsBuilder.append(" -f ").append(valuesFileName);
       } catch (Exception e) {
         executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
         throw e;
@@ -374,10 +375,8 @@ public class K8sTaskHelper {
       ProcessResult processResult = processExecutor.execute();
 
       if (processResult.getExitValue() != 0) {
-        logger.error("Failed to render templates. " + processResult.getOutput().getUTF8());
-        String message =
-            isNotEmpty(processResult.getOutput().getLines()) ? processResult.getOutput().getLines().get(0) : "";
-        throw new WingsException("Failed to render template: " + message);
+        throw new WingsException(format("Failed to render template for %s. Error %s", manifestFile.getFileName(),
+            processResult.getOutput().getUTF8()));
       }
 
       result.add(ManifestFile.builder()
