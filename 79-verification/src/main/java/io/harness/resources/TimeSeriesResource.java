@@ -94,8 +94,9 @@ public class TimeSeriesResource {
       @QueryParam("groupName") final String groupName, @QueryParam("analysisMinute") Integer analysisMinute,
       @QueryParam("taskId") String taskId, @QueryParam("baseLineExecutionId") String baseLineExecutionId,
       @QueryParam("cvConfigId") String cvConfigId, TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
-    return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(stateType, appId, stateExecutionId,
-        workflowExecutionId, groupName, analysisMinute, taskId, baseLineExecutionId, cvConfigId, mlAnalysisResponse));
+    return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, appId,
+        stateExecutionId, workflowExecutionId, groupName, analysisMinute, taskId, baseLineExecutionId, cvConfigId,
+        mlAnalysisResponse));
   }
 
   @Produces({"application/json", "application/v1+json"})

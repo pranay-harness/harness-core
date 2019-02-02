@@ -7,27 +7,34 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
+import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
+import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -47,14 +54,13 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   private String accountId;
   private String appId;
   private String stateExecutionId;
-  private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
   private String cvConfigId;
   private String groupName;
   private String delegateTaskId;
-  private Integer analysisMinute;
   @Mock private VerificationManagerClientHelper managerClientHelper;
+  @Mock private UsageMetricsHelper usageMetricsHelper;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TimeSeriesAnalysisService metricDataAnalysisService;
@@ -63,17 +69,18 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   public void setUp() {
     MockitoAnnotations.initMocks(this);
     when(managerClientHelper.callManagerWithRetry(any())).thenReturn(aRestResponse().withResource(false).build());
+    when(usageMetricsHelper.getCVConfig(anyString())).thenReturn(mockCVConfig());
+    when(usageMetricsHelper.getApplication(anyString())).thenReturn(mockApplication());
     setInternalState(metricDataAnalysisService, "managerClientHelper", managerClientHelper);
+    setInternalState(metricDataAnalysisService, "usageMetricsHelper", usageMetricsHelper);
     accountId = wingsPersistence.save(anAccount().withAccountName(generateUuid()).build());
     appId = wingsPersistence.save(anApplication().withName(generateUuid()).withAccountId(accountId).build());
     stateExecutionId = generateUuid();
-    workflowId = generateUuid();
     workflowExecutionId = generateUuid();
     serviceId = generateUuid();
     cvConfigId = generateUuid();
     groupName = "groupName-";
     delegateTaskId = UUID.randomUUID().toString();
-    analysisMinute = 10;
   }
 
   @Test
@@ -91,7 +98,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
             put("key2", 0.5);
           }
         });
-        metricDataAnalysisService.saveAnalysisRecordsML(StateType.DYNA_TRACE, appId, stateExecutionId,
+        metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.DYNA_TRACE, appId, stateExecutionId,
             workflowExecutionId, groupName + i, j, delegateTaskId, "-1", cvConfigId, mlAnalysisResponse);
       }
     }
@@ -221,7 +228,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     }
     assertFalse(isEmpty(timeSeriesMLAnalysisRecord.getTransactions()));
     assertNull(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson());
-    metricDataAnalysisService.saveAnalysisRecordsML(StateType.APP_DYNAMICS, appId, stateExecutionId,
+    metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.APP_DYNAMICS, appId, stateExecutionId,
         workflowExecutionId, generateUuid(), (int) analysisMinute, generateUuid(), generateUuid(), cvConfigId,
         timeSeriesMLAnalysisRecord);
 
@@ -235,5 +242,23 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         metricDataAnalysisService.getPreviousAnalysis(appId, cvConfigId, analysisMinute);
     assertFalse(isEmpty(readRecord.getTransactions()));
     assertNull(readRecord.getTransactionsCompressedJson());
+  }
+
+  private Application mockApplication() {
+    Application app = new Application();
+    app.setUuid(APP_ID);
+    app.setName(APP_NAME);
+    return app;
+  }
+
+  private CVConfiguration mockCVConfig() {
+    AppDynamicsCVServiceConfiguration config =
+        AppDynamicsCVServiceConfiguration.builder().appDynamicsApplicationId("1234").tierId("5678").build();
+    config.setConnectorId("connectorId");
+    config.setName("test Config");
+    config.setUuid("cvConfigId");
+    config.setAppId("appId");
+    config.setServiceId("serviceId");
+    return config;
   }
 }

@@ -76,8 +76,8 @@ public class ExperimentalTimeseriesAnalysisResourceImpl implements ExperimentalM
       mlAnalysisResponse.setAppId(applicationId);
       mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
     }
-    return new RestResponse<>(
-        timeSeriesAnalysisService.saveAnalysisRecordsML(stateType, applicationId, stateExecutionId, workflowExecutionId,
-            groupName, analysisMinute, taskId, baseLineExecutionId, cvConfigId, mlAnalysisResponse));
+    return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, applicationId,
+        stateExecutionId, workflowExecutionId, groupName, analysisMinute, taskId, baseLineExecutionId, cvConfigId,
+        mlAnalysisResponse));
   }
 }

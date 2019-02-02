@@ -28,6 +28,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.entities.TimeSeriesCumulativeSums;
+import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -74,6 +75,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -102,6 +104,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private DataStoreService dataStoreService;
   @Inject private VerificationServiceConfiguration verificationServiceConfiguration;
+  @Inject private UsageMetricsHelper usageMetricsHelper;
 
   @Override
   public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
@@ -148,6 +151,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   /**
    * Method to save ml analysed records to mongoDB
    *
+   *
+   * @param accountId
    * @param stateType
    * @param appId
    * @param stateExecutionId
@@ -161,7 +166,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
    * @return
    */
   @Override
-  public boolean saveAnalysisRecordsML(StateType stateType, String appId, String stateExecutionId,
+  public boolean saveAnalysisRecordsML(String accountId, StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String groupName, Integer analysisMinute, String taskId, String baseLineExecutionId,
       String cvConfigId, MetricAnalysisRecord mlAnalysisResponse) {
     logger.info("saveAnalysisRecordsML stateType  {} stateExecutionId {} analysisMinute {}", stateType,
@@ -306,13 +311,19 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     wingsPersistence.save(riskSummary);
 
     Map<String, Double> overAllScoreByMetricName = mlAnalysisResponse.getOverallMetricScores();
-    if (!isEmpty(overAllScoreByMetricName)) {
+    if (!isEmpty(overAllScoreByMetricName) && !isEmpty(cvConfigId)
+        && !managerClientHelper.callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.CV_DEMO, accountId))
+                .getResource()) {
       String metricName = Collections.max(overAllScoreByMetricName.entrySet(), Map.Entry.comparingByValue()).getKey();
       Double finalOverallScore = overAllScoreByMetricName.get(metricName);
-      if (!isEmpty(cvConfigId) && finalOverallScore >= MEDIUM_RISK_CUTOFF) {
-        logger.warn(
-            "Risk detected for cvConfigId {}, stateType {}, finalOverallScore {} aggregatedRisk {} metricName {}",
-            cvConfigId, stateType, finalOverallScore, mlAnalysisResponse.getAggregatedRisk(), metricName);
+      if (finalOverallScore >= MEDIUM_RISK_CUTOFF) {
+        Application application = usageMetricsHelper.getApplication(appId);
+        CVConfiguration cvConfig = usageMetricsHelper.getCVConfig(cvConfigId);
+        String url = "/account/" + accountId + "/continuous-verification2/" + cvConfig.getServiceId() + "/details";
+        logger.warn(String.format("Risk detected for cvConfigId %S, cvConfigName %S, stateType %S, "
+                + "metricName %S, serviceName %S, URL %S, ApplicationName %S, finalOverallScore %S",
+            cvConfigId, cvConfig.getName(), stateType, metricName, cvConfig.getServiceName(), url,
+            application.getName(), finalOverallScore));
       }
     }
     logger.info("inserted MetricAnalysisRecord to persistence layer for "
