@@ -10,7 +10,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "preferenceType")
 @JsonSubTypes({ @Type(value = DeploymentPreference.class, name = "DEPLOYMENT_PREFERENCE") })
