@@ -1841,7 +1841,7 @@ public class WorkflowServiceHelper {
   }
 
   public boolean isK8sV2Service(String appId, String serviceId) {
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.get(appId, serviceId, false);
     return service != null && service.isK8sV2();
   }
 
