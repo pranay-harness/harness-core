@@ -22,6 +22,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 public class CustomArtifactStream extends ArtifactStream {
   public static final String ARTIFACT_SOURCE_NAME = "CUSTOM_ARTIFACT_STREAM";
+  public static final String DEFAULT_SCRIPT_TIME_OUT = "60"; // 60 secs
 
   @NotNull private List<Script> scripts = new ArrayList<>();
   private List<String> tags = new ArrayList<>();

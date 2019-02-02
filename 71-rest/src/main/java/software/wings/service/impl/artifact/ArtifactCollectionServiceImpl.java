@@ -42,7 +42,6 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.MavenVersionCompareUtil;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -51,7 +50,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /***
@@ -126,11 +127,11 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   }
 
   private void collectMetaDataOnlyArtifacts(ArtifactStream artifactStream, List<Artifact> newArtifacts) {
-    logger.debug("Collecting build details for artifact stream id {} type {} and source name {} ",
-        artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
     List<BuildDetails> builds;
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      logger.info("Collecting custom repository build details for artifact stream id {}", artifactStream.getUuid());
       builds = customBuildSourceService.getBuilds(artifactStream.getAppId(), artifactStream.getUuid());
+      logger.info("Collected custom repository build details for artifact stream id {}", artifactStream.getUuid());
     } else {
       builds = buildSourceService.getBuilds(
           artifactStream.getAppId(), artifactStream.getUuid(), artifactStream.getSettingId());
@@ -210,6 +211,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
    * Gets all  existing artifacts for the given artifact stream, and compares with artifact source data
    */
   private Set<String> getNewBuildNumbers(ArtifactStream artifactStream, List<BuildDetails> builds) {
+    // Filter out the duplicated entries
     Map<String, BuildDetails> buildNoDetails =
         builds.parallelStream().collect(Collectors.toMap(BuildDetails::getNumber, Function.identity()));
     try (HIterator<Artifact> iterator =
@@ -243,10 +245,8 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     return service;
   }
 
-  /**
-   * Compares two maven format version strings.
-   */
-  public static int versionCompare(String str1, String str2) {
-    return MavenVersionCompareUtil.compare(str1).with(str2);
+  public <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+    Map<Object, Boolean> seen = new ConcurrentHashMap<>();
+    return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
   }
 }

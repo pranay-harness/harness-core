@@ -84,8 +84,9 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
   public static final Duration timeout = Duration.ofMinutes(10);
 
-  public static final List<String> metadataOnlyStreams = Collections.unmodifiableList(asList(DOCKER.name(), ECR.name(),
-      GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), AMAZON_S3.name(), GCS.name(), SMB.name(), SFTP.name()));
+  public static final List<String> metadataOnlyStreams =
+      Collections.unmodifiableList(asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(),
+          AMAZON_S3.name(), GCS.name(), SMB.name(), SFTP.name(), CUSTOM.name()));
 
   private BuildSourceRequestType getRequestType(ArtifactStream artifactStream, ArtifactType artifactType) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
