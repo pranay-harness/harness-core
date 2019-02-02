@@ -13,6 +13,8 @@ import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.RestResponse;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.NotificationSetupService;
 
@@ -94,6 +96,7 @@ public class NotificationSetupResource {
   @Path("notification-groups")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<NotificationGroup> createNotificationGroups(
       @QueryParam("accountId") String accountId, NotificationGroup notificationGroup) {
     notificationGroup.setAccountId(accountId);
@@ -112,6 +115,7 @@ public class NotificationSetupResource {
   @Path("notification-groups/{notificationGroupId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<NotificationGroup> updateNotificationGroups(@QueryParam("accountId") String accountId,
       @PathParam("notificationGroupId") String notificationGroupId, NotificationGroup notificationGroup) {
     notificationGroup.setAccountId(accountId);
@@ -131,6 +135,7 @@ public class NotificationSetupResource {
   @Path("notification-groups/{notificationGroupId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse deleteNotificationGroups(
       @QueryParam("accountId") String accountId, @PathParam("notificationGroupId") String notificationGroupId) {
     notificationSetupService.deleteNotificationGroups(accountId, notificationGroupId);
