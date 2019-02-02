@@ -64,6 +64,7 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig.K8sDelegateManifestConfigBuilder;
 import software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters;
@@ -380,9 +381,12 @@ public class K8sStateHelper {
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
     String artifactStreamId = artifact == null ? null : artifact.getArtifactStreamId();
 
+    K8sClusterConfig k8sClusterConfig = containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping);
+    k8sClusterConfig.setNamespace(context.renderExpression(k8sClusterConfig.getNamespace()));
+
     k8sTaskParameters.setAccountId(app.getAccountId());
     k8sTaskParameters.setAppId(app.getUuid());
-    k8sTaskParameters.setK8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping));
+    k8sTaskParameters.setK8sClusterConfig(k8sClusterConfig);
     k8sTaskParameters.setWorkflowExecutionId(context.getWorkflowExecutionId());
 
     String waitId = generateUuid();
