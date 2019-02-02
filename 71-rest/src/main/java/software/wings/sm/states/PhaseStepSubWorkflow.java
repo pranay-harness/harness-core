@@ -494,7 +494,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         && phaseStepType == PhaseStepType.INFRASTRUCTURE_NODE) {
       ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
           elementNotifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
-      executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
+      if (serviceInstanceIdsParam != null) {
+        executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
+      }
     } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
       ClusterElement clusterElement =
           (ClusterElement) notifiedElement(elementNotifyResponseData, ClusterElement.class, "Missing ClusterElement");
@@ -546,7 +548,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       ElementNotifyResponseData elementNotifyResponseData, Class<? extends ContextElement> cls, String message) {
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
     if (isEmpty(elements)) {
-      throw new InvalidRequestException(message);
+      return null;
     }
     if (!(cls.isInstance(elements.get(0)))) {
       throw new InvalidRequestException(message);

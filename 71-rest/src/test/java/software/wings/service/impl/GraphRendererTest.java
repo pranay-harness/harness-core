@@ -164,48 +164,6 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
-  public void testIsInfrastructureNode() {
-    assertThat(GraphRenderer.isInfrastructureNode(getInfrastructureNode())).isTrue();
-  }
-
-  @Test
-  public void testAdjustInfrastructureNode() {
-    GraphRenderer.adjustInfrastructureNode((GraphNode) null);
-    GraphRenderer.adjustInfrastructureNode((GraphGroup) null);
-
-    {
-      GraphNode node = GraphNode.builder().build();
-      GraphRenderer.adjustInfrastructureNode(node);
-    }
-
-    {
-      GraphNode infrastructureNode = getInfrastructureNode();
-      final GraphNode element = infrastructureNode.getGroup().getElements().get(0);
-
-      GraphNode node = GraphNode.builder().build();
-      node.setNext(infrastructureNode);
-
-      GraphRenderer.adjustInfrastructureNode(node);
-      assertThat(node.getNext()).isEqualTo(element);
-    }
-
-    {
-      GraphNode infrastructureNode = getInfrastructureNode();
-      GraphNode next = GraphNode.builder().name("next").build();
-      infrastructureNode.setNext(next);
-
-      final GraphNode element = infrastructureNode.getGroup().getElements().get(0);
-
-      final GraphGroup group = new GraphGroup();
-      group.setElements(asList(infrastructureNode));
-
-      GraphRenderer.adjustInfrastructureNode(group);
-      assertThat(group.getElements().get(0)).isEqualTo(element);
-      assertThat(element.getNext()).isEqualTo(next);
-    }
-  }
-
-  @Test
   public void testConvertToNode() {
     final StateExecutionInstance instance = aStateExecutionInstance()
                                                 .withDisplayName("state name")
