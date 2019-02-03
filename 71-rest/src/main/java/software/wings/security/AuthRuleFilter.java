@@ -220,17 +220,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
     if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
-      UserRequestContextBuilder userRequestContextBuilder =
-          UserRequestContext.builder().accountId(accountId).entityInfoMap(Maps.newHashMap());
-
-      UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user);
-      userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
-
-      Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
-      setAppIdFilterInUserRequestContext(userRequestContextBuilder, emptyAppIdsInReq, allowedAppIds);
-
-      user.setUserRequestContext(userRequestContextBuilder.build());
-
+      UserRequestContext userRequestContext = buildUserRequestContext(accountId, user, emptyAppIdsInReq);
+      user.setUserRequestContext(userRequestContext);
       return;
     }
 
@@ -400,24 +391,29 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private UserRequestContext buildUserRequestContext(List<PermissionAttribute> requiredPermissionAttributes, User user,
       String accountId, boolean emptyAppIdsInReq, String httpMethod, List<String> appIdsFromRequest, boolean skipAuth,
       boolean accountLevelPermissions) {
+    UserRequestContext userRequestContext = buildUserRequestContext(accountId, user, emptyAppIdsInReq);
+
+    if (!accountLevelPermissions) {
+      authHandler.setEntityIdFilterIfGet(httpMethod, skipAuth, requiredPermissionAttributes, userRequestContext,
+          userRequestContext.isAppIdFilterRequired(), userRequestContext.getAppIds(), appIdsFromRequest);
+    }
+    return userRequestContext;
+  }
+
+  private UserRequestContext buildUserRequestContext(String accountId, User user, boolean emptyAppIdsInReq) {
     UserRequestContextBuilder userRequestContextBuilder =
         UserRequestContext.builder().accountId(accountId).entityInfoMap(Maps.newHashMap());
 
     UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user);
     userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
 
+    UserRestrictionInfo userRestrictionInfo = authService.getUserRestrictionInfo(accountId, user, userPermissionInfo);
+    userRequestContextBuilder.userRestrictionInfo(userRestrictionInfo);
+
     Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
+    setAppIdFilterInUserRequestContext(userRequestContextBuilder, emptyAppIdsInReq, allowedAppIds);
 
-    boolean appIdFilterRequired =
-        setAppIdFilterInUserRequestContext(userRequestContextBuilder, emptyAppIdsInReq, allowedAppIds);
-
-    UserRequestContext userRequestContext = userRequestContextBuilder.build();
-
-    if (!accountLevelPermissions) {
-      authHandler.setEntityIdFilterIfGet(httpMethod, skipAuth, requiredPermissionAttributes, userRequestContext,
-          appIdFilterRequired, allowedAppIds, appIdsFromRequest);
-    }
-    return userRequestContext;
+    return userRequestContextBuilder.build();
   }
 
   private boolean skipAuth(List<PermissionAttribute> requiredPermissionAttributes) {

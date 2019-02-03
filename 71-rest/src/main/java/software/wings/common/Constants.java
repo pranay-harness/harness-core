@@ -609,6 +609,11 @@ public interface Constants {
   String USER_PERMISSION_CACHE = "userPermissionCache";
 
   /**
+   * The constant USER_RESTRICTION_CACHE.
+   */
+  String USER_RESTRICTION_CACHE = "userRestrictionCache";
+
+  /**
    * The constant
    */
   String WHITELIST_CACHE = "whitelistCache";
@@ -1011,6 +1016,10 @@ public interface Constants {
   String RESOURCE_URI_UPDATE_WORKFLOW = "/api/workflows/[^/]+/basic";
   String RESOURCE_URI_UPDATE_PIPELINE = "/api/pipelines/[^/]+";
 
+  String RESOURCE_URI_DELETE_APP = "/api/apps/[^/]+";
+  String RESOURCE_URI_DELETE_ENVIRONMENT = "/api/environments/[^/]+";
+
   String HTTP_PUT = HttpMethod.PUT.name();
   String HTTP_POST = HttpMethod.POST.name();
+  String HTTP_DELETE = HttpMethod.DELETE.name();
 }

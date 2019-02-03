@@ -333,11 +333,11 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private void evictUserPermissionInfoCacheForUserGroup(UserGroup userGroup) {
-    authService.evictAccountUserPermissionInfoCache(userGroup.getAccountId(), userGroup.getMemberIds());
+    authService.evictUserPermissionAndRestrictionCacheForAccount(userGroup.getAccountId(), userGroup.getMemberIds());
   }
 
   private void evictUserPermissionInfoCacheForUserGroup(String accountId, List<String> memberIds) {
-    authService.evictAccountUserPermissionInfoCache(accountId, memberIds);
+    authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, memberIds);
   }
 
   @Override

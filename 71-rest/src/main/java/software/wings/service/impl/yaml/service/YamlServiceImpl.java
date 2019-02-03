@@ -46,6 +46,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -103,6 +104,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -120,6 +122,15 @@ import java.util.zip.ZipFile;
 @Singleton
 public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements YamlService<Y, B> {
   private static final Logger logger = LoggerFactory.getLogger(YamlServiceImpl.class);
+  /**
+   * We need to evict UserPermissionCache and UserRestrictionCache for some yaml operations.
+   * All the rbac*YamlTypes define the entity types in which we have to refresh the cache.
+   */
+  private static final Set<YamlType> rbacCreateYamlTypes = Sets.newHashSet(YamlType.APPLICATION, YamlType.SERVICE,
+      YamlType.ENVIRONMENT, YamlType.PROVISIONER, YamlType.WORKFLOW, YamlType.PIPELINE);
+  private static final Set<YamlType> rbacUpdateYamlTypes =
+      Sets.newHashSet(YamlType.ENVIRONMENT, YamlType.WORKFLOW, YamlType.PIPELINE);
+  private static final Set<YamlType> rbacDeleteYamlTypes = Sets.newHashSet(YamlType.APPLICATION, YamlType.ENVIRONMENT);
 
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
@@ -440,18 +451,25 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
     Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = Maps.newConcurrentMap();
     YamlType previousYamlType = null;
+    ChangeType previousChangeType = null;
     int numOfParallelChanges = 0;
 
     for (ChangeContext changeContext : changeContextList) {
       String yamlFilePath = changeContext.getChange().getFilePath();
       YamlType yamlType = changeContext.getYamlType();
+      ChangeType changeType = changeContext.getChange().getChangeType();
       if (previousYamlType == null) {
         previousYamlType = yamlType;
       }
 
+      if (previousChangeType == null) {
+        previousChangeType = changeContext.getChange().getChangeType();
+      }
+
       if (previousYamlType != yamlType || (++numOfParallelChanges == Constants.YAML_MAX_PARALLEL_COUNT)) {
-        checkFuturesAndEvictCache(futures, previousYamlType, accountId);
+        checkFuturesAndEvictCache(futures, previousYamlType, accountId, previousChangeType);
         previousYamlType = yamlType;
+        previousChangeType = changeType;
         numOfParallelChanges = 0;
       }
 
@@ -474,7 +492,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       }));
     }
 
-    checkFuturesAndEvictCache(futures, previousYamlType, accountId);
+    checkFuturesAndEvictCache(futures, previousYamlType, accountId, previousChangeType);
 
     if (failedYamlFileChangeMap.size() > 0) {
       logAllErrorsWhileYamlInjestion(failedYamlFileChangeMap);
@@ -498,7 +516,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     logger.warn(builder.toString());
   }
 
-  private void checkFuturesAndEvictCache(Queue<Future> futures, YamlType yamlType, String accountId) {
+  private void checkFuturesAndEvictCache(
+      Queue<Future> futures, YamlType yamlType, String accountId, ChangeType changeType) {
     while (!futures.isEmpty()) {
       try {
         if (futures.peek().isDone()) {
@@ -510,12 +529,24 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       }
       quietSleep(ofMillis(10));
     }
+    invalidateUserRelatedCacheIfNeeded(accountId, yamlType, changeType);
+  }
 
-    // Evict only in case of below six entity types
-    if (YamlType.APPLICATION.equals(yamlType) || YamlType.SERVICE.equals(yamlType)
-        || YamlType.ENVIRONMENT.equals(yamlType) || YamlType.WORKFLOW.equals(yamlType)
-        || YamlType.PIPELINE.equals(yamlType) || YamlType.PROVISIONER.equals(yamlType)) {
-      authService.evictAccountUserPermissionInfoCache(accountId, true);
+  private void invalidateUserRelatedCacheIfNeeded(String accountId, YamlType yamlType, ChangeType changeType) {
+    if (changeType.equals(ChangeType.ADD) && rbacCreateYamlTypes.contains(yamlType)) {
+      if (yamlType.equals(YamlType.APPLICATION) || yamlType.equals(YamlType.ENVIRONMENT)) {
+        authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
+      } else {
+        authService.evictUserPermissionCacheForAccount(accountId, true);
+      }
+    } else if (changeType.equals(ChangeType.MODIFY) && rbacUpdateYamlTypes.contains(yamlType)) {
+      if (yamlType.equals(YamlType.ENVIRONMENT)) {
+        authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
+      } else {
+        authService.evictUserPermissionCacheForAccount(accountId, true);
+      }
+    } else if (changeType.equals(ChangeType.DELETE) && rbacDeleteYamlTypes.contains(yamlType)) {
+      authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
     }
   }
 

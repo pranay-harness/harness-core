@@ -115,7 +115,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    doNothing().when(authService).evictAccountUserPermissionInfoCache(anyString(), anyList());
+    doNothing().when(authService).evictUserPermissionAndRestrictionCacheForAccount(anyString(), anyList());
     when(accountService.get(anyString())).thenReturn(account);
     when(accountService.save(any())).thenReturn(account);
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -234,7 +234,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     doReturn(account).when(accountService).get(ACCOUNT_ID);
     final String newName = "NewName";
     final String newDescription = "Desc";
-    doNothing().when(authService).evictAccountUserPermissionInfoCache(anyString(), any());
+    doNothing().when(authService).evictUserPermissionAndRestrictionCacheForAccount(anyString(), any());
     UserGroup cloneActual = userGroupService.cloneUserGroup(ACCOUNT_ID, USER_GROUP_ID, newName, newDescription);
     assertThat(cloneActual.getName()).isEqualTo(newName);
     assertThat(cloneActual.getDescription()).isEqualTo(newDescription);

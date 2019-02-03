@@ -138,7 +138,7 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     HarnessUserGroup updatedUserGroup = get(uuid);
 
     SetView<String> accountsAffected = symmetricDifference(updatedUserGroup.getAccountIds(), oldAccountIds);
-    authService.evictAccountUserPermissionInfoCache(
+    authService.evictUserPermissionAndRestrictionCacheForAccounts(
         accountsAffected, Lists.newArrayList(updatedUserGroup.getMemberIds()));
     return updatedUserGroup;
   }
@@ -170,7 +170,8 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
       accountsAffected = updatedUserGroup.getAccountIds();
     }
 
-    authService.evictAccountUserPermissionInfoCache(accountsAffected, Lists.newArrayList(membersAffected));
+    authService.evictUserPermissionAndRestrictionCacheForAccounts(
+        accountsAffected, Lists.newArrayList(membersAffected));
     return updatedUserGroup;
   }
 

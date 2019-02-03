@@ -72,6 +72,8 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
+import software.wings.security.UserRestrictionInfo;
+import software.wings.security.UserRestrictionInfo.UserRestrictionInfoBuilder;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -343,9 +345,9 @@ public class UsageRestrictionsServiceImplTest {
       setPermissions(appIds, envIds, actions, isAccountAdmin);
 
       UsageRestrictions restrictionsFromPermissionsForUpdateAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getUsageRestrictionsForUpdateAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForUpdateAction();
       Map<String, Set<String>> appEnvMapFromPermissionsForUpdateAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getAppEnvMapForUpdateAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getAppEnvMapForUpdateAction();
 
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       Set<String> envFilters = newHashSet(PROD);
@@ -372,9 +374,9 @@ public class UsageRestrictionsServiceImplTest {
       assertFalse(hasAccess);
 
       UsageRestrictions restrictionsFromPermissionsForReadAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getUsageRestrictionsForReadAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForReadAction();
       Map<String, Set<String>> appEnvMapFromPermissionsForReadAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getAppEnvMapForReadAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getAppEnvMapForReadAction();
 
       hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, isAccountAdmin, null, null, usageRestrictions,
           restrictionsFromPermissionsForReadAction, appEnvMapFromPermissionsForReadAction, appIdEnvMap);
@@ -449,9 +451,9 @@ public class UsageRestrictionsServiceImplTest {
       setPermissions(appIds, envIds, actions, true);
 
       UsageRestrictions restrictionsFromPermissionsForUpdateAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getUsageRestrictionsForUpdateAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForUpdateAction();
       Map<String, Set<String>> appEnvMapFromPermissionsForUpdateAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getAppEnvMapForUpdateAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getAppEnvMapForUpdateAction();
 
       boolean hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, true, APP_ID_1, ENV_ID_1, null,
           restrictionsFromPermissionsForUpdateAction, appEnvMapFromPermissionsForUpdateAction, appIdEnvMap);
@@ -467,9 +469,9 @@ public class UsageRestrictionsServiceImplTest {
       assertFalse(hasAccess);
 
       UsageRestrictions restrictionsFromPermissionsForReadAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getUsageRestrictionsForReadAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForReadAction();
       Map<String, Set<String>> appEnvMapFromPermissionsForReadAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getAppEnvMapForReadAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getAppEnvMapForReadAction();
 
       hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, true, null, null, null,
           restrictionsFromPermissionsForReadAction, appEnvMapFromPermissionsForReadAction, appIdEnvMap);
@@ -501,9 +503,9 @@ public class UsageRestrictionsServiceImplTest {
       setPermissions(appIds, envIds, actions, false);
 
       UsageRestrictions restrictionsFromPermissionsForUpdateAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getUsageRestrictionsForUpdateAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForUpdateAction();
       Map<String, Set<String>> appEnvMapFromPermissionsForUpdateAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getAppEnvMapForUpdateAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getAppEnvMapForUpdateAction();
 
       boolean hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, false, APP_ID_1, ENV_ID_1, null,
           restrictionsFromPermissionsForUpdateAction, appEnvMapFromPermissionsForUpdateAction, appIdEnvMap);
@@ -519,9 +521,9 @@ public class UsageRestrictionsServiceImplTest {
       assertFalse(hasAccess);
 
       UsageRestrictions restrictionsFromPermissionsForReadAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getUsageRestrictionsForReadAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForReadAction();
       Map<String, Set<String>> appEnvMapFromPermissionsForReadAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getAppEnvMapForReadAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getAppEnvMapForReadAction();
 
       hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, false, null, null, null,
           restrictionsFromPermissionsForReadAction, appEnvMapFromPermissionsForReadAction, appIdEnvMap);
@@ -614,9 +616,9 @@ public class UsageRestrictionsServiceImplTest {
       setPermissions(appIds, envIds, actions, isAccountAdmin);
 
       UsageRestrictions restrictionsFromPermissionsForUpdateAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getUsageRestrictionsForUpdateAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForUpdateAction();
       Map<String, Set<String>> appEnvMapFromPermissionsForUpdateAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getAppEnvMapForUpdateAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getAppEnvMapForUpdateAction();
 
       UsageRestrictions usageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD));
 
@@ -757,9 +759,9 @@ public class UsageRestrictionsServiceImplTest {
     assertFalse(hasAccess);
 
     UsageRestrictions restrictionsFromPermissionsForReadAction =
-        UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getUsageRestrictionsForReadAction();
+        UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForReadAction();
     Map<String, Set<String>> appEnvMapFromPermissionsForReadAction =
-        UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getAppEnvMapForReadAction();
+        UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getAppEnvMapForReadAction();
 
     hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, isAccountAdmin, null, null, usageRestrictions,
         restrictionsFromPermissionsForReadAction, appEnvMapFromPermissionsForReadAction, appIdEnvMap);
@@ -799,9 +801,9 @@ public class UsageRestrictionsServiceImplTest {
       UsageRestrictions usageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD));
 
       UsageRestrictions restrictionsFromPermissionsForUpdateAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getUsageRestrictionsForUpdateAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForUpdateAction();
       Map<String, Set<String>> appEnvMapFromPermissionsForUpdateAction =
-          UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getAppEnvMapForUpdateAction();
+          UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getAppEnvMapForUpdateAction();
 
       setupEnvMocks();
 
@@ -977,6 +979,7 @@ public class UsageRestrictionsServiceImplTest {
   private void setPermissions(List<String> appIds, List<String> envIds, Set<Action> actions, boolean isAccountAdmin) {
     UserPermissionInfo userPermissionInfo = getUserPermissionInfo(appIds, envIds, actions);
 
+    UserRestrictionInfoBuilder restrictionInfoBuilder = UserRestrictionInfo.builder();
     User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
 
     if (isAccountAdmin) {
@@ -984,26 +987,30 @@ public class UsageRestrictionsServiceImplTest {
           AccountPermissionSummary.builder().permissions(newHashSet(PermissionType.ACCOUNT_MANAGEMENT)).build();
       userPermissionInfo.setAccountPermissionSummary(accountPermissionSummary);
     }
-    user.setUserRequestContext(
-        UserRequestContext.builder().accountId(ACCOUNT_ID).userPermissionInfo(userPermissionInfo).build());
 
     UsageRestrictions restrictionsFromUserPermissionsForUpdate =
         usageRestrictionsService.getUsageRestrictionsFromUserPermissions(
             ACCOUNT_ID, userPermissionInfo, user, Action.UPDATE);
-    userPermissionInfo.setUsageRestrictionsForUpdateAction(restrictionsFromUserPermissionsForUpdate);
+    restrictionInfoBuilder.usageRestrictionsForUpdateAction(restrictionsFromUserPermissionsForUpdate);
 
     UsageRestrictions restrictionsFromUserPermissionsForRead =
         usageRestrictionsService.getUsageRestrictionsFromUserPermissions(
             ACCOUNT_ID, userPermissionInfo, user, Action.READ);
-    userPermissionInfo.setUsageRestrictionsForReadAction(restrictionsFromUserPermissionsForRead);
+    restrictionInfoBuilder.usageRestrictionsForReadAction(restrictionsFromUserPermissionsForRead);
 
     Map<String, Set<String>> appEnvMapForUpdate =
         usageRestrictionsService.getAppEnvMapFromUserPermissions(ACCOUNT_ID, userPermissionInfo, Action.UPDATE);
-    userPermissionInfo.setAppEnvMapForUpdateAction(appEnvMapForUpdate);
+    restrictionInfoBuilder.appEnvMapForUpdateAction(appEnvMapForUpdate);
 
     Map<String, Set<String>> appEnvMapForRead =
         usageRestrictionsService.getAppEnvMapFromUserPermissions(ACCOUNT_ID, userPermissionInfo, Action.READ);
-    userPermissionInfo.setAppEnvMapForReadAction(appEnvMapForRead);
+    restrictionInfoBuilder.appEnvMapForReadAction(appEnvMapForRead);
+
+    user.setUserRequestContext(UserRequestContext.builder()
+                                   .accountId(ACCOUNT_ID)
+                                   .userPermissionInfo(userPermissionInfo)
+                                   .userRestrictionInfo(restrictionInfoBuilder.build())
+                                   .build());
 
     UserThreadLocal.set(user);
   }

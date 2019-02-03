@@ -16,6 +16,7 @@ import java.util.Set;
 public class UserRequestContext {
   private String accountId;
   private UserPermissionInfo userPermissionInfo;
+  private UserRestrictionInfo userRestrictionInfo;
 
   private boolean appIdFilterRequired;
   private Set<String> appIds;

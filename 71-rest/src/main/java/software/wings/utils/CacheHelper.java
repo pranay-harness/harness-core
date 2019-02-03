@@ -3,6 +3,7 @@ package software.wings.utils;
 import static software.wings.common.Constants.NEW_RELIC_APPLICATION_CACHE;
 import static software.wings.common.Constants.USER_CACHE;
 import static software.wings.common.Constants.USER_PERMISSION_CACHE;
+import static software.wings.common.Constants.USER_RESTRICTION_CACHE;
 import static software.wings.common.Constants.WHITELIST_CACHE;
 
 import com.google.inject.Singleton;
@@ -10,6 +11,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.User;
 import software.wings.beans.security.access.WhitelistConfig;
 import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRestrictionInfo;
 import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
 
 import java.util.Optional;
@@ -52,6 +54,11 @@ public class CacheHelper {
 
   public Cache<String, UserPermissionInfo> getUserPermissionInfoCache() {
     return getCache(USER_PERMISSION_CACHE, String.class, UserPermissionInfo.class,
+        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+  }
+
+  public Cache<String, UserRestrictionInfo> getUserRestrictionInfoCache() {
+    return getCache(USER_RESTRICTION_CACHE, String.class, UserRestrictionInfo.class,
         AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
   }
 
