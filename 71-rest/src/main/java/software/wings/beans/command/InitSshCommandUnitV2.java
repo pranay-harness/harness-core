@@ -16,6 +16,7 @@ import freemarker.cache.StringTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,7 +142,8 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
     return commandExecutionStatus;
   }
 
-  private String getInitCommand(String scriptWorkingDirectory) throws IOException, TemplateException {
+  private String getInitCommand(String scriptWorkingDirectory, boolean includeTailFunctions)
+      throws IOException, TemplateException {
     try (StringWriter stringWriter = new StringWriter()) {
       Map<String, Object> templateParams = ImmutableMap.<String, Object>builder()
                                                .put("executionId", activityId)
@@ -149,6 +151,7 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
                                                .put("envVariables", envVariables)
                                                .put("safeEnvVariables", safeDisplayEnvVariables)
                                                .put("scriptWorkingDirectory", scriptWorkingDirectory)
+                                               .put("includeTailFunctions", includeTailFunctions)
                                                .build();
       cfg.getTemplate("execlauncherv2.sh.ftl").process(templateParams, stringWriter);
       return stringWriter.toString();
@@ -164,16 +167,20 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
           ExecCommandUnit execCommandUnit = (ExecCommandUnit) unit;
           String commandDir =
               isNotBlank(execCommandUnit.getCommandPath()) ? "'" + execCommandUnit.getCommandPath().trim() + "'" : "";
-          StringBuilder preparedCommand = new StringBuilder(getInitCommand(commandDir));
+          String commandString = execCommandUnit.getCommandString();
+          boolean includeTailFunctions = isNotEmpty(execCommandUnit.getTailPatterns())
+              || StringUtils.contains(commandString, "harness_utils_start_tail_log_verification")
+              || StringUtils.contains(commandString, "harness_utils_wait_for_tail_log_verification");
+          StringBuilder preparedCommand = new StringBuilder(getInitCommand(commandDir, includeTailFunctions));
           if (isEmpty(execCommandUnit.getTailPatterns())) {
-            preparedCommand.append(execCommandUnit.getCommandString());
+            preparedCommand.append(commandString);
           } else {
             try (StringWriter stringWriter = new StringWriter()) {
               Map<String, Object> templateParams = ImmutableMap.<String, Object>builder()
                                                        .put("tailPatterns", execCommandUnit.getTailPatterns())
                                                        .put("executionId", activityId)
                                                        .put("executionStagingDir", executionStagingDir)
-                                                       .put("commandString", execCommandUnit.getCommandString())
+                                                       .put("commandString", commandString)
                                                        .build();
               cfg.getTemplate("tailwrapperv2.sh.ftl").process(templateParams, stringWriter);
               preparedCommand.append(' ').append(stringWriter.toString());
