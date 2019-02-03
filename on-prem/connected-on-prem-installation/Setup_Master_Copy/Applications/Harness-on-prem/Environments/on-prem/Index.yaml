@@ -108,7 +108,7 @@ variableOverrides:
     value: <HOST2_PLACEHOLDER>
     valueType: TEXT
   - name: FEATURES
-    value: RBAC,HELM
+    value: ''
     valueType: TEXT
   - name: UI_SERVER_URL
     serviceName: Manager

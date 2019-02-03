@@ -1,11 +1,9 @@
 package software.wings.resources.stats.rbac;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
 
 import com.google.common.collect.Sets;
 
-import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
@@ -16,13 +14,11 @@ import software.wings.resources.stats.model.InstanceTimeline;
 import software.wings.resources.stats.model.InstanceTimeline.Aggregate;
 import software.wings.resources.stats.model.InstanceTimeline.DataPoint;
 import software.wings.security.UserRequestContext;
-import software.wings.security.UserRequestInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.UsageRestrictionsService;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -125,34 +121,14 @@ public class TimelineRbacFilters {
 
   // get allowed AppIds according to RBAC rules
   private Set<String> getAssignedApps(User user) {
-    if (user.isUseNewRbac()) {
-      UserRequestContext userRequestContext = currentUser.getUserRequestContext();
+    UserRequestContext userRequestContext = currentUser.getUserRequestContext();
 
-      Set<String> allowedAppIds = userRequestContext.getAppIds();
-      if (isEmpty(allowedAppIds)) {
-        log.info("No apps assigned for user. User: {}, Account: {}", user.getEmail(), accountId);
-        return Collections.emptySet();
-      }
-
-      return allowedAppIds;
-    } else {
-      UserRequestInfo userRequestInfo = user.getUserRequestInfo();
-      if (userRequestInfo == null) {
-        throw new WingsException(NO_APPS_ASSIGNED);
-      }
-
-      Set<String> allowedAppIds;
-      if (userRequestInfo.isAllAppsAllowed()) {
-        allowedAppIds = new HashSet<>(userRequestInfo.getAllowedAppIds());
-      } else {
-        allowedAppIds = new HashSet<>(appService.getAppIdsByAccountId(userRequestInfo.getAccountId()));
-      }
-
-      if (isEmpty(allowedAppIds)) {
-        throw new WingsException(NO_APPS_ASSIGNED);
-      }
-
-      return allowedAppIds;
+    Set<String> allowedAppIds = userRequestContext.getAppIds();
+    if (isEmpty(allowedAppIds)) {
+      log.info("No apps assigned for user. User: {}, Account: {}", user.getEmail(), accountId);
+      return Collections.emptySet();
     }
+
+    return allowedAppIds;
   }
 }

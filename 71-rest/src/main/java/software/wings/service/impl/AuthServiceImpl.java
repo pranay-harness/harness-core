@@ -475,10 +475,6 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public UserPermissionInfo getUserPermissionInfo(String accountId, User user) {
-    if (!featureFlagService.isEnabled(FeatureName.RBAC, accountId)) {
-      return UserPermissionInfo.builder().accountId(accountId).isRbacEnabled(false).build();
-    }
-
     Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
     if (cache == null) {
       logger.error("UserInfoCache is null. This should not happen. Fall back to DB");
@@ -494,8 +490,8 @@ public class AuthServiceImpl implements AuthService {
         cache.put(key, value);
       }
       return value;
-    } catch (Exception ignored) {
-      logger.warn("Error in fetching user UserPermissionInfo from Cache for key:" + key, ignored);
+    } catch (Exception e) {
+      logger.warn("Error in fetching user UserPermissionInfo from Cache for key:" + key, e);
     }
 
     // not found in cache. cache write through failed as well. rebuild anyway
@@ -571,11 +567,6 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void evictAccountUserPermissionInfoCache(String accountId, boolean rebuild) {
-    boolean rbacEnabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
-    if (!rbacEnabled) {
-      return;
-    }
-
     Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
     Set<String> keys = new HashSet<>();
     if (cache != null) {
@@ -619,11 +610,6 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void evictAccountUserPermissionInfoCache(String accountId, List<String> memberIds) {
-    boolean rbacEnabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
-    if (!rbacEnabled) {
-      return;
-    }
-
     Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
     if (cache != null && isNotEmpty(memberIds)) {
       Set<String> keys =

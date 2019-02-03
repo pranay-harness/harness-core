@@ -79,8 +79,6 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
-import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
@@ -212,7 +210,6 @@ public class DataGenService {
     }
 
     featureFlagService.initializeFeatureFlags();
-    enableRbac();
     learningEngineService.initializeServiceSecretKeys();
 
     createTestApplication(account);
@@ -281,19 +278,6 @@ public class DataGenService {
         }
       }
     });
-  }
-
-  private void enableRbac() {
-    FeatureFlag featureFlag =
-        wingsPersistence.createQuery(FeatureFlag.class).filter("name", FeatureName.RBAC.name()).get();
-
-    if (featureFlag == null) {
-      featureFlag = FeatureFlag.builder().name(FeatureName.RBAC.name()).enabled(true).obsolete(false).build();
-    } else {
-      featureFlag.setEnabled(true);
-      featureFlag.setObsolete(false);
-    }
-    wingsPersistence.save(featureFlag);
   }
 
   private void createGlobalSettings(Account account) {

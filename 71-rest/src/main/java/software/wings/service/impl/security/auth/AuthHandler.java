@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static java.util.Arrays.asList;
-import static software.wings.beans.FeatureName.RBAC;
 import static software.wings.common.Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.common.Constants.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION;
 import static software.wings.common.Constants.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
@@ -85,7 +84,6 @@ import software.wings.security.WorkflowFilter;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -118,16 +116,12 @@ public class AuthHandler {
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private EnvironmentService environmentService;
   @Inject private WorkflowService workflowService;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private UserGroupService userGroupService;
   @Inject private AuthService authService;
   @Inject private WingsPersistence wingsPersistence;
 
   public UserPermissionInfo getUserPermissionInfo(String accountId, List<UserGroup> userGroups) {
     UserPermissionInfoBuilder userPermissionInfoBuilder = UserPermissionInfo.builder().accountId(accountId);
-
-    boolean enabled = featureFlagService.isEnabled(RBAC, accountId);
-    userPermissionInfoBuilder.isRbacEnabled(enabled);
 
     Set<PermissionType> accountPermissionSet = new HashSet<>();
     AccountPermissionSummaryBuilder accountPermissionSummaryBuilder =
@@ -141,7 +135,7 @@ public class AuthHandler {
     // Cache all the entities by app id first
     Map<PermissionType, Set<String>> permissionTypeAppIdSetMap = collectRequiredAppIds(userGroups, allAppIds);
 
-    // Let's fetch all entities by appIds
+    // Fetch all entities by appIds
     Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap =
         fetchRequiredEntities(permissionTypeAppIdSetMap);
 

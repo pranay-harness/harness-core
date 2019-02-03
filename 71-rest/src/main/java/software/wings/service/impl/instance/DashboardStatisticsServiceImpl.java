@@ -81,7 +81,6 @@ import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.HarnessException;
 import software.wings.security.UserRequestContext;
-import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.ServiceInstanceCount.EnvType;
 import software.wings.service.intfc.AppService;
@@ -1022,50 +1021,31 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     } else {
       User user = UserThreadLocal.get();
       if (user != null) {
-        if (user.isUseNewRbac()) {
-          UserRequestContext userRequestContext = user.getUserRequestContext();
-          if (userRequestContext.isAppIdFilterRequired()) {
-            Set<String> allowedAppIds = userRequestContext.getAppIds();
+        UserRequestContext userRequestContext = user.getUserRequestContext();
+        if (userRequestContext.isAppIdFilterRequired()) {
+          Set<String> allowedAppIds = userRequestContext.getAppIds();
 
-            if (includeDeleted && usageRestrictionsService.isAccountAdmin(accountId)) {
-              Set<String> deletedAppIds = getDeletedAppIds(accountId, timestamp);
-              if (isNotEmpty(deletedAppIds)) {
-                allowedAppIds = Sets.newHashSet(allowedAppIds);
-                allowedAppIds.addAll(deletedAppIds);
-              }
+          if (includeDeleted && usageRestrictionsService.isAccountAdmin(accountId)) {
+            Set<String> deletedAppIds = getDeletedAppIds(accountId, timestamp);
+            if (isNotEmpty(deletedAppIds)) {
+              allowedAppIds = Sets.newHashSet(allowedAppIds);
+              allowedAppIds.addAll(deletedAppIds);
             }
+          }
 
-            if (isNotEmpty(allowedAppIds)) {
-              // This is an optimization. Instead of a large IN() Query, if the user has access to all apps,
-              // we could just pull it using accountId. For example, QA has 212 apps in our account.
-              if (allowedAppIds.size() > 10) {
-                List<String> allApps = appService.getAppIdsByAccountId(accountId);
-                if (allowedAppIds.size() == allApps.size()) {
-                  query.filter("accountId", accountId);
-                } else {
-                  query.field("appId").in(allowedAppIds);
-                }
+          if (isNotEmpty(allowedAppIds)) {
+            // This is an optimization. Instead of a large IN() Query, if the user has access to all apps,
+            // we could just pull it using accountId. For example, QA has 212 apps in our account.
+            if (allowedAppIds.size() > 10) {
+              List<String> allApps = appService.getAppIdsByAccountId(accountId);
+              if (allowedAppIds.size() == allApps.size()) {
+                query.filter("accountId", accountId);
               } else {
                 query.field("appId").in(allowedAppIds);
               }
             } else {
-              throw new HarnessException(NO_APPS_ASSIGNED);
+              query.field("appId").in(allowedAppIds);
             }
-          }
-        } else {
-          UserRequestInfo userRequestInfo = user.getUserRequestInfo();
-          if (userRequestInfo == null) {
-            throw new HarnessException(NO_APPS_ASSIGNED);
-          }
-
-          if (userRequestInfo.isAllAppsAllowed()) {
-            appIds = userRequestInfo.getAllowedAppIds();
-          } else {
-            appIds = appService.getAppIdsByAccountId(userRequestInfo.getAccountId());
-          }
-
-          if (isNotEmpty(appIds)) {
-            query.field("appId").in(appIds);
           } else {
             throw new HarnessException(NO_APPS_ASSIGNED);
           }
