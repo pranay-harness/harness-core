@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+<#if includeTailFunctions>
+
 ### Functions needed for expanding paths. ###
 
 realpath() {
@@ -355,6 +357,8 @@ harness_utils_wait_for_tail_log_verification() {
 
   return $returnvalue
 }
+
+</#if>
 
 # set session
 set -m
