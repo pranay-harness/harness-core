@@ -8,6 +8,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestInfo;
+import software.wings.security.UserRestrictionInfo;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
@@ -84,16 +85,21 @@ public interface AuthService extends OwnedByAccount {
 
   UserPermissionInfo getUserPermissionInfo(String accountId, User user);
 
+  UserRestrictionInfo getUserRestrictionInfo(String accountId, User user, UserPermissionInfo userPermissionInfo);
+
   Set<String> getAppPermissionsForUser(
       String userId, String accountId, String appId, PermissionType permissionType, Action action);
 
   AppPermissionSummary getAppPermissionSummaryForUser(String userId, String accountId, String appId);
 
-  void evictAccountUserPermissionInfoCache(String accountId, boolean rebuild);
+  void evictUserPermissionAndRestrictionCacheForAccount(String accountId, List<String> memberIds);
 
-  void evictAccountUserPermissionInfoCache(String accountId, List<String> memberIds);
+  void evictUserPermissionAndRestrictionCacheForAccount(
+      String accountId, boolean rebuildUserPermissionInfo, boolean rebuildUserRestrictionInfo);
 
-  void evictAccountUserPermissionInfoCache(Set<String> accountIds, List<String> memberIds);
+  void evictUserPermissionCacheForAccount(String accountId, boolean rebuildUserPermissionInfo);
+
+  void evictUserPermissionAndRestrictionCacheForAccounts(Set<String> accountIds, List<String> memberIds);
 
   User refreshToken(String oldToken);
 

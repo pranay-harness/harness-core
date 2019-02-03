@@ -47,6 +47,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
+import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.WorkflowFilter;
 import software.wings.security.encryption.EncryptedData;
@@ -955,20 +956,20 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return builder.build();
     }
 
-    UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+    UserRestrictionInfo userRestrictionInfo = userRequestContext.getUserRestrictionInfo();
 
-    if (userPermissionInfo == null) {
+    if (userRestrictionInfo == null) {
       return builder.build();
     }
 
     switch (action) {
       case READ:
-        builder.appEnvMap(userPermissionInfo.getAppEnvMapForReadAction());
-        builder.usageRestrictions(userPermissionInfo.getUsageRestrictionsForReadAction());
+        builder.appEnvMap(userRestrictionInfo.getAppEnvMapForReadAction());
+        builder.usageRestrictions(userRestrictionInfo.getUsageRestrictionsForReadAction());
         break;
       case UPDATE:
-        builder.appEnvMap(userPermissionInfo.getAppEnvMapForUpdateAction());
-        builder.usageRestrictions(userPermissionInfo.getUsageRestrictionsForUpdateAction());
+        builder.appEnvMap(userRestrictionInfo.getAppEnvMapForUpdateAction());
+        builder.usageRestrictions(userRestrictionInfo.getUsageRestrictionsForUpdateAction());
         break;
       default:
         logger.error("Invalid action {} for restrictions", action);

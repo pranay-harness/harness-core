@@ -1162,7 +1162,7 @@ public class UserServiceImpl implements UserService {
       removeUserFromUserGroups(accountId, userFromDB, userGroupMemberDeletions, false);
     }
 
-    authService.evictAccountUserPermissionInfoCache(accountId, Arrays.asList(userId));
+    authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, Arrays.asList(userId));
     return get(accountId, userId);
   }
 

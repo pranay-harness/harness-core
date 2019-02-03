@@ -150,7 +150,7 @@ public class SecureResourceTest {
   private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
       userGroupService, usageRestrictionsService, workflowService, envService, cacheHelper, configuration,
       learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager,
-      usageMetricsEventPublisher, whitelistService, ssoSettingService);
+      usageMetricsEventPublisher, whitelistService, ssoSettingService, appService);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(auditService, auditHelper, authService, authHandler,
       appService, userService, whitelistService, harnessUserGroupService);

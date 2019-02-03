@@ -95,7 +95,7 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
     Account account = accountService.get(accountId);
     if (account != null) {
       sampleDataProviderService.createHarnessSampleApp(account);
-      authService.evictAccountUserPermissionInfoCache(accountId, false);
+      authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
     } else {
       throw new WingsException(
           "Account invalid. Sample App for deployment type could not be restored." + deploymentType,

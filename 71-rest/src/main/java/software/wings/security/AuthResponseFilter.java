@@ -1,6 +1,7 @@
 package software.wings.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.common.Constants.HTTP_DELETE;
 import static software.wings.common.Constants.HTTP_POST;
 import static software.wings.common.Constants.HTTP_PUT;
 import static software.wings.common.Constants.RESOURCE_URI_CLONE_APP;
@@ -15,6 +16,8 @@ import static software.wings.common.Constants.RESOURCE_URI_CREATE_PIPELINE;
 import static software.wings.common.Constants.RESOURCE_URI_CREATE_PROVISIONER;
 import static software.wings.common.Constants.RESOURCE_URI_CREATE_SERVICE;
 import static software.wings.common.Constants.RESOURCE_URI_CREATE_WORKFLOW;
+import static software.wings.common.Constants.RESOURCE_URI_DELETE_APP;
+import static software.wings.common.Constants.RESOURCE_URI_DELETE_ENVIRONMENT;
 import static software.wings.common.Constants.RESOURCE_URI_UPDATE_ENVIRONMENT;
 import static software.wings.common.Constants.RESOURCE_URI_UPDATE_PIPELINE;
 import static software.wings.common.Constants.RESOURCE_URI_UPDATE_WORKFLOW;
@@ -41,13 +44,13 @@ import javax.ws.rs.core.MultivaluedMap;
 @Singleton
 public class AuthResponseFilter implements ContainerResponseFilter {
   private static final Logger logger = LoggerFactory.getLogger(AuthResponseFilter.class);
-  private static final Set<String> createUris =
+  private static final Set<String> restResourcesCreateURIs =
       Sets.newHashSet(RESOURCE_URI_CREATE_APP, RESOURCE_URI_CREATE_SERVICE, RESOURCE_URI_CREATE_PROVISIONER,
           RESOURCE_URI_CREATE_ENVIRONMENT, RESOURCE_URI_CREATE_WORKFLOW, RESOURCE_URI_CREATE_PIPELINE);
-  private static final Set<String> cloneUris =
+  private static final Set<String> restResourcesCloneURIs =
       Sets.newHashSet(RESOURCE_URI_CLONE_APP, RESOURCE_URI_CLONE_SERVICE, RESOURCE_URI_CLONE_PROVISIONER,
           RESOURCE_URI_CLONE_ENVIRONMENT, RESOURCE_URI_CLONE_WORKFLOW, RESOURCE_URI_CLONE_PIPELINE);
-  private static final Set<String> updateUris =
+  private static final Set<String> restResourcesUpdateURIs =
       Sets.newHashSet(RESOURCE_URI_UPDATE_ENVIRONMENT, RESOURCE_URI_UPDATE_WORKFLOW, RESOURCE_URI_UPDATE_PIPELINE);
 
   @Inject private AuthService authService;
@@ -63,23 +66,37 @@ public class AuthResponseFilter implements ContainerResponseFilter {
     String httpMethod = requestContext.getMethod();
     String resourcePath = requestContext.getUriInfo().getAbsolutePath().getPath();
 
-    if (HTTP_PUT.equals(httpMethod) && updateUris.stream().anyMatch(pattern -> resourcePath.matches(pattern))) {
-      evict(requestContext, resourcePath);
+    if (HTTP_PUT.equals(httpMethod)
+        && restResourcesUpdateURIs.stream().anyMatch(pattern -> resourcePath.matches(pattern))) {
+      if (resourcePath.matches(RESOURCE_URI_UPDATE_ENVIRONMENT)) {
+        evictPermissionsAndRestrictions(requestContext, resourcePath, true, true);
+      } else {
+        evictPermissions(requestContext, resourcePath, true);
+      }
     } else if (HTTP_POST.equals(httpMethod)
-        && (createUris.contains(resourcePath)
-               || cloneUris.stream().anyMatch(pattern -> resourcePath.matches(pattern)))) {
-      evict(requestContext, resourcePath);
+        && (restResourcesCreateURIs.contains(resourcePath)
+               || restResourcesCloneURIs.stream().anyMatch(pattern -> resourcePath.matches(pattern)))) {
+      if (resourcePath.equals(RESOURCE_URI_CREATE_APP) || resourcePath.equals(RESOURCE_URI_CREATE_ENVIRONMENT)
+          || resourcePath.matches(RESOURCE_URI_CLONE_ENVIRONMENT)) {
+        evictPermissionsAndRestrictions(requestContext, resourcePath, true, true);
+      } else {
+        evictPermissions(requestContext, resourcePath, true);
+      }
+    } else if (HTTP_DELETE.equals(httpMethod)
+        && (resourcePath.matches(RESOURCE_URI_DELETE_APP) || resourcePath.matches(RESOURCE_URI_DELETE_ENVIRONMENT))) {
+      evictPermissionsAndRestrictions(requestContext, resourcePath, true, true);
     }
   }
 
-  private void evict(ContainerRequestContext requestContext, String resourcePath) {
+  private void evictPermissions(
+      ContainerRequestContext requestContext, String resourcePath, boolean rebuildUserPermissionInfo) {
     MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
     String accountId = queryParameters.getFirst("accountId");
     try {
       String appId = queryParameters.getFirst("appId");
 
       // Special handling for AppResource
-      if (resourcePath.startsWith("/api/apps") && isEmpty(accountId) && isEmpty(appId)) {
+      if (resourcePath.startsWith(RESOURCE_URI_CREATE_APP) && isEmpty(accountId) && isEmpty(appId)) {
         appId = requestContext.getUriInfo().getPathParameters().getFirst("appId");
       }
 
@@ -89,8 +106,34 @@ public class AuthResponseFilter implements ContainerResponseFilter {
       }
 
       accountId = isEmpty(accountId) ? appService.getAccountIdByAppId(appId) : accountId;
-      String finalAccountId = accountId;
-      authService.evictAccountUserPermissionInfoCache(finalAccountId, true);
+
+      authService.evictUserPermissionCacheForAccount(accountId, rebuildUserPermissionInfo);
+    } catch (Exception ex) {
+      logger.error("Cache eviction failed for resourcePath {} for accountId {}", resourcePath, accountId, ex);
+    }
+  }
+
+  private void evictPermissionsAndRestrictions(ContainerRequestContext requestContext, String resourcePath,
+      boolean rebuildUserPermissionInfo, boolean rebuildUserRestrictionInfo) {
+    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
+    String accountId = queryParameters.getFirst("accountId");
+    try {
+      String appId = queryParameters.getFirst("appId");
+
+      // Special handling for AppResource
+      if (resourcePath.startsWith(RESOURCE_URI_CREATE_APP) && isEmpty(accountId) && isEmpty(appId)) {
+        appId = requestContext.getUriInfo().getPathParameters().getFirst("appId");
+      }
+
+      if (isEmpty(accountId) && isEmpty(appId)) {
+        logger.error("Cache eviction failed for resource 2 [{}]", ((ContainerRequest) requestContext).getRequestUri());
+        return;
+      }
+
+      accountId = isEmpty(accountId) ? appService.getAccountIdByAppId(appId) : accountId;
+
+      authService.evictUserPermissionAndRestrictionCacheForAccount(
+          accountId, rebuildUserPermissionInfo, rebuildUserRestrictionInfo);
     } catch (Exception ex) {
       logger.error("Cache eviction failed for resourcePath {} for accountId {}", resourcePath, accountId, ex);
     }
