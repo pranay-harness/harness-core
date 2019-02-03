@@ -17,7 +17,6 @@ import static software.wings.beans.EnvironmentRole.EnvironmentRoleBuilder.anEnvi
 import static software.wings.beans.Permission.Builder.aPermission;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.security.PermissionAttribute.Action.ALL;
 import static software.wings.security.PermissionAttribute.Action.CREATE;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
@@ -45,7 +44,6 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
-import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.WingsException;
 import org.apache.commons.codec.DecoderException;
@@ -76,6 +74,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
+import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -154,9 +153,10 @@ public class SecureResourceTest {
       usageMetricsEventPublisher, whitelistService, ssoSettingService);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(auditService, auditHelper, authService, authHandler,
-      appService, userService, featureFlagService, whitelistService, harnessUserGroupService);
+      appService, userService, whitelistService, harnessUserGroupService);
 
   Cache<String, User> cache = Mockito.mock(Cache.class);
+  Cache<String, UserPermissionInfo> cachePermissionInfo = Mockito.mock(Cache.class);
 
   /**
    * The constant resources.
@@ -250,6 +250,7 @@ public class SecureResourceTest {
           .withAccounts(Lists.newArrayList(account))
           .withRoles(asList(aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build()))
           .build();
+  private UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder().accountId(ACCOUNT_ID).build();
 
   /**
    * Sets up.
@@ -260,6 +261,8 @@ public class SecureResourceTest {
   public void setUp() throws Exception {
     when(cacheHelper.getUserCache()).thenReturn(cache);
     when(cache.get(USER_ID)).thenReturn(user);
+    when(cacheHelper.getUserPermissionInfoCache()).thenReturn(cachePermissionInfo);
+    when(cachePermissionInfo.get(ACCOUNT_ID + "~" + USER_ID)).thenReturn(userPermissionInfo);
 
     when(genericDbCache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(USER_ID, TOKEN_EXPIRY_IN_MILLIS));
     when(genericDbCache.get(Account.class, ACCOUNT_ID))
@@ -364,42 +367,6 @@ public class SecureResourceTest {
   }
 
   /**
-   * Should deny app scope resource read request for user without required permission.
-   */
-  @Test
-  public void shouldDenyAppScopeResourceReadRequestForUserWithoutRequiredPermission() {
-    user.setRoles(asList());
-
-    Assertions
-        .assertThatThrownBy(()
-                                -> resources.client()
-                                       .target("/secure-resources/appResourceReadActionOnAppScope?appId=APP_ID")
-                                       .request()
-                                       .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
-                                       .get())
-        .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCode.ACCESS_DENIED.name());
-  }
-
-  /**
-   * Should deny app scope resource write request for user without required permission.
-   */
-  @Test
-  public void shouldDenyAppScopeResourceWriteRequestForUserWithoutRequiredPermission() {
-    user.setRoles(asList());
-
-    Assertions
-        .assertThatThrownBy(()
-                                -> resources.client()
-                                       .target("/secure-resources/appResourceWriteActionOnAppScope?appId=APP_ID")
-                                       .request()
-                                       .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
-                                       .post(ENTITY))
-        .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCode.ACCESS_DENIED.name());
-  }
-
-  /**
    * Should authorize env scope resource read request for user with required permission.
    */
   @Test
@@ -429,75 +396,6 @@ public class SecureResourceTest {
             .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
             .post(ENTITY, new GenericType<RestResponse<User>>() {});
     assertThat(response.getResource().getEmail()).isEqualTo(USER_EMAIL);
-  }
-
-  /**
-   * Should deny env scope resource read request for user without required permission.
-   */
-  @Test
-  public void shouldDenyEnvScopeResourceReadRequestForUserWithoutRequiredPermission() {
-    user.setRoles(asList());
-
-    Assertions
-        .assertThatThrownBy(
-            ()
-                -> resources.client()
-                       .target("/secure-resources/envResourceReadActionOnEnvScope?appId=APP_ID&envId=ENV_ID")
-                       .request()
-                       .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
-                       .get())
-        .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCode.ACCESS_DENIED.name());
-  }
-
-  /**
-   * Should deny env scope resource write request for user without required permission.
-   */
-  @Test
-  public void shouldDenyEnvScopeResourceWriteRequestForUserWithoutRequiredPermission() {
-    user.setRoles(asList());
-
-    Assertions
-        .assertThatThrownBy(
-            ()
-                -> resources.client()
-                       .target("/secure-resources/envResourceWriteActionOnEnvScope?appId=APP_ID&envId=ENV_ID")
-                       .request()
-                       .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
-                       .post(ENTITY))
-        .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCode.ACCESS_DENIED.name());
-  }
-
-  /**
-   * Should deny env scope release resource read request for user without required permission.
-   */
-  @Test
-  public void shouldDenyEnvScopeReleaseResourceReadRequestForUserWithoutRequiredPermission() {
-    Role envDeploymentResourceALLActionRole = aRole()
-                                                  .withAppId(GLOBAL_APP_ID)
-                                                  .withName(ROLE_NAME)
-                                                  .withUuid(ROLE_ID)
-                                                  .withPermissions(asList(aPermission()
-                                                                              .withAppId(APP_ID)
-                                                                              .withEnvId(ENV_ID)
-                                                                              .withPermissionScope(ENV)
-                                                                              .withResourceType(ResourceType.DEPLOYMENT)
-                                                                              .withAction(ALL)
-                                                                              .build()))
-                                                  .build();
-    user.setRoles(asList(envDeploymentResourceALLActionRole));
-
-    Assertions
-        .assertThatThrownBy(
-            ()
-                -> resources.client()
-                       .target("/secure-resources/envResourceWriteActionOnEnvScope?appId=APP_ID&envId=ENV_ID")
-                       .request()
-                       .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
-                       .post(ENTITY))
-        .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCode.ACCESS_DENIED.name());
   }
 
   @Test

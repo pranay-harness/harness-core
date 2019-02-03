@@ -76,7 +76,6 @@ public class User extends Base implements Principal {
 
   @JsonIgnore @Transient private UserRequestInfo userRequestInfo;
   @JsonIgnore @Transient private UserRequestContext userRequestContext;
-  @JsonIgnore @Transient private boolean useNewRbac;
 
   private boolean twoFactorAuthenticationEnabled;
   private TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism;
@@ -495,14 +494,6 @@ public class User extends Base implements Principal {
 
   public void setUserRequestContext(UserRequestContext userRequestContext) {
     this.userRequestContext = userRequestContext;
-  }
-
-  public boolean isUseNewRbac() {
-    return useNewRbac;
-  }
-
-  public void setUseNewRbac(boolean useNewRbac) {
-    this.useNewRbac = useNewRbac;
   }
 
   public boolean isTwoFactorAuthenticationEnabled() {

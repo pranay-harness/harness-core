@@ -361,7 +361,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     FolderNode applicationsFolder = new FolderNode(
         accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
 
-    yamlDirectoryService.doApplication(app.getUuid(), false, null, applicationsFolder, directoryPath);
+    yamlDirectoryService.doApplication(app.getUuid(), null, applicationsFolder, directoryPath);
 
     List<GitFileChange> gitFileChanges = new ArrayList<>();
     gitFileChanges = yamlDirectoryService.traverseDirectory(
@@ -421,7 +421,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   private List<GitFileChange> obtainAccountOnlyGitFileChanges(String accountId, boolean includeFiles) {
     List<GitFileChange> gitFileChanges = new ArrayList<>();
 
-    FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID, false, null);
+    FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID, null);
     gitFileChanges = yamlDirectoryService.traverseDirectory(
         gitFileChanges, accountId, top, "", includeFiles, true, Optional.empty());
 
@@ -432,7 +432,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   public List<String> getAllYamlErrorsForAccount(String accountId) {
     try {
       logger.info("Getting all Yaml errors for account {}", accountId);
-      FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID, false, null);
+      FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID, null);
       List<GitFileChange> gitFileChanges = new ArrayList<>();
       List<String> errorLog = new ArrayList<>();
       yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", false, false, Optional.of(errorLog));

@@ -185,7 +185,6 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                .withAccounts(asList(Account.Builder.anAccount().withUuid(ACCOUNT_1_ID).build(),
                    Account.Builder.anAccount().withUuid(ACCOUNT_2_ID).build()))
                .build();
-    user.setUseNewRbac(true);
 
     Map<String, AppPermissionSummaryForUI> appPermissionsMap = Maps.newHashMap();
     setAppPermissionsMap(appPermissionsMap, ENV_1_ID, APP_1_ID);
@@ -195,11 +194,8 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     setAppPermissionsMap(appPermissionsMap, ENV_5_ID, APP_4_ID);
     setAppPermissionsMap(appPermissionsMap, ENV_6_ID, APP_5_ID);
 
-    UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder()
-                                                .accountId(ACCOUNT_ID)
-                                                .isRbacEnabled(true)
-                                                .appPermissionMap(appPermissionsMap)
-                                                .build();
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().accountId(ACCOUNT_ID).appPermissionMap(appPermissionsMap).build();
 
     user.setUserRequestContext(UserRequestContext.builder()
                                    .accountId(ACCOUNT_ID)

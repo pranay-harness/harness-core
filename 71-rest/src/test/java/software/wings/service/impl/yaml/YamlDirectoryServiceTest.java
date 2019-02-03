@@ -26,6 +26,8 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
@@ -44,6 +46,8 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.security.AppPermissionSummary;
+import software.wings.security.AppPermissionSummary.EnvInfo;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ConfigService;
@@ -84,16 +88,21 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   public void testDoApplications() throws Exception {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
     Map<String, AppPermissionSummary> appPermissionSummaryMap = new HashMap<>();
-    appPermissionSummaryMap.put(APP_ID, null);
+    appPermissionSummaryMap.put(APP_ID,
+        AppPermissionSummary.builder()
+            .servicePermissions(ImmutableMap.of(Action.READ, ImmutableSet.of(SERVICE_ID)))
+            .envPermissions(ImmutableMap.of(Action.READ, ImmutableSet.of(EnvInfo.builder().envId(ENV_ID).build())))
+            .workflowPermissions(ImmutableMap.of(Action.READ, ImmutableSet.of(WORKFLOW_ID)))
+            .pipelinePermissions(ImmutableMap.of(Action.READ, ImmutableSet.of(PIPELINE_ID)))
+            .provisionerPermissions(ImmutableMap.of(Action.READ, ImmutableSet.of(PROVISIONER_ID)))
+            .build());
     performMocking();
-    DirectoryNode directoryNode =
-        (DirectoryNode) yamlDirectoryService.doApplications(ACCOUNT_ID, directoryPath, false, appPermissionSummaryMap);
+    FolderNode directoryNode = yamlDirectoryService.doApplications(ACCOUNT_ID, directoryPath, appPermissionSummaryMap);
     assertNotNull(directoryNode);
-    FolderNode folderNode = (FolderNode) directoryNode;
-    assertNotNull(folderNode.getChildren());
-    assertEquals(1, folderNode.getChildren().size());
+    assertNotNull(directoryNode.getChildren());
+    assertEquals(1, directoryNode.getChildren().size());
 
-    FolderNode appNode = (FolderNode) folderNode.getChildren().get(0);
+    FolderNode appNode = (FolderNode) directoryNode.getChildren().get(0);
     assertEquals(APP_ID, appNode.getAppId());
     assertEquals(ACCOUNT_ID, appNode.getAccountId());
     assertEquals("Application", appNode.getShortClassName());
@@ -101,39 +110,48 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     for (DirectoryNode node : appNode.getChildren()) {
       assertEquals(ACCOUNT_ID, node.getAccountId());
 
-      if (node.getName().equals("Index.yaml")) {
-        assertEquals("Setup/Applications/APP_NAME/Index.yaml", node.getDirectoryPath().getPath());
-        YamlNode yamlNode = (YamlNode) node;
-        assertEquals(APP_ID, yamlNode.getUuid());
-        assertEquals(NodeType.YAML, yamlNode.getType());
-      } else if (node.getName().equals("Defaults.yaml")) {
-        assertEquals("Setup/Applications/APP_NAME/Defaults.yaml", node.getDirectoryPath().getPath());
-        YamlNode yamlNode = (YamlNode) node;
-        assertEquals(APP_ID, yamlNode.getUuid());
-        assertEquals(NodeType.YAML, yamlNode.getType());
-      } else if (node.getName().equals("Services")) {
-        FolderNode serviceFolderNode =
-            validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Services");
-        performServiceNodeValidation(serviceFolderNode);
-
-      } else if (node.getName().equals("Environments")) {
-        FolderNode envFolderNode =
-            validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Environments");
-        performEnvironmentNodeValidation(envFolderNode);
-
-      } else if (node.getName().equals("Workflows")) {
-        FolderNode workflowNode =
-            validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Workflows");
-        performWorkflowNodeValidation(workflowNode);
-
-      } else if (node.getName().equals("Pipelines")) {
-        FolderNode pipelineFolderNode =
-            validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Pipelines");
-        performPipelineNodeValidation(pipelineFolderNode);
-      } else if (node.getName().equals("Provisioners")) {
-        FolderNode provisionerFolderNode =
-            validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Provisioners");
-        performProvisionerNodeValidation(provisionerFolderNode);
+      switch (node.getName()) {
+        case "Index.yaml": {
+          assertEquals("Setup/Applications/APP_NAME/Index.yaml", node.getDirectoryPath().getPath());
+          YamlNode yamlNode = (YamlNode) node;
+          assertEquals(APP_ID, yamlNode.getUuid());
+          assertEquals(NodeType.YAML, yamlNode.getType());
+          break;
+        }
+        case "Defaults.yaml": {
+          assertEquals("Setup/Applications/APP_NAME/Defaults.yaml", node.getDirectoryPath().getPath());
+          YamlNode yamlNode = (YamlNode) node;
+          assertEquals(APP_ID, yamlNode.getUuid());
+          assertEquals(NodeType.YAML, yamlNode.getType());
+          break;
+        }
+        case "Services":
+          FolderNode serviceFolderNode =
+              validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Services");
+          performServiceNodeValidation(serviceFolderNode);
+          break;
+        case "Environments":
+          FolderNode envFolderNode =
+              validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Environments");
+          performEnvironmentNodeValidation(envFolderNode);
+          break;
+        case "Workflows":
+          FolderNode workflowNode =
+              validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Workflows");
+          performWorkflowNodeValidation(workflowNode);
+          break;
+        case "Pipelines":
+          FolderNode pipelineFolderNode =
+              validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Pipelines");
+          performPipelineNodeValidation(pipelineFolderNode);
+          break;
+        case "Provisioners":
+          FolderNode provisionerFolderNode =
+              validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Provisioners");
+          performProvisionerNodeValidation(provisionerFolderNode);
+          break;
+        default:
+          throw new IllegalArgumentException("Unknown node name: " + node.getName());
       }
     }
   }

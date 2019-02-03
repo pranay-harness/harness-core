@@ -54,7 +54,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
@@ -388,11 +387,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public DirectoryNode getDirectory(@NotEmpty String accountId, String appId) {
-    boolean enabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
     return getDirectory(YamlDirectoryFetchPayload.builder()
                             .accountId(accountId)
                             .entityId(accountId)
-                            .applyPermissions(enabled)
                             .userPermissionInfo(getUserPermissionInfo(accountId))
                             .appLevelYamlTreeOnly(true)
                             .addApplication(true)
@@ -401,12 +398,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
-  public FolderNode getDirectory(
-      @NotEmpty String accountId, String entityId, boolean applyPermissions, UserPermissionInfo userPermissionInfo) {
+  public FolderNode getDirectory(@NotEmpty String accountId, String entityId, UserPermissionInfo userPermissionInfo) {
     return getDirectory(YamlDirectoryFetchPayload.builder()
                             .accountId(accountId)
                             .entityId(entityId)
-                            .applyPermissions(applyPermissions)
                             .userPermissionInfo(userPermissionInfo)
                             .appLevelYamlTreeOnly(false)
                             .addApplication(false)
@@ -431,8 +426,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       futureList.add(executorService.submit(
           ()
               -> doApplicationsYamlTree(accountId, directoryPath.clone(),
-                  yamlDirectoryFetchPayload.isApplyPermissions(), yamlDirectoryFetchPayload.getUserPermissionInfo(),
-                  yamlDirectoryFetchPayload.isAppLevelYamlTreeOnly(), yamlDirectoryFetchPayload.getAppId())));
+                  yamlDirectoryFetchPayload.getUserPermissionInfo(), yamlDirectoryFetchPayload.isAppLevelYamlTreeOnly(),
+                  yamlDirectoryFetchPayload.getAppId())));
     }
 
     futureList.add(executorService.submit(() -> doCloudProviders(accountId, directoryPath.clone())));
@@ -488,10 +483,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public DirectoryNode getApplicationYamlFolderNode(@NotEmpty String accountId, @NotEmpty String applicationId) {
-    boolean enabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
     UserPermissionInfo userPermissionInfo = getUserPermissionInfo(accountId);
     Map<String, AppPermissionSummary> appPermissionSummaryMap = null;
-    if (enabled && userPermissionInfo != null) {
+    if (userPermissionInfo != null) {
       appPermissionSummaryMap = userPermissionInfo.getAppPermissionMapInternal();
     }
 
@@ -500,7 +494,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode applicationsFolder = new FolderNode(
         accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
 
-    return doApplication(applicationId, enabled, appPermissionSummaryMap, applicationsFolder, directoryPath);
+    return doApplication(applicationId, appPermissionSummaryMap, applicationsFolder, directoryPath);
   }
 
   @Override
@@ -512,21 +506,18 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private UserPermissionInfo getUserPermissionInfo(@NotEmpty String accountId) {
-    boolean enabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
     UserPermissionInfo userPermissionInfo = null;
-    if (enabled) {
-      User user = UserThreadLocal.get();
-      if (user != null) {
-        UserRequestContext userRequestContext = user.getUserRequestContext();
-        if (userRequestContext != null) {
-          userPermissionInfo = userRequestContext.getUserPermissionInfo();
-        }
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      UserRequestContext userRequestContext = user.getUserRequestContext();
+      if (userRequestContext != null) {
+        userPermissionInfo = userRequestContext.getUserPermissionInfo();
       }
     }
     return userPermissionInfo;
   }
 
-  private FolderNode doApplicationLevelOnly(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
+  private FolderNode doApplicationLevelOnly(String accountId, DirectoryPath directoryPath,
       Map<String, AppPermissionSummary> appPermissionSummaryMap, String appId) {
     logger.info("Inside doApplicationLevelOnly");
     FolderNode applicationsFolder = new FolderNode(
@@ -535,24 +526,22 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     List<Application> apps = appService.getAppsByAccountId(accountId);
 
     Set<String> allowedAppIds = null;
-    if (applyPermissions) {
-      if (appPermissionSummaryMap != null) {
-        allowedAppIds = appPermissionSummaryMap.keySet();
-      }
+    if (appPermissionSummaryMap != null) {
+      allowedAppIds = appPermissionSummaryMap.keySet();
+    }
 
-      if (isEmpty(allowedAppIds)) {
-        return applicationsFolder;
-      }
+    if (isEmpty(allowedAppIds)) {
+      return applicationsFolder;
     }
 
     // iterate over applications
     for (Application app : apps) {
-      if (applyPermissions && !allowedAppIds.contains(app.getUuid())) {
+      if (!allowedAppIds.contains(app.getUuid())) {
         continue;
       }
 
       if (isNotEmpty(appId) && app.getUuid().equals(appId)) {
-        doApplication(appId, applyPermissions, appPermissionSummaryMap, applicationsFolder, directoryPath);
+        doApplication(appId, appPermissionSummaryMap, applicationsFolder, directoryPath);
       } else {
         DirectoryPath appPath = directoryPath.clone();
         FolderNode appFolder = new FolderNode(
@@ -568,26 +557,22 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   /**
    * Get YamlTreeNode for a single application
    * @param applicationId
-   * @param applyPermissions
    * @param appPermissionSummaryMap
    * @return
    */
 
   @Override
-  public FolderNode doApplication(String applicationId, boolean applyPermissions,
-      final Map<String, AppPermissionSummary> appPermissionSummaryMap, FolderNode applicationsFolder,
-      DirectoryPath directoryPath) {
+  public FolderNode doApplication(String applicationId, final Map<String, AppPermissionSummary> appPermissionSummaryMap,
+      FolderNode applicationsFolder, DirectoryPath directoryPath) {
     Application app = appService.get(applicationId);
     String accountId = app.getAccountId();
     Set<String> allowedAppIds = null;
-    if (applyPermissions) {
-      if (appPermissionSummaryMap != null) {
-        allowedAppIds = appPermissionSummaryMap.keySet();
-      }
+    if (appPermissionSummaryMap != null) {
+      allowedAppIds = appPermissionSummaryMap.keySet();
+    }
 
-      if (isEmpty(allowedAppIds) || !allowedAppIds.contains(applicationId)) {
-        return applicationsFolder;
-      }
+    if (isEmpty(allowedAppIds) || !allowedAppIds.contains(applicationId)) {
+      return applicationsFolder;
     }
 
     DirectoryPath appPath = directoryPath.clone();
@@ -614,7 +599,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     Set<String> workflowSet = null;
     Set<String> pipelineSet = null;
 
-    if (applyPermissions && appPermissionSummary != null) {
+    if (appPermissionSummary != null) {
       Map<Action, Set<String>> servicePermissions = appPermissionSummary.getServicePermissions();
       if (servicePermissions != null) {
         serviceSet = servicePermissions.get(Action.READ);
@@ -632,7 +617,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         if (isEmpty(envInfos)) {
           envSet = emptySet();
         } else {
-          envSet = envInfos.stream().map(envInfo -> envInfo.getEnvId()).collect(Collectors.toSet());
+          envSet = envInfos.stream().map(EnvInfo::getEnvId).collect(Collectors.toSet());
         }
       }
 
@@ -656,20 +641,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     //--------------------------------------
     // parallelization using CompletionService (part 2)
     List<Future<FolderNode>> futureResponseList = new ArrayList<>();
-    futureResponseList.add(
-        executorService.submit(() -> doServices(app, appPath.clone(), applyPermissions, allowedServices)));
+    futureResponseList.add(executorService.submit(() -> doServices(app, appPath.clone(), allowedServices)));
 
-    futureResponseList.add(
-        executorService.submit(() -> doEnvironments(app, appPath.clone(), applyPermissions, allowedEnvs)));
+    futureResponseList.add(executorService.submit(() -> doEnvironments(app, appPath.clone(), allowedEnvs)));
 
-    futureResponseList.add(
-        executorService.submit(() -> doWorkflows(app, appPath.clone(), applyPermissions, allowedWorkflows)));
+    futureResponseList.add(executorService.submit(() -> doWorkflows(app, appPath.clone(), allowedWorkflows)));
 
-    futureResponseList.add(
-        executorService.submit(() -> doPipelines(app, appPath.clone(), applyPermissions, allowedPipelines)));
+    futureResponseList.add(executorService.submit(() -> doPipelines(app, appPath.clone(), allowedPipelines)));
 
-    futureResponseList.add(
-        executorService.submit(() -> doProvisioners(app, appPath.clone(), applyPermissions, allowedProvisioners)));
+    futureResponseList.add(executorService.submit(() -> doProvisioners(app, appPath.clone(), allowedProvisioners)));
 
     //      completionService.submit(() -> doTriggers(app, appPath.clone()));
 
@@ -704,53 +684,50 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return applicationsFolder;
   }
 
-  private FolderNode doApplicationsYamlTree(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
+  private FolderNode doApplicationsYamlTree(String accountId, DirectoryPath directoryPath,
       UserPermissionInfo userPermissionInfo, boolean appLevelYamlTreeOnly, String appId) {
     Map<String, AppPermissionSummary> appPermissionMap = null;
 
-    if (applyPermissions && userPermissionInfo != null) {
+    if (userPermissionInfo != null) {
       appPermissionMap = userPermissionInfo.getAppPermissionMapInternal();
     }
 
     if (appLevelYamlTreeOnly) {
-      return doApplicationLevelOnly(accountId, directoryPath, applyPermissions, appPermissionMap, appId);
+      return doApplicationLevelOnly(accountId, directoryPath, appPermissionMap, appId);
     } else {
-      return doApplications(accountId, directoryPath, applyPermissions, appPermissionMap);
+      return doApplications(accountId, directoryPath, appPermissionMap);
     }
   }
 
   @VisibleForTesting
-  FolderNode doApplications(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
-      Map<String, AppPermissionSummary> appPermissionSummaryMap) {
+  FolderNode doApplications(
+      String accountId, DirectoryPath directoryPath, Map<String, AppPermissionSummary> appPermissionSummaryMap) {
     FolderNode applicationsFolder = new FolderNode(
         accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
 
     Set<String> allowedAppIds = null;
-    if (applyPermissions) {
-      if (appPermissionSummaryMap != null) {
-        allowedAppIds = appPermissionSummaryMap.keySet();
-      }
+    if (appPermissionSummaryMap != null) {
+      allowedAppIds = appPermissionSummaryMap.keySet();
+    }
 
-      if (isEmpty(allowedAppIds)) {
-        return applicationsFolder;
-      }
+    if (isEmpty(allowedAppIds)) {
+      return applicationsFolder;
     }
 
     List<Application> apps = appService.getAppsByAccountId(accountId);
     // iterate over applications
     for (Application app : apps) {
-      doApplication(app.getUuid(), applyPermissions, appPermissionSummaryMap, applicationsFolder, directoryPath);
+      doApplication(app.getUuid(), appPermissionSummaryMap, applicationsFolder, directoryPath);
     }
     return applicationsFolder;
   }
 
-  private FolderNode doServices(
-      Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedServices) {
+  private FolderNode doServices(Application app, DirectoryPath directoryPath, Set<String> allowedServices) {
     String accountId = app.getAccountId();
     FolderNode servicesFolder = new FolderNode(accountId, SERVICES_FOLDER, Service.class,
         directoryPath.add(SERVICES_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    if (applyPermissions && isEmpty(allowedServices)) {
+    if (isEmpty(allowedServices)) {
       return servicesFolder;
     }
 
@@ -759,7 +736,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (services != null) {
       // iterate over services
       for (Service service : services) {
-        if (applyPermissions && !allowedServices.contains(service.getUuid())) {
+        if (!allowedServices.contains(service.getUuid())) {
           continue;
         }
 
@@ -1071,13 +1048,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
-  private FolderNode doEnvironments(
-      Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedEnvs) {
+  private FolderNode doEnvironments(Application app, DirectoryPath directoryPath, Set<String> allowedEnvs) {
     String accountId = app.getAccountId();
     FolderNode environmentsFolder = new FolderNode(accountId, ENVIRONMENTS_FOLDER, Environment.class,
         directoryPath.add(ENVIRONMENTS_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    if (applyPermissions && isEmpty(allowedEnvs)) {
+    if (isEmpty(allowedEnvs)) {
       return environmentsFolder;
     }
 
@@ -1086,7 +1062,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (environments != null) {
       // iterate over environments
       for (Environment environment : environments) {
-        if (applyPermissions && !allowedEnvs.contains(environment.getUuid())) {
+        if (!allowedEnvs.contains(environment.getUuid())) {
           continue;
         }
 
@@ -1248,13 +1224,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
-  private FolderNode doWorkflows(
-      Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedWorkflows) {
+  private FolderNode doWorkflows(Application app, DirectoryPath directoryPath, Set<String> allowedWorkflows) {
     String accountId = app.getAccountId();
     FolderNode workflowsFolder = new FolderNode(accountId, WORKFLOWS_FOLDER, Workflow.class,
         directoryPath.add(WORKFLOWS_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    if (applyPermissions && isEmpty(allowedWorkflows)) {
+    if (isEmpty(allowedWorkflows)) {
       return workflowsFolder;
     }
 
@@ -1264,7 +1239,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (workflows != null) {
       // iterate over workflows
       for (Workflow workflow : workflows) {
-        if (applyPermissions && !allowedWorkflows.contains(workflow.getUuid())) {
+        if (!allowedWorkflows.contains(workflow.getUuid())) {
           continue;
         }
 
@@ -1279,13 +1254,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return workflowsFolder;
   }
 
-  private FolderNode doPipelines(
-      Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedPipelines) {
+  private FolderNode doPipelines(Application app, DirectoryPath directoryPath, Set<String> allowedPipelines) {
     String accountId = app.getAccountId();
     FolderNode pipelinesFolder = new FolderNode(accountId, PIPELINES_FOLDER, Pipeline.class,
         directoryPath.add(PIPELINES_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    if (applyPermissions && isEmpty(allowedPipelines)) {
+    if (isEmpty(allowedPipelines)) {
       return pipelinesFolder;
     }
 
@@ -1295,7 +1269,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (pipelines != null) {
       // iterate over pipelines
       for (Pipeline pipeline : pipelines) {
-        if (applyPermissions && !allowedPipelines.contains(pipeline.getUuid())) {
+        if (!allowedPipelines.contains(pipeline.getUuid())) {
           continue;
         }
 
@@ -1310,13 +1284,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return pipelinesFolder;
   }
 
-  private FolderNode doProvisioners(
-      Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedProvisioners) {
+  private FolderNode doProvisioners(Application app, DirectoryPath directoryPath, Set<String> allowedProvisioners) {
     String accountId = app.getAccountId();
     FolderNode provisionersFolder = new FolderNode(accountId, PROVISIONERS_FOLDER, InfrastructureProvisioner.class,
         directoryPath.add(PROVISIONERS_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    if (applyPermissions && isEmpty(allowedProvisioners)) {
+    if (isEmpty(allowedProvisioners)) {
       return provisionersFolder;
     }
 
@@ -1327,7 +1300,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     if (infrastructureProvisioners != null) {
       for (InfrastructureProvisioner provisioner : infrastructureProvisioners) {
-        if (applyPermissions && !allowedProvisioners.contains(provisioner.getUuid())) {
+        if (!allowedProvisioners.contains(provisioner.getUuid())) {
           continue;
         }
 

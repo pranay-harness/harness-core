@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import migrations.all.AddReplCtrlNameToKubeSetupProperties;
-import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateConnectionResults;
@@ -99,7 +98,7 @@ public class MigrationList {
         .add(Pair.of(135, TimeSeriesAnalysisRecordsMigration.class))
         .add(Pair.of(136, TimeSeriesMLScoresMigration.class))
         .add(Pair.of(137, SetRollbackFlagToWorkflows.class))
-        .add(Pair.of(138, AddUsersToAdminUserGroup.class))
+        .add(Pair.of(138, BaseMigration.class))
         .add(Pair.of(139, RenameProvisionNodeToInfrastructureNodeWorkflows.class))
         .add(Pair.of(140, GitSyncToAllAccounts.class))
         .add(Pair.of(141, RemoveResizeFromStatefulSetWorkflows.class))

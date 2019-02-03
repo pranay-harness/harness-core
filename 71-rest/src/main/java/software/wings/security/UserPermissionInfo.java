@@ -16,7 +16,6 @@ import java.util.Set;
 @Builder
 public class UserPermissionInfo {
   private String accountId;
-  private boolean isRbacEnabled;
   private AccountPermissionSummary accountPermissionSummary;
   // Key - appId, Value - app permission summary
   private Map<String, AppPermissionSummaryForUI> appPermissionMap = new HashMap<>();

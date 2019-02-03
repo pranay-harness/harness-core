@@ -1034,7 +1034,6 @@ public class UsageRestrictionsServiceImplTest {
 
     return UserPermissionInfo.builder()
         .accountId(ACCOUNT_ID)
-        .isRbacEnabled(true)
         .appPermissionMap(appPermissionsMap)
         .appPermissionMapInternal(appPermissionsMapInternal)
         .build();
