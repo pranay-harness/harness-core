@@ -210,6 +210,11 @@ import software.wings.service.impl.instance.stats.collector.StatsCollectorImpl;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.ContainerSyncImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
+import software.wings.service.impl.notifications.NotificationDispatcher;
+import software.wings.service.impl.notifications.NotificationGroupBasedDispatcher;
+import software.wings.service.impl.notifications.UseNotificationGroup;
+import software.wings.service.impl.notifications.UseUserGroup;
+import software.wings.service.impl.notifications.UserGroupBasedDispatcher;
 import software.wings.service.impl.prometheus.PrometheusAnalysisServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
@@ -653,6 +658,12 @@ public class WingsModule extends DependencyModule {
 
     bind(FileService.class).to(FileServiceImpl.class);
     bind(AlertNotificationRuleChecker.class).to(AlertNotificationRuleCheckerImpl.class);
+
+    bind(NotificationDispatcher.class).annotatedWith(UseUserGroup.class).to(UserGroupBasedDispatcher.class);
+
+    bind(NotificationDispatcher.class)
+        .annotatedWith(UseNotificationGroup.class)
+        .to(NotificationGroupBasedDispatcher.class);
 
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);

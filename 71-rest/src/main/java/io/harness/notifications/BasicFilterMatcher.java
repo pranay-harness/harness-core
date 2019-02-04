@@ -1,7 +1,7 @@
 package io.harness.notifications;
 
-import io.harness.notifications.Condition.Operator;
-import io.harness.notifications.beans.BaseCondition;
+import io.harness.notifications.beans.Conditions;
+import io.harness.notifications.beans.Conditions.Operator;
 import lombok.Value;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertFilter;
@@ -18,14 +18,14 @@ public class BasicFilterMatcher implements FilterMatcher {
   public boolean matchesCondition() {
     boolean matches = alert.getType() == alertFilter.getAlertType();
 
-    BaseCondition condition = (BaseCondition) alertFilter.getConditions();
-    Operator op = condition.getOperator();
+    Conditions conditions = alertFilter.getConditions();
+    Operator op = conditions.getOperator();
 
     switch (op) {
       case MATCHING:
         return matches;
       case NOT_MATCHING:
-        return matches;
+        return !matches;
       default:
         throw new IllegalArgumentException("Unexpected value of alert filter operator: " + op);
     }

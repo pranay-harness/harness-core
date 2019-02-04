@@ -20,13 +20,16 @@ import allbegray.slack.webhook.SlackWebhookClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import okhttp3.ResponseBody;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 import retrofit2.http.Url;
-import software.wings.beans.SlackConfig;
+import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.utils.Validator;
 
@@ -38,13 +41,20 @@ import java.io.IOException;
 
 @Singleton
 public class SlackNotificationServiceImpl implements SlackNotificationService {
+  private static final Logger log = LoggerFactory.getLogger(SlackNotificationServiceImpl.class);
+
   public static final String SLACK_WEBHOOK_URL_PREFIX = "https://hooks.slack.com/services/";
 
   @Override
-  public void sendMessage(SlackConfig slackConfig, String slackChannel, String senderName, String message) {
+  public void sendMessage(
+      SlackNotificationConfiguration slackConfig, String slackChannel, String senderName, String message) {
     Validator.notNullCheck("Slack Config", slackConfig);
 
     String webhookUrl = slackConfig.getOutgoingWebhookUrl();
+    if (StringUtils.isEmpty(webhookUrl)) {
+      log.error("Webhook URL is empty. No message will be send. Config: {}, Message: {}", slackConfig, message);
+      return;
+    }
 
     Payload payload = new Payload();
 

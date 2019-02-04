@@ -56,6 +56,7 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.notification.NotificationSettings;
+import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
@@ -1111,7 +1112,8 @@ public class AuthHandler {
                                       .build();
     appPermissions.add(appPermission);
 
-    NotificationSettings notificationSettings = new NotificationSettings(true, Collections.emptyMap());
+    NotificationSettings notificationSettings =
+        new NotificationSettings(true, Collections.emptyList(), SlackNotificationSetting.emptyConfig());
 
     UserGroupBuilder userGroupBuilder = UserGroup.builder()
                                             .accountId(accountId)

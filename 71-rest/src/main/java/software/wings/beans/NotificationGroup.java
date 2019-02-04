@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.notifications.NotificationReceiverInfo;
@@ -14,17 +15,22 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
+import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 /**
  * Created by rishi on 10/30/16.
+ *
+ * This has been deprecated in favor of {@link software.wings.beans.security.UserGroup#notificationSettings}
  */
 @Entity(value = "notificationGroups", noClassnameStored = true)
 @Indexes(
@@ -70,6 +76,19 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo 
    */
   public Map<NotificationChannelType, List<String>> getAddressesByChannelType() {
     return addressesByChannelType;
+  }
+
+  @Nullable
+  @Override
+  @JsonIgnore
+  public SlackNotificationSetting getSlackConfig() {
+    return null;
+  }
+
+  @Override
+  @JsonIgnore
+  public List<String> getEmailAddresses() {
+    return Collections.emptyList();
   }
 
   /**
