@@ -9,21 +9,19 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{.Values.name}}-deployment
-  labels:
-    app: nginx
 spec:
   replicas: {{int .Values.replicas}}
   selector:
     matchLabels:
-      app: nginx
+      app: {{.Values.name}}
   template:
     metadata:
       labels:
-        app: nginx
+        app: {{.Values.name}}
     spec:
       containers:
       - name: {{.Values.name}}
-        image: nginx:1.15.4
+        image: {{.Values.image}}
         envFrom:
         - configMapRef:
             name: {{.Values.name}}-config
