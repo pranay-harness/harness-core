@@ -65,8 +65,8 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
   private @NotEmpty String delegateId;
   private @NotEmpty String delegateTaskId;
   private String title;
-  @Default private List<ThirdPartyApiCallField> request = new ArrayList<>();
-  @Default private List<ThirdPartyApiCallField> response = new ArrayList<>();
+  private List<ThirdPartyApiCallField> request = new ArrayList<>();
+  private List<ThirdPartyApiCallField> response = new ArrayList<>();
   private long requestTimeStamp;
   private long responseTimeStamp;
 

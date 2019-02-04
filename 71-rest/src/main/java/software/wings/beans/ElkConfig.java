@@ -6,6 +6,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -43,7 +44,7 @@ public class ElkConfig extends SettingValue implements EncryptableSetting {
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  private String kibanaVersion = "0";
+  @Default private String kibanaVersion = "0";
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 

@@ -15,6 +15,8 @@ public class ElkCVConfiguration extends LogsCVConfiguration {
 
   @Attributes(title = "Elastic search indices to search", required = true) @DefaultValue("_all") protected String index;
 
+  @Attributes(required = true, title = "Host Name Field") @DefaultValue("hostname") protected String hostnameField;
+
   @Attributes(required = true, title = "Message Field") @DefaultValue("message") protected String messageField;
 
   @Attributes(required = true, title = "Timestamp Field")

@@ -1386,12 +1386,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .query(config.getQuery())
             .formattedQuery(config.isFormattedQuery())
             .indices(config.getIndex())
+            .hostnameField(config.getHostnameField())
             .messageField(config.getMessageField())
             .timestampField(config.getTimestampField())
             .timestampFieldFormat(config.getTimestampFormat())
             .queryType(config.getQueryType())
             .startTime(startTime)
             .endTime(endTime)
+            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
             .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, config.getAppId(), null))
             .build();
     return createDelegateTask(config, waitId, new Object[] {dataCollectionInfo}, TaskType.ELK_COLLECT_24_7_LOG_DATA);

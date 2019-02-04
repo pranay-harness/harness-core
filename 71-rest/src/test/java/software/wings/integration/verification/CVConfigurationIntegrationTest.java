@@ -224,11 +224,14 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     elkCVConfiguration.setEnabled24x7(enabled24x7);
     elkCVConfiguration.setConnectorId(settingAttributeId);
     elkCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+    elkCVConfiguration.setBaselineStartMinute(100);
+    elkCVConfiguration.setBaselineEndMinute(200);
 
     elkCVConfiguration.setQuery("query1");
     elkCVConfiguration.setFormattedQuery(true);
     elkCVConfiguration.setQueryType(ElkQueryType.TERM);
     elkCVConfiguration.setIndex("index1");
+    elkCVConfiguration.setHostnameField("host1");
     elkCVConfiguration.setMessageField("message1");
     elkCVConfiguration.setTimestampField("timestamp1");
     elkCVConfiguration.setTimestampFormat("timestamp_format1");
@@ -243,6 +246,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     logsCVConfiguration.setEnabled24x7(enabled24x7);
     logsCVConfiguration.setConnectorId(settingAttributeId);
     logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+    logsCVConfiguration.setBaselineStartMinute(100);
+    logsCVConfiguration.setBaselineEndMinute(200);
 
     logsCVConfiguration.setQuery("query1");
     logsCVConfiguration.setFormattedQuery(true);
@@ -545,11 +550,14 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
     assertEquals("someSettingAttributeName", elkCVServiceConfiguration.getConnectorName());
     assertEquals("someServiceName", elkCVServiceConfiguration.getServiceName());
+    assertEquals(100, fetchedObject.getBaselineStartMinute());
+    assertEquals(200, fetchedObject.getBaselineEndMinute());
 
     assertEquals("query1", fetchedObject.getQuery());
     assertEquals(true, fetchedObject.isFormattedQuery());
     assertEquals(ElkQueryType.TERM, fetchedObject.getQueryType());
     assertEquals("index1", fetchedObject.getIndex());
+    assertEquals("host1", fetchedObject.getHostnameField());
     assertEquals("message1", fetchedObject.getMessageField());
     assertEquals("timestamp1", fetchedObject.getTimestampField());
     assertEquals("timestamp_format1", fetchedObject.getTimestampFormat());
@@ -579,12 +587,15 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(url);
     elkCVServiceConfiguration.setName("Config 2");
     elkCVServiceConfiguration.setEnabled24x7(false);
+    elkCVServiceConfiguration.setBaselineStartMinute(101);
+    elkCVServiceConfiguration.setBaselineEndMinute(202);
 
     elkCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
     elkCVServiceConfiguration.setFormattedQuery(false);
     elkCVServiceConfiguration.setQuery("query2");
     elkCVServiceConfiguration.setQueryType(ElkQueryType.MATCH);
     elkCVServiceConfiguration.setIndex("index2");
+    elkCVServiceConfiguration.setHostnameField("host2");
     elkCVServiceConfiguration.setMessageField("message2");
     elkCVServiceConfiguration.setTimestampField("timestamp2");
     elkCVServiceConfiguration.setTimestampFormat("timestamp_format2");
@@ -596,11 +607,14 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     fetchedObject = getRequestResponse.getResource();
     assertFalse(fetchedObject.isEnabled24x7());
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
+    assertEquals(101, fetchedObject.getBaselineStartMinute());
+    assertEquals(202, fetchedObject.getBaselineEndMinute());
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
     assertEquals(false, fetchedObject.isFormattedQuery());
     assertEquals(ElkQueryType.MATCH, fetchedObject.getQueryType());
     assertEquals("index2", fetchedObject.getIndex());
+    assertEquals("host2", fetchedObject.getHostnameField());
     assertEquals("message2", fetchedObject.getMessageField());
     assertEquals("timestamp2", fetchedObject.getTimestampField());
     assertEquals("timestamp_format2", fetchedObject.getTimestampFormat());
@@ -650,6 +664,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     assertEquals("query1", fetchedObject.getQuery());
     assertEquals(true, fetchedObject.isFormattedQuery());
+    assertEquals(100, fetchedObject.getBaselineStartMinute());
+    assertEquals(200, fetchedObject.getBaselineEndMinute());
 
     url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId;
     target = client.target(url);
@@ -670,6 +686,10 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(SUMO, obj.getStateType());
     assertEquals(AnalysisTolerance.MEDIUM, obj.getAnalysisTolerance());
     assertEquals("Config 1", obj.getName());
+    assertEquals("query1", obj.getQuery());
+    assertEquals(true, obj.isFormattedQuery());
+    assertEquals(100, obj.getBaselineStartMinute());
+    assertEquals(200, obj.getBaselineEndMinute());
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
         + "&stateType=" + SUMO + "&serviceConfigurationId=" + savedObjectUuid;
@@ -680,6 +700,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
     logsCVConfiguration.setFormattedQuery(false);
     logsCVConfiguration.setQuery("query2");
+    logsCVConfiguration.setBaselineStartMinute(101);
+    logsCVConfiguration.setBaselineEndMinute(202);
 
     getRequestBuilderWithAuthHeader(target).put(
         entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -691,6 +713,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
     assertEquals(false, fetchedObject.isFormattedQuery());
+    assertEquals(101, fetchedObject.getBaselineStartMinute());
+    assertEquals(202, fetchedObject.getBaselineEndMinute());
 
     String delete_url =
         API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;

@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.inject.Inject;
@@ -126,7 +127,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                           .hostnameField(elkDataCollectionInfo.getHostnameField())
                           .messageField(elkDataCollectionInfo.getMessageField())
                           .timestampField(elkDataCollectionInfo.getTimestampField())
-                          .hosts(Collections.singleton(hostName))
+                          .hosts(hostName.equals(DUMMY_HOST_NAME) ? Collections.emptySet()
+                                                                  : Collections.singleton(hostName))
                           .startTime(collectionStartTime)
                           .endTime(collectionStartTime + TimeUnit.MINUTES.toMillis(1))
                           .queryType(elkDataCollectionInfo.getQueryType())
@@ -149,7 +151,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                           .hostnameField(logzDataCollectionInfo.getHostnameField())
                           .messageField(logzDataCollectionInfo.getMessageField())
                           .timestampField(logzDataCollectionInfo.getTimestampField())
-                          .hosts(Collections.singleton(hostName))
+                          .hosts(hostName.equals(DUMMY_HOST_NAME) ? Collections.emptySet()
+                                                                  : Collections.singleton(hostName))
                           .startTime(collectionStartTime)
                           .endTime(collectionStartTime + TimeUnit.MINUTES.toMillis(1))
                           .queryType(logzDataCollectionInfo.getQueryType())
@@ -176,7 +179,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
               List<LogElement> logElements;
               try {
                 logElements = parseElkResponse(searchResponse, dataCollectionInfo.getQuery(), timestampField,
-                    timestampFieldFormat, hostnameField, hostName, messageField, logCollectionMinute, true);
+                    timestampFieldFormat, hostnameField, hostName, messageField, logCollectionMinute, !is24X7Task());
               } catch (Exception pe) {
                 retry = RETRIES;
                 taskResult.setErrorMessage(Misc.getMessage(pe));
@@ -185,15 +188,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
               /**
                * Heart beat.
                */
-              logElements.add(LogElement.builder()
-                                  .query(dataCollectionInfo.getQuery())
-                                  .clusterLabel("-1")
-                                  .host(hostName)
-                                  .count(0)
-                                  .logMessage("")
-                                  .timeStamp(0)
-                                  .logCollectionMinute(logCollectionMinute)
-                                  .build());
+              addHeartBeat(hostName, dataCollectionInfo, logCollectionMinute, logElements);
               boolean response = logAnalysisStoreService.save(dataCollectionInfo.getStateType(),
                   dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
                   dataCollectionInfo.getCvConfigId(), dataCollectionInfo.getStateExecutionId(),
