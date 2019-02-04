@@ -129,6 +129,17 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   public void shouldEvaluateWithDefaultPrefix() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
+    String expr = "sam.age < bob.age && sam.address.city.length() > address.city.length()";
+    Object retValue = expressionEvaluator.evaluate(expr, persons, "bob");
+    assertThat(retValue).isNotNull();
+    assertThat(retValue).isInstanceOf(Boolean.class);
+    assertThat(retValue).isEqualTo(true);
+  }
+
+  @Test
+  public void shouldEvaluateWithSubexpression() {
+    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+
     String expr = "sam.age < bob.age && sam.address.city.length() > ${address.city.length()}";
     Object retValue = expressionEvaluator.evaluate(expr, persons, "bob");
     assertThat(retValue).isNotNull();
@@ -139,11 +150,15 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   @Test
   public void shouldSubstituteWithDefaultPrefix() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+    expressionEvaluator.addFunctor("regex", new RegexFunctor());
 
     String expr = "${sam.address.city}, ${address.city}";
     Object retValue = expressionEvaluator.substitute(expr, persons, "bob");
     assertThat(retValue).isNotNull();
     assertThat(retValue).isEqualTo("San Francisco, New York");
+
+    assertThat(expressionEvaluator.substitute("${regex.extract('..', address.city)}", persons, null, "bob"))
+        .isEqualTo("Ne");
   }
 
   @Test
