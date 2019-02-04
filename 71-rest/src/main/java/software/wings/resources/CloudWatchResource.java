@@ -18,6 +18,7 @@ import software.wings.service.impl.cloudwatch.CloudWatchSetupTestNodeData;
 import software.wings.service.intfc.CloudWatchService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.ws.rs.GET;
@@ -77,6 +78,15 @@ public class CloudWatchResource {
   public RestResponse<List<String>> getLambdaFunctionsNames(@QueryParam("accountId") final String accountId,
       @QueryParam("settingId") final String settingId, @QueryParam("region") final String region) {
     return new RestResponse<>(cloudWatchService.getLambdaFunctionsNames(settingId, region));
+  }
+
+  @GET
+  @Path("/get-ec2-instances")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> getEC2Instances(@QueryParam("accountId") final String accountId,
+      @QueryParam("settingId") final String settingId, @QueryParam("region") final String region) {
+    return new RestResponse<>(cloudWatchService.getEC2Instances(settingId, region));
   }
 
   @GET

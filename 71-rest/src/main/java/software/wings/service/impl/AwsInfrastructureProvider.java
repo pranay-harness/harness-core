@@ -323,4 +323,10 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       throw new InvalidRequestException(Misc.getMessage(e), USER);
     }
   }
+
+  public List<Instance> listEc2Instances(SettingAttribute settingAttribute, String region) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(settingAttribute);
+    return awsEc2HelperServiceManager.listEc2Instances(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, null, null);
+  }
 }

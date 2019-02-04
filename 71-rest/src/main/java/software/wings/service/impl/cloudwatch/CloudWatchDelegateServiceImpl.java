@@ -236,7 +236,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
         metricStatistics.getSdkHttpMetadata().getHttpStatusCode(), metricStatistics, FieldType.JSON);
     delegateLogService.save(dataCollectionInfo.getAwsConfig().getAccountId(), apiCallLog);
     List<Datapoint> datapoints = metricStatistics.getDatapoints();
-    String metricName = awsNameSpace == AwsNameSpace.EC2 ? "EC2 Metrics" : dimensionValue;
+    String metricName = awsNameSpace == AwsNameSpace.EC2 ? "EC2 Metrics/" + dimensionValue : dimensionValue;
     String hostNameForRecord = awsNameSpace == AwsNameSpace.LAMBDA
         ? VerificationConstants.LAMBDA_HOST_NAME
         : awsNameSpace == AwsNameSpace.ECS ? VerificationConstants.ECS_HOST_NAME : host;

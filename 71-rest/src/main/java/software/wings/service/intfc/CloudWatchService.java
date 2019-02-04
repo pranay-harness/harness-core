@@ -58,6 +58,10 @@ public interface CloudWatchService {
 
   Map<String, List<CloudWatchMetric>> createLambdaFunctionNames(List<String> lambdaFunctions);
 
+  Map<String, String> getGroupNameByHost(List<String> ec2InstanceNames);
+
+  Map<String, String> getEC2Instances(String settingId, String region);
+
   Map<String, List<CloudWatchMetric>> createECSMetrics(String ecsClusterName);
 
   List<String> getECSClusterNames(String settingId, String region);

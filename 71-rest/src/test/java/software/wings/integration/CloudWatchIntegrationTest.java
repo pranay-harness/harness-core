@@ -136,7 +136,20 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
 
     List<String> ecsClusterNames = restResponse.getResource();
 
-    assertTrue("No lambda function found", ecsClusterNames.size() > 1);
+    assertTrue("No ECS Cluster found", ecsClusterNames.size() > 1);
+  }
+
+  @Test
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  public void testGetEC2InstancesNames() throws Exception {
+    WebTarget target = client.target(API_BASE + "/cloudwatch/get-ec2-instances?accountId=" + accountId
+        + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());
+    RestResponse<Map<String, String>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Map<String, String>>>() {});
+
+    Map<String, String> ec2InstanceIdByDnsName = restResponse.getResource();
+
+    assertTrue("No EC2 Instances found", ec2InstanceIdByDnsName.size() > 1);
   }
 
   private CloudWatchSetupTestNodeData getCloudWatchSetupTestNodedata() {
