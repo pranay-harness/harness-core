@@ -130,7 +130,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             logger.warn(format("Decryption failed. trial num: %d", retry), e);
             sleep(ofMillis(1000));
           } else {
-            String reason = format("Decryption failed after %d retries", NUM_OF_RETRIES);
+            String reason =
+                format("Decryption failed for encryptedData %s after %d retries", data.getName(), NUM_OF_RETRIES);
             throw new DelegateRetryableException(new KmsOperationException(reason, e, USER));
           }
         } else {

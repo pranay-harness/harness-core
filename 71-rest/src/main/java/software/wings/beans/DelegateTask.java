@@ -60,6 +60,7 @@ public class DelegateTask extends Base {
   private Set<String> alreadyTriedDelegates = new HashSet<>();
   private String serviceTemplateId;
   private String artifactStreamId;
+  private String correlationId;
 
   @Transient private transient ResponseData notifyResponse;
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
@@ -276,6 +277,14 @@ public class DelegateTask extends Base {
     return this.artifactStreamId;
   }
 
+  public void setCorrelationId(String correlationId) {
+    this.correlationId = correlationId;
+  }
+
+  public String getCorrelationId() {
+    return this.correlationId;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -325,6 +334,7 @@ public class DelegateTask extends Base {
     private String infrastructureMappingId;
     private long timeout = DEFAULT_SYNC_CALL_TIMEOUT;
     private List<String> tags;
+    private String correlationId;
 
     public String getAccountId() {
       return accountId;
@@ -374,6 +384,14 @@ public class DelegateTask extends Base {
       this.tags = tags;
     }
 
+    public String getCorrelationId() {
+      return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+      this.correlationId = correlationId;
+    }
+
     public static final class Builder {
       private String accountId;
       private String appId;
@@ -381,6 +399,7 @@ public class DelegateTask extends Base {
       private String infrastructureMappingId;
       private long timeout = DEFAULT_SYNC_CALL_TIMEOUT;
       private List<String> tags;
+      private String correlationId;
 
       private Builder() {}
 
@@ -418,6 +437,11 @@ public class DelegateTask extends Base {
         return this;
       }
 
+      public Builder withCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
+        return this;
+      }
+
       public Builder but() {
         return aContext()
             .withAccountId(accountId)
@@ -425,7 +449,8 @@ public class DelegateTask extends Base {
             .withEnvId(envId)
             .withTimeout(timeout)
             .withInfrastructureMappingId(infrastructureMappingId)
-            .withTags(tags);
+            .withTags(tags)
+            .withCorrelationId(correlationId);
       }
 
       public SyncTaskContext build() {
@@ -436,6 +461,7 @@ public class DelegateTask extends Base {
         syncTaskContext.setInfrastructureMappingId(infrastructureMappingId);
         syncTaskContext.setTimeout(timeout);
         syncTaskContext.setTags(tags);
+        syncTaskContext.setCorrelationId(correlationId);
         return syncTaskContext;
       }
     }
@@ -482,6 +508,7 @@ public class DelegateTask extends Base {
     private String preAssignedDelegateId;
     private String serviceTemplateId;
     private String artifactStreamId;
+    private String correlationId;
 
     private Builder() {}
 
@@ -600,6 +627,11 @@ public class DelegateTask extends Base {
       return this;
     }
 
+    public Builder withCorrelationId(String correlationId) {
+      this.correlationId = correlationId;
+      return this;
+    }
+
     public Builder but() {
       return aDelegateTask()
           .withVersion(version)
@@ -623,7 +655,8 @@ public class DelegateTask extends Base {
           .withNotifyResponse(notifyResponse)
           .withPreAssignedDelegateId(preAssignedDelegateId)
           .withServiceTemplateId(serviceTemplateId)
-          .withArtifactStreamId(artifactStreamId);
+          .withArtifactStreamId(artifactStreamId)
+          .withCorrelationId(correlationId);
     }
 
     public DelegateTask build() {
@@ -650,6 +683,7 @@ public class DelegateTask extends Base {
       delegateTask.setPreAssignedDelegateId(preAssignedDelegateId);
       delegateTask.setServiceTemplateId(serviceTemplateId);
       delegateTask.setArtifactStreamId(artifactStreamId);
+      delegateTask.setCorrelationId(correlationId);
       return delegateTask;
     }
   }

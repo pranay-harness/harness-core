@@ -44,7 +44,8 @@ public class DelegateInvocationHandler implements InvocationHandler {
                           .withInfrastructureMappingId(syncTaskContext.getInfrastructureMappingId())
                           .withAsync(false)
                           .withTimeout(syncTaskContext.getTimeout())
-                          .withTags(syncTaskContext.getTags());
+                          .withTags(syncTaskContext.getTags())
+                          .withCorrelationId(syncTaskContext.getCorrelationId());
 
     String awsConfigTag = getAwsConfigTags(args);
     if (isNotEmpty(awsConfigTag)) {
