@@ -17,6 +17,8 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
+import software.wings.service.impl.analysis.LogDataCollectionInfo;
+import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
@@ -175,6 +177,34 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
 
   protected int getPeriodMinutes() {
     return COLLECTION_PERIOD_MINS;
+  }
+
+  protected void addHeartBeat(String host, LogDataCollectionInfo logDataCollectionInfo, long logCollectionMinute,
+      List<LogElement> logElements) {
+    if (!is24X7Task()) {
+      logElements.add(LogElement.builder()
+                          .query(logDataCollectionInfo.getQuery())
+                          .clusterLabel("-3")
+                          .host(host)
+                          .count(0)
+                          .logMessage("")
+                          .timeStamp(0)
+                          .logCollectionMinute(logCollectionMinute)
+                          .build());
+    } else {
+      for (long heartBeatMin = TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getStartTime());
+           heartBeatMin <= TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getEndTime()); heartBeatMin++) {
+        logElements.add(LogElement.builder()
+                            .query(logDataCollectionInfo.getQuery())
+                            .clusterLabel("-3")
+                            .host(host)
+                            .count(0)
+                            .logMessage("")
+                            .timeStamp(TimeUnit.MINUTES.toMillis(heartBeatMin))
+                            .logCollectionMinute((int) heartBeatMin)
+                            .build());
+      }
+    }
   }
 
   public static OkHttpClient getUnsafeHttpClient(String baseUrl) {

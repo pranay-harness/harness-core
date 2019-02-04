@@ -274,13 +274,18 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case SUMO:
         updateOperations.set("query", ((LogsCVConfiguration) cvConfiguration).getQuery())
-            .set("formattedQuery", ((LogsCVConfiguration) cvConfiguration).isFormattedQuery());
+            .set("formattedQuery", ((LogsCVConfiguration) cvConfiguration).isFormattedQuery())
+            .set("baselineStartMinute", ((LogsCVConfiguration) cvConfiguration).getBaselineStartMinute())
+            .set("baselineEndMinute", ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute());
         break;
       case ELK:
         updateOperations.set("query", ((ElkCVConfiguration) cvConfiguration).getQuery())
             .set("formattedQuery", ((ElkCVConfiguration) cvConfiguration).isFormattedQuery())
+            .set("baselineStartMinute", ((LogsCVConfiguration) cvConfiguration).getBaselineStartMinute())
+            .set("baselineEndMinute", ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute())
             .set("queryType", ((ElkCVConfiguration) cvConfiguration).getQueryType())
             .set("index", ((ElkCVConfiguration) cvConfiguration).getIndex())
+            .set("hostnameField", ((ElkCVConfiguration) cvConfiguration).getHostnameField())
             .set("messageField", ((ElkCVConfiguration) cvConfiguration).getMessageField())
             .set("timestampField", ((ElkCVConfiguration) cvConfiguration).getTimestampField())
             .set("timestampFormat", ((ElkCVConfiguration) cvConfiguration).getTimestampFormat());

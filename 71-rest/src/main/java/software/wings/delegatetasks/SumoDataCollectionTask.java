@@ -108,7 +108,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
         try {
           final List<LogElement> logElements = new ArrayList<>();
           for (String host : dataCollectionInfo.getHosts()) {
-            addHeartBeat(host, logElements);
+            addHeartBeat(host, dataCollectionInfo, logCollectionMinute, logElements);
 
             ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
             final long collectionEndTime =
@@ -189,33 +189,6 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
         logger.info("Shutting down sumo data collection " + dataCollectionInfo.getStateExecutionId());
         shutDownCollection();
         return;
-      }
-    }
-
-    private void addHeartBeat(String host, List<LogElement> logElements) {
-      if (!is247Task) {
-        logElements.add(LogElement.builder()
-                            .query(dataCollectionInfo.getQuery())
-                            .clusterLabel("-3")
-                            .host(host)
-                            .count(0)
-                            .logMessage("")
-                            .timeStamp(0)
-                            .logCollectionMinute(logCollectionMinute)
-                            .build());
-      } else {
-        for (long heartBeatMin = TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime());
-             heartBeatMin <= TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime()); heartBeatMin++) {
-          logElements.add(LogElement.builder()
-                              .query(dataCollectionInfo.getQuery())
-                              .clusterLabel("-3")
-                              .host(host)
-                              .count(0)
-                              .logMessage("")
-                              .timeStamp(TimeUnit.MINUTES.toMillis(heartBeatMin))
-                              .logCollectionMinute((int) heartBeatMin)
-                              .build());
-        }
       }
     }
   }

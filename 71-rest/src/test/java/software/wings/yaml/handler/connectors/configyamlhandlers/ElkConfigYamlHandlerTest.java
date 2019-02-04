@@ -64,6 +64,7 @@ public class ElkConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
     elkConfig.setAccountId(ACCOUNT_ID);
     elkConfig.setElkConnector(ElkConnector.ELASTIC_SEARCH_SERVER);
     elkConfig.setElkUrl(url);
+    elkConfig.setKibanaVersion("0");
     elkConfig.setUsername(userName);
     elkConfig.setPassword(password.toCharArray());
 

@@ -76,12 +76,17 @@ public class NewRelicMetricDataBackupMigration implements Migration {
     PageResponse<NewRelicMetricDataRecord> response =
         wingsPersistence.query(NewRelicMetricDataRecord.class, pageRequest, excludeAuthority);
     while (!response.isEmpty()) {
+      logger.info("going to save {} records to google", response.size());
       dataStoreService.save(NewRelicMetricDataRecord.class, response.getResponse());
       previousOffSet += response.size();
-      logger.info("moved records:  " + previousOffSet);
+      logger.info("moved records:  {}", previousOffSet);
       pageRequest.setOffset(String.valueOf(previousOffSet));
+      logger.info("get next set of records to move");
       response = wingsPersistence.query(NewRelicMetricDataRecord.class, pageRequest, excludeAuthority);
+      logger.info("got {} records to move", response.size());
       sleep(ofMillis(2000));
     }
+
+    logger.info("migration done...");
   }
 }

@@ -7,6 +7,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -37,6 +38,7 @@ public class NewRelicConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "URL")
   @NotEmpty
   @DefaultValue("https://api.newrelic.com")
+  @Default
   private String newRelicUrl = "https://api.newrelic.com";
 
   @Attributes(title = "API key", required = true) @Encrypted private char[] apiKey;

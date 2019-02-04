@@ -22,7 +22,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.WingsException;
 import io.harness.persistence.GoogleDataStoreAware;
-import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -55,7 +54,6 @@ public class Log extends Base implements GoogleDataStoreAware {
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   @Override
