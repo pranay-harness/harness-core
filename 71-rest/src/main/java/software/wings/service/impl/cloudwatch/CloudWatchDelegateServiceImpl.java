@@ -170,6 +170,11 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
                   hostStartTimeMap);
             }
             break;
+          case ECS:
+            fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, groupName,
+                startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog, COMPARE_WITH_CURRENT, is247Task,
+                hostStartTimeMap);
+            break;
           default:
             throw new WingsException("Invalid name space " + awsNameSpace);
         }
@@ -232,7 +237,9 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     delegateLogService.save(dataCollectionInfo.getAwsConfig().getAccountId(), apiCallLog);
     List<Datapoint> datapoints = metricStatistics.getDatapoints();
     String metricName = awsNameSpace == AwsNameSpace.EC2 ? "EC2 Metrics" : dimensionValue;
-    String hostNameForRecord = awsNameSpace == AwsNameSpace.LAMBDA ? VerificationConstants.LAMBDA_HOST_NAME : host;
+    String hostNameForRecord = awsNameSpace == AwsNameSpace.LAMBDA
+        ? VerificationConstants.LAMBDA_HOST_NAME
+        : awsNameSpace == AwsNameSpace.ECS ? VerificationConstants.ECS_HOST_NAME : host;
     datapoints.forEach(datapoint -> {
       NewRelicMetricDataRecord newRelicMetricDataRecord =
           NewRelicMetricDataRecord.builder()

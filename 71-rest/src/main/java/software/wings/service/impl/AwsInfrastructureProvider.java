@@ -43,6 +43,7 @@ import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
@@ -74,6 +75,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
   @Inject private AwsLambdaHelperServiceManager awsLambdaHelperServiceManager;
+  @Inject private AwsEcsHelperServiceManager awsEcsHelperServiceManager;
   @Inject private ServiceResourceService serviceResourceService;
 
   @Override
@@ -277,6 +279,12 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsLambdaHelperServiceManager.listLambdaFunctions(
         awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+  }
+
+  public List<String> listECSClusterNames(SettingAttribute computeProviderSetting, String region) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsEcsHelperServiceManager.listClusters(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, null);
   }
 
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {

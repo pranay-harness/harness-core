@@ -92,9 +92,9 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
   private class CloudWatchMetricCollector implements Runnable {
     private final CloudWatchDataCollectionInfo dataCollectionInfo;
     private final DataCollectionTaskResult taskResult;
+    boolean is247Task;
     private long collectionStartTime;
     private int dataCollectionMinute;
-    boolean is247Task;
     private Map<String, Long> hostStartTimeMap;
 
     private CloudWatchMetricCollector(
@@ -204,35 +204,25 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
 
       Map<String, List<CloudWatchMetric>> cloudWatchMetricsByLambdaFunction =
           dataCollectionInfo.getLambdaFunctionNames();
-      if (isNotEmpty(cloudWatchMetricsByLambdaFunction)) {
+      Map<String, List<CloudWatchMetric>> cloudWatchMetricsByECSClusterName =
+          dataCollectionInfo.getMetricsByECSClusterName();
+      Map<String, List<CloudWatchMetric>> cloudWatchMetricsByELBName = dataCollectionInfo.getLoadBalancerMetrics();
+
+      if (isNotEmpty(cloudWatchMetricsByECSClusterName)) {
+        logger.info("for {} fetching metrics for ECS Cluster {}", dataCollectionInfo.getStateExecutionId(),
+            cloudWatchMetricsByECSClusterName);
+        addCallablesForGetMetricData(cloudWatchClient, callables, AwsNameSpace.ECS, cloudWatchMetricsByECSClusterName);
+      } else if (isNotEmpty(cloudWatchMetricsByLambdaFunction)) {
         logger.info("for {} fetching metrics for lambda functions {}", dataCollectionInfo.getStateExecutionId(),
             cloudWatchMetricsByLambdaFunction);
-        cloudWatchMetricsByLambdaFunction.forEach(
-            (functionName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
-              callables.add(
-                  ()
-                      -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.LAMBDA, cloudWatchClient,
-                          cloudWatchMetric, functionName, DEFAULT_GROUP_NAME, dataCollectionInfo, getAppId(),
-                          System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
-                          System.currentTimeMillis(), createApiCallLog(dataCollectionInfo.getStateExecutionId()),
-                          is247Task, hostStartTimeMap));
-            }));
+        addCallablesForGetMetricData(
+            cloudWatchClient, callables, AwsNameSpace.LAMBDA, cloudWatchMetricsByLambdaFunction);
       } else {
-        if (isNotEmpty(dataCollectionInfo.getLoadBalancerMetrics())) {
+        if (isNotEmpty(cloudWatchMetricsByELBName)) {
           logger.info("for {} fetching metrics for load balancers {}", dataCollectionInfo.getStateExecutionId(),
-              dataCollectionInfo.getLoadBalancerMetrics());
-          dataCollectionInfo.getLoadBalancerMetrics().forEach(
-              (loadBalancerName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
-                callables.add(
-                    ()
-                        -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.ELB, cloudWatchClient,
-                            cloudWatchMetric, loadBalancerName, DEFAULT_GROUP_NAME, dataCollectionInfo, getAppId(),
-                            endTimeForCollection - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
-                            endTimeForCollection, createApiCallLog(dataCollectionInfo.getStateExecutionId()), is247Task,
-                            hostStartTimeMap));
-              }));
+              cloudWatchMetricsByELBName);
+          addCallablesForGetMetricData(cloudWatchClient, callables, AwsNameSpace.ELB, cloudWatchMetricsByELBName);
         }
-
         if (isNotEmpty(dataCollectionInfo.getHosts()) && isNotEmpty(dataCollectionInfo.getEc2Metrics())) {
           logger.info("for {} fetching {} metrics for hosts {}", dataCollectionInfo.getStateExecutionId(),
               dataCollectionInfo.getEc2Metrics(), dataCollectionInfo.getHosts());
@@ -269,6 +259,19 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
         }
       });
       return metricDataResponses;
+    }
+
+    private void addCallablesForGetMetricData(AmazonCloudWatchClient cloudWatchClient,
+        List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables, AwsNameSpace nameSpace,
+        Map<String, List<CloudWatchMetric>> cloudWatchMetricsByType) {
+      cloudWatchMetricsByType.forEach((entityType, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
+        callables.add(()
+                          -> cloudWatchDelegateService.getMetricDataRecords(nameSpace, cloudWatchClient,
+                              cloudWatchMetric, entityType, DEFAULT_GROUP_NAME, dataCollectionInfo, getAppId(),
+                              System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
+                              System.currentTimeMillis(), createApiCallLog(dataCollectionInfo.getStateExecutionId()),
+                              is247Task, hostStartTimeMap));
+      }));
     }
   }
 }
