@@ -513,6 +513,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public boolean isTemplatizedProvisioner(TerraformInfrastructureProvisioner infrastructureProvisioner) {
+    if (isEmpty(infrastructureProvisioner.getSourceRepoBranch())) {
+      return false;
+    }
     return infrastructureProvisioner.getSourceRepoBranch().contains("$")
         || infrastructureProvisioner.getPath().contains("$");
   }
