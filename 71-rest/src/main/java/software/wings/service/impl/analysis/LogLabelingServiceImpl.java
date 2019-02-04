@@ -1,6 +1,8 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.beans.PageRequest.UNLIMITED;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
@@ -20,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.LogLabelingService;
@@ -27,6 +30,8 @@ import software.wings.service.intfc.analysis.LogLabelingService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 
 @Singleton
@@ -43,27 +48,64 @@ public class LogLabelingServiceImpl implements LogLabelingService {
       return null;
     }
 
-    Query<LogDataRecord> logQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
-                                        .field("createdAt")
-                                        .greaterThan(1514808000000l)
-                                        .field("clusterLevel")
-                                        .notIn(Arrays.asList("H0", "H1", "H2", "HF"))
-                                        .project("uuid", true)
-                                        .project("logMessage", true)
-                                        .project("timesLabeled", true)
-                                        .order("-createdAt");
+    Query<LogMLAnalysisRecord> logQuery = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+                                              .field("createdAt")
+                                              .greaterThan(1514808000000l)
+                                              .order("-createdAt");
 
     logQuery.or(logQuery.criteria("timesLabeled").lessThanOrEq(MAX_CASSIFICATION_COUNT),
         logQuery.criteria("timesLabeled").doesNotExist());
 
-    List<LogDataRecord> logDataRecords = logQuery.asList(new FindOptions().limit(1000));
+    List<LogMLAnalysisRecord> logAnalysisRecords = logQuery.asList(new FindOptions().limit(100));
+    logAnalysisRecords.forEach(logAnalysisRecord -> logAnalysisRecord.decompressLogAnalysisRecord());
+
+    List<LogDataRecord> logDataRecords = new ArrayList<>();
+
     List<LogDataRecord> returnList = new ArrayList<>();
+    logAnalysisRecords.forEach(logAnalysisRecord -> {
+      Optional
+          .ofNullable(createDataRecords(
+              logAnalysisRecord.getUuid(), logAnalysisRecord.getTimesLabeled(), logAnalysisRecord.getTest_clusters()))
+          .ifPresent(logDataRecords::addAll);
+      Optional
+          .ofNullable(createDataRecords(logAnalysisRecord.getUuid(), logAnalysisRecord.getTimesLabeled(),
+              logAnalysisRecord.getControl_clusters()))
+          .ifPresent(logDataRecords::addAll);
+      Optional
+          .ofNullable(createDataRecords(logAnalysisRecord.getUuid(), logAnalysisRecord.getTimesLabeled(),
+              logAnalysisRecord.getUnknown_clusters()))
+          .ifPresent(logDataRecords::addAll);
+      Optional
+          .ofNullable(createDataRecords(
+              logAnalysisRecord.getUuid(), logAnalysisRecord.getTimesLabeled(), logAnalysisRecord.getIgnore_clusters()))
+          .ifPresent(logDataRecords::addAll);
+    });
     if (logDataRecords.size() <= MAX_CASSIFICATION_COUNT) {
       returnList.addAll(logDataRecords);
     } else {
       while (returnList.size() < MAX_LOG_RETURN_SIZE) {
         Random randomizer = new Random();
         returnList.add(logDataRecords.get(randomizer.nextInt(logDataRecords.size())));
+      }
+    }
+    return returnList;
+  }
+
+  private List<LogDataRecord> createDataRecords(
+      String uuid, int timesLabelled, Map<String, Map<String, SplunkAnalysisCluster>> clusters) {
+    if (isEmpty(clusters)) {
+      return null;
+    }
+    List<LogDataRecord> returnList = new ArrayList<>();
+    for (Map.Entry<String, Map<String, SplunkAnalysisCluster>> entry : clusters.entrySet()) {
+      if (isNotEmpty(entry.getValue())) {
+        for (SplunkAnalysisCluster cluster : entry.getValue().values()) {
+          LogDataRecord record = new LogDataRecord();
+          record.setLogMessage(cluster.getText());
+          record.setUuid(uuid);
+          record.setTimesLabeled(timesLabelled);
+          returnList.add(record);
+        }
       }
     }
     return returnList;
@@ -112,10 +154,12 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
     // increment the timesLabeled count in logDataRecords
 
-    Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class).filter("_id", record.getUuid());
+    Query<LogMLAnalysisRecord> query =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class).filter("_id", record.getUuid());
 
-    UpdateOperations<LogDataRecord> updateOperations =
-        wingsPersistence.createUpdateOperations(LogDataRecord.class).inc("timesLabeled");
+    UpdateOperations<LogMLAnalysisRecord> updateOperations =
+        wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
+            .set("timesLabeled", record.getTimesLabeled() + 1);
     wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
   }
 
