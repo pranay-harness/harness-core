@@ -7,7 +7,9 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import io.github.benas.randombeans.api.EnhancedRandom;
+import io.harness.exception.WingsException;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager.Owners;
 import software.wings.beans.Application;
@@ -94,6 +96,17 @@ public class EnvironmentGenerator {
       builder.withEnvironmentType(random.nextObject(EnvironmentType.class));
     }
 
-    return environmentService.save(builder.build());
+    // Todo : move this part to a common method for all generators
+    try {
+      return environmentService.save(builder.build());
+    } catch (WingsException we) {
+      if (we.getCause() instanceof DuplicateKeyException) {
+        Environment exists = exists(builder.build());
+        if (exists != null) {
+          return exists;
+        }
+      }
+      throw we;
+    }
   }
 }

@@ -26,7 +26,7 @@ import java.util.List;
 
 @Singleton
 public class ManagerExecutor {
-  protected static boolean failedAlready;
+  private static boolean failedAlready;
   private static final Logger logger = LoggerFactory.getLogger(ManagerExecutor.class);
   private static final String alpnJar =
       "org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar";
@@ -42,9 +42,11 @@ public class ManagerExecutor {
       return;
     }
 
-    final File directory = new File(Project.rootDirectory(AbstractFunctionalTest.class));
+    String directoryPath = Project.rootDirectory(AbstractFunctionalTest.class);
+    final File directory = new File(directoryPath);
+    final File lockfile = new File(directoryPath, "manager");
 
-    if (FileIo.acquireLock(directory, ofMinutes(2))) {
+    if (FileIo.acquireLock(lockfile, ofMinutes(2))) {
       try {
         if (isHealthy()) {
           return;
@@ -89,7 +91,7 @@ public class ManagerExecutor {
         failedAlready = true;
         throw exception;
       } finally {
-        FileIo.releaseLock(directory);
+        FileIo.releaseLock(lockfile);
       }
     }
   }

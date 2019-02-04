@@ -7,6 +7,7 @@ import static software.wings.beans.artifact.JenkinsArtifactStream.JenkinsArtifac
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.SettingGenerator.Settings;
@@ -247,6 +248,15 @@ public class ArtifactStreamGenerator {
       default:
         throw new UnsupportedOperationException();
     }
-    return artifactStreamService.create(newArtifactStream, false);
+
+    try {
+      return artifactStreamService.create(newArtifactStream, false);
+    } catch (DuplicateKeyException de) {
+      ArtifactStream exists = exists(newArtifactStream);
+      if (exists != null) {
+        return exists;
+      }
+      throw de;
+    }
   }
 }

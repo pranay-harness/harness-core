@@ -24,6 +24,7 @@ import software.wings.beans.Account;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
 
+import java.io.IOException;
 import javax.ws.rs.core.GenericType;
 
 public abstract class AbstractFunctionalTest implements FunctionalTests {
@@ -49,16 +50,19 @@ public abstract class AbstractFunctionalTest implements FunctionalTests {
   }
 
   @Inject private AccountGenerator accountGenerator;
+  @Inject private DelegateExecutor delegateExecutor;
   @Inject OwnerManager ownerManager;
 
   Account account;
 
   @Before
-  public void testSetup() {
+  public void testSetup() throws IOException {
     final Seed seed = new Seed(0);
     Owners owners = ownerManager.create();
 
     account = accountGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
+
+    delegateExecutor.ensureDelegate();
 
     String basicAuthValue =
         "Basic " + encodeBase64String(String.format("%s:%s", "admin@harness.io", "admin").getBytes());

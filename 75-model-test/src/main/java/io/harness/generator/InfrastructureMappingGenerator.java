@@ -10,7 +10,9 @@ import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import io.github.benas.randombeans.api.EnhancedRandom;
+import io.harness.exception.WingsException;
 import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
 import io.harness.generator.OwnerManager.Owners;
@@ -319,6 +321,16 @@ public class InfrastructureMappingGenerator {
         throw new UnsupportedOperationException();
     }
 
-    return infrastructureMappingService.save(newInfrastructureMapping);
+    try {
+      return infrastructureMappingService.save(newInfrastructureMapping);
+    } catch (WingsException de) {
+      if (de.getCause() instanceof DuplicateKeyException) {
+        InfrastructureMapping exists = exists(newInfrastructureMapping);
+        if (exists != null) {
+          return exists;
+        }
+      }
+      throw de;
+    }
   }
 }
