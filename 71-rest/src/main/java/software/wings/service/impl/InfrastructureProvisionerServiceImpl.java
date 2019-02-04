@@ -511,7 +511,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     return ((TerraformExecutionData) responseData).getTargets();
   }
 
-  private boolean isTemplatizedProvisioner(TerraformInfrastructureProvisioner infrastructureProvisioner) {
+  @Override
+  public boolean isTemplatizedProvisioner(TerraformInfrastructureProvisioner infrastructureProvisioner) {
     return infrastructureProvisioner.getSourceRepoBranch().contains("$")
         || infrastructureProvisioner.getPath().contains("$");
   }
