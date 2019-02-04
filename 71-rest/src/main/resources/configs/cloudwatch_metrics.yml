@@ -161,3 +161,34 @@ LAMBDA:
       dimensionDisplay: Lambda Function Name
       metricType: THROUGHPUT
       enabledDefault: true
+
+ECS:
+    - metricName: CPUReservation
+      displayName: CPU Reservation
+      dimension: ClusterName
+      dimensionDisplay: Cluster Name
+      metricType: VALUE
+      enabledDefault: true
+
+    - metricName: CPUUtilization
+      displayName: CPU Utilization
+      dimension: ClusterName
+      dimensionDisplay: Cluster Name
+      metricType: VALUE
+      enabledDefault: true
+
+    - metricName: MemoryReservation
+      displayName: Memory Reservation
+      dimension: ClusterName
+      dimensionDisplay: Cluster Name
+      metricType: VALUE
+      enabledDefault: true
+
+    - metricName: MemoryUtilization
+      displayName: Memory Utilization
+      dimension: ClusterName
+      dimensionDisplay: Cluster Name
+      metricType: VALUE
+      enabledDefault: true
+
+

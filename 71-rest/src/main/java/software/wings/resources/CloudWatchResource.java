@@ -78,4 +78,13 @@ public class CloudWatchResource {
       @QueryParam("settingId") final String settingId, @QueryParam("region") final String region) {
     return new RestResponse<>(cloudWatchService.getLambdaFunctionsNames(settingId, region));
   }
+
+  @GET
+  @Path("/get-ecs-cluster-names")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getECSClusterNames(@QueryParam("accountId") final String accountId,
+      @QueryParam("settingId") final String settingId, @QueryParam("region") final String region) {
+    return new RestResponse<>(cloudWatchService.getECSClusterNames(settingId, region));
+  }
 }

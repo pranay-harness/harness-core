@@ -1363,6 +1363,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .analysisComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE)
             .loadBalancerMetrics(config.getLoadBalancerMetrics())
             .lambdaFunctionNames(cloudWatchService.createLambdaFunctionNames(config.getLambdaFunctions()))
+            .metricsByECSClusterName(cloudWatchService.createECSMetrics(config.getClusterName()))
             .region(config.getRegion())
             .dataCollectionMinute(0)
             .build();

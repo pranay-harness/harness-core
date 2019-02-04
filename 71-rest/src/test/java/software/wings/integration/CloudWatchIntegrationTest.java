@@ -126,6 +126,19 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
     assertTrue("No lambda function found", lambdaFunctionNames.size() > 1);
   }
 
+  @Test
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  public void testGetECSClusternNames() throws Exception {
+    WebTarget target = client.target(API_BASE + "/cloudwatch/get-ecs-cluster-names?accountId=" + accountId
+        + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());
+    RestResponse<List<String>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<String>>>() {});
+
+    List<String> ecsClusterNames = restResponse.getResource();
+
+    assertTrue("No lambda function found", ecsClusterNames.size() > 1);
+  }
+
   private CloudWatchSetupTestNodeData getCloudWatchSetupTestNodedata() {
     return CloudWatchSetupTestNodeData.builder()
         .region("us-east-2")

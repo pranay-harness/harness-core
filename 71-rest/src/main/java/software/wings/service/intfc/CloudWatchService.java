@@ -57,4 +57,8 @@ public interface CloudWatchService {
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(CloudWatchSetupTestNodeData setupTestNodeData);
 
   Map<String, List<CloudWatchMetric>> createLambdaFunctionNames(List<String> lambdaFunctions);
+
+  Map<String, List<CloudWatchMetric>> createECSMetrics(String ecsClusterName);
+
+  List<String> getECSClusterNames(String settingId, String region);
 }

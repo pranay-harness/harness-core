@@ -20,6 +20,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.AwsLambdaContextElement;
+import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.AwsConfig;
@@ -74,6 +75,8 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   @SchemaIgnore @Builder.Default private List<CloudWatchMetric> ec2Metrics = new ArrayList<>();
 
   @SchemaIgnore private boolean shouldDoLambdaVerification;
+
+  @SchemaIgnore private boolean shouldDoECSClusterVerification;
 
   /**
    * Instantiates a new state.
@@ -135,11 +138,17 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     Map<String, String> lambdaFunctions = new HashMap<>();
+    String clusterName = null;
     if (shouldDoLambdaVerification && getDeploymentType(context).equals(DeploymentType.AWS_LAMBDA)) {
       AwsLambdaContextElement elements = context.getContextElement(ContextElementType.PARAM);
       elements.getFunctionArns().forEach(contextElement -> {
         lambdaFunctions.put(contextElement.getFunctionName(), contextElement.getFunctionArn());
       });
+    }
+
+    if (shouldDoECSClusterVerification && getDeploymentType(context).equals(DeploymentType.ECS)) {
+      ContainerServiceElement containerServiceElement = context.getContextElement(ContextElementType.PARAM);
+      clusterName = containerServiceElement.getClusterName();
     }
 
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
@@ -175,6 +184,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
             .loadBalancerMetrics(loadBalancerMetrics)
             .ec2Metrics(ec2Metrics)
             .lambdaFunctionNames(createLambdaMetrics(lambdaFunctions.keySet(), cloudWatchMetrics))
+            .metricsByECSClusterName(createECSMetrics(clusterName, cloudWatchMetrics))
             .build();
 
     analysisContext.getTestNodes().put(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
@@ -202,6 +212,16 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);
+  }
+
+  private Map<String, List<CloudWatchMetric>> createECSMetrics(
+      String clusterName, Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics) {
+    if (isEmpty(clusterName)) {
+      return null;
+    }
+    Map<String, List<CloudWatchMetric>> ecsMetrics = new HashMap<>();
+    ecsMetrics.put(clusterName, cloudWatchMetrics.get(AwsNameSpace.ECS));
+    return ecsMetrics;
   }
 
   public static Map<String, TimeSeriesMetricDefinition> fetchMetricTemplates(
@@ -270,6 +290,14 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
 
   public void setShouldDoLambdaVerification(boolean shouldDoLambdaVerification) {
     this.shouldDoLambdaVerification = shouldDoLambdaVerification;
+  }
+
+  public boolean isShouldDoECSClusterVerification() {
+    return shouldDoECSClusterVerification;
+  }
+
+  public void setShouldDoECSClusterVerification(boolean shouldDoECSClusterVerification) {
+    this.shouldDoECSClusterVerification = shouldDoECSClusterVerification;
   }
 
   public void setEc2Metrics(List<CloudWatchMetric> ec2Metrics) {

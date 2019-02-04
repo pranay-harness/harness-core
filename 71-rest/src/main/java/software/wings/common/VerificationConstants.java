@@ -45,6 +45,7 @@ public class VerificationConstants {
   public static final String GET_CLASSIFY_LABELS_URL = "/list-labels-to-classify";
   public static final String LAMBDA_HOST_NAME = "LAMBDA_HOST";
   public static final String DEFAULT_GROUP_NAME = "default";
+  public static final String ECS_HOST_NAME = "ECS_HOST";
 
   // DEMO Workflow Constants
   public static final String DEMO_APPLICAITON_ID = "CV-Demo";

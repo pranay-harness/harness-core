@@ -139,6 +139,25 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   }
 
   @Override
+  public Map<String, List<CloudWatchMetric>> createECSMetrics(String ecsClusterName) {
+    if (isEmpty(ecsClusterName)) {
+      return null;
+    }
+    Map<String, List<CloudWatchMetric>> metricsByECSClusterName = new HashMap<>();
+    metricsByECSClusterName.put(ecsClusterName, cloudWatchMetrics.get(AwsNameSpace.ECS));
+    return metricsByECSClusterName;
+  }
+
+  @Override
+  public List<String> getECSClusterNames(String settingId, String region) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
+      throw new WingsException("AWS account setting not found " + settingId);
+    }
+    return awsInfrastructureProvider.listECSClusterNames(settingAttribute, region);
+  }
+
+  @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(CloudWatchSetupTestNodeData setupTestNodeData) {
     String hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
     try {
