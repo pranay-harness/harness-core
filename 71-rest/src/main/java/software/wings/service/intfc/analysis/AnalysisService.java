@@ -4,12 +4,16 @@ import software.wings.api.InstanceElement;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.elk.ElkQueryType;
+import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -78,4 +82,6 @@ public interface AnalysisService {
   List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
   LogMLAnalysisSummary getExperimentalAnalysisSummary(
       String stateExecutionId, String appId, StateType stateType, String expName);
+  List<LogMLClusterSummary> computeCluster(Map<String, Map<String, SplunkAnalysisCluster>> cluster,
+      Map<String, LogMLScore> clusterScores, CLUSTER_TYPE cluster_type);
 }

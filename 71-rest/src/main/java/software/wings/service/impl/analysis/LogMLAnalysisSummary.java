@@ -6,6 +6,7 @@ import lombok.Data;
 import software.wings.metrics.RiskLevel;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,5 +32,11 @@ public class LogMLAnalysisSummary {
 
   public boolean isEmptyResult() {
     return isEmpty(testClusters) && isEmpty(unknownClusters);
+  }
+  public void initializeClusters() {
+    controlClusters = new ArrayList<>();
+    testClusters = new ArrayList<>();
+    unknownClusters = new ArrayList<>();
+    ignoreClusters = new ArrayList<>();
   }
 }
