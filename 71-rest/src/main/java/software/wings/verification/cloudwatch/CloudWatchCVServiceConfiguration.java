@@ -26,6 +26,10 @@ public class CloudWatchCVServiceConfiguration extends CVConfiguration {
 
   @Attributes(title = "Lambda Functions") private List<String> lambdaFunctions;
 
+  @Attributes(title = "EC2 Instance Names") private List<String> ec2InstanceNames;
+
+  @Attributes(title = "EC2 Metrics") private List<CloudWatchMetric> ec2Metrics;
+
   @Attributes(title = "ECS Cluster Name") private String clusterName;
 
   @Attributes(title = "Region") private String region;

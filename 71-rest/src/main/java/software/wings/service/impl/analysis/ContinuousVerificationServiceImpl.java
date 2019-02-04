@@ -1349,6 +1349,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       CloudWatchCVServiceConfiguration config, String waitId, long startTime, long endTime) {
     AwsConfig awsConfig = (AwsConfig) settingsService.get(config.getConnectorId()).getValue();
     int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+
     final CloudWatchDataCollectionInfo dataCollectionInfo =
         CloudWatchDataCollectionInfo.builder()
             .awsConfig(awsConfig)
@@ -1358,7 +1359,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .cvConfigId(config.getUuid())
             .startTime(startTime)
             .collectionTime(timeDuration)
-            .hosts(new HashMap<>())
+            .hosts(cloudWatchService.getGroupNameByHost(config.getEc2InstanceNames()))
+            .ec2Metrics(config.getEc2Metrics())
             .encryptedDataDetails(secretManager.getEncryptionDetails(awsConfig, config.getAppId(), null))
             .analysisComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE)
             .loadBalancerMetrics(config.getLoadBalancerMetrics())

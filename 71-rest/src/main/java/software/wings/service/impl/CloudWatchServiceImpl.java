@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Charsets;
@@ -13,6 +14,7 @@ import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.DimensionFilter;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.Metric;
+import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -139,6 +141,24 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   }
 
   @Override
+  public Map<String, String> getGroupNameByHost(List<String> ec2InstanceNames) {
+    Map<String, String> groupNameByHost = new HashMap<>();
+    ec2InstanceNames.forEach(ec2InstanceName -> { groupNameByHost.put(ec2InstanceName, DEFAULT_GROUP_NAME); });
+    return groupNameByHost;
+  }
+
+  @Override
+  public Map<String, String> getEC2Instances(String settingId, String region) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
+      throw new WingsException("AWS account setting not found " + settingId);
+    }
+    List<Instance> instances = awsInfrastructureProvider.listEc2Instances(settingAttribute, region);
+    return instances.stream()
+        .filter(instance -> !instance.getPublicDnsName().equals(""))
+        .collect(Collectors.toMap(Instance::getPrivateDnsName, Instance::getInstanceId));
+  }
+
   public Map<String, List<CloudWatchMetric>> createECSMetrics(String ecsClusterName) {
     if (isEmpty(ecsClusterName)) {
       return null;

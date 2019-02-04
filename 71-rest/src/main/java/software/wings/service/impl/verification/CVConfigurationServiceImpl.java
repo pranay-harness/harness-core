@@ -268,7 +268,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("loadBalancerMetrics", ((CloudWatchCVServiceConfiguration) cvConfiguration).getLoadBalancerMetrics())
             .set("region", ((CloudWatchCVServiceConfiguration) cvConfiguration).getRegion())
             .set("lambdaFunctions", ((CloudWatchCVServiceConfiguration) cvConfiguration).getLambdaFunctions())
-            .set("clusterName", ((CloudWatchCVServiceConfiguration) cvConfiguration).getClusterName());
+            .set("clusterName", ((CloudWatchCVServiceConfiguration) cvConfiguration).getClusterName())
+            .set("ec2InstanceName", ((CloudWatchCVServiceConfiguration) cvConfiguration).getEc2InstanceNames())
+            .set("ec2Metrics", ((CloudWatchCVServiceConfiguration) cvConfiguration).getEc2Metrics());
         break;
       case SUMO:
         updateOperations.set("query", ((LogsCVConfiguration) cvConfiguration).getQuery())
