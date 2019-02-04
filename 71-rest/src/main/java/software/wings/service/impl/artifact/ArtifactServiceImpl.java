@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.CREATED_AT_KEY;
+import static software.wings.beans.artifact.Artifact.ARTIFACT_FILES_KEY;
 import static software.wings.beans.artifact.Artifact.ARTIFACT_SOURCE_NAME_KEY;
 import static software.wings.beans.artifact.Artifact.ARTIFACT_STREAM_ID_KEY;
 import static software.wings.beans.artifact.Artifact.CONTENT_STATUS_KEY;
@@ -355,15 +356,18 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
+    deleteArtifactsByQuery(wingsPersistence.createQuery(Artifact.class)
+                               .project(APP_ID_KEY, true)
+                               .project(ARTIFACT_FILES_KEY, true)
+                               .filter(APP_ID_KEY, appId)
+                               .filter(ARTIFACT_STREAM_ID_KEY, artifactStreamId));
+  }
+
+  private void deleteArtifactsByQuery(Query<Artifact> artifactQuery) {
     List<String> artifactIds = new ArrayList<>();
     List<String> artifactIdsWithFiles = new ArrayList<>();
     List<String> artifactFileIds = new ArrayList<>();
-    try (HIterator<Artifact> iterator = new HIterator<>(wingsPersistence.createQuery(Artifact.class)
-                                                            .filter(APP_ID_KEY, appId)
-                                                            .project("artifactFiles", true)
-                                                            .filter(APP_ID_KEY, appId)
-                                                            .filter(ARTIFACT_STREAM_ID_KEY, artifactStreamId)
-                                                            .fetch())) {
+    try (HIterator<Artifact> iterator = new HIterator<>(artifactQuery.fetch())) {
       while (iterator.hasNext()) {
         Artifact artifact = iterator.next();
         if (isNotEmpty(artifact.getArtifactFiles())) {
@@ -589,5 +593,15 @@ public class ArtifactServiceImpl implements ArtifactService {
     }
     artifactQuery.filter("artifactSourceName", artifactStream.getSourceName());
     return artifactQuery;
+  }
+
+  @Override
+  public void deleteWhenArtifactSourceNameChanged(ArtifactStream artifactStream) {
+    deleteArtifactsByQuery(wingsPersistence.createQuery(Artifact.class)
+                               .project(APP_ID_KEY, true)
+                               .project(ARTIFACT_FILES_KEY, true)
+                               .filter(APP_ID_KEY, artifactStream.getAppId())
+                               .filter(ARTIFACT_STREAM_ID_KEY, artifactStream.getUuid())
+                               .filter(ARTIFACT_SOURCE_NAME_KEY, artifactStream.getSourceName()));
   }
 }

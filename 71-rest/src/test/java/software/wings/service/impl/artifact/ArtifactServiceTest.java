@@ -867,4 +867,34 @@ public class ArtifactServiceTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNotNull();
     assertThat(artifactService.fetchArtifacts(APP_ID, Collections.setOf(asList(savedArtifact.getUuid())))).isNotEmpty();
   }
+
+  @Test
+  public void shouldDeleteWhenArtifactSourceNameChanged() {
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .sourceName("todolistwar")
+                                                      .settingId(SETTING_ID)
+                                                      .appId(APP_ID)
+                                                      .jobname("todolistwar")
+                                                      .autoPopulate(true)
+                                                      .serviceId(SERVICE_ID)
+                                                      .artifactPaths(asList("target/todolist.war"))
+                                                      .build();
+    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
+    Artifact jenkinsArtifact = anArtifact()
+                                   .withAppId(APP_ID)
+                                   .withArtifactStreamId(jenkinsArtifactStreamId)
+                                   .withMetadata(ImmutableMap.of("buildNo", "200"))
+                                   .withRevision("1.0")
+                                   .withDisplayName("DISPLAY_NAME")
+                                   .withServiceIds(asList(SERVICE_ID))
+                                   .withStatus(APPROVED)
+                                   .build();
+
+    when(artifactStreamService.get(APP_ID, jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
+    Artifact savedArtifact = artifactService.create(jenkinsArtifact);
+    assertThat(savedArtifact).isNotNull();
+    artifactService.deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
+    assertThat(artifactService.list(aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build(), false))
+        .hasSize(0);
+  }
 }

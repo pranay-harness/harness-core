@@ -171,4 +171,6 @@ public interface ArtifactService extends OwnedByArtifactStream {
   List<Artifact> fetchArtifacts(String appId, Set<String> artifactUuids);
 
   Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream);
+
+  void deleteWhenArtifactSourceNameChanged(ArtifactStream artifactStream);
 }
