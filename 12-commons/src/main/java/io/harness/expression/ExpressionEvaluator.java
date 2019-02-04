@@ -3,7 +3,6 @@ package io.harness.expression;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
-import static java.util.Arrays.asList;
 
 import io.harness.data.algorithm.IdentifierName;
 import io.harness.exception.CriticalExpressionEvaluationException;
@@ -18,7 +17,9 @@ import org.apache.commons.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,7 +57,7 @@ public class ExpressionEvaluator {
   public Object evaluate(String expression, Map<String, Object> context, String defaultObjectPrefix) {
     expression = normalizeExpression(expression, context, defaultObjectPrefix);
 
-    JexlContext jc = prepareContext(context);
+    JexlContext jc = prepareContext(context, defaultObjectPrefix);
     return evaluate(expression, jc);
   }
 
@@ -74,10 +75,10 @@ public class ExpressionEvaluator {
       return null;
     }
 
-    JexlContext jc = prepareContext(context);
+    JexlContext jc = prepareContext(context, null);
 
     final NormalizeVariableResolver variableResolver =
-        NormalizeVariableResolver.builder().objectPrefixes(asList(defaultObjectPrefix, "context")).context(jc).build();
+        NormalizeVariableResolver.builder().objectPrefixes(generatePrefixList(defaultObjectPrefix)).context(jc).build();
 
     StrSubstitutor substitutor = new StrSubstitutor();
     substitutor.setVariableResolver(variableResolver);
@@ -104,7 +105,7 @@ public class ExpressionEvaluator {
       return null;
     }
 
-    JexlContext jc = prepareContext(context);
+    JexlContext jc = prepareContext(context, defaultObjectPrefix);
 
     String prefix = IdentifierName.random();
     String suffix = IdentifierName.random();
@@ -113,7 +114,6 @@ public class ExpressionEvaluator {
 
     final EvaluateVariableResolver variableResolver = EvaluateVariableResolver.builder()
                                                           .expressionEvaluator(this)
-                                                          .objectPrefixes(asList(defaultObjectPrefix, "context"))
                                                           .context(jc)
                                                           .variableResolverTracker(tracker)
                                                           .prefix(prefix)
@@ -199,9 +199,22 @@ public class ExpressionEvaluator {
     return ExpressionEvaluator.wingsVariablePattern.matcher(expression).find();
   }
 
-  protected JexlContext prepareContext(Map<String, Object> context) {
-    final LateBindingContext lateBindingContext = new LateBindingContext(context);
-    lateBindingContext.putAll(expressionFunctorMap);
-    return lateBindingContext;
+  protected JexlContext prepareContext(Map<String, Object> context, String defaultObjectPrefix) {
+    final HashMap<String, Object> map = new HashMap<>(context);
+    map.putAll(expressionFunctorMap);
+    return LateBindingContext.builder()
+        .prefixes(generatePrefixList(defaultObjectPrefix))
+        .expressionEvaluator(this)
+        .map(map)
+        .build();
+  }
+
+  private List<String> generatePrefixList(String defaultObjectPrefix) {
+    List<String> prefixes = new ArrayList<>();
+    if (defaultObjectPrefix != null) {
+      prefixes.add(defaultObjectPrefix);
+    }
+    prefixes.add("context");
+    return prefixes;
   }
 }
