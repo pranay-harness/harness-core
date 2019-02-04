@@ -10,7 +10,9 @@ import static software.wings.beans.Service.builder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import io.github.benas.randombeans.api.EnhancedRandom;
+import io.harness.exception.WingsException;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.ArtifactStreamGenerator.ArtifactStreams;
 import io.harness.generator.OwnerManager.Owners;
@@ -99,7 +101,17 @@ public class ServiceGenerator {
       builder.artifactType(random.nextObject(ArtifactType.class));
     }
 
-    return serviceResourceService.save(builder.build());
+    try {
+      return serviceResourceService.save(builder.build());
+    } catch (WingsException we) {
+      if (we.getCause() instanceof DuplicateKeyException) {
+        Service exists = exists(builder.build());
+        if (exists != null) {
+          return exists;
+        }
+      }
+      throw we;
+    }
   }
 
   public Service ensureService(Service service) {

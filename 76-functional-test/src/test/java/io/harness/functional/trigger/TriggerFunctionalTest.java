@@ -37,7 +37,6 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private ServiceGenerator serviceGenerator;
-
   Application application;
 
   final Seed seed = new Seed(0);

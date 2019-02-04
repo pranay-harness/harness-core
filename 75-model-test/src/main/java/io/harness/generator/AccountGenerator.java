@@ -131,11 +131,10 @@ public class AccountGenerator {
     licenseInfo.setLicenseUnits(Constants.DEFAULT_PAID_LICENSE_UNITS);
     accountObj.setLicenseInfo(licenseInfo);
 
-    // TODO: fix this Hack here.
     try {
       accountService.save(accountObj);
     } catch (WingsException we) {
-      logger.info(we.getMessage());
+      // TODO: fix this Hack here.
     }
 
     // Update account key to make it work with delegate

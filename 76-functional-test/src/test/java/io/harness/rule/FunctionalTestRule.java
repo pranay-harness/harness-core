@@ -69,6 +69,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
     ManagerExecutor.ensureManager();
+
     RestResponse<MongoConfig> mongoConfigRestResponse =
         given()
             .queryParam("configurationType", ConfigurationType.MONGO)
