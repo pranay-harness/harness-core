@@ -51,7 +51,7 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
           if (orchestrationWorkflow != null) {
             boolean updateNeeded = false;
             // Verify in pre-deployment steps
-            updateNeeded = updateStep(template, updateNeeded, orchestrationWorkflow.getPostDeploymentSteps());
+            updateNeeded = updateStep(template, updateNeeded, orchestrationWorkflow.getPreDeploymentSteps());
             // Verify in post deployment steps
             updateNeeded = updateStep(template, updateNeeded, orchestrationWorkflow.getPostDeploymentSteps());
             // Verify in phases
