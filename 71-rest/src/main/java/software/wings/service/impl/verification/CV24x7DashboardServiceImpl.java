@@ -1,11 +1,14 @@
 package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+import static software.wings.common.VerificationConstants.LOGS_HIGH_RISK_THRESHOLD;
+import static software.wings.common.VerificationConstants.LOGS_MEDIUM_RISK_THRESHOLD;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -14,17 +17,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLClusterSummary;
+import software.wings.service.impl.splunk.LogMLClusterScores;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
 import software.wings.verification.dashboard.HeatMapUnit;
+import software.wings.verification.log.LogsCVConfiguration;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
@@ -32,6 +45,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
 
   @Inject WingsPersistence wingsPersistence;
   @Inject CVConfigurationService cvConfigurationService;
+  @Inject AnalysisService analysisService;
 
   @Override
   public List<HeatMap> getHeatMapForLogs(
@@ -197,5 +211,111 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
         .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
         .order("logCollectionMinute")
         .asList();
+  }
+
+  public LogMLAnalysisSummary getAnalysisSummary(String cvConfigId, long startTime, long endTime, String appId) {
+    CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+    if (!VerificationConstants.getLogAnalysisStates().contains(cvConfiguration.getStateType())) {
+      logger.error("Incorrect CVConfigID to fetch logAnalysisSummary {}", cvConfigId);
+      return null;
+    }
+    List<LogMLAnalysisRecord> analysisRecords =
+        getLogAnalysisRecordsInTimeRange(appId, startTime, endTime, cvConfiguration);
+
+    if (analysisRecords == null) {
+      return null;
+    }
+
+    analysisRecords.forEach(analysisRecord -> analysisRecord.decompressLogAnalysisRecord());
+
+    // TODO: Incorporate user feedbacks into this.
+    final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
+    analysisSummary.initializeClusters();
+    double totalScore = 0.0;
+    int unknownFrequency = 0;
+    for (LogMLAnalysisRecord record : analysisRecords) {
+      analysisSummary.getControlClusters().addAll(
+          analysisService.computeCluster(record.getControl_clusters(), Collections.emptyMap(), CLUSTER_TYPE.CONTROL));
+      LogMLClusterScores logMLClusterScores =
+          record.getCluster_scores() != null ? record.getCluster_scores() : new LogMLClusterScores();
+      analysisSummary.getTestClusters().addAll(
+          analysisService.computeCluster(record.getTest_clusters(), logMLClusterScores.getTest(), CLUSTER_TYPE.TEST));
+      analysisSummary.getUnknownClusters().addAll(analysisService.computeCluster(
+          record.getUnknown_clusters(), logMLClusterScores.getUnknown(), CLUSTER_TYPE.UNKNOWN));
+      analysisSummary.getIgnoreClusters().addAll(
+          analysisService.computeCluster(record.getIgnore_clusters(), Collections.emptyMap(), CLUSTER_TYPE.IGNORE));
+
+      unknownFrequency += getUnexpectedFrequency(record.getTest_clusters());
+      analysisSummary.setQuery(record.getQuery());
+      totalScore += record.getScore();
+    }
+
+    analysisSummary.setScore(totalScore / analysisRecords.size() * 100);
+
+    RiskLevel riskLevel = RiskLevel.NA;
+
+    int unknownClusters = 0;
+    int highRiskClusters = 0;
+    int mediumRiskCluster = 0;
+    int lowRiskClusters = 0;
+    if (isNotEmpty(analysisSummary.getUnknownClusters())) {
+      for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
+        if (clusterSummary.getScore() > LOGS_HIGH_RISK_THRESHOLD) {
+          ++highRiskClusters;
+        } else if (clusterSummary.getScore() > LOGS_MEDIUM_RISK_THRESHOLD) {
+          ++mediumRiskCluster;
+        } else if (clusterSummary.getScore() > 0) {
+          ++lowRiskClusters;
+        }
+      }
+      riskLevel = highRiskClusters > 0
+          ? RiskLevel.HIGH
+          : mediumRiskCluster > 0 ? RiskLevel.MEDIUM : lowRiskClusters > 0 ? RiskLevel.LOW : RiskLevel.HIGH;
+
+      unknownClusters = analysisSummary.getUnknownClusters().size();
+      analysisSummary.setHighRiskClusters(highRiskClusters);
+      analysisSummary.setMediumRiskClusters(mediumRiskCluster);
+      analysisSummary.setLowRiskClusters(lowRiskClusters);
+    }
+
+    if (unknownFrequency > 0) {
+      analysisSummary.setHighRiskClusters(analysisSummary.getHighRiskClusters() + unknownFrequency);
+      riskLevel = RiskLevel.HIGH;
+    }
+
+    String analysisSummaryMsg = "";
+    if (highRiskClusters > 0 || mediumRiskCluster > 0 || lowRiskClusters > 0) {
+      analysisSummaryMsg = analysisSummary.getHighRiskClusters() + " high risk, "
+          + analysisSummary.getMediumRiskClusters() + " medium risk, " + analysisSummary.getLowRiskClusters()
+          + " low risk anomalous cluster(s) found";
+    } else if (unknownClusters > 0 || unknownFrequency > 0) {
+      final int totalAnomalies = unknownClusters + unknownFrequency;
+      analysisSummaryMsg = totalAnomalies == 1 ? totalAnomalies + " anomalous cluster found"
+                                               : totalAnomalies + " anomalous clusters found";
+    }
+
+    analysisSummary.setRiskLevel(riskLevel);
+    analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
+    analysisSummary.setStateType(cvConfiguration.getStateType());
+    analysisSummary.setQuery(((LogsCVConfiguration) cvConfiguration).getQuery());
+    return analysisSummary;
+  }
+
+  private int getUnexpectedFrequency(Map<String, Map<String, SplunkAnalysisCluster>> testClusters) {
+    int unexpectedFrequency = 0;
+    if (isEmpty(testClusters)) {
+      return unexpectedFrequency;
+    }
+    for (Entry<String, Map<String, SplunkAnalysisCluster>> labelEntry : testClusters.entrySet()) {
+      for (Entry<String, SplunkAnalysisCluster> hostEntry : labelEntry.getValue().entrySet()) {
+        final SplunkAnalysisCluster analysisCluster = hostEntry.getValue();
+        if (analysisCluster.isUnexpected_freq()) {
+          unexpectedFrequency++;
+          break;
+        }
+      }
+    }
+
+    return unexpectedFrequency;
   }
 }

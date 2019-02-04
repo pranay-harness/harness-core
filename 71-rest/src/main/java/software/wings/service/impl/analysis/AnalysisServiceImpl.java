@@ -745,7 +745,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     return searchResponse;
   }
 
-  private List<LogMLClusterSummary> computeCluster(Map<String, Map<String, SplunkAnalysisCluster>> cluster,
+  public List<LogMLClusterSummary> computeCluster(Map<String, Map<String, SplunkAnalysisCluster>> cluster,
       Map<String, LogMLScore> clusterScores, CLUSTER_TYPE cluster_type) {
     if (cluster == null) {
       return Collections.emptyList();

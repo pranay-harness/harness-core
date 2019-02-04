@@ -19,7 +19,9 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.CVDeploymentData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.TimeSeriesFilter;
+import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.verification.HeatMap;
 import software.wings.verification.TransactionTimeSeries;
 
@@ -41,6 +43,7 @@ import javax.ws.rs.QueryParam;
 @Scope(SERVICE)
 public class ContinuousVerificationDashboardResource {
   @Transient @Inject @SchemaIgnore protected ContinuousVerificationService continuousVerificationService;
+  @Inject private CV24x7DashboardService cv24x7DashboardService;
 
   @GET
   @Path(VerificationConstants.CV_DASH_GET_RECORDS)
@@ -165,5 +168,16 @@ public class ContinuousVerificationDashboardResource {
   public RestResponse<SortedSet<TransactionTimeSeries>> getFilteredTimeSeriesOfHeatMapUnitPost(
       @QueryParam("accountId") @Valid final String accountId, @Valid TimeSeriesFilter timeSeriesFilter) {
     return new RestResponse<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(timeSeriesFilter));
+  }
+
+  @GET
+  @Path(VerificationConstants.LOG_24x7_SUMMARY)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<LogMLAnalysisSummary> getLogAnalysisSummaryOfHeatmap(
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("appId") @Valid final String appId,
+      @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime,
+      @QueryParam("cvConfigId") String cvConfigId) {
+    return new RestResponse<>(cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId));
   }
 }

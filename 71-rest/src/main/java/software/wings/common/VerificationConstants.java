@@ -35,6 +35,7 @@ public class VerificationConstants {
   public static final String VERIFICATION_SERVICE_BASE_URL = "/verification";
   public static final String HEATMAP_SUMMARY = "/heatmap-summary";
   public static final String TIMESERIES = "/timeseries";
+  public static final String LOG_24x7_SUMMARY = "/log-24x7-summary";
   public static final String STACKDRIVER_URL = "http://monitoring.googleapis.com";
   public static final String ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL = "/save-analysis-records";
   public static final String ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL = "/get-analysis-summary";
@@ -58,6 +59,8 @@ public class VerificationConstants {
   public static final Double HIGH_RISK_CUTOFF = 0.5;
   public static final Double MEDIUM_RISK_CUTOFF = 0.3;
   public static final Double NO_DATA_CUTOFF = 0.0;
+  public static final double LOGS_HIGH_RISK_THRESHOLD = 50;
+  public static final double LOGS_MEDIUM_RISK_THRESHOLD = 25;
   public static final int DURATION_TO_ASK_MINUTES = 5;
   public static final int CANARY_DAYS_TO_COLLECT = 7;
   public static final int PERIODIC_GAP_IN_DAYS = 7;
