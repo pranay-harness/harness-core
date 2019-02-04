@@ -185,9 +185,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   public ArtifactStream update(ArtifactStream artifactStream, boolean validate) {
-    ArtifactStream savedArtifactStream =
+    ArtifactStream existingArtifactStream =
         wingsPersistence.getWithAppId(ArtifactStream.class, artifactStream.getAppId(), artifactStream.getUuid());
-    if (savedArtifactStream == null) {
+    if (existingArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
 
@@ -198,15 +198,46 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.setSourceName(artifactStream.generateSourceName());
     ArtifactStream finalArtifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
 
-    if (!savedArtifactStream.getSourceName().equals(finalArtifactStream.getSourceName())) {
-      executorService.submit(() -> triggerService.updateByApp(savedArtifactStream.getAppId()));
+    if (!existingArtifactStream.getSourceName().equals(finalArtifactStream.getSourceName())) {
+      executorService.submit(() -> triggerService.updateByApp(existingArtifactStream.getAppId()));
     }
 
-    boolean isRename = !artifactStream.getName().equals(savedArtifactStream.getName());
+    if (shouldDeleteArtifactsOnSourceChanged(existingArtifactStream, finalArtifactStream)) {
+      // TODO: This logic has to be moved to Prune event or Queue to ensure guaranteed execution
+      executorService.submit(() -> artifactService.deleteWhenArtifactSourceNameChanged(existingArtifactStream));
+    }
+    boolean isRename = !artifactStream.getName().equals(existingArtifactStream.getName());
     String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
     yamlPushService.pushYamlChangeSet(
-        accountId, savedArtifactStream, finalArtifactStream, Type.UPDATE, artifactStream.isSyncFromGit(), isRename);
+        accountId, existingArtifactStream, finalArtifactStream, Type.UPDATE, artifactStream.isSyncFromGit(), isRename);
     return finalArtifactStream;
+  }
+
+  private boolean shouldDeleteArtifactsOnSourceChanged(
+      ArtifactStream oldArtifactStream, ArtifactStream updatedArtifactStream) {
+    ArtifactStreamType artifactStreamType = ArtifactStreamType.valueOf(oldArtifactStream.getArtifactStreamType());
+    switch (artifactStreamType) {
+      case CUSTOM:
+        return false;
+      case AMI:
+      case ARTIFACTORY:
+      case AMAZON_S3:
+      case NEXUS:
+      case ECR:
+      case DOCKER:
+      case GCR:
+      case ACR:
+      case GCS:
+      case SMB:
+      case SFTP:
+      case JENKINS:
+      case BAMBOO:
+        return !oldArtifactStream.getSourceName().equals(updatedArtifactStream.getSourceName());
+
+      default:
+        throw new InvalidRequestException(
+            "Artifact source changed check not covered for Artifact Stream Type [" + artifactStreamType + "]");
+    }
   }
 
   private void validateArtifactSourceData(ArtifactStream artifactStream) {

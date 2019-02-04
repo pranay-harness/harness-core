@@ -67,6 +67,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -89,6 +90,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private TriggerService triggerService;
   @Mock private SettingsService settingsService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private ArtifactService artifactService;
   @InjectMocks @Inject private ArtifactStreamService artifactStreamService;
 
   @Test
@@ -197,11 +199,21 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+    verify(artifactService).deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
+    verify(triggerService).updateByApp(APP_ID);
   }
 
   @Test
   public void shouldAddBambooArtifactStream() {
-    ArtifactStream savedArtifactSteam = createBambooArtifactStream();
+    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .jobname("TOD-TOD")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .artifactPaths(asList("artifacts/todolist.war"))
+                                                    .build();
+    ArtifactStream savedArtifactSteam = createBambooArtifactStream(bambooArtifactStream);
     BambooArtifactStream savedBambooArtifactStream = (BambooArtifactStream) savedArtifactSteam;
     assertThat(savedBambooArtifactStream.getJobname()).isEqualTo("TOD-TOD");
     assertThat(savedBambooArtifactStream.getArtifactPaths()).contains("artifacts/todolist.war");
@@ -212,7 +224,15 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateBambooArtifactStream() {
-    ArtifactStream savedArtifactSteam = createBambooArtifactStream();
+    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .jobname("TOD-TOD")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .artifactPaths(asList("artifacts/todolist.war"))
+                                                    .build();
+    ArtifactStream savedArtifactSteam = createBambooArtifactStream(bambooArtifactStream);
 
     BambooArtifactStream savedBambooArtifactStream = (BambooArtifactStream) savedArtifactSteam;
     assertThat(savedBambooArtifactStream.getJobname()).isEqualTo("TOD-TOD");
@@ -242,17 +262,11 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+    verify(artifactService).deleteWhenArtifactSourceNameChanged(bambooArtifactStream);
+    verify(triggerService).updateByApp(APP_ID);
   }
 
-  private ArtifactStream createBambooArtifactStream() {
-    BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
-                                                    .appId(APP_ID)
-                                                    .settingId(SETTING_ID)
-                                                    .jobname("TOD-TOD")
-                                                    .autoPopulate(true)
-                                                    .serviceId(SERVICE_ID)
-                                                    .artifactPaths(asList("artifacts/todolist.war"))
-                                                    .build();
+  private ArtifactStream createBambooArtifactStream(BambooArtifactStream bambooArtifactStream) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(bambooArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
@@ -1617,6 +1631,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     script.setScriptString("Welcome to harness");
     savedCustomArtifactStream.setScripts(Arrays.asList(script));
+    savedCustomArtifactStream.setName("Name Changed");
 
     ArtifactStream updatedArtifactStream = artifactStreamService.update(savedArtifactSteam);
 
@@ -1630,5 +1645,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
 
     assertThat(artifactStreamService.get(APP_ID, updatedArtifactStream.getUuid())).isNull();
+
+    verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(triggerService).updateByApp(APP_ID);
   }
 }
