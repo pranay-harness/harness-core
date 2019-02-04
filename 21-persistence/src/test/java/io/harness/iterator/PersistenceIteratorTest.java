@@ -9,6 +9,7 @@ import io.harness.PersistenceTest;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
+import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
 import org.junit.Before;
@@ -53,6 +54,7 @@ public class PersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Bypass
   public void testNextReturnsJustAdded() {
     for (int i = 0; i < 10; i++) {
       persistence.save(IterableEntity.builder().build());
@@ -62,7 +64,7 @@ public class PersistenceIteratorTest extends PersistenceTest {
     //    final Future<?> future2 = executorService.submit(() -> iterator.process());
     //    final Future<?> future3 = executorService.submit(() -> iterator.process());
 
-    Morpheus.sleep(ofSeconds(100));
+    Morpheus.sleep(ofSeconds(3));
     future1.cancel(true);
     //    future2.cancel(true);
     //    future3.cancel(true);

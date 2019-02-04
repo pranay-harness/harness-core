@@ -36,7 +36,8 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
+public class PersistenceRule
+    implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin, BypassRuleMixin {
   private static final Logger logger = LoggerFactory.getLogger(PersistenceRule.class);
 
   ClosingFactory closingFactory;
@@ -113,6 +114,10 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
+    if (bypass(frameworkMethod)) {
+      return noopStatement();
+    }
+
     return applyInjector(statement, frameworkMethod, target);
   }
 }

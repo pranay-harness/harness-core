@@ -43,8 +43,11 @@ public class PersistentLocker implements Locker {
 
   @Override
   public AcquiredLock acquireEphemeralLock(String name, Duration timeout) {
-    return acquireLock(
-        name, timeout, AcquiredDistributedLock.builder().closeAction(CloseAction.DESTROY).persistence(persistence));
+    return acquireLock(name, timeout,
+        AcquiredDistributedLock.builder()
+            .closeAction(CloseAction.DESTROY)
+            .persistence(persistence)
+            .distributedLockSvc(distributedLockSvc));
   }
 
   @SuppressWarnings("PMD")

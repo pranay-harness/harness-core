@@ -4,6 +4,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 
 import com.deftlabs.lock.mongo.DistributedLock;
+import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
@@ -25,6 +26,7 @@ public class AcquiredDistributedLock implements AcquiredLock {
 
   enum CloseAction { RELEASE, DESTROY }
 
+  private DistributedLockSvc distributedLockSvc;
   private HPersistence persistence;
   private CloseAction closeAction;
 
@@ -75,6 +77,8 @@ public class AcquiredDistributedLock implements AcquiredLock {
       switch (closeAction) {
         case DESTROY:
           String name = lock.getName();
+          lock.unlock();
+          distributedLockSvc.destroy(lock);
           final BasicDBObject filter = new BasicDBObject().append("_id", name);
           persistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks").remove(filter);
           break;
