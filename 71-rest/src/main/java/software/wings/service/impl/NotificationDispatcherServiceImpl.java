@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -21,7 +23,6 @@ import com.google.inject.Singleton;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.notifications.NotificationReceiverInfo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -190,7 +191,8 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     notificationGroup.getRoles().forEach(role -> {
       PageRequest<User> request = aPageRequest()
                                       .withLimit(PageRequest.UNLIMITED)
-                                      .addFilter("roles", Operator.IN, role)
+                                      .addFilter("appId", EQ, notificationGroup.getAppId())
+                                      .addFilter("roles", IN, role)
                                       .addFieldsIncluded("email", "emailVerified")
                                       .build();
 
