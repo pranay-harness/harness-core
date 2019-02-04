@@ -11,6 +11,7 @@ import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.sm.ExecutionContext;
@@ -58,6 +59,8 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
       String appId, String scmSettingId, String terraformDirectory, String accountId, String sourceRepoBranch);
 
   List<String> getTerraformTargets(String appId, String accountId, String provisionerId);
+
+  boolean isTemplatizedProvisioner(TerraformInfrastructureProvisioner infrastructureProvisioner);
 
   StreamingOutput downloadTerraformState(String provisionerId, String envId);
 }

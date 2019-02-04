@@ -6,6 +6,7 @@ import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.NewRelicMetricDataBackupMigration;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SetLastLoginTimeToAllUsers;
+import migrations.all.TerraformIsTemplatizedMigration;
 import migrations.all.TimeSeriesRiskSummaryMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -28,6 +29,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(7, RemoveSupportEmailFromSalesContacts.class))
         .add(Pair.of(8, NewRelicMetricDataBackupMigration.class))
         .add(Pair.of(9, TimeSeriesRiskSummaryMigration.class))
+        .add(Pair.of(10, TerraformIsTemplatizedMigration.class))
         .build();
   }
 }
