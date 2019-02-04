@@ -58,6 +58,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.K8sDeployment
 import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.ContainerMetadata;
+import software.wings.service.impl.ContainerMetadataType;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.request.ContainerFilter;
 import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
@@ -137,7 +138,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
                                                  .filter(Objects::nonNull)
                                                  .collect(toList());
 
-        if (isNotEmpty(containerMetadata.getReleaseName())) {
+        if (containerMetadata.getType() == ContainerMetadataType.K8S) {
           logger.info("Found {} instances in DB for app {} , infraMapping {} and releaseName {}", instancesInDB.size(),
               appId, infraMappingId, containerMetadata.getReleaseName());
 
@@ -279,7 +280,6 @@ public class ContainerInstanceHandler extends InstanceHandler {
       }
       Instance instance =
           buildInstanceFromPodInfo(containerInfraMapping, currentPodsMap.get(podName), deploymentSummary);
-      instance.setLastArtifactBuildNum(currentPodsMap.get(podName).getContainerList().get(0).getImage());
       instanceService.saveOrUpdate(instance);
     }
   }
@@ -323,6 +323,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
       newDeploymentSummaries.forEach(deploymentSummary -> {
         K8sDeploymentInfo deploymentInfo = (K8sDeploymentInfo) deploymentSummary.getDeploymentInfo();
         deploymentSummaryMap.put(ContainerMetadata.builder()
+                                     .type(ContainerMetadataType.K8S)
                                      .releaseName(deploymentInfo.getReleaseName())
                                      .namespace(deploymentInfo.getNamespace())
                                      .build(),
@@ -356,7 +357,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
             ? ((KubernetesContainerInfo) containerInfo).getNamespace()
             : null;
         String releaseName = containerInfo instanceof K8sPodInfo ? ((K8sPodInfo) containerInfo).getReleaseName() : null;
+        ContainerMetadataType type = containerInfo instanceof K8sPodInfo ? ContainerMetadataType.K8S : null;
         instanceMap.put(ContainerMetadata.builder()
+                            .type(type)
                             .containerServiceName(containerSvcName)
                             .namespace(namespace)
                             .releaseName(releaseName)
@@ -398,6 +401,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
       deploymentSummaries.forEach(deploymentSummary -> {
         K8sDeploymentInfo deploymentInfo = (K8sDeploymentInfo) deploymentSummary.getDeploymentInfo();
         containerSvcNameInstanceMap.put(ContainerMetadata.builder()
+                                            .type(ContainerMetadataType.K8S)
                                             .releaseName(deploymentInfo.getReleaseName())
                                             .namespace(deploymentInfo.getNamespace())
                                             .build(),
@@ -607,6 +611,25 @@ public class ContainerInstanceHandler extends InstanceHandler {
                                                         .build())
                                              .collect(toList()))
                              .build());
+
+    String image = pod.getContainerList().get(0).getImage();
+    String artifactSource;
+    String tag;
+    String splitArray[] = image.split(":");
+    if (splitArray.length == 2) {
+      artifactSource = splitArray[0];
+      tag = splitArray[1];
+    } else if (splitArray.length == 1) {
+      artifactSource = splitArray[0];
+      tag = "latest";
+    } else {
+      artifactSource = image;
+      tag = image;
+    }
+
+    builder.lastArtifactName(pod.getContainerList().get(0).getImage());
+    builder.lastArtifactSourceName(artifactSource);
+    builder.lastArtifactBuildNum(tag);
 
     return builder.build();
   }
