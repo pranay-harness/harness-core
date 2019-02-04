@@ -8,6 +8,8 @@ import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
+import static software.wings.beans.alert.AlertType.DelegateProfileError;
+import static software.wings.beans.alert.AlertType.DelegatesDown;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
@@ -40,8 +42,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.event.AlertEvent;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -51,12 +55,15 @@ import java.util.concurrent.Future;
 @Singleton
 public class AlertServiceImpl implements AlertService {
   private static final Logger logger = LoggerFactory.getLogger(AlertServiceImpl.class);
+  private static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON =
+      Arrays.asList(NoActiveDelegates, NoEligibleDelegates, DelegatesDown, DelegateProfileError);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private Injector injector;
   @Inject private EventPublisher eventPublisher;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public PageResponse<Alert> list(PageRequest<Alert> pageRequest) {
@@ -124,14 +131,23 @@ public class AlertServiceImpl implements AlertService {
             .withSeverity(alertType.getSeverity())
             .build());
 
+    //    publishEvent(persistedAlert);
+    logger.info("Alert opened: {}", persistedAlert);
+  }
+
+  private void publishEvent(Alert persistedAlert) {
+    AlertType alertType = persistedAlert.getType();
+
     try {
-      Event.builder().eventData(alertEventData(persistedAlert)).eventType(EventType.OPEN_ALERT).build();
-      //      eventPublisher.publishEvent(event);
+      if (ALERT_TYPES_TO_NOTIFY_ON.contains(persistedAlert.getType())) {
+        Event event = Event.builder().eventData(alertEventData(persistedAlert)).eventType(EventType.OPEN_ALERT).build();
+        eventPublisher.publishEvent(event);
+      } else {
+        logger.info("No alert 'event' will be published in event queue. Type: {}", alertType);
+      }
     } catch (Exception e) {
       logger.error("Could not publish alert event. Alert: {}", persistedAlert);
     }
-
-    logger.info("Alert opened: {}", persistedAlert);
   }
 
   private static EventData alertEventData(Alert alert) throws JsonProcessingException {

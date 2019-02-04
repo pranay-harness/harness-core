@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.SlackConfig;
+import software.wings.beans.notification.SlackNotificationConfiguration;
 
 /**
  * Created by anubhaw on 12/14/16.
@@ -14,5 +14,5 @@ public interface SlackNotificationService {
    * @param senderName  the sender name
    * @param message     the message
    */
-  void sendMessage(SlackConfig slackConfig, String slackChanel, String senderName, String message);
+  void sendMessage(SlackNotificationConfiguration slackConfig, String slackChanel, String senderName, String message);
 }

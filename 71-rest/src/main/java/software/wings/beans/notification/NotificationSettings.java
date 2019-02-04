@@ -1,33 +1,31 @@
 package software.wings.beans.notification;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.apache.commons.collections4.MapUtils;
+import io.harness.data.structure.CollectionUtils;
+import lombok.Value;
 import software.wings.beans.NotificationChannelType;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 
-@ToString
-@Getter
-@EqualsAndHashCode
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Value
 public class NotificationSettings {
   private boolean useIndividualEmails;
-  @Nonnull private Map<NotificationChannelType, List<String>> addressesByChannelType;
-
-  public NotificationSettings(
-      boolean useIndividualEmails, @Nonnull Map<NotificationChannelType, List<String>> addressesByChannelType) {
-    this.useIndividualEmails = useIndividualEmails;
-    this.addressesByChannelType = MapUtils.emptyIfNull(addressesByChannelType);
-  }
+  @NotNull private List<String> emailAddresses;
+  @NotNull private SlackNotificationSetting slackConfig;
 
   @Nonnull
   public Map<NotificationChannelType, List<String>> getAddressesByChannelType() {
-    return MapUtils.emptyIfNull(addressesByChannelType);
+    return Collections.emptyMap();
+  }
+
+  public @NotNull SlackNotificationSetting getSlackConfig() {
+    return slackConfig;
+  }
+
+  public List<String> getEmailAddresses() {
+    return CollectionUtils.emptyIfNull(emailAddresses);
   }
 }

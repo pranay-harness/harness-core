@@ -51,6 +51,7 @@ import software.wings.beans.Account.Builder;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
+import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
@@ -327,7 +328,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertNotNull(fetchedGroup);
     assertNull(fetchedGroup.getNotificationSettings());
 
-    NotificationSettings settings = new NotificationSettings(true, Collections.emptyMap());
+    NotificationSettings settings =
+        new NotificationSettings(true, Collections.emptyList(), SlackNotificationSetting.emptyConfig());
     userGroupService.updateNotificationSettings(accountId, fetchedGroup.getUuid(), settings);
     fetchedGroup = userGroupService.get(accountId, fetchedGroup.getUuid(), false);
     assertNotNull(fetchedGroup.getNotificationSettings());

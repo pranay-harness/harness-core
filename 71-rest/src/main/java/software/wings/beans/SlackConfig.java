@@ -2,21 +2,25 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CollaborationProviderYaml;
+
+import javax.annotation.Nullable;
 
 /**
  * Created by anubhaw on 12/14/16.
  */
 @JsonTypeName("SLACK")
 @ToString
-public class SlackConfig extends SettingValue {
+public class SlackConfig extends SettingValue implements SlackNotificationConfiguration {
   @Attributes(title = "Slack Webhook URL", required = true) @NotEmpty private String outgoingWebhookUrl;
 
   /**
@@ -24,6 +28,13 @@ public class SlackConfig extends SettingValue {
    */
   public SlackConfig() {
     super(SettingVariableTypes.SLACK.name());
+  }
+
+  @Nullable
+  @Override
+  @SchemaIgnore
+  public String getName() {
+    return null;
   }
 
   /**

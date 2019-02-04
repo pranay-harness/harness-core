@@ -23,6 +23,7 @@ import software.wings.beans.Base;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
+import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.sso.SSOType;
 
 import java.util.Collections;
@@ -124,6 +125,19 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
   @Override
   @JsonIgnore
   public Map<NotificationChannelType, List<String>> getAddressesByChannelType() {
-    return notificationSettings != null ? notificationSettings.getAddressesByChannelType() : Collections.emptyMap();
+    return null != notificationSettings ? notificationSettings.getAddressesByChannelType() : Collections.emptyMap();
+  }
+
+  @Nullable
+  @Override
+  @JsonIgnore
+  public SlackNotificationSetting getSlackConfig() {
+    return null != notificationSettings ? notificationSettings.getSlackConfig() : null;
+  }
+
+  @Override
+  @JsonIgnore
+  public List<String> getEmailAddresses() {
+    return null != notificationSettings ? notificationSettings.getEmailAddresses() : Collections.emptyList();
   }
 }

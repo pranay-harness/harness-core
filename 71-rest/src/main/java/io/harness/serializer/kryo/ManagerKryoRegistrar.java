@@ -6,6 +6,7 @@ import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.NotificationChannelType;
+import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateResponse;
@@ -42,5 +43,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsLambdaFunctionRequest.class, 7116);
     kryo.register(AwsLambdaFunctionResponse.class, 7117);
     kryo.register(PcfInfraMappingDataRequest.ActionType.class, 7118);
+    kryo.register(SlackNotificationSetting.class, 7119);
   }
 }
