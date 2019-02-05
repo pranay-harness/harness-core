@@ -289,6 +289,10 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public boolean saveClusteredLogData(String appId, String cvConfigId, ClusterLevel clusterLevel,
       int logCollectionMinute, String host, List<LogElement> logData) {
     final LogsCVConfiguration logsCVConfiguration = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    if (logsCVConfiguration == null) {
+      logger.info("No configuration found for {} in app {}. It may have been deleted.", cvConfigId, appId);
+      return false;
+    }
     if (isNotEmpty(logData)) {
       List<LogDataRecord> logDataRecords =
           LogDataRecord.generateDataRecords(logsCVConfiguration.getStateType(), appId, cvConfigId, null, null, null,
