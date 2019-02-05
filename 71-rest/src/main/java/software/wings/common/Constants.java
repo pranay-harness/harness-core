@@ -508,6 +508,7 @@ public interface Constants {
   String DELEGATE_DIR = "harness-delegate";
   String DOCKER_DELEGATE = "harness-delegate-docker";
   String KUBERNETES_DELEGATE = "harness-delegate-kubernetes";
+  String ECS_DELEGATE = "harness-delegate-ecs";
 
   String SELF_DESTRUCT = "[SELF_DESTRUCT]";
 
