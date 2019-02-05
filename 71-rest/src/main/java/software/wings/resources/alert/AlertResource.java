@@ -1,4 +1,4 @@
-package software.wings.resources;
+package software.wings.resources.alert;
 
 import static software.wings.security.PermissionAttribute.ResourceType.ROLE;
 
@@ -12,8 +12,12 @@ import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.alert.Alert;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.AlertServiceImpl;
 import software.wings.service.intfc.AlertService;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -41,5 +45,16 @@ public class AlertResource {
   public RestResponse<PageResponse<Alert>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Alert> request) {
     return new RestResponse<>(alertService.list(request));
+  }
+
+  @GET
+  @Path("/types")
+  public RestResponse<List<AlertType>> listCategoriesAndTypes(@QueryParam("accountId") String accountId) {
+    List<AlertType> types = Arrays.stream(software.wings.beans.alert.AlertType.values())
+                                .filter(AlertServiceImpl.ALERT_TYPES_TO_NOTIFY_ON::contains)
+                                .map(AlertType::new)
+                                .collect(Collectors.toList());
+
+    return new RestResponse<>(types);
   }
 }

@@ -68,20 +68,18 @@ public class InstanceStatServiceImpl implements InstanceStatService {
     Instant from = Instant.ofEpochMilli(fromTsMillis);
     Instant to = Instant.ofEpochMilli(toTsMillis);
     List<InstanceStatsSnapshot> stats = aggregate(accountId, from, to);
-    List<InstanceStatsSnapshot> filteredStats;
 
     Set<String> deletedAppIds = dashboardStatsService.getDeletedAppIds(accountId, fromTsMillis, toTsMillis);
     User user = UserThreadLocal.get();
-    TimelineRbacFilters rbacFilters;
     if (null != user) {
-      rbacFilters = new TimelineRbacFilters(user, accountId, appService, usageRestrictionsService);
-      filteredStats = rbacFilters.filter(stats, deletedAppIds);
+      TimelineRbacFilters rbacFilters = new TimelineRbacFilters(user, accountId, appService, usageRestrictionsService);
+      List<InstanceStatsSnapshot> filteredStats = rbacFilters.filter(stats, deletedAppIds);
+      log.info("Stats before and after filtering. Before: {}, After: {}", stats.size(), filteredStats.size());
+      InstanceTimeline timeline = new InstanceTimeline(filteredStats, deletedAppIds);
+      return top(timeline, 5);
     } else {
       throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
     }
-
-    InstanceTimeline timeline = new InstanceTimeline(filteredStats, deletedAppIds);
-    return top(timeline, 5);
   }
 
   @Override
