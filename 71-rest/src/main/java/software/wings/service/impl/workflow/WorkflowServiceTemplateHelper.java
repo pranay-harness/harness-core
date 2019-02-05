@@ -91,6 +91,18 @@ public class WorkflowServiceTemplateHelper {
               step.getProperties().putAll(templateStep.getProperties());
             }
           }
+        } else if (oldTemplateStep != null) {
+          // Do not change the template properties
+          List<String> templateProperties =
+              templateService.fetchTemplateProperties(step.getTemplateUuid(), step.getTemplateVersion());
+          if (step.getProperties() != null) {
+            step.getProperties().keySet().removeAll(templateProperties);
+            if (oldTemplateStep.getProperties() != null) {
+              for (String s : templateProperties) {
+                step.getProperties().put(s, oldTemplateStep.getProperties().get(s));
+              }
+            }
+          }
         }
       });
     }
