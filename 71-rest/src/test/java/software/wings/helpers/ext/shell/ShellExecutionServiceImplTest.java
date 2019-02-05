@@ -16,11 +16,10 @@ public class ShellExecutionServiceImplTest extends WingsBaseTest {
 
   @Test
   public void testExecuteShellScript() {
-    ShellExecutionRequest shellExecutionRequest =
-        ShellExecutionRequest.builder()
-            .scriptString("curl https://harness.jfrog.io/harness/api/repositories > $ARTIFACT_RESULT_PATH")
-            .workingDirectory("/tmp")
-            .build();
+    ShellExecutionRequest shellExecutionRequest = ShellExecutionRequest.builder()
+                                                      .scriptString("echo \"foo\" > $ARTIFACT_RESULT_PATH")
+                                                      .workingDirectory("/tmp")
+                                                      .build();
     ShellExecutionResponse shellExecutionResponse = shellExecutionService.execute(shellExecutionRequest);
     assertThat(shellExecutionResponse).isNotNull();
     assertThat(shellExecutionResponse.getExitValue()).isEqualTo(0);
