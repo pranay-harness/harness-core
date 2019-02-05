@@ -1,14 +1,9 @@
 package io.harness.limits.checker.rate;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
+import io.harness.persistence.PersistentEntity;
 import lombok.Value;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
-import software.wings.beans.Base;
+import org.mongodb.morphia.annotations.Id;
 
 import java.util.List;
 
@@ -16,13 +11,10 @@ import java.util.List;
  * This collections tracks the usage for rate limiting purposes.
  */
 @Value
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = false)
 @Entity(value = "usageBuckets", noClassnameStored = true)
-@Indexes(@Index(fields = @Field("key"), options = @IndexOptions(name = "key_idx", unique = true)))
-public class UsageBucket extends Base {
+public class UsageBucket implements PersistentEntity {
   // key which uniquely identifies this bucket
-  private String key;
+  @Id private String key;
 
   /**
    * List of times when bucket is accessed in current window.
@@ -30,10 +22,4 @@ public class UsageBucket extends Base {
    * See {@link MongoSlidingWindowRateLimitChecker#checkAndConsume} for example.
    */
   private List<Long> accessTimes;
-
-  // morphia expects a no-args constructor
-  private UsageBucket() {
-    this.key = null;
-    this.accessTimes = null;
-  }
 }
