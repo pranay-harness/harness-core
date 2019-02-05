@@ -46,6 +46,7 @@ import software.wings.service.intfc.FeatureFlagService;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -55,8 +56,8 @@ import java.util.concurrent.Future;
 @Singleton
 public class AlertServiceImpl implements AlertService {
   private static final Logger logger = LoggerFactory.getLogger(AlertServiceImpl.class);
-  private static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON =
-      Arrays.asList(NoActiveDelegates, NoEligibleDelegates, DelegatesDown, DelegateProfileError);
+  public static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = Collections.unmodifiableList(
+      Arrays.asList(NoActiveDelegates, NoEligibleDelegates, DelegatesDown, DelegateProfileError));
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;

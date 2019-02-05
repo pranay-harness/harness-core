@@ -59,7 +59,8 @@ public class TimelineRbacFilters {
     }
 
     final Set<String> allowedAppIds = getAssignedApps(currentUser);
-    log.info("Allowed App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), allowedAppIds);
+    log.info("Allowed App Ids. Account: {} User: {} Ids: {}, includeDeletedAppIds: {}", accountId,
+        currentUser.getEmail(), allowedAppIds, includeDeletedAppIds);
     final Set<String> allowedAppIdsFinal = Sets.newHashSet(allowedAppIds);
     if (includeDeletedAppIds) {
       allowedAppIdsFinal.addAll(deletedAppIds);
