@@ -191,6 +191,7 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
+import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
@@ -281,6 +282,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private YamlPushService yamlPushService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private LimitCheckerFactory limitCheckerFactory;
+  @Inject private K8sStateHelper k8sStateHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -2041,7 +2043,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void updateRequiredEntityTypes(String appId, String serviceId, PhaseStep phaseStep,
-      Set<EntityType> requiredEntityTypes, WorkflowPhase workflowPhase, Map<String, String> workflowVaraibles) {
+      Set<EntityType> requiredEntityTypes, WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
     boolean artifactNeeded = false;
 
     for (GraphNode step : phaseStep.getSteps()) {
@@ -2103,15 +2105,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         break;
       } else if (workflowPhase != null && HELM.equals(workflowPhase.getDeploymentType())
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
-        String infraMappingId = null;
-        if (workflowPhase.checkInfraTemplatized()) {
-          String infraTemplatizedName = workflowPhase.fetchInfraMappingTemplatizedName();
-          if (infraTemplatizedName != null) {
-            infraMappingId = isEmpty(workflowVaraibles) ? null : workflowVaraibles.get(infraTemplatizedName);
-          }
-        } else {
-          infraMappingId = workflowPhase.getInfraMappingId();
-        }
+        String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
         if (infraMappingId != null) {
           InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
           if (infrastructureMapping != null) {
@@ -2122,10 +2116,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             }
           }
         }
-      } else if (k8sV2ArtifactNeededStateTypes.contains(step.getType())
-          && artifactStreamService.artifactStreamsExistForService(appId, serviceId)) {
-        artifactNeeded = true;
-        break;
+      } else if (workflowPhase != null && k8sV2ArtifactNeededStateTypes.contains(step.getType())) {
+        if (artifactStreamService.artifactStreamsExistForService(appId, serviceId)) {
+          artifactNeeded = true;
+          break;
+        }
+
+        String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
+        if (isNotEmpty(getInfraMappingId(workflowPhase, workflowVariables))
+            && k8sStateHelper.doManifestsUseArtifact(appId, infraMappingId)) {
+          artifactNeeded = true;
+          break;
+        }
       }
     }
 
@@ -2133,6 +2135,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       requiredEntityTypes.add(ARTIFACT);
       phaseStep.setArtifactNeeded(true);
     }
+  }
+
+  private String getInfraMappingId(WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
+    String infraMappingId = null;
+    if (workflowPhase.checkInfraTemplatized()) {
+      String infraTemplatizedName = workflowPhase.fetchInfraMappingTemplatizedName();
+      if (infraTemplatizedName != null) {
+        infraMappingId = isEmpty(workflowVariables) ? null : workflowVariables.get(infraTemplatizedName);
+      }
+    } else {
+      infraMappingId = workflowPhase.getInfraMappingId();
+    }
+    return infraMappingId;
   }
 
   private boolean isArtifactNeeded(Object... args) {
