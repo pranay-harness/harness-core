@@ -23,6 +23,10 @@ import io.harness.exception.WingsException;
 import io.harness.generator.LicenseGenerator.Licenses;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.limits.ActionType;
+import io.harness.limits.configuration.LimitConfigurationService;
+import io.harness.limits.impl.model.RateLimit;
+import io.harness.limits.impl.model.StaticLimit;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.Setter;
@@ -46,6 +50,8 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class AccountGenerator {
@@ -82,6 +88,8 @@ public class AccountGenerator {
   @Inject UserGroupService userGroupService;
   @Inject UserService userService;
   @Inject WingsPersistence wingsPersistence;
+  @Inject private LimitConfigurationService limitConfigurationService;
+
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
 
   @Setter Account account;
@@ -144,6 +152,11 @@ public class AccountGenerator {
 
     this.account = accountService.get(accountId);
     ensureDefaultUsers(account);
+
+    limitConfigurationService.configure(accountId, ActionType.CREATE_PIPELINE, new StaticLimit(1000));
+    limitConfigurationService.configure(accountId, ActionType.CREATE_USER, new StaticLimit(1000));
+    limitConfigurationService.configure(accountId, ActionType.CREATE_APPLICATION, new StaticLimit(1000));
+    limitConfigurationService.configure(accountId, ActionType.DEPLOY, new RateLimit(1000, 1, TimeUnit.HOURS));
 
     return this.account;
   }
