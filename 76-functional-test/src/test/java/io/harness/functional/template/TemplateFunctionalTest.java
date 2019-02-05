@@ -12,6 +12,7 @@ import static software.wings.beans.VariableType.TEXT;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.delegates.beans.ScriptType;
 import io.harness.functional.AbstractFunctionalTest;
@@ -24,31 +25,25 @@ import io.harness.generator.TemplateGalleryGenerator;
 import io.harness.generator.TemplateGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.restassured.http.ContentType;
+import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.BuildWorkflow;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.PhaseStep;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowPhase;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.GenericType;
 
-//@Ignore
 public class TemplateFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private AccountGenerator accountGenerator;
@@ -62,7 +57,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   Workflow buildWorkflow;
 
   final Randomizer.Seed seed = new Randomizer.Seed(0);
-  final String SCRIPT_TEMPLATE_NAME = "Sample Shell Script";
+  final String SCRIPT_TEMPLATE_NAME = "Another Sample Shell Script";
   OwnerManager.Owners owners;
   Application application;
   Account account;
@@ -80,7 +75,6 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Ignore
   public void shouldExecuteShellScriptTemplateWorkflow() {
     GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
         new GenericType<RestResponse<WorkflowExecution>>() {
@@ -90,6 +84,8 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
     Template shellScriptTemplate =
         templateGenerator.ensurePredefined(seed, owners, TemplateGenerator.Templates.SHELL_SCRIPT);
     buildWorkflow = workflowGenerator.ensurePredefined(seed, owners, WorkflowGenerator.Workflows.BUILD_SHELL_SCRIPT);
+
+    resetCache();
     assertThat(buildWorkflow).isNotNull();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -107,48 +103,24 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
     WorkflowExecution workflowExecution = workflowExecutionRestResponse.getResource();
     assertThat(workflowExecution).isNotNull();
-    assertThat(workflowExecution.getWorkflowId()).isEqualTo(buildWorkflow.getUuid());
-    // cleanup - unlink template and delete template
-    Map<String, WorkflowPhase> map = ((BuildWorkflow) buildWorkflow.getOrchestrationWorkflow()).getWorkflowPhaseIdMap();
-    for (Entry<String, WorkflowPhase> entry : map.entrySet()) {
-      WorkflowPhase phase = entry.getValue();
-      if (phase.getName().equalsIgnoreCase("Phase 1")) {
-        List<PhaseStep> phaseSteps = phase.getPhaseSteps();
-        for (PhaseStep phaseStep : phaseSteps) {
-          if (phaseStep.getName().equalsIgnoreCase("Collect Artifact")) {
-            phaseStep.setSteps(asList());
-            given()
-                .auth()
-                .oauth2(bearerToken)
-                .queryParam("appId", application.getUuid())
-                .pathParam("workflowId", buildWorkflow.getUuid())
-                .pathParam("phaseId", phase.getUuid())
-                .body(phase)
-                .contentType(ContentType.JSON)
-                .put("/workflows/{workflowId}/phases/{phaseId}");
-            break;
-          }
-        }
-      }
-    }
 
-    //    workflowExecutionService.triggerEnvExecution(
-    //        buildWorkflow.getAppId(), buildWorkflow.getEnvId(), executionArgs, null);
-
-    // Delete template
-    given()
-        .auth()
-        .oauth2(bearerToken)
-        .queryParam("accountId", account.getUuid())
-        .pathParam("templateId", shellScriptTemplate.getUuid())
-        .delete("/templates/{templateId}")
-        .then()
-        .statusCode(200);
+    // Poll for success status
+    Awaitility.await()
+        .atMost(120, TimeUnit.SECONDS)
+        .pollInterval(5, TimeUnit.SECONDS)
+        .until(()
+                   -> given()
+                          .auth()
+                          .oauth2(bearerToken)
+                          .queryParam("appId", application.getUuid())
+                          .get("/executions/" + workflowExecution.getUuid())
+                          .jsonPath()
+                          .<String>getJsonObject("resource.status")
+                          .equals(ExecutionStatus.SUCCESS.name()));
   }
 
   @Test
   @Category(FunctionalTests.class)
-  @Ignore
   public void createUpdateDeleteShellScriptTemplate() {
     // Create template
     TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER);
@@ -182,6 +154,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                                                        .as(templateType.getType());
 
     Template savedTemplate = savedTemplateResponse.getResource();
+    resetCache();
     assertThat(savedTemplate).isNotNull();
     assertThat(savedTemplate.getUuid()).isNotEmpty();
     assertThat(savedTemplate.getName()).isEqualTo(SCRIPT_TEMPLATE_NAME);

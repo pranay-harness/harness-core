@@ -356,6 +356,7 @@ public class WorkflowGenerator {
     properties.put("scriptString", templateObject.getScriptString());
     properties.put("outputVars", templateObject.getOutputVars());
     properties.put("connectionType", "SSH");
+    properties.put("executeOnDelegate", true);
 
     return ensureWorkflow(seed, owners,
         aWorkflow()

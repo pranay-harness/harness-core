@@ -27,7 +27,8 @@ public class TemplateFolderGenerator {
   public TemplateFolder ensurePredefined(Randomizer.Seed seed, OwnerManager.Owners owners, TemplateFolders predefined) {
     switch (predefined) {
       case TEMPLATE_FOLDER:
-        return ensureTemplateFolder(seed, owners, TemplateFolder.builder().build());
+        return ensureTemplateFolder(
+            seed, owners, TemplateFolder.builder().name("Functional Test - Shell Scripts").build());
       default:
         unhandled(predefined);
     }
@@ -61,6 +62,28 @@ public class TemplateFolderGenerator {
       TemplateGallery templateGallery = templateGalleryGenerator.ensurePredefined(seed, owners, HARNESS_GALLERY);
       if (templateGallery != null) {
         builder.galleryId(templateGallery.getUuid());
+      }
+    }
+
+    if (templateFolder != null && templateFolder.getParentId() != null) {
+      builder.parentId(templateFolder.getParentId());
+    } else {
+      String accId = (templateFolder != null && templateFolder.getAccountId() != null) ? templateFolder.getAccountId()
+                                                                                       : account.getUuid();
+      TemplateFolder harnessFolder = exists(TemplateFolder.builder().name("Harness").accountId(accId).build());
+      if (harnessFolder != null) {
+        builder.parentId(harnessFolder.getUuid());
+      }
+    }
+
+    if (templateFolder != null && templateFolder.getPathId() != null) {
+      builder.parentId(templateFolder.getPathId());
+    } else {
+      String accId = (templateFolder != null && templateFolder.getAccountId() != null) ? templateFolder.getAccountId()
+                                                                                       : account.getUuid();
+      TemplateFolder harnessFolder = exists(TemplateFolder.builder().name("Harness").accountId(accId).build());
+      if (harnessFolder != null) {
+        builder.pathId(harnessFolder.getUuid());
       }
     }
 
