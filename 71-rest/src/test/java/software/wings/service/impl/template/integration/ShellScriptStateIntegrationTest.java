@@ -22,6 +22,7 @@ import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateService;
 
 import java.util.Arrays;
+import java.util.UUID;
 
 @Integration
 @SetupScheduler
@@ -46,7 +47,7 @@ public class ShellScriptStateIntegrationTest extends WingsBaseTest {
             .folderId(parentFolder.getUuid())
             .appId(GLOBAL_APP_ID)
             .accountId(GLOBAL_ACCOUNT_ID)
-            .name("Sample Script")
+            .name("Integration State - Sample Script" + UUID.randomUUID().toString())
             .variables(Arrays.asList(aVariable().withType(TEXT).withName("var").withMandatory(true).build()))
             .build();
     Template savedTemplate = templateService.save(template);
