@@ -12,8 +12,6 @@ import io.harness.delegate.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.k8s.K8sContextElement;
-import software.wings.api.k8s.K8sContextElement.K8sContextElementBuilder;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
@@ -127,9 +125,6 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
 
     K8sRollingDeployResponse k8sRollingDeployResponse =
         (K8sRollingDeployResponse) executionResponse.getK8sTaskResponse();
-
-    K8sContextElementBuilder k8sContextElementBuilder = K8sContextElement.builder();
-    k8sContextElementBuilder.releaseNumber(k8sRollingDeployResponse.getReleaseNumber());
 
     activityService.updateStatus(k8sStateHelper.getActivityId(context), app.getUuid(), executionStatus);
 

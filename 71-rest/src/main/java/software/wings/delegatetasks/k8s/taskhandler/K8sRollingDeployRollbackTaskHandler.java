@@ -72,17 +72,18 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
-    if (release.getManagedWorkload() == null) {
+    if (previousRollbackEligibleRelease == null || previousRollbackEligibleRelease.getManagedWorkload() == null) {
       k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState)
-          .saveExecutionLog("Skipping Status Check since there is no Managed Workload.", INFO, SUCCESS);
+          .saveExecutionLog(
+              "Skipping Status Check since there is no previous eligible Managed Workload.", INFO, SUCCESS);
     } else {
-      k8sTaskHelper.doStatusCheck(client, release.getManagedWorkload(), k8sDelegateTaskParams,
+      k8sTaskHelper.doStatusCheck(client, previousRollbackEligibleRelease.getManagedWorkload(), k8sDelegateTaskParams,
           k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState));
 
       release.setStatus(Status.Failed);
       // update the revision on the previous release.
-      previousRollbackEligibleRelease.setManagedWorkloadRevision(
-          k8sTaskHelper.getLatestRevision(client, release.getManagedWorkload(), k8sDelegateTaskParams));
+      previousRollbackEligibleRelease.setManagedWorkloadRevision(k8sTaskHelper.getLatestRevision(
+          client, previousRollbackEligibleRelease.getManagedWorkload(), k8sDelegateTaskParams));
     }
 
     kubernetesContainerService.saveReleaseHistory(
@@ -108,9 +109,13 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
           "\nNo release history found for release " + k8sRollingDeployRollbackTaskParameters.getReleaseName());
     } else {
       releaseHistory = ReleaseHistory.createFromData(releaseHistoryData);
-      release = releaseHistory.getLatestRelease();
-      if (release.getManagedWorkload() != null) {
-        executionLogCallback.saveExecutionLog("\nManaged Workload is: " + release.getManagedWorkload().kindNameRef());
+      try {
+        release = releaseHistory.getLatestRelease();
+        if (release.getManagedWorkload() != null) {
+          executionLogCallback.saveExecutionLog("\nManaged Workload is: " + release.getManagedWorkload().kindNameRef());
+        }
+      } catch (Exception e) {
+        logger.error("Failed to get latest release", e);
       }
     }
 
@@ -121,8 +126,8 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
 
   public boolean rollback(K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
-    if (k8sRollingDeployRollbackTaskParameters.getReleaseNumber() == 0) {
-      executionLogCallback.saveExecutionLog("No releaseNumber found. Skipping rollback.");
+    if (release == null) {
+      executionLogCallback.saveExecutionLog("No previous release found. Skipping rollback.");
       executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return true;
     }
@@ -133,9 +138,21 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       return true;
     }
 
-    previousRollbackEligibleRelease =
-        releaseHistory.getPreviousRollbackEligibleRelease(k8sRollingDeployRollbackTaskParameters.getReleaseNumber());
+    int releaseNumber = k8sRollingDeployRollbackTaskParameters.getReleaseNumber() != null
+        ? k8sRollingDeployRollbackTaskParameters.getReleaseNumber()
+        : 0;
+    if (releaseNumber == 0) { // RollingDeploy was aborted
+      if (release.getStatus() == Status.Succeeded) {
+        executionLogCallback.saveExecutionLog("No failed release found. Skipping rollback.");
+        executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+        return true;
+      } else {
+        // set releaseNumber to max int so that rollback to current successful one goes through.
+        releaseNumber = Integer.MAX_VALUE;
+      }
+    }
 
+    previousRollbackEligibleRelease = releaseHistory.getPreviousRollbackEligibleRelease(releaseNumber);
     if (previousRollbackEligibleRelease == null) {
       executionLogCallback.saveExecutionLog("No previous eligible release found. Can't rollback.");
       executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);

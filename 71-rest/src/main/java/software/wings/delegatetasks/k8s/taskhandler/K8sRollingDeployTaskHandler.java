@@ -116,9 +116,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-        k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
-
     List<K8sPod> podList = Collections.EMPTY_LIST;
 
     if (managedWorkload == null) {
@@ -128,6 +125,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       release.setManagedWorkload(managedWorkload.getResourceId());
       release.setManagedWorkloadRevision(
           k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
+
+      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+          k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
       success = k8sTaskHelper.doStatusCheck(client, managedWorkload.getResourceId(), k8sDelegateTaskParams,
           k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState));

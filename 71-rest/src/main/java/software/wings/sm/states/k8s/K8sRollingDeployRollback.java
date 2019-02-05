@@ -72,7 +72,7 @@ public class K8sRollingDeployRollback extends State {
     try {
       K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
 
-      if (k8sContextElement == null || k8sContextElement.getReleaseNumber() == null) {
+      if (k8sContextElement == null) {
         return anExecutionResponse()
             .withExecutionStatus(SKIPPED)
             .withStateExecutionData(
