@@ -20,4 +20,9 @@ public class CustomBuildServiceImpl implements CustomBuildService {
   public List<BuildDetails> getBuilds(ArtifactStreamAttributes artifactStreamAttributes) {
     return customRepositoryService.getBuilds(artifactStreamAttributes);
   }
+
+  @DelegateTaskType(TaskType.CUSTOM_VALIDATE_ARTIFACT_STREAM)
+  public boolean validateArtifactSource(ArtifactStreamAttributes artifactStreamAttributes) {
+    return customRepositoryService.validateArtifactSource(artifactStreamAttributes);
+  }
 }

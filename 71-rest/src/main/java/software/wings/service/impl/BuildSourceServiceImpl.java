@@ -265,6 +265,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
+  public boolean validateArtifactSource(ArtifactStream artifactStream) {
+    return customBuildSourceService.validateArtifactSource(artifactStream);
+  }
+
+  @Override
   public JobDetails getJob(String appId, String settingId, String jobName) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);

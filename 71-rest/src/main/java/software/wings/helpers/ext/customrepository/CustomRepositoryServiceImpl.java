@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.customrepository;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -107,5 +108,16 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
     }
 
     return buildDetails;
+  }
+
+  @Override
+  public boolean validateArtifactSource(ArtifactStreamAttributes artifactStreamAttributes) {
+    List<BuildDetails> buildDetails = getBuilds(artifactStreamAttributes);
+    if (isEmpty(buildDetails)) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
+          .addParam("message",
+              "Script execution was successful. However, no artifacts were found matching the criteria provided in script.");
+    }
+    return true;
   }
 }

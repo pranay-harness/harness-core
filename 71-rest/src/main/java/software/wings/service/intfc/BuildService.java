@@ -51,6 +51,10 @@ public interface BuildService<T> {
     throw new UnsupportedOperationException("Supported only for Custom Artifact Source");
   }
 
+  default boolean validateArtifactSource(ArtifactStreamAttributes artifactStreamAttributes) {
+    throw new UnsupportedOperationException("Supported only for Custom Artifact Source");
+  }
+
   /**
    * Gets jobs.
    *

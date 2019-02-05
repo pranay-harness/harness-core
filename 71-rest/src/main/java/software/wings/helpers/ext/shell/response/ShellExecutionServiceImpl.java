@@ -94,6 +94,9 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
       ProcessResult processResult = processExecutor.execute();
       shellExecutionResponseBuilder.exitValue(processResult.getExitValue());
       if (processResult.getExitValue() == 0) {
+        if (scriptOutputFile != null && scriptOutputFile.length() == 0) {
+          throw new WingsException("Error occurred during script execution, Reason: " + message[0]);
+        }
         Map<String, String> scriptData = new HashMap<>();
         scriptData.put(ARTIFACT_RESULT_PATH, scriptOutputFile.getAbsolutePath());
         shellExecutionResponseBuilder.shellExecutionData(scriptData);
