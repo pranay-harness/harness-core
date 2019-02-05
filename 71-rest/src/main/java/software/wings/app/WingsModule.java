@@ -36,10 +36,12 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.trigger.Condition;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
@@ -659,9 +661,11 @@ public class WingsModule extends DependencyModule {
     bind(FileService.class).to(FileServiceImpl.class);
     bind(AlertNotificationRuleChecker.class).to(AlertNotificationRuleCheckerImpl.class);
 
-    bind(NotificationDispatcher.class).annotatedWith(UseUserGroup.class).to(UserGroupBasedDispatcher.class);
+    bind(new TypeLiteral<NotificationDispatcher<UserGroup>>() {})
+        .annotatedWith(UseUserGroup.class)
+        .to(UserGroupBasedDispatcher.class);
 
-    bind(NotificationDispatcher.class)
+    bind(new TypeLiteral<NotificationDispatcher<NotificationGroup>>() {})
         .annotatedWith(UseNotificationGroup.class)
         .to(NotificationGroupBasedDispatcher.class);
 

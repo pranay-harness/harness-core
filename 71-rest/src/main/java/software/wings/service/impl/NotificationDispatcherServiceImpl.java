@@ -41,8 +41,9 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   private static final Logger logger = LoggerFactory.getLogger(NotificationDispatcherServiceImpl.class);
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private UserGroupService userGroupService;
-  @Inject @UseNotificationGroup private NotificationDispatcher notificationGroupDispatcher;
-  @Inject @UseUserGroup private NotificationDispatcher userGroupDispatcher;
+  @Inject @UseNotificationGroup private NotificationDispatcher<NotificationGroup> notificationGroupDispatcher;
+  @Inject @UseUserGroup private NotificationDispatcher<UserGroup> userGroupDispatcher;
+
   @Inject private EmailDispatcher emailDispatcher;
 
   @Override
@@ -102,9 +103,9 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     for (NotificationReceiverInfo notificationReceiver : receivers) {
       if (notificationReceiver instanceof NotificationGroup) {
         logger.info("[notification-group-dispatch] accountId={}", notifications.get(0).getAccountId());
-        notificationGroupDispatcher.dispatch(notifications, notificationReceiver);
+        notificationGroupDispatcher.dispatch(notifications, (NotificationGroup) notificationReceiver);
       } else if (notificationReceiver instanceof UserGroup) {
-        userGroupDispatcher.dispatch(notifications, notificationReceiver);
+        userGroupDispatcher.dispatch(notifications, (UserGroup) notificationReceiver);
       } else {
         logger.error("Unhandled implementation of NotificationReceiverInfo. Class: {}",
             notificationReceiver.getClass().getSimpleName());

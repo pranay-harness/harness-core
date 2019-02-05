@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -10,6 +10,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
@@ -27,6 +28,7 @@ import com.google.inject.Inject;
 import com.mongodb.DBCollection;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.event.publisher.EventPublisher;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,6 +62,7 @@ public class AlertServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks private AlertService alertService;
 
+  @Mock private EventPublisher eventPublisher;
   @Mock private HQuery<Alert> query;
   @Mock private FieldEnd end;
   @Mock private UpdateOperations updateOperations;
@@ -158,6 +161,8 @@ public class AlertServiceTest extends WingsBaseTest {
     assertThat(savedAlert.getCategory()).isEqualTo(NoActiveDelegates.getCategory());
     assertThat(savedAlert.getSeverity()).isEqualTo(NoActiveDelegates.getSeverity());
     assertThat(savedAlert.getTitle()).isEqualTo("No delegates are available");
+
+    verifyZeroInteractions(eventPublisher);
   }
 
   @Test

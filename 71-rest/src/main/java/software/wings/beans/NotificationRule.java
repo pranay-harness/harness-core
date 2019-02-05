@@ -198,6 +198,7 @@ public class NotificationRule {
     private boolean batchNotifications;
     private boolean active = true;
     private boolean notificationGroupAsExpression;
+    private List<String> userGroupIds = new ArrayList<>();
 
     private NotificationRuleBuilder() {}
 
@@ -229,6 +230,11 @@ public class NotificationRule {
      */
     public NotificationRuleBuilder withUuid(String uuid) {
       this.uuid = uuid;
+      return this;
+    }
+
+    public NotificationRuleBuilder withUserGroupIds(List<String> userGroupIds) {
+      this.userGroupIds = CollectionUtils.emptyIfNull(userGroupIds);
       return this;
     }
 
@@ -305,6 +311,7 @@ public class NotificationRule {
       notificationRule.setNotificationGroups(notificationGroups);
       notificationRule.setBatchNotifications(batchNotifications);
       notificationRule.setActive(active);
+      notificationRule.setUserGroupIds(userGroupIds);
       notificationRule.setNotificationGroupAsExpression(notificationGroupAsExpression);
       return notificationRule;
     }

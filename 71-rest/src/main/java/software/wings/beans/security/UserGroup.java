@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.notifications.NotificationReceiverInfo;
 import lombok.Builder;
 import lombok.Data;
@@ -64,6 +65,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
 
   @Indexed private String accountId;
   private List<String> memberIds;
+
   @Transient private List<User> members;
 
   private Set<AppPermission> appPermissions;
@@ -120,6 +122,10 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
         .ssoGroupId(ssoGroupId)
         .ssoGroupName(ssoGroupName)
         .build();
+  }
+
+  public List<User> getMembers() {
+    return CollectionUtils.emptyIfNull(members);
   }
 
   @Override

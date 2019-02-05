@@ -14,11 +14,11 @@ import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
@@ -150,7 +150,8 @@ public class AlertServiceImpl implements AlertService {
     }
   }
 
-  private static EventData alertEventData(Alert alert) throws JsonProcessingException {
+  @VisibleForTesting
+  static EventData alertEventData(Alert alert) {
     return EventData.builder().eventInfo(new AlertEvent(alert)).build();
   }
 
