@@ -85,6 +85,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.persistence.ReadPref;
 import io.harness.serializer.KryoUtils;
+import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -152,7 +153,6 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

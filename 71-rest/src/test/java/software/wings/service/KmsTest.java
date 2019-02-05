@@ -39,6 +39,7 @@ import io.harness.queue.Queue;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.RealMongo;
 import io.harness.rule.RepeatRule.Repeat;
+import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -103,7 +104,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction.AppEnvRestrictionBuilder;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.FileInputStream;

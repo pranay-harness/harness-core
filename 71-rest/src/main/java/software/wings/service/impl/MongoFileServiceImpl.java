@@ -23,6 +23,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
 import io.harness.persistence.ReadPref;
+import io.harness.stream.BoundedInputStream;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -33,7 +34,6 @@ import software.wings.beans.ChecksumType;
 import software.wings.beans.FileMetadata;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.FileOutputStream;

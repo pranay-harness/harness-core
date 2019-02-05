@@ -16,6 +16,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentResult;
+import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
 import lombok.Builder;
 import lombok.Value;
@@ -35,7 +36,6 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.InputStream;

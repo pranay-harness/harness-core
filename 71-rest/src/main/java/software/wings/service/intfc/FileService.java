@@ -1,8 +1,8 @@
 package software.wings.service.intfc;
 
+import io.harness.stream.BoundedInputStream;
 import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.InputStream;

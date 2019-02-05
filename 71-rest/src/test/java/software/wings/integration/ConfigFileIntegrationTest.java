@@ -21,6 +21,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 import com.google.inject.Inject;
 
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +48,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.BufferedWriter;
 import java.io.File;

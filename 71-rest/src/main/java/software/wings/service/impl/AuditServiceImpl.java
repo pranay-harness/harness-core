@@ -18,6 +18,7 @@ import com.mongodb.BasicDBObject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.ReadPref;
+import io.harness.stream.BoundedInputStream;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -30,7 +31,6 @@ import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FileService;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

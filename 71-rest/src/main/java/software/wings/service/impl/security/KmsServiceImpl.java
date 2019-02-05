@@ -24,6 +24,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.stream.BoundedInputStream;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
@@ -40,7 +41,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

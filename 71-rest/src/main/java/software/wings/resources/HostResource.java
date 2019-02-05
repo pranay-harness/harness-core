@@ -10,6 +10,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -20,7 +21,6 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.HostService;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.InputStream;
 import javax.ws.rs.BeanParam;

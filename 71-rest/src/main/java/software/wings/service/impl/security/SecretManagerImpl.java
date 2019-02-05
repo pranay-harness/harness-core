@@ -40,6 +40,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
 import io.harness.queue.Queue;
+import io.harness.stream.BoundedInputStream;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -86,7 +87,6 @@ import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
-import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 import software.wings.utils.WingsReflectionUtils;
 

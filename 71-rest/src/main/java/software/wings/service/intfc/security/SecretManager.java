@@ -3,6 +3,7 @@ package software.wings.service.intfc.security;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.UuidAware;
+import io.harness.stream.BoundedInputStream;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
@@ -13,7 +14,6 @@ import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.IOException;

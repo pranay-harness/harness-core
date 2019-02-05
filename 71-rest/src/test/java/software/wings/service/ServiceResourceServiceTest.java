@@ -83,6 +83,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
+import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -154,7 +155,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.stencils.Stencil;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -11,6 +11,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.queue.Queue;
+import io.harness.stream.BoundedInputStream;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -29,7 +30,6 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ownership.OwnedByHost;
-import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
 
 import java.util.List;
