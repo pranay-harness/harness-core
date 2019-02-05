@@ -10,4 +10,7 @@ import java.util.List;
 public interface CustomBuildService extends BuildService {
   @DelegateTaskType(TaskType.CUSTOM_GET_BUILDS)
   List<BuildDetails> getBuilds(ArtifactStreamAttributes artifactStreamAttributes);
+
+  @DelegateTaskType(TaskType.CUSTOM_VALIDATE_ARTIFACT_STREAM)
+  boolean validateArtifactSource(ArtifactStreamAttributes artifactStreamAttributes);
 }

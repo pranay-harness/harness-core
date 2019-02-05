@@ -4,6 +4,7 @@ import io.harness.exception.WingsException;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -167,7 +168,7 @@ public interface BuildSourceService {
   }
 
   /**
-   * Valiate Artifact Stream
+   * Validate Artifact Stream
    *
    * @param appId                    the app id
    * @param settingId                the setting id
@@ -177,6 +178,15 @@ public interface BuildSourceService {
    */
   default boolean validateArtifactSource(
       @NotEmpty String appId, @NotEmpty String settingId, ArtifactStreamAttributes artifactStreamAttributes) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Validate Artifact Stream
+   * @param artifactStream
+   * @return
+   */
+  default boolean validateArtifactSource(ArtifactStream artifactStream) {
     throw new UnsupportedOperationException();
   }
 

@@ -570,6 +570,8 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(copyArtifactEnabledForArtifactory);
       artifactStreamAttributes.setArtifactoryDockerRepositoryServer(artifactoryDockerRepositoryServer);
       artifactStreamAttributes.setNexusDockerPort(nexusDockerPort);
+      artifactStreamAttributes.setCustomScriptTimeout(customScriptTimeout);
+      artifactStreamAttributes.setCustomArtifactStreamScript(customArtifactStreamScript);
       return artifactStreamAttributes;
     }
   }

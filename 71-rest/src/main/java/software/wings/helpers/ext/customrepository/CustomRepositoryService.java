@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface CustomRepositoryService {
   List<BuildDetails> getBuilds(ArtifactStreamAttributes artifactStreamAttributes);
+
+  boolean validateArtifactSource(ArtifactStreamAttributes artifactStreamAttributes);
 }

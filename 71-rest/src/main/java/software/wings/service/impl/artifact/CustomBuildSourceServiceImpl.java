@@ -69,4 +69,40 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
         serviceLocator.getBuildServiceClass(customArtifactStream.getArtifactStreamType());
     return delegateProxyFactory.get(buildServiceClass, syncTaskContext).getBuilds(artifactStreamAttributes);
   }
+
+  @Override
+  public boolean validateArtifactSource(ArtifactStream artifactStream) {
+    logger.info("Validating artifact source for Custom Repository artifactStreamId {}",
+        artifactStream.getArtifactStreamAttributes().getArtifactStreamId());
+    //    ArtifactStream artifactStream = artifactStreamService.get(appId,
+    //    artifactStreamAttributes.getArtifactStreamId());
+    Validator.notNullCheck("Artifact source does not exist", artifactStream, USER);
+
+    CustomArtifactStream customArtifactStream = (CustomArtifactStream) artifactStream;
+
+    // TODO: The rendering expression should be moved to delegate once the Framework is ready
+    ArtifactStreamAttributes streamAttributes =
+        artifactCollectionUtil.renderCustomArtifactScriptString(customArtifactStream);
+
+    // Defaulting to the 60 secs
+    long timeout = streamAttributes.getCustomScriptTimeout() == null
+        ? 60
+        : Long.parseLong(streamAttributes.getCustomScriptTimeout());
+    List<String> tags = customArtifactStream.getTags();
+    if (isNotEmpty(tags)) {
+      // To remove if any empty tags in case saved for custom artifact stream
+      tags = tags.stream().filter(s -> isNotEmpty(s)).distinct().collect(Collectors.toList());
+    }
+
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(streamAttributes.getAccountId())
+                                          .withAppId(artifactStream.getAppId())
+                                          .withTimeout(Duration.ofSeconds(timeout).toMillis())
+                                          .withTags(tags)
+                                          .build();
+
+    Class<? extends BuildService> buildServiceClass =
+        serviceLocator.getBuildServiceClass(customArtifactStream.getArtifactStreamType());
+    return delegateProxyFactory.get(buildServiceClass, syncTaskContext).validateArtifactSource(streamAttributes);
+  }
 }
