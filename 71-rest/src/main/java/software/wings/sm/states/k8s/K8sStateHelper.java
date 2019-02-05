@@ -7,6 +7,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.k8s.manifest.ManifestHelper.normalizeFolderPath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -289,6 +290,41 @@ public class K8sStateHelper {
     }
 
     return appManifestMap;
+  }
+
+  public boolean doManifestsUseArtifact(String appId, String infraMappingId) {
+    InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, infraMappingId);
+    if (infraMapping == null) {
+      throw new InvalidRequestException(
+          format("Infra mapping not found for appId %s infraMappingId %s", appId, infraMappingId));
+    }
+
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByServiceId(appId, infraMapping.getServiceId());
+    if (doesValuesFileContainArtifact(applicationManifest)) {
+      return true;
+    }
+
+    applicationManifest = applicationManifestService.getByEnvId(appId, infraMapping.getEnvId(), AppManifestKind.VALUES);
+    if (doesValuesFileContainArtifact(applicationManifest)) {
+      return true;
+    }
+
+    applicationManifest = applicationManifestService.getByEnvAndServiceId(
+        appId, infraMapping.getEnvId(), infraMapping.getServiceId(), AppManifestKind.VALUES);
+
+    return doesValuesFileContainArtifact(applicationManifest);
+  }
+
+  private boolean doesValuesFileContainArtifact(ApplicationManifest applicationManifest) {
+    if (applicationManifest != null && StoreType.Local.equals(applicationManifest.getStoreType())) {
+      ManifestFile manifestFile =
+          applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
+      if (manifestFile != null) {
+        return contains(manifestFile.getFileContent(), "${artifact.");
+      }
+    }
+    return false;
   }
 
   private void populateValuesFiles(
