@@ -683,7 +683,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(K8S_BLUE_GREEN_DEPLOY.name())
-                                    .name(Constants.K8S_BLUE_GREEN_DEPLOY)
+                                    .name(Constants.K8S_STAGE_DEPLOY)
                                     .properties(defaultSetupProperties)
                                     .build())
                        .build());
