@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
+import static software.wings.common.Constants.ECS_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
@@ -348,6 +349,9 @@ public class DelegateResource {
             + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId),
         "kubernetesUrl",
         url + request.getRequestURI().replace("downloadUrl", "kubernetes") + "?accountId=" + accountId
+            + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId),
+        "ecsUrl",
+        url + request.getRequestURI().replace("downloadUrl", "ecs") + "?accountId=" + accountId
             + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId)));
   }
 
@@ -401,6 +405,25 @@ public class DelegateResource {
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
         .header("Content-Disposition", "attachment; filename=" + KUBERNETES_DELEGATE + ".tar.gz")
+        .build();
+  }
+
+  @PublicApi
+  @GET
+  @Path("ecs")
+  @Timed
+  @ExceptionMetered
+  public Response downloadEcs(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("delegateGroupName") @NotEmpty String delegateGroupName, @QueryParam("awsVpcMode") Boolean awsVpcMode,
+      @QueryParam("hostname") String hostname, @QueryParam("delegateProfileId") String delegateProfileId,
+      @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
+    downloadTokenService.validateDownloadToken("delegate." + accountId, token);
+    File delegateFile = delegateService.downloadECSDelegate(getManagerUrl(request), getVerificationUrl(request),
+        accountId, awsVpcMode, hostname, delegateGroupName, delegateProfileId);
+    return Response.ok(delegateFile)
+        .header("Content-Transfer-Encoding", "binary")
+        .type("application/zip; charset=binary")
+        .header("Content-Disposition", "attachment; filename=" + ECS_DELEGATE + ".tar.gz")
         .build();
   }
 

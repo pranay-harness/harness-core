@@ -62,7 +62,8 @@ public interface DelegateService extends OwnedByAccount {
       throws IOException, TemplateException;
   File downloadKubernetes(String managerHost, String verificationServiceUrl, String accountId, String delegateName,
       String delegateProfile) throws IOException, TemplateException;
-
+  File downloadECSDelegate(String managerHost, String verificationUrl, String accountId, boolean awsVpcMode,
+      String hostname, String delegateGroupName, String delegateProfile) throws IOException, TemplateException;
   Delegate add(Delegate delegate);
 
   void delete(String accountId, String delegateId);

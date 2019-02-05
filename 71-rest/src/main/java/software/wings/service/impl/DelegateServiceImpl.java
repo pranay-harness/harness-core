@@ -43,6 +43,7 @@ import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
+import static software.wings.common.Constants.ECS_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.common.Constants.SELF_DESTRUCT;
@@ -189,6 +190,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
   private static final int DELEGATE_METADATA_HTTP_CALL_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
   private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
+  public static final String ECS = "ECS";
+  public static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -888,6 +891,83 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     compressGzipFile(kubernetesDelegateFile, gzipKubernetesDelegateFile);
 
     return gzipKubernetesDelegateFile;
+  }
+
+  @Override
+  public File downloadECSDelegate(String managerHost, String verificationUrl, String accountId, boolean awsVpcMode,
+      String hostname, String delegateGroupName, String delegateProfile) throws IOException, TemplateException {
+    File ecsDelegateFile = File.createTempFile(ECS_DELEGATE, ".tar");
+
+    try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(ecsDelegateFile))) {
+      out.putArchiveEntry(new TarArchiveEntry(ECS_DELEGATE + "/"));
+      out.closeArchiveEntry();
+
+      String version;
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
+        List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
+        version = delegateVersions.get(delegateVersions.size() - 1);
+      } else {
+        version = "0.0.0";
+      }
+
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost,
+          verificationUrl, StringUtils.EMPTY, delegateProfile == null ? "" : delegateProfile);
+      scriptParams = updateMapForEcsDelegate(awsVpcMode, hostname, delegateGroupName, scriptParams);
+
+      File yaml = File.createTempFile("ecs-spec", ".json");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
+        cfg.getTemplate("harness-ecs-delegate.json.ftl").process(scriptParams, fileWriter);
+      }
+      yaml = new File(yaml.getAbsolutePath());
+      TarArchiveEntry yamlTarArchiveEntry = new TarArchiveEntry(yaml, ECS_DELEGATE + "/ecs-task-spec.json");
+      out.putArchiveEntry(yamlTarArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(yaml)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+
+      File readme = File.createTempFile("README", ".txt");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
+        cfg.getTemplate("readme-ecs.txt.ftl").process(emptyMap(), fileWriter);
+      }
+      readme = new File(readme.getAbsolutePath());
+      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, ECS_DELEGATE + "/README.txt");
+      out.putArchiveEntry(readmeTarArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(readme)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+
+      out.flush();
+      out.finish();
+    }
+
+    File gzipEcsDelegateFile = File.createTempFile(DELEGATE_DIR, ".tar.gz");
+    compressGzipFile(ecsDelegateFile, gzipEcsDelegateFile);
+
+    return gzipEcsDelegateFile;
+  }
+
+  private ImmutableMap<String, String> updateMapForEcsDelegate(
+      boolean awsVpcMode, String hostname, String delegateGroupName, ImmutableMap<String, String> scriptParams) {
+    Map<String, String> map = new HashMap<>(scriptParams);
+    // AWSVPC mode, hostname must be null
+    if (awsVpcMode) {
+      map.put("networkModeForTask", new StringBuilder(64).append("\"awsvpc\"").toString());
+      map.put("hostnameForDelegate", new StringBuilder(64).append("null").toString());
+    } else {
+      map.put("networkModeForTask", new StringBuilder(64).append("null").toString());
+      if (isBlank(hostname)) {
+        // hostname not provided, use as null, so dockerId will become hostname in ecs
+        hostname = HARNESS_ECS_DELEGATE;
+      }
+      map.put("hostnameForDelegate", new StringBuilder(128).append('"').append(hostname).append('"').toString());
+    }
+
+    map.put("delegateGroupName", new StringBuilder(128).append(delegateGroupName).toString());
+
+    scriptParams = ImmutableMap.copyOf(map);
+    return scriptParams;
   }
 
   @Override

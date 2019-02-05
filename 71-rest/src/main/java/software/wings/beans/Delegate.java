@@ -26,6 +26,7 @@ public class Delegate extends Base {
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String HOST_NAME_KEY = "hostName";
   public static final String VERSION_KEY = "version";
+  public static final String DELEGATE_GROUP_NAME_KEY = "delegateGroupName";
 
   @NotEmpty private String accountId;
   private Status status = Status.ENABLED;
@@ -33,6 +34,7 @@ public class Delegate extends Base {
   private boolean connected;
   private String ip;
   private String hostName;
+  private String delegateGroupName;
   private String delegateName;
   private String delegateProfileId;
   private long lastHeartBeat;
@@ -59,6 +61,7 @@ public class Delegate extends Base {
     private String description;
     private String hostName;
     private String delegateName;
+    private String delegateGroupName;
     private String delegateProfileId;
     private long lastHeartBeat;
     private String version;
@@ -116,6 +119,11 @@ public class Delegate extends Base {
 
     public Builder withDelegateName(String delegateName) {
       this.delegateName = delegateName;
+      return this;
+    }
+
+    public Builder withDelegateGroupName(String delegateGroupName) {
+      this.delegateGroupName = delegateGroupName;
       return this;
     }
 
@@ -188,6 +196,7 @@ public class Delegate extends Base {
           .withIp(ip)
           .withHostName(hostName)
           .withDelegateName(delegateName)
+          .withDelegateGroupName(delegateGroupName)
           .withDelegateProfileId(delegateProfileId)
           .withLastHeartBeat(lastHeartBeat)
           .withVersion(version)
@@ -212,6 +221,7 @@ public class Delegate extends Base {
       delegate.setIp(ip);
       delegate.setHostName(hostName);
       delegate.setDelegateName(delegateName);
+      delegate.setDelegateGroupName(delegateGroupName);
       delegate.setDelegateProfileId(delegateProfileId);
       delegate.setLastHeartBeat(lastHeartBeat);
       delegate.setVersion(version);
