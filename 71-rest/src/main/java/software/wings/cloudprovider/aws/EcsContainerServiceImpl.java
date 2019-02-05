@@ -70,6 +70,8 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
+import software.wings.cloudprovider.aws.TaskMetadata.Container;
+import software.wings.cloudprovider.aws.TaskMetadata.Network;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.utils.Misc;
@@ -1155,8 +1157,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                 taskMetadata.getTasks().stream().filter(task -> taskArns.contains(task.getArn())).findFirst();
 
             if (optionalTask.isPresent() && isNotEmpty(optionalTask.get().getContainers())) {
-              String containerId =
-                  StringUtils.substring(optionalTask.get().getContainers().get(0).getDockerId(), 0, 12);
+              TaskMetadata.Task task = optionalTask.get();
+              Container container = task.getContainers().get(0);
+              String containerId = StringUtils.substring(container.getDockerId(), 0, 12);
 
               if (containerId == null) {
                 containerId = ipAddress;
@@ -1169,14 +1172,16 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                 executionLogCallback.saveExecutionLog("Successfully fetched dockerId");
               }
 
+              ipAddress = getIp(ipAddress, container);
               ContainerInfo containerInfo = ContainerInfo.builder()
                                                 .hostName(containerId)
                                                 .ip(ipAddress)
                                                 .containerId(containerId)
                                                 .ec2Instance(ec2Instance)
                                                 .status(Status.SUCCESS)
-                                                .newContainer(!originalTaskArns.contains(optionalTask.get().getArn()))
+                                                .newContainer(!originalTaskArns.contains(task.getArn()))
                                                 .build();
+
               containerInfos.add(containerInfo);
             } else {
               logger.warn("Metadata tasks {} not found in taskArns {}",
@@ -1236,6 +1241,20 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
 
     return containerInfos;
+  }
+
+  @VisibleForTesting
+  String getIp(String ipAddress, Container container) {
+    String ipAddressForContainer = ipAddress;
+
+    if (isNotEmpty(container.getNetworks())) {
+      Network network = container.getNetworks().get(0);
+      if (network.getNetworkMode().equalsIgnoreCase("awsvpc") && isNotEmpty(network.getIPv4Addresses())) {
+        ipAddressForContainer = network.getIPv4Addresses().get(0);
+      }
+    }
+
+    return ipAddressForContainer;
   }
 
   /**

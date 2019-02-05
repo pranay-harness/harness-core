@@ -2,7 +2,9 @@ package software.wings.cloudprovider.aws;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -38,6 +40,7 @@ import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
+import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -47,6 +50,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.aws.TaskMetadata.Network;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Collections;
@@ -190,5 +194,32 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
             .withEvents(new ServiceEvent().withMessage("Foo has reached a steady state.").withCreatedAt(new Date(15)));
     ret = ecsContainerServiceImpl.hasServiceReachedSteadyState(service);
     assertTrue(ret);
+  }
+
+  @Test
+  public void testJson() throws Exception {
+    String json =
+        "{\"Tasks\":[{\"Arn\":\"arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/f0c1d86cfa154d36b4c67b8ec72fda6d\",\"DesiredStatus\":\"STOPPED\",\"KnownStatus\":\"STOPPED\",\"Family\":\"AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test\",\"Version\":\"26\",\"Containers\":[{\"DockerId\":\"b8013be505613d216cbeaa911f8c4ac013d5522cfc012e427379b617196f8a42\",\"DockerName\":\"ecs-AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test-26-448640225317dkrecrus-east-1amazonawscomhello-worldlatest-f4c4fbe8fff4e8f7e701\",\"Name\":\"448640225317_dkr_ecr_us-east-1_amazonaws_com_hello-world_latest\"}]},{\"Arn\":\"arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/bc26c8dffd0446009fb6f41ee4298298\",\"DesiredStatus\":\"RUNNING\",\"KnownStatus\":\"RUNNING\",\"Family\":\"AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test\",\"Version\":\"28\",\"Containers\":[{\"DockerId\":\"f40291c50dd71caa7b39e13f3471059906e92a52b5078e76718dadfb0f5009d3\",\"DockerName\":\"ecs-AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test-28-448640225317dkrecrus-east-1amazonawscomhello-worldlatest-aebadbbd98f9bf954700\",\"Name\":\"448640225317_dkr_ecr_us-east-1_amazonaws_com_hello-world_latest\"}]},{\"Arn\":\"arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/e0a96879647145bc81dd3d5ca482dd2a\",\"DesiredStatus\":\"STOPPED\",\"KnownStatus\":\"STOPPED\",\"Family\":\"AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test\",\"Version\":\"25\",\"Containers\":[{\"DockerId\":\"e7871c6f03f0c4bec48e18182ac33f134ebcbef0c89fcc3ff82da769b2be6fa8\",\"DockerName\":\"ecs-AWS__ECS__awsvpc__Ecs__Awsvpc__mode__Test-25-448640225317dkrecrus-east-1amazonawscomhello-worldlatest-a4edd0fdad9afcff1f00\",\"Name\":\"448640225317_dkr_ecr_us-east-1_amazonaws_com_hello-world_latest\",\"Networks\":[{\"NetworkMode\":\"awsvpc\",\"IPv4Addresses\":[\"172.31.21.197\"]}]}]}]}";
+
+    TaskMetadata metadata = JsonUtils.asObject(json, TaskMetadata.class);
+    TaskMetadata.Task task =
+        metadata.getTasks()
+            .stream()
+            .filter(task1
+                -> task1.getArn().equals(
+                    "arn:aws:ecs:us-east-1:448640225317:task/SdkTesting/e0a96879647145bc81dd3d5ca482dd2a"))
+            .findFirst()
+            .get();
+
+    assertNotNull(task);
+    assertNotNull(task.getContainers());
+    assertNotNull(task.getContainers().get(0).getNetworks());
+
+    Network network = task.getContainers().get(0).getNetworks().get(0);
+    assertNotNull(network.getIPv4Addresses());
+    assertEquals("172.31.21.197", network.getIPv4Addresses().get(0));
+
+    EcsContainerServiceImpl serviceImpl = new EcsContainerServiceImpl();
+    assertEquals("172.31.21.197", serviceImpl.getIp("ip", task.getContainers().get(0)));
   }
 }

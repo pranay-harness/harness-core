@@ -168,6 +168,7 @@ public class TaskMetadata {
     @JsonProperty("DockerId") private String dockerId;
     @JsonProperty("DockerName") private String dockerName;
     @JsonProperty("Name") private String name;
+    @JsonProperty("Networks") private List<Network> networks;
 
     /**
      * Getter for property 'dockerId'.
@@ -223,13 +224,49 @@ public class TaskMetadata {
       this.name = name;
     }
 
+    public List<Network> getNetworks() {
+      return networks;
+    }
+
+    public void setNetworks(List<Network> networks) {
+      this.networks = networks;
+    }
+
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(this)
           .add("dockerId", dockerId)
           .add("dockerName", dockerName)
           .add("name", name)
+          .add("netWorks", networks)
           .toString();
+    }
+  }
+
+  public static class Network {
+    @JsonProperty("NetworkMode") private String NetworkMode;
+    @JsonProperty("IPv4Addresses") private List<String> IPv4Addresses;
+
+    public String getNetworkMode() {
+      return NetworkMode;
+    }
+
+    public void setNetworkMode(String networkMode) {
+      NetworkMode = networkMode;
+    }
+
+    public List<String> getIPv4Addresses() {
+      return IPv4Addresses;
+    }
+
+    public void setIPv4Addresses(List<String> IPv4Addresses) {
+      this.IPv4Addresses = IPv4Addresses;
+    }
+
+    @Override
+    public String toString() {
+      return "Network{"
+          + "NetworkMode='" + NetworkMode + '\'' + ", IPv4Addresses=" + IPv4Addresses + '}';
     }
   }
 }
