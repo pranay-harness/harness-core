@@ -6,13 +6,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
+import io.harness.stream.BoundedInputStream;
 import software.wings.beans.Base;
 import software.wings.beans.SystemCatalog;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.SystemCatalogService;
-import software.wings.utils.BoundedInputStream;
 import software.wings.utils.FileType;
 import software.wings.utils.FileTypeDetector;
 import software.wings.utils.Misc;
@@ -55,7 +55,7 @@ public class SystemCatalogSeviceImpl implements SystemCatalogService {
   }
 
   private boolean uploadSystemCatalogFile(SystemCatalog systemCatalog, String url, FileBucket fileBucket, long size) {
-    BufferedInputStream in = new BufferedInputStream(BoundedInputStream.getBoundedStreamForUrl(url, size));
+    BufferedInputStream in = new BufferedInputStream(BoundedInputStream.createBoundedStreamForUrl(url, size));
 
     String fileId = fileService.saveFile(systemCatalog, in, fileBucket);
     systemCatalog.setFileUuid(fileId);

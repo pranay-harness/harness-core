@@ -29,6 +29,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
+import io.harness.stream.BoundedInputStream;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -55,7 +56,6 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.IOException;

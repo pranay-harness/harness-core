@@ -25,6 +25,7 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -37,7 +38,6 @@ import software.wings.beans.FileMetadata;
 import software.wings.beans.GcsFileMetadata;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

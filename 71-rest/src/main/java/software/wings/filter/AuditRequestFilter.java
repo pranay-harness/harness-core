@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
+import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,6 @@ import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.IOException;
 import java.nio.charset.Charset;

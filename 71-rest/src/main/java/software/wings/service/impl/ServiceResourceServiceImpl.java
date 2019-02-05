@@ -58,6 +58,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
+import io.harness.stream.BoundedInputStream;
 import io.harness.validation.Create;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -145,7 +146,6 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 
 import java.io.File;

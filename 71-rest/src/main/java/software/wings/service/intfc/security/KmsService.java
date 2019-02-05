@@ -1,8 +1,8 @@
 package software.wings.service.intfc.security;
 
+import io.harness.stream.BoundedInputStream;
 import software.wings.beans.KmsConfig;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.OutputStream;

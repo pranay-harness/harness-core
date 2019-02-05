@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.persistence.ReadPref;
+import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -42,7 +43,6 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.BufferedWriter;
 import java.io.File;

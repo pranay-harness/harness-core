@@ -48,6 +48,7 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.queue.Queue;
+import io.harness.stream.BoundedInputStream;
 import io.harness.validation.Create;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -94,7 +95,6 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.stencils.DataProvider;
-import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 
 import java.io.File;

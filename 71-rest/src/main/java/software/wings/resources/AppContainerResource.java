@@ -10,6 +10,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -20,7 +21,6 @@ import software.wings.beans.Base;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppContainerService;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.BufferedInputStream;
 import java.io.File;

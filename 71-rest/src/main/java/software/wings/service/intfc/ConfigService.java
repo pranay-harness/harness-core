@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.stream.BoundedInputStream;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -10,7 +11,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.service.intfc.ownership.OwnedByHost;
 import software.wings.service.intfc.ownership.OwnedByService;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.util.List;

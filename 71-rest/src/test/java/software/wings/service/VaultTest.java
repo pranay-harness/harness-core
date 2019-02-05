@@ -29,6 +29,7 @@ import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.RealMongo;
+import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -78,7 +79,6 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.FileInputStream;

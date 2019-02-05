@@ -12,6 +12,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import io.harness.persistence.UuidAware;
+import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import retrofit2.http.Body;
@@ -30,7 +31,6 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.BoundedInputStream;
 
 import java.io.BufferedReader;
 import java.io.IOException;

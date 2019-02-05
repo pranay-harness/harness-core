@@ -32,6 +32,7 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
+import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -48,7 +49,6 @@ import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.FileService.FileBucket;
-import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Misc;
 
 import java.io.BufferedReader;
