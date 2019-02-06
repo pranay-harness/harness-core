@@ -1,5 +1,9 @@
 package software.wings.api;
 
+import static com.google.common.collect.Maps.newHashMap;
+
+import com.google.common.collect.ImmutableMap;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,7 +48,9 @@ public class AmiServiceSetupElement implements ContextElement {
 
   @Override
   public Map<String, Object> paramMap(ExecutionContext context) {
-    return null;
+    Map<String, Object> map = newHashMap();
+    map.put("newAsgName", newAutoScalingGroupName);
+    return ImmutableMap.of("ami", map);
   }
 
   @Override

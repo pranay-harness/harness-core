@@ -2,6 +2,7 @@ package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.serializer.KryoRegistrar;
+import software.wings.api.AwsAmiSetupExecutionData;
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
@@ -44,5 +45,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsLambdaFunctionResponse.class, 7117);
     kryo.register(PcfInfraMappingDataRequest.ActionType.class, 7118);
     kryo.register(SlackNotificationSetting.class, 7119);
+    kryo.register(AwsAmiSetupExecutionData.class, 7120);
   }
 }
