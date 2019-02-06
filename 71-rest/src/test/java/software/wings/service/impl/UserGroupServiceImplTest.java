@@ -20,7 +20,7 @@ import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.UserThreadLocal.userGuard;
-import static software.wings.service.impl.UserServiceImpl.ADD_ROLE_EMAIL_TEMPLATE_NAME;
+import static software.wings.service.impl.UserServiceImpl.ADD_GROUP_EMAIL_TEMPLATE_NAME;
 import static software.wings.service.impl.UserServiceImpl.INVITE_EMAIL_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
@@ -311,7 +311,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
       emailsData = emailDataArgumentCaptor.getAllValues();
       assertFalse(emailsData.stream()
-                      .filter(emailData -> emailData.getTemplateName().equals(ADD_ROLE_EMAIL_TEMPLATE_NAME))
+                      .filter(emailData -> emailData.getTemplateName().equals(ADD_GROUP_EMAIL_TEMPLATE_NAME))
                       .collect(Collectors.toList())
                       .size()
           == 1);
@@ -382,7 +382,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
       List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
       assertFalse(emailsData.stream()
-                      .filter(emailData -> emailData.getTemplateName().equals(ADD_ROLE_EMAIL_TEMPLATE_NAME))
+                      .filter(emailData -> emailData.getTemplateName().equals(ADD_GROUP_EMAIL_TEMPLATE_NAME))
                       .collect(Collectors.toList())
                       .size()
           == 2);

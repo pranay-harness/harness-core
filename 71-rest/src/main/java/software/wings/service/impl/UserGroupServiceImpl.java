@@ -247,7 +247,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       Account account = accountService.get(updatedUserGroup.getAccountId());
       updatedUserGroup.getMembers().forEach(member -> {
         if (newlyAddedMemberIds.contains(member.getUuid())) {
-          userService.sendAddedRoleEmail(member, account);
+          userService.sendAddedGroupEmail(member, account);
         }
       });
     }

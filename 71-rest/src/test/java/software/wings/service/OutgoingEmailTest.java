@@ -34,7 +34,7 @@ public class OutgoingEmailTest {
 
     verifyMailForAction(cfg, emailData, "invite");
     verifyMailForAction(cfg, emailData, "add_account");
-    verifyMailForAction(cfg, emailData, "add_role");
+    verifyMailForAction(cfg, emailData, "add_group");
     verifyMailForAction(cfg, emailData, "reset_password");
     verifyMailForAction(cfg, emailData, "signup");
     verifyMailForAction(cfg, emailData, "reset_2fa");

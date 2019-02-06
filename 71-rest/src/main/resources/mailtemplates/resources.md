@@ -32,11 +32,11 @@ Welcome to ${company} account!
 ACCESS YOUR ${(company)?upper_case} ACCOUNT
 
 
-### add_role-body.ftl
+### add_group-body.ftl
 
 
 Hi ${(name!"there")?capitalize},
-You have been assigned new roles.
+You have been assigned new user groups.
       
 ACCESS YOUR ${(company)?upper_case} ACCOUNT
 
