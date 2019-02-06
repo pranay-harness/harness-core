@@ -130,7 +130,10 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1016,9 +1019,32 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
+  private void sortManifestFiles(List<ManifestFile> manifestFiles) {
+    Collections.sort(manifestFiles, new Comparator<ManifestFile>() {
+      @Override
+      public int compare(ManifestFile lhs, ManifestFile rhs) {
+        String[] lhsNames = lhs.getFileName().split("/");
+        String[] rhsNames = rhs.getFileName().split("/");
+
+        if (lhsNames.length != rhsNames.length) {
+          return rhsNames.length - lhsNames.length;
+        }
+
+        for (int i = 0; i < lhsNames.length; i++) {
+          if (!lhsNames[i].equals(rhsNames[i])) {
+            return lhsNames[i].compareTo(rhsNames[i]);
+          }
+        }
+        return -1;
+      }
+    });
+  }
+
   private void processManifestFiles(List<ManifestFile> manifestFiles, Map<String, YamlManifestFileNode> map,
       List<YamlManifestFileNode> fileNodesUnderFiles) {
     if (isNotEmpty(manifestFiles)) {
+      sortManifestFiles(manifestFiles);
+
       manifestFiles.forEach(manifestFile -> {
         String name = manifestFile.getFileName();
         String[] names = name.split("/");
@@ -1031,12 +1057,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
                                       .uuId(manifestFile.getUuid())
                                       .build());
         } else {
-          int startIndex = 0;
-
           YamlManifestFileNode previousNode = null;
           for (int index = 0; index < names.length - 1; index++) {
-            YamlManifestFileNode node =
-                YamlManifestFileNode.builder().isDir(true).name(names[index]).childNodesMap(new HashMap<>()).build();
+            YamlManifestFileNode node = YamlManifestFileNode.builder()
+                                            .isDir(true)
+                                            .name(names[index])
+                                            .childNodesMap(new LinkedHashMap<>())
+                                            .build();
 
             if (previousNode == null) {
               YamlManifestFileNode startingNode = map.putIfAbsent(node.getName(), node);
