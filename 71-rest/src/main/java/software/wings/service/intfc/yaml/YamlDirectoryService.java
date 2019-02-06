@@ -52,10 +52,12 @@ public interface YamlDirectoryService {
    *
    * @param accountId the account id
    * @param entityId the entity id
+   * @param applyPermissions
    * @param userPermissionInfo user permission info
    * @return the directory node (top of the requested "tree")
    */
-  FolderNode getDirectory(@NotEmpty String accountId, String entityId, UserPermissionInfo userPermissionInfo);
+  FolderNode getDirectory(
+      @NotEmpty String accountId, String entityId, boolean applyPermissions, UserPermissionInfo userPermissionInfo);
 
   YamlGitConfig weNeedToPushChanges(String accountId, String entityId);
 
@@ -114,8 +116,9 @@ public interface YamlDirectoryService {
 
   DirectoryNode getApplicationYamlFolderNode(@NotEmpty String accountId, @NotEmpty String applicationId);
 
-  FolderNode doApplication(String applicationId, Map<String, AppPermissionSummary> appPermissionSummaryMap,
-      FolderNode applicationsFolder, DirectoryPath directoryPath);
+  FolderNode doApplication(String applicationId, boolean applyPermissions,
+      Map<String, AppPermissionSummary> appPermissionSummaryMap, FolderNode applicationsFolder,
+      DirectoryPath directoryPath);
 
   String getRootPathByApplicationManifest(ApplicationManifest applicationManifest);
 

@@ -26,8 +26,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
@@ -46,8 +44,6 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.security.AppPermissionSummary;
-import software.wings.security.AppPermissionSummary.EnvInfo;
-import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ConfigService;
@@ -88,16 +84,10 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   public void testDoApplications() throws Exception {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
     Map<String, AppPermissionSummary> appPermissionSummaryMap = new HashMap<>();
-    appPermissionSummaryMap.put(APP_ID,
-        AppPermissionSummary.builder()
-            .servicePermissions(ImmutableMap.of(Action.READ, ImmutableSet.of(SERVICE_ID)))
-            .envPermissions(ImmutableMap.of(Action.READ, ImmutableSet.of(EnvInfo.builder().envId(ENV_ID).build())))
-            .workflowPermissions(ImmutableMap.of(Action.READ, ImmutableSet.of(WORKFLOW_ID)))
-            .pipelinePermissions(ImmutableMap.of(Action.READ, ImmutableSet.of(PIPELINE_ID)))
-            .provisionerPermissions(ImmutableMap.of(Action.READ, ImmutableSet.of(PROVISIONER_ID)))
-            .build());
+    appPermissionSummaryMap.put(APP_ID, null);
     performMocking();
-    FolderNode directoryNode = yamlDirectoryService.doApplications(ACCOUNT_ID, directoryPath, appPermissionSummaryMap);
+    FolderNode directoryNode =
+        yamlDirectoryService.doApplications(ACCOUNT_ID, directoryPath, false, appPermissionSummaryMap);
     assertNotNull(directoryNode);
     assertNotNull(directoryNode.getChildren());
     assertEquals(1, directoryNode.getChildren().size());

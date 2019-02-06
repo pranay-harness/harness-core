@@ -12,6 +12,7 @@ public class YamlDirectoryFetchPayload {
   private String accountId;
   private String appId;
   private String entityId;
+  private boolean applyPermissions;
   private UserPermissionInfo userPermissionInfo;
   private boolean appLevelYamlTreeOnly;
   private boolean addApplication;
