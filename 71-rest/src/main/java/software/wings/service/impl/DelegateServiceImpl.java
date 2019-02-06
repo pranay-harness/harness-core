@@ -10,11 +10,14 @@ import static io.harness.eraro.ErrorCode.UNAVAILABLE_DELEGATES;
 import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.persistence.UpdatedAtAccess.LAST_UPDATED_AT_KEY;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
+import static java.util.Comparator.comparingInt;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -25,8 +28,15 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Delegate.Builder.aDelegate;
+import static software.wings.beans.Delegate.DELEGATE_GROUP_NAME_KEY;
+import static software.wings.beans.Delegate.DELEGATE_TYPE_KEY;
 import static software.wings.beans.Delegate.HOST_NAME_KEY;
+import static software.wings.beans.Delegate.SEQUENCE_NUM_KEY;
 import static software.wings.beans.DelegateConnection.defaultExpiryTimeInMinutes;
+import static software.wings.beans.DelegateSequenceConfig.ACCOUNT_ID_KEY;
+import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
+import static software.wings.beans.DelegateSequenceConfig.DELEGATE_TOKEN;
+import static software.wings.beans.DelegateSequenceConfig.SEQUENCE_NUM;
 import static software.wings.beans.DelegateTask.Status.ABORTED;
 import static software.wings.beans.DelegateTask.Status.ERROR;
 import static software.wings.beans.DelegateTask.Status.FINISHED;
@@ -52,6 +62,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
@@ -65,6 +76,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
+import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoGridFSException;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
@@ -115,6 +127,7 @@ import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateScripts;
+import software.wings.beans.DelegateSequenceConfig;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
@@ -192,6 +205,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
   public static final String ECS = "ECS";
   public static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
+  private static final String DELIMITER = "_";
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -389,6 +403,27 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public Delegate update(Delegate delegate) {
+    UpdateOperations<Delegate> updateOperations = getDelegateUpdateOperations(delegate);
+
+    if ("ECS".equals(delegate.getDelegateType())) {
+      return updateEcsDelegate(delegate, true);
+    } else {
+      logger.info("Updating delegate : {}", delegate.getUuid());
+      return updateDelegate(delegate, updateOperations);
+    }
+  }
+
+  private Delegate updateEcsDelegate(Delegate delegate, boolean updateEntireEcsCluster) {
+    UpdateOperations<Delegate> updateOperations = getDelegateUpdateOperations(delegate);
+    if (updateEntireEcsCluster) {
+      return updateAllDelegatesIfECSType(delegate, updateOperations, "ALL");
+    } else {
+      logger.info("Updating delegate : {}", delegate.getUuid());
+      return updateDelegate(delegate, updateOperations);
+    }
+  }
+
+  private UpdateOperations<Delegate> getDelegateUpdateOperations(Delegate delegate) {
     UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
     setUnset(updateOperations, "ip", delegate.getIp());
     setUnset(updateOperations, "status", delegate.getStatus());
@@ -397,11 +432,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     setUnset(updateOperations, "version", delegate.getVersion());
     setUnset(updateOperations, "description", delegate.getDescription());
     setUnset(updateOperations, "delegateProfileId", delegate.getDelegateProfileId());
-
-    logger.info("Updating delegate : {}", delegate.getUuid());
-    return updateDelegate(delegate, updateOperations);
+    return updateOperations;
   }
-
   @Override
   public Delegate updateDescription(String accountId, String delegateId, String newDescription) {
     logger.info("Updating delegate : {} with new description", delegateId);
@@ -433,11 +465,17 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
     setUnset(updateOperations, "tags", delegate.getTags());
     logger.info("Updating delegate tags : Delegate:{} tags:{}", delegate.getUuid(), delegate.getTags());
-    Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
-    if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < 2 * 60 * 1000) {
-      alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
+
+    if (ECS.equals(delegate.getDelegateType())) {
+      return updateAllDelegatesIfECSType(delegate, updateOperations, "TAGS");
+    } else {
+      Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
+      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < 2 * 60 * 1000) {
+        alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
+      }
+
+      return updatedDelegate;
     }
-    return updatedDelegate;
   }
 
   @Override
@@ -448,11 +486,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     logger.info("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}", delegate.getUuid(),
         delegate.getIncludeScopes(), delegate.getExcludeScopes());
-    Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
-    if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < 2 * 60 * 1000) {
-      alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
+
+    if (ECS.equals(delegate.getDelegateType())) {
+      return updateAllDelegatesIfECSType(delegate, updateOperations, "SCOPES");
+    } else {
+      Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
+      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < 2 * 60 * 1000) {
+        alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
+      }
+      return updatedDelegate;
     }
-    return updatedDelegate;
   }
 
   private Delegate updateDelegate(Delegate delegate, UpdateOperations<Delegate> updateOperations) {
@@ -975,7 +1018,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     logger.info("Adding delegate {} for account {}", delegate.getHostName(), delegate.getAccountId());
     delegate.setAppId(GLOBAL_APP_ID);
     Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
-    logger.info("Delegate saved: {}", savedDelegate.getUuid());
+    logger.info("Delegate saved: {}", savedDelegate);
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
     assignDelegateService.clearConnectionResults(delegate.getAccountId());
@@ -1013,6 +1056,20 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         wingsPersistence.createQuery(Delegate.class).filter(ACCOUNT_ID, accountId).filter(ID_KEY, delegateId));
   }
 
+  private void deleteDelegateSequenceConfig(String accountId, Delegate existingDelegate) {
+    try {
+      if (existingDelegate != null && ECS.equals(existingDelegate.getDelegateType())
+          && existingDelegate.getSequenceNum() != null) {
+        wingsPersistence.delete(wingsPersistence.createQuery(DelegateSequenceConfig.class)
+                                    .filter("accountId", accountId)
+                                    .filter(HOST_NAME_KEY, existingDelegate.getHostName())
+                                    .filter(SEQUENCE_NUM_KEY, Integer.parseInt(existingDelegate.getSequenceNum())));
+      }
+    } catch (Exception e) {
+      logger.error("Failed to clear delegateSequenceConfig for: " + existingDelegate);
+    }
+  }
+
   @Override
   public Delegate register(Delegate delegate) {
     if (licenseService.isAccountDeleted(delegate.getAccountId())) {
@@ -1022,16 +1079,26 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     logger.info("Registering delegate for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
         delegate.getHostName(), delegate.getIp());
-    Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
-                                        .filter(ACCOUNT_ID, delegate.getAccountId())
-                                        .filter("hostName", delegate.getHostName());
-    // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
-    // We ignore IP address because that can change with every restart of the pod.
-    if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
-      delegateQuery.filter("ip", delegate.getIp());
-    }
 
-    Delegate existingDelegate = delegateQuery.project("status", true).project("delegateProfileId", true).get();
+    if (ECS.equals(delegate.getDelegateType())) {
+      return handleEcsDelegateRequest(delegate);
+    } else {
+      Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
+                                          .filter(ACCOUNT_ID, delegate.getAccountId())
+                                          .filter("hostName", delegate.getHostName());
+      // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
+      // We ignore IP address because that can change with every restart of the pod.
+      if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
+        delegateQuery.filter("ip", delegate.getIp());
+      }
+
+      Delegate existingDelegate = delegateQuery.project("status", true).project("delegateProfileId", true).get();
+      return upsertDelegateOperation(existingDelegate, delegate);
+    }
+  }
+
+  @VisibleForTesting
+  Delegate upsertDelegateOperation(Delegate existingDelegate, Delegate delegate) {
     Delegate registeredDelegate;
     if (existingDelegate == null) {
       logger.info("No existing delegate, adding for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
@@ -1042,14 +1109,59 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       delegate.setUuid(existingDelegate.getUuid());
       delegate.setStatus(existingDelegate.getStatus());
       delegate.setDelegateProfileId(existingDelegate.getDelegateProfileId());
-      registeredDelegate = update(delegate);
-
-      broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true)
-          .broadcast("[X]" + delegate.getUuid());
+      if (ECS.equals(delegate.getDelegateType())) {
+        registeredDelegate = updateEcsDelegate(delegate, false);
+      } else {
+        registeredDelegate = update(delegate);
+      }
     }
+
+    // Broadcast Message containing, DelegateId and SeqNum (if applicable)
+    StringBuilder message = new StringBuilder(128).append("[X]").append(delegate.getUuid());
+    updateBroadcastMessageIfEcsDelegate(message, delegate, registeredDelegate);
+    broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(message.toString());
+
     alertService.activeDelegateUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
     registeredDelegate.setVerificationServiceSecret(learningEngineService.getServiceSecretKey(LEARNING_ENGINE));
     return registeredDelegate;
+  }
+
+  private void updateBroadcastMessageIfEcsDelegate(
+      StringBuilder message, Delegate delegate, Delegate registeredDelegate) {
+    if (ECS.equals(delegate.getDelegateType())) {
+      logger.info(delegate.toString());
+      logger.info(delegate.getHostName());
+      String hostName =
+          registeredDelegate.getHostName().substring(0, registeredDelegate.getHostName().lastIndexOf('_'));
+      String seqNum = registeredDelegate.getHostName().substring(registeredDelegate.getHostName().lastIndexOf('_') + 1);
+      DelegateSequenceConfig sequenceConfig =
+          getDelegateSequenceConfig(delegate.getAccountId(), hostName, Integer.parseInt(seqNum));
+      registeredDelegate.setDelegateRandomToken(sequenceConfig.getDelegateToken());
+      registeredDelegate.setSequenceNum(sequenceConfig.getSequenceNum().toString());
+      message.append("[TOKEN]")
+          .append(sequenceConfig.getDelegateToken())
+          .append("[SEQ]")
+          .append(sequenceConfig.getSequenceNum());
+
+      logger.info("^^^^SEQ: " + message.toString());
+    }
+  }
+
+  @VisibleForTesting
+  DelegateSequenceConfig getDelegateSequenceConfig(String accountId, String hostName, Integer seqNum) {
+    Query<DelegateSequenceConfig> delegateSequenceQuery = wingsPersistence.createQuery(DelegateSequenceConfig.class)
+                                                              .filter(ACCOUNT_ID_KEY, accountId)
+                                                              .filter(DelegateSequenceConfig.HOST_NAME_KEY, hostName);
+
+    if (seqNum != null) {
+      delegateSequenceQuery.filter(SEQUENCE_NUM, seqNum);
+    }
+
+    return delegateSequenceQuery.project(ACCOUNT_ID_KEY, true)
+        .project(SEQUENCE_NUM_KEY, true)
+        .project(HOST_NAME_KEY, true)
+        .project(DELEGATE_TOKEN, true)
+        .get();
   }
 
   @Override
@@ -1821,4 +1933,468 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public void deleteByAccountId(String accountId) {
     wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class).filter(ACCOUNT_ID, accountId));
   }
+
+  //------ Start: ECS Delegate Specific Methods
+
+  /**
+   * Delegate keepAlive and Registration requests will be handled here
+   */
+  @VisibleForTesting
+  Delegate handleEcsDelegateRequest(Delegate delegate) {
+    if (delegate.isKeepAlivePacket()) {
+      return handleEcsDelegateKeepAlivePacket(delegate);
+    }
+    return handleEcsDelegateRegistration(delegate);
+  }
+
+  /**
+   * ECS delegate sends keepAlive request every 20 secs. KeepAlive request is a frequent and light weight
+   * mode for indicating that delegate is active.
+   *
+   * We just update "lastUpdatedAt" field with latest time for DelegateSequenceConfig associated with delegate,
+   * so we can found stale config (not updated in last 100 secs) when we need to reuse it for new delegate
+   * registration.
+   */
+  @VisibleForTesting
+  Delegate handleEcsDelegateKeepAlivePacket(Delegate delegate) {
+    logger.info("Hadling Keep alive packet ");
+    if (isBlank(delegate.getHostName()) || isBlank(delegate.getDelegateRandomToken()) || isBlank(delegate.getUuid())
+        || isBlank(delegate.getSequenceNum())) {
+      return null;
+    }
+
+    Delegate existingDelegate =
+        getDelegateUsingSequenceNum(delegate.getAccountId(), delegate.getHostName(), delegate.getSequenceNum());
+    if (existingDelegate == null) {
+      return null;
+    }
+
+    DelegateSequenceConfig config = getDelegateSequenceConfig(
+        delegate.getAccountId(), delegate.getHostName(), Integer.parseInt(delegate.getSequenceNum()));
+
+    if (config != null && config.getDelegateToken().equals(delegate.getDelegateRandomToken())) {
+      Query<DelegateSequenceConfig> sequenceConfigQuery =
+          wingsPersistence.createQuery(DelegateSequenceConfig.class).filter(ID_KEY, config.getUuid());
+      wingsPersistence.update(sequenceConfigQuery,
+          wingsPersistence.createUpdateOperations(DelegateSequenceConfig.class)
+              .set(DELEGATE_TOKEN, delegate.getDelegateRandomToken()));
+    }
+
+    return null;
+  }
+
+  /**
+   * Handles first time registration or heartbeat request send by delegate
+   */
+  @VisibleForTesting
+  Delegate handleEcsDelegateRegistration(Delegate delegate) {
+    // SCENARIO 1: Received delegateId with the request and delegate exists in DB.
+    // Just update same existing delegate
+
+    if (delegate.getUuid() != null && isValidSeqNum(delegate.getSequenceNum())
+        && checkForValidTokenIfPresent(delegate)) {
+      Delegate registeredDelegate = handleECSRegistrationUsingID(delegate);
+      if (registeredDelegate != null) {
+        return registeredDelegate;
+      }
+    }
+
+    // can not proceed unless we receive valid token
+    if (isBlank(delegate.getDelegateRandomToken()) || "null".equalsIgnoreCase(delegate.getDelegateRandomToken())) {
+      throw new WingsException(GENERAL_ERROR, "Received invalid token from ECS delegate", USER_SRE)
+          .addParam("message", "Received invalid token from ECS delegate");
+    }
+
+    // SCENARIO 2: Delegate passed sequenceNum & delegateToken but not UUID.
+    // So delegate was registered earlier but may be got restarted and trying re-register.
+    if (isValidSeqNum(delegate.getSequenceNum()) && isNotBlank(delegate.getDelegateRandomToken())) {
+      Delegate registeredDelegate = handleECSRegistrationUsingSeqNumAndToken(delegate);
+      if (registeredDelegate != null) {
+        return registeredDelegate;
+      }
+    }
+
+    // SCENARIO 3: Create new SequenceNum for delegate.
+    // We will reach here in 2 scenarios,
+    // 1. Delegate did not pass any sequenceNum or delegateToken. (This is first time delegate is registering after
+    // start up or disk file delegate writes to, got deleted).
+
+    // 2. Delegate passed seqNum & delegateToken, but We got DuplicateKeyException in SCENARIO 2
+    // In any of these cases, it will be treated as fresh registration and new sequenceNum will be generated.
+    return registerDelegateWithNewSequenceGeneration(delegate);
+  }
+
+  @VisibleForTesting
+  boolean checkForValidTokenIfPresent(Delegate delegate) {
+    DelegateSequenceConfig config = getDelegateSequenceConfig(
+        delegate.getAccountId(), delegate.getHostName(), Integer.parseInt(delegate.getSequenceNum()));
+    if (config == null || !config.getDelegateToken().equals(delegate.getDelegateRandomToken())) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Delegate sent token and seqNum but null UUID.
+   * 1. See if DelegateSequenceConfig record with same {accId, SeqNum} has same token as passed by delegate.
+   *    If yes,
+   *       - get delegate associated with this DelegateSequenceConfig if exists and update it.
+   *       - if delegate does not present in db, create a new record (init it with config from similar delegate and
+   * create record)
+   *
+   *    IF No,
+   *      - Means that seqNum has been acquired by another delegate.
+   *      - Generate a new SeqNum and create delegate record using it (init it with config from similar delegate and
+   * create record).
+   */
+  @VisibleForTesting
+  Delegate handleECSRegistrationUsingSeqNumAndToken(Delegate delegate) {
+    logger.info("Delegate sent seqNum : " + delegate.getSequenceNum() + ", and DelegateToken"
+        + delegate.getDelegateRandomToken());
+
+    DelegateSequenceConfig sequenceConfig = getDelegateSequenceConfig(
+        delegate.getAccountId(), delegate.getHostName(), Integer.parseInt(delegate.getSequenceNum()));
+
+    Delegate existingDelegate = null;
+    boolean delegateConfigMatches = false;
+    // SequenceConfig found with same {HostName, AccountId, SequenceNum, DelegateToken}.
+    // Its same delegate sending request with valid data. Find actual delegate record using this
+    // DelegateSequenceConfig
+    if (seqNumAndTokenMatchesConfig(delegate, sequenceConfig)) {
+      delegateConfigMatches = true;
+      existingDelegate = getDelegateUsingSequenceNum(
+          sequenceConfig.getAccountId(), sequenceConfig.getHostName(), sequenceConfig.getSequenceNum().toString());
+    }
+
+    // No Existing delegate was found, so create new delegate record on manager side,
+    // using {seqNum, delegateToken} passed by delegate.
+    if (existingDelegate == null) {
+      try {
+        DelegateSequenceConfig config = delegateConfigMatches
+            ? sequenceConfig
+            : generateNewSeqenceConfig(delegate, Integer.parseInt(delegate.getSequenceNum()));
+
+        String hostNameWithSeqNum =
+            getHostNameToBeUsedForECSDelegate(config.getHostName(), config.getSequenceNum().toString());
+        delegate.setHostName(hostNameWithSeqNum);
+
+        // Init this delegate with {TAG/SCOPE/PROFILE} config reading from similar delegate
+        initDelegateWithConfigFromExistingDelegate(delegate);
+
+        return upsertDelegateOperation(null, delegate);
+      } catch (DuplicateKeyException e) {
+        logger.warn(
+            "SequenceNum passed by delegate has been assigned to a new delegate. will regenerate new sequenceNum.");
+      }
+    } else {
+      // Existing delegate was found, so just update it.
+      return upsertDelegateOperation(existingDelegate, delegate);
+    }
+
+    return null;
+  }
+
+  @VisibleForTesting
+  boolean seqNumAndTokenMatchesConfig(Delegate delegate, DelegateSequenceConfig sequenceConfig) {
+    if (sequenceConfig != null && sequenceConfig.getSequenceNum() != null
+        && isNotBlank(sequenceConfig.getDelegateToken())
+        && sequenceConfig.getDelegateToken().equals(delegate.getDelegateRandomToken())
+        && sequenceConfig.getSequenceNum().toString().equals(delegate.getSequenceNum())) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Get Delegate associated with {AccountId, HostName, SeqNum}
+   */
+  @VisibleForTesting
+  Delegate getDelegateUsingSequenceNum(String accountId, String hostName, String seqNum) {
+    Delegate existingDelegate;
+    Query<Delegate> delegateQuery =
+        wingsPersistence.createQuery(Delegate.class)
+            .filter(ACCOUNT_ID_KEY, accountId)
+            .filter(DelegateSequenceConfig.HOST_NAME_KEY, getHostNameToBeUsedForECSDelegate(hostName, seqNum));
+
+    existingDelegate = delegateQuery.get();
+    return existingDelegate;
+  }
+
+  /**
+   * Get existing delegate having same {hostName (prefix without seqNum), AccId, type = ECS}
+   * Copy {SCOPE/PROFILE/TAG} config into new delegate being registered
+   *
+   */
+  @VisibleForTesting
+  void initDelegateWithConfigFromExistingDelegate(Delegate delegate) {
+    List<Delegate> existingDelegates = getAllDelegatesMatchingGroupName(delegate);
+    if (isNotEmpty(existingDelegates)) {
+      initNewDelegateWithExistingDelegate(delegate, existingDelegates.get(0));
+    }
+  }
+
+  /**
+   * Delegate send UUID, if record exists, just update same one.
+   */
+  @VisibleForTesting
+  Delegate handleECSRegistrationUsingID(Delegate delegate) {
+    Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class).filter(ID_KEY, delegate.getUuid());
+
+    Delegate existingDelegate =
+        delegateQuery.project("hostName", true).project("status", true).project("delegateProfileId", true).get();
+
+    if (existingDelegate != null) {
+      return upsertDelegateOperation(existingDelegate, delegate);
+    }
+
+    return null;
+  }
+
+  /**
+   * Either
+   * 1. find a stale DelegateSeqConfig (not updated for last 100 secs),
+   *    delete delegate associated with it and use this seqNum for new delegate registration.
+   *
+   * 2. Else no such config exists from point 1, Create new SequenceConfig and associate with delegate.
+   * (In both cases, we copy config {SCOPE/TAG/PROFILE} from existing delegates to this new delegate being registered)
+   */
+  @VisibleForTesting
+  Delegate registerDelegateWithNewSequenceGeneration(Delegate delegate) {
+    List<DelegateSequenceConfig> existingDelegateSequenceConfigs = getDelegateSequenceConfigs(delegate);
+
+    // Find Inactive DelegateSequenceConfig with same Acc and hostName and delete associated delegate
+    DelegateSequenceConfig config =
+        getInactiveDelegateSequenceConfigToReplace(delegate, existingDelegateSequenceConfigs);
+
+    if (config != null) {
+      return upsertDelegateOperation(null, delegate);
+    }
+
+    // Could not find InactiveDelegateConfig, Create new SequenceConfig
+    for (int i = 0; i < 3; i++) {
+      try {
+        config = addNewDelegateSequenceConfigRecord(delegate);
+        String hostNameWithSeqNum =
+            getHostNameToBeUsedForECSDelegate(delegate.getHostName(), config.getSequenceNum().toString());
+        delegate.setHostName(hostNameWithSeqNum);
+
+        // Init this delegate with TAG/SCOPE/PROFILE config reading from similar delegate
+        initDelegateWithConfigFromExistingDelegate(delegate);
+
+        return upsertDelegateOperation(null, delegate);
+      } catch (Exception e) {
+        logger.warn("Attempt: " + i + " failed with DuplicateKeyException. Trying again" + e);
+      }
+    }
+    // All 3 attempts of sequenceNum generation for delegate failed. Registration can not be completed.
+    // Delegate will need to send request again
+    throw new WingsException(GENERAL_ERROR, "Failed to generate sequence number for Delegate", USER_SRE)
+        .addParam("message", "Failed to generate sequence number for Delegate");
+  }
+
+  /**
+   * This method expects, you have already stripped off seqNum for delegate host name
+   */
+  @VisibleForTesting
+  List<DelegateSequenceConfig> getDelegateSequenceConfigs(Delegate delegate) {
+    Query<DelegateSequenceConfig> delegateSequenceConfigQuery =
+        wingsPersistence.createQuery(DelegateSequenceConfig.class)
+            .filter(ACCOUNT_ID_KEY, delegate.getAccountId())
+            .filter(DelegateSequenceConfig.HOST_NAME_KEY, delegate.getHostName());
+
+    return delegateSequenceConfigQuery.project(ID_KEY, true)
+        .project(SEQUENCE_NUM, true)
+        .project(LAST_UPDATED_AT_KEY, true)
+        .project(ACCOUNT_ID_KEY, true)
+        .project(DelegateSequenceConfig.HOST_NAME_KEY, true)
+        .project(DELEGATE_TOKEN, true)
+        .asList();
+  }
+
+  @VisibleForTesting
+  DelegateSequenceConfig addNewDelegateSequenceConfigRecord(Delegate delegate) {
+    Query<DelegateSequenceConfig> delegateSequenceConfigQuery =
+        wingsPersistence.createQuery(DelegateSequenceConfig.class)
+            .filter(ACCOUNT_ID_KEY, delegate.getAccountId())
+            .filter(DelegateSequenceConfig.HOST_NAME_KEY, delegate.getHostName());
+
+    List<DelegateSequenceConfig> existingDelegateSequenceConfigs =
+        delegateSequenceConfigQuery.project(SEQUENCE_NUM, true)
+            .project("lastUpdatedAt", true)
+            .project(ACCOUNT_ID_KEY, true)
+            .project(DelegateSequenceConfig.HOST_NAME_KEY, true)
+            .project(DELEGATE_TOKEN, true)
+            .asList();
+
+    existingDelegateSequenceConfigs = existingDelegateSequenceConfigs.stream()
+                                          .sorted(comparingInt(existingDelegate -> existingDelegate.getSequenceNum()))
+                                          .collect(toList());
+
+    int num = 0;
+    for (int index = 0; index < existingDelegateSequenceConfigs.size(); index++) {
+      if (num < existingDelegateSequenceConfigs.get(index).getSequenceNum().intValue()) {
+        break;
+      }
+      num++;
+    }
+
+    delegate.setSequenceNum(new StringBuilder(64).append(num).toString());
+    return generateNewSeqenceConfig(delegate, Integer.valueOf(num));
+  }
+
+  @VisibleForTesting
+  DelegateSequenceConfig getInactiveDelegateSequenceConfigToReplace(
+      Delegate delegate, List<DelegateSequenceConfig> existingDelegateSequenceConfigs) {
+    DelegateSequenceConfig config = null;
+    try {
+      Optional<DelegateSequenceConfig> optionalConfig =
+          existingDelegateSequenceConfigs.stream()
+              .filter(sequenceConfig
+                  -> sequenceConfig.getLastUpdatedAt() < System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(100))
+              .findFirst();
+
+      if (optionalConfig.isPresent()) {
+        config = optionalConfig.get();
+
+        Delegate existingInactiveDelegate = getDelegateUsingSequenceNum(
+            delegate.getAccountId(), config.getHostName(), config.getSequenceNum().toString());
+
+        if (existingInactiveDelegate != null) {
+          // Before deleting existing one, copy {TAG/PROFILE/SCOPE} config into new delegate being registered
+          // This needs to be done here as this may be the only delegate in db.
+          initNewDelegateWithExistingDelegate(delegate, existingInactiveDelegate);
+          delete(existingInactiveDelegate.getAccountId(), existingInactiveDelegate.getUuid());
+        }
+
+        Query<DelegateSequenceConfig> sequenceConfigQuery =
+            wingsPersistence.createQuery(DelegateSequenceConfig.class).filter("_id", config.getUuid());
+        wingsPersistence.update(sequenceConfigQuery,
+            wingsPersistence.createUpdateOperations(DelegateSequenceConfig.class)
+                .set(DELEGATE_TOKEN, delegate.getDelegateRandomToken()));
+
+        // Update delegate with seqNum and hostName
+        delegate.setSequenceNum(config.getSequenceNum().toString());
+        String hostNameWithSeqNum =
+            getHostNameToBeUsedForECSDelegate(config.getHostName(), config.getSequenceNum().toString());
+        delegate.setHostName(hostNameWithSeqNum);
+
+        if (existingInactiveDelegate == null) {
+          initDelegateWithConfigFromExistingDelegate(delegate);
+        }
+        return config;
+      }
+    } catch (Exception e) {
+      logger.warn(new StringBuilder(128)
+                      .append("Failed while updating delegateSequenceConfig with delegateToken: ")
+                      .append(delegate.getDelegateRandomToken())
+                      .append("DelegateId: ")
+                      .append(delegate.getUuid())
+                      .toString());
+      config = null;
+    }
+
+    return config;
+  }
+
+  @VisibleForTesting
+  DelegateSequenceConfig generateNewSeqenceConfig(Delegate delegate, Integer seqNum) {
+    logger.info(new StringBuilder(128)
+                    .append("Adding delegateSequenceConfig For delegate.hostname: ")
+                    .append(delegate.getHostName())
+                    .append(", With SequenceNum: ")
+                    .append(delegate.getSequenceNum())
+                    .append(", for account:  ")
+                    .append(delegate.getAccountId())
+                    .toString());
+
+    DelegateSequenceConfig sequenceConfig = aDelegateSequenceBuilder()
+                                                .withSequenceNum(seqNum)
+                                                .withAccountId(delegate.getAccountId())
+                                                .withHostName(delegate.getHostName())
+                                                .withDelegateToken(delegate.getDelegateRandomToken())
+                                                .withAppId(GLOBAL_APP_ID)
+                                                .build();
+
+    DelegateSequenceConfig savedDelegateSequenceConfig =
+        wingsPersistence.saveAndGet(DelegateSequenceConfig.class, sequenceConfig);
+    logger.info("DelegateSequenceConfig saved: {}", savedDelegateSequenceConfig);
+
+    return savedDelegateSequenceConfig;
+  }
+
+  private String getHostNameToBeUsedForECSDelegate(String hostName, String seqNum) {
+    return new StringBuilder(128).append(hostName).append(DELIMITER).append(seqNum).toString();
+  }
+
+  /**
+   * Copy {SCOPE/TAG/PROFILE/KEYWORDS} into new delegate
+   */
+  private void initNewDelegateWithExistingDelegate(Delegate delegate, Delegate existingInactiveDelegate) {
+    delegate.setExcludeScopes(existingInactiveDelegate.getExcludeScopes());
+    delegate.setIncludeScopes(existingInactiveDelegate.getIncludeScopes());
+    delegate.setDelegateProfileId(existingInactiveDelegate.getDelegateProfileId());
+    delegate.setTags(existingInactiveDelegate.getTags());
+    delegate.setKeywords(existingInactiveDelegate.getKeywords());
+  }
+
+  private Delegate updateAllDelegatesIfECSType(
+      Delegate delegate, UpdateOperations<Delegate> updateOperations, String filedBeingUpdate) {
+    final List<Delegate> retVal = new ArrayList<>();
+    List<Delegate> delegates = getAllDelegatesMatchingGroupName(delegate);
+
+    if (isEmpty(delegates)) {
+      return null;
+    }
+
+    delegates.forEach(delegateToBeUpdated -> {
+      // LOGGING logic
+      if ("SCOPES".equals(filedBeingUpdate)) {
+        logger.info("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}",
+            delegateToBeUpdated.getUuid(), delegate.getIncludeScopes(), delegate.getExcludeScopes());
+      } else if ("TAGS".equals(filedBeingUpdate)) {
+        logger.info("Updating delegate tags : Delegate:{} tags:{}", delegateToBeUpdated.getUuid(), delegate.getTags());
+      } else {
+        logger.info("Updating delegate : {}", delegateToBeUpdated.getUuid());
+      }
+
+      Delegate updatedDelegate = updateDelegate(delegateToBeUpdated, updateOperations);
+      if (updatedDelegate.getUuid().equals(delegate.getUuid())) {
+        retVal.add(updatedDelegate);
+      }
+      if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < 2 * 60 * 1000) {
+        alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
+      }
+    });
+
+    if (isNotEmpty(retVal)) {
+      return retVal.get(0);
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * All delegates matching {AccId, HostName Prefix, Type = ECS}
+   */
+  private List<Delegate> getAllDelegatesMatchingGroupName(Delegate delegate) {
+    return wingsPersistence.createQuery(Delegate.class, excludeAuthority)
+        .filter(ACCOUNT_ID_KEY, delegate.getAccountId())
+        .filter(DELEGATE_TYPE_KEY, delegate.getDelegateType())
+        .filter(DELEGATE_GROUP_NAME_KEY, delegate.getDelegateGroupName())
+        .asList();
+  }
+
+  @VisibleForTesting
+  boolean isValidSeqNum(String sequenceNum) {
+    try {
+      Integer.parseInt(sequenceNum);
+    } catch (Exception e) {
+      return false;
+    }
+
+    return true;
+  }
+  //------ END: ECS Delegate Specific Methods
 }

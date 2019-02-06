@@ -66,8 +66,10 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import io.harness.network.Http;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -97,6 +99,7 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -156,6 +159,7 @@ public class WatcherServiceImpl implements WatcherService {
   private final Map<String, Long> delegateVersionMatchedAt = new HashMap<>();
   private HttpHost httpProxyHost;
   private long startTime;
+  public static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
 
   @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})
   @Override
@@ -166,6 +170,7 @@ public class WatcherServiceImpl implements WatcherService {
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
 
+      generateEcsDelegateSequenceConfigFile();
       if (upgrade) {
         Message message = messageService.waitForMessage(WATCHER_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
         logger.info(message != null ? "[New] Got go-ahead. Proceeding"
@@ -206,6 +211,18 @@ public class WatcherServiceImpl implements WatcherService {
 
     } catch (InterruptedException e) {
       logger.error("Interrupted while running watcher", e);
+    }
+  }
+
+  private void generateEcsDelegateSequenceConfigFile() {
+    try {
+      FileUtils.touch(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
+      String randomToken = UUIDGenerator.generateUuid();
+      FileIo.writeWithExclusiveLockAcrossProcesses(
+          new StringBuilder(128).append("[TOKEN]").append(randomToken).append("[SEQ]").toString(),
+          DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
+    } catch (IOException e) {
+      logger.warn("Failed to create DelegateSequenceConfigFile");
     }
   }
 

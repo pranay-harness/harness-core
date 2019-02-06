@@ -181,6 +181,13 @@ public class DelegateResource {
     delegate.setAccountId(accountId);
     delegate.setUuid(delegateId);
     delegate.setAppId(GLOBAL_APP_ID);
+
+    Delegate existingDelegate = delegateService.get(accountId, delegateId, true);
+    if (existingDelegate != null) {
+      delegate.setDelegateType(existingDelegate.getDelegateType());
+      delegate.setDelegateGroupName(existingDelegate.getDelegateGroupName());
+    }
+
     return new RestResponse<>(delegateService.update(delegate));
   }
 
