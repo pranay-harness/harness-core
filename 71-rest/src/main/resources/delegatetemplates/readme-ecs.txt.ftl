@@ -19,7 +19,7 @@ Ways to install and run ECS Delegate in the AWS ECS Console:
 - Create a task defintion using harness-ecs-delegate.json.
 - Create and run tasks using this task defintion.
 
-2. Create ECS services.
+2. Create ECS services. (Recommended. An ECS service will spin up a new ECS Delegate task if any ECS Delegate task goes down, thus maintaining a persistent ECS Delegate.)
 - Create a task defintion using harness-ecs-delegate.json.
 - Create ECS service using this task definition.
 - Run the service.

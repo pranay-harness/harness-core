@@ -68,7 +68,7 @@
       "workingDirectory": null,
       "secrets": null,
       "dockerSecurityOptions": [],
-      "memory": 1024,
+      "memory": 6144,
       "memoryReservation": null,
       "volumesFrom": [],
       "image": "${delegateDockerImage}",
@@ -89,7 +89,7 @@
     }
   ],
   "placementConstraints": [],
-  "memory": "1024",
+  "memory": "6144",
   "taskRoleArn": null,
   "pidMode": null,
   "requiresCompatibilities": [

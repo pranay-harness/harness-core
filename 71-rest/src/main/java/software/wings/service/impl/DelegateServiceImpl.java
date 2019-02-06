@@ -361,6 +361,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                   .delegateName(delegate.getDelegateName())
                                   .description(delegate.getDescription())
                                   .hostName(delegate.getHostName())
+                                  .delegateGroupName(delegate.getDelegateGroupName())
                                   .ip(delegate.getIp())
                                   .status(delegate.getStatus())
                                   .lastHeartBeat(delegate.getLastHeartBeat())

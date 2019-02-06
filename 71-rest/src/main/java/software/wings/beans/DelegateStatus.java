@@ -26,6 +26,7 @@ public class DelegateStatus {
     private String ip;
     private String hostName;
     private String delegateName;
+    private String delegateGroupName;
     private String description;
     private Status status;
     private long lastHeartBeat;
