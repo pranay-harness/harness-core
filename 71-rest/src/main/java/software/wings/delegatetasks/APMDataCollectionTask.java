@@ -13,7 +13,6 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
@@ -449,7 +448,6 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return shouldCollectData;
     }
 
-    @SuppressFBWarnings
     @Override
     @SuppressWarnings("PMD")
     public void run() {
