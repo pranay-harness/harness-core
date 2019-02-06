@@ -486,12 +486,6 @@
                 <groupId>com.novemberain</groupId>
                 <artifactId>quartz-mongodb</artifactId>
                 <version>2.1.1</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.mongodb</groupId>
-                        <artifactId>mongodb-driver</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.offbytwo.jenkins</groupId>
@@ -900,7 +894,7 @@
             <dependency>
                 <groupId>org.mongodb</groupId>
                 <artifactId>mongo-java-driver</artifactId>
-                <version>3.10.0</version>
+                <version>3.6.4</version>
             </dependency>
             <dependency>
                 <groupId>org.mongodb.morphia</groupId>
