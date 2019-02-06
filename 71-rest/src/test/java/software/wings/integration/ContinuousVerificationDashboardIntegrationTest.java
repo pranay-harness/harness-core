@@ -152,7 +152,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
                 TreeMap<String,
                     Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>>>() {});
 
-    assertFalse(response.getResource().isEmpty());
+    assertFalse("not empty resource" + response.getResource(), response.getResource().isEmpty());
 
     long start = Instant.ofEpochMilli(now).truncatedTo(ChronoUnit.DAYS).toEpochMilli();
 
