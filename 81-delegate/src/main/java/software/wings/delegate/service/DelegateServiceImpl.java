@@ -22,6 +22,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.Delegate.Builder.aDelegate;
@@ -66,7 +67,9 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.DelegateRunnableTask;
+import io.harness.filesystem.FileIo;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.security.TokenGenerator;
@@ -128,6 +131,7 @@ import java.io.StringReader;
 import java.net.ConnectException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -164,6 +168,8 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
+  public static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
+  public static final int KEEP_ALIVE_INTERVAL = 20000;
 
   private static String hostName;
 
@@ -215,6 +221,8 @@ public class DelegateServiceImpl implements DelegateService {
   private long upgradeStartedAt;
   private long stoppedAcquiringAt;
   private static String delegateId;
+  private static String delegateType;
+  private static String delegateGroupName;
   private String accountId;
   private long watcherVersionMatchedAt = System.currentTimeMillis();
   private HttpHost httpProxyHost;
@@ -286,14 +294,29 @@ public class DelegateServiceImpl implements DelegateService {
         delegateProfile = "";
       }
 
+      delegateType = System.getenv().get("DELEGATE_TYPE");
+
+      logger.info("DELEGATE_TYPE is: " + delegateType);
+      if (isNotBlank(delegateType)) {
+        delegateGroupName = System.getenv().get("DELEGATE_GROUP_NAME");
+        logger.info(new StringBuilder(128)
+                        .append("Registering delegate with delegate Type: ")
+                        .append(delegateType)
+                        .append(", DelegateGroupName: ")
+                        .append(delegateGroupName)
+                        .toString());
+      }
+
       Delegate.Builder builder = aDelegate()
                                      .withIp(getLocalHostAddress())
                                      .withAccountId(accountId)
                                      .withHostName(hostName)
                                      .withDelegateName(delegateName)
+                                     .withDelegateGroupName(delegateGroupName)
                                      .withDelegateProfileId(delegateProfile)
                                      .withDescription(description)
-                                     .withVersion(getVersion());
+                                     .withVersion(getVersion())
+                                     .withDelegateType(delegateType);
 
       delegateId = registerDelegate(builder);
       logger.info("[New] Delegate registered in {} ms", clock.millis() - start);
@@ -314,6 +337,8 @@ public class DelegateServiceImpl implements DelegateService {
                 .queryString("delegateId", delegateId)
                 .queryString("delegateConnectionId", delegateConnectionId)
                 .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, hostName))
+                .queryString("sequenceNum", getSequenceNumForEcsDelegate())
+                .queryString("delegateToken", getRandomTokenForEcsDelegate())
                 .header("Version", getVersion());
         if (delegateConfiguration.isProxy()) {
           reqBuilder.header("X-Atmosphere-WebSocket-Proxy", "true");
@@ -368,6 +393,7 @@ public class DelegateServiceImpl implements DelegateService {
         socket.open(request.build());
 
         startHeartbeat(builder, socket);
+        startKeepAlivePacket(builder, socket);
       }
 
       startTaskPolling();
@@ -465,16 +491,29 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void handleMessageSubmit(String message) {
+    logger.info("^^MSG: " + message);
     systemExecutorService.submit(() -> handleMessage(message));
   }
 
   private void handleMessage(String message) {
     if (StringUtils.startsWith(message, "[X]")) {
-      String receivedId = message.substring(3); // Remove the "[X]"
+      String receivedId;
+      String token = null;
+      String sequenceNum = null;
+      if (isEcsDelegate()) {
+        int indexForToken = message.lastIndexOf("[TOKEN]");
+        receivedId = message.substring(3, indexForToken); // Remove the "[X]
+
+      } else {
+        receivedId = message.substring(3);
+      }
       if (delegateId.equals(receivedId)) {
         long now = clock.millis();
         logger.info("Delegate {} received heartbeat response {} after sending. {} since last response.", receivedId,
             getDurationString(lastHeartbeatSentAt.get(), now), getDurationString(lastHeartbeatReceivedAt.get(), now));
+
+        handleEcsDelegateSpecificMessage(message);
+
         lastHeartbeatReceivedAt.set(now);
       } else {
         logger.info("Heartbeat response for another delegate received: {}", receivedId);
@@ -530,6 +569,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @SuppressFBWarnings({"DM_EXIT"})
   private String registerDelegate(Builder builder) {
+    updateBuilderIfEcsDelegate(builder);
     AtomicInteger attempts = new AtomicInteger(0);
     while (acquireTasks.get()) {
       RestResponse<Delegate> delegateResponse;
@@ -552,7 +592,11 @@ public class DelegateServiceImpl implements DelegateService {
         sleep(ofMinutes(1));
         continue;
       }
-      String delegateId = delegateResponse.getResource().getUuid();
+
+      Delegate delegate = delegateResponse.getResource();
+      String delegateId = delegate.getUuid();
+      handleEcsDelegateRegistrationResponse(delegate);
+
       if (StringUtils.equals(delegateId, SELF_DESTRUCT)) {
         initiateSelfDestruct();
         sleep(ofMinutes(1));
@@ -867,6 +911,28 @@ public class DelegateServiceImpl implements DelegateService {
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
+  private void startKeepAlivePacket(Builder builder, Socket socket) {
+    if (!isEcsDelegate()) {
+      return;
+    }
+
+    // Only perform for ECS delegate.
+    logger.info("Starting KeepAlive Packet at interval {} ms", KEEP_ALIVE_INTERVAL);
+    heartbeatExecutor.scheduleAtFixedRate(() -> {
+      try {
+        systemExecutorService.submit(() -> {
+          try {
+            sendKeepAlivePacket(builder, socket);
+          } catch (Exception ex) {
+            logger.error("Exception while sending KeepAlive Packet", ex);
+          }
+        });
+      } catch (Exception e) {
+        logger.error("Exception while scheduling KeepAlive Packet", e);
+      }
+    }, 0, KEEP_ALIVE_INTERVAL, TimeUnit.MILLISECONDS);
+  }
+
   private void startLocalHeartbeat() {
     localHeartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
@@ -970,6 +1036,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private boolean doRestartDelegate() {
     long now = clock.millis();
+
     return new File("start.sh").exists()
         && (restartNeeded.get() || now - lastHeartbeatSentAt.get() > HEARTBEAT_TIMEOUT
                || now - lastHeartbeatReceivedAt.get() > HEARTBEAT_TIMEOUT);
@@ -978,6 +1045,9 @@ public class DelegateServiceImpl implements DelegateService {
   private void sendHeartbeat(Builder builder, Socket socket) {
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       logger.info("Sending heartbeat...");
+
+      // This will Add ECS delegate specific fields if delegateType = "ECS"
+      updateBuilderIfEcsDelegate(builder);
       try {
         timeLimiter.callWithTimeout(
             ()
@@ -991,6 +1061,25 @@ public class DelegateServiceImpl implements DelegateService {
         lastHeartbeatSentAt.set(clock.millis());
       } catch (UncheckedTimeoutException ex) {
         logger.warn("Timed out sending heartbeat");
+      } catch (Exception e) {
+        logger.error("Error sending heartbeat", e);
+      }
+    } else {
+      logger.warn("Socket is not open");
+    }
+  }
+
+  private void sendKeepAlivePacket(Builder builder, Socket socket) {
+    if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
+      logger.info("Sending keepAlive packet...");
+      updateBuilderIfEcsDelegate(builder);
+      try {
+        timeLimiter.callWithTimeout(
+            ()
+                -> socket.fire(JsonUtils.asJson(builder.but().withKeepAlivePacket(true).build())),
+            15L, TimeUnit.SECONDS, true);
+      } catch (UncheckedTimeoutException ex) {
+        logger.warn("Timed out sending keep alive packet");
       } catch (Exception e) {
         logger.error("Error sending heartbeat", e);
       }
@@ -1322,5 +1411,147 @@ public class DelegateServiceImpl implements DelegateService {
     upgradeNeeded.set(false);
     restartNeeded.set(false);
     selfDestruct.set(true);
+  }
+
+  private void handleEcsDelegateSpecificMessage(String message) {
+    if (isEcsDelegate()) {
+      int indexForToken = message.lastIndexOf("[TOKEN]");
+      int indexForSeqNum = message.lastIndexOf("[SEQ]");
+      String token = message.substring(indexForToken + 7, indexForSeqNum);
+      String sequenceNum = message.substring(indexForSeqNum + 5);
+
+      // Did not receive correct data, skip updating token and sequence
+      if (isInvalidData(token) || isInvalidData(sequenceNum)) {
+        return;
+      }
+
+      try {
+        FileIo.writeWithExclusiveLockAcrossProcesses(
+            new StringBuilder(128).append("[TOKEN]").append(token).append("[SEQ]").append(sequenceNum).toString(),
+            DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
+      } catch (Exception e) {
+        logger.error("Failed to write registration response into delegate_sequence file");
+      }
+    }
+  }
+
+  private boolean isInvalidData(String value) {
+    if (isBlank(value) || "null".equalsIgnoreCase(value)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private void updateBuilderIfEcsDelegate(Builder builder) {
+    if (!isEcsDelegate()) {
+      return;
+    }
+
+    builder.withDelegateGroupName(delegateGroupName);
+
+    try {
+      if (!FileIo.checkIfFileExist(DELEGATE_SEQUENCE_CONFIG_FILE)) {
+        generateEcsDelegateSequenceConfigFile();
+      }
+
+      builder.withDelegateRandomToken(getRandomTokenForEcsDelegate());
+      builder.withSequenceNum(getSequenceNumForEcsDelegate());
+    } catch (Exception e) {
+      logger.warn("Failed while reading seqNum and delegateToken from disk file");
+    }
+  }
+
+  private String getSequenceConfigData() {
+    String content = null;
+    try {
+      FileUtils.touch(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
+
+      if (isEcsDelegate()) {
+        content = FileIo.getFileContentsWithSharedLockAcrossProcesses(DELEGATE_SEQUENCE_CONFIG_FILE);
+      }
+    } catch (Exception e) {
+      content = null;
+    }
+
+    return isBlank(content) ? null : content;
+  }
+
+  private String getSequenceNumForEcsDelegate() {
+    String content = null;
+    String seqNum = null;
+    if (isEcsDelegate()) {
+      content = getSequenceConfigData();
+      if (isNotBlank(content)) {
+        int indexForSeqNum = content.lastIndexOf("[SEQ]");
+        seqNum = content.substring(indexForSeqNum + 5);
+        if (isBlank(seqNum)) {
+          seqNum = null;
+        }
+      }
+    }
+    logger.info("SeqNum being sent to manager is: " + seqNum);
+    return seqNum;
+  }
+
+  private String getRandomTokenForEcsDelegate() {
+    String token = null;
+    token = readTokenFromFile();
+
+    if (token == null) {
+      FileUtils.deleteQuietly(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
+      generateEcsDelegateSequenceConfigFile();
+      token = readTokenFromFile();
+    }
+    logger.info("Token being sent to manager is: " + token);
+    return token;
+  }
+
+  private String readTokenFromFile() {
+    String token = null;
+    String content;
+    if (isEcsDelegate()) {
+      content = getSequenceConfigData();
+      if (isNotBlank(content)) {
+        int indexForSeqNum = content.lastIndexOf("[SEQ]");
+        token = content.substring(7, indexForSeqNum);
+        if (isBlank(token)) {
+          token = null;
+        }
+      }
+    }
+    return token;
+  }
+
+  private void handleEcsDelegateRegistrationResponse(Delegate delegate) {
+    if (isEcsDelegate()) {
+      try {
+        FileIo.writeWithExclusiveLockAcrossProcesses(new StringBuilder()
+                                                         .append("[TOKEN]")
+                                                         .append(delegate.getDelegateRandomToken())
+                                                         .append("[SEQ]")
+                                                         .append(delegate.getSequenceNum())
+                                                         .toString(),
+            DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
+      } catch (Exception e) {
+        logger.error("Failed to write registration response into delegate_sequence file");
+      }
+    }
+  }
+
+  private boolean isEcsDelegate() {
+    return "ECS".equals(delegateType);
+  }
+
+  private void generateEcsDelegateSequenceConfigFile() {
+    try {
+      FileUtils.touch(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
+      String randomToken = UUIDGenerator.generateUuid();
+      FileIo.writeWithExclusiveLockAcrossProcesses(
+          new StringBuilder(128).append("[TOKEN]").append(randomToken).append("[SEQ]").toString(),
+          DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
+    } catch (IOException e) {
+      logger.warn("Failed to create DelegateSequenceConfigFile");
+    }
   }
 }

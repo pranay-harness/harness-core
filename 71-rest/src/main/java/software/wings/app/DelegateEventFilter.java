@@ -70,7 +70,15 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
         return new BroadcastAction(ACTION.ABORT, message);
       }
     } else if (message instanceof String && ((String) message).startsWith("[X]")) {
-      if (delegateId.equals(((String) message).substring(3))) { // Remove the "[X]"
+      String msg = (String) message;
+      int seqIndex = msg.lastIndexOf("[TOKEN]");
+      if (seqIndex != -1) {
+        msg = msg.substring(3, seqIndex);
+      } else {
+        msg = msg.substring(3);
+      }
+
+      if (delegateId.equals(msg)) {
         return new BroadcastAction(message);
       } else {
         return new BroadcastAction(ACTION.ABORT, message);

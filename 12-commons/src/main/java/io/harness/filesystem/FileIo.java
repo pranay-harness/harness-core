@@ -8,6 +8,7 @@ import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Duration.ofSeconds;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.FileUtils;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -15,6 +16,9 @@ import org.zeroturnaround.exec.ProcessResult;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitResult;
@@ -22,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +42,11 @@ public class FileIo {
     } catch (FileAlreadyExistsException e) {
       // Ignore.
     }
+  }
+
+  public static boolean checkIfFileExist(final String filePath) throws IOException {
+    Path path = Paths.get(filePath);
+    return Files.exists(path);
   }
 
   public static boolean waitForDirectoryToBeAccessibleOutOfProcess(final String directoryPath, int maxRetries) {
@@ -149,5 +159,61 @@ public class FileIo {
   public static boolean isLocked(File file) {
     File lockFile = new File(file.getPath() + ".lock");
     return lockFile.exists();
+  }
+
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
+  public static void writeWithExclusiveLockAcrossProcesses(
+      String input, String filePath, StandardOpenOption standardOpenOption) throws IOException {
+    FileLock fileLock = null;
+    try {
+      ByteBuffer buffer = ByteBuffer.wrap(input.getBytes());
+      Path path = Paths.get(filePath);
+      FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.WRITE, standardOpenOption);
+
+      fileLock = fileChannel.lock(); // gets an exclusive lock
+      fileChannel.write(buffer);
+      fileChannel.close(); // also releases lock
+    } catch (Exception e) {
+      if (fileLock != null) {
+        fileLock.close();
+      }
+    }
+  }
+
+  public static String getFileContentsWithSharedLockAcrossProcesses(String filePath) throws IOException {
+    String content = null;
+    FileLock fileLock = null;
+    FileChannel fileChannel = null;
+
+    try {
+      StringBuilder builder = new StringBuilder(128);
+      Path path = Paths.get(filePath);
+      fileChannel = FileChannel.open(path, StandardOpenOption.READ);
+
+      // take shared lock on file
+      fileLock = fileChannel.lock(0, Long.MAX_VALUE, true);
+
+      ByteBuffer buffer = ByteBuffer.allocate(128);
+      int noOfBytesRead = fileChannel.read(buffer);
+      while (noOfBytesRead != -1) {
+        buffer.flip();
+        while (buffer.hasRemaining()) {
+          builder.append((char) buffer.get());
+        }
+        buffer.clear();
+        noOfBytesRead = fileChannel.read(buffer);
+      }
+
+      // also releases the lock
+      fileChannel.close();
+      fileChannel = null;
+      content = builder.toString();
+    } catch (Exception e) {
+      if (fileLock != null) {
+        fileLock.close();
+      }
+    }
+
+    return content;
   }
 }

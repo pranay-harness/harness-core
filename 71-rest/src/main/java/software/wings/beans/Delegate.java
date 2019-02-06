@@ -26,7 +26,11 @@ public class Delegate extends Base {
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String HOST_NAME_KEY = "hostName";
   public static final String VERSION_KEY = "version";
+  public static final String DELEGATE_TYPE_KEY = "delegateType";
   public static final String DELEGATE_GROUP_NAME_KEY = "delegateGroupName";
+
+  // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
+  public static final String SEQUENCE_NUM_KEY = "sequenceNum";
 
   @NotEmpty private String accountId;
   private Status status = Status.ENABLED;
@@ -39,7 +43,12 @@ public class Delegate extends Base {
   private String delegateProfileId;
   private long lastHeartBeat;
   private String version;
+  @Transient private String sequenceNum;
+  private String delegateType;
+  @Transient private String delegateRandomToken;
+  @Transient private boolean keepAlivePacket;
   private String verificationServiceSecret;
+
   @Deprecated private List<String> supportedTaskTypes;
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
@@ -65,6 +74,11 @@ public class Delegate extends Base {
     private String delegateProfileId;
     private long lastHeartBeat;
     private String version;
+    private String sequenceNum;
+    private String delegateType;
+    private String delegateRandomToken;
+    private boolean keepAlivePacket;
+
     private List<DelegateScope> includeScopes;
     private List<DelegateScope> excludeScopes;
     private List<DelegateTask> currentlyExecutingDelegateTasks;
@@ -142,6 +156,21 @@ public class Delegate extends Base {
       return this;
     }
 
+    public Builder withSequenceNum(String sequenceNum) {
+      this.sequenceNum = sequenceNum;
+      return this;
+    }
+
+    public Builder withDelegateType(String delegateType) {
+      this.delegateType = delegateType;
+      return this;
+    }
+
+    public Builder withDelegateRandomToken(String delegateRandomToken) {
+      this.delegateRandomToken = delegateRandomToken;
+      return this;
+    }
+
     public Builder withIncludeScopes(List<DelegateScope> includeScopes) {
       this.includeScopes = includeScopes;
       return this;
@@ -187,6 +216,11 @@ public class Delegate extends Base {
       return this;
     }
 
+    public Builder withKeepAlivePacket(boolean keepAlivePacket) {
+      this.keepAlivePacket = keepAlivePacket;
+      return this;
+    }
+
     public Builder but() {
       return aDelegate()
           .withAccountId(accountId)
@@ -200,6 +234,9 @@ public class Delegate extends Base {
           .withDelegateProfileId(delegateProfileId)
           .withLastHeartBeat(lastHeartBeat)
           .withVersion(version)
+          .withSequenceNum(sequenceNum)
+          .withDelegateType(delegateType)
+          .withDelegateRandomToken(delegateRandomToken)
           .withIncludeScopes(includeScopes)
           .withExcludeScopes(excludeScopes)
           .withTags(tags)
@@ -209,7 +246,8 @@ public class Delegate extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withKeepAlivePacket(keepAlivePacket);
     }
 
     public Delegate build() {
@@ -225,6 +263,8 @@ public class Delegate extends Base {
       delegate.setDelegateProfileId(delegateProfileId);
       delegate.setLastHeartBeat(lastHeartBeat);
       delegate.setVersion(version);
+      delegate.setSequenceNum(sequenceNum);
+      delegate.setDelegateType(delegateType);
       delegate.setIncludeScopes(includeScopes);
       delegate.setExcludeScopes(excludeScopes);
       delegate.setTags(tags);
@@ -235,6 +275,8 @@ public class Delegate extends Base {
       delegate.setCreatedAt(createdAt);
       delegate.setLastUpdatedBy(lastUpdatedBy);
       delegate.setLastUpdatedAt(lastUpdatedAt);
+      delegate.setDelegateRandomToken(delegateRandomToken);
+      delegate.setKeepAlivePacket(keepAlivePacket);
       return delegate;
     }
   }

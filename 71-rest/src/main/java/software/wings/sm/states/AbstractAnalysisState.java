@@ -409,6 +409,7 @@ public abstract class AbstractAnalysisState extends State {
                                      .build());
 
     Map<String, String> map = new HashMap<>();
+
     for (software.wings.cloudprovider.ContainerInfo containerInfo : containerInfos) {
       Map<String, Object> containerMap = new HashMap<>();
       containerMap.put("host", containerInfo);

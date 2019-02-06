@@ -170,5 +170,6 @@ public class ManagerMorphiaClasses {
       YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class,
       ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class,
       LogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
-      AlertNotificationRule.class, CustomArtifactStream.class, NotificationReceiverInfo.class);
+      AlertNotificationRule.class, CustomArtifactStream.class, NotificationReceiverInfo.class,
+      DelegateSequenceConfig.class);
 }
