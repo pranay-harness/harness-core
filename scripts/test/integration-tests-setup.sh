@@ -45,11 +45,6 @@ export SPLUNKML_ENVIRONMENT=REMOTE
 
 mongo harness --eval "db.dropDatabase();"
 
-#build python docker image in parrallel
-set +e
-echo "remove existing image"
-docker rmi le_local || true
-set -e
 echo "build docker image in background"
 #nohup sh -c 'cd python/splunk_intelligence && make init && make dist && docker build --rm -t le_local .' > docker_container_build.log &
 #docker_container_build_pid=$!
@@ -147,23 +142,22 @@ if [[ $foundRegisteredDelegate -ne 0 ]] ; then
   exit $foundRegisteredDelegate
 fi
 
-# Vault integration test need to be run first to avoid interfering with other integration test such as
-# Sumo/Elk integration tests etc.
-mvn -B test -pl 71-rest -Dtest=software.wings.integration.VaultIntegrationTest -DfailIfNoTests=false
-
-#build and start learning engine
 export HOSTNAME
 echo "host is $HOSTNAME"
-#wait for docker container to finish
-#echo "waiting for docker image to build"
-#wait $docker_container_build_pid
-#echo "finished waiting for docker image to build"
+
 serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ }, { serviceSecret: 1, _id: 0})"| grep serviceSecret | awk '{print $4}' | tr -d '"'`
 echo $serviceSecret
 server_url=https://$HOSTNAME:7070
 echo $server_url
-docker pull harness/learning-engine-prod:latest && docker run -d -e server_url=$server_url -e service_secret=$serviceSecret -e https_port=10800  -e learning_env=integration-tests harness/learning-engine-prod:latest
+mkdir -p le_logs
+rm -rf le_logs/le.log
+docker pull harness/learning-engine-prod:latest && docker run -d -e server_url=$server_url -e service_secret=$serviceSecret -e https_port=10800  -e learning_env=on_prem -v $(pwd)/le_logs/:/home/harness/logs harness/learning-engine-prod:latest
 
 echo "listing containers after le_local was launched"
 docker ps
+
+# Vault integration test need to be run first to avoid interfering with other integration test such as
+# Sumo/Elk integration tests etc.
+mvn -B test -pl 71-rest -Dtest=software.wings.integration.VaultIntegrationTest -DfailIfNoTests=false
+
 

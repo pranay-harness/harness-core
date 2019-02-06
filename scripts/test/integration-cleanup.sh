@@ -7,11 +7,14 @@ sudo service mongod stop
 #kill vault
 pgrep -f "vault"| xargs kill -9 || true
 
-#kill delegate
-pgrep -f "integration-test/wings/delegate" | xargs kill -9
+echo "kill delegate"
+$JAVA_HOME/bin/jps -l | grep DelegateApplication | xargs kill -9 || true
 
-#kill manager
-pgrep -f "integration-test/wings/rest" | xargs kill -9
+echo "verification service"
+$JAVA_HOME/bin/jps -l | grep VerificationServiceApplication | xargs kill -9 || true
+
+echo "kill manager"
+$JAVA_HOME/bin/jps -l | grep WingsApplication | xargs kill -9 || true
 
 #kill le container
 docker ps -a
@@ -23,10 +26,6 @@ docker ps -a | grep Exited | awk '{print $1}' | xargs docker rm || true
 
 echo "about to call docker kill le_local"
 docker ps | grep learning | awk '{print $1}' | xargs docker kill || true
-
-echo "Stop and remove all other docker containers"
-docker stop $(docker ps -aq) || true
-docker rm $(docker ps -aq) || true
 
 
 
