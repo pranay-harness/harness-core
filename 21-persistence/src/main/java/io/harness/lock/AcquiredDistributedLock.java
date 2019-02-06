@@ -77,8 +77,6 @@ public class AcquiredDistributedLock implements AcquiredLock {
       switch (closeAction) {
         case DESTROY:
           String name = lock.getName();
-          lock.unlock();
-          distributedLockSvc.destroy(lock);
           final BasicDBObject filter = new BasicDBObject().append("_id", name);
           persistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks").remove(filter);
           break;
