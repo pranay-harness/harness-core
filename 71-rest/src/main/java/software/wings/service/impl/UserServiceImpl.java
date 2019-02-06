@@ -152,7 +152,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class UserServiceImpl implements UserService {
-  public static final String ADD_ROLE_EMAIL_TEMPLATE_NAME = "add_role";
+  public static final String ADD_GROUP_EMAIL_TEMPLATE_NAME = "add_group";
   public static final String SIGNUP_EMAIL_TEMPLATE_NAME = "signup";
   public static final String INVITE_EMAIL_TEMPLATE_NAME = "invite";
   public static final String TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME = "invite_trial";
@@ -609,8 +609,8 @@ public class UserServiceImpl implements UserService {
 
     // Sending email only if user was added to some new group
     if (sendNotification && isNotEmpty(newUserGroups)) {
-      logger.info("LGSJ: sendAddedRoleEmail called for user: [{}], newUserGroup: [{}]", user, newUserGroups);
-      sendAddedRoleEmail(user, accountService.get(accountId));
+      logger.info("sendAddedGroupEmail called for user: [{}], newUserGroup: [{}]", user, newUserGroups);
+      sendAddedGroupEmail(user, accountService.get(accountId));
     }
   }
 
@@ -776,14 +776,14 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void sendAddedRoleEmail(User user, Account account) {
+  public void sendAddedGroupEmail(User user, Account account) {
     try {
       Map<String, Object> templateModel = getAddedRoleTemplateModel(user, account);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()
                                 .to(toList)
-                                .templateName(ADD_ROLE_EMAIL_TEMPLATE_NAME)
+                                .templateName(ADD_GROUP_EMAIL_TEMPLATE_NAME)
                                 .templateModel(templateModel)
                                 .accountId(account.getUuid())
                                 .build();
