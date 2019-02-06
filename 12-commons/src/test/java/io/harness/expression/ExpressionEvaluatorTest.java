@@ -267,6 +267,8 @@ public class ExpressionEvaluatorTest extends CategoryTest {
 
     assertThat(expressionEvaluator.substitute("${json.select(\"$..book[2]\", body).isbn}", context))
         .isEqualTo("0-553-21311-3");
+    assertThat(expressionEvaluator.substitute("${json.select(\"$..book[2].isbn\", body)}", context))
+        .isEqualTo("0-553-21311-3");
   }
 
   @Test
