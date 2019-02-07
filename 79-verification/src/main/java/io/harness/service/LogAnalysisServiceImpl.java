@@ -150,34 +150,46 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     wingsPersistence.delete(query);
   }
 
-  private void deleteClusterLevel(String appId, String cvConfigId, Set<String> hosts, int logCollectionMinute,
+  private void deleteClusterLevel(String appId, String cvConfigId, String host, int logCollectionMinute,
       ClusterLevel fromLevel, ClusterLevel toLevel) {
     Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class)
                                      .filter("cvConfigId", cvConfigId)
                                      .filter("appId", appId)
-                                     .filter("logCollectionMinute", logCollectionMinute)
                                      .filter("clusterLevel", fromLevel);
-    if (isNotEmpty(hosts)) {
-      query = query.field("host").in(hosts);
+
+    if (ClusterLevel.L2.equals(toLevel)) {
+      query = query.field("logCollectionMinute").lessThanOrEq(logCollectionMinute);
+    } else {
+      query = query.filter("logCollectionMinute", logCollectionMinute);
+    }
+
+    if (isNotEmpty(host)) {
+      query = query.filter("host", host);
     }
     wingsPersistence.delete(query);
     try {
       query = wingsPersistence.createQuery(LogDataRecord.class)
                   .filter("cvConfigId", cvConfigId)
                   .filter("appId", appId)
-                  .filter("logCollectionMinute", logCollectionMinute)
                   .filter("clusterLevel", ClusterLevel.getHeartBeatLevel(fromLevel));
-      if (isNotEmpty(hosts)) {
-        query = query.field("host").in(hosts);
+
+      if (ClusterLevel.L2.equals(toLevel)) {
+        query = query.field("logCollectionMinute").lessThanOrEq(logCollectionMinute);
+      } else {
+        query = query.filter("logCollectionMinute", logCollectionMinute);
+      }
+
+      if (isNotEmpty(host)) {
+        query = query.filter("host", host);
       }
       UpdateResults updatedResults = wingsPersistence.update(query,
           wingsPersistence.createUpdateOperations(LogDataRecord.class)
               .set("clusterLevel", ClusterLevel.getHeartBeatLevel(toLevel)));
-      if (updatedResults.getUpdatedCount() == 0 && hosts.contains(DUMMY_HOST_NAME)) {
+      if (updatedResults.getUpdatedCount() == 0 && host.equals(DUMMY_HOST_NAME)) {
         logger.error("did not update heartbeat from {} to {}  for min {}", fromLevel, toLevel, logCollectionMinute);
       }
     } catch (DuplicateKeyException e) {
-      logger.error("for {} for hosts {} for min {} level is already updated to {}", cvConfigId, hosts,
+      logger.error("for {} for hosts {} for min {} level is already updated to {}", cvConfigId, host,
           logCollectionMinute, toLevel);
     }
   }
@@ -304,8 +316,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       case L0:
         break;
       case L1:
-        deleteClusterLevel(
-            appId, cvConfigId, Sets.newHashSet(host), logCollectionMinute, ClusterLevel.L0, ClusterLevel.L1);
+        deleteClusterLevel(appId, cvConfigId, host, logCollectionMinute, ClusterLevel.L0, ClusterLevel.L1);
         if (isEmpty(getHostsForMinute(appId, cvConfigId, logCollectionMinute, H0))) {
           try {
             learningEngineService.markCompleted(null, "LOGS_CLUSTER_L1_" + cvConfigId + "_" + logCollectionMinute,
@@ -317,7 +328,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         }
         break;
       case L2:
-        deleteClusterLevel(appId, cvConfigId, emptySet(), logCollectionMinute, ClusterLevel.L1, ClusterLevel.L2);
+        deleteClusterLevel(appId, cvConfigId, null, logCollectionMinute, ClusterLevel.L1, ClusterLevel.L2);
         learningEngineService.markCompleted(null, "LOGS_CLUSTER_L2_" + cvConfigId + "_" + logCollectionMinute,
             logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L2);
         break;
