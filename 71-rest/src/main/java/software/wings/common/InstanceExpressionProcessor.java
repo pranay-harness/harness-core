@@ -15,7 +15,6 @@ import static software.wings.service.intfc.ServiceVariableService.EncryptedField
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -80,7 +79,6 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
   private String serviceName;
   private String[] serviceTemplateNames;
-  private String[] hostNames;
   private String[] instanceIds;
 
   /**
@@ -170,18 +168,6 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    */
   public InstanceExpressionProcessor withServiceTemplates(String... serviceTemplateNames) {
     this.serviceTemplateNames = serviceTemplateNames;
-    return this;
-  }
-
-  /**
-   * With hosts.
-   *
-   * @param hosts the hosts
-   * @return the instance expression processor
-   */
-  @SuppressFBWarnings("URF_UNREAD_FIELD")
-  public InstanceExpressionProcessor withHosts(String... hosts) {
-    this.hostNames = hosts;
     return this;
   }
 

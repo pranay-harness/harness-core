@@ -253,39 +253,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   @Test
   public void testSyncInstances_NewDeployment() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(
-        Instance.builder()
-            .uuid(INSTANCE_1_ID)
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .computeProviderId(COMPUTE_PROVIDER_NAME)
-            .appName(APP_NAME)
-            .envId(ENV_ID)
-            .envName(ENV_NAME)
-            .envType(EnvironmentType.PROD)
-            .infraMappingId(INFRA_MAPPING_ID)
-            .infraMappingType(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName())
-            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP1).build())
-            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
-            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
-            .instanceInfo(Ec2InstanceInfo.builder().ec2Instance(instance1).hostPublicDns(PUBLIC_DNS_1).build())
-            .build(),
-        Instance.builder()
-            .uuid(INSTANCE_2_ID)
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .computeProviderId(COMPUTE_PROVIDER_NAME)
-            .appName(APP_NAME)
-            .envId(ENV_ID)
-            .envName(ENV_NAME)
-            .envType(EnvironmentType.PROD)
-            .infraMappingId(INFRA_MAPPING_ID)
-            .infraMappingType(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName())
-            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP2).build())
-            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
-            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
-            .instanceInfo(Ec2InstanceInfo.builder().ec2Instance(instance2).hostPublicDns(PUBLIC_DNS_2).build())
-            .build()));
+    setPageResponse(pageResponse);
 
     doReturn(pageResponse).when(instanceService).list(any());
     com.amazonaws.services.ec2.model.Instance ec2Instance2 = new com.amazonaws.services.ec2.model.Instance();
@@ -330,23 +298,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     assertTrue(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName()));
   }
 
-  // 3 existing instances
-  // expected 1 delete 2 update
-  @Test
-  public void testSyncInstances_NewDeployment_Rollback() throws Exception {
-    doReturn(Optional.of(DeploymentSummary.builder()
-                             .deploymentInfo(AwsCodeDeployDeploymentInfo.builder().deploymentId(DEPLOYMENT_ID).build())
-                             .accountId(ACCOUNT_ID)
-                             .infraMappingId(INFRA_MAPPING_ID)
-                             .workflowExecutionId("workfloeExecution_1")
-                             .stateExecutionInstanceId("stateExecutionInstanceId")
-                             .artifactBuildNum("1")
-                             .artifactName("old")
-                             .build()))
-        .when(deploymentService)
-        .get(any(DeploymentSummary.class));
-
-    PageResponse<Instance> pageResponse = new PageResponse<>();
+  private void setPageResponse(PageResponse<Instance> pageResponse) {
     pageResponse.setResponse(asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
@@ -380,6 +332,26 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
             .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
             .instanceInfo(Ec2InstanceInfo.builder().ec2Instance(instance2).hostPublicDns(PUBLIC_DNS_2).build())
             .build()));
+  }
+
+  // 3 existing instances
+  // expected 1 delete 2 update
+  @Test
+  public void testSyncInstances_NewDeployment_Rollback() throws Exception {
+    doReturn(Optional.of(DeploymentSummary.builder()
+                             .deploymentInfo(AwsCodeDeployDeploymentInfo.builder().deploymentId(DEPLOYMENT_ID).build())
+                             .accountId(ACCOUNT_ID)
+                             .infraMappingId(INFRA_MAPPING_ID)
+                             .workflowExecutionId("workfloeExecution_1")
+                             .stateExecutionInstanceId("stateExecutionInstanceId")
+                             .artifactBuildNum("1")
+                             .artifactName("old")
+                             .build()))
+        .when(deploymentService)
+        .get(any(DeploymentSummary.class));
+
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    setPageResponse(pageResponse);
 
     doReturn(pageResponse).when(instanceService).list(any());
     com.amazonaws.services.ec2.model.Instance ec2Instance2 = new com.amazonaws.services.ec2.model.Instance();

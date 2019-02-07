@@ -90,7 +90,7 @@ public class AccountGenerator {
   @Inject WingsPersistence wingsPersistence;
   @Inject private LimitConfigurationService limitConfigurationService;
 
-  private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+  public static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
 
   @Setter Account account;
   private static final Logger logger = LoggerFactory.getLogger(AccountGenerator.class);

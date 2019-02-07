@@ -181,84 +181,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
   @Test
   public void testSyncInstances_instanceSync() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(
-        Instance.builder()
-            .uuid(INSTANCE_1_ID)
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .computeProviderId(COMPUTE_PROVIDER_NAME)
-            .appName(APP_NAME)
-            .envId(ENV_ID)
-            .envName(ENV_NAME)
-            .envType(EnvironmentType.PROD)
-            .infraMappingId(INFRA_MAPPING_ID)
-            .infraMappingType(InfrastructureMappingType.AWS_AMI.getName())
-            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP1).build())
-            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
-            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
-            .instanceInfo(AutoScalingGroupInstanceInfo.builder()
-                              .autoScalingGroupName(ASG_1)
-                              .hostId(HOST_NAME_IP1)
-                              .ec2Instance(instance1)
-                              .hostPublicDns(PUBLIC_DNS_1)
-                              .build())
-            .build(),
-        Instance.builder()
-            .uuid(INSTANCE_2_ID)
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .computeProviderId(COMPUTE_PROVIDER_NAME)
-            .appName(APP_NAME)
-            .envId(ENV_ID)
-            .envName(ENV_NAME)
-            .envType(EnvironmentType.PROD)
-            .infraMappingId(INFRA_MAPPING_ID)
-            .infraMappingType(InfrastructureMappingType.AWS_AMI.getName())
-            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP2).build())
-            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
-            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
-            .instanceInfo(AutoScalingGroupInstanceInfo.builder()
-                              .autoScalingGroupName(ASG_1)
-                              .hostId(HOST_NAME_IP2)
-                              .ec2Instance(instance2)
-                              .hostPublicDns(PUBLIC_DNS_2)
-                              .build())
-            .build(),
-        Instance.builder()
-            .uuid(INSTANCE_3_ID)
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .computeProviderId(COMPUTE_PROVIDER_NAME)
-            .appName(APP_NAME)
-            .envId(ENV_ID)
-            .envName(ENV_NAME)
-            .envType(EnvironmentType.PROD)
-            .infraMappingId(INFRA_MAPPING_ID)
-            .infraMappingType(InfrastructureMappingType.AWS_AMI.getName())
-            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP3).build())
-            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
-            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
-            .instanceInfo(Ec2InstanceInfo.builder().ec2Instance(instance3).hostPublicDns(PUBLIC_DNS_3).build())
-            .build(),
-        Instance.builder()
-            .uuid(INSTANCE_4_ID)
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .computeProviderId(COMPUTE_PROVIDER_NAME)
-            .appName(APP_NAME)
-            .envId(ENV_ID)
-            .envName(ENV_NAME)
-            .envType(EnvironmentType.PROD)
-            .infraMappingId(INFRA_MAPPING_ID)
-            .infraMappingType(InfrastructureMappingType.AWS_AMI.getName())
-            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP4).build())
-            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
-            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
-            .instanceInfo(Ec2InstanceInfo.builder()
-                              .ec2Instance(null /*for NPE issue we saw in prod*/)
-                              .hostPublicDns(PUBLIC_DNS_4)
-                              .build())
-            .build()));
+    setPageResponse(pageResponse);
 
     doReturn(pageResponse).when(instanceService).list(any());
     doReturn(new DescribeInstancesResult()).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
@@ -288,26 +211,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     assertTrue(idTobeDeleted.contains(instance3.getInstanceId()));
   }
 
-  // 3 existing instances, 1 EC2, 2 AMI,
-  // expected EC2 Delete, 2 AMI Update
-  @Test
-  public void testSyncInstances_Rollback() throws Exception {
-    PageResponse<Instance> pageResponse = new PageResponse<>();
-
-    doReturn(Optional.of(
-                 DeploymentSummary.builder()
-                     .deploymentInfo(
-                         AwsAutoScalingGroupDeploymentInfo.builder().autoScalingGroupName("autoScalingGroup").build())
-                     .accountId(ACCOUNT_ID)
-                     .infraMappingId(INFRA_MAPPING_ID)
-                     .workflowExecutionId("workfloeExecution_1")
-                     .stateExecutionInstanceId("stateExecutionInstanceId")
-                     .artifactBuildNum("1")
-                     .artifactName("old")
-                     .build()))
-        .when(deploymentService)
-        .get(any(DeploymentSummary.class));
-
+  private void setPageResponse(PageResponse<Instance> pageResponse) {
     pageResponse.setResponse(asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
@@ -386,6 +290,29 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
                               .hostPublicDns(PUBLIC_DNS_4)
                               .build())
             .build()));
+  }
+
+  // 3 existing instances, 1 EC2, 2 AMI,
+  // expected EC2 Delete, 2 AMI Update
+  @Test
+  public void testSyncInstances_Rollback() throws Exception {
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+
+    doReturn(Optional.of(
+                 DeploymentSummary.builder()
+                     .deploymentInfo(
+                         AwsAutoScalingGroupDeploymentInfo.builder().autoScalingGroupName("autoScalingGroup").build())
+                     .accountId(ACCOUNT_ID)
+                     .infraMappingId(INFRA_MAPPING_ID)
+                     .workflowExecutionId("workfloeExecution_1")
+                     .stateExecutionInstanceId("stateExecutionInstanceId")
+                     .artifactBuildNum("1")
+                     .artifactName("old")
+                     .build()))
+        .when(deploymentService)
+        .get(any(DeploymentSummary.class));
+
+    setPageResponse(pageResponse);
 
     doReturn(pageResponse).when(instanceService).list(any());
     doReturn(new DescribeInstancesResult()).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
