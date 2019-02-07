@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
@@ -73,13 +74,19 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   }
 
   @Override
-  public void save(String accountId, Log log) {
+  public synchronized void save(String accountId, Log log) {
+    if (isBlank(log.getActivityId()) || isBlank(log.getCommandUnitName())) {
+      // ToDo Remove it once the root cause of the empty activityId or commandUnitName is found
+      logger.info("Logging stack while saving the execution log ", new Exception(""));
+    }
+
     Optional.ofNullable(cache.get(accountId, s -> new ArrayList<>())).ifPresent(logs -> logs.add(log));
   }
 
   @Override
-  public void save(String accountId, ThirdPartyApiCallLog thirdPartyApiCallLog) {
+  public synchronized void save(String accountId, ThirdPartyApiCallLog thirdPartyApiCallLog) {
     thirdPartyApiCallLog.setUuid(null);
+
     Optional.ofNullable(apiCallLogCache.get(accountId, s -> new ArrayList<>()))
         .ifPresent(logs -> logs.add(thirdPartyApiCallLog));
   }
