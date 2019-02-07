@@ -15,7 +15,6 @@ import com.google.inject.Inject;
 
 import com.bertramlabs.plugins.hcl4j.HCLParser;
 import com.bertramlabs.plugins.hcl4j.HCLParserException;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.eraro.ErrorCode;
@@ -51,9 +50,10 @@ import software.wings.utils.Misc;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -109,7 +109,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     writer.write(String.format("%s = \"%s\"%n", key, value.replaceAll("\"", "\\\"")));
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
     saveExecutionLog(parameters, "Branch: " + gitConfig.getBranch() + "\nPath: " + parameters.getScriptPath(),
@@ -151,7 +150,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       }
 
       if (isNotEmpty(parameters.getVariables()) || isNotEmpty(parameters.getEncryptedVariables())) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tfVariablesFile))) {
+        try (BufferedWriter writer =
+                 new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tfVariablesFile), "UTF-8"))) {
           if (isNotEmpty(parameters.getVariables())) {
             for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
               saveVariable(writer, entry.getKey(), entry.getValue());
@@ -169,19 +169,19 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         FileUtils.deleteQuietly(tfVariablesFile);
       }
 
-      if (isNotEmpty(parameters.getBackendConfigs())) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tfBackendConfigsFile))) {
-          for (Entry<String, String> entry : parameters.getBackendConfigs().entrySet()) {
-            saveVariable(writer, entry.getKey(), entry.getValue());
+      if (isNotEmpty(parameters.getBackendConfigs()) || isNotEmpty(parameters.getEncryptedBackendConfigs())) {
+        try (BufferedWriter writer =
+                 new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tfBackendConfigsFile), "UTF-8"))) {
+          if (isNotEmpty(parameters.getBackendConfigs())) {
+            for (Entry<String, String> entry : parameters.getBackendConfigs().entrySet()) {
+              saveVariable(writer, entry.getKey(), entry.getValue());
+            }
           }
-        }
-      }
-
-      if (isNotEmpty(parameters.getEncryptedBackendConfigs())) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tfBackendConfigsFile))) {
-          for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedBackendConfigs().entrySet()) {
-            String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue()));
-            saveVariable(writer, entry.getKey(), value);
+          if (isNotEmpty(parameters.getEncryptedBackendConfigs())) {
+            for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedBackendConfigs().entrySet()) {
+              String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue()));
+              saveVariable(writer, entry.getKey(), value);
+            }
           }
         }
       }
