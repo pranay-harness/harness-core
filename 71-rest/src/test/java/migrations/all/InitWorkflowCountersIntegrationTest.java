@@ -10,6 +10,7 @@ import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
 import io.harness.limits.counter.service.CounterService;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.Application;
@@ -32,6 +33,7 @@ public class InitWorkflowCountersIntegrationTest extends BaseIntegrationTest {
         wingsPersistence.createQuery(Counter.class).field("key").endsWith(ActionType.CREATE_WORKFLOW.toString()));
   }
 
+  @Owner(emails = "jatin@harness.io", intermittent = true)
   @Test
   public void testMigrate() {
     long totalWorkflows = wingsPersistence.createQuery(Workflow.class).count();
