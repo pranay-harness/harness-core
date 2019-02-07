@@ -717,6 +717,49 @@ public class KmsTest extends WingsBaseTest {
     EncryptedData encryptedData = query.get();
     assertNull(encryptedData.getKmsId());
 
+    verifyChangeLogs(savedAttributeId, savedAttribute, user1);
+
+    final String newPassWord = UUID.randomUUID().toString();
+    final AppDynamicsConfig newAppDynamicsConfig = AppDynamicsConfig.builder()
+                                                       .accountId(accountId)
+                                                       .controllerUrl(UUID.randomUUID().toString())
+                                                       .username(UUID.randomUUID().toString())
+                                                       .password(newPassWord.toCharArray())
+                                                       .accountname(UUID.randomUUID().toString())
+                                                       .build();
+
+    String updatedAppId = UUID.randomUUID().toString();
+    String updatedName = UUID.randomUUID().toString();
+    final Map<String, Object> keyValuePairs = new HashMap<>();
+    keyValuePairs.put("name", updatedName);
+    keyValuePairs.put("appId", updatedAppId);
+    keyValuePairs.put("value", newAppDynamicsConfig);
+
+    wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
+    query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
+    assertEquals(1, query.count());
+
+    encryptedData = query.get();
+    assertEquals(accountId, encryptedData.getAccountId());
+    assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
+    assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
+    assertNull(encryptedData.getKmsId());
+    assertNotNull(encryptedData.getEncryptionKey());
+    assertNotNull(encryptedData.getEncryptedValue());
+
+    savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    assertEquals(updatedName, savedAttribute.getName());
+    assertEquals(updatedAppId, savedAttribute.getAppId());
+
+    AppDynamicsConfig updatedAppdynamicsConfig = (AppDynamicsConfig) savedAttribute.getValue();
+    encryptionService.decrypt(
+        updatedAppdynamicsConfig, secretManager.getEncryptionDetails(updatedAppdynamicsConfig, null, null));
+    assertEquals(newPassWord, String.valueOf(updatedAppdynamicsConfig.getPassword()));
+  }
+
+  private void verifyChangeLogs(String savedAttributeId, SettingAttribute savedAttribute, User user1)
+      throws IllegalAccessException {
+    Query<EncryptedData> query;
     List<SecretChangeLog> changeLogs =
         secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
     assertEquals(2, changeLogs.size());
@@ -759,43 +802,6 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
     assertEquals(user.getName(), secretChangeLog.getUser().getName());
     assertEquals("Created", secretChangeLog.getDescription());
-
-    final String newPassWord = UUID.randomUUID().toString();
-    final AppDynamicsConfig newAppDynamicsConfig = AppDynamicsConfig.builder()
-                                                       .accountId(accountId)
-                                                       .controllerUrl(UUID.randomUUID().toString())
-                                                       .username(UUID.randomUUID().toString())
-                                                       .password(newPassWord.toCharArray())
-                                                       .accountname(UUID.randomUUID().toString())
-                                                       .build();
-
-    String updatedAppId = UUID.randomUUID().toString();
-    String updatedName = UUID.randomUUID().toString();
-    final Map<String, Object> keyValuePairs = new HashMap<>();
-    keyValuePairs.put("name", updatedName);
-    keyValuePairs.put("appId", updatedAppId);
-    keyValuePairs.put("value", newAppDynamicsConfig);
-
-    wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
-    query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
-    assertEquals(1, query.count());
-
-    encryptedData = query.get();
-    assertEquals(accountId, encryptedData.getAccountId());
-    assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
-    assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
-    assertNull(encryptedData.getKmsId());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
-
-    savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    assertEquals(updatedName, savedAttribute.getName());
-    assertEquals(updatedAppId, savedAttribute.getAppId());
-
-    AppDynamicsConfig updatedAppdynamicsConfig = (AppDynamicsConfig) savedAttribute.getValue();
-    encryptionService.decrypt(
-        updatedAppdynamicsConfig, secretManager.getEncryptionDetails(updatedAppdynamicsConfig, null, null));
-    assertEquals(newPassWord, String.valueOf(updatedAppdynamicsConfig.getPassword()));
   }
 
   @Test
@@ -917,48 +923,7 @@ public class KmsTest extends WingsBaseTest {
     EncryptedData encryptedData = query.get();
     assertEquals(kmsConfig.getUuid(), encryptedData.getKmsId());
 
-    List<SecretChangeLog> changeLogs =
-        secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
-    assertEquals(2, changeLogs.size());
-    SecretChangeLog secretChangeLog = changeLogs.get(0);
-    assertEquals(user1.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user1.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user1.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Changed password", secretChangeLog.getDescription());
-
-    secretChangeLog = changeLogs.get(1);
-    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Created", secretChangeLog.getDescription());
-
-    User user2 = User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName("user2").build();
-    wingsPersistence.save(user2);
-    UserThreadLocal.set(user2);
-    wingsPersistence.save(savedAttribute);
-
-    query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
-    assertEquals(1, query.count());
-
-    changeLogs = secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
-    assertEquals(3, changeLogs.size());
-    secretChangeLog = changeLogs.get(0);
-    assertEquals(user2.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user2.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user2.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Changed password", secretChangeLog.getDescription());
-
-    secretChangeLog = changeLogs.get(1);
-    assertEquals(user1.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user1.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user1.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Changed password", secretChangeLog.getDescription());
-
-    secretChangeLog = changeLogs.get(2);
-    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
-    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
-    assertEquals(user.getName(), secretChangeLog.getUser().getName());
-    assertEquals("Created", secretChangeLog.getDescription());
+    verifyChangeLogs(savedAttributeId, savedAttribute, user1);
 
     final String newPassWord = UUID.randomUUID().toString();
     final AppDynamicsConfig newAppDynamicsConfig = AppDynamicsConfig.builder()

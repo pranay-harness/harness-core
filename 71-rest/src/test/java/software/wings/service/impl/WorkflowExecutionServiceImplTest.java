@@ -493,16 +493,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Graph graph =
         aGraph()
-            .addNodes(GraphNode.builder()
-                          .id("Repeat By Services")
-                          .origin(true)
-                          .name("Repeat By Services")
-                          .type(StateType.REPEAT.name())
-                          .properties(ImmutableMap.<String, Object>builder()
-                                          .put("repeatElementExpression", "${services()}")
-                                          .put("executionStrategy", ExecutionStrategy.SERIAL)
-                                          .build())
-                          .build(),
+            .addNodes(getGraphNode("Repeat By Services", ExecutionStrategy.SERIAL),
                 GraphNode.builder()
                     .id("RepeatByInstances")
                     .name("RepeatByInstances")
@@ -651,16 +642,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Graph graph =
         aGraph()
-            .addNodes(GraphNode.builder()
-                          .id("Repeat By Services")
-                          .origin(true)
-                          .name("Repeat By Services")
-                          .type(StateType.REPEAT.name())
-                          .properties(ImmutableMap.<String, Object>builder()
-                                          .put("repeatElementExpression", "${services()}")
-                                          .put("executionStrategy", ExecutionStrategy.SERIAL)
-                                          .build())
-                          .build(),
+            .addNodes(getGraphNode("Repeat By Services", ExecutionStrategy.SERIAL),
                 GraphNode.builder()
                     .id("RepeatByInstances")
                     .name("RepeatByInstances")
@@ -1285,16 +1267,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   private Graph getGraph() {
     return aGraph()
-        .addNodes(GraphNode.builder()
-                      .id("RepeatByServices")
-                      .origin(true)
-                      .name("RepeatByServices")
-                      .type(StateType.REPEAT.name())
-                      .properties(ImmutableMap.<String, Object>builder()
-                                      .put("repeatElementExpression", "${services()}")
-                                      .put("executionStrategy", ExecutionStrategy.PARALLEL)
-                                      .build())
-                      .build(),
+        .addNodes(getGraphNode("RepeatByServices", ExecutionStrategy.PARALLEL),
             GraphNode.builder()
                 .id("wait1")
                 .name("wait1")
@@ -1517,16 +1490,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Graph graph =
         aGraph()
-            .addNodes(GraphNode.builder()
-                          .id("RepeatByServices")
-                          .origin(true)
-                          .name("RepeatByServices")
-                          .type(StateType.REPEAT.name())
-                          .properties(ImmutableMap.<String, Object>builder()
-                                          .put("repeatElementExpression", "${services()}")
-                                          .put("executionStrategy", ExecutionStrategy.PARALLEL)
-                                          .build())
-                          .build(),
+            .addNodes(getGraphNode("RepeatByServices", ExecutionStrategy.PARALLEL),
                 GraphNode.builder()
                     .id("RepeatByInstances")
                     .name("RepeatByInstances")
@@ -1711,41 +1675,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     ServiceInstance inst1 = serviceInstanceService.save(builder.withHost(host1).build());
 
-    Graph graph =
-        aGraph()
-            .addNodes(GraphNode.builder()
-                          .id("RepeatByServices")
-                          .origin(true)
-                          .name("RepeatByServices")
-                          .type(StateType.REPEAT.name())
-                          .properties(ImmutableMap.<String, Object>builder()
-                                          .put("repeatElementExpression", "${services()}")
-                                          .put("executionStrategy", ExecutionStrategy.PARALLEL)
-                                          .build())
-                          .build(),
-                GraphNode.builder()
-                    .id("RepeatByInstances")
-                    .name("RepeatByInstances")
-                    .type(StateType.REPEAT.name())
-                    .properties(ImmutableMap.<String, Object>builder()
-                                    .put("repeatElementExpression", "${instances()}")
-                                    .put("executionStrategy", ExecutionStrategy.SERIAL)
-                                    .build())
-                    .build(),
-                GraphNode.builder()
-                    .id("install")
-                    .name("install")
-                    .type(StateType.COMMAND.name())
-                    .properties(ImmutableMap.<String, Object>builder().put("command", "install").build())
-                    .build())
-            .addLinks(aLink()
-                          .withId("l1")
-                          .withFrom("RepeatByServices")
-                          .withTo("RepeatByInstances")
-                          .withType("repeat")
-                          .build())
-            .addLinks(aLink().withId("l2").withFrom("RepeatByInstances").withTo("install").withType("repeat").build())
-            .build();
+    Graph graph = constructGraph();
 
     Workflow workflow =
         aWorkflow()
@@ -1847,6 +1777,43 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .hasSize(1)
         .extracting("status")
         .containsExactly(ExecutionStatus.SUCCESS.name());
+  }
+
+  private Graph constructGraph() {
+    return aGraph()
+        .addNodes(getGraphNode("RepeatByServices", ExecutionStrategy.PARALLEL),
+            GraphNode.builder()
+                .id("RepeatByInstances")
+                .name("RepeatByInstances")
+                .type(StateType.REPEAT.name())
+                .properties(ImmutableMap.<String, Object>builder()
+                                .put("repeatElementExpression", "${instances()}")
+                                .put("executionStrategy", ExecutionStrategy.SERIAL)
+                                .build())
+                .build(),
+            GraphNode.builder()
+                .id("install")
+                .name("install")
+                .type(StateType.COMMAND.name())
+                .properties(ImmutableMap.<String, Object>builder().put("command", "install").build())
+                .build())
+        .addLinks(
+            aLink().withId("l1").withFrom("RepeatByServices").withTo("RepeatByInstances").withType("repeat").build())
+        .addLinks(aLink().withId("l2").withFrom("RepeatByInstances").withTo("install").withType("repeat").build())
+        .build();
+  }
+
+  private GraphNode getGraphNode(String repeatByServices, ExecutionStrategy parallel) {
+    return GraphNode.builder()
+        .id(repeatByServices)
+        .origin(true)
+        .name(repeatByServices)
+        .type(StateType.REPEAT.name())
+        .properties(ImmutableMap.<String, Object>builder()
+                        .put("repeatElementExpression", "${services()}")
+                        .put("executionStrategy", parallel)
+                        .build())
+        .build();
   }
 
   @Test

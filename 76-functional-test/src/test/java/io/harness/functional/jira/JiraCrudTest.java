@@ -3,7 +3,6 @@ package io.harness.functional.jira;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_JIRA;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -19,6 +18,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.functional.Workflow.WorkflowRestUtil;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -29,8 +29,7 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
+import io.harness.threading.Morpheus;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,7 +38,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.GraphNode;
-import software.wings.beans.RestResponse;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
@@ -47,10 +45,11 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.time.Duration;
 import java.util.Collections;
-import javax.ws.rs.core.GenericType;
 
 public class JiraCrudTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -62,6 +61,7 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   @Inject private AccountGenerator accountGenerator;
   @Inject private WorkflowService workflowService;
   @Inject private SettingsService settingsService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   Application application;
 
@@ -94,27 +94,14 @@ public class JiraCrudTest extends AbstractFunctionalTest {
             .build();
 
     // REST API.
-    GenericType<RestResponse<Workflow>> workflowType = new GenericType<RestResponse<Workflow>>() {};
 
-    RestResponse<Workflow> savedWorkflowResponse = given()
-                                                       .auth()
-                                                       .oauth2(bearerToken)
-                                                       .queryParam("accountId", application.getAccountId())
-                                                       .queryParam("appId", application.getUuid())
-                                                       .body(jiraWorkflow, ObjectMapperType.GSON)
-                                                       .contentType(ContentType.JSON)
-                                                       .post("/workflows")
-                                                       .as(workflowType.getType());
-
-    Workflow savedWorkflow = savedWorkflowResponse.getResource();
+    Workflow savedWorkflow =
+        WorkflowRestUtil.createWorkflow(application.getAccountId(), application.getUuid(), jiraWorkflow);
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
     // Test running the workflow
-
-    GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
-        new GenericType<RestResponse<WorkflowExecution>>() {};
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
@@ -122,35 +109,15 @@ public class JiraCrudTest extends AbstractFunctionalTest {
         SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
     executionArgs.setOrchestrationId(savedWorkflow.getUuid());
 
-    RestResponse<WorkflowExecution> savedWorkflowExecutionResponse = given()
-                                                                         .auth()
-                                                                         .oauth2(bearerToken)
-                                                                         .queryParam("appId", application.getUuid())
-                                                                         .queryParam("envId", environment.getUuid())
-                                                                         .contentType(ContentType.JSON)
-                                                                         .body(executionArgs, ObjectMapperType.GSON)
-                                                                         .post("/executions")
-                                                                         .as(workflowExecutionType.getType());
-
-    WorkflowExecution workflowExecution = savedWorkflowExecutionResponse.getResource();
+    WorkflowExecution workflowExecution =
+        WorkflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     // Check output of the workflow Execution
-    WorkflowExecution workflowExecutionDetails;
-    do {
-      RestResponse<WorkflowExecution> workflowExecutionRestResponse =
-          given()
-              .auth()
-              .oauth2(bearerToken)
-              .queryParam("appId", application.getUuid())
-              .queryParam("envId", environment.getUuid())
-              .get("/executions/" + workflowExecution.getUuid())
-              .as(workflowExecutionType.getType());
-
-      workflowExecutionDetails = workflowExecutionRestResponse.getResource();
-    } while (workflowExecutionDetails.getStatus() != ExecutionStatus.SUCCESS);
-
-    assertThat(workflowExecutionDetails.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    Morpheus.quietSleep(Duration.ofSeconds(30));
+    assertThat(
+        workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid()).getStatus())
+        .isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   private GraphNode getJiraCreateNode() {
