@@ -9,7 +9,6 @@ import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.IOUtils;
@@ -118,16 +117,16 @@ public class AuditRequestFilter implements ContainerRequestFilter {
         .contains(requestContext.getMethod());
   }
 
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private String getHeaderString(MultivaluedMap<String, String> headers) {
     if (isEmpty(headers)) {
       return "";
     }
 
     StringBuilder headerString = new StringBuilder();
-    for (String key : headers.keySet()) {
+    for (Entry<String, List<String>> entry : headers.entrySet()) {
+      String key = entry.getKey();
       headerString.append(key).append('=');
-      for (String value : headers.get(key)) {
+      for (String value : entry.getValue()) {
         headerString.append(';');
         headerString.append(key.equalsIgnoreCase("Authorization") ? "********" : value);
       }

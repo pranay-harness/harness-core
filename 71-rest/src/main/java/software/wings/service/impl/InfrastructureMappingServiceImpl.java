@@ -379,11 +379,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
           (GcpKubernetesInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(gcpKubernetesInfrastructureMapping, fromYaml);
-      keyValuePairs.put("clusterName", gcpKubernetesInfrastructureMapping.getClusterName());
-      keyValuePairs.put("namespace",
-          isNotBlank(gcpKubernetesInfrastructureMapping.getNamespace())
-              ? gcpKubernetesInfrastructureMapping.getNamespace()
-              : "default");
+      if (isNotEmpty(gcpKubernetesInfrastructureMapping.getClusterName())) {
+        keyValuePairs.put("clusterName", gcpKubernetesInfrastructureMapping.getClusterName());
+      } else {
+        fieldsToRemove.add("clusterName");
+      }
+      if (isNotEmpty(gcpKubernetesInfrastructureMapping.getNamespace())) {
+        keyValuePairs.put("namespace", gcpKubernetesInfrastructureMapping.getNamespace());
+      } else {
+        fieldsToRemove.add("namespace");
+      }
     } else if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
       AzureKubernetesInfrastructureMapping azureKubernetesInfrastructureMapping =
           (AzureKubernetesInfrastructureMapping) infrastructureMapping;
