@@ -31,7 +31,7 @@ public class Account extends Base {
   public static final String ACCOUNT_NAME_KEY = "accountName";
   public static final String COMPANY_NAME_KEY = "companyName";
 
-  @Indexed @NotNull private String companyName;
+  @NotNull private String companyName;
 
   @Indexed(options = @IndexOptions(unique = true)) @NotNull private String accountName;
 

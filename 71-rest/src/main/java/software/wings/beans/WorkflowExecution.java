@@ -79,7 +79,7 @@ public class WorkflowExecution extends Base {
   private String appName;
   private String envName;
   private EnvironmentType envType;
-  @Indexed private WorkflowType workflowType;
+  private WorkflowType workflowType;
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
   @Transient private Graph graph;
 
