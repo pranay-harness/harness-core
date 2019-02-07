@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -10,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.appmanifest.ManifestFile.APPLICATION_MANIFEST_ID_KEY;
 import static software.wings.beans.appmanifest.ManifestFile.FILE_NAME_KEY;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.common.Constants.VALUES_YAML_KEY;
@@ -60,8 +60,10 @@ import software.wings.yaml.directory.DirectoryPath;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -175,7 +177,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public List<ManifestFile> getManifestFilesByAppManifestId(String appId, String applicationManifestId) {
     return wingsPersistence.createQuery(ManifestFile.class)
-        .filter(ManifestFile.APPLICATION_MANIFEST_ID_KEY, applicationManifestId)
+        .filter(APPLICATION_MANIFEST_ID_KEY, applicationManifestId)
         .filter(ManifestFile.APP_ID_KEY, appId)
         .asList();
   }
@@ -197,7 +199,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public ManifestFile getManifestFileByFileName(String applicationManifestId, String fileName) {
     Query<ManifestFile> query = wingsPersistence.createQuery(ManifestFile.class)
-                                    .filter(ManifestFile.APPLICATION_MANIFEST_ID_KEY, applicationManifestId)
+                                    .filter(APPLICATION_MANIFEST_ID_KEY, applicationManifestId)
                                     .filter(ManifestFile.FILE_NAME_KEY, fileName);
     return query.get();
   }
@@ -251,20 +253,43 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   private void validateFileNamePrefixForDirectory(ManifestFile manifestFile) {
+    List<ManifestFile> manifestFiles = wingsPersistence.createQuery(ManifestFile.class)
+                                           .filter(APP_ID_KEY, manifestFile.getAppId())
+                                           .filter(APPLICATION_MANIFEST_ID_KEY, manifestFile.getApplicationManifestId())
+                                           .project(FILE_NAME_KEY, true)
+                                           .asList();
+
+    if (isEmpty(manifestFiles)) {
+      return;
+    }
+
     Pattern pattern = Pattern.compile("^" + manifestFile.getFileName() + "/");
-
-    List<ManifestFile> manifestFiles =
-        wingsPersistence.createQuery(ManifestFile.class)
-            .filter(APP_ID_KEY, manifestFile.getAppId())
-            .filter(ManifestFile.APPLICATION_MANIFEST_ID_KEY, manifestFile.getApplicationManifestId())
-            .filter(FILE_NAME_KEY, pattern)
-            .asList();
-
-    if (isNotEmpty(manifestFiles)) {
+    boolean match = manifestFiles.stream().anyMatch(manifest -> pattern.matcher(manifest.getFileName()).find());
+    if (match) {
       throw new InvalidRequestException(
           format("Cannot create manifest file with name %s. There exists a directory with same name",
               manifestFile.getFileName()),
           USER);
+    }
+
+    // Below handles case like testValidateManifestFileName4
+    Set<String> manifestFilesSet = manifestFiles.stream().map(ManifestFile::getFileName).collect(Collectors.toSet());
+
+    String[] filePathParts = manifestFile.getFileName().split("/");
+    StringBuilder fileNamePrefixBuilder = new StringBuilder();
+
+    for (int i = 0; i < filePathParts.length; i++) {
+      fileNamePrefixBuilder.append(filePathParts[i]);
+      String fileNamePrefix = fileNamePrefixBuilder.toString();
+
+      if (manifestFilesSet.contains(fileNamePrefixBuilder.toString())) {
+        throw new InvalidRequestException(
+            format("Cannot create manifest file with name %s. There exists a file with path %s",
+                manifestFile.getFileName(), fileNamePrefix),
+            USER);
+      }
+
+      fileNamePrefixBuilder.append('/');
     }
   }
 

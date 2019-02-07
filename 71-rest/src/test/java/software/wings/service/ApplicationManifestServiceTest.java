@@ -19,7 +19,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.RealMongo;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -49,6 +51,8 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject @InjectMocks ApplicationManifestService applicationManifestService;
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws Exception {
@@ -511,5 +515,68 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.getAllByEnvIdAndKind(APP_ID, ENV_ID, VALUES);
     assertThat(applicationManifests).isEmpty();
+  }
+
+  @Test
+  public void testValidateManifestFileName() {
+    upsertManifestFile("abc/def", "abc/pqr");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidateManifestFileName1() {
+    upsertManifestFile("abc/def", "abc");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidateManifestFileName2() {
+    upsertManifestFile("abc/def/ghi", "abc");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidateManifestFileName3() {
+    upsertManifestFile("abc/def/ghi", "abc/def");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidateManifestFileName4() {
+    upsertManifestFile("abc", "abc/def");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidateManifestFileName5() {
+    upsertManifestFile("abc/def", "abc/def/ghi");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidateManifestFileName6() {
+    upsertManifestFile("abc/def", "abc/def/ghi/klm");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testValidateManifestFileName7() {
+    upsertManifestFile("abc/def", "abc/def");
+  }
+
+  @Test
+  public void testValidateManifestFileName8() {
+    upsertManifestFile("abc/def", "abc/ghi");
+    upsertManifestFile("abc/jkl", "abc/mno");
+  }
+
+  private ApplicationManifest createAppManifest() {
+    ApplicationManifest envAppManifest =
+        ApplicationManifest.builder().storeType(Local).kind(VALUES).serviceId(SERVICE_ID).build();
+    envAppManifest.setAppId(APP_ID);
+    return applicationManifestService.create(envAppManifest);
+  }
+
+  private void upsertManifestFile(String fileName1, String fileName2) {
+    ApplicationManifest appManifest = createAppManifest();
+
+    ManifestFile manifestFile = getManifestFileWithName(fileName1);
+    applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+
+    manifestFile = getManifestFileWithName(fileName2);
+    applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
   }
 }
