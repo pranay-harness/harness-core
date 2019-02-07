@@ -317,7 +317,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           return null;
         }
 
-        Map<String, Object> stateParams = fetchStateParams(orchestrationWorkflow, state);
+        Map<String, Object> stateParams = fetchStateParams(orchestrationWorkflow, state, executionEvent);
         return anExecutionEventAdvice()
             .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
             .withStateParams(stateParams)
@@ -419,7 +419,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     return null;
   }
 
-  private Map<String, Object> fetchStateParams(CanaryOrchestrationWorkflow orchestrationWorkflow, State state) {
+  private Map<String, Object> fetchStateParams(
+      CanaryOrchestrationWorkflow orchestrationWorkflow, State state, ExecutionEvent executionEvent) {
     if (orchestrationWorkflow == null || orchestrationWorkflow.getGraph() == null || state == null
         || state.getId() == null) {
       return null;
@@ -429,13 +430,27 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return null;
     }
     Graph graph = orchestrationWorkflow.getGraph().getSubworkflows().get(state.getParentId());
-    Optional<GraphNode> node1 =
-        graph.getNodes().stream().filter(node -> node.getId().equals(state.getId())).findFirst();
-    if (!node1.isPresent()) {
+    GraphNode node1 =
+        graph.getNodes().stream().filter(node -> node.getId().equals(state.getId())).findFirst().orElse(null);
+    if (node1 == null) {
       return null;
     }
 
-    return node1.get().getProperties();
+    Map<String, Object> properties = node1.getProperties();
+    if (isNotEmpty(state.getTemplateVariables())) {
+      properties.put("templateVariables", state.getTemplateVariables());
+    }
+    if (isNotEmpty(state.getTemplateUuid())) {
+      properties.put("templateUuid", state.getTemplateUuid());
+    }
+    if (isNotEmpty(state.getTemplateVersion())) {
+      properties.put("templateVersion", state.getTemplateVersion());
+    }
+    if (executionEvent != null && executionEvent.getContext() != null
+        && isNotEmpty(executionEvent.getContext().getAccountId())) {
+      properties.put("accountId", executionEvent.getContext().getAccountId());
+    }
+    return properties;
   }
 
   private ExecutionEventAdvice phaseSubWorkflowAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,
