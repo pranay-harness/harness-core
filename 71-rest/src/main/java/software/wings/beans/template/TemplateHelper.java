@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.LINKED_TEMPLATE_UUIDS_KEY;
 import static software.wings.beans.Base.TEMPATE_UUID_KEY;
+import static software.wings.beans.EntityType.ARTIFACT_STREAM;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -28,6 +29,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.TemplateConstants;
@@ -52,6 +54,8 @@ public class TemplateHelper {
       case HTTP:
       case SHELL_SCRIPT:
         return Workflow.class;
+      case ARTIFACT_SOURCE:
+        return ArtifactStream.class;
       default:
         unhandled(templateType);
     }
@@ -65,6 +69,8 @@ public class TemplateHelper {
       case HTTP:
       case SHELL_SCRIPT:
         return WORKFLOW;
+      case ARTIFACT_SOURCE:
+        return ARTIFACT_STREAM;
       default:
         unhandled(templateType);
     }
@@ -73,6 +79,10 @@ public class TemplateHelper {
 
   public boolean templatesLinked(TemplateType templateType, List<String> templateUuids) {
     if (isEmpty(templateUuids)) {
+      return false;
+    }
+    // TODO: remove once linking logic added to artifact stream
+    if (templateType.equals(TemplateType.ARTIFACT_SOURCE)) {
       return false;
     }
     long templatesOfType = wingsPersistence.createQuery(Template.class)
@@ -94,6 +104,7 @@ public class TemplateHelper {
         return TEMPATE_UUID_KEY;
       case HTTP:
       case SHELL_SCRIPT:
+      case ARTIFACT_SOURCE:
         return LINKED_TEMPLATE_UUIDS_KEY;
       default:
         unhandled(templateType);
