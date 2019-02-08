@@ -205,7 +205,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       return null;
     }
 
-    InfraMappingElementBuilder builder = InfraMappingElement.builder();
+    InfraMappingElementBuilder builder = InfraMappingElement.builder().name(infrastructureMapping.getName());
     populateNamespaceInInfraMappingElement(infrastructureMapping, builder);
     populateDeploymentSpecificInfoInInfraMappingElement(infrastructureMapping, phaseElement, builder);
 

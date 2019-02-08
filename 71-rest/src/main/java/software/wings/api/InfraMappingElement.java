@@ -9,6 +9,7 @@ public class InfraMappingElement {
   private Pcf pcf;
   private Kubernetes kubernetes;
   private Helm helm;
+  private String name;
 
   @Data
   @Builder
