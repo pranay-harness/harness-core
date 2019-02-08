@@ -13,6 +13,7 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
+import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceListener;
 import io.harness.mongo.MongoModule;
 import org.apache.commons.lang3.StringUtils;
@@ -64,7 +65,11 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       MongoClientURI uri =
           new MongoClientURI(getMongoUri(), MongoClientOptions.builder(MongoModule.mongoClientOptions));
       try (MongoClient mongoClient = new MongoClient(uri)) {
-        final MongoDatabase database = mongoClient.getDatabase(uri.getDatabase());
+        final String databaseName = uri.getDatabase();
+        if (databaseName == null) {
+          throw new WingsException("The mongo db uri does not specify database name");
+        }
+        final MongoDatabase database = mongoClient.getDatabase(databaseName);
 
         final String prefix = properties.getProperty("org.quartz.jobStore.collectionPrefix");
 
@@ -102,9 +107,15 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
                                        .maxConnectionIdleTime(600000)
                                        .connectionsPerHost(50);
       MongoClientURI uri = new MongoClientURI(getMongoUri(), mongoClientOptions);
+
+      final String databaseName = uri.getDatabase();
+      if (databaseName == null) {
+        throw new WingsException("The mongo db uri does not specify database name");
+      }
+
       props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobStoreClass());
       props.setProperty("org.quartz.jobStore.mongoUri", uri.getURI());
-      props.setProperty("org.quartz.jobStore.dbName", uri.getDatabase());
+      props.setProperty("org.quartz.jobStore.dbName", databaseName);
       props.setProperty("org.quartz.jobStore.collectionPrefix", schedulerConfig.getTablePrefix());
       props.setProperty("org.quartz.jobStore.mongoOptionWriteConcernTimeoutMillis",
           schedulerConfig.getMongoOptionWriteConcernTimeoutMillis());
