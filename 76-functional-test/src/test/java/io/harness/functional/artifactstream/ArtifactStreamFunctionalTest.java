@@ -1,10 +1,12 @@
 package io.harness.functional.artifactstream;
 
+import static io.harness.artifact.CustomRepositoryMapping.AttributeMapping.builder;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.artifact.CustomRepositoryMapping;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
@@ -29,7 +31,9 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Script;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import javax.ws.rs.core.GenericType;
 
 public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
@@ -61,11 +65,12 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
 
         };
 
+    String name = "Custom Artifact Stream" + System.currentTimeMillis();
     ArtifactStream customArtifactStream =
         CustomArtifactStream.builder()
             .appId(application.getUuid())
             .serviceId(service.getUuid())
-            .name("Custom Artifact Stream" + System.currentTimeMillis())
+            .name(name)
             .scripts(Arrays.asList(CustomArtifactStream.Script.builder()
                                        .scriptString("echo Hello World!! and echo ${secrets.getValue(My Secret)")
                                        .build()))
@@ -84,11 +89,86 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
 
     ArtifactStream savedArtifactSteam = restResponse.getResource();
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
-    assertThat(savedArtifactSteam.getSourceName()).isEqualTo(CustomArtifactStream.ARTIFACT_SOURCE_NAME);
+    assertThat(savedArtifactSteam.getSourceName()).isEqualTo(name);
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ArtifactStreamType.CUSTOM.name());
     CustomArtifactStream savedCustomArtifactStream = (CustomArtifactStream) savedArtifactSteam;
     assertThat(savedCustomArtifactStream.getScripts()).isNotEmpty();
     Script script = savedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
     assertThat(script.getScriptString()).isEqualTo("echo Hello World!! and echo ${secrets.getValue(My Secret)");
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  @Ignore
+  public void shouldCRUDCustomArtifactStreamWithCustomMapping() {
+    Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
+
+    GenericType<RestResponse<CustomArtifactStream>> artifactStreamType =
+        new GenericType<RestResponse<CustomArtifactStream>>() {
+
+        };
+
+    String scriptString =
+        "echo '{\"results\":[{\"buildNo\":\"1.0\",\"metadata\":{\"repository\":\"maven-releases\",\"downloadUrl\":\"http://localhost:8081/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war\"}}]}' > $ARTIFACT_RESULT_PATH";
+    List<CustomRepositoryMapping.AttributeMapping> attributeMapping = new ArrayList<>();
+    attributeMapping.add(builder().fromField("version").toField("buildNo").build());
+    attributeMapping.add(builder().fromField("assets.downloadUrl").toField("metadata.downloadUrl").build());
+    CustomRepositoryMapping mapping =
+        CustomRepositoryMapping.builder().artifactRoot("$.results").artifactAttributes(attributeMapping).build();
+    String name = "Custom Artifact Stream" + System.currentTimeMillis();
+    ArtifactStream customArtifactStream = CustomArtifactStream.builder()
+                                              .appId(application.getUuid())
+                                              .serviceId(service.getUuid())
+                                              .name(name)
+                                              .scripts(Arrays.asList(CustomArtifactStream.Script.builder()
+                                                                         .scriptString(scriptString)
+                                                                         .customRepositoryMapping(mapping)
+                                                                         .build()))
+                                              .tags(Arrays.asList())
+                                              .build();
+
+    RestResponse<CustomArtifactStream> restResponse = given()
+                                                          .auth()
+                                                          .oauth2(bearerToken)
+                                                          .queryParam("accountId", application.getAccountId())
+                                                          .queryParam("appId", application.getUuid())
+                                                          .body(customArtifactStream, ObjectMapperType.GSON)
+                                                          .contentType(ContentType.JSON)
+                                                          .post("/artifactstreams")
+                                                          .as(artifactStreamType.getType());
+
+    ArtifactStream savedArtifactSteam = restResponse.getResource();
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    assertThat(savedArtifactSteam.getSourceName()).isEqualTo(name);
+    assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ArtifactStreamType.CUSTOM.name());
+    CustomArtifactStream savedCustomArtifactStream = (CustomArtifactStream) savedArtifactSteam;
+    assertThat(savedCustomArtifactStream.getScripts()).isNotEmpty();
+    Script script = savedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
+    assertThat(script.getScriptString()).isEqualTo(scriptString);
+    assertThat(script.getCustomRepositoryMapping()).isNotNull();
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(2);
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes())
+        .extracting("fromField")
+        .contains("version", "assets.downloadUrl");
+
+    // Delete custom artifactStream
+    given()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("appId", application.getUuid())
+        .pathParam("id", savedCustomArtifactStream.getUuid())
+        .delete("/artifactstreams/{id}")
+        .then()
+        .statusCode(200);
+
+    // Make sure that it is deleted
+    restResponse = given()
+                       .auth()
+                       .oauth2(bearerToken)
+                       .queryParam("appId", application.getUuid())
+                       .pathParam("streamId", savedCustomArtifactStream.getUuid())
+                       .get("/artifactstreams/{streamId}")
+                       .as(artifactStreamType.getType());
+    assertThat(restResponse.getResource()).isNull();
   }
 }

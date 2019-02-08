@@ -5,6 +5,7 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.artifact.CustomRepositoryMapping;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -33,6 +34,7 @@ public class CustomArtifactStream extends ArtifactStream {
     @Default @NotNull private Action action = Action.FETCH_VERSIONS;
     @NotEmpty private String scriptString;
     private String timeout;
+    private CustomRepositoryMapping customRepositoryMapping;
   }
 
   public enum Action { FETCH_VERSIONS, DOWNLOAD_ARTIFACT, VALIDATE }

@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifactstream;
 
+import static io.harness.artifact.CustomRepositoryMapping.AttributeMapping.builder;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.artifact.CustomRepositoryMapping;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
@@ -76,6 +78,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ArtifactType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -1648,6 +1651,81 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     CustomArtifactStream updatedCustomArtifactStream = (CustomArtifactStream) savedArtifactSteam;
     Script updatedScript = updatedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
     assertThat(updatedScript.getScriptString()).isEqualTo("Welcome to harness");
+
+    artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
+
+    assertThat(artifactStreamService.get(APP_ID, updatedArtifactStream.getUuid())).isNull();
+
+    verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(triggerService).updateByApp(APP_ID);
+  }
+
+  @Test
+  public void shouldCRUDCustomArtifactStreamWithCustomMapping() {
+    List<CustomRepositoryMapping.AttributeMapping> attributeMapping = new ArrayList<>();
+    attributeMapping.add(builder().fromField("version").toField("buildNo").build());
+    attributeMapping.add(builder().fromField("assets.downloadUrl").toField("metadata.downloadUrl").build());
+    CustomRepositoryMapping mapping =
+        CustomRepositoryMapping.builder().artifactRoot("$.items").artifactAttributes(attributeMapping).build();
+    ArtifactStream customArtifactStream =
+        CustomArtifactStream.builder()
+            .appId(APP_ID)
+            .serviceId(SERVICE_ID)
+            .name("Custom Artifact Stream" + System.currentTimeMillis())
+            .scripts(Arrays.asList(CustomArtifactStream.Script.builder()
+                                       .action(Action.FETCH_VERSIONS)
+                                       .scriptString("echo Hello World!! and echo ${secrets.getValue(My Secret)}")
+                                       .customRepositoryMapping(mapping)
+                                       .build()))
+            .build();
+
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(customArtifactStream);
+
+    assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
+    assertThat(savedArtifactSteam.getSourceName()).isEqualTo(savedArtifactSteam.getName());
+    assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ArtifactStreamType.CUSTOM.name());
+    CustomArtifactStream savedCustomArtifactStream = (CustomArtifactStream) savedArtifactSteam;
+    assertThat(savedCustomArtifactStream.getScripts()).isNotEmpty();
+    Script script = savedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
+    assertThat(script.getAction()).isEqualTo(Action.FETCH_VERSIONS);
+    assertThat(script.getScriptString()).isEqualTo("echo Hello World!! and echo ${secrets.getValue(My Secret)}");
+    assertThat(script.getCustomRepositoryMapping()).isNotNull();
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(2);
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes())
+        .extracting("fromField")
+        .contains("version", "assets.downloadUrl");
+
+    assertThat(artifactStreamService.fetchArtifactStreamsForService(APP_ID, SERVICE_ID))
+        .isNotEmpty()
+        .extracting(ArtifactStream::getUuid)
+        .isNotNull()
+        .contains(savedArtifactSteam.getUuid());
+
+    attributeMapping = new ArrayList<>();
+    attributeMapping.add(builder().fromField("version").toField("buildNo").build());
+    attributeMapping.add(builder().fromField("assets.path").toField("metadata.path").build());
+    mapping = CustomRepositoryMapping.builder().artifactRoot("$.items").artifactAttributes(attributeMapping).build();
+    script.setCustomRepositoryMapping(mapping);
+    script.setScriptString("Welcome to harness");
+    savedCustomArtifactStream.setScripts(Arrays.asList(script));
+    savedCustomArtifactStream.setName("Name Changed");
+
+    ArtifactStream updatedArtifactStream = artifactStreamService.update(savedArtifactSteam);
+
+    assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
+    assertThat(updatedArtifactStream.getSourceName()).isEqualTo(updatedArtifactStream.getName());
+    assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(ArtifactStreamType.CUSTOM.name());
+    CustomArtifactStream updatedCustomArtifactStream = (CustomArtifactStream) savedArtifactSteam;
+    Script updatedScript = updatedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
+    assertThat(updatedScript.getScriptString()).isEqualTo("Welcome to harness");
+    assertThat(script.getCustomRepositoryMapping()).isNotNull();
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(2);
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes())
+        .extracting("fromField")
+        .contains("version", "assets.path");
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes())
+        .extracting("fromField")
+        .doesNotContain("assets.downloadUrl");
 
     artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
 
