@@ -54,6 +54,11 @@
             <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>13-encryption</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

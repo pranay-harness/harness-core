@@ -81,7 +81,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData encryptedData) {
     SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
-    return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
+    return (EncryptedData) delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .encrypt(name, value, accountId, settingType, vaultConfig, encryptedData);
   }
 

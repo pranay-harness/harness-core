@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.security.encryption.EncryptedRecord;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -47,7 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Indexes({
   @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
 })
-public class EncryptedData extends Base {
+public class EncryptedData extends Base implements EncryptedRecord {
   public static final String NAME_KEY = "name";
 
   @NotEmpty @Indexed private String name;
