@@ -10,6 +10,7 @@ import com.google.inject.name.Names;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import io.harness.govern.DependencyModule;
+import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
@@ -165,6 +166,7 @@ import software.wings.service.impl.ldap.LdapDelegateServiceImpl;
 import software.wings.service.impl.logz.LogzDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.prometheus.PrometheusDelegateServiceImpl;
+import software.wings.service.impl.security.DelegateDecryptionServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
@@ -398,6 +400,7 @@ public class DelegateModule extends DependencyModule {
     bind(CustomRepositoryService.class).to(CustomRepositoryServiceImpl.class);
     bind(AwsRoute53HelperServiceDelegate.class).to(AwsRoute53HelperServiceDelegateImpl.class);
     bind(AwsServiceDiscoveryHelperServiceDelegate.class).to(AwsServiceDiscoveryHelperServiceDelegateImpl.class);
+    bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

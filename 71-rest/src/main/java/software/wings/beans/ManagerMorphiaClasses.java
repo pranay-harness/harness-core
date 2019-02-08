@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.event.model.QueableEvent;
 import io.harness.notifications.NotificationReceiverInfo;
+import io.harness.security.encryption.EncryptedRecord;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
@@ -165,7 +166,7 @@ public class ManagerMorphiaClasses {
       LearningEngineAnalysisTask.class, ExperimentalMetricAnalysisRecord.class, Comparable.class,
       LogMLAnalysisRecord.class, TimeSeriesMLAnalysisRecord.class, StateExecutionInstance.class,
       DatadogCVServiceConfiguration.class, MetricAnalysisRecord.class, YamlVersion.class, EncryptionConfig.class,
-      Principal.class, PrometheusCVServiceConfiguration.class, EncryptedData.class,
+      Principal.class, PrometheusCVServiceConfiguration.class, EncryptedData.class, EncryptedRecord.class,
       NewRelicCVServiceConfiguration.class, ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class,
       YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class,
       ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class,

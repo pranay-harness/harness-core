@@ -35,6 +35,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KmsConfig;
@@ -88,7 +89,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   @Override
-  public EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
+  public EncryptedRecord encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
     Preconditions.checkNotNull(kmsConfig, "null for " + accountId);
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
@@ -114,7 +115,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   @SuppressFBWarnings("DM_STRING_CTOR")
   @Override
-  public char[] decrypt(EncryptedData data, KmsConfig kmsConfig) {
+  public char[] decrypt(EncryptedRecord data, KmsConfig kmsConfig) {
     if (data.getEncryptedValue() == null) {
       return null;
     }
@@ -143,8 +144,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   @Override
-  public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
-      VaultConfig vaultConfig, EncryptedData savedEncryptedData) {
+  public EncryptedRecord encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
+      VaultConfig vaultConfig, EncryptedRecord savedEncryptedData) {
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
         return timeLimiter.callWithTimeout(
@@ -168,7 +169,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   @Override
-  public char[] decrypt(EncryptedData data, VaultConfig vaultConfig) {
+  public char[] decrypt(EncryptedRecord data, VaultConfig vaultConfig) {
     if (data.getEncryptedValue() == null) {
       return null;
     }
@@ -205,7 +206,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   @Override
-  public List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedData encryptedData, VaultConfig vaultConfig) {
+  public List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedRecord encryptedData, VaultConfig vaultConfig) {
     List<SecretChangeLog> secretChangeLogs = new ArrayList<>();
 
     EmbeddedUser vaultUser = EmbeddedUser.builder().name("VaultUser").build();
@@ -280,7 +281,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     return false;
   }
 
-  private EncryptedData encryptInternal(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
+  private EncryptedRecord encryptInternal(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
     long startTime = System.currentTimeMillis();
     logger.info("Encrypting one secret in account {} with KMS secret manager '{}'", accountId, kmsConfig.getName());
 
@@ -317,7 +318,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         .build();
   }
 
-  private char[] decryptInternal(EncryptedData data, KmsConfig kmsConfig) throws Exception {
+  private char[] decryptInternal(EncryptedRecord data, KmsConfig kmsConfig) throws Exception {
     long startTime = System.currentTimeMillis();
     logger.info("Decrypting secret {} with KMS secret manager '{}'", data.getUuid(), kmsConfig.getName());
 
@@ -340,15 +341,15 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     return decrypt(data.getEncryptedValue(), new SecretKeySpec(getByteArray(plainTextKey), "AES")).toCharArray();
   }
 
-  private EncryptedData encryptInternal(String name, String value, String accountId, SettingVariableTypes settingType,
-      VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws Exception {
+  private EncryptedRecord encryptInternal(String name, String value, String accountId, SettingVariableTypes settingType,
+      VaultConfig vaultConfig, EncryptedRecord savedEncryptedData) throws Exception {
     String keyUrl = settingType + "/" + name;
     char[] encryptedValue = keyUrl.toCharArray();
 
     long startTime = System.currentTimeMillis();
     logger.info("Saving secret {} into Vault {}", name, keyUrl);
 
-    EncryptedData encryptedData = savedEncryptedData;
+    EncryptedRecord encryptedData = savedEncryptedData;
     if (savedEncryptedData == null) {
       encryptedData = EncryptedData.builder()
                           .encryptionKey(keyUrl)
@@ -401,7 +402,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
   }
 
-  private char[] decryptInternal(EncryptedData data, VaultConfig vaultConfig) throws Exception {
+  private char[] decryptInternal(EncryptedRecord data, VaultConfig vaultConfig) throws Exception {
     String fullPath =
         isEmpty(data.getPath()) ? getFullPath(vaultConfig.getBasePath(), data.getEncryptionKey()) : data.getPath();
     long startTime = System.currentTimeMillis();

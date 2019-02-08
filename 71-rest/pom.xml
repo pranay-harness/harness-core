@@ -528,6 +528,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>13-encryption</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>20-delegate-tasks</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
