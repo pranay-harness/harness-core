@@ -168,7 +168,7 @@ public class ExecutionResource {
       if (executionArgs != null) {
         if (executionArgs.getOrchestrationId() != null) {
           authHandler.authorize(permissionAttributeList, asList(appId), executionArgs.getOrchestrationId());
-          authService.checkIfUserAllowedToDeployToEnv(appId, asList(envId));
+          authService.checkIfUserAllowedToDeployToEnv(appId, envId);
         } else if (executionArgs.getPipelineId() != null) {
           authHandler.authorize(permissionAttributeList, asList(appId), executionArgs.getPipelineId());
         }
@@ -215,8 +215,8 @@ public class ExecutionResource {
     }
 
     if (requiredAction.equals(EXECUTE)) {
-      List<String> envIds = workflowExecution.getEnvIds();
-      authService.checkIfUserAllowedToDeployToEnv(appId, envIds);
+      String envId = workflowExecution.getEnvId();
+      authService.checkIfUserAllowedToDeployToEnv(appId, envId);
     }
   }
 

@@ -904,8 +904,8 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public void checkIfUserAllowedToDeployToEnv(String appId, List<String> envIdList) {
-    if (isEmpty(envIdList)) {
+  public void checkIfUserAllowedToDeployToEnv(String appId, String envId) {
+    if (isEmpty(envId)) {
       return;
     }
 
@@ -923,7 +923,7 @@ public class AuthServiceImpl implements AuthService {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
 
-    if (!deploymentEnvPermissions.containsAll(envIdList)) {
+    if (!deploymentEnvPermissions.contains(envId)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
   }
