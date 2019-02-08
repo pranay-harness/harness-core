@@ -16,6 +16,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.AwsConfig;
@@ -296,6 +297,7 @@ public class AwsInstanceHandler extends InstanceHandler {
       AwsInfrastructureMapping awsInfrastructureMapping = AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping()
                                                               .withRegion(region)
                                                               .withAwsInstanceFilter(null)
+                                                              .withDeploymentType(DeploymentType.SSH.name())
                                                               .build();
       List<com.amazonaws.services.ec2.model.Instance> activeInstanceList =
           awsInfrastructureProvider.listFilteredInstances(awsInfrastructureMapping, awsConfig, encryptedDataDetails);
