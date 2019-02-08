@@ -220,8 +220,8 @@ public class ZombieHunterJob implements Job {
     selectOwner.put(ID_KEY, 1);
 
     int count = 0;
-    final DBCursor dbCursor =
-        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, zombieType.collection).find(null, select);
+    final DBCursor dbCursor = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, zombieType.collection)
+                                  .find(new BasicDBObject(), select);
     while (dbCursor.hasNext()) {
       final DBObject object = dbCursor.next();
       final Object ownerId = object.get(zombieType.ownerFieldName);
