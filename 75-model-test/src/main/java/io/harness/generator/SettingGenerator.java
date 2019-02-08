@@ -3,6 +3,7 @@ package io.harness.generator;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
+import static io.harness.generator.SettingGenerator.Settings.HARNESS_EXPLORATION_GCS;
 import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_TEST_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -53,7 +54,7 @@ public class SettingGenerator {
   private static final String HARNESS_ARTIFACTORY = "Harness Artifactory";
   private static final String HARNESS_BAMBOO = "Harness Bamboo";
   private static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
-  private static final String HARNESS_GCP_EXPLORATION = "harness-exploration";
+  private static final String HARNESS_EXPLORATION_GCS = "harness-exploration-gcs";
 
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;
@@ -72,7 +73,7 @@ public class SettingGenerator {
     HARNESS_NEXU3_CONNECTOR,
     HARNESS_ARTIFACTORY_CONNECTOR,
     HARNESS_DOCKER_REGISTRY,
-    HARNESS_GCP_EXPLORATION,
+    HARNESS_EXPLORATION_GCS,
     HARNESS_JIRA
   }
 
@@ -102,8 +103,8 @@ public class SettingGenerator {
         return ensureHarnessArtifactory(seed, owners);
       case HARNESS_DOCKER_REGISTRY:
         return ensureHarnessDocker(seed, owners);
-      case HARNESS_GCP_EXPLORATION:
-        return ensureHarnessGcpExploration(seed, owners);
+      case HARNESS_EXPLORATION_GCS:
+        return ensureHarnessExplorationGcs(seed, owners);
       case HARNESS_JIRA:
         return ensureHarnessJira(seed, owners);
       default:
@@ -327,18 +328,18 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, dockerSettingAttribute);
   }
 
-  private SettingAttribute ensureHarnessGcpExploration(Randomizer.Seed seed, Owners owners) {
+  private SettingAttribute ensureHarnessExplorationGcs(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute gcpSettingAttribute =
         aSettingAttribute()
-            .withName(HARNESS_GCP_EXPLORATION)
+            .withName(HARNESS_EXPLORATION_GCS)
             .withCategory(Category.CLOUD_PROVIDER)
             .withAccountId(account.getUuid())
-            .withValue(GcpConfig.builder()
-                           .serviceAccountKeyFileContent(
-                               scmSecret.decryptToCharArray(new SecretName("harness_gcp_exploration")))
-                           .accountId(account.getUuid())
-                           .build())
+            .withValue(
+                GcpConfig.builder()
+                    .serviceAccountKeyFileContent(scmSecret.decryptToCharArray(new SecretName("harness_exploration")))
+                    .accountId(account.getUuid())
+                    .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, gcpSettingAttribute);

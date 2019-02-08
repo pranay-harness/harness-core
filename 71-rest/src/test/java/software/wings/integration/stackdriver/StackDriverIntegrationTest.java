@@ -15,6 +15,7 @@ import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aW
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
@@ -70,6 +71,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Owner(emails = "pranjal@harness.io", intermittent = true)
   public void testGetMetricsWithDataForNode() throws Exception {
     StackDriverSetupTestNodeData setupTestNodedata = getStackDriverSetupTestNodedata();
     WebTarget target = client.target(API_BASE + "/stackdriver/node-data?accountId=" + accountId);
