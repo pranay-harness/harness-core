@@ -56,7 +56,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>13-encryption</artifactId>
+            <artifactId>15-api-services</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
