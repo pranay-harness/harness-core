@@ -49,6 +49,8 @@ public interface WingsPersistence extends HPersistence {
    * @param t   the t
    * @return the t
    */
+  @Deprecated
+  // There is no point of using this method. Instead use save, and your object will be updated.
   <T extends Base> T saveAndGet(Class<T> cls, T t);
 
   /**
