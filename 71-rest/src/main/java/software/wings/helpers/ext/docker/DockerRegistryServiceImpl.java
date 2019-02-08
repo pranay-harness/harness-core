@@ -68,14 +68,18 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   @Override
   public List<BuildDetails> getBuilds(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, int maxNumberOfBuilds) {
+    List<BuildDetails> buildDetails;
     try {
       if (dockerConfig.hasCredentials()) {
-        return getBuildDetails(dockerConfig, encryptionDetails, imageName);
+        buildDetails = getBuildDetails(dockerConfig, encryptionDetails, imageName);
+      } else {
+        buildDetails =
+            dockerPublicRegistryProcessor.getBuilds(dockerConfig, encryptionDetails, imageName, maxNumberOfBuilds);
       }
-      return dockerPublicRegistryProcessor.getBuilds(dockerConfig, encryptionDetails, imageName, maxNumberOfBuilds);
     } catch (IOException e) {
       throw new WingsException(GENERAL_ERROR, WingsException.USER, e).addParam("message", Misc.getMessage(e));
     }
+    return buildDetails;
   }
 
   private List<BuildDetails> getBuildDetails(
@@ -97,6 +101,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     }
     buildDetails.addAll(processBuildResponse(dockerImageTagResponse, dockerConfig, imageName));
     // TODO: Limit the no of tags
+    String baseUrl = response.raw().request().url().toString();
     while (true) {
       String nextLink = findNextLink(response.headers());
       if (nextLink == null) {
@@ -105,7 +110,6 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         logger.info(
             "Using pagination to fetch all the builds. The no of builds fetched so far {}", buildDetails.size());
       }
-      String baseUrl = response.raw().request().url().toString();
       int queryParamIndex = nextLink.indexOf('?');
       String nextPageUrl =
           queryParamIndex == -1 ? baseUrl.concat(nextLink) : baseUrl.concat(nextLink.substring(queryParamIndex));
@@ -116,7 +120,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       dockerImageTagResponse = response.body();
       if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
-        logger.info("There are no more tags available for the imageName {}", imageName);
+        logger.info("There are no more tags available for the imageName {}. Returning tags", imageName);
         return buildDetails;
       }
       buildDetails.addAll(processBuildResponse(dockerImageTagResponse, dockerConfig, imageName));
@@ -126,7 +130,6 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         break;
       }
     }
-    logger.info("The complete list  of the the tags {}", buildDetails);
     return buildDetails;
   }
 

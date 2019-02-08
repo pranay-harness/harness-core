@@ -59,12 +59,12 @@ public class CustomArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes().withArtifactStreamType(getArtifactStreamType()).build();
   }
 
   @Override
-  public String getArtifactDisplayName(String buildNo) {
+  public String fetchArtifactDisplayName(String buildNo) {
     return format("%s_%s", getName(), buildNo);
   }
 

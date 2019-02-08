@@ -36,7 +36,7 @@ package-lock.json
 infer-out
 infer-out/*
 client-tools
-
+delegate_sequence_config
 # The Terraform code in this app is just an example, so ignore any files that may store Terraform state from a real
 # deployment. You may want to remove these gitignore entries for a real app.
 **/terraform.tfvars

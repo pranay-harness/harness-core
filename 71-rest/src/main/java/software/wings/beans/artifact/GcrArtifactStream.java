@@ -46,12 +46,12 @@ public class GcrArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public String getArtifactDisplayName(String buildNo) {
+  public String fetchArtifactDisplayName(String buildNo) {
     return format("%s_%s_%s", getDockerImageName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
   }
 
   @Override
-  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())
         .withImageName(dockerImageName)

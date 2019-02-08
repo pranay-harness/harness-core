@@ -50,7 +50,7 @@ public class AmiArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public String getArtifactDisplayName(String amiName) {
+  public String fetchArtifactDisplayName(String amiName) {
     return isEmpty(tags) ? format("%s_%s", getRegion(), amiName) : format("%s_%s", getSourceName(), amiName);
   }
 
@@ -76,7 +76,7 @@ public class AmiArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     Map<String, List<String>> tagMap = new HashMap<>();
     Map<String, String> filterMap = new HashMap<>();
     if (tags != null) {

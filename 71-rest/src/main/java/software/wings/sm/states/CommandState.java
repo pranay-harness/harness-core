@@ -354,7 +354,7 @@ public class CommandState extends State {
               WingsException.USER);
         }
 
-        ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
+        ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
         artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
         if (!ArtifactStreamType.CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
           SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());

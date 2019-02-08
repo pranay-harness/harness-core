@@ -123,13 +123,13 @@ public class ArtifactCollectionUtil {
     }
     if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
       if (buildDetails.getArtifactPath() != null) {
-        return artifactStream.getArtifactDisplayName("");
+        return artifactStream.fetchArtifactDisplayName("");
       }
     } else if (artifactStream.getArtifactStreamType().equals(AMAZON_S3.name())) {
-      return artifactStream.getArtifactDisplayName("");
+      return artifactStream.fetchArtifactDisplayName("");
     }
 
-    return artifactStream.getArtifactDisplayName(buildDetails.getNumber());
+    return artifactStream.fetchArtifactDisplayName(buildDetails.getNumber());
   }
 
   private Map<String, String> getMetadata(ArtifactStream artifactStream, BuildDetails buildDetails) {
@@ -373,7 +373,7 @@ public class ArtifactCollectionUtil {
 
     Validator.notNullCheck("Fetch Version script is missing", versionScript, USER);
 
-    ArtifactStreamAttributes artifactStreamAttributes = customArtifactStream.getArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes = customArtifactStream.fetchArtifactStreamAttributes();
 
     String scriptString = versionScript.getScriptString();
     Validator.notNullCheck("Script string can not be empty", scriptString, USER);

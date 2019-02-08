@@ -463,7 +463,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
         break;
       case DOCKER:
         assertTrue(buildSourceService.validateArtifactSource(
-            appId, settingAttribute.getUuid(), artifactStream.getArtifactStreamAttributes()));
+            appId, settingAttribute.getUuid(), artifactStream.fetchArtifactStreamAttributes()));
         break;
       case ECR:
         return;

@@ -206,7 +206,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   private ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     return artifactStreamAttributes;
   }
