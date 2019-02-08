@@ -386,7 +386,6 @@ public class AuthHandler {
           Map<Action, Set<String>> actionEntityIdMap =
               buildActionEntityMap(finalAppPermissionSummary.getWorkflowPermissions(), entityIds, entityActions);
           finalAppPermissionSummary.setWorkflowPermissions(actionEntityIdMap);
-          //          aaaa workflowCreatePermissions;
           break;
         }
         case DEPLOYMENT: {
@@ -406,9 +405,11 @@ public class AuthHandler {
 
           Set<String> envIdSet =
               getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
-          Set<String> updatedEnvIdSet =
-              addToExistingEntityIdSet(finalAppPermissionSummary.getDeploymentEnvPermissions(), envIdSet);
-          finalAppPermissionSummary.setDeploymentEnvPermissions(updatedEnvIdSet);
+          if (entityActions.contains(Action.EXECUTE)) {
+            Set<String> updatedEnvIdSet =
+                addToExistingEntityIdSet(finalAppPermissionSummary.getDeploymentEnvPermissions(), envIdSet);
+            finalAppPermissionSummary.setDeploymentEnvPermissions(updatedEnvIdSet);
+          }
           break;
         }
         default:
