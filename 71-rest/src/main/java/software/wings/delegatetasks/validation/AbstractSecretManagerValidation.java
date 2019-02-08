@@ -6,14 +6,14 @@ import static java.util.Collections.singletonList;
 import com.google.common.base.Preconditions;
 
 import com.amazonaws.regions.Regions;
+import io.harness.security.encryption.EncryptionConfig;
+import io.harness.security.encryption.EncryptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.intfc.security.EncryptionConfig;
 
 import java.util.List;
 import java.util.Map;

@@ -1,11 +1,11 @@
 package software.wings.security.encryption;
 
+import io.harness.security.encryption.EncryptionConfig;
+import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.security.EncryptionType;
-import software.wings.service.intfc.security.EncryptionConfig;
 
 /**
  * Created by rsingh on 10/17/17.

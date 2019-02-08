@@ -5,11 +5,11 @@ import com.google.inject.Singleton;
 
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.EncryptedRecord;
+import io.harness.security.encryption.EncryptionConfig;
+import io.harness.security.encryption.EncryptionType;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.security.EncryptionType;
 import software.wings.security.encryption.SimpleEncryption;
-import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import java.util.HashMap;

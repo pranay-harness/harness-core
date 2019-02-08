@@ -1,6 +1,4 @@
-package software.wings.service.intfc.security;
-
-import software.wings.security.EncryptionType;
+package io.harness.security.encryption;
 
 /**
  * Created by rsingh on 11/3/17.

@@ -1,7 +1,5 @@
 package io.harness.security.encryption;
 
-import software.wings.service.intfc.security.EncryptionConfig;
-
 import java.util.List;
 import java.util.Map;
 

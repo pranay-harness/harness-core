@@ -2,10 +2,10 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.security.encryption.EncryptionConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
-import software.wings.service.intfc.security.EncryptionConfig;
 
 import java.util.Arrays;
 import java.util.List;
