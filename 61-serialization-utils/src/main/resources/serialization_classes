@@ -180,7 +180,7 @@ software.wings.utils.FileType, 5119
 software.wings.helpers.ext.jenkins.BuildDetails, 5120
 software.wings.helpers.ext.jenkins.JobDetails, 5121
 software.wings.delegatetasks.RemoteMethodReturnValueData, 5122
-software.wings.security.EncryptionType, 5123
+io.harness.security.encryption.EncryptionType, 5123
 software.wings.security.encryption.EncryptedData, 5124
 software.wings.security.encryption.EncryptedDataDetail, 5125
 software.wings.service.impl.WorkflowExecutionUpdate, 5126
@@ -358,7 +358,7 @@ software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest, 5301
 software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse, 5302
 software.wings.helpers.ext.mail.EmailData, 5303
 software.wings.helpers.ext.mail.SmtpConfig, 5304
-software.wings.service.intfc.security.EncryptionConfig, 5305
+io.harness.security.encryption.EncryptionConfig, 5305
 software.wings.helpers.ext.external.comm.CollaborationProviderRequest, 5306
 software.wings.helpers.ext.external.comm.CollaborationProviderRequest$CommunicationType, 5307
 software.wings.helpers.ext.external.comm.CollaborationProviderResponse, 5308

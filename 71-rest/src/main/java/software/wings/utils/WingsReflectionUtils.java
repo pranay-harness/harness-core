@@ -1,7 +1,7 @@
 package software.wings.utils;
 
 import io.harness.beans.Encryptable;
-import software.wings.security.EncryptionType;
+import io.harness.security.encryption.EncryptionType;
 
 import java.lang.reflect.Field;
 

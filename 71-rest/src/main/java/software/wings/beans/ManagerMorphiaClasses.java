@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import io.harness.event.model.QueableEvent;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.security.encryption.EncryptedRecord;
+import io.harness.security.encryption.EncryptionConfig;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
@@ -94,7 +95,6 @@ import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTa
 import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;

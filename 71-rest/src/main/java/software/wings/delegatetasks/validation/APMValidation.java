@@ -4,6 +4,7 @@ import static java.util.Collections.singletonList;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.security.encryption.EncryptionConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -18,7 +19,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
-import software.wings.service.intfc.security.EncryptionConfig;
 
 import java.util.Arrays;
 import java.util.HashMap;

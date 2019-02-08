@@ -10,13 +10,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.KmsOperationException;
+import io.harness.security.encryption.EncryptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.EncryptionService;
@@ -26,6 +26,7 @@ import software.wings.utils.Misc;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.stream.Collectors;
+
 /**
  * Created by rsingh on 6/7/18.
  */

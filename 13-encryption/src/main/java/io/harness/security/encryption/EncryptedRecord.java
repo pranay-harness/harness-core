@@ -1,7 +1,5 @@
 package io.harness.security.encryption;
 
-import software.wings.security.EncryptionType;
-
 /**
  * An interface to abstract the basic information available from an encrypted record.
  *
