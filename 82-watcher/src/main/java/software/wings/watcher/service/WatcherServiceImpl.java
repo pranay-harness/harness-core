@@ -216,6 +216,12 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void generateEcsDelegateSequenceConfigFile() {
     try {
+      if (!"ECS".equals(System.getenv().get("DELEGATE_TYPE"))) {
+        return;
+      }
+
+      // Only generate this file in case of ECS delegate
+      logger.info("Generating delegate_sequence_config file");
       FileUtils.touch(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
       String randomToken = UUIDGenerator.generateUuid();
       FileIo.writeWithExclusiveLockAcrossProcesses(
