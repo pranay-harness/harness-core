@@ -106,7 +106,7 @@ public interface AuthService extends OwnedByAccount {
 
   User generateBearerTokenForUser(@NotNull User user);
 
-  void checkIfUserAllowedToDeployToEnv(String appId, List<String> envIdList);
+  void checkIfUserAllowedToDeployToEnv(String appId, String envId);
 
   void checkIfUserCanCreateEnv(String appId, EnvironmentType envType);
 }
