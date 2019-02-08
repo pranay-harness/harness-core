@@ -37,6 +37,7 @@ import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
+import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -75,6 +76,7 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserRestrictionInfo.UserRestrictionInfoBuilder;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -899,5 +901,56 @@ public class AuthServiceImpl implements AuthService {
     ssoSettingService.deleteByAccountId(accountId);
     userService.deleteByAccountId(accountId);
     userGroupService.deleteByAccountId(accountId);
+  }
+
+  @Override
+  public void checkIfUserAllowedToDeployToEnv(String appId, List<String> envIdList) {
+    if (isEmpty(envIdList)) {
+      return;
+    }
+
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return;
+    }
+
+    Set<String> deploymentEnvPermissions = user.getUserRequestContext()
+                                               .getUserPermissionInfo()
+                                               .getAppPermissionMapInternal()
+                                               .get(appId)
+                                               .getDeploymentEnvPermissions();
+    if (isEmpty(deploymentEnvPermissions)) {
+      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
+
+    if (!deploymentEnvPermissions.containsAll(envIdList)) {
+      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
+  }
+
+  @Override
+  public void checkIfUserCanCreateEnv(String appId, EnvironmentType envType) {
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return;
+    }
+
+    if (envType == null) {
+      throw new WingsException("No environment type specified", USER);
+    }
+
+    Set<EnvironmentType> envCreatePermissions = user.getUserRequestContext()
+                                                    .getUserPermissionInfo()
+                                                    .getAppPermissionMapInternal()
+                                                    .get(appId)
+                                                    .getEnvCreatePermissions();
+
+    if (isEmpty(envCreatePermissions)) {
+      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
+
+    if (!envCreatePermissions.contains(envType)) {
+      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
   }
 }

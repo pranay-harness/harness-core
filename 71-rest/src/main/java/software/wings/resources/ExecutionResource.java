@@ -43,6 +43,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionData;
@@ -71,6 +72,7 @@ public class ExecutionResource {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private StateInspectionService stateInspectionService;
   @Inject private AuthHandler authHandler;
+  @Inject private AuthService authService;
 
   /**
    * List.
@@ -166,6 +168,7 @@ public class ExecutionResource {
       if (executionArgs != null) {
         if (executionArgs.getOrchestrationId() != null) {
           authHandler.authorize(permissionAttributeList, asList(appId), executionArgs.getOrchestrationId());
+          authService.checkIfUserAllowedToDeployToEnv(appId, asList(envId));
         } else if (executionArgs.getPipelineId() != null) {
           authHandler.authorize(permissionAttributeList, asList(appId), executionArgs.getPipelineId());
         }
@@ -209,6 +212,11 @@ public class ExecutionResource {
       String workflowId = workflowExecution.getWorkflowId();
       Validator.notNullCheck("Workflow id is null for execution " + workflowExecutionId, workflowId);
       authHandler.authorize(permissionAttributeList, asList(appId), workflowId);
+    }
+
+    if (requiredAction.equals(EXECUTE)) {
+      List<String> envIds = workflowExecution.getEnvIds();
+      authService.checkIfUserAllowedToDeployToEnv(appId, envIds);
     }
   }
 
