@@ -3,6 +3,7 @@ package software.wings.security;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.Action;
 
 import java.util.Map;
@@ -22,6 +23,11 @@ public class AppPermissionSummary {
   private boolean canCreateWorkflow;
   private boolean canCreatePipeline;
 
+  private Set<EnvironmentType> envCreatePermissions;
+  private Set<String> workflowCreatePermissions;
+  private Set<String> pipelineCreatePermissions;
+  private Set<String> deploymentEnvPermissions;
+
   // Key - action, Value - set of entity ids
   private Map<Action, Set<String>> servicePermissions;
   private Map<Action, Set<String>> provisionerPermissions;
@@ -39,20 +45,26 @@ public class AppPermissionSummary {
 
   @Builder
   public AppPermissionSummary(boolean canCreateService, boolean canCreateProvisioner, boolean canCreateEnvironment,
-      boolean canCreateWorkflow, boolean canCreatePipeline, Map<Action, Set<String>> servicePermissions,
-      Map<Action, Set<String>> provisionerPermissions, Map<Action, Set<EnvInfo>> envPermissions,
-      Map<Action, Set<String>> workflowPermissions, Map<Action, Set<String>> deploymentPermissions,
-      Map<Action, Set<String>> pipelinePermissions) {
+      boolean canCreateWorkflow, boolean canCreatePipeline, Set<EnvironmentType> envCreatePermissions,
+      Set<String> workflowCreatePermissions, Set<String> pipelineCreatePermissions,
+      Map<Action, Set<String>> servicePermissions, Map<Action, Set<String>> provisionerPermissions,
+      Map<Action, Set<EnvInfo>> envPermissions, Map<Action, Set<String>> workflowPermissions,
+      Map<Action, Set<String>> deploymentPermissions, Map<Action, Set<String>> pipelinePermissions,
+      Set<String> deploymentEnvPermissions) {
     this.canCreateService = canCreateService;
     this.canCreateProvisioner = canCreateProvisioner;
     this.canCreateEnvironment = canCreateEnvironment;
     this.canCreateWorkflow = canCreateWorkflow;
     this.canCreatePipeline = canCreatePipeline;
+    this.envCreatePermissions = envCreatePermissions;
+    this.workflowCreatePermissions = workflowCreatePermissions;
+    this.pipelineCreatePermissions = pipelineCreatePermissions;
     this.servicePermissions = servicePermissions;
     this.provisionerPermissions = provisionerPermissions;
     this.envPermissions = envPermissions;
     this.workflowPermissions = workflowPermissions;
     this.deploymentPermissions = deploymentPermissions;
     this.pipelinePermissions = pipelinePermissions;
+    this.deploymentEnvPermissions = deploymentEnvPermissions;
   }
 }

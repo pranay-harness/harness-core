@@ -14,6 +14,7 @@ import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -28,6 +29,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 
 import java.util.List;
@@ -54,6 +56,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(permissionType = ENV)
 public class EnvironmentResource {
   @Inject private EnvironmentService environmentService;
+  @Inject private AuthService authService;
   @Inject private ApplicationManifestService applicationManifestService;
 
   /**
@@ -86,6 +89,7 @@ public class EnvironmentResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Environment> save(@QueryParam("appId") String appId, Environment environment) {
+    authService.checkIfUserCanCreateEnv(appId, environment.getEnvironmentType());
     environment.setAppId(appId);
     return new RestResponse<>(environmentService.save(environment));
   }
@@ -179,6 +183,9 @@ public class EnvironmentResource {
   @ExceptionMetered
   public RestResponse<Environment> cloneEnvironment(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, CloneMetadata cloneMetadata) {
+    Environment environment = environmentService.get(appId, envId, false);
+    EnvironmentType envType = environment.getEnvironmentType();
+    authService.checkIfUserCanCreateEnv(appId, envType);
     return new RestResponse<>(environmentService.cloneEnvironment(appId, envId, cloneMetadata));
   }
 

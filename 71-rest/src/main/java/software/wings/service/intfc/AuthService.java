@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.AuthToken;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute;
@@ -104,4 +105,8 @@ public interface AuthService extends OwnedByAccount {
   User refreshToken(String oldToken);
 
   User generateBearerTokenForUser(@NotNull User user);
+
+  void checkIfUserAllowedToDeployToEnv(String appId, List<String> envIdList);
+
+  void checkIfUserCanCreateEnv(String appId, EnvironmentType envType);
 }
