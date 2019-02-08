@@ -68,6 +68,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Before;
@@ -125,7 +126,6 @@ import software.wings.sm.WorkflowStandardParams;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -622,14 +622,13 @@ public class CommandStateTest extends WingsBaseTest {
    * Should throw exception for unknown command.
    */
   @Test
+  @Owner(emails = "anubhaw@harness.io", intermittent = true)
   public void shouldFailWhenNestedCommandNotFound() {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand()
                         .withTargetToAllEnv(true)
                         .withCommand(aCommand().withName("NESTED_CMD").withReferenceId("NON_EXISTENT_COMMAND").build())
                         .build());
-
-    ExecutionResponse executionResponse = commandState.execute(context);
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
     verify(serviceResourceService).get(APP_ID, SERVICE_ID);
@@ -700,9 +699,6 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   public void shouldRenderCommandStringWithVariables() {
     Map<String, Object> stateVariables = new HashMap<>();
-    List<Variable> variables = new ArrayList<>();
-    variables.add(aVariable().withName("var1").withValue("var1Value").build());
-    variables.add(aVariable().withName("var2").withValue("var2Value").build());
     if (isNotEmpty(command.getTemplateVariables())) {
       stateVariables.putAll(
           command.getTemplateVariables().stream().collect(Collectors.toMap(Variable::getName, Variable::getValue)));
@@ -723,9 +719,6 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   public void shouldRenderReferencedCommandStringWithVariables() {
     Map<String, Object> stateVariables = new HashMap<>();
-    List<Variable> variables = new ArrayList<>();
-    variables.add(aVariable().withName("var1").withValue("var1Value").build());
-    variables.add(aVariable().withName("var2").withValue("var2Value").build());
     if (isNotEmpty(command.getTemplateVariables())) {
       stateVariables.putAll(
           command.getTemplateVariables().stream().collect(Collectors.toMap(Variable::getName, Variable::getValue)));
