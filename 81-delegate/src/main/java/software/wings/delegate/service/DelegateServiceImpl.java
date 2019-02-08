@@ -1495,6 +1495,10 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String getRandomTokenForEcsDelegate() {
+    if (!isEcsDelegate()) {
+      return null;
+    }
+
     String token = null;
     token = readTokenFromFile();
 
