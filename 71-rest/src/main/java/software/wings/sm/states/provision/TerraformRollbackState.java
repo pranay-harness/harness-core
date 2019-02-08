@@ -69,6 +69,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
 
     String entityId = generateEntityId(context);
     Iterator<TerraformfConfig> configIterator = wingsPersistence.createQuery(TerraformfConfig.class)
+                                                    .filter(TerraformfConfig.APP_ID_KEY, context.getAppId())
                                                     .filter(TerraformfConfig.ENTITY_ID_KEY, entityId)
                                                     .order(Sort.descending(TerraformfConfig.CREATED_AT_KEY))
                                                     .iterator();
