@@ -1331,6 +1331,8 @@
                         <target>1.8</target>
                         <compilerArgs>
                             <arg>-parameters</arg>
+                            <arg>-Xmaxwarns</arg>
+                            <arg>10000</arg>
                         </compilerArgs>
                         <fork>true</fork>
                     </configuration>
