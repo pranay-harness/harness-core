@@ -39,14 +39,14 @@ public class SftpArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public String getArtifactDisplayName(String buildNo) {
+  public String fetchArtifactDisplayName(String buildNo) {
     return isBlank(getSourceName())
         ? format("%s_%s_%s", getSourceName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()))
         : format("%s_%s", buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
   }
 
   @Override
-  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())
         .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))

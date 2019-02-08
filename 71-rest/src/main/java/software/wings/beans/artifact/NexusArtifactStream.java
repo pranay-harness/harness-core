@@ -47,7 +47,7 @@ public class NexusArtifactStream extends ArtifactStream {
     this.dockerPort = dockerPort;
   }
 
-  public String getArtifactDisplayName(String buildNo) {
+  public String fetchArtifactDisplayName(String buildNo) {
     if (isNotEmpty(artifactPaths)) {
       return format("%s_%s_%s", getSourceName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
     }
@@ -81,7 +81,7 @@ public class NexusArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())
         .withJobName(jobname)

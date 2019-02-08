@@ -52,7 +52,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public String getArtifactDisplayName(String buildNo) {
+  public String fetchArtifactDisplayName(String buildNo) {
     return isBlank(getImageName())
         ? format("%s_%s_%s", getSourceName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()))
         : format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo,
@@ -83,7 +83,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())
         .withJobName(jobname)

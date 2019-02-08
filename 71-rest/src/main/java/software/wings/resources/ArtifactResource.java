@@ -108,7 +108,7 @@ public class ArtifactResource {
   public RestResponse<Artifact> save(@QueryParam("appId") String appId, Artifact artifact) {
     artifact.setAppId(appId);
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifact.getArtifactStreamId());
-    artifact.setDisplayName(artifactStream.getArtifactDisplayName(artifact.getBuildNo()));
+    artifact.setDisplayName(artifactStream.fetchArtifactDisplayName(artifact.getBuildNo()));
     return new RestResponse<>(artifactService.create(artifact));
   }
 

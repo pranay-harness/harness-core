@@ -73,7 +73,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
   @Override
   public boolean validateArtifactSource(ArtifactStream artifactStream) {
     logger.info("Validating artifact source for Custom Repository artifactStreamId {}",
-        artifactStream.getArtifactStreamAttributes().getArtifactStreamId());
+        artifactStream.fetchArtifactStreamAttributes().getArtifactStreamId());
     //    ArtifactStream artifactStream = artifactStreamService.get(appId,
     //    artifactStreamAttributes.getArtifactStreamId());
     Validator.notNullCheck("Artifact source does not exist", artifactStream, USER);

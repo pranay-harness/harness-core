@@ -78,9 +78,9 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable 
 
   public abstract String generateSourceName();
 
-  public abstract ArtifactStreamAttributes getArtifactStreamAttributes();
+  public abstract ArtifactStreamAttributes fetchArtifactStreamAttributes();
 
-  public abstract String getArtifactDisplayName(String buildNo);
+  public abstract String fetchArtifactDisplayName(String buildNo);
 
   @Data
   @EqualsAndHashCode(callSuper = true)

@@ -101,7 +101,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   private boolean isArtifactoryDockerOrGenric(ArtifactStream artifactStream, ArtifactType artifactType) {
     return ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())
         && (ArtifactType.DOCKER.equals(artifactType)
-               || !"maven".equals(artifactStream.getArtifactStreamAttributes().getRepositoryType()));
+               || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType()));
   }
 
   @Override
@@ -219,7 +219,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   }
 
   private ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     return artifactStreamAttributes;
   }

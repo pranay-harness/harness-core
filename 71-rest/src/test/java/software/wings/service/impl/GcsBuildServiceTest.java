@@ -54,7 +54,7 @@ public class GcsBuildServiceTest extends WingsBaseTest {
         Builder.aBuildDetails().withNumber("10").withRevision("10").withArtifactPath("artifact1").build());
     when(gcsService.getArtifactsBuildDetails(any(), any(), any(), any(), anyBoolean())).thenReturn(buildDetails);
     List<BuildDetails> builds =
-        gcsBuildService.getBuilds(APP_ID, gcsArtifactStream.getArtifactStreamAttributes(), gcpConfig, null);
+        gcsBuildService.getBuilds(APP_ID, gcsArtifactStream.fetchArtifactStreamAttributes(), gcpConfig, null);
     assertThat(builds).hasSize(1).extracting(BuildDetails::getNumber).containsExactly("10");
     assertThat(builds).extracting(BuildDetails::getArtifactPath).containsExactly("artifact1");
   }

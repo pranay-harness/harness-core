@@ -57,7 +57,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
         Builder.aBuildDetails().withNumber("10").withRevision("10").withArtifactPath("artifact1").build());
     when(amazonS3Service.getArtifactsBuildDetails(any(), any(), any(), any(), anyBoolean())).thenReturn(buildDetails);
     List<BuildDetails> builds =
-        amazonS3BuildService.getBuilds(APP_ID, amazonS3ArtifactStream.getArtifactStreamAttributes(), awsConfig, null);
+        amazonS3BuildService.getBuilds(APP_ID, amazonS3ArtifactStream.fetchArtifactStreamAttributes(), awsConfig, null);
     assertThat(builds).hasSize(1).extracting(BuildDetails::getNumber).containsExactly("10");
     assertThat(builds).extracting(BuildDetails::getArtifactPath).containsExactly("artifact1");
   }

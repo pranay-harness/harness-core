@@ -105,7 +105,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(()
                         -> jenkinsBuildService.getBuilds(
-                            APP_ID, jenkinsArtifactStream.getArtifactStreamAttributes(), jenkinsConfig, null));
+                            APP_ID, jenkinsArtifactStream.fetchArtifactStreamAttributes(), jenkinsConfig, null));
   }
 
   /**
@@ -115,8 +115,8 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnListOfBuilds() throws IOException {
-    assertThat(
-        jenkinsBuildService.getBuilds(APP_ID, jenkinsArtifactStream.getArtifactStreamAttributes(), jenkinsConfig, null))
+    assertThat(jenkinsBuildService.getBuilds(
+                   APP_ID, jenkinsArtifactStream.fetchArtifactStreamAttributes(), jenkinsConfig, null))
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
         .containsExactly(

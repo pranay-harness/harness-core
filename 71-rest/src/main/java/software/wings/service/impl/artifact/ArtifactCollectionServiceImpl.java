@@ -169,8 +169,8 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   private void collectArtifactoryArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     if (getService(appId, artifactStream).getArtifactType().equals(ArtifactType.DOCKER)) {
       collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
-    } else if (artifactStream.getArtifactStreamAttributes().getRepositoryType() == null
-        || artifactStream.getArtifactStreamAttributes().getRepositoryType().equals("any")) {
+    } else if (artifactStream.fetchArtifactStreamAttributes().getRepositoryType() == null
+        || artifactStream.fetchArtifactStreamAttributes().getRepositoryType().equals("any")) {
       collectGenericArtifacts(appId, artifactStream, newArtifacts);
     }
   }

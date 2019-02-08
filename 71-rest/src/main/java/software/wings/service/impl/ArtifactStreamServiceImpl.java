@@ -246,7 +246,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         || GCR.name().equals(artifactStreamType) || ACR.name().equals(artifactStreamType)
         || ARTIFACTORY.name().equals(artifactStreamType)) {
       buildSourceService.validateArtifactSource(
-          artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
+          artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.fetchArtifactStreamAttributes());
     } else if (CUSTOM.name().equals(artifactStreamType)) {
       buildSourceService.validateArtifactSource(artifactStream);
     }

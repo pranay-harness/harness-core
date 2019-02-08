@@ -120,7 +120,7 @@ public class ArtifactResourceTest {
                             .withArtifactStreamId(ARTIFACT_STREAM_ID)
                             .withMetadata(ImmutableMap.of("BUILD_NO", "5"))
                             .build();
-    when(ARTIFACT_STREAM_SERVICE.get(APP_ID, ARTIFACT_STREAM_ID).getArtifactDisplayName("5"))
+    when(ARTIFACT_STREAM_SERVICE.get(APP_ID, ARTIFACT_STREAM_ID).fetchArtifactDisplayName("5"))
         .thenReturn("DISPLAY_NAME");
 
     RestResponse<Artifact> restResponse =

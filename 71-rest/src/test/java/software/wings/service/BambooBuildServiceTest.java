@@ -57,7 +57,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
         .thenReturn(
             Lists.newArrayList(aBuildDetails().withNumber("10").build(), aBuildDetails().withNumber("9").build()));
     List<BuildDetails> builds =
-        bambooBuildService.getBuilds(APP_ID, bambooArtifactStream.getArtifactStreamAttributes(), bambooConfig, null);
+        bambooBuildService.getBuilds(APP_ID, bambooArtifactStream.fetchArtifactStreamAttributes(), bambooConfig, null);
     assertThat(builds).hasSize(2).extracting(BuildDetails::getNumber).containsExactly("10", "9");
   }
 
@@ -81,7 +81,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
     when(bambooService.getLastSuccessfulBuild(bambooConfig, null, BUILD_JOB_NAME))
         .thenReturn(aBuildDetails().withNumber("10").build());
     BuildDetails lastSuccessfulBuild = bambooBuildService.getLastSuccessfulBuild(
-        APP_ID, bambooArtifactStream.getArtifactStreamAttributes(), bambooConfig, null);
+        APP_ID, bambooArtifactStream.fetchArtifactStreamAttributes(), bambooConfig, null);
     assertThat(lastSuccessfulBuild.getNumber()).isEqualTo("10");
   }
 

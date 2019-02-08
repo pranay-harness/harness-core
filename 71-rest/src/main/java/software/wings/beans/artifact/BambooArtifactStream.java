@@ -40,7 +40,7 @@ public class BambooArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public String getArtifactDisplayName(String buildNo) {
+  public String fetchArtifactDisplayName(String buildNo) {
     return format("%s_%s_%s", getSourceName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
   }
 
@@ -55,7 +55,7 @@ public class BambooArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes().withArtifactStreamType(getArtifactStreamType()).withJobName(jobname).build();
   }
 
