@@ -21,15 +21,9 @@ public class ExecutionLogWriter extends Writer {
   private final String executionId;
   private final String hostName;
   private final String commandUnitName;
-  private boolean writeCalled;
-
-  public boolean didWriteGetCalled() {
-    return writeCalled;
-  }
 
   @Override
   public void write(char[] cbuf, int off, int len) throws IOException {
-    writeCalled = true;
     stringBuilder.append(cbuf, off, len);
     char lastChar = cbuf[off + len - 1];
     if (lastChar == '\n') {
@@ -43,7 +37,9 @@ public class ExecutionLogWriter extends Writer {
   }
 
   @Override
-  public void close() throws IOException {}
+  public void close() throws IOException {
+    logAndFlush();
+  }
 
   private void logAndFlush() {
     String logLine = stringBuilder.toString();

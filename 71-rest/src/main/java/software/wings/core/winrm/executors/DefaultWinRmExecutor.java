@@ -4,8 +4,15 @@ import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.Log.LogColor.Gray;
+import static software.wings.beans.Log.LogColor.Red;
+import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogColor.Yellow;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
+import static software.wings.beans.Log.doneColoring;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
@@ -69,39 +76,20 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     saveExecutionLog(format("Initializing WinRM connection to %s ...", config.getHostname()), INFO);
 
-    try (WinRmSession session = new WinRmSession(config)) {
+    try (WinRmSession session = new WinRmSession(config); ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
+         ExecutionLogWriter errorWriter = getExecutionLogWriter(ERROR)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
       if (displayCommand) {
         saveExecutionLog(format("Executing command %s...", command), INFO);
       } else {
-        saveExecutionLog(format("Executing command ..."), INFO);
+        saveExecutionLog(format("Executing command ...%n"), INFO);
       }
 
-      ExecutionLogWriter outputWriter = ExecutionLogWriter.builder()
-                                            .accountId(config.getAccountId())
-                                            .appId(config.getAppId())
-                                            .commandUnitName(config.getCommandUnitName())
-                                            .executionId(config.getExecutionId())
-                                            .hostName(config.getHostname())
-                                            .logService(logService)
-                                            .stringBuilder(new StringBuilder(1024))
-                                            .logLevel(INFO)
-                                            .build();
-
-      ExecutionLogWriter errorWriter = ExecutionLogWriter.builder()
-                                           .accountId(config.getAccountId())
-                                           .appId(config.getAppId())
-                                           .commandUnitName(config.getCommandUnitName())
-                                           .executionId(config.getExecutionId())
-                                           .hostName(config.getHostname())
-                                           .logService(logService)
-                                           .stringBuilder(new StringBuilder(1024))
-                                           .logLevel(ERROR)
-                                           .build();
-
       int exitCode = session.executeCommandString(psWrappedCommand(command), outputWriter, errorWriter);
-      commandExecutionStatus = (exitCode == 0 && !errorWriter.didWriteGetCalled()) ? SUCCESS : FAILURE;
-      saveExecutionLog(format("Command completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
+      commandExecutionStatus = (exitCode == 0) ? SUCCESS : FAILURE;
+      saveExecutionLog(format("%nCommand completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
+    } catch (RuntimeException re) {
+      throw re;
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;
       logger.error("Error while executing command", e);
@@ -139,67 +127,21 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       envVariablesOutputFile = this.config.getWorkingDirectory() + "\\"
           + "harness-" + this.config.getExecutionId() + ".out";
     }
-    WinRmSession session = null;
-    ExecutionLogWriter outputWriter = null;
-    ExecutionLogWriter errorWriter = null;
-    Map<String, String> envVariablesMap = new HashMap<>();
-    try {
-      session = new WinRmSession(config);
+    try (WinRmSession session = new WinRmSession(config); ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
+         ExecutionLogWriter errorWriter = getExecutionLogWriter(ERROR)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
-      saveExecutionLog(format("Executing command ..."), INFO);
-
-      outputWriter = ExecutionLogWriter.builder()
-                         .accountId(config.getAccountId())
-                         .appId(config.getAppId())
-                         .commandUnitName(config.getCommandUnitName())
-                         .executionId(config.getExecutionId())
-                         .hostName(config.getHostname())
-                         .logService(logService)
-                         .stringBuilder(new StringBuilder(1024))
-                         .logLevel(INFO)
-                         .build();
-
-      errorWriter = ExecutionLogWriter.builder()
-                        .accountId(config.getAccountId())
-                        .appId(config.getAppId())
-                        .commandUnitName(config.getCommandUnitName())
-                        .executionId(config.getExecutionId())
-                        .hostName(config.getHostname())
-                        .logService(logService)
-                        .stringBuilder(new StringBuilder(1024))
-                        .logLevel(ERROR)
-                        .build();
+      saveExecutionLog(format("Executing command ...%n"), INFO);
 
       command = addEnvVariablesCollector(command, envVariablesToCollect, envVariablesOutputFile);
       int exitCode = session.executeCommandString(psWrappedCommand(command), outputWriter, errorWriter);
-      commandExecutionStatus = (exitCode == 0 && !errorWriter.didWriteGetCalled()) ? SUCCESS : FAILURE;
+      commandExecutionStatus = (exitCode == 0) ? SUCCESS : FAILURE;
 
       if (commandExecutionStatus == SUCCESS && envVariablesOutputFile != null) {
-        command = "$base64string = [Convert]::ToBase64String([IO.File]::ReadAllBytes('" + envVariablesOutputFile
-            + "'))\n"
-            + "Write-Host $base64string -NoNewline";
-
-        StringWriter outputAccumulator = new StringWriter(1024);
-        StringWriter errorAccumulator = new StringWriter(1024);
-        exitCode = session.executeCommandString(psWrappedCommand(command), outputAccumulator, errorAccumulator);
-        byte[] decodedBytes = Base64.getDecoder().decode(outputAccumulator.getBuffer().toString());
-        // removing UTF-8 and UTF-16 BOMs if any
-        String fileContents =
-            new String(decodedBytes, Charset.forName("UTF-8")).replace("\uFEFF", "").replace("\uEFBBBF", "");
-        String[] lines = fileContents.split("\n");
-        saveExecutionLog("Script Output: ", INFO);
-        for (String line : lines) {
-          int index = line.indexOf('=');
-          if (index != -1) {
-            String key = line.substring(0, index).trim();
-            String value = line.substring(index + 1).trim().replace("\r", "");
-            envVariablesMap.put(key, value);
-            saveExecutionLog(key + "=" + value, INFO);
-          }
-        }
+        executionDataBuilder.sweepingOutputEnvVariables(
+            collectOutputEnvironmentVariables(session, envVariablesOutputFile));
       }
-      executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
-      saveExecutionLog(format("Command completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
+
+      saveExecutionLog(format("%nCommand completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
       commandExecutionResult.withStatus(commandExecutionStatus);
       commandExecutionResult.withCommandExecutionData(executionDataBuilder.build());
       return commandExecutionResult.build();
@@ -207,23 +149,64 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       throw re;
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;
-      executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
       logger.error("Error while executing command", e);
       ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
-    } finally {
-      if (session != null) {
-        if (envVariablesOutputFile != null) {
-          command = "Remove-Item -Path " + envVariablesOutputFile;
-          session.executeCommandString(psWrappedCommand(command), outputWriter, errorWriter);
-        }
-        session.close();
-      }
     }
     commandExecutionResult.withStatus(commandExecutionStatus);
     commandExecutionResult.withCommandExecutionData(executionDataBuilder.build());
     return commandExecutionResult.build();
+  }
+
+  private Map<String, String> collectOutputEnvironmentVariables(WinRmSession session, String envVariablesOutputFile) {
+    Map<String, String> envVariablesMap = new HashMap<>();
+    String command = "$base64string = [Convert]::ToBase64String([IO.File]::ReadAllBytes('" + envVariablesOutputFile
+        + "'))\n"
+        + "Write-Host $base64string -NoNewline";
+
+    try (StringWriter outputAccumulator = new StringWriter(1024);
+         StringWriter errorAccumulator = new StringWriter(1024)) {
+      int exitCode = session.executeCommandString(psWrappedCommand(command), outputAccumulator, errorAccumulator);
+      if (exitCode != 0) {
+        logger.error("Powershell script collecting output environment Variables failed with exitCode {}", exitCode);
+        return envVariablesMap;
+      }
+
+      byte[] decodedBytes = Base64.getDecoder().decode(outputAccumulator.getBuffer().toString());
+      // removing UTF-8 and UTF-16 BOMs if any
+      String fileContents =
+          new String(decodedBytes, Charset.forName("UTF-8")).replace("\uFEFF", "").replace("\uEFBBBF", "");
+      String[] lines = fileContents.split("\n");
+      saveExecutionLog(color("\n\nScript Output: ", White, Bold), INFO);
+      for (String line : lines) {
+        int index = line.indexOf('=');
+        if (index != -1) {
+          String key = line.substring(0, index).trim();
+          String value = line.substring(index + 1).trim().replace("\r", "");
+          envVariablesMap.put(key, value);
+          saveExecutionLog(color(key + "=" + value, Gray), INFO);
+        }
+      }
+
+      cleanupEnvironmentOutputFile(session, envVariablesOutputFile);
+    } catch (RuntimeException re) {
+      throw re;
+    } catch (Exception e) {
+      logger.error("Exception while trying to collectOutputEnvironmentVariables", e);
+    }
+    return envVariablesMap;
+  }
+
+  private void cleanupEnvironmentOutputFile(WinRmSession session, String envVariablesOutputFile) {
+    String command = "Remove-Item -Path " + envVariablesOutputFile;
+    try (StringWriter outputAccumulator = new StringWriter(1024)) {
+      session.executeCommandString(psWrappedCommand(command), outputAccumulator, outputAccumulator);
+    } catch (RuntimeException re) {
+      throw re;
+    } catch (Exception e) {
+      logger.error("Exception while trying to remove envVariablesOutputFile {}", envVariablesOutputFile, e);
+    }
   }
 
   private String psWrappedCommand(String command) {
@@ -239,6 +222,14 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   }
 
   private void saveExecutionLog(String line, LogLevel level, CommandExecutionStatus commandExecutionStatus) {
+    if (level == LogLevel.ERROR) {
+      line = color(line, Red, Bold);
+    } else if (level == LogLevel.WARN) {
+      line = color(line, Yellow, Bold);
+    }
+
+    line = doneColoring(line);
+
     logService.save(config.getAccountId(),
         aLog()
             .withAppId(config.getAppId())
@@ -253,33 +244,11 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
   private CommandExecutionStatus downloadConfigFile(ConfigFileMetaData configFileMetaData) {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
-    WinRmSession session = null;
-    ExecutionLogWriter outputWriter = ExecutionLogWriter.builder()
-                                          .accountId(config.getAccountId())
-                                          .appId(config.getAppId())
-                                          .commandUnitName(config.getCommandUnitName())
-                                          .executionId(config.getExecutionId())
-                                          .hostName(config.getHostname())
-                                          .logService(logService)
-                                          .stringBuilder(new StringBuilder(1024))
-                                          .logLevel(INFO)
-                                          .build();
 
-    ExecutionLogWriter errorWriter = ExecutionLogWriter.builder()
-                                         .accountId(config.getAccountId())
-                                         .appId(config.getAppId())
-                                         .commandUnitName(config.getCommandUnitName())
-                                         .executionId(config.getExecutionId())
-                                         .hostName(config.getHostname())
-                                         .logService(logService)
-                                         .stringBuilder(new StringBuilder(1024))
-                                         .logLevel(ERROR)
-                                         .build();
-
-    try {
-      session = new WinRmSession(config);
+    try (WinRmSession session = new WinRmSession(config); ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
+         ExecutionLogWriter errorWriter = getExecutionLogWriter(ERROR)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
-      saveExecutionLog(format("Executing command ..."), INFO);
+      saveExecutionLog(format("Executing command ...%n"), INFO);
 
       byte[] fileBytes = new byte[configFileMetaData.getLength().intValue()];
 
@@ -320,10 +289,6 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
-    } finally {
-      if (session != null) {
-        session.close();
-      }
     }
     return commandExecutionStatus;
   }
@@ -332,7 +297,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     if (isBlank(configFileMetaData.getFileId()) || isBlank(configFileMetaData.getFilename())) {
       saveExecutionLog("There is no config file to copy. " + configFileMetaData.toString(), INFO);
-      commandExecutionStatus = CommandExecutionStatus.SUCCESS;
+      return CommandExecutionStatus.SUCCESS;
     }
     commandExecutionStatus = downloadConfigFile(configFileMetaData);
     logger.info("Copy Config command execution returned.", commandExecutionStatus);
@@ -353,5 +318,18 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   public CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
     throw new NotImplementedException("Not implemented");
+  }
+
+  private ExecutionLogWriter getExecutionLogWriter(LogLevel logLevel) {
+    return ExecutionLogWriter.builder()
+        .accountId(config.getAccountId())
+        .appId(config.getAppId())
+        .commandUnitName(config.getCommandUnitName())
+        .executionId(config.getExecutionId())
+        .hostName(config.getHostname())
+        .logService(logService)
+        .stringBuilder(new StringBuilder(1024))
+        .logLevel(logLevel)
+        .build();
   }
 }
