@@ -369,6 +369,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     assertThat(expressions).contains("workflow.variables.Environment");
     assertThat(expressions).contains("workflow.name", "workflow.startTs", "pipeline.name", "pipeline.startTs");
     assertThat(expressions).contains(HTTP_URL);
+    assertThat(expressions).contains("infra.name");
   }
 
   @Test

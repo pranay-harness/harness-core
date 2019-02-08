@@ -79,6 +79,7 @@ public abstract class ExpressionBuilder {
 
   protected static final String SERVICE_NAME = "service.name";
   protected static final String SERVICE_DESCRIPTION = "service.description";
+  protected static final String INFRA_NAME = "infra.name";
 
   protected static final String WORKFLOW_NAME = "workflow.name";
   protected static final String WORKFLOW_START_TS = "workflow.startTs";
@@ -163,6 +164,7 @@ public abstract class ExpressionBuilder {
         ARTIFACT_SOURCE_REPOSITORY_NAME));
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));
+    expressions.addAll(asList(INFRA_NAME));
     expressions.addAll(asList(WORKFLOW_NAME, WORKFLOW_DESCRIPTION, WORKFLOW_DISPLAY_NAME, WORKFLOW_RELEASE_NO,
         WORKFLOW_LAST_GOOD_DEPLOYMENT_DISPLAY_NAME, WORKFLOW_LAST_GOOD_RELEASE_NO, WORKFLOW_PIPELINE_DEPLOYMENT_UUID,
         WORKFLOW_START_TS));
