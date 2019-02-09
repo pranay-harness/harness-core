@@ -552,8 +552,10 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     upsertManifestFile("abc/def", "abc/def/ghi/klm");
   }
 
-  @Test(expected = InvalidRequestException.class)
-  public void testValidateManifestFileName7() {
+  @Test(expected = WingsException.class)
+  @RealMongo
+  public void testDuplicateManifestFileName() {
+    wingsPersistence.ensureIndex(ManifestFile.class);
     upsertManifestFile("abc/def", "abc/def");
   }
 
@@ -561,6 +563,21 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   public void testValidateManifestFileName8() {
     upsertManifestFile("abc/def", "abc/ghi");
     upsertManifestFile("abc/jkl", "abc/mno");
+  }
+
+  @Test
+  public void testEditManifestFile() {
+    ApplicationManifest appManifest = createAppManifest();
+
+    ManifestFile manifestFile = getManifestFileWithName("abc/values.yaml");
+    manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+
+    manifestFile.setFileContent("file-content-abc");
+    applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+
+    ManifestFile manifestFileById =
+        applicationManifestService.getManifestFileById(manifestFile.getAppId(), manifestFile.getUuid());
+    assertThat(manifestFileById.getFileContent()).isEqualTo("file-content-abc");
   }
 
   private ApplicationManifest createAppManifest() {
