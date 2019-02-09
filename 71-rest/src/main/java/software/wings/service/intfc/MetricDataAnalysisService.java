@@ -40,8 +40,8 @@ public interface MetricDataAnalysisService {
   List<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
       String appId, String stateExecutionId, String workflowExecutionId);
 
-  TimeSeriesMLTransactionThresholds getCustomThreshold(
-      String appId, StateType stateType, String serviceId, String groupName, String transactionName, String metricName);
+  TimeSeriesMLTransactionThresholds getCustomThreshold(String appId, StateType stateType, String serviceId,
+      String cvConfigId, String groupName, String transactionName, String metricName);
 
   boolean saveCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
       String transactionName, String groupName, TimeSeriesMetricDefinition metricDefinition);
