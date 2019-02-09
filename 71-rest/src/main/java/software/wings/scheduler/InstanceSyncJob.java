@@ -91,6 +91,10 @@ public class InstanceSyncJob implements Job {
     jobScheduler.ensureJob__UnderConstruction(job, triggerBuilder.build());
   }
 
+  public static void delete(PersistentScheduler jobScheduler, String appId) {
+    jobScheduler.deleteJob(appId, GROUP);
+  }
+
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     String appId = null;
