@@ -1,5 +1,7 @@
 package migrations.all;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
@@ -20,9 +22,10 @@ public class TerraformIsTemplatizedMigration implements Migration {
 
   @Override
   public void migrate() {
-    Query<InfrastructureProvisioner> query = wingsPersistence.createQuery(InfrastructureProvisioner.class)
-                                                 .field("infrastructureProvisionerType")
-                                                 .equal("TERRAFORM");
+    Query<InfrastructureProvisioner> query =
+        wingsPersistence.createQuery(InfrastructureProvisioner.class, excludeAuthority)
+            .field("infrastructureProvisionerType")
+            .equal("TERRAFORM");
     try (HIterator<InfrastructureProvisioner> provisioners = new HIterator<>(query.fetch())) {
       while (provisioners.hasNext()) {
         InfrastructureProvisioner provisioner = null;
