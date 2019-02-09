@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddValidUntilToCommandLog;
+import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.NewRelicMetricDataBackupMigration;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SetLastLoginTimeToAllUsers;
@@ -30,6 +31,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(8, NewRelicMetricDataBackupMigration.class))
         .add(Pair.of(9, TimeSeriesRiskSummaryMigration.class))
         .add(Pair.of(10, TerraformIsTemplatizedMigration.class))
+        .add(Pair.of(11, DeleteAndAddInstanceSyncJobToAllAccounts.class))
         .build();
   }
 }
