@@ -122,7 +122,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       jiraClient.getProjects();
     } catch (JiraException e) {
       String errorMessage = "Failed to fetch projects during credential validation.";
-      logger.error(errorMessage);
+      logger.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
 
@@ -144,10 +144,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .executionStatus(ExecutionStatus.SUCCESS)
           .createMetadata((JSONObject) response)
           .build();
-    } catch (URISyntaxException | RestException | IOException | JiraException e) {
-      String errorMessage = "Failed to fetch statuses from JIRA server.";
-      logger.error(errorMessage);
-      return JiraExecutionData.builder().errorMessage(errorMessage).build();
+    } catch (URISyntaxException | RestException | IOException | JiraException | RuntimeException e) {
+      String errorMessage = "Failed to fetch issue metadata from JIRA server.";
+      logger.error(errorMessage, e);
+      return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
   }
 
@@ -162,10 +162,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .executionStatus(ExecutionStatus.SUCCESS)
           .statuses((JSONArray) response)
           .build();
-    } catch (URISyntaxException | RestException | IOException | JiraException e) {
+    } catch (URISyntaxException | RestException | IOException | JiraException | RuntimeException e) {
       String errorMessage = "Failed to fetch statuses from JIRA server.";
-      logger.error(errorMessage);
-      return JiraExecutionData.builder().errorMessage(errorMessage).build();
+      logger.error(errorMessage, e);
+      return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
   }
 
@@ -175,23 +175,19 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       JiraClient jiraClient = getJiraClient(parameters);
       String jqlQuery = "project = " + parameters.getProject();
       SearchResult issues = jiraClient.searchIssues(jqlQuery, 1);
-
       Issue issue = null;
       if (CollectionUtils.isNotEmpty(issues.issues)) {
         issue = issues.issues.get(0);
       }
-
       String issueKey = (issue == null) ? (parameters.getProject() + "-1") : issue.getKey();
       uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/" + issueKey + "/editmeta");
       JSON response = jiraClient.getRestClient().get(uri);
 
-      return JiraExecutionData.builder().fields((JSONObject) response).build();
-    } catch (URISyntaxException | IOException | RestException | JiraException e) {
+      return JiraExecutionData.builder().fields((JSONObject) response).executionStatus(ExecutionStatus.SUCCESS).build();
+    } catch (URISyntaxException | IOException | RestException | JiraException | RuntimeException e) {
       String errorMessage = "Failed to fetch fields from JIRA server.";
-      logger.error(errorMessage);
-
-      // TODO(swagat): Add execution status to JiraExecutionData
-      return JiraExecutionData.builder().errorMessage(errorMessage).build();
+      logger.error(errorMessage, e);
+      return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
   }
 
@@ -201,11 +197,11 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       URI uri = jira.getRestClient().buildURI(Resource.getBaseUri() + "project");
       JSON response = jira.getRestClient().get(uri);
       JSONArray projectsArray = JSONArray.fromObject(response);
-      return JiraExecutionData.builder().projects(projectsArray).build();
-    } catch (URISyntaxException | IOException | RestException | JiraException e) {
+      return JiraExecutionData.builder().projects(projectsArray).executionStatus(ExecutionStatus.SUCCESS).build();
+    } catch (URISyntaxException | IOException | RestException | JiraException | RuntimeException e) {
       String errorMessage = "Failed to fetch projects from JIRA server.";
-      logger.error(errorMessage);
-      return JiraExecutionData.builder().errorMessage(errorMessage).build();
+      logger.error(errorMessage, e);
+      return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
   }
 

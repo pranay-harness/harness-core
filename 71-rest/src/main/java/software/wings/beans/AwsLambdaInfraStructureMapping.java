@@ -24,6 +24,7 @@ import java.util.Optional;
  */
 @JsonTypeName("AWS_AWS_LAMBDA")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   /**
    * Instantiates a new Infrastructure mapping.

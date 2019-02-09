@@ -47,7 +47,7 @@ import java.util.Objects;
 public class JiraHelperService {
   private static final Logger logger = LoggerFactory.getLogger(JiraHelperService.class);
   private static final String WORKFLOW_EXECUTION_ID = "workflow";
-  private static final long JIRA_DELEGATE_TIMEOUT_MILLIS = 30 * 1000;
+  private static final long JIRA_DELEGATE_TIMEOUT_MILLIS = 60 * 1000;
   @Inject private DelegateServiceImpl delegateService;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject SettingsService settingService;
@@ -98,17 +98,14 @@ public class JiraHelperService {
     }
   }
 
-  private String extractRelevantMessage(String message) {
-    String[] words = message.split("\\s+");
-
-    return words[0] + " " + words[1];
-  }
-
   public JSONArray getProjects(String connectorId, String accountId, String appId) {
     JiraTaskParameters jiraTaskParameters =
         JiraTaskParameters.builder().accountId(accountId).jiraAction(JiraAction.GET_PROJECTS).build();
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
+    if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
+      throw new WingsException("Failed to fetch Projects");
+    }
     return jiraExecutionData.getProjects();
   }
 
@@ -129,6 +126,10 @@ public class JiraHelperService {
                                                 .build();
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
+    if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
+      throw new WingsException("Failed to fetch IssueType and Priorities");
+    }
+
     return jiraExecutionData.getFields();
   }
 
@@ -159,6 +160,9 @@ public class JiraHelperService {
         JiraTaskParameters.builder().accountId(accountId).jiraAction(JiraAction.GET_STATUSES).project(project).build();
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
+    if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
+      throw new WingsException("Failed to fetch Status for this project");
+    }
     return jiraExecutionData.getStatuses();
   }
 
@@ -229,6 +233,9 @@ public class JiraHelperService {
         JiraTaskParameters.builder().accountId(accountId).jiraAction(JiraAction.GET_CREATE_METADATA).build();
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
+    if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
+      throw new WingsException("Failed to fetch Projects and Issue Metadata");
+    }
     return jiraExecutionData.getCreateMetadata();
   }
 
