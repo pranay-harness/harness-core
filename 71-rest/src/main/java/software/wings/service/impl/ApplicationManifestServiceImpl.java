@@ -275,6 +275,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     // Below handles case like testValidateManifestFileName4
     Set<String> manifestFilesSet = manifestFiles.stream().map(ManifestFile::getFileName).collect(Collectors.toSet());
 
+    // To handle the edit of the existing file
+    if (manifestFilesSet.contains(manifestFile.getFileName())) {
+      return;
+    }
+
     String[] filePathParts = manifestFile.getFileName().split("/");
     StringBuilder fileNamePrefixBuilder = new StringBuilder();
 
