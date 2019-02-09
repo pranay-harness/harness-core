@@ -62,10 +62,12 @@ public class InstanceStatsCollectorJob implements Job {
                         .usingJobData(ACCOUNT_ID_KEY, accountId)
                         .build();
 
-    TriggerBuilder triggerBuilder =
-        TriggerBuilder.newTrigger()
-            .withIdentity(accountId, GROUP)
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(SYNC_INTERVAL).repeatForever());
+    TriggerBuilder triggerBuilder = TriggerBuilder.newTrigger()
+                                        .withIdentity(accountId, GROUP)
+                                        .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                                          .withIntervalInMinutes(SYNC_INTERVAL)
+                                                          .repeatForever()
+                                                          .withMisfireHandlingInstructionNowWithExistingCount());
     if (triggerStartTime != null) {
       triggerBuilder.startAt(triggerStartTime);
     }

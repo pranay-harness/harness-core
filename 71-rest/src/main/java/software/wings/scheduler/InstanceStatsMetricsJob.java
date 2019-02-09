@@ -93,11 +93,13 @@ public class InstanceStatsMetricsJob implements Job {
                         .withDescription("Instance Stats Metric Job")
                         .build();
 
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity(CRON_NAME, CRON_GROUP)
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(10).repeatForever())
-            .build();
+    Trigger trigger = TriggerBuilder.newTrigger()
+                          .withIdentity(CRON_NAME, CRON_GROUP)
+                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                            .withIntervalInMinutes(10)
+                                            .repeatForever()
+                                            .withMisfireHandlingInstructionNowWithExistingCount())
+                          .build();
 
     jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }
