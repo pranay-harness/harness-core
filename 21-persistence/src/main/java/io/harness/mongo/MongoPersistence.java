@@ -285,6 +285,7 @@ public class MongoPersistence implements HPersistence {
     }
 
     onUpdate(query, updateOperations, currentTime);
+    // TODO: this ignores the read preferences in the query
     return getDatastore(query.getEntityClass(), NORMAL).findAndModify(query, updateOperations, options);
   }
 

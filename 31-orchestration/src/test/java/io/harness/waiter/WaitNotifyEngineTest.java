@@ -3,9 +3,7 @@ package io.harness.waiter;
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 import static java.time.Duration.ofMinutes;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
@@ -227,25 +225,6 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
     notifier.executeUnderLock();
 
     assertThat(persistence.get(NotifyResponse.class, notificationId)).isNull();
-  }
-
-  @Test
-  public void shouldCleanZombieWaitQueue() {
-    final WaitQueue waitQueue = WaitQueue.builder()
-                                    .uuid(generateUuid())
-                                    .createdAt(System.currentTimeMillis() - ofMinutes(1).toMillis())
-                                    .waitInstanceId(generateUuid())
-                                    .correlationId(generateUuid())
-                                    .build();
-    String waitQueueId = persistence.save(waitQueue);
-    assertThat(persistence.get(WaitQueue.class, waitQueueId)).isNotNull();
-
-    notifyEventListener.onMessage(aNotifyEvent()
-                                      .withWaitInstanceId(waitQueue.getWaitInstanceId())
-                                      .withCorrelationIds(singletonList(waitQueue.getCorrelationId()))
-                                      .build());
-
-    assertThat(persistence.get(WaitQueue.class, waitQueueId)).isNull();
   }
 
   public static class TestNotifyCallback implements NotifyCallback {
