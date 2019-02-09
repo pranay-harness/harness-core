@@ -566,7 +566,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void testEditManifestFile() {
+  public void testEditManifestFileContent() {
     ApplicationManifest appManifest = createAppManifest();
 
     ManifestFile manifestFile = getManifestFileWithName("abc/values.yaml");
@@ -577,7 +577,40 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
     ManifestFile manifestFileById =
         applicationManifestService.getManifestFileById(manifestFile.getAppId(), manifestFile.getUuid());
+
+    assertThat(manifestFileById.getFileName()).isEqualTo("abc/values.yaml");
     assertThat(manifestFileById.getFileContent()).isEqualTo("file-content-abc");
+  }
+
+  @Test
+  public void testEditManifestFileName() {
+    ApplicationManifest appManifest = createAppManifest();
+
+    ManifestFile manifestFile = getManifestFileWithName("abc/values.yaml");
+    manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+
+    manifestFile.setFileName("xyz");
+    applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+
+    ManifestFile manifestFileById =
+        applicationManifestService.getManifestFileById(manifestFile.getAppId(), manifestFile.getUuid());
+
+    assertThat(manifestFileById.getFileName()).isEqualTo("xyz");
+    assertThat(manifestFileById.getFileContent()).isEqualTo(FILE_CONTENT);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void testMoveManifestFileToExistingDirectory() {
+    ApplicationManifest appManifest = createAppManifest();
+
+    ManifestFile manifestFile = getManifestFileWithName("abc/file1");
+    applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+
+    manifestFile = getManifestFileWithName("xyz/file2");
+    manifestFile = applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+
+    manifestFile.setFileName("abc");
+    applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
   }
 
   private ApplicationManifest createAppManifest() {
