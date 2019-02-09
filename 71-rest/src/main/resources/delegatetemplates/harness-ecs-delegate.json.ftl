@@ -1,10 +1,6 @@
 {
-  "ipcMode": null,
-  "executionRoleArn": null,
   "containerDefinitions": [
     {
-      "dnsSearchDomains": [],
-      "entryPoint": [],
       "portMappings": [
         {
           "hostPort": 8080,
@@ -12,8 +8,6 @@
           "containerPort": 8080
         }
       ],
-      "command": [],
-      "linuxParameters": null,
       "cpu": 1,
       "environment": [
         {
@@ -40,7 +34,10 @@
           "name": "DELEGATE_GROUP_NAME",
           "value": "${delegateGroupName}"
         },
-
+        {
+          "name": "DELEGATE_PROFILE",
+          "value": "${delegateProfile}"
+        },
         {
           "name": "DEPLOY_MODE",
           "value": "${deployMode}"
@@ -62,41 +59,18 @@
           "value": "${watcherStorageUrl}"
         }
       ],
-      "ulimits": null,
-      "dnsServers": [],
-      "mountPoints": [],
-      "workingDirectory": null,
-      "secrets": null,
-      "dockerSecurityOptions": [],
       "memory": 6144,
-      "memoryReservation": null,
-      "volumesFrom": [],
       "image": "${delegateDockerImage}",
-      "disableNetworking": null,
-      "interactive": null,
-      "healthCheck": null,
       "essential": true,
-      "links": [],
-      "hostname": ${hostnameForDelegate},
-      "extraHosts": null,
-      "pseudoTerminal": null,
-      "user": null,
-      "readonlyRootFilesystem": null,
-      "dockerLabels": null,
-      "systemControls": null,
-      "privileged": null,
+      ${hostnameForDelegate}
       "name": "ecs-delegate"
     }
   ],
-  "placementConstraints": [],
   "memory": "6144",
-  "taskRoleArn": null,
-  "pidMode": null,
   "requiresCompatibilities": [
     "EC2"
   ],
-  "networkMode": ${networkModeForTask},
+  ${networkModeForTask}
   "cpu": "1024",
-  "volumes": [],
   "family": "harness-delegate-task-spec"
 }

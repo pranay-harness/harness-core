@@ -958,6 +958,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           verificationUrl, StringUtils.EMPTY, delegateProfile == null ? "" : delegateProfile);
       scriptParams = updateMapForEcsDelegate(awsVpcMode, hostname, delegateGroupName, scriptParams);
 
+      // Add Task Spec Json file
       File yaml = File.createTempFile("ecs-spec", ".json");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
         cfg.getTemplate("harness-ecs-delegate.json.ftl").process(scriptParams, fileWriter);
@@ -970,6 +971,21 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
       out.closeArchiveEntry();
 
+      // Add Task "Service Spec Json for awsvpc mode" file
+      File serviceJson = File.createTempFile("ecs-service-spec", ".json");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(serviceJson), UTF_8)) {
+        cfg.getTemplate("harness-ecs-delegate-service.json.ftl").process(scriptParams, fileWriter);
+      }
+      serviceJson = new File(serviceJson.getAbsolutePath());
+      TarArchiveEntry serviceJsonTarArchiveEntry =
+          new TarArchiveEntry(serviceJson, ECS_DELEGATE + "/service-spec-for-awsvpc-mode.json");
+      out.putArchiveEntry(serviceJsonTarArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(serviceJson)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+
+      // Add Readme file
       File readme = File.createTempFile("README", ".txt");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme), UTF_8)) {
         cfg.getTemplate("readme-ecs.txt.ftl").process(emptyMap(), fileWriter);
@@ -997,15 +1013,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Map<String, String> map = new HashMap<>(scriptParams);
     // AWSVPC mode, hostname must be null
     if (awsVpcMode) {
-      map.put("networkModeForTask", new StringBuilder(64).append("\"awsvpc\"").toString());
-      map.put("hostnameForDelegate", new StringBuilder(64).append("null").toString());
+      map.put("networkModeForTask", new StringBuilder(64).append("\"networkMode\": ").append("\"awsvpc\",").toString());
+      map.put("hostnameForDelegate", StringUtils.EMPTY);
     } else {
-      map.put("networkModeForTask", new StringBuilder(64).append("null").toString());
+      map.put("networkModeForTask", StringUtils.EMPTY);
       if (isBlank(hostname)) {
         // hostname not provided, use as null, so dockerId will become hostname in ecs
         hostname = HARNESS_ECS_DELEGATE;
       }
-      map.put("hostnameForDelegate", new StringBuilder(128).append('"').append(hostname).append('"').toString());
+      map.put("hostnameForDelegate",
+          new StringBuilder(128).append("\"hostname\": \"").append(hostname).append("\",").toString());
     }
 
     map.put("delegateGroupName", new StringBuilder(128).append(delegateGroupName).toString());
