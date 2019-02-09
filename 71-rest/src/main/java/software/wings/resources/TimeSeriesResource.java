@@ -99,9 +99,10 @@ public class TimeSeriesResource {
   public RestResponse<TimeSeriesMLTransactionThresholds> getCustomThreshold(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
-      @QueryParam("transactionName") String transactionName, @QueryParam("metricName") String metricName) {
+      @QueryParam("transactionName") String transactionName, @QueryParam("metricName") String metricName,
+      @QueryParam("cvConfigId") String cvConfigId) {
     return new RestResponse<>(metricDataAnalysisService.getCustomThreshold(
-        appId, stateType, serviceId, groupName, transactionName, metricName));
+        appId, stateType, serviceId, cvConfigId, groupName, transactionName, metricName));
   }
 
   @DELETE
