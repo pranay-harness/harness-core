@@ -44,7 +44,7 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
   public void migrate() {
     // Fetch the list of current valid cvConfigurations
     List<CVConfiguration> cvConfigurations =
-        wingsPersistence.createQuery(CVConfiguration.class).filter("enabled24x7", true).asList();
+        wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).filter("enabled24x7", true).asList();
 
     logger.info("Starting TimeSeriesRiskSummaryMigration. Total CV Configs to migrate: {}", cvConfigurations.size());
     for (CVConfiguration config : cvConfigurations) {
