@@ -60,9 +60,10 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
 
     };
 
+    String name = "WebHook Trigger " + System.currentTimeMillis();
     Trigger trigger = Trigger.builder()
                           .workflowId(buildWorkflow.getUuid())
-                          .name("WebHook Trigger")
+                          .name(name)
                           .appId(application.getAppId())
                           .workflowType(ORCHESTRATION)
                           .condition(WebHookTriggerCondition.builder()

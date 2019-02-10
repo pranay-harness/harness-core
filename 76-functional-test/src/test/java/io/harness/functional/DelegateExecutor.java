@@ -1,6 +1,5 @@
 package io.harness.functional;
 
-import static io.harness.generator.AccountGenerator.Accounts.GENERIC_TEST;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 
@@ -9,10 +8,6 @@ import com.google.inject.Singleton;
 
 import io.fabric8.utils.Strings;
 import io.harness.filesystem.FileIo;
-import io.harness.generator.AccountGenerator;
-import io.harness.generator.OwnerManager;
-import io.harness.generator.OwnerManager.Owners;
-import io.harness.generator.Randomizer.Seed;
 import io.harness.resource.Project;
 import io.harness.threading.Puller;
 import org.slf4j.Logger;
@@ -36,22 +31,14 @@ public class DelegateExecutor {
   private static final Logger logger = LoggerFactory.getLogger(DelegateExecutor.class);
 
   @Inject private DelegateService delegateService;
-  @Inject private AccountGenerator accountGenerator;
-  @Inject private OwnerManager ownerManager;
-  private String accountId;
 
-  public void ensureDelegate() throws IOException {
-    final Seed seed = new Seed(0);
-    Owners owners = ownerManager.create();
-
-    Account account = accountGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
-    accountId = account.getUuid();
+  public void ensureDelegate(Account account) throws IOException {
     if (!isHealthy(account.getUuid())) {
-      executeLocalDelegate();
+      executeLocalDelegate(account);
     }
   }
 
-  private void executeLocalDelegate() throws IOException {
+  private void executeLocalDelegate(Account account) throws IOException {
     if (failedAlready) {
       return;
     }
@@ -62,7 +49,7 @@ public class DelegateExecutor {
 
     if (FileIo.acquireLock(lockfile, ofMinutes(2))) {
       try {
-        if (isHealthy(accountId)) {
+        if (isHealthy(account.getUuid())) {
           return;
         }
         logger.info("Execute the delegate from {}", directory);
@@ -86,7 +73,7 @@ public class DelegateExecutor {
 
         processExecutor.start();
 
-        Puller.pullFor(ofMinutes(2), () -> isHealthy(accountId));
+        Puller.pullFor(ofMinutes(2), () -> isHealthy(account.getUuid()));
 
       } catch (RuntimeException exception) {
         failedAlready = true;

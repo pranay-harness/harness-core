@@ -118,6 +118,7 @@ public class AccountGenerator {
     String accountId = ACCOUNT_ID;
     Account accountObj = anAccount().withAccountName("Harness").withCompanyName("Harness").build();
     this.account = exists(accountObj);
+
     if (this.account == null) {
       accountObj = Account.Builder.anAccount()
                        .withUuid(accountId)
@@ -141,22 +142,22 @@ public class AccountGenerator {
 
     try {
       accountService.save(accountObj);
-    } catch (WingsException we) {
-      // TODO: fix this Hack here.
+      // Update account key to make it work with delegate
+      UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
+      accountUpdateOperations.set("accountKey", scmSecret.decryptToString(new SecretName("harness_account_secret")));
+      wingsPersistence.update(wingsPersistence.createQuery(Account.class), accountUpdateOperations);
+
+      this.account = accountService.get(accountId);
+      limitConfigurationService.configure(accountId, ActionType.CREATE_PIPELINE, new StaticLimit(1000));
+      limitConfigurationService.configure(accountId, ActionType.CREATE_USER, new StaticLimit(1000));
+      limitConfigurationService.configure(accountId, ActionType.CREATE_APPLICATION, new StaticLimit(1000));
+      limitConfigurationService.configure(accountId, ActionType.DEPLOY, new RateLimit(1000, 1, TimeUnit.HOURS));
+      ensureDefaultUsers(account);
     }
 
-    // Update account key to make it work with delegate
-    UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
-    accountUpdateOperations.set("accountKey", scmSecret.decryptToString(new SecretName("harness_account_secret")));
-    wingsPersistence.update(wingsPersistence.createQuery(Account.class), accountUpdateOperations);
-
-    this.account = accountService.get(accountId);
-    ensureDefaultUsers(account);
-
-    limitConfigurationService.configure(accountId, ActionType.CREATE_PIPELINE, new StaticLimit(1000));
-    limitConfigurationService.configure(accountId, ActionType.CREATE_USER, new StaticLimit(1000));
-    limitConfigurationService.configure(accountId, ActionType.CREATE_APPLICATION, new StaticLimit(1000));
-    limitConfigurationService.configure(accountId, ActionType.DEPLOY, new RateLimit(1000, 1, TimeUnit.HOURS));
+    catch (WingsException we) {
+      // TODO: fix this Hack here.
+    }
 
     return this.account;
   }
@@ -171,12 +172,12 @@ public class AccountGenerator {
     wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
 
     User adminUser =
-        addUser(adminUserUuid, adminUserName, adminUserEmail, scmSecret.decryptToCharArray(adminPassword), account);
-    addUser(defaultUserUuid, defaultUserName, defaultEmail, scmSecret.decryptToCharArray(defaultPassword), account);
-    User readOnlyUser = addUser(
+        ensureUser(adminUserUuid, adminUserName, adminUserEmail, scmSecret.decryptToCharArray(adminPassword), account);
+    ensureUser(defaultUserUuid, defaultUserName, defaultEmail, scmSecret.decryptToCharArray(defaultPassword), account);
+    User readOnlyUser = ensureUser(
         readOnlyUserUuid, readOnlyUserName, readOnlyEmail, scmSecret.decryptToCharArray(readOnlyPassword), account);
-    addUser(rbac1UserUuid, rbac1UserName, rbac1Email, scmSecret.decryptToCharArray(rbac1Password), account);
-    addUser(rbac2UserUuid, rbac2UserName, rbac2Email, scmSecret.decryptToCharArray(rbac2Password), account);
+    ensureUser(rbac1UserUuid, rbac1UserName, rbac1Email, scmSecret.decryptToCharArray(rbac1Password), account);
+    ensureUser(rbac2UserUuid, rbac2UserName, rbac2Email, scmSecret.decryptToCharArray(rbac2Password), account);
     addUserToUserGroup(adminUser, account.getUuid(), Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
     UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(
         account.getUuid(), readOnlyUser, Constants.DEFAULT_READ_ONLY_USER_GROUP_NAME);
@@ -185,8 +186,6 @@ public class AccountGenerator {
     addUserToUserGroup(readOnlyUser, readOnlyUserGroup);
 
     addUserToHarnessUserGroup(adminUser);
-
-    //    loginAdminUser();
 
     return account;
   }
@@ -215,7 +214,7 @@ public class AccountGenerator {
     harnessUserGroupService.save(harnessUserGroup);
   }
 
-  private User addUser(String uuid, String userName, String email, char[] password, Account account) {
+  private User ensureUser(String uuid, String userName, String email, char[] password, Account account) {
     User user = anUser()
                     .withUuid(uuid)
                     .withName(userName)
