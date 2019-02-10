@@ -7,7 +7,6 @@ import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SetLastLoginTimeToAllUsers;
 import migrations.all.TerraformIsTemplatizedMigration;
-import migrations.all.TimeSeriesRiskSummaryMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -28,7 +27,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(6, BaseMigration.class))
         .add(Pair.of(7, RemoveSupportEmailFromSalesContacts.class))
         .add(Pair.of(8, BaseMigration.class))
-        .add(Pair.of(9, TimeSeriesRiskSummaryMigration.class))
+        .add(Pair.of(9, BaseMigration.class))
         .add(Pair.of(10, TerraformIsTemplatizedMigration.class))
         .add(Pair.of(11, DeleteAndAddInstanceSyncJobToAllAccounts.class))
         .build();
