@@ -1,6 +1,5 @@
 package io.harness.functional;
 
-import static io.harness.generator.AccountGenerator.Accounts.GENERIC_TEST;
 import static io.restassured.RestAssured.given;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,10 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
-import io.harness.generator.AccountGenerator;
-import io.harness.generator.OwnerManager;
-import io.harness.generator.OwnerManager.Owners;
-import io.harness.generator.Randomizer.Seed;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
 import io.restassured.RestAssured;
@@ -49,20 +44,22 @@ public abstract class AbstractFunctionalTest implements FunctionalTests {
     RestAssured.useRelaxedHTTPSValidation();
   }
 
-  @Inject private AccountGenerator accountGenerator;
+  //  @Inject private AccountGenerator accountGenerator;
   @Inject private DelegateExecutor delegateExecutor;
-  @Inject OwnerManager ownerManager;
+  //  @Inject OwnerManager ownerManager;
+  @Inject private AccountSetupService accountSetupService;
 
   Account account;
 
   @Before
   public void testSetup() throws IOException {
-    final Seed seed = new Seed(0);
-    Owners owners = ownerManager.create();
+    //    final Seed seed = new Seed(0);
+    //    Owners owners = ownerManager.create();
 
-    account = accountGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
+    //    account = accountGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
+    account = accountSetupService.ensureAccount();
 
-    delegateExecutor.ensureDelegate();
+    delegateExecutor.ensureDelegate(account);
 
     String basicAuthValue =
         "Basic " + encodeBase64String(String.format("%s:%s", "admin@harness.io", "admin").getBytes());
