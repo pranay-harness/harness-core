@@ -2,16 +2,13 @@ package software.wings.beans;
 
 import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
-/**
- * Created by anubhaw on 6/17/16.
- */
 @Entity(value = "emailVerificationTokens")
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@EqualsAndHashCode(callSuper = true)
 public class EmailVerificationToken extends Base {
   @NotEmpty private String token;
   @NotEmpty private String userId;

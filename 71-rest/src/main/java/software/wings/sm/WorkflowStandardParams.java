@@ -14,7 +14,6 @@ import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappin
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import lombok.Getter;
 import lombok.Setter;
@@ -720,7 +719,6 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
      *
      * @return the workflow standard params
      */
-    @SuppressFBWarnings("UWF_UNWRITTEN_FIELD")
     public WorkflowStandardParams build() {
       WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
       workflowStandardParams.setAppId(appId);
