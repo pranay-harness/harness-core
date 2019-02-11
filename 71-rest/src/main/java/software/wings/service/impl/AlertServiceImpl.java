@@ -132,11 +132,15 @@ public class AlertServiceImpl implements AlertService {
             .withSeverity(alertType.getSeverity())
             .build());
 
-    //    publishEvent(persistedAlert);
+    publishEvent(persistedAlert);
     logger.info("Alert opened: {}", persistedAlert);
   }
 
   private void publishEvent(Alert persistedAlert) {
+    if (null == persistedAlert) {
+      return;
+    }
+
     AlertType alertType = persistedAlert.getType();
 
     try {
