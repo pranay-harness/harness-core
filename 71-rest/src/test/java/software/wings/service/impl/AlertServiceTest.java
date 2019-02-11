@@ -10,7 +10,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
@@ -28,6 +27,7 @@ import com.google.inject.Inject;
 import com.mongodb.DBCollection;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.event.model.Event;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
@@ -149,10 +150,12 @@ public class AlertServiceTest extends WingsBaseTest {
   @Test
   public void shouldOpenAlert() {
     when(query.asList()).thenReturn(emptyList());
+    ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
 
+    when(wingsPersistence.saveAndGet(Mockito.eq(Alert.class), Mockito.any(Alert.class)))
+        .thenReturn(anAlert().withType(NoActiveDelegates).build());
     alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoActiveDelegates, noActiveDelegatesAlert);
 
-    ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
     verify(wingsPersistence).saveAndGet(eq(Alert.class), alertCaptor.capture());
     Alert savedAlert = alertCaptor.getValue();
     assertThat(savedAlert.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -162,7 +165,7 @@ public class AlertServiceTest extends WingsBaseTest {
     assertThat(savedAlert.getSeverity()).isEqualTo(NoActiveDelegates.getSeverity());
     assertThat(savedAlert.getTitle()).isEqualTo("No delegates are available");
 
-    verifyZeroInteractions(eventPublisher);
+    verify(eventPublisher).publishEvent(Mockito.any(Event.class));
   }
 
   @Test
