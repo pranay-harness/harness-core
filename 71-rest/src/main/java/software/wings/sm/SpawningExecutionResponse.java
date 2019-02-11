@@ -1,17 +1,10 @@
 package software.wings.sm;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by rishi on 5/20/16.
- */
-@SuppressFBWarnings("UUF_UNUSED_FIELD")
 public class SpawningExecutionResponse extends ExecutionResponse {
   private List<StateExecutionInstance> stateExecutionInstanceList = new ArrayList<>();
-  private String delegateTaskId;
 
   /**
    * Gets state execution instance list.
