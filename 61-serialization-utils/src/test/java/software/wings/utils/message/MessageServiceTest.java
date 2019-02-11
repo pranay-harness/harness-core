@@ -154,7 +154,6 @@ public class MessageServiceTest {
   }
 
   @Test
-  @SuppressWarnings({"unchecked"})
   public void shouldWriteData() throws IOException {
     messageService.putData(data1, "foo", "bar");
     messageService.putData(data1, "baz", "qux");

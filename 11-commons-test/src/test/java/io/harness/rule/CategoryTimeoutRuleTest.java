@@ -8,5 +8,5 @@ import org.junit.experimental.categories.Category;
 public class CategoryTimeoutRuleTest extends CategoryTest {
   @Test
   @Category({UnitTests.class, CategoryTimeoutRule.RunMode.class})
-  public void TestTheTimeoutCapability() {}
+  public void testTheTimeoutCapability() {}
 }
