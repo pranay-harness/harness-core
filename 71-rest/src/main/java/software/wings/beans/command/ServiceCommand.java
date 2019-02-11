@@ -267,6 +267,8 @@ public class ServiceCommand extends Base {
     return aServiceCommand()
         .withName(getName())
         .withTargetToAllEnv(targetToAllEnv)
+        .withTemplateVersion(templateVersion)
+        .withTemplateUuid(templateUuid)
         .withCommand(getCommand().cloneInternal())
         .build();
   }
