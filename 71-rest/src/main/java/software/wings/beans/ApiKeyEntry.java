@@ -11,8 +11,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.jersey.JsonViews;
 
-import java.util.List;
-
 @Getter
 @NoArgsConstructor
 @Entity(value = "apiKeys", noClassnameStored = true)
@@ -25,9 +23,8 @@ public class ApiKeyEntry extends Base {
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   @Builder
   public ApiKeyEntry(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String accountId, char[] encryptedKey,
-      String hashOfKey) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      long lastUpdatedAt, String entityYamlPath, String accountId, char[] encryptedKey, String hashOfKey) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.accountId = accountId;
     this.encryptedKey = encryptedKey;
     this.hashOfKey = hashOfKey;

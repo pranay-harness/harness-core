@@ -50,10 +50,10 @@ public class TriggerExecution extends Base {
 
   @Builder
   public TriggerExecution(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String triggerId, String triggerName,
-      String workflowExecutionId, String workflowExecutionName, Status status, String message, Type type,
-      String webhookToken, WebhookEventDetails webhookEventDetails) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      long lastUpdatedAt, String entityYamlPath, String triggerId, String triggerName, String workflowExecutionId,
+      String workflowExecutionName, Status status, String message, Type type, String webhookToken,
+      WebhookEventDetails webhookEventDetails) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.triggerId = triggerId;
     this.triggerName = triggerName;
     this.workflowExecutionId = workflowExecutionId;

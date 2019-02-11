@@ -9,8 +9,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 
-import java.util.List;
-
 /**
  *
  * @author rktummala on 09/13/17
@@ -44,12 +42,11 @@ public class ContainerDeploymentInfo extends Base {
 
   @Builder
   public ContainerDeploymentInfo(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String accountId,
-      String serviceId, String envId, String infraMappingId, String computeProviderId, String workflowId,
-      String workflowExecutionId, String pipelineExecutionId, String stateExecutionInstanceId,
-      InstanceType instanceType, String clusterName, String namespace, long lastVisited, String containerSvcName,
-      String containerSvcNameNoRevision) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String accountId, String serviceId,
+      String envId, String infraMappingId, String computeProviderId, String workflowId, String workflowExecutionId,
+      String pipelineExecutionId, String stateExecutionInstanceId, InstanceType instanceType, String clusterName,
+      String namespace, long lastVisited, String containerSvcName, String containerSvcNameNoRevision) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.accountId = accountId;
     this.serviceId = serviceId;
     this.envId = envId;

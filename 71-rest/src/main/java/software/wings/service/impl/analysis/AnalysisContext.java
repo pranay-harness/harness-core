@@ -78,15 +78,15 @@ public class AnalysisContext extends Base {
 
   @Builder
   private AnalysisContext(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, boolean syncFromGit, String accountId,
-      String workflowId, String workflowExecutionId, String stateExecutionId, String serviceId,
-      Map<String, String> controlNodes, Map<String, String> testNodes, String query, boolean isSSL, int appPort,
+      long lastUpdatedAt, String entityYamlPath, boolean syncFromGit, String accountId, String workflowId,
+      String workflowExecutionId, String stateExecutionId, String serviceId, Map<String, String> controlNodes,
+      Map<String, String> testNodes, String query, boolean isSSL, int appPort,
       AnalysisComparisonStrategy comparisonStrategy, int timeDuration, StateType stateType,
       String analysisServerConfigId, String correlationId, int smooth_window, int tolerance,
       String prevWorkflowExecutionId, int minimumRequestsPerMinute, int comparisonWindow, int parallelProcesses,
       Map<String, List<TimeSeries>> timeSeriesToCollect, boolean runTillConvergence, String delegateTaskId,
       MLAnalysisType analysisType, ExecutionStatus executionStatus, String managerVersion) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, syncFromGit);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, syncFromGit);
     this.accountId = accountId;
     this.workflowId = workflowId;
     this.workflowExecutionId = workflowExecutionId;

@@ -2,6 +2,7 @@ package software.wings.beans.template;
 
 import static java.util.Arrays.asList;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.validation.Create;
@@ -15,6 +16,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
@@ -36,17 +38,19 @@ public class TemplateGallery extends Base {
   private String description;
   private String referencedGalleryId;
   private boolean global;
+  @SchemaIgnore @Indexed private List<String> keywords;
 
   @Builder
   public TemplateGallery(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name, String accountId,
       String description, String referencedGalleryId, boolean global) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.accountId = accountId;
     this.description = description;
     this.referencedGalleryId = referencedGalleryId;
     this.global = global;
+    this.keywords = keywords;
   }
 
   @Override

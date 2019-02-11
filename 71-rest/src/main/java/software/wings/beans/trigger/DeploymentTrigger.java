@@ -16,7 +16,6 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.WorkflowType;
 
-import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -39,9 +38,9 @@ public class DeploymentTrigger extends Base {
 
   @Builder
   public DeploymentTrigger(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name,
-      String description, Condition condition, String workflowId, String workflowName, WorkflowType workflowType) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String name, String description,
+      Condition condition, String workflowId, String workflowName, WorkflowType workflowType) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
     this.condition = condition;

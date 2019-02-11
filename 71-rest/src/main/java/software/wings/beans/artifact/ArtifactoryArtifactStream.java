@@ -36,11 +36,11 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
 
   @Builder
   public ArtifactoryArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String sourceName,
-      String settingId, String name, boolean autoPopulate, String serviceId, boolean metadataOnly,
-      String repositoryType, String jobname, String groupId, String imageName, List<String> artifactPaths,
-      String artifactPattern, String dockerRepositoryServer) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, ARTIFACTORY.name(),
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
+      String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String repositoryType, String jobname,
+      String groupId, String imageName, List<String> artifactPaths, String artifactPattern,
+      String dockerRepositoryServer) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, ARTIFACTORY.name(),
         sourceName, settingId, name, autoPopulate, serviceId, metadataOnly);
     this.repositoryType = repositoryType;
     this.jobname = jobname;

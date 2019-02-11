@@ -11,8 +11,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
-import java.util.List;
-
 /**
  * Keeps track of the last sync status and time of the infra mapping.
  *
@@ -45,10 +43,9 @@ public class SyncStatus extends Base {
 
   @Builder
   public SyncStatus(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String envId, String serviceId,
-      String infraMappingId, String infraMappingName, long lastSyncedAt, long lastSuccessfullySyncedAt,
-      String syncFailureReason) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      long lastUpdatedAt, String entityYamlPath, String envId, String serviceId, String infraMappingId,
+      String infraMappingName, long lastSyncedAt, long lastSuccessfullySyncedAt, String syncFailureReason) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.envId = envId;
     this.serviceId = serviceId;
     this.infraMappingId = infraMappingId;

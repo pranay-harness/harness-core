@@ -77,11 +77,10 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
 
   @Builder
   public ThirdPartyApiCallLog(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath,
-      String stateExecutionId, String accountId, String delegateId, String delegateTaskId, String title,
-      List<ThirdPartyApiCallField> request, List<ThirdPartyApiCallField> response, long requestTimeStamp,
-      long responseTimeStamp) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String stateExecutionId, String accountId,
+      String delegateId, String delegateTaskId, String title, List<ThirdPartyApiCallField> request,
+      List<ThirdPartyApiCallField> response, long requestTimeStamp, long responseTimeStamp) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateExecutionId = stateExecutionId;
     this.accountId = accountId;
     this.delegateId = delegateId;

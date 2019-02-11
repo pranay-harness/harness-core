@@ -39,7 +39,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -104,11 +103,11 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
 
   @Builder
   public NewRelicMetricDataRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
-      String name, String workflowId, String workflowExecutionId, String serviceId, String cvConfigId,
-      String stateExecutionId, long timeStamp, int dataCollectionMinute, String host, ClusterLevel level, String tag,
-      String groupName, Map<String, Double> values, Map<String, String> deeplinkMetadata) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, StateType stateType, String name,
+      String workflowId, String workflowExecutionId, String serviceId, String cvConfigId, String stateExecutionId,
+      long timeStamp, int dataCollectionMinute, String host, ClusterLevel level, String tag, String groupName,
+      Map<String, Double> values, Map<String, String> deeplinkMetadata) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateType = stateType;
     this.name = name;
     this.workflowId = workflowId;

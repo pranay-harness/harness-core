@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.validation.Create;
@@ -19,6 +20,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
@@ -34,11 +36,12 @@ import java.util.List;
     fields = { @Field("accountId")
                , @Field("name"), @Field("pathId") }))
 public class TemplateFolder extends Base {
-  public static final String PATH_KEY = "path";
-  public static final String PATH_ID_KEY = "pathId";
-  public static final String NAME_KEY = "name";
   public static final String GALLERY_ID_KEY = "galleryId";
+  public static final String KEYWORDS_KEY = "keywords";
+  public static final String NAME_KEY = "name";
   public static final String PARENT_ID_KEY = "parentId";
+  public static final String PATH_ID_KEY = "pathId";
+  public static final String PATH_KEY = "path";
 
   @NotEmpty private String accountId;
   @NotEmpty @EntityName(groups = {Create.class, Update.class}) String name;
@@ -49,6 +52,8 @@ public class TemplateFolder extends Base {
   private transient long templatesCount;
   private String pathId;
   private transient List<TemplateFolder> children = new ArrayList<>();
+
+  @SchemaIgnore @Indexed private List<String> keywords;
 
   public enum NodeType {
     FOLDER("folder"),
@@ -70,7 +75,7 @@ public class TemplateFolder extends Base {
       long lastUpdatedAt, List<String> keywords, String entityYamlPath, String accountId, String name,
       String description, String parentId, String nodeType, String galleryId, String pathId,
       List<TemplateFolder> children) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.accountId = accountId;
     this.name = name;
     this.description = description;
@@ -79,6 +84,7 @@ public class TemplateFolder extends Base {
     this.galleryId = galleryId;
     this.pathId = pathId;
     this.children = children;
+    this.keywords = keywords;
   }
 
   public TemplateFolder cloneInternal() {

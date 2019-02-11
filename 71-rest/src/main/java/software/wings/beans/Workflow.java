@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
@@ -33,6 +34,7 @@ import javax.validation.constraints.NotNull;
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class Workflow extends Base {
   public static final String NAME_KEY = "name";
+  public static final String KEYWORDS_KEY = "keywords";
 
   @NotNull @EntityName private String name;
 
@@ -48,6 +50,8 @@ public class Workflow extends Base {
 
   private List<TemplateExpression> templateExpressions;
 
+  @SchemaIgnore @Indexed @Getter @Setter private List<String> keywords;
+
   @Transient private String notes;
 
   @Transient private OrchestrationWorkflow orchestrationWorkflow;
@@ -55,12 +59,11 @@ public class Workflow extends Base {
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
-  @Transient private String serviceId; // Only for UI payload to support BasicOrchestration workflow
-  @Transient private String infraMappingId; // Only for UI payload to support BasicOrchestration workflow
-  @Transient
-  @Getter
-  @Setter
-  private WorkflowCreationFlags creationFlags; // Only for UI payload to support BasicOrchestration workflow
+  // Only for UI payload to support BasicOrchestration workflow {{
+  @Transient private String serviceId;
+  @Transient private String infraMappingId;
+  @Transient @Getter @Setter private WorkflowCreationFlags creationFlags;
+  // }}
 
   private transient List<String> templatizedServiceIds = new ArrayList<>();
 

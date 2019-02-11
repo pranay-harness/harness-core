@@ -3,8 +3,10 @@ package software.wings.beans;
 import static software.wings.beans.PreferenceType.DEPLOYMENT_PREFERENCE;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.List;
 
@@ -25,6 +27,8 @@ public class DeploymentPreference extends Preference {
   List<String> status;
   String startTime;
   String endTime;
+
+  @SchemaIgnore @Indexed private List<String> keywords;
 
   public DeploymentPreference() {
     super(DEPLOYMENT_PREFERENCE.name());

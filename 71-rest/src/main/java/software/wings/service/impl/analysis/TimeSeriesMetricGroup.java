@@ -18,7 +18,6 @@ import software.wings.sm.StateType;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,9 +45,9 @@ public class TimeSeriesMetricGroup extends Base {
 
   @Builder
   public TimeSeriesMetricGroup(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, StateType stateType,
       String stateExecutionId, Map<String, TimeSeriesMlAnalysisGroupInfo> groups) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateType = stateType;
     this.stateExecutionId = stateExecutionId;
     this.groups = groups;

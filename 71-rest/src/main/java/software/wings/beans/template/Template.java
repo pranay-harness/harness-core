@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.validation.Create;
@@ -35,13 +36,14 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 public class Template extends Base {
-  public static final String GALLERY_KEY = "gallery";
-  public static final String NAME_KEY = "name";
-  public static final String VERSION_KEY = "version";
-  public static final String TYPE_KEY = "type";
-  public static final String FOLDER_PATH_ID_KEY = "folderPathId";
   public static final String FOLDER_ID_KEY = "folderId";
+  public static final String FOLDER_PATH_ID_KEY = "folderPathId";
   public static final String GALLERY_ID_KEY = "galleryId";
+  public static final String GALLERY_KEY = "gallery";
+  public static final String KEYWORDS_KEY = "keywords";
+  public static final String NAME_KEY = "name";
+  public static final String TYPE_KEY = "type";
+  public static final String VERSION_KEY = "version";
 
   @Indexed @NotNull @EntityName(groups = {Create.class, Update.class}) private String name;
   @NotEmpty private String accountId;
@@ -59,6 +61,7 @@ public class Template extends Base {
   private String referencedTemplateId;
   private Long referencedTemplateVersion;
   private transient String referencedTemplateUri;
+  @SchemaIgnore @Indexed private List<String> keywords;
 
   @Builder
   public Template(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
@@ -66,7 +69,7 @@ public class Template extends Base {
       String folderId, long version, String description, String folderPathId, String folderPath, String gallery,
       BaseTemplate templateObject, List<Variable> variables, VersionedTemplate versionedTemplate, String galleryId,
       String referencedTemplateId, Long referencedTemplateVersion) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.accountId = accountId;
     this.type = type;
@@ -82,6 +85,7 @@ public class Template extends Base {
     this.galleryId = galleryId;
     this.referencedTemplateId = referencedTemplateId;
     this.referencedTemplateVersion = referencedTemplateVersion;
+    this.keywords = keywords;
   }
 
   @Override

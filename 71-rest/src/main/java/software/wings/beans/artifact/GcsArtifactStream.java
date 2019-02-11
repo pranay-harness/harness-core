@@ -33,11 +33,11 @@ public class GcsArtifactStream extends ArtifactStream {
 
   @Builder
   public GcsArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String sourceName,
-      String settingId, String name, boolean autoPopulate, String serviceId, String jobname, List<String> artifactPaths,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
+      String name, boolean autoPopulate, String serviceId, String jobname, List<String> artifactPaths,
       String projectId) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, GCS.name(),
-        sourceName, settingId, name, autoPopulate, serviceId, true);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, GCS.name(), sourceName,
+        settingId, name, autoPopulate, serviceId, true);
     this.jobname = jobname;
     this.artifactPaths = artifactPaths;
     this.projectId = projectId;

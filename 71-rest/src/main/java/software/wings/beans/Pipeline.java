@@ -7,6 +7,7 @@ package software.wings.beans;
 import static java.util.Arrays.asList;
 import static software.wings.beans.WorkflowType.PIPELINE;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import lombok.AllArgsConstructor;
@@ -15,6 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.yaml.BaseEntityYaml;
@@ -57,13 +59,14 @@ public class Pipeline extends Base {
   private transient List<EnvSummary> envSummaries = new ArrayList<>();
   private transient boolean hasBuildWorkflow;
   private transient List<String> infraMappingIds = new ArrayList<>();
+  @SchemaIgnore @Indexed private List<String> keywords;
 
   @Builder
   public Pipeline(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name, String description,
-      List<PipelineStage> pipelineStages, Map<String, Long> stateEtaMap, List<Service> services,
-      List<WorkflowExecution> workflowExecutions, List<FailureStrategy> failureStrategies) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      long lastUpdatedAt, String entityYamlPath, String name, String description, List<PipelineStage> pipelineStages,
+      Map<String, Long> stateEtaMap, List<Service> services, List<WorkflowExecution> workflowExecutions,
+      List<FailureStrategy> failureStrategies) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
     this.pipelineStages = (pipelineStages == null) ? new ArrayList<>() : pipelineStages;

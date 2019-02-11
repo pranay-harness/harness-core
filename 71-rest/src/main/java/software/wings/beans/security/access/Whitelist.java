@@ -13,8 +13,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 
-import java.util.List;
-
 /**
  * @author rktummala on 04/06/2018
  */
@@ -32,9 +30,9 @@ public class Whitelist extends Base {
 
   @Builder
   public Whitelist(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String accountId, String description,
-      WhitelistStatus status, String filter) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      long lastUpdatedAt, String entityYamlPath, String accountId, String description, WhitelistStatus status,
+      String filter) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.accountId = accountId;
     this.description = description;
     this.status = status;

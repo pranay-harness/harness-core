@@ -220,7 +220,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                                              .createdAt(0)
                                              .lastUpdatedBy(null)
                                              .lastUpdatedAt(0)
-                                             .keywords(null)
                                              .entityYamlPath(null)
                                              .name("Stored")
                                              .description("Desc")

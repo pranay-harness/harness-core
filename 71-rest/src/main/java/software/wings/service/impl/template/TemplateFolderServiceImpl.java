@@ -9,7 +9,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.Base.KEYWORDS_KEY;
 import static software.wings.beans.template.Template.TYPE_KEY;
 import static software.wings.beans.template.TemplateFolder.GALLERY_ID_KEY;
 import static software.wings.beans.template.TemplateFolder.NAME_KEY;
@@ -219,8 +218,8 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     Query<Template> templateQuery = wingsPersistence.createQuery(Template.class).filter(ACCOUNT_ID_KEY, accountId);
 
     if (isNotEmpty(keyword)) {
-      folderQuery = folderQuery.field(KEYWORDS_KEY).contains(keyword.toLowerCase());
-      templateQuery = templateQuery.field(KEYWORDS_KEY).contains(keyword.toLowerCase());
+      folderQuery = folderQuery.field(TemplateFolder.KEYWORDS_KEY).contains(keyword.toLowerCase());
+      templateQuery = templateQuery.field(TemplateFolder.KEYWORDS_KEY).contains(keyword.toLowerCase());
     }
 
     List<TemplateFolder> templateFolders = new ArrayList<>();

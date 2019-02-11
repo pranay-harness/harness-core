@@ -14,7 +14,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by anubhaw on 1/5/17.
@@ -32,10 +31,10 @@ public class DockerArtifactStream extends ArtifactStream {
 
   @Builder
   public DockerArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String sourceName,
-      String settingId, String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String imageName) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, DOCKER.name(),
-        sourceName, settingId, name, autoPopulate, serviceId, true);
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
+      String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String imageName) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, DOCKER.name(), sourceName,
+        settingId, name, autoPopulate, serviceId, true);
     this.imageName = imageName;
   }
 

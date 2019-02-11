@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -117,6 +118,8 @@ public class WorkflowExecution extends Base {
   private String deploymentTriggerId;
 
   @Getter @Setter private List<Artifact> artifacts = new ArrayList();
+
+  @SchemaIgnore @Indexed @Getter @Setter private List<String> keywords;
 
   public String getDeploymentTriggerId() {
     return deploymentTriggerId;

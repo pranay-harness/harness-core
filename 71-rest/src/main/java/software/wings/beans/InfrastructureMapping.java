@@ -85,8 +85,8 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
       String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
-      String name, List<String> keywords, boolean autoPopulateName) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      String name, boolean autoPopulateName) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.computeProviderSettingId = computeProviderSettingId;
     this.envId = envId;
     this.serviceTemplateId = serviceTemplateId;

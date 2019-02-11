@@ -96,6 +96,8 @@ public class EncryptedData extends Base implements EncryptedRecord {
 
   @SchemaIgnore @Transient private transient int changeLog;
 
+  @SchemaIgnore @Indexed private List<String> keywords;
+
   public void addParent(String parentId) {
     if (parentIds == null) {
       parentIds = new HashSet<>();

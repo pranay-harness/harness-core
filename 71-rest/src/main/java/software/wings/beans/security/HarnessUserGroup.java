@@ -13,7 +13,6 @@ import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 import software.wings.security.PermissionAttribute.Action;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -36,9 +35,9 @@ public class HarnessUserGroup extends Base {
 
   @Builder
   public HarnessUserGroup(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name, String description,
-      Set<Action> actions, boolean applyToAllAccounts, Set<String> memberIds, Set<String> accountIds) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      long lastUpdatedAt, String entityYamlPath, String name, String description, Set<Action> actions,
+      boolean applyToAllAccounts, Set<String> memberIds, Set<String> accountIds) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
     this.actions = actions;

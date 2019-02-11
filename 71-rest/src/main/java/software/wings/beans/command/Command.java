@@ -390,12 +390,6 @@ public class Command extends Base implements CommandUnit {
     return super.getUuid();
   }
 
-  @SchemaIgnore
-  @Override
-  public List<String> getKeywords() {
-    return super.getKeywords();
-  }
-
   public Command cloneInternal() {
     Command clonedCommand = aCommand()
                                 .withCommandType(getCommandType())

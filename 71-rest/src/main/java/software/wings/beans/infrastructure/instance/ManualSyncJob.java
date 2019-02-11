@@ -7,8 +7,6 @@ import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 
-import java.util.List;
-
 /**
  * Keeps track of the manual sync job. These are short-lived.
  * We just need to persist them so that all managers can access them.
@@ -23,8 +21,8 @@ public class ManualSyncJob extends Base {
 
   @Builder
   public ManualSyncJob(String uuid, String accountId, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.accountId = accountId;
   }
 }
