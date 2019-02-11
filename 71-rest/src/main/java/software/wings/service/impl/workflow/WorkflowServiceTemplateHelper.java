@@ -271,7 +271,7 @@ public class WorkflowServiceTemplateHelper {
   public static String getTemplatizedEnvVariableName(List<Variable> variables) {
     if (isNotEmpty(variables)) {
       return variables.stream()
-          .filter((Variable variable) -> ENVIRONMENT.equals(variable.getEntityType()))
+          .filter((Variable variable) -> ENVIRONMENT.equals(variable.obtainEntityType()))
           .map(Variable::getName)
           .findFirst()
           .orElse(null);
@@ -319,7 +319,8 @@ public class WorkflowServiceTemplateHelper {
       return new ArrayList<>();
     }
     return variables.stream()
-        .filter(variable -> variable.getEntityType() != null && variable.getEntityType().equals(INFRASTRUCTURE_MAPPING))
+        .filter(variable
+            -> variable.obtainEntityType() != null && variable.obtainEntityType().equals(INFRASTRUCTURE_MAPPING))
         .map(Variable::getName)
         .distinct()
         .collect(toList());
@@ -330,7 +331,7 @@ public class WorkflowServiceTemplateHelper {
       return new ArrayList<>();
     }
     return variables.stream()
-        .filter(variable -> variable.getEntityType() != null && variable.getEntityType().equals(SERVICE))
+        .filter(variable -> variable.obtainEntityType() != null && variable.obtainEntityType().equals(SERVICE))
         .map(Variable::getName)
         .distinct()
         .collect(toList());

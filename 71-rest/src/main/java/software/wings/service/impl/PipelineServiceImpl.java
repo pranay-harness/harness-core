@@ -518,9 +518,9 @@ public class PipelineServiceImpl implements PipelineService {
     // Reorder pipeline variables
     List<Variable> reorderedPipelineVariables = new ArrayList<>();
     List<Variable> nonEntityVariables =
-        pipelineVariables.stream().filter(variable -> variable.getEntityType() == null).collect(toList());
+        pipelineVariables.stream().filter(variable -> variable.obtainEntityType() == null).collect(toList());
     List<Variable> entityVariables =
-        pipelineVariables.stream().filter(variable -> variable.getEntityType() != null).collect(toList());
+        pipelineVariables.stream().filter(variable -> variable.obtainEntityType() != null).collect(toList());
     reorderedPipelineVariables.addAll(entityVariables);
     reorderedPipelineVariables.addAll(nonEntityVariables);
     return reorderedPipelineVariables;
@@ -533,7 +533,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
     boolean atleastOneEntityParameterized;
     List<Variable> entityVariables =
-        workflowVariables.stream().filter(variable -> variable.getEntityType() != null).collect(toList());
+        workflowVariables.stream().filter(variable -> variable.obtainEntityType() != null).collect(toList());
     for (Variable variable : entityVariables) {
       String value = pseWorkflowVaraibles.get(variable.getName());
       if (value != null) {
@@ -613,7 +613,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
     List<Variable> nonEntityVariables =
         workflowVariables.stream()
-            .filter(variable -> (variable.getEntityType() == null) & !variable.isFixed())
+            .filter(variable -> (variable.obtainEntityType() == null) & !variable.isFixed())
             .collect(toList());
 
     if (isEmpty(pseWorkflowVariables)) {
@@ -629,7 +629,7 @@ public class PipelineServiceImpl implements PipelineService {
     for (Variable variable : workflowVariables) {
       // Entity Variables
       String value = pseWorkflowVariables.get(variable.getName());
-      if (variable.getEntityType() == null) {
+      if (variable.obtainEntityType() == null) {
         if (isEmpty(value) && !variable.isFixed()) {
           if (!contains(pipelineVariables, variable.getName())) {
             pipelineVariables.add(variable.cloneInternal());

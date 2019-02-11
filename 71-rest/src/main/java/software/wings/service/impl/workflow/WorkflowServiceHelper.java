@@ -1813,7 +1813,7 @@ public class WorkflowServiceHelper {
 
   private List<String> getEntityNames(List<Variable> userVariables, EntityType entityType) {
     return userVariables.stream()
-        .filter(variable -> entityType.equals(variable.getEntityType()))
+        .filter(variable -> entityType.equals(variable.obtainEntityType()))
         .map(Variable::getName)
         .collect(toList());
   }

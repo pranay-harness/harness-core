@@ -279,7 +279,7 @@ public abstract class OrchestrationWorkflow {
    */
   private void setVariableDescription(Variable variable, String stateName) {
     variable.setDescription(WorkflowServiceTemplateHelper.getVariableDescription(
-        variable.getEntityType(), getOrchestrationWorkflowType(), stateName));
+        variable.obtainEntityType(), getOrchestrationWorkflowType(), stateName));
   }
 
   public void addTemplateUuid(String templateUuid) {
