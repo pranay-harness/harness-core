@@ -7,18 +7,23 @@ import static java.util.Arrays.asList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import software.wings.api.DeploymentType;
 import software.wings.beans.Service;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.LogConfiguration;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 
 @Singleton
 public class ServiceSampleDataProvider {
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   public Service createKubeService(String appId) {
     Service service = serviceResourceService.save(Service.builder()
@@ -124,6 +129,59 @@ public class ServiceSampleDataProvider {
     KubernetesPayload kubernetesPayload = KubernetesPayload.builder().advancedConfig(advancedConfig).build();
     serviceResourceService.updateContainerTaskAdvanced(
         appId, savedContainerTask.getServiceId(), savedContainerTask.getUuid(), kubernetesPayload, false);
+
+    return service;
+  }
+
+  public Service createK8sV2Service(String appId) {
+    Service service = serviceResourceService.save(Service.builder()
+                                                      .appId(appId)
+                                                      .artifactType(ArtifactType.DOCKER)
+                                                      .deploymentType(DeploymentType.KUBERNETES)
+                                                      .isK8sV2(true)
+                                                      .name(K8S_SERVICE_NAME)
+                                                      .description(K8S_SERVICE_DESC)
+                                                      .build());
+
+    ManifestFile namespaceManifest = ManifestFile.builder()
+                                         .fileName("templates/namespace.yaml")
+                                         .fileContent("apiVersion: v1\n"
+                                             + "kind: Namespace\n"
+                                             + "metadata:\n"
+                                             + "  name: {{.Values.namespace}}")
+                                         .build();
+    namespaceManifest.setAppId(appId);
+
+    ManifestFile serviceManifest = ManifestFile.builder()
+                                       .fileName("templates/service.yaml")
+                                       .fileContent("apiVersion: v1\n"
+                                           + "kind: Service\n"
+                                           + "metadata:\n"
+                                           + "  name: {{.Values.name}}-svc\n"
+                                           + "spec:\n"
+                                           + "  type: LoadBalancer\n"
+                                           + "  ports:\n"
+                                           + "  - port: 80\n"
+                                           + "    protocol: TCP\n"
+                                           + "  selector:\n"
+                                           + "    app: {{.Values.name}}")
+                                       .build();
+    serviceManifest.setAppId(appId);
+
+    applicationManifestService.createManifestFileByServiceId(namespaceManifest, service.getUuid());
+
+    applicationManifestService.createManifestFileByServiceId(serviceManifest, service.getUuid());
+
+    ApplicationManifest appManifest = applicationManifestService.getByServiceId(appId, service.getUuid());
+
+    ManifestFile valuesFile =
+        applicationManifestService.getManifestFileByFileName(appManifest.getUuid(), "values.yaml");
+    valuesFile.setFileContent("name: harness-example\n"
+        + "replicas: 1\n"
+        + "image: ${artifact.metadata.image}\n"
+        + "namespace: ${infra.kubernetes.namespace}");
+
+    applicationManifestService.updateManifestFileByServiceId(valuesFile, service.getUuid());
 
     return service;
   }

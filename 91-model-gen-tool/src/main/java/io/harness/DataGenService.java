@@ -208,6 +208,8 @@ public class DataGenService {
 
     createTestApplication(account);
 
+    sampleDataProviderService.createK8sV2SampleApp(account);
+
     loadAppStackCatalogs();
   }
 

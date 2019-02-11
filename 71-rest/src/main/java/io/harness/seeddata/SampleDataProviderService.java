@@ -1,5 +1,9 @@
 package io.harness.seeddata;
 
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_DEFAULT_NAMESPACE;
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_PROD_NAMESPACE;
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_QA_NAMESPACE;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -31,56 +35,110 @@ public class SampleDataProviderService {
   public void createHarnessSampleApp(Account account) {
     try {
       // The following steps to achieve end to end seed data generation
-      // 1. Create Cloud Provider ->
+      // Create Cloud Provider ->
       SettingAttribute kubernetesClusterConfig =
           cloudProviderSeedDataProvider.createKubernetesClusterConfig(account.getUuid());
 
-      // 2. Create Docker connector
+      // Create Docker connector
       SettingAttribute dockerConnector = connectorGenerator.createDockerConnector(account.getUuid());
 
-      // 3. Create App
-      Application kubernetesApp = applicationSampleDataProvider.createKubernetesApp(account.getUuid());
-      Validator.notNullCheck("Kubernetes App not saved", kubernetesApp);
+      createK8sSampleApp(account, kubernetesClusterConfig, dockerConnector);
+    } catch (Exception ex) {
+      logger.error("Failed to create Sample Application for the account [" + account.getUuid()
+              + "]. Reason: " + Misc.getMessage(ex),
+          ex);
+    }
+  }
 
-      // 4. Create Service
-      Service kubeService = serviceSampleDataProvider.createKubeService(kubernetesApp.getUuid());
+  private void createK8sSampleApp(
+      Account account, SettingAttribute kubernetesClusterConfig, SettingAttribute dockerConnector) {
+    // Create App
+    Application kubernetesApp = applicationSampleDataProvider.createKubernetesApp(account.getUuid());
+    Validator.notNullCheck("Kubernetes App not saved", kubernetesApp);
 
-      // 5. Create Artifact Stream
-      artifactStreamSampleDataProvider.createDockerArtifactStream(
-          kubernetesApp.getAppId(), kubeService.getUuid(), dockerConnector.getUuid());
-      // 6. Create QA Environment
-      Environment qaEnv = environmentSampleDataProvider.createQAEnvironment(kubernetesApp.getUuid());
+    // Create Service
+    Service kubeService = serviceSampleDataProvider.createKubeService(kubernetesApp.getUuid());
 
-      // 7. Create QA Service Infrastructure
-      InfrastructureMapping qaInfraMapping =
-          infraMappingSampleDataProvider.createKubeServiceInfraStructure(account.getUuid(), kubernetesApp.getUuid(),
-              qaEnv.getUuid(), kubeService.getUuid(), kubernetesClusterConfig.getUuid());
+    // Create Artifact Stream
+    artifactStreamSampleDataProvider.createDockerArtifactStream(
+        kubernetesApp.getAppId(), kubeService.getUuid(), dockerConnector.getUuid());
+    // Create QA Environment
+    Environment qaEnv = environmentSampleDataProvider.createQAEnvironment(kubernetesApp.getUuid());
 
-      // 8. Create Prod Environment
-      Environment prodEnv = environmentSampleDataProvider.createProdEnvironment(kubernetesApp.getUuid());
+    // Create QA Service Infrastructure
+    InfrastructureMapping qaInfraMapping = infraMappingSampleDataProvider.createKubeServiceInfraStructure(
+        account.getUuid(), kubernetesApp.getUuid(), qaEnv.getUuid(), kubeService.getUuid(),
+        kubernetesClusterConfig.getUuid(), K8S_SERVICE_INFRA_DEFAULT_NAMESPACE);
 
-      // 9. Create Prod Service Infrastructure
+    // Create Prod Environment
+    Environment prodEnv = environmentSampleDataProvider.createProdEnvironment(kubernetesApp.getUuid());
 
-      InfrastructureMapping prodInfraMapping =
-          infraMappingSampleDataProvider.createKubeServiceInfraStructure(account.getUuid(), kubernetesApp.getUuid(),
-              prodEnv.getUuid(), kubeService.getUuid(), kubernetesClusterConfig.getUuid());
+    // Create Prod Service Infrastructure
+    InfrastructureMapping prodInfraMapping = infraMappingSampleDataProvider.createKubeServiceInfraStructure(
+        account.getUuid(), kubernetesApp.getUuid(), prodEnv.getUuid(), kubeService.getUuid(),
+        kubernetesClusterConfig.getUuid(), K8S_SERVICE_INFRA_DEFAULT_NAMESPACE);
 
-      // 8. Create Workflow
-      String basicWorkflowId = workflowSampleDataProvider.createK8sBasicWorkflow(
-          kubernetesApp.getUuid(), qaEnv.getUuid(), kubeService.getUuid(), qaInfraMapping.getUuid());
+    // Create Workflow
+    String basicWorkflowId = workflowSampleDataProvider.createK8sBasicWorkflow(
+        kubernetesApp.getUuid(), qaEnv.getUuid(), kubeService.getUuid(), qaInfraMapping.getUuid());
 
-      // 9 Create Canary Workflow
-      String canaryWorkflowId = workflowSampleDataProvider.createK8sCanaryWorkflow(
-          kubernetesApp.getUuid(), prodEnv.getUuid(), kubeService.getUuid(), prodInfraMapping.getUuid());
+    // Create Canary Workflow
+    String canaryWorkflowId = workflowSampleDataProvider.createK8sCanaryWorkflow(
+        kubernetesApp.getUuid(), prodEnv.getUuid(), kubeService.getUuid(), prodInfraMapping.getUuid());
 
-      // 10. Create a Pipeline
-      pipelineSampleDataProvider.createPipeline(kubernetesApp.getAccountId(), kubernetesApp.getUuid(), basicWorkflowId,
-          qaEnv.getUuid(), canaryWorkflowId, prodEnv.getUuid());
+    // Create a Pipeline
+    pipelineSampleDataProvider.createPipeline(kubernetesApp.getAccountId(), kubernetesApp.getUuid(), basicWorkflowId,
+        qaEnv.getUuid(), canaryWorkflowId, prodEnv.getUuid());
+  }
+
+  public void createK8sV2SampleApp(Account account) {
+    try {
+      // The following steps to achieve end to end seed data generation
+      // Create Cloud Provider ->
+      SettingAttribute kubernetesClusterConfig =
+          cloudProviderSeedDataProvider.createKubernetesClusterConfig(account.getUuid());
+
+      // Create Docker connector
+      SettingAttribute dockerConnector = connectorGenerator.createDockerConnector(account.getUuid());
+
+      createK8sV2SampleApp(account, kubernetesClusterConfig, dockerConnector, "k8s-v2");
 
     } catch (Exception ex) {
       logger.error("Failed to create Sample Application for the account [" + account.getUuid()
               + "]. Reason: " + Misc.getMessage(ex),
           ex);
     }
+  }
+
+  private void createK8sV2SampleApp(
+      Account account, SettingAttribute kubernetesClusterConfig, SettingAttribute dockerConnector, String appName) {
+    Application kubernetesApp = applicationSampleDataProvider.createApp(account.getUuid(), appName, appName);
+    Validator.notNullCheck("Kubernetes App not saved", kubernetesApp);
+
+    Service kubeService = serviceSampleDataProvider.createK8sV2Service(kubernetesApp.getUuid());
+
+    artifactStreamSampleDataProvider.createDockerArtifactStream(
+        kubernetesApp.getAppId(), kubeService.getUuid(), dockerConnector.getUuid());
+
+    Environment qaEnv = environmentSampleDataProvider.createQAEnvironment(kubernetesApp.getUuid());
+
+    InfrastructureMapping qaInfraMapping =
+        infraMappingSampleDataProvider.createKubeServiceInfraStructure(account.getUuid(), kubernetesApp.getUuid(),
+            qaEnv.getUuid(), kubeService.getUuid(), kubernetesClusterConfig.getUuid(), K8S_SERVICE_INFRA_QA_NAMESPACE);
+
+    Environment prodEnv = environmentSampleDataProvider.createProdEnvironment(kubernetesApp.getUuid());
+
+    InfrastructureMapping prodInfraMapping = infraMappingSampleDataProvider.createKubeServiceInfraStructure(
+        account.getUuid(), kubernetesApp.getUuid(), prodEnv.getUuid(), kubeService.getUuid(),
+        kubernetesClusterConfig.getUuid(), K8S_SERVICE_INFRA_PROD_NAMESPACE);
+
+    String basicWorkflowId = workflowSampleDataProvider.createK8sV2RollingWorkflow(
+        kubernetesApp.getUuid(), qaEnv.getUuid(), kubeService.getUuid(), qaInfraMapping.getUuid());
+
+    String canaryWorkflowId = workflowSampleDataProvider.createK8sV2CanaryWorkflow(
+        kubernetesApp.getUuid(), prodEnv.getUuid(), kubeService.getUuid(), prodInfraMapping.getUuid());
+
+    pipelineSampleDataProvider.createPipeline(kubernetesApp.getAccountId(), kubernetesApp.getUuid(), basicWorkflowId,
+        qaEnv.getUuid(), canaryWorkflowId, prodEnv.getUuid());
   }
 }

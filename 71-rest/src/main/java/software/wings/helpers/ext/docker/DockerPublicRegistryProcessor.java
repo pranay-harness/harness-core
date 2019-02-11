@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.docker;
 
 import static io.harness.exception.WingsException.USER;
+import static software.wings.common.Constants.IMAGE;
+import static software.wings.common.Constants.TAG;
 import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSuccessful;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -10,6 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.network.Http;
 import okhttp3.HttpUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +24,9 @@ import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -100,10 +105,21 @@ public class DockerPublicRegistryProcessor {
         ? dockerConfig.getDockerRegistryUrl() + imageName + "/tags/"
         : dockerConfig.getDockerRegistryUrl() + "/" + imageName + "/tags/";
 
+    String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
+
     if (publicImageTags != null && EmptyPredicate.isNotEmpty(publicImageTags.getResults())) {
       return publicImageTags.getResults()
           .stream()
-          .map(tag -> aBuildDetails().withNumber(tag.getName()).withBuildUrl(tagUrl + tag.getName()).build())
+          .map(tag -> {
+            Map<String, String> metadata = new HashMap();
+            metadata.put(IMAGE, domainName + "/" + imageName + ":" + tag.getName());
+            metadata.put(TAG, tag.getName());
+            return aBuildDetails()
+                .withNumber(tag.getName())
+                .withBuildUrl(tagUrl + tag.getName())
+                .withMetadata(metadata)
+                .build();
+          })
           .collect(Collectors.toList());
 
     } else {

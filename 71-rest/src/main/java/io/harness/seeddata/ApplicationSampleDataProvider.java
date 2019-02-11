@@ -22,4 +22,14 @@ public class ApplicationSampleDataProvider {
 
     return appService.save(application);
   }
+
+  public Application createApp(String accountId, String name, String description) {
+    Application application = Application.Builder.anApplication()
+                                  .withName(name)
+                                  .withDescription(description)
+                                  .withAccountId(accountId)
+                                  .build();
+
+    return appService.save(application);
+  }
 }

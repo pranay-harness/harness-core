@@ -595,8 +595,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
       addK8sCanaryWorkflowPhase(workflow);
+      addK8sRollingWorkflowPhase(workflow, "Primary");
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
-      addK8sRollingWorkflowPhase(workflow);
+      addK8sRollingWorkflowPhase(workflow, "Rolling");
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
       addK8sBlueGreenWorkflowPhase(workflow);
     } else {
@@ -606,10 +607,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
   }
 
-  private void addK8sRollingWorkflowPhase(Workflow workflow) {
+  private void addK8sRollingWorkflowPhase(Workflow workflow, String phaseName) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     WorkflowPhase workflowPhase = aWorkflowPhase()
-                                      .name("Rolling")
+                                      .name(phaseName)
                                       .infraMappingId(workflow.getInfraMappingId())
                                       .serviceId(workflow.getServiceId())
                                       .build();
