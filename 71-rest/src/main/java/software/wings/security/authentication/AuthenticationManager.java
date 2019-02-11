@@ -181,6 +181,10 @@ public class AuthenticationManager {
       User user = samlBasedAuthHandler.authenticate(credentials);
       String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getPortal().getUrl());
+      // This means the request is going to a free cluster
+      if (configuration.isTrialRegistrationAllowed()) {
+        encodedApiUrl = encodeBase64(configuration.getPortal().getUrl() + "/gratis");
+      }
       Map<String, String> params = new HashMap<>();
       params.put("token", jwtToken);
       params.put("apiurl", encodedApiUrl);
