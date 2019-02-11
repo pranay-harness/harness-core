@@ -2,6 +2,7 @@ package io.harness.seeddata;
 
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_BASIC_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_CANARY_WORKFLOW_NAME;
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_ROLLING_WORKFLOW_NAME;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -21,6 +22,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Workflow;
@@ -94,6 +96,46 @@ public class WorkflowSampleDataProvider {
     setK8sUpgradeContainer(secondPhase, "100");
 
     workflowService.updateWorkflowPhase(appId, savedWorkflow.getUuid(), secondPhase);
+
+    return savedWorkflow.getUuid();
+  }
+
+  public String createK8sV2RollingWorkflow(String appId, String envId, String serviceId, String infraMappingId) {
+    Workflow workflow = aWorkflow()
+                            .withName(K8S_ROLLING_WORKFLOW_NAME)
+                            .withAppId(appId)
+                            .withEnvId(envId)
+                            .withServiceId(serviceId)
+                            .withInfraMappingId(infraMappingId)
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                            .build();
+
+    workflow.getOrchestrationWorkflow().setOrchestrationWorkflowType(OrchestrationWorkflowType.ROLLING);
+
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+    Validator.notNullCheck("Workflow not saved", savedWorkflow);
+    Validator.notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
+
+    return savedWorkflow.getUuid();
+  }
+
+  public String createK8sV2CanaryWorkflow(String appId, String envId, String serviceId, String infraMappingId) {
+    Workflow workflow = aWorkflow()
+                            .withName(K8S_CANARY_WORKFLOW_NAME)
+                            .withAppId(appId)
+                            .withEnvId(envId)
+                            .withServiceId(serviceId)
+                            .withInfraMappingId(infraMappingId)
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                            .build();
+
+    workflow.getOrchestrationWorkflow().setOrchestrationWorkflowType(OrchestrationWorkflowType.CANARY);
+
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+    Validator.notNullCheck("Workflow not saved", savedWorkflow);
+    Validator.notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
 
     return savedWorkflow.getUuid();
   }

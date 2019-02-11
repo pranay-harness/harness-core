@@ -1,7 +1,6 @@
 package io.harness.seeddata;
 
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_NAME;
-import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_NAME_SPACE;
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 
 import com.google.inject.Inject;
@@ -23,7 +22,7 @@ public class InfraMappingSampleDataProvider {
   @Inject private ServiceTemplateService serviceTemplateService;
 
   public InfrastructureMapping createKubeServiceInfraStructure(
-      String accountId, String appId, String envId, String serviceId, String cloudProviderId) {
+      String accountId, String appId, String envId, String serviceId, String cloudProviderId, String namespace) {
     ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceId, envId);
     Validator.notNullCheck("Service template does not exist", serviceTemplate);
 
@@ -37,7 +36,7 @@ public class InfraMappingSampleDataProvider {
             .withComputeProviderType(SettingVariableTypes.KUBERNETES_CLUSTER.name())
             .withDeploymentType(DeploymentType.KUBERNETES.name())
             .withName(K8S_SERVICE_INFRA_NAME)
-            .withNamespace(K8S_SERVICE_INFRA_NAME_SPACE)
+            .withNamespace(namespace)
             .withAutoPopulate(false)
             .withServiceTemplateId(serviceTemplate.getUuid())
             .withEnvId(envId)
