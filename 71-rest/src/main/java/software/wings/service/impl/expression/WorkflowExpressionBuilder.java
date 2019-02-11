@@ -105,7 +105,7 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
     return workflow.getOrchestrationWorkflow()
         .getUserVariables()
         .stream()
-        .filter(variable -> variable.getName() != null && (includeEntityType || variable.getEntityType() == null))
+        .filter(variable -> variable.getName() != null && (includeEntityType || variable.obtainEntityType() == null))
         .map(variable -> "workflow.variables." + variable.getName())
         .collect(Collectors.toSet());
   }

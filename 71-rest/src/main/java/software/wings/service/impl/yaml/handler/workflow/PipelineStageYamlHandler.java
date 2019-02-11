@@ -254,7 +254,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       for (Map.Entry<String, String> entry : workflowVariables.entrySet()) {
         Variable variable = nameVariableMap.get(entry.getKey());
         if (variable != null) {
-          EntityType entityType = variable.getEntityType();
+          EntityType entityType = variable.obtainEntityType();
           PipelineStage.WorkflowVariable workflowVariable =
               PipelineStage.WorkflowVariable.builder()
                   .name(entry.getKey())

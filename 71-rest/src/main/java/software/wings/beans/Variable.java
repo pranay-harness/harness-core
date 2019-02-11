@@ -6,7 +6,6 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
 import com.google.common.collect.Maps;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
@@ -15,12 +14,8 @@ import lombok.NoArgsConstructor;
 import software.wings.common.Constants;
 import software.wings.yaml.BaseYamlWithType;
 
-import java.beans.Transient;
 import java.util.Map;
 
-/**
- * Created by rishi on 12/21/16.
- */
 @JsonInclude(NON_NULL)
 public class Variable {
   private String name;
@@ -101,9 +96,7 @@ public class Variable {
         .build();
   }
 
-  @Transient
-  @JsonIgnore
-  public EntityType getEntityType() {
+  public EntityType obtainEntityType() {
     if (metadata == null) {
       return null;
     }
@@ -114,18 +107,14 @@ public class Variable {
     return entityType instanceof EntityType ? (EntityType) entityType : EntityType.valueOf((String) entityType);
   }
 
-  @Transient
-  @JsonIgnore
-  public Object getArtifactType() {
+  public Object obtainArtifactType() {
     if (metadata == null) {
       return null;
     }
     return metadata.get(Constants.ARTIFACT_TYPE);
   }
 
-  @Transient
-  @JsonIgnore
-  public String getRelatedField() {
+  public String obtainRelatedField() {
     if (metadata == null) {
       return "";
     }

@@ -651,7 +651,7 @@ public class WorkflowServiceTestHelper {
         .extracting(templateExpression -> templateExpression.getFieldName())
         .contains("infraMappingId");
     assertThat(orchestrationWorkflow.getUserVariables())
-        .extracting(variable -> variable.getEntityType())
+        .extracting(variable -> variable.obtainEntityType())
         .containsSequence(ENVIRONMENT, SERVICE, INFRASTRUCTURE_MAPPING);
   }
 
@@ -846,7 +846,7 @@ public class WorkflowServiceTestHelper {
         .extracting(templateExpression -> templateExpression.getFieldName())
         .contains("infraMappingId");
     assertThat(workflow.getOrchestrationWorkflow().getUserVariables())
-        .extracting(variable -> variable.getEntityType())
+        .extracting(variable -> variable.obtainEntityType())
         .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
     return workflowPhase3;
   }
