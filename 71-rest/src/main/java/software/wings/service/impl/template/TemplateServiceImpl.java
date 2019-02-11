@@ -9,7 +9,6 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ID_KEY;
-import static software.wings.beans.Base.KEYWORDS_KEY;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
@@ -464,7 +463,7 @@ public class TemplateServiceImpl implements TemplateService {
     if (isNotEmpty(keyword)) {
       Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
                                           .filter(ACCOUNT_ID, accountId)
-                                          .field(KEYWORDS_KEY)
+                                          .field(Template.KEYWORDS_KEY)
                                           .in(asList(keyword.toLowerCase()));
       List<Template> templates = templateQuery.asList();
       if (isNotEmpty(templates)) {

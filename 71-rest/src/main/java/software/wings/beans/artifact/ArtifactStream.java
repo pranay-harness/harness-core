@@ -19,8 +19,6 @@ import software.wings.beans.config.ArtifactSourceable;
 import software.wings.utils.Util;
 import software.wings.yaml.BaseEntityYaml;
 
-import java.util.List;
-
 /**
  * ArtifactStream bean class.
  *
@@ -60,9 +58,9 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable 
   }
 
   public ArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String artifactStreamType, String sourceName,
-      String settingId, String name, boolean autoPopulate, String serviceId, boolean metadataOnly) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      long lastUpdatedAt, String entityYamlPath, String artifactStreamType, String sourceName, String settingId,
+      String name, boolean autoPopulate, String serviceId, boolean metadataOnly) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.artifactStreamType = artifactStreamType;
     this.sourceName = sourceName;
     this.settingId = settingId;

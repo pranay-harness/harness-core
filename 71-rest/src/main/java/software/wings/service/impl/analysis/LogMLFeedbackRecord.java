@@ -16,8 +16,6 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackType;
 import software.wings.sm.StateType;
 
-import java.util.List;
-
 @Entity(value = "logMlFeedbackRecords", noClassnameStored = true)
 @Indexes({
   @Index(fields = {
@@ -51,11 +49,11 @@ public class LogMLFeedbackRecord extends Base {
 
   @Builder
   public LogMLFeedbackRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String serviceId,
-      String workflowId, String workflowExecutionId, String stateExecutionId, StateType stateType, int clusterLabel,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String serviceId, String workflowId,
+      String workflowExecutionId, String stateExecutionId, StateType stateType, int clusterLabel,
       CLUSTER_TYPE clusterType, LogMLFeedbackType logMLFeedbackType, String logMessage, String logMD5Hash,
       String comment) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.serviceId = serviceId;
     this.workflowId = workflowId;
     this.workflowExecutionId = workflowExecutionId;

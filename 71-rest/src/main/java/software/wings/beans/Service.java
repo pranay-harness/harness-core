@@ -3,6 +3,7 @@ package software.wings.beans;
 import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -14,6 +15,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
@@ -63,6 +65,8 @@ public class Service extends Base {
   @Transient private Activity lastProdDeploymentActivity;
   @Transient private Setup setup;
 
+  @SchemaIgnore @Indexed private List<String> keywords;
+
   private boolean isK8sV2;
 
   @Builder
@@ -72,7 +76,7 @@ public class Service extends Base {
       long version, AppContainer appContainer, List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables,
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
       Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
     this.artifactType = artifactType;
@@ -88,6 +92,7 @@ public class Service extends Base {
     this.lastDeploymentActivity = lastDeploymentActivity;
     this.lastProdDeploymentActivity = lastProdDeploymentActivity;
     this.setup = setup;
+    this.keywords = keywords;
     this.isK8sV2 = isK8sV2;
   }
 

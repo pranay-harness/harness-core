@@ -50,8 +50,6 @@ public class Base
 
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
-  public static final String KEYWORDS_KEY = "keywords";
-
   public static final String LINKED_TEMPLATE_UUIDS_KEY = "linkedTemplateUuids";
 
   public static final String TEMPATE_UUID_KEY = "templateUuid";
@@ -68,8 +66,6 @@ public class Base
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
-
-  @SchemaIgnore @Indexed private List<String> keywords;
 
   /**
    * TODO: Add isDeleted boolean field to enable soft delete. @swagat
@@ -95,14 +91,13 @@ public class Base
   }
 
   public Base(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath) {
+      long lastUpdatedAt, String entityYamlPath) {
     this.uuid = uuid;
     this.appId = appId;
     this.createdBy = createdBy;
     this.createdAt = createdAt;
     this.lastUpdatedBy = lastUpdatedBy;
     this.lastUpdatedAt = lastUpdatedAt;
-    this.keywords = keywords;
     this.entityYamlPath = entityYamlPath;
   }
 

@@ -9,7 +9,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by anubhaw on 7/17/18.
@@ -25,9 +24,8 @@ public class Permit extends Base {
 
   @Builder
   public Permit(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String key, String group, Date expireAt,
-      long leaseDuration) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      long lastUpdatedAt, String entityYamlPath, String key, String group, Date expireAt, long leaseDuration) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.key = key;
     this.group = group;
     this.expireAt = new Date(expireAt.getTime());

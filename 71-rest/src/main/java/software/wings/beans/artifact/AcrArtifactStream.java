@@ -14,7 +14,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 @JsonTypeName("ACR")
 @Data
@@ -31,11 +30,11 @@ public class AcrArtifactStream extends ArtifactStream {
 
   @Builder
   public AcrArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String sourceName,
-      String settingId, String name, boolean autoPopulate, String serviceId, String subscriptionId, String registryName,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
+      String name, boolean autoPopulate, String serviceId, String subscriptionId, String registryName,
       String repositoryName) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, ACR.name(),
-        sourceName, settingId, name, autoPopulate, serviceId, true);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, ACR.name(), sourceName,
+        settingId, name, autoPopulate, serviceId, true);
     this.subscriptionId = subscriptionId;
     this.registryName = registryName;
     this.repositoryName = repositoryName;

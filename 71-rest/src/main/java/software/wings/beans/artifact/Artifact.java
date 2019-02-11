@@ -281,7 +281,6 @@ public class Artifact extends Base {
     private String errorMessage;
     private long lastUpdatedAt;
     private ContentStatus contentStatus;
-    private List<String> keywords;
 
     private Builder() {}
 
@@ -379,11 +378,6 @@ public class Artifact extends Base {
       return this;
     }
 
-    public Builder withKeywords(List<String> keywords) {
-      this.keywords = keywords;
-      return this;
-    }
-
     public Builder withEntityYamlPath(String entityYamlPath) {
       this.entityYamlPath = entityYamlPath;
       return this;
@@ -409,7 +403,6 @@ public class Artifact extends Base {
           .withErrorMessage(errorMessage)
           .withLastUpdatedAt(lastUpdatedAt)
           .withContentStatus(contentStatus)
-          .withKeywords(keywords)
           .withEntityYamlPath(entityYamlPath);
     }
 
@@ -433,7 +426,6 @@ public class Artifact extends Base {
       artifact.setErrorMessage(errorMessage);
       artifact.setLastUpdatedAt(lastUpdatedAt);
       artifact.setContentStatus(contentStatus);
-      artifact.setKeywords(keywords);
       artifact.setEntityYamlPath(entityYamlPath);
       return artifact;
     }

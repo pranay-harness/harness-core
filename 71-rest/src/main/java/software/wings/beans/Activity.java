@@ -100,15 +100,15 @@ public class Activity extends Base {
 
   @Builder
   public Activity(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, Type type, String applicationName,
-      String environmentId, String environmentName, EnvironmentType environmentType, String commandName,
-      List<CommandUnit> commandUnits, Map<String, Integer> commandNameVersionMap, String commandType, String serviceId,
-      String serviceName, String serviceTemplateId, String serviceTemplateName, String hostName, String publicDns,
-      String serviceInstanceId, String workflowExecutionId, String workflowId, String workflowExecutionName,
-      WorkflowType workflowType, String stateExecutionInstanceId, String stateExecutionInstanceName, Long version,
-      CommandUnitType commandUnitType, boolean logPurged, String artifactStreamId, String artifactStreamName,
-      boolean isPipeline, String artifactId, String artifactName, ExecutionStatus status) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      long lastUpdatedAt, String entityYamlPath, Type type, String applicationName, String environmentId,
+      String environmentName, EnvironmentType environmentType, String commandName, List<CommandUnit> commandUnits,
+      Map<String, Integer> commandNameVersionMap, String commandType, String serviceId, String serviceName,
+      String serviceTemplateId, String serviceTemplateName, String hostName, String publicDns, String serviceInstanceId,
+      String workflowExecutionId, String workflowId, String workflowExecutionName, WorkflowType workflowType,
+      String stateExecutionInstanceId, String stateExecutionInstanceName, Long version, CommandUnitType commandUnitType,
+      boolean logPurged, String artifactStreamId, String artifactStreamName, boolean isPipeline, String artifactId,
+      String artifactName, ExecutionStatus status) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.type = type;
     this.applicationName = applicationName;
     this.environmentId = environmentId;

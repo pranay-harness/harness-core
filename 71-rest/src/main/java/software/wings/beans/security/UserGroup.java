@@ -77,10 +77,10 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
   @Builder
   public UserGroup(String name, String description, String accountId, List<String> memberIds, List<User> members,
       Set<AppPermission> appPermissions, AccountPermissions accountPermissions, String uuid, String appId,
-      EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords,
-      String entityYamlPath, boolean isSsoLinked, SSOType linkedSsoType, String linkedSsoId,
-      String linkedSsoDisplayName, String ssoGroupId, String ssoGroupName, NotificationSettings notificationSettings) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+      EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
+      boolean isSsoLinked, SSOType linkedSsoType, String linkedSsoId, String linkedSsoDisplayName, String ssoGroupId,
+      String ssoGroupName, NotificationSettings notificationSettings) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
     this.accountId = accountId;
@@ -105,7 +105,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
         .createdAt(0)
         .lastUpdatedBy(null)
         .lastUpdatedAt(0)
-        .keywords(getKeywords())
+        // @@@ .keywords(getKeywords())
         .entityYamlPath(getEntityYamlPath())
         .name(newName)
         .description(newDescription)

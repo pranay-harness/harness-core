@@ -15,7 +15,6 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.sm.StateType;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -43,10 +42,10 @@ public class TimeSeriesMLScores extends Base {
 
   @Builder
   public TimeSeriesMLScores(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
-      String workflowId, String workflowExecutionId, String stateExecutionId, int analysisMinute,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, StateType stateType, String workflowId,
+      String workflowExecutionId, String stateExecutionId, int analysisMinute,
       Map<String, TimeSeriesMLTxnScores> scoresMap) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateType = stateType;
     this.workflowId = workflowId;
     this.workflowExecutionId = workflowExecutionId;

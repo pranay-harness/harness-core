@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import com.google.common.base.MoreObjects;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,6 +16,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.yaml.BaseEntityYaml;
@@ -50,6 +52,8 @@ public class Application extends Base {
   @Transient private List<WorkflowExecution> recentExecutions;
   @Transient private List<Notification> notifications;
   @Transient private long nextDeploymentOn;
+  @SchemaIgnore @Indexed @Getter @Setter private List<String> keywords;
+
   @Getter @Setter private transient YamlGitConfig yamlGitConfig;
 
   private transient Map<String, String> defaults = new HashMap<>();

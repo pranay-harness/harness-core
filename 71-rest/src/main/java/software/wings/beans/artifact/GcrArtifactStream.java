@@ -14,7 +14,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author rktummala on 8/4/17.
@@ -36,11 +35,10 @@ public class GcrArtifactStream extends ArtifactStream {
 
   @Builder
   public GcrArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String sourceName,
-      String settingId, String name, boolean autoPopulate, String serviceId, String registryHostName,
-      String dockerImageName) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, GCR.name(),
-        sourceName, settingId, name, autoPopulate, serviceId, true);
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
+      String name, boolean autoPopulate, String serviceId, String registryHostName, String dockerImageName) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, GCR.name(), sourceName,
+        settingId, name, autoPopulate, serviceId, true);
     this.registryHostName = registryHostName;
     this.dockerImageName = dockerImageName;
   }

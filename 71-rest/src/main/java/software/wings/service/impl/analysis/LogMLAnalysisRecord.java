@@ -80,17 +80,16 @@ public class LogMLAnalysisRecord extends Base {
 
   @Builder
   private LogMLAnalysisRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath,
-      String stateExecutionId, StateType stateType, int logCollectionMinute, boolean isBaseLineCreated,
-      String baseLineExecutionId, String query, String analysisSummaryMessage, double score,
-      List<List<SplunkAnalysisCluster>> unknown_events, Map<String, List<SplunkAnalysisCluster>> test_events,
-      Map<String, List<SplunkAnalysisCluster>> control_events,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String stateExecutionId,
+      StateType stateType, int logCollectionMinute, boolean isBaseLineCreated, String baseLineExecutionId, String query,
+      String analysisSummaryMessage, double score, List<List<SplunkAnalysisCluster>> unknown_events,
+      Map<String, List<SplunkAnalysisCluster>> test_events, Map<String, List<SplunkAnalysisCluster>> control_events,
       Map<String, Map<String, SplunkAnalysisCluster>> control_clusters,
       Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters,
       Map<String, Map<String, SplunkAnalysisCluster>> test_clusters,
       Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters, LogMLClusterScores cluster_scores,
       byte[] analysisDetailsCompressedJson) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateExecutionId = stateExecutionId;
     this.stateType = stateType;
     this.logCollectionMinute = logCollectionMinute;

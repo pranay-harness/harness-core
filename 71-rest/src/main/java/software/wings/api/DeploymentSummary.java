@@ -49,7 +49,7 @@ public class DeploymentSummary extends Base {
       String deployedByName, long deployedAt, DeploymentInfo deploymentInfo, PcfDeploymentKey pcfDeploymentKey,
       AwsAmiDeploymentKey awsAmiDeploymentKey, AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey,
       ContainerDeploymentKey containerDeploymentKey) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, null, entityYamlPath);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.accountId = accountId;
     this.infraMappingId = infraMappingId;
     this.workflowId = workflowId;

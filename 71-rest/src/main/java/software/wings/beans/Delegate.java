@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,14 +10,12 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.List;
 
-/**
- * Created by peeyushaggarwal on 11/28/16.
- */
 @Entity(value = "delegates", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
@@ -24,10 +23,11 @@ import java.util.List;
 @Indexes({ @Index(fields = { @Field("accountId") }, options = @IndexOptions(name = "delegateAccountIdIdx")) })
 public class Delegate extends Base {
   public static final String ACCOUNT_ID_KEY = "accountId";
-  public static final String HOST_NAME_KEY = "hostName";
-  public static final String VERSION_KEY = "version";
-  public static final String DELEGATE_TYPE_KEY = "delegateType";
   public static final String DELEGATE_GROUP_NAME_KEY = "delegateGroupName";
+  public static final String DELEGATE_TYPE_KEY = "delegateType";
+  public static final String HOST_NAME_KEY = "hostName";
+  public static final String KEYWORDS_KEY = "keywords";
+  public static final String VERSION_KEY = "version";
 
   // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
   public static final String SEQUENCE_NUM_KEY = "sequenceNum";
@@ -59,6 +59,8 @@ public class Delegate extends Base {
   private String profileResult;
   private boolean profileError;
   private long profileExecutedAt;
+
+  @SchemaIgnore @Indexed private List<String> keywords;
 
   public enum Status { ENABLED, DISABLED, DELETED }
 

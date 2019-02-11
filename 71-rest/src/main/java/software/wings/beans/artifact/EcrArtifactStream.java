@@ -14,7 +14,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 @JsonTypeName("ECR")
 @Data
@@ -30,11 +29,10 @@ public class EcrArtifactStream extends ArtifactStream {
 
   @Builder
   public EcrArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String sourceName,
-      String settingId, String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String region,
-      String imageName) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, ECR.name(),
-        sourceName, settingId, name, autoPopulate, serviceId, metadataOnly);
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
+      String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String region, String imageName) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, ECR.name(), sourceName,
+        settingId, name, autoPopulate, serviceId, metadataOnly);
     this.region = region;
     this.imageName = imageName;
   }

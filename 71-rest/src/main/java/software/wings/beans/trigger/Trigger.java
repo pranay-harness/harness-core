@@ -52,11 +52,11 @@ public class Trigger extends Base {
 
   @Builder
   public Trigger(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name, String description,
-      TriggerCondition condition, String pipelineId, String pipelineName, String workflowId, String workflowName,
+      long lastUpdatedAt, String entityYamlPath, String name, String description, TriggerCondition condition,
+      String pipelineId, String pipelineName, String workflowId, String workflowName,
       List<ArtifactSelection> artifactSelections, String webHookToken, WorkflowType workflowType,
       Map<String, String> workflowVariables, List<ServiceInfraWorkflow> serviceInfraWorkflows) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
     this.condition = condition;
