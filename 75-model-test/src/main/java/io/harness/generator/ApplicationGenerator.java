@@ -24,14 +24,14 @@ public class ApplicationGenerator {
   @Inject AppService applicationService;
   @Inject WingsPersistence wingsPersistence;
 
-  public enum Applications {
-    GENERIC_TEST,
-  }
+  public enum Applications { GENERIC_TEST, FUNCTIONAL_TEST }
 
   public Application ensurePredefined(Randomizer.Seed seed, Owners owners, Applications predefined) {
     switch (predefined) {
       case GENERIC_TEST:
         return ensureGenericTest(seed, owners);
+      case FUNCTIONAL_TEST:
+        return ensureFunctionalTest(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -46,6 +46,15 @@ public class ApplicationGenerator {
     }
     return ensureApplication(
         seed, owners, anApplication().withAccountId(account.getUuid()).withName("Test Application").build());
+  }
+
+  private Application ensureFunctionalTest(Randomizer.Seed seed, Owners owners) {
+    Account account = owners.obtainAccount();
+    if (account == null) {
+      account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    }
+    return ensureApplication(
+        seed, owners, anApplication().withAccountId(account.getUuid()).withName("Functional Test Application").build());
   }
 
   public Application ensureRandom(Randomizer.Seed seed, Owners owners) {

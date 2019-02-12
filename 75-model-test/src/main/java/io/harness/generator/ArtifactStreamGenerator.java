@@ -34,12 +34,14 @@ public class ArtifactStreamGenerator {
 
   @Inject WingsPersistence wingsPersistence;
 
-  public enum ArtifactStreams { HARNESS_SAMPLE_ECHO_WAR }
+  public enum ArtifactStreams { HARNESS_SAMPLE_ECHO_WAR, ARTIFACTORY_ECHO_WAR }
 
   public ArtifactStream ensurePredefined(Randomizer.Seed seed, Owners owners, ArtifactStreams predefined) {
     switch (predefined) {
       case HARNESS_SAMPLE_ECHO_WAR:
         return ensureHarnessSampleEchoWar(seed, owners, null);
+      case ARTIFACTORY_ECHO_WAR:
+        return ensureHarnessArtifactoryEchoWar(seed, owners, null);
       default:
         unhandled(predefined);
     }
@@ -67,6 +69,28 @@ public class ArtifactStreamGenerator {
             .artifactPaths(asList("echo/target/echo.war"))
             .settingId(settingAttribute.getUuid())
             .build());
+  }
+
+  public ArtifactStream ensureHarnessArtifactoryEchoWar(Randomizer.Seed seed, Owners owners, String serviceId) {
+    if (serviceId == null) {
+      Service service = owners.obtainService();
+      serviceId = service.getUuid();
+    }
+    Application application = owners.obtainApplication();
+
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_ARTIFACTORY_CONNECTOR);
+
+    ArtifactStream artifactStream = ArtifactoryArtifactStream.builder()
+                                        .appId(application.getUuid())
+                                        .serviceId(serviceId)
+                                        .name("artifactory-echo-war")
+                                        .jobname("functional-test")
+                                        .autoPopulate(true)
+                                        .artifactPattern("/io/harness/e2e/echo/*/*.war")
+                                        .settingId(settingAttribute.getUuid())
+                                        .build();
+    return ensureArtifactStream(seed, artifactStream);
   }
 
   public ArtifactStream ensureRandom(Randomizer.Seed seed, Owners owners) {
@@ -225,14 +249,8 @@ public class ArtifactStreamGenerator {
           throw new UnsupportedOperationException();
         }
 
-        if (artifactoryArtifactStream.getArtifactPaths() != null) {
-          artifactoryArtifactStreamBuilder.artifactPaths(artifactoryArtifactStream.getArtifactPaths());
-        }
-
-        if (artifactStream.getSourceName() != null) {
-          artifactoryArtifactStreamBuilder.sourceName(artifactStream.getSourceName());
-        } else {
-          throw new UnsupportedOperationException();
+        if (artifactoryArtifactStream.getArtifactPattern() != null) {
+          artifactoryArtifactStreamBuilder.artifactPattern(artifactoryArtifactStream.getArtifactPattern());
         }
 
         if (artifactStream.getSettingId() != null) {
@@ -240,7 +258,7 @@ public class ArtifactStreamGenerator {
         } else {
           throw new UnsupportedOperationException();
         }
-
+        artifactoryArtifactStreamBuilder.autoPopulate(artifactoryArtifactStream.isAutoPopulate());
         artifactoryArtifactStreamBuilder.metadataOnly(artifactStream.isMetadataOnly());
 
         newArtifactStream = artifactoryArtifactStreamBuilder.build();
