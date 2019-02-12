@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
@@ -115,17 +116,29 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
   @Override
   public void collectNewArtifactsAsync(String appId, ArtifactStream artifactStream, String permitId) {
+    logger.info("Collecting build details for artifact stream id {} type {} and source name {} ",
+        artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
     String accountId;
     BuildSourceRequest buildSourceRequest;
+
+    String waitId = generateUuid();
+    DelegateTask.Builder delegateTaskBuilder =
+        aDelegateTask().withTaskType(TaskType.BUILD_SOURCE_TASK).withAppId(GLOBAL_APP_ID).withWaitId(waitId);
+
     if (CUSTOM.name().equals(artifactStreamType)) {
+      // Defaulting to the 60 secs
       ArtifactStreamAttributes artifactStreamAttributes =
           artifactCollectionUtil.renderCustomArtifactScriptString((CustomArtifactStream) artifactStream);
+
+      long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
+          ? Long.parseLong(CustomArtifactStream.DEFAULT_SCRIPT_TIME_OUT)
+          : Long.parseLong(artifactStreamAttributes.getCustomScriptTimeout());
+
       accountId = artifactStreamAttributes.getAccountId();
       BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
-      logger.debug("Collecting build details for artifact stream id {} type {} and source name {} ",
-          artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
 
       buildSourceRequest = BuildSourceRequest.builder()
                                .accountId(artifactStreamAttributes.getAccountId())
@@ -135,6 +148,19 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
                                .buildSourceRequestType(requestType)
                                .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
                                .build();
+
+      List<String> tags = ((CustomArtifactStream) artifactStream).getTags();
+      if (isNotEmpty(tags)) {
+        // To remove if any empty tags in case saved for custom artifact stream
+        tags = tags.stream().filter(s -> isNotEmpty(s)).distinct().collect(Collectors.toList());
+        delegateTaskBuilder.withTags(tags);
+      }
+
+      delegateTaskBuilder.withAccountId(accountId);
+      delegateTaskBuilder.withTags(tags);
+      delegateTaskBuilder.withTimeout(timeout);
+      delegateTaskBuilder.withParameters(new Object[] {buildSourceRequest});
+
     } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       if (settingAttribute == null) {
@@ -156,8 +182,6 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
 
       BuildSourceRequestType requestType = getRequestType(artifactStream, service.getArtifactType());
-      logger.debug("Collecting build details for artifact stream id {} type {} and source name {} ",
-          artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
 
       buildSourceRequest = BuildSourceRequest.builder()
                                .accountId(settingAttribute.getAccountId())
@@ -169,29 +193,16 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
                                .buildSourceRequestType(requestType)
                                .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
                                .build();
-    }
 
-    String waitId = generateUuid();
-
-    DelegateTask.Builder delegateTaskBuilder = aDelegateTask()
-                                                   .withTaskType(TaskType.BUILD_SOURCE_TASK)
-                                                   .withAccountId(accountId)
-                                                   .withAppId(GLOBAL_APP_ID)
-                                                   .withWaitId(waitId)
-                                                   .withParameters(new Object[] {buildSourceRequest})
-                                                   .withTimeout(TimeUnit.MINUTES.toMillis(1));
-
-    if (CUSTOM.name().equals(artifactStreamType)) {
-      List<String> tags = ((CustomArtifactStream) artifactStream).getTags();
-      if (isNotEmpty(tags)) {
-        // To remove if any empty tags in case saved for custom artifact stream
-        tags = tags.stream().filter(s -> isNotEmpty(s)).distinct().collect(Collectors.toList());
-        delegateTaskBuilder.withTags(tags);
-      }
+      delegateTaskBuilder.withAccountId(accountId);
+      delegateTaskBuilder.withParameters(new Object[] {buildSourceRequest});
+      delegateTaskBuilder.withTimeout(TimeUnit.MINUTES.toMillis(1));
     }
 
     waitNotifyEngine.waitForAll(new BuildSourceCallback(accountId, appId, artifactStream.getUuid(), permitId), waitId);
-    delegateService.queueTask(delegateTaskBuilder.build());
+    logger.info("Queuing delegate task for artifact streamId {} with waitId {}", artifactStream.getUuid(), waitId);
+    final String taskId = delegateService.queueTask(delegateTaskBuilder.build());
+    logger.info("Queued delegate taskId {}", taskId);
   }
 
   private int getLimit(String artifactStreamType, BuildSourceRequestType requestType) {

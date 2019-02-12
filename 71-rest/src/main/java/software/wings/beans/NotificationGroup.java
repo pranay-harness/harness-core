@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.notifications.NotificationReceiverInfo;
 import lombok.Builder;
@@ -24,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
@@ -36,12 +36,35 @@ import javax.validation.constraints.NotNull;
 @Indexes(
     @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 @Deprecated
 public class NotificationGroup extends Base implements NotificationReceiverInfo {
   public static final String NAME_KEY = "name";
 
   @NotEmpty private String accountId;
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    NotificationGroup that = (NotificationGroup) o;
+    return editable == that.editable && defaultNotificationGroupForAccount == that.defaultNotificationGroupForAccount
+        && Objects.equals(accountId, that.accountId) && Objects.equals(name, that.name)
+        && Objects.equals(roles, that.roles) && Objects.equals(addressesByChannelType, that.addressesByChannelType);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        super.hashCode(), accountId, name, editable, roles, defaultNotificationGroupForAccount, addressesByChannelType);
+  }
+
   @NotNull private String name;
   private boolean editable = true;
 
