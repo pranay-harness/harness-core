@@ -4,6 +4,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.Cyan;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogColor.Yellow;
@@ -35,6 +36,7 @@ import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import lombok.NoArgsConstructor;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -56,9 +58,11 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -110,13 +114,13 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
+    List<K8sPod> existingPodList = getPods();
+
     success = k8sTaskHelper.applyManifests(client, resources, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply));
     if (!success) {
       return getFailureResponse();
     }
-
-    List<K8sPod> podList = Collections.EMPTY_LIST;
 
     if (managedWorkload == null) {
       k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState)
@@ -137,9 +141,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
             k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
         return getFailureResponse();
       }
-
-      podList =
-          k8sTaskHelper.getPodDetails(kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName);
     }
 
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WrapUp));
@@ -152,13 +153,35 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    K8sRollingDeployResponse rollingSetupResponse =
-        K8sRollingDeployResponse.builder().releaseNumber(release.getNumber()).k8sPodList(podList).build();
+    K8sRollingDeployResponse rollingSetupResponse = K8sRollingDeployResponse.builder()
+                                                        .releaseNumber(release.getNumber())
+                                                        .k8sPodList(getNewPods(existingPodList))
+                                                        .build();
 
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
         .k8sTaskResponse(rollingSetupResponse)
         .build();
+  }
+
+  private List<K8sPod> getPods() {
+    if (managedWorkload != null) {
+      return k8sTaskHelper.getPodDetails(kubernetesConfig,
+          isNotBlank(managedWorkload.getResourceId().getNamespace()) ? managedWorkload.getResourceId().getNamespace()
+                                                                     : kubernetesConfig.getNamespace(),
+          releaseName);
+    }
+    return new ArrayList<>();
+  }
+
+  private List<K8sPod> getNewPods(List<K8sPod> existingPods) {
+    List<K8sPod> newPods = getPods();
+    if (CollectionUtils.isEmpty(existingPods)) {
+      return newPods;
+    } else {
+      Set<String> existingPodNames = existingPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
+      return newPods.stream().filter(pod -> !existingPodNames.contains(pod.getName())).collect(Collectors.toList());
+    }
   }
 
   private K8sTaskExecutionResponse getFailureResponse() {
