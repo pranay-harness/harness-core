@@ -264,6 +264,9 @@ public interface Constants {
   String K8S_CANARY_DEPLOY = "Canary Deployment";
   String K8S_STAGE_DEPLOY = "Stage Deployment";
 
+  String K8S_PRIMARY_PHASE_NAME = "Primary";
+  String K8S_CANARY_PHASE_NAME = "Canary";
+
   /**
    * The constant KUBERNETES_SERVICE_SETUP.
    */
