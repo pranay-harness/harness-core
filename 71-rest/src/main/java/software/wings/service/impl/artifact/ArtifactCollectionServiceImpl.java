@@ -111,6 +111,10 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
         logger.info("Artifact Stream {} does not exist. Returning", artifactStreamId);
         return newArtifacts;
       }
+
+      logger.info("Collecting build details for artifact stream id {} type {} and source name {} ",
+          artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+
       String artifactStreamType = artifactStream.getArtifactStreamType();
       if (metadataOnlyStreams.contains(artifactStreamType)) {
         collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);

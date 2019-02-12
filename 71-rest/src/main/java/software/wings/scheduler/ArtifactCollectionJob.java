@@ -32,7 +32,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PermitService;
 import software.wings.service.intfc.TriggerService;
-import software.wings.utils.Misc;
 
 import java.time.Duration;
 import java.util.Date;
@@ -87,7 +86,7 @@ public class ArtifactCollectionJob implements Job {
                                         .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                                                           .withIntervalInSeconds(POLL_INTERVAL)
                                                           .repeatForever()
-                                                          .withMisfireHandlingInstructionNowWithExistingCount());
+                                                          .withMisfireHandlingInstructionNextWithExistingCount());
     if (triggerStartTime != null) {
       triggerBuilder.startAt(triggerStartTime);
     }
@@ -100,12 +99,20 @@ public class ArtifactCollectionJob implements Job {
     String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString(ARTIFACT_STREAM_ID_KEY);
     String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
     String accountId = jobExecutionContext.getMergedJobDataMap().getString(ACCOUNT_ID_KEY);
+
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     if (artifactStream == null) {
       jobScheduler.deleteJob(artifactStreamId, GROUP);
       return;
     }
 
+    logger.info("Received the artifact collection for ArtifactStreamId {}. Running asynchronously", artifactStreamId);
+
+    artifactCollectionExecutor.submit(() -> executeInternal(appId, artifactStream, accountId));
+  }
+
+  private void executeInternal(String appId, ArtifactStream artifactStream, String accountId) {
+    String artifactStreamId = artifactStream.getUuid();
     if (artifactStream.getFailedCronAttempts() > 100) {
       logger.warn(
           "ASYNC_ARTIFACT_CRON: Artifact collection disabled for artifactstream:[id:{}, type:{}] due to too many failures [{}]",
@@ -141,10 +148,17 @@ public class ArtifactCollectionJob implements Job {
         ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
       } catch (Exception e) {
         logger.warn(
-            "Failed to collect artifacts for appId {}, artifact stream {}", appId, artifactStreamId, e.getMessage());
+            "Failed to collect artifacts for appId {}, artifactStream {}", appId, artifactStreamId, e.getMessage());
       }
     } else {
-      artifactCollectionExecutor.submit(() -> executeJobAsync(appId, artifactStreamId));
+      List<Artifact> artifacts;
+      artifacts = artifactCollectionService.collectNewArtifacts(appId, artifactStreamId);
+      if (isNotEmpty(artifacts)) {
+        logger.info("[{}] new artifacts collected", artifacts.size());
+        artifacts.forEach(artifact -> logger.info(artifact.toString()));
+        logger.info("Calling trigger service to check if any triggers set for the collected artifacts");
+        triggerService.triggerExecutionPostArtifactCollectionAsync(appId, artifactStreamId, artifacts);
+      }
     }
 
     // Old cron jobs doesn't have accountId. Will need to recreate with accountId as part of the job details
@@ -155,26 +169,6 @@ public class ArtifactCollectionJob implements Job {
       accountId = appService.getAccountIdByAppId(appId);
       jobScheduler.deleteJob(artifactStreamId, GROUP);
       addDefaultJob(jobScheduler, accountId, appId, artifactStreamId);
-    }
-  }
-
-  private void executeJobAsync(String appId, String artifactStreamId) {
-    List<Artifact> artifacts = null;
-    try {
-      artifacts = artifactCollectionService.collectNewArtifacts(appId, artifactStreamId);
-    } catch (WingsException exception) {
-      exception.addContext(Application.class, appId);
-      exception.addContext(ArtifactStream.class, artifactStreamId);
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
-    } catch (Exception e) {
-      logger.warn("Failed to collect artifacts for appId {}, artifact stream {}. Reason {}", appId, artifactStreamId,
-          Misc.getMessage(e));
-    }
-    if (isNotEmpty(artifacts)) {
-      logger.info("[{}] new artifacts collected", artifacts.size());
-      artifacts.forEach(artifact -> logger.info(artifact.toString()));
-      logger.info("Calling trigger service to check if any triggers set for the collected artifacts");
-      triggerService.triggerExecutionPostArtifactCollectionAsync(appId, artifactStreamId, artifacts);
     }
   }
 }
