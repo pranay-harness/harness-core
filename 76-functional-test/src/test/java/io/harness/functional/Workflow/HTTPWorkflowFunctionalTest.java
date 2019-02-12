@@ -14,17 +14,17 @@ import static software.wings.sm.StateType.HTTP;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.RestUtils.WorkflowRestUtil;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.functional.RestUtils.WorkflowRestUtil;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
-import io.harness.threading.Morpheus;
+import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,13 +41,14 @@ import software.wings.common.Constants;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.states.HttpState;
 
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private WorkflowRestUtil workflowRestUtil;
 
   Application application;
 
@@ -81,7 +82,7 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     // Test  creating a workflow
     Workflow savedWorkflow =
-        WorkflowRestUtil.createWorkflow(application.getAccountId(), application.getUuid(), workflow);
+        workflowRestUtil.createWorkflow(application.getAccountId(), application.getUuid(), workflow);
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
@@ -95,13 +96,16 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
     executionArgs.setOrchestrationId(savedWorkflow.getUuid());
 
     WorkflowExecution workflowExecution =
-        WorkflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
+        workflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
-    Morpheus.quietSleep(Duration.ofSeconds(30));
-    assertThat(
-        workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid()).getStatus())
-        .isEqualTo(ExecutionStatus.SUCCESS);
+    Awaitility.await()
+        .atMost(120, TimeUnit.SECONDS)
+        .pollInterval(5, TimeUnit.SECONDS)
+        .until(()
+                   -> workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid())
+                          .getStatus()
+                          .equals(ExecutionStatus.SUCCESS));
   }
 
   private GraphNode getHTTPNode() {

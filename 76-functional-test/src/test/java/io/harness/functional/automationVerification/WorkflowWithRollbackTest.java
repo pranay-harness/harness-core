@@ -13,11 +13,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.RestUtils.ArtifactRestUtil;
+import io.harness.RestUtils.WorkflowRestUtil;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
-import io.harness.functional.RestUtils.ArtifactRestUtil;
-import io.harness.functional.RestUtils.WorkflowRestUtil;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -67,6 +67,8 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
   @Inject private ArtifactStreamGenerator artifactStreamGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private ArtifactRestUtil artifactRestUtil;
+  @Inject private WorkflowRestUtil workflowRestUtil;
 
   private Application application;
   private Service service;
@@ -111,7 +113,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
     WorkflowPhase updatedPhase2 = addVerificationPhase2(savedWorkflow);
     assertThat(updatedPhase2).isNotNull();
 
-    Artifact artifact = ArtifactRestUtil.getArtifact(application.getUuid(), environment.getUuid(), service.getUuid());
+    Artifact artifact = artifactRestUtil.getArtifact(application.getUuid(), environment.getUuid(), service.getUuid());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
@@ -121,7 +123,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
     executionArgs.setArtifacts(Collections.singletonList(artifact));
 
     WorkflowExecution workflowExecution =
-        WorkflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
+        workflowRestUtil.runWorkflow(application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
 
     Awaitility.await()
@@ -144,7 +146,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
     assertThat(completedWorkflowExecution.getExecutionNode().getNext().getStatus()).isEqualTo("SUCCESS");
     assertThat(completedWorkflowExecution.getExecutionNode().getNext().getNext().getStatus()).isEqualTo("FAILED");
 
-    assertThat(WorkflowRestUtil.deleteWorkflow(savedWorkflow.getUuid(), application.getUuid())).isNull();
+    assertThat(workflowRestUtil.deleteWorkflow(savedWorkflow.getUuid(), application.getUuid())).isNull();
   }
 
   private WorkflowPhase addVerificationPhase2(Workflow savedWorkflow) {
@@ -159,7 +161,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
             break;
           }
         }
-        return WorkflowRestUtil.saveWorkflowPhase(
+        return workflowRestUtil.saveWorkflowPhase(
             application.getUuid(), savedWorkflow.getUuid(), workflowPhase.getUuid(), workflowPhase);
       }
     }
@@ -184,7 +186,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
                 aCanaryOrchestrationWorkflow().withWorkflowPhases(ImmutableList.of(phase1, phase2)).build())
             .build();
 
-    return WorkflowRestUtil.createWorkflow(AccountGenerator.ACCOUNT_ID, application.getUuid(), variableTestWorkflow);
+    return workflowRestUtil.createWorkflow(AccountGenerator.ACCOUNT_ID, application.getUuid(), variableTestWorkflow);
   }
 
   private GraphNode getHTTPNode() {
