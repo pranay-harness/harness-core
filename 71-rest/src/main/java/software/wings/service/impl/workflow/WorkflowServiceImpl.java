@@ -1889,7 +1889,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
       if (!variableNames.add(variable.getName())) {
-        throw new InvalidRequestException("Duplciate variable names are not allowed.", USER);
+        throw new InvalidRequestException("Duplicate variable names are not allowed.", USER);
       }
     }
   }
