@@ -21,7 +21,7 @@ public class KubernetesResourceId {
   private String namespace;
   private boolean versioned;
 
-  public static KubernetesResourceId createKubernetesResourceIdFromKindName(String kindName) {
+  public static KubernetesResourceId createKubernetesResourceIdFromNamespaceKindName(String kindName) {
     String splitArray[] = kindName.trim().split("/");
     if (splitArray.length == 3) {
       return KubernetesResourceId.builder().namespace(splitArray[0]).kind(splitArray[1]).name(splitArray[2]).build();
@@ -38,7 +38,7 @@ public class KubernetesResourceId {
     List<KubernetesResourceId> result = new ArrayList<>();
 
     for (String resource : resourceArray) {
-      result.add(createKubernetesResourceIdFromKindName(resource));
+      result.add(createKubernetesResourceIdFromNamespaceKindName(resource));
     }
 
     return result;
@@ -50,7 +50,7 @@ public class KubernetesResourceId {
 
   public String namespaceKindNameRef() {
     if (!isBlank(this.getNamespace())) {
-      return this.getNamespace() + this.kindNameRef();
+      return this.getNamespace() + "/" + this.kindNameRef();
     }
     return this.kindNameRef();
   }

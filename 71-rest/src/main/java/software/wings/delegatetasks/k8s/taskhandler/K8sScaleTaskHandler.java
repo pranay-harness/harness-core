@@ -1,9 +1,13 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdFromKindName;
+import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdFromNamespaceKindName;
+import static software.wings.beans.Log.LogColor.Cyan;
+import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Scale;
@@ -128,9 +132,10 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
         return true;
       }
 
-      resourceIdToScale = createKubernetesResourceIdFromKindName(k8sScaleTaskParameters.getWorkload());
+      resourceIdToScale = createKubernetesResourceIdFromNamespaceKindName(k8sScaleTaskParameters.getWorkload());
 
-      executionLogCallback.saveExecutionLog("\nWorkload to scale is: " + resourceIdToScale.kindNameRef());
+      executionLogCallback.saveExecutionLog(
+          color("\nWorkload to scale is: ", White, Bold) + color(resourceIdToScale.namespaceKindNameRef(), Cyan, Bold));
 
       executionLogCallback.saveExecutionLog("\nQuerying current replicas");
       Integer currentReplicas = k8sTaskHelper.getCurrentReplicas(client, resourceIdToScale, k8sDelegateTaskParams);

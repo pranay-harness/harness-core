@@ -5,6 +5,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -128,8 +129,10 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithTrack(
-        kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, "canary");
+    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithTrack(kubernetesConfig,
+        isNotBlank(canaryWorkload.getResourceId().getNamespace()) ? canaryWorkload.getResourceId().getNamespace()
+                                                                  : kubernetesConfig.getNamespace(),
+        releaseName, "canary");
 
     wrapUp(k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, WrapUp));
 

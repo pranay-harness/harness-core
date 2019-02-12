@@ -2,8 +2,12 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdsFromKindName;
+import static software.wings.beans.Log.LogColor.Gray;
+import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.K8sDummyCommandUnit.Delete;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
@@ -84,8 +88,8 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
 
       resourceIdsToDelete = createKubernetesResourceIdsFromKindName(k8sDeleteTaskParameters.getResources());
 
-      executionLogCallback.saveExecutionLog(
-          "\nWorkloads to delete are: " + getResourcesInStringFormat(resourceIdsToDelete));
+      executionLogCallback.saveExecutionLog(color("\nResources to delete are: ", White, Bold)
+          + color(getResourcesInStringFormat(resourceIdsToDelete), Gray));
 
       executionLogCallback.saveExecutionLog("Done.", INFO, SUCCESS);
 

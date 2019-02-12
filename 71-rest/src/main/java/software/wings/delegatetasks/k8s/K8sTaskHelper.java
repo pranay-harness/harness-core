@@ -206,9 +206,11 @@ public class K8sTaskHelper {
       int targetReplicaCount, ExecutionLogCallback executionLogCallback) throws Exception {
     executionLogCallback.saveExecutionLog("\nScaling " + resourceId.kindNameRef());
 
-    ProcessResult result =
-        executeCommand(client.scale().resource(resourceId.kindNameRef()).replicas(targetReplicaCount),
-            k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
+    ProcessResult result = executeCommand(client.scale()
+                                              .resource(resourceId.kindNameRef())
+                                              .replicas(targetReplicaCount)
+                                              .namespace(resourceId.getNamespace()),
+        k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
     if (result.getExitValue() == 0) {
       executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return true;
@@ -453,8 +455,7 @@ public class K8sTaskHelper {
 
   public static String getResourcesInStringFormat(List<KubernetesResourceId> resourceIds) {
     StringBuilder sb = new StringBuilder(1024);
-    sb.append('\n');
-    resourceIds.forEach(resourceId -> { sb.append(resourceId.namespaceKindNameRef()).append('\n'); });
+    resourceIds.forEach(resourceId -> { sb.append("\n- ").append(resourceId.namespaceKindNameRef()); });
     return sb.toString();
   }
 
