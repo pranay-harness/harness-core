@@ -110,10 +110,12 @@ import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
+import software.wings.utils.AccountPermissionUtils;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
@@ -172,6 +174,9 @@ public class AccountExportImportResource {
   private WingsMongoExportImport mongoExportImport;
   private PersistentScheduler scheduler;
   private AppService appService;
+  private UsageRestrictionsService usageRestrictionsService;
+  private AccountPermissionUtils accountPermissionUtils;
+
   private Map<String, Class<? extends Base>> genericExportableEntityTypes = new LinkedHashMap<>();
   private Gson gson = new GsonBuilder().setPrettyPrinting().create();
   private JsonParser jsonParser = new JsonParser();
@@ -218,11 +223,14 @@ public class AccountExportImportResource {
 
   @Inject
   public AccountExportImportResource(WingsMongoPersistence wingsPersistence, WingsMongoExportImport mongoExportImport,
-      AppService appService, @Named("BackgroundJobScheduler") PersistentScheduler scheduler) {
+      AppService appService, UsageRestrictionsService usageRestrictionsService,
+      AccountPermissionUtils accountPermissionUtils, @Named("BackgroundJobScheduler") PersistentScheduler scheduler) {
     this.wingsPersistence = wingsPersistence;
     this.mongoExportImport = mongoExportImport;
     this.scheduler = scheduler;
     this.appService = appService;
+    this.usageRestrictionsService = usageRestrictionsService;
+    this.accountPermissionUtils = accountPermissionUtils;
 
     findExportableEntityTypes();
   }
@@ -234,6 +242,16 @@ public class AccountExportImportResource {
   public Response exportAccountData(@QueryParam("accountId") final String accountId,
       @QueryParam("mode") @DefaultValue("ALL") ExportMode exportMode,
       @QueryParam("entityTypes") List<String> entityTypes) throws Exception {
+    // Only if the user the account administrator or in the Harness user group can perform the export operation.
+    if (!usageRestrictionsService.isAccountAdmin(accountId)) {
+      String errorMessage = "User is not account administrator and can't perform the export operation.";
+      RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
+      if (restResponse != null) {
+        log.error(errorMessage);
+        return Response.status(Response.Status.UNAUTHORIZED).build();
+      }
+    }
+
     if (exportMode == ExportMode.SPECIFIC && isEmpty(entityTypes)) {
       throw new IllegalArgumentException("Export type is ALL but no entity type is specified.");
     }
@@ -410,6 +428,16 @@ public class AccountExportImportResource {
       @QueryParam("mode") @DefaultValue("UPSERT") ImportMode importMode,
       @QueryParam("disableSchemaCheck") boolean disableSchemaCheck,
       @FormDataParam("file") final InputStream uploadInputStream) throws Exception {
+    // Only if the user the account administrator or in the Harness user group can perform the export operation.
+    if (!usageRestrictionsService.isAccountAdmin(accountId)) {
+      String errorMessage = "User is not account administrator and can't perform the import operation.";
+      RestResponse<ImportStatusReport> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
+      if (restResponse != null) {
+        log.error(errorMessage);
+        return restResponse;
+      }
+    }
+
     log.info("Started importing data for account '{}'.", accountId);
     Map<String, String> zipEntryDataMap = readZipEntries(uploadInputStream);
     log.info("Finished reading uploaded input stream in zip format.");
