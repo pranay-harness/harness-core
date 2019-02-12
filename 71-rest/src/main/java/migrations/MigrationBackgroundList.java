@@ -7,6 +7,7 @@ import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SetLastLoginTimeToAllUsers;
 import migrations.all.TerraformIsTemplatizedMigration;
+import migrations.all.VaultTokenMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(9, BaseMigration.class))
         .add(Pair.of(11, DeleteAndAddInstanceSyncJobToAllAccounts.class))
         .add(Pair.of(12, TerraformIsTemplatizedMigration.class))
+        .add(Pair.of(13, VaultTokenMigration.class))
         .build();
   }
 }

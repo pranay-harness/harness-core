@@ -36,7 +36,6 @@ import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -118,11 +117,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     return kmsConfig;
   }
 
-  private char[] decryptKey(char[] key) {
-    final EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, new String(key));
-    return decrypt(encryptedData, null, null);
-  }
-
   @Override
   public String saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig) {
     validateKms(accountId, kmsConfig);
@@ -149,7 +143,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
         wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId);
     List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
 
-    EncryptedData accessKeyData = encrypt(kmsConfig.getAccessKey().toCharArray(), accountId, null);
+    EncryptedData accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
     if (isNotBlank(kmsConfig.getUuid())) {
       EncryptedData savedAccessKey = wingsPersistence.get(
           EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getAccessKey());
@@ -164,7 +158,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     String accessKeyId = wingsPersistence.save(accessKeyData);
     kmsConfig.setAccessKey(accessKeyId);
 
-    EncryptedData secretKeyData = encrypt(kmsConfig.getSecretKey().toCharArray(), accountId, null);
+    EncryptedData secretKeyData = encryptLocal(kmsConfig.getSecretKey().toCharArray());
     if (isNotBlank(kmsConfig.getUuid())) {
       EncryptedData savedSecretKey = wingsPersistence.get(
           EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getSecretKey());
@@ -179,7 +173,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     String secretKeyId = wingsPersistence.save(secretKeyData);
     kmsConfig.setSecretKey(secretKeyId);
 
-    EncryptedData arnKeyData = encrypt(kmsConfig.getKmsArn().toCharArray(), accountId, null);
+    EncryptedData arnKeyData = encryptLocal(kmsConfig.getKmsArn().toCharArray());
     if (isNotBlank(kmsConfig.getUuid())) {
       EncryptedData savedArn = wingsPersistence.get(
           EncryptedData.class, wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid()).getKmsArn());
@@ -275,11 +269,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
         }
         EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
         Preconditions.checkNotNull(accessKeyData, "encrypted accessKey can't be null for " + kmsConfig);
-        kmsConfig.setAccessKey(new String(decrypt(accessKeyData, null, null)));
+        kmsConfig.setAccessKey(new String(decryptLocal(accessKeyData)));
 
         EncryptedData arnData = wingsPersistence.get(EncryptedData.class, kmsConfig.getKmsArn());
         Preconditions.checkNotNull(arnData, "encrypted arn can't be null for " + kmsConfig);
-        kmsConfig.setKmsArn(new String(decrypt(arnData, null, null)));
+        kmsConfig.setKmsArn(new String(decryptLocal(arnData)));
 
         if (maskSecret) {
           kmsConfig.setSecretKey(Constants.SECRET_MASK);
@@ -287,7 +281,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
         } else {
           EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
           Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + kmsConfig);
-          kmsConfig.setSecretKey(new String(decrypt(secretData, null, null)));
+          kmsConfig.setSecretKey(new String(decryptLocal(secretData)));
         }
         kmsConfig.setEncryptionType(EncryptionType.KMS);
         rv.add(kmsConfig);
@@ -385,22 +379,5 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     }
 
     return kmsConfig;
-  }
-
-  private EncryptedData encryptLocal(char[] value) {
-    final String encryptionKey = UUID.randomUUID().toString();
-    final SimpleEncryption simpleEncryption = new SimpleEncryption(encryptionKey);
-    char[] encryptChars = simpleEncryption.encryptChars(value);
-
-    return EncryptedData.builder()
-        .encryptionKey(encryptionKey)
-        .encryptedValue(encryptChars)
-        .encryptionType(EncryptionType.LOCAL)
-        .build();
-  }
-
-  private char[] decryptLocal(EncryptedData data) {
-    final SimpleEncryption simpleEncryption = new SimpleEncryption(data.getEncryptionKey());
-    return simpleEncryption.decryptChars(data.getEncryptedValue());
   }
 }

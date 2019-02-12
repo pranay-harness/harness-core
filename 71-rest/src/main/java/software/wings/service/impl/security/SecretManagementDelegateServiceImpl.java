@@ -28,7 +28,6 @@ import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.amazonaws.services.kms.model.KMSInternalException;
 import com.amazonaws.services.kms.model.KeyUnavailableException;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
@@ -113,7 +112,6 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     throw new IllegalStateException("Encryption failed. This state should never have been reached");
   }
 
-  @SuppressFBWarnings("DM_STRING_CTOR")
   @Override
   public char[] decrypt(EncryptedRecord data, KmsConfig kmsConfig) {
     if (data.getEncryptedValue() == null) {
