@@ -134,7 +134,6 @@ public class IndexManagement {
         // Temporary exclude indexes that coming from Base class. Currently we have no flexibility to enable/disable
         // such for different objects.
         .filter(entry -> !entry.getKey().startsWith("appId"))
-        .filter(entry -> !entry.getKey().startsWith("keywords"))
         .filter(entry -> !entry.getKey().startsWith(CreatedAtAccess.CREATED_AT_KEY))
         // Alert for every index that left:
         .forEach(entry -> {

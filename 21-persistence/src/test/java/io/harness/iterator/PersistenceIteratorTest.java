@@ -1,5 +1,8 @@
 package io.harness.iterator;
 
+import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
+import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
+import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.joor.Reflect.on;
 
@@ -54,13 +57,25 @@ public class PersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
+  public void testPumpWithEmptyCollection() {
+    iterator.process(PUMP);
+  }
+
+  @Test
+  public void testLoopWithEmptyCollection() {
+    final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
+    Morpheus.sleep(ofMillis(300));
+    future1.cancel(true);
+  }
+
+  @Test
   @Bypass
   public void testNextReturnsJustAdded() {
     for (int i = 0; i < 10; i++) {
       persistence.save(IterableEntity.builder().build());
     }
 
-    final Future<?> future1 = executorService.submit(() -> iterator.process());
+    final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
     //    final Future<?> future2 = executorService.submit(() -> iterator.process());
     //    final Future<?> future3 = executorService.submit(() -> iterator.process());
 

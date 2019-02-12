@@ -1,5 +1,6 @@
 package io.harness.mongo;
 
+import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMillis;
@@ -35,6 +36,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   private Class<T> clazz;
   private String fieldName;
   private Duration targetInterval;
+  private Duration maximumDaleyForCheck;
   private Duration acceptableDelay;
   private Handler<T> handler;
   private ExecutorService executorService;
@@ -47,13 +49,11 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
   @Override
   @SuppressWarnings("PMD")
-  public void process() {
+  public void process(ProcessMode mode) {
     long movingAverage = 0;
     long previous = 0;
     while (true) {
       try {
-        T entity = null;
-
         // make sure we did not hit the limit
         semaphore.acquire();
 
@@ -64,6 +64,8 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         }
 
         previous = base;
+
+        T entity = null;
         try {
           entity = next(base);
         } finally {
@@ -71,6 +73,9 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         }
 
         if (entity != null) {
+          // Make sure that if the object is updated we reset the scheduler for it
+          entity.updateNextIteration(fieldName, null);
+
           T finalEntity = entity;
           synchronized (finalEntity) {
             executorService.submit(() -> processEntity(finalEntity));
@@ -81,12 +86,20 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
           continue;
         }
 
+        if (mode == PUMP) {
+          break;
+        }
+
         final T first = persistence.createQuery(clazz).order(Sort.ascending(fieldName)).project(fieldName, true).get();
 
-        Duration sleepInterval = first != null && first.getNextIteration(fieldName) != null
-            ? ofMillis(Math.max(0, first.getNextIteration(fieldName) - currentTimeMillis()))
-            : ofSeconds(1);
+        Duration sleepInterval = maximumDaleyForCheck == null ? targetInterval : maximumDaleyForCheck;
 
+        if (first != null && first.obtainNextIteration(fieldName) != null) {
+          final Duration nextEntity = ofMillis(Math.max(0, first.obtainNextIteration(fieldName) - currentTimeMillis()));
+          if (nextEntity.compareTo(maximumDaleyForCheck) < 0) {
+            sleepInterval = nextEntity;
+          }
+        }
         Thread.sleep(sleepInterval.toMillis());
       } catch (InterruptedException exception) {
         Thread.currentThread().interrupt();
@@ -120,7 +133,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
     }
 
     long delay =
-        entity.getNextIteration(fieldName) == null ? 0 : currentTimeMillis() - entity.getNextIteration(fieldName);
+        entity.obtainNextIteration(fieldName) == null ? 0 : currentTimeMillis() - entity.obtainNextIteration(fieldName);
     if (delay < acceptableDelay.toMillis()) {
       logger.info("Working on entity {}.{} with delay {}", clazz.getCanonicalName(), entity.getUuid(), delay);
     } else {
