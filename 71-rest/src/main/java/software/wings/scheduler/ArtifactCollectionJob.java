@@ -86,7 +86,7 @@ public class ArtifactCollectionJob implements Job {
                                         .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                                                           .withIntervalInSeconds(POLL_INTERVAL)
                                                           .repeatForever()
-                                                          .withMisfireHandlingInstructionNextWithExistingCount());
+                                                          .withMisfireHandlingInstructionNowWithExistingCount());
     if (triggerStartTime != null) {
       triggerBuilder.startAt(triggerStartTime);
     }
