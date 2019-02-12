@@ -33,7 +33,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
     }
 
     if (null == userGroup.getNotificationSettings()) {
-      log.error("Notification Settings is null for User Group. No message will be sent. userGroup={} accountId={}",
+      log.info("Notification Settings is null for User Group. No message will be sent. userGroup={} accountId={}",
           userGroup.getName(), userGroup.getAccountId());
       return;
     }
