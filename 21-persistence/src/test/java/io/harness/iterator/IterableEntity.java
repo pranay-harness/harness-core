@@ -2,11 +2,11 @@ package io.harness.iterator;
 
 import io.harness.persistence.PersistentIterable;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
-@Value
+@Data
 @Builder
 @Entity(value = "!!!testIterable")
 public class IterableEntity implements PersistentIterable {
@@ -16,7 +16,12 @@ public class IterableEntity implements PersistentIterable {
   private Long nextIteration;
 
   @Override
-  public Long getNextIteration(String fieldName) {
+  public Long obtainNextIteration(String fieldName) {
     return nextIteration;
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    this.nextIteration = nextIteration;
   }
 }
