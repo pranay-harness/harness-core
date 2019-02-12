@@ -149,18 +149,25 @@ public class AccountServiceImpl implements AccountService {
     // Validate if account/company name is valid.
     validateAccount(account);
 
+    if (isEmpty(account.getUuid())) {
+      logger.info("Creating a new account '{}'.", account.getAccountName());
+      account.setUuid(UUIDGenerator.generateUuid());
+    } else {
+      logger.info("Creating a new account '{}' with specified id '{}'.", account.getAccountName(), account.getUuid());
+    }
+
     account.setAppId(GLOBAL_APP_ID);
     account.setAccountKey(generateSecretKey());
-    if (isEmpty(account.getUuid())) {
-      account.setUuid(UUIDGenerator.generateUuid());
-    }
     licenseService.addLicenseInfo(account);
 
     wingsPersistence.save(account);
 
     // When an account is just created for import, no need to create default account entities.
     // As the import process will do all these instead.
-    if (!account.isForImport()) {
+    if (account.isForImport()) {
+      logger.info("Creating the account '{}' for import only, no default account entities will be created",
+          account.getAccountName());
+    } else {
       createDefaultAccountEntities(account);
       // Schedule default account level jobs.
       AlertCheckJob.add(jobScheduler, account.getUuid());
@@ -168,6 +175,7 @@ public class AccountServiceImpl implements AccountService {
       LimitVicinityCheckerJob.add(jobScheduler, account.getUuid());
     }
 
+    logger.info("Successfully created account '{}' with id '{}'.", account.getAccountName(), account.getUuid());
     return account;
   }
 
@@ -305,7 +313,9 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public boolean delete(String accountId) {
-    if (wingsPersistence.delete(Account.class, accountId)) {
+    logger.info("Started deleting account '{}'", accountId);
+    boolean deleted = wingsPersistence.delete(Account.class, accountId);
+    if (deleted) {
       dbCache.invalidate(Account.class, accountId);
       InstanceStatsCollectorJob.delete(jobScheduler, accountId);
       AlertCheckJob.delete(jobScheduler, accountId);
@@ -317,7 +327,8 @@ public class AccountServiceImpl implements AccountService {
       //      refreshUsersForAccountDelete(accountId);
     }
 
-    return true;
+    logger.info("Successfully deleting account '{}': {}", accountId, deleted);
+    return deleted;
   }
 
   @Override

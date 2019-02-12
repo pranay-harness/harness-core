@@ -3,15 +3,12 @@ package software.wings.resources;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.eraro.ResponseMessage;
-import io.harness.exception.InvalidRequestException;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
@@ -19,16 +16,14 @@ import software.wings.beans.AccountSalesContactsInfo;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.RestResponse;
-import software.wings.beans.RestResponse.Builder;
 import software.wings.beans.Service;
-import software.wings.beans.User;
 import software.wings.licensing.LicenseService;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.HarnessUserGroupService;
+import software.wings.utils.AccountPermissionUtils;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -49,7 +44,7 @@ import javax.ws.rs.core.MediaType;
 public class AccountResource {
   @Inject private AccountService accountService;
   @Inject private LicenseService licenseService;
-  @Inject private HarnessUserGroupService harnessUserGroupService;
+  @Inject private AccountPermissionUtils accountPermissionUtils;
 
   @GET
   @Path("{accountId}/status")
@@ -65,7 +60,8 @@ public class AccountResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> startMigration(@PathParam("accountId") String accountId) {
-    RestResponse<Boolean> response = checkIfHarnessUser("User not allowed to start account migration");
+    RestResponse<Boolean> response =
+        accountPermissionUtils.checkIfHarnessUser("User not allowed to start account migration");
     if (response == null) {
       response = new RestResponse<>(accountService.startAccountMigration(accountId));
     }
@@ -77,7 +73,8 @@ public class AccountResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> completeMigration(@PathParam("accountId") String accountId, String newClusterUrl) {
-    RestResponse<Boolean> response = checkIfHarnessUser("User not allowed to complete account migration");
+    RestResponse<Boolean> response =
+        accountPermissionUtils.checkIfHarnessUser("User not allowed to complete account migration");
     if (response == null) {
       response = new RestResponse<>(accountService.completeAccountMigration(accountId, newClusterUrl));
     }
@@ -130,7 +127,8 @@ public class AccountResource {
   @ExceptionMetered
   public RestResponse<Account> updateAccountLicense(
       @PathParam("accountId") @NotEmpty String accountId, LicenseInfo licenseInfo) {
-    RestResponse<Account> response = checkIfHarnessUser("User not allowed to update account license");
+    RestResponse<Account> response =
+        accountPermissionUtils.checkIfHarnessUser("User not allowed to update account license");
     if (response == null) {
       response = new RestResponse<>(licenseService.updateAccountLicense(accountId, licenseInfo));
     }
@@ -143,7 +141,8 @@ public class AccountResource {
   @ExceptionMetered
   public RestResponse<Account> updateAccountSalesContacts(
       @PathParam("accountId") @NotEmpty String accountId, AccountSalesContactsInfo salesContactsInfo) {
-    RestResponse<Account> response = checkIfHarnessUser("User not allowed to update account sales contacts");
+    RestResponse<Account> response =
+        accountPermissionUtils.checkIfHarnessUser("User not allowed to update account sales contacts");
     if (response == null) {
       response = new RestResponse<>(
           licenseService.updateAccountSalesContacts(accountId, salesContactsInfo.getSalesContacts()));
@@ -157,7 +156,8 @@ public class AccountResource {
   @ExceptionMetered
   public RestResponse<String> generateLicense(
       @PathParam("accountId") @NotEmpty String accountId, LicenseInfo licenseInfo) {
-    RestResponse<String> response = checkIfHarnessUser("User not allowed to generate a new license");
+    RestResponse<String> response =
+        accountPermissionUtils.checkIfHarnessUser("User not allowed to generate a new license");
     if (response == null) {
       response = new RestResponse<>(licenseService.generateLicense(licenseInfo));
     }
@@ -169,7 +169,7 @@ public class AccountResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> deleteAccount(@PathParam("accountId") @NotEmpty String accountId) {
-    RestResponse<Boolean> response = checkIfHarnessUser("User not allowed to delete account");
+    RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to delete account");
     if (response == null) {
       response = new RestResponse<>(accountService.delete(accountId));
     }
@@ -181,27 +181,11 @@ public class AccountResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Account> createAccount(@NotNull Account account) {
-    RestResponse<Account> response = checkIfHarnessUser("User not allowed to create account");
+    RestResponse<Account> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to create account");
     if (response == null) {
       account.setAppId(GLOBAL_APP_ID);
       response = new RestResponse<>(accountService.save(account));
     }
     return response;
-  }
-
-  private <T> RestResponse<T> checkIfHarnessUser(String errorMessage) {
-    User existingUser = UserThreadLocal.get();
-    if (existingUser == null) {
-      throw new InvalidRequestException("Invalid User");
-    }
-
-    RestResponse<T> errorResponse = null;
-    if (!harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
-      errorResponse =
-          Builder.aRestResponse()
-              .withResponseMessages(Lists.newArrayList(ResponseMessage.builder().message(errorMessage).build()))
-              .build();
-    }
-    return errorResponse;
   }
 }

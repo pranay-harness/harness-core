@@ -117,8 +117,8 @@ public class WingsMongoExportImport {
             collection.save(importRecord, WriteConcern.ACKNOWLEDGED);
             importedRecords++;
           } else {
-            log.debug(
-                "Record {} in collection {} matched {} records using natural key query {} but matches {} record using id query.",
+            log.info(
+                "Skipped importing of record {} in collection {} because it matches {} records using natural key query {} but only matches {} records using id query.",
                 id, collectionName, recordCountFromNaturalKey, naturalKeyQuery, recordCountFromId);
           }
           break;
