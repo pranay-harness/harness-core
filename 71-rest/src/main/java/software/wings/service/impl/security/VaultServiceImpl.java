@@ -52,7 +52,6 @@ import software.wings.helpers.ext.vault.VaultSysMountsRestClient;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -74,7 +73,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Singleton
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
-  @Inject private KmsService kmsService;
   @Inject private AlertService alertService;
 
   @Override
@@ -119,8 +117,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
       Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + vaultConfig);
 
-      char[] decrypt =
-          kmsService.decrypt(encryptedData, accountId, kmsService.getKmsConfig(accountId, encryptedData.getKmsId()));
+      char[] decrypt = decryptVaultToken(encryptedData);
       vaultConfig.setAuthToken(String.valueOf(decrypt));
     }
 
@@ -136,8 +133,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
       Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + vaultConfig);
 
-      char[] decrypt =
-          kmsService.decrypt(encryptedData, accountId, kmsService.getKmsConfig(accountId, encryptedData.getKmsId()));
+      char[] decrypt = decryptVaultToken(encryptedData);
       vaultConfig.setAuthToken(String.valueOf(decrypt));
     }
 
@@ -230,8 +226,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     vaultConfig.setAccountId(accountId);
 
-    EncryptedData encryptedData =
-        kmsService.encrypt(vaultConfig.getAuthToken().toCharArray(), accountId, kmsService.getSecretConfig(accountId));
+    EncryptedData encryptedData = encryptLocal(vaultConfig.getAuthToken().toCharArray());
     if (isNotBlank(vaultConfig.getUuid())) {
       EncryptedData savedEncryptedData = wingsPersistence.get(
           EncryptedData.class, wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid()).getAuthToken());
@@ -302,8 +297,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         } else {
           EncryptedData tokenData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
           Preconditions.checkNotNull(tokenData, "token data null for " + vaultConfig);
-          char[] decryptedToken =
-              kmsService.decrypt(tokenData, accountId, kmsService.getKmsConfig(accountId, tokenData.getKmsId()));
+          char[] decryptedToken = decryptVaultToken(tokenData);
           vaultConfig.setAuthToken(String.valueOf(decryptedToken));
         }
         vaultConfig.setEncryptionType(EncryptionType.VAULT);

@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.Account;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.VaultConfig;
@@ -61,6 +62,8 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   private VaultConfig vaultConfigWithBasePath;
   private VaultConfig vaultConfigWithBasePath2;
   private VaultConfig vaultConfigWithBasePath3;
+
+  private KmsConfig kmsConfig;
 
   @Before
   public void setUp() {
@@ -110,6 +113,16 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
                                    .basePath(VAULT_BASE_PATH_3)
                                    .isDefault(true)
                                    .build();
+
+    kmsConfig = KmsConfig.builder()
+                    .accountId(accountId)
+                    .name("TestAwsKMS")
+                    .accessKey("AKIAJRYQHJZ4S6P3RPRQ")
+                    .kmsArn("arn:aws:kms:us-east-1:448640225317:key/60b9e9c5-3a1b-43fb-b345-e79ded0d94c3")
+                    .secretKey("Gw0XEQ9v6GAdnx4T0EX5HaoYFSHiqQ85h0XYow+i")
+                    .region("us-east-1")
+                    .isDefault(true)
+                    .build();
   }
 
   @Test
@@ -140,6 +153,23 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
       // 7. Delete the vault config
       deleteVaultConfig(vaultConfigId);
+    }
+  }
+
+  @Test
+  public void testCreateKmsVaultConfig_shouldSucceed() {
+    // 1. Create a new KMS config.
+    String kmsConfigId = createKmsConfig(kmsConfig);
+
+    // 2. Create a new Vault config.
+    String vaultConfigId = createVaultConfig(vaultConfig);
+    VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
+    assertNotNull(savedVaultConfig);
+
+    try {
+      testUpdateSecretText(savedVaultConfig);
+    } finally {
+      deleteKmsConfig(kmsConfigId);
     }
   }
 
@@ -522,6 +552,18 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     return vaultConfigId;
   }
 
+  private String createKmsConfig(KmsConfig kmsConfig) {
+    WebTarget target = client.target(API_BASE + "/kms/save-kms?accountId=" + accountId);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(kmsConfig, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    // Verify vault config was successfully created.
+    assertEquals(0, restResponse.getResponseMessages().size());
+    String kmsConfigId = restResponse.getResource();
+    assertTrue(isNotEmpty(kmsConfigId));
+
+    return kmsConfigId;
+  }
+
   private void updateVaultConfig(VaultConfig vaultConfig) {
     WebTarget target = client.target(API_BASE + "/vault?accountId=" + accountId);
     vaultConfig.setName("TestVault_Different_Name");
@@ -537,6 +579,17 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertEquals(0, deleteRestResponse.getResponseMessages().size());
     assertTrue(Boolean.valueOf(deleteRestResponse.getResource()));
     assertNull(wingsPersistence.get(VaultConfig.class, vaultConfigId));
+  }
+
+  private void deleteKmsConfig(String kmsConfigId) {
+    WebTarget target =
+        client.target(API_BASE + "/kms/delete-kms?accountId=" + accountId + "&kmsConfigId=" + kmsConfigId);
+    RestResponse<Boolean> deleteRestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Boolean>>() {});
+    // Verify the vault config was deleted successfully
+    assertEquals(0, deleteRestResponse.getResponseMessages().size());
+    assertTrue(Boolean.valueOf(deleteRestResponse.getResource()));
+    assertNull(wingsPersistence.get(VaultConfig.class, kmsConfigId));
   }
 
   private void verifySecretValue(String secretUuid, String expectedValue, VaultConfig vaultConfig) {
