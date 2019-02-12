@@ -54,13 +54,15 @@ public class InfrastructureMappingGenerator {
 
   @Inject private WingsPersistence wingsPersistence;
 
-  public enum InfrastructureMappings { AWS_SSH_TEST, TERRAFORM_AWS_SSH_TEST }
+  public enum InfrastructureMappings { AWS_SSH_TEST, TERRAFORM_AWS_SSH_TEST, AWS_SSH_FUNCTIONAL_TEST }
 
   public InfrastructureMapping ensurePredefined(
       Randomizer.Seed seed, Owners owners, InfrastructureMappings predefined) {
     switch (predefined) {
       case AWS_SSH_TEST:
         return ensureAwsSshTest(seed, owners);
+      case AWS_SSH_FUNCTIONAL_TEST:
+        return ensureAwsSshFunctionalTest(seed, owners);
       case TERRAFORM_AWS_SSH_TEST:
         return ensureTerraformAwsSshTest(seed, owners);
       default:
@@ -84,6 +86,41 @@ public class InfrastructureMappingGenerator {
 
     final List<Tag> tags = asList(Tag.builder().key("Purpose").value("test").build(),
         Tag.builder().key("User").value(System.getProperty("user.name")).build());
+
+    final SettingAttribute awsTestSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
+
+    return ensureInfrastructureMapping(seed, owners,
+        anAwsInfrastructureMapping()
+            .withName("Aws non prod - ssh workflow test")
+            .withAutoPopulate(false)
+            .withInfraMappingType(AWS_SSH.name())
+            .withDeploymentType(DeploymentType.SSH.name())
+            .withComputeProviderType(SettingVariableTypes.AWS.name())
+            .withComputeProviderSettingId(awsTestSettingAttribute.getUuid())
+            .withHostConnectionAttrs(devKeySettingAttribute.getUuid())
+            .withUsePublicDns(true)
+            .withRegion("us-east-1")
+            .withAwsInstanceFilter(AwsInstanceFilter.builder().tags(tags).build())
+            .build());
+  }
+
+  private InfrastructureMapping ensureAwsSshFunctionalTest(Randomizer.Seed seed, Owners owners) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.FUNCTIONAL_TEST);
+      owners.add(service);
+    }
+
+    final List<Tag> tags =
+        asList(Tag.builder().key("Purpose").value("test").build(), Tag.builder().key("User").value("root").build());
 
     final SettingAttribute awsTestSettingAttribute =
         settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);

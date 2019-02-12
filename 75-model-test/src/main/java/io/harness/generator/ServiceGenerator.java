@@ -31,12 +31,14 @@ public class ServiceGenerator {
   @Inject ServiceResourceService serviceResourceService;
   @Inject WingsPersistence wingsPersistence;
 
-  public enum Services { GENERIC_TEST, KUBERNETES_GENERIC_TEST }
+  public enum Services { GENERIC_TEST, KUBERNETES_GENERIC_TEST, FUNCTIONAL_TEST }
 
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
     switch (predefined) {
       case GENERIC_TEST:
         return ensureGenericTest(seed, owners, "Test Service");
+      case FUNCTIONAL_TEST:
+        return ensureFunctionalTest(seed, owners, "FunctionalTest Service");
       case KUBERNETES_GENERIC_TEST:
         return ensureKubernetesGenericTest(seed, owners);
       default:
@@ -48,8 +50,15 @@ public class ServiceGenerator {
 
   public Service ensureGenericTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
-    owners.add(ensureService(seed, owners, builder().name("Test Service").artifactType(ArtifactType.WAR).build()));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
     artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
+    return owners.obtainService();
+  }
+
+  public Service ensureFunctionalTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
+    artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
     return owners.obtainService();
   }
 

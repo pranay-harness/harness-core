@@ -25,14 +25,14 @@ public class EnvironmentGenerator {
   @Inject EnvironmentService environmentService;
   @Inject WingsPersistence wingsPersistence;
 
-  public enum Environments {
-    GENERIC_TEST,
-  }
+  public enum Environments { GENERIC_TEST, FUNCTIONAL_TEST }
 
   public Environment ensurePredefined(Randomizer.Seed seed, Owners owners, Environments predefined) {
     switch (predefined) {
       case GENERIC_TEST:
         return ensureGenericTest(seed, owners);
+      case FUNCTIONAL_TEST:
+        return ensureFunctionalTest(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -47,6 +47,17 @@ public class EnvironmentGenerator {
         anEnvironment()
             .withAppId(application.getUuid())
             .withName("Test Environment")
+            .withEnvironmentType(NON_PROD)
+            .build());
+  }
+
+  private Environment ensureFunctionalTest(Randomizer.Seed seed, Owners owners) {
+    final Application application = owners.obtainApplication(
+        () -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
+    return ensureEnvironment(seed, owners,
+        anEnvironment()
+            .withAppId(application.getUuid())
+            .withName("FunctionalTest Environment")
             .withEnvironmentType(NON_PROD)
             .build());
   }
