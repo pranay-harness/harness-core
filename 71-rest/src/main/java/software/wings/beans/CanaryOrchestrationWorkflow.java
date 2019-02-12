@@ -35,6 +35,7 @@ import static software.wings.common.Constants.phaseNamePattern;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -662,6 +663,19 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
           && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
           && existingPhase.getInfraMappingId() != null
           && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean containsPhaseWithName(String phaseName) {
+    if (workflowPhaseIds == null) {
+      return false;
+    }
+    for (String phaseId : workflowPhaseIds) {
+      WorkflowPhase existingPhase = workflowPhaseIdMap.get(phaseId);
+      if (StringUtils.equals(phaseName, existingPhase.getName())) {
         return true;
       }
     }

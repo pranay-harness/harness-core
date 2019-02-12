@@ -541,6 +541,12 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
       executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+    } else if (phaseStepType == PhaseStepType.K8S_PHASE_STEP) {
+      if (!isEmpty(elementNotifyResponseData.getContextElements())) {
+        InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+            elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
+        executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+      }
     }
   }
 
