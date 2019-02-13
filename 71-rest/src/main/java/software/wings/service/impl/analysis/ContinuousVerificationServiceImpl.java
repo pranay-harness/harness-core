@@ -70,6 +70,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
@@ -87,6 +88,7 @@ import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.AppService;
@@ -881,6 +883,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return new TreeSet<>();
     }
 
+    populateMetricNames(cvConfiguration, filter);
     filter.setStartTime(Timestamp.nextMinuteBoundary(filter.getStartTime()));
     filter.setEndTime(Timestamp.minuteBoundary(filter.getEndTime()));
     filter.setHistoryStartTime(Timestamp.nextMinuteBoundary(filter.getHistoryStartTime()));
@@ -891,6 +894,35 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       filter.setHistoryStartTime(filter.getStartTime() - TimeUnit.HOURS.toMillis(2) + 1);
     }
     return convertTimeSeriesResponse(getTimeSeriesForTimeRangeFromDataRecords(cvConfiguration, filter));
+  }
+
+  private void populateMetricNames(CVConfiguration cvConfiguration, TimeSeriesFilter filter) {
+    if (isEmpty(filter.getMetricNames())) {
+      return;
+    }
+    switch (cvConfiguration.getStateType()) {
+      case APP_DYNAMICS:
+        if (filter.getMetricNames().contains(AppdynamicsConstants.ERROR_DISPLAY_METRIC_NAME)) {
+          filter.getMetricNames().remove(AppdynamicsConstants.ERROR_DISPLAY_METRIC_NAME);
+          filter.getMetricNames().add(AppdynamicsConstants.ERRORS_PER_MINUTE);
+        }
+
+        if (filter.getMetricNames().contains(AppdynamicsConstants.STALL_COUNT_DISPLAY_METRIC_NAME)) {
+          filter.getMetricNames().remove(AppdynamicsConstants.STALL_COUNT_DISPLAY_METRIC_NAME);
+          filter.getMetricNames().add(AppdynamicsConstants.STALL_COUNT);
+        }
+        break;
+
+      case NEW_RELIC:
+        if (filter.getMetricNames().contains(NewRelicMetricValueDefinition.ERROR_DISPLAY_METRIC_NAME)) {
+          filter.getMetricNames().remove(NewRelicMetricValueDefinition.ERROR_DISPLAY_METRIC_NAME);
+          filter.getMetricNames().add(NewRelicMetricValueDefinition.ERROR);
+        }
+        break;
+
+      default:
+        throw new WingsException("Invalid State: " + cvConfiguration.getStateType());
+    }
   }
 
   private SortedSet<TransactionTimeSeries> convertTimeSeriesResponse(

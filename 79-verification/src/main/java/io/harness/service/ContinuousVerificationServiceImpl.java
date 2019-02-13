@@ -279,6 +279,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             -> cvConfiguration.isEnabled24x7() && getLogAnalysisStates().contains(cvConfiguration.getStateType()))
         .forEach(cvConfiguration -> {
           LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
+          if (logsCVConfiguration.getBaselineStartMinute() < 0 || logsCVConfiguration.getBaselineEndMinute() < 0) {
+            logger.error("For {} baseline is not set. Skipping collection", logsCVConfiguration.getUuid());
+            return;
+          }
           final long maxCVCollectionMinute = logAnalysisService.getMaxCVCollectionMinute(
               logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid());
 

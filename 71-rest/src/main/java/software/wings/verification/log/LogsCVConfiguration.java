@@ -10,18 +10,14 @@ import org.json.JSONObject;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
 
-import java.time.OffsetDateTime;
-import java.util.concurrent.TimeUnit;
-
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class LogsCVConfiguration extends CVConfiguration {
   @Attributes(title = "Search Keywords", required = true) @DefaultValue("*exception*") protected String query;
   @Attributes(required = true, title = "Is Formatted Query") @DefaultValue("false") private boolean formattedQuery;
 
-  private long baselineStartMinute =
-      TimeUnit.MILLISECONDS.toMinutes(OffsetDateTime.now().minusHours(1).toInstant().toEpochMilli());
-  private long baselineEndMinute = TimeUnit.SECONDS.toMinutes(OffsetDateTime.now().toEpochSecond());
+  private long baselineStartMinute = -1;
+  private long baselineEndMinute = -1;
 
   public void setQuery(String query) {
     try {
