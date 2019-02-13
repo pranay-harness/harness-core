@@ -5,7 +5,6 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.artifact.CustomRepositoryMapping;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -13,6 +12,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.template.artifacts.CustomRepositoryMapping;
 
 import java.util.ArrayList;
 import java.util.List;

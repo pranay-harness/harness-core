@@ -8,14 +8,14 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
-import io.harness.artifact.CustomRepositoryMapping;
-import io.harness.artifact.CustomRepositoryMapping.AttributeMapping;
 import io.harness.exception.WingsException;
 import org.junit.Test;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.artifacts.ArtifactSourceTemplate;
 import software.wings.beans.template.artifacts.CustomArtifactSourceTemplate;
+import software.wings.beans.template.artifacts.CustomRepositoryMapping;
+import software.wings.beans.template.artifacts.CustomRepositoryMapping.AttributeMapping;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,11 +47,13 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
     assertThat(savedCustomArtifactStreamTemplate).isNotNull();
 
     List<AttributeMapping> attributeMapping = new ArrayList<>();
-    attributeMapping.add(AttributeMapping.builder().fromField("version").toField("buildNo").build());
     attributeMapping.add(
-        AttributeMapping.builder().fromField("assets.downloadUrl").toField("metadata.downloadUrl").build());
-    CustomRepositoryMapping mapping =
-        CustomRepositoryMapping.builder().artifactRoot("$.items").artifactAttributes(attributeMapping).build();
+        AttributeMapping.builder().relativePath("assets.downloadUrl").mappedAttribute("metadata.downloadUrl").build());
+    CustomRepositoryMapping mapping = CustomRepositoryMapping.builder()
+                                          .artifactRoot("$.items")
+                                          .buildNoPath("version")
+                                          .artifactAttributes(attributeMapping)
+                                          .build();
     CustomArtifactSourceTemplate customArtifactSourceTemplate = CustomArtifactSourceTemplate.builder()
                                                                     .script("echo \"hi\"")
                                                                     .timeoutSeconds(100)
@@ -80,8 +82,12 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
         ((CustomArtifactSourceTemplate) ((ArtifactSourceTemplate) updatedTemplate.getTemplateObject())
                 .getArtifactSource())
             .getCustomRepositoryMapping();
-    assertThat(customRepositoryMapping.getArtifactAttributes().size()).isEqualTo(2);
-    assertThat(customRepositoryMapping.getArtifactAttributes()).extracting("fromField").contains("version");
+    assertThat(customRepositoryMapping).isNotNull();
+    assertThat(customRepositoryMapping.getBuildNoPath()).isEqualTo("version");
+    assertThat(customRepositoryMapping.getArtifactAttributes().size()).isEqualTo(1);
+    assertThat(customRepositoryMapping.getArtifactAttributes())
+        .extracting("relativePath")
+        .contains("assets.downloadUrl");
     assertThat(updatedTemplate.getVariables()).extracting("name").contains("var1");
   }
 
@@ -115,18 +121,22 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
         ((CustomArtifactSourceTemplate) ((ArtifactSourceTemplate) savedTemplate.getTemplateObject())
                 .getArtifactSource())
             .getCustomRepositoryMapping();
-    assertThat(customRepositoryMapping.getArtifactAttributes().size()).isEqualTo(2);
-    assertThat(customRepositoryMapping.getArtifactAttributes()).extracting("fromField").contains("name");
+    assertThat(customRepositoryMapping.getArtifactAttributes().size()).isEqualTo(1);
+    assertThat(customRepositoryMapping.getArtifactAttributes())
+        .extracting("relativePath")
+        .contains("assets.downloadUrl");
   }
 
   private Template constructCustomArtifactTemplateEntity() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     List<AttributeMapping> attributeMapping = new ArrayList<>();
-    attributeMapping.add(AttributeMapping.builder().fromField("name").toField("buildNo").build());
     attributeMapping.add(
-        AttributeMapping.builder().fromField("assets.downloadUrl").toField("metadata.downloadUrl").build());
-    CustomRepositoryMapping mapping =
-        CustomRepositoryMapping.builder().artifactRoot("$.items").artifactAttributes(attributeMapping).build();
+        AttributeMapping.builder().relativePath("assets.downloadUrl").mappedAttribute("metadata.downloadUrl").build());
+    CustomRepositoryMapping mapping = CustomRepositoryMapping.builder()
+                                          .artifactRoot("$.items")
+                                          .buildNoPath("name")
+                                          .artifactAttributes(attributeMapping)
+                                          .build();
     CustomArtifactSourceTemplate customArtifactSourceTemplate =
         CustomArtifactSourceTemplate.builder().script("echo \"hello world\"").customRepositoryMapping(mapping).build();
     return Template.builder()

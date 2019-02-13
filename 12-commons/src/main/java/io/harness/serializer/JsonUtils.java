@@ -110,6 +110,10 @@ public class JsonUtils {
     return JsonPath.parse(json);
   }
 
+  public static <T> T read(Object json, String jsonPath) {
+    return JsonPath.read(json, jsonPath);
+  }
+
   /**
    * Json path.
    *

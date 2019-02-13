@@ -1,6 +1,5 @@
 package software.wings.service.impl.artifactstream;
 
-import static io.harness.artifact.CustomRepositoryMapping.AttributeMapping.builder;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +19,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
+import static software.wings.beans.template.artifacts.CustomRepositoryMapping.AttributeMapping.builder;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
@@ -33,7 +33,6 @@ import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 
 import com.google.inject.Inject;
 
-import io.harness.artifact.CustomRepositoryMapping;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
@@ -66,6 +65,7 @@ import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.template.artifacts.CustomRepositoryMapping;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.service.intfc.AppService;
@@ -1663,10 +1663,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   public void shouldCRUDCustomArtifactStreamWithCustomMapping() {
     List<CustomRepositoryMapping.AttributeMapping> attributeMapping = new ArrayList<>();
-    attributeMapping.add(builder().fromField("version").toField("buildNo").build());
-    attributeMapping.add(builder().fromField("assets.downloadUrl").toField("metadata.downloadUrl").build());
-    CustomRepositoryMapping mapping =
-        CustomRepositoryMapping.builder().artifactRoot("$.items").artifactAttributes(attributeMapping).build();
+    attributeMapping.add(builder().relativePath("assets.downloadUrl").mappedAttribute("metadata.downloadUrl").build());
+    CustomRepositoryMapping mapping = CustomRepositoryMapping.builder()
+                                          .artifactRoot("$.items")
+                                          .buildNoPath("version")
+                                          .artifactAttributes(attributeMapping)
+                                          .build();
     ArtifactStream customArtifactStream =
         CustomArtifactStream.builder()
             .appId(APP_ID)
@@ -1690,10 +1692,11 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(script.getAction()).isEqualTo(Action.FETCH_VERSIONS);
     assertThat(script.getScriptString()).isEqualTo("echo Hello World!! and echo ${secrets.getValue(My Secret)}");
     assertThat(script.getCustomRepositoryMapping()).isNotNull();
-    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(2);
+    assertThat(script.getCustomRepositoryMapping().getBuildNoPath()).isEqualTo("version");
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(1);
     assertThat(script.getCustomRepositoryMapping().getArtifactAttributes())
-        .extracting("fromField")
-        .contains("version", "assets.downloadUrl");
+        .extracting("mappedAttribute")
+        .contains("metadata.downloadUrl");
 
     assertThat(artifactStreamService.fetchArtifactStreamsForService(APP_ID, SERVICE_ID))
         .isNotEmpty()
@@ -1702,9 +1705,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .contains(savedArtifactSteam.getUuid());
 
     attributeMapping = new ArrayList<>();
-    attributeMapping.add(builder().fromField("version").toField("buildNo").build());
-    attributeMapping.add(builder().fromField("assets.path").toField("metadata.path").build());
-    mapping = CustomRepositoryMapping.builder().artifactRoot("$.items").artifactAttributes(attributeMapping).build();
+    attributeMapping.add(builder().relativePath("assets.path").mappedAttribute("metadata.path").build());
+    mapping = CustomRepositoryMapping.builder()
+                  .artifactRoot("$.items")
+                  .buildNoPath("version")
+                  .artifactAttributes(attributeMapping)
+                  .build();
     script.setCustomRepositoryMapping(mapping);
     script.setScriptString("Welcome to harness");
     savedCustomArtifactStream.setScripts(Arrays.asList(script));
@@ -1719,13 +1725,13 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     Script updatedScript = updatedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
     assertThat(updatedScript.getScriptString()).isEqualTo("Welcome to harness");
     assertThat(script.getCustomRepositoryMapping()).isNotNull();
-    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(2);
+    assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(1);
     assertThat(script.getCustomRepositoryMapping().getArtifactAttributes())
-        .extracting("fromField")
-        .contains("version", "assets.path");
+        .extracting("mappedAttribute")
+        .contains("metadata.path");
     assertThat(script.getCustomRepositoryMapping().getArtifactAttributes())
-        .extracting("fromField")
-        .doesNotContain("assets.downloadUrl");
+        .extracting("mappedAttribute")
+        .doesNotContain("metadata.downloadUrl");
 
     artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
 
