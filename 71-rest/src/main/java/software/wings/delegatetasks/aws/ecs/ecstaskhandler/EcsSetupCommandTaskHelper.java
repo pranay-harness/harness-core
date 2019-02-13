@@ -67,7 +67,6 @@ import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -104,7 +103,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class EcsSetupCommandTaskHelper {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsSetupCommandTaskHelper.class);
+  private static final transient Logger logger = LoggerFactory.getLogger(EcsSetupCommandTaskHelper.class);
   @Inject private AwsClusterService awsClusterService;
   @Inject private AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingService;
   @Inject private AwsHelperService awsHelperService;

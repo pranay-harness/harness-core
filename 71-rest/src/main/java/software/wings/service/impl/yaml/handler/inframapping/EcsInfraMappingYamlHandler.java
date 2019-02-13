@@ -80,6 +80,7 @@ public class EcsInfraMappingYamlHandler
 
     if (LaunchType.FARGATE.name().equals(yaml.getLaunchType())) {
       validateNetworkParameters(yaml, bean);
+      bean.setExecutionRole(yaml.getExecutionRole());
     }
 
     bean.setVpcId(yaml.getVpcId());
@@ -129,6 +130,7 @@ public class EcsInfraMappingYamlHandler
     yaml.setSubnetIds(getIds(bean.getSubnetIds()));
     yaml.setSecurityGroupIds(getIds(bean.getSecurityGroupIds()));
     yaml.setAssignPublicIp(bean.isAssignPublicIp());
+    yaml.setExecutionRole(bean.getExecutionRole());
   }
 
   private String getIds(List<String> ids) {
