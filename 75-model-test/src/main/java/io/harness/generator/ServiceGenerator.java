@@ -31,7 +31,7 @@ public class ServiceGenerator {
   @Inject ServiceResourceService serviceResourceService;
   @Inject WingsPersistence wingsPersistence;
 
-  public enum Services { GENERIC_TEST, KUBERNETES_GENERIC_TEST, FUNCTIONAL_TEST }
+  public enum Services { GENERIC_TEST, KUBERNETES_GENERIC_TEST, FUNCTIONAL_TEST, WINDOWS_TEST }
 
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
     switch (predefined) {
@@ -41,11 +41,20 @@ public class ServiceGenerator {
         return ensureFunctionalTest(seed, owners, "FunctionalTest Service");
       case KUBERNETES_GENERIC_TEST:
         return ensureKubernetesGenericTest(seed, owners);
+      case WINDOWS_TEST:
+        return ensureWindowsTest(seed, owners, "Test IIS APP Service");
       default:
         unhandled(predefined);
     }
 
     return null;
+  }
+
+  public Service ensureWindowsTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.IIS_APP).build()));
+    artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_IIS_APP);
+    return owners.obtainService();
   }
 
   public Service ensureGenericTest(Randomizer.Seed seed, Owners owners, String name) {

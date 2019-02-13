@@ -1,9 +1,11 @@
 package io.harness.generator;
 
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
+import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_EXPLORATION_GCS;
+import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_TEST_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -29,19 +31,24 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JiraConfig;
+import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.EnumSet;
 
@@ -56,6 +63,9 @@ public class SettingGenerator {
   private static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
   private static final String HARNESS_GCP_EXPLORATION = "harness-exploration";
   private static final String HARNESS_EXPLORATION_GCS = "harness-exploration-gcs";
+  private static final String AZURE_CLIENT_ID = "2d7ae800-e1dd-4098-97f8-f6ae330abf82";
+  private static final String AZURE_TENANT_ID = "b229b2bb-5f33-4d22-bce0-730f6474e906";
+  private static final String AZURE_KEY = "ON3N2Ce+GxKcnculN2A7tDUr4EGhp5bUVne4v7Wg4Zg=";
 
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;
@@ -65,6 +75,7 @@ public class SettingGenerator {
 
   public enum Settings {
     AWS_TEST_CLOUD_PROVIDER,
+    AZURE_TEST_CLOUD_PROVIDER,
     DEV_TEST_CONNECTOR,
     HARNESS_JENKINS_CONNECTOR,
     GITHUB_TEST_CONNECTOR,
@@ -76,7 +87,9 @@ public class SettingGenerator {
     HARNESS_DOCKER_REGISTRY,
     HARNESS_GCP_EXPLORATION,
     HARNESS_EXPLORATION_GCS,
-    HARNESS_JIRA
+    HARNESS_JIRA,
+    PHYSICAL_DATA_CENTER,
+    WINRM_TEST_CONNECTOR
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -87,6 +100,8 @@ public class SettingGenerator {
     switch (predefined) {
       case AWS_TEST_CLOUD_PROVIDER:
         return ensureAwsTest(seed, owners);
+      case AZURE_TEST_CLOUD_PROVIDER:
+        return ensureAzureTestCloudProvider(seed, owners);
       case DEV_TEST_CONNECTOR:
         return ensureDevTest(seed);
       case HARNESS_JENKINS_CONNECTOR:
@@ -111,11 +126,71 @@ public class SettingGenerator {
         return ensureHarnessExplorationGcs(seed, owners);
       case HARNESS_JIRA:
         return ensureHarnessJira(seed, owners);
+      case PHYSICAL_DATA_CENTER:
+        return ensurePhysicalDataCenter(seed, owners);
+      case WINRM_TEST_CONNECTOR:
+        return ensureWinRmTestConnector(seed, owners);
       default:
         unhandled(predefined);
     }
-
     return null;
+  }
+
+  public SettingAttribute ensureWinRmTestConnector(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SETTING)
+                                            .withName("Test WinRM Connection")
+                                            .withAppId(GLOBAL_APP_ID)
+                                            .withEnvId(GLOBAL_ENV_ID)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(WinRmConnectionAttributes.builder()
+                                                           .accountId(account.getUuid())
+                                                           .authenticationScheme(AuthenticationScheme.NTLM)
+                                                           .username("harnessadmin")
+                                                           .password("H@rnessH@rness".toCharArray())
+                                                           .port(5986)
+                                                           .useSSL(true)
+                                                           .skipCertChecks(true)
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
+    return ensureSettingAttribute(seed, settingAttribute);
+  }
+
+  public SettingAttribute ensurePhysicalDataCenter(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(CLOUD_PROVIDER)
+                                            .withName(PHYSICAL_DATA_CENTER.name())
+                                            .withAppId(GLOBAL_APP_ID)
+                                            .withEnvId(GLOBAL_ENV_ID)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
+                                                           .withType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
+    return ensureSettingAttribute(seed, settingAttribute);
+  }
+
+  public SettingAttribute ensureAzureTestCloudProvider(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(CLOUD_PROVIDER)
+                                            .withName(AZURE_TEST_CLOUD_PROVIDER.name())
+                                            .withAppId(GLOBAL_APP_ID)
+                                            .withEnvId(GLOBAL_ENV_ID)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(AzureConfig.builder()
+                                                           .clientId(AZURE_CLIENT_ID)
+                                                           .tenantId(AZURE_TENANT_ID)
+                                                           .accountId(account.getUuid())
+                                                           .key(AZURE_KEY.toCharArray())
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
+    return ensureSettingAttribute(seed, settingAttribute);
   }
 
   public SettingAttribute ensureAwsTest(Randomizer.Seed seed, Owners owners) {

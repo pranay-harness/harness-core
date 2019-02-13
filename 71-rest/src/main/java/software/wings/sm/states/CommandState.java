@@ -244,8 +244,10 @@ public class CommandState extends State {
           serviceResourceService.getCommandByName(appId, service.getUuid(), envId, actualCommand);
       Command command = serviceCommand != null ? serviceCommand.getCommand() : null;
       if (command == null) {
-        throw new WingsException(
-            format("Unable to find command %s for service %s", actualCommand, service.getUuid()), WingsException.USER);
+        throw new WingsException(format(""
+                                         + "Unable to find command %s for service %s",
+                                     actualCommand, service.getUuid()),
+            WingsException.USER);
       }
 
       command.setGraph(null);
