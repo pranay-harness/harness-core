@@ -96,19 +96,23 @@ public class ArtifactCollectionJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString(ARTIFACT_STREAM_ID_KEY);
-    String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
-    String accountId = jobExecutionContext.getMergedJobDataMap().getString(ACCOUNT_ID_KEY);
+    //    String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString(ARTIFACT_STREAM_ID_KEY);
+    //    String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
+    //    logger.info(
+    //        "Received the artifact collection for ArtifactStreamId {}. Running asynchronously. And NoOP",
+    //        artifactStreamId);
+    //    String accountId = jobExecutionContext.getMergedJobDataMap().getString(ACCOUNT_ID_KEY);
 
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    if (artifactStream == null) {
-      jobScheduler.deleteJob(artifactStreamId, GROUP);
-      return;
-    }
+    //    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    //    if (artifactStream == null) {
+    //      jobScheduler.deleteJob(artifactStreamId, GROUP);
+    //      return;
+    //    }
+    //
+    //    logger.info("Received the artifact collection for ArtifactStreamId {}. Running asynchronously",
+    //    artifactStreamId);
 
-    logger.info("Received the artifact collection for ArtifactStreamId {}. Running asynchronously", artifactStreamId);
-
-    artifactCollectionExecutor.submit(() -> executeInternal(appId, artifactStream, accountId));
+    //    artifactCollectionExecutor.submit(() -> executeInternal(appId, artifactStream, accountId));
   }
 
   private void executeInternal(String appId, ArtifactStream artifactStream, String accountId) {

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.quartz.SchedulerException;
@@ -23,6 +24,7 @@ public class ArtifactCollectionJobTest extends WingsBaseTest {
   private static final String artifactScreamId = "Dummy Artifact Stream Id";
 
   @Test
+  @Ignore
   public void selfPrune() throws TimeoutException, InterruptedException, SchedulerException {
     TestJobListener listener = new TestJobListener(ArtifactCollectionJob.GROUP + "." + artifactScreamId);
     jobScheduler.getScheduler().getListenerManager().addJobListener(listener);

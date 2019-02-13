@@ -9,6 +9,7 @@ import io.harness.persistence.CreatedByAccess;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.PersistentIterable;
 import io.harness.persistence.UpdatedAtAccess;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAccess;
@@ -23,5 +24,5 @@ public class PersistenceMorphiaClasses {
   public static final Set<Class> classes = ImmutableSet.<Class>of(Queuable.class, Encryptable.class, UuidAware.class,
       UuidAccess.class, CreatedAtAware.class, CreatedAtAccess.class, CreatedByAware.class, CreatedByAccess.class,
       UpdatedAtAware.class, UpdatedAtAccess.class, UpdatedByAware.class, UpdatedByAccess.class, PersistentEntity.class,
-      GoogleDataStoreAware.class);
+      GoogleDataStoreAware.class, PersistentIterable.class);
 }

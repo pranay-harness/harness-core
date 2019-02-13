@@ -3,6 +3,7 @@ package software.wings.beans.artifact;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.persistence.PersistentIterable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,7 +33,7 @@ import software.wings.yaml.BaseEntityYaml;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
-public abstract class ArtifactStream extends Base implements ArtifactSourceable {
+public abstract class ArtifactStream extends Base implements ArtifactSourceable, PersistentIterable {
   protected static final String dateFormat = "HHMMSS";
 
   public static final String NAME_KEY = "name";
@@ -40,6 +41,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable 
   public static final String ARTIFACT_STREAM_TYPE_KEY = "artifactStreamType";
   public static final String METADATA_ONLY_KEY = "metadataOnly";
   public static final String SETTING_ID_KEY = "settingId";
+  public static final String NEXT_ITERATION_KEY = "nextIteration";
 
   private String artifactStreamType;
   private String sourceName;
@@ -51,6 +53,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable 
   transient @Deprecated private boolean autoApproveForProduction;
   private boolean metadataOnly;
   private int failedCronAttempts;
+  @Indexed private Long nextIteration;
 
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
@@ -79,6 +82,16 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable 
   public abstract ArtifactStreamAttributes fetchArtifactStreamAttributes();
 
   public abstract String fetchArtifactDisplayName(String buildNo);
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return nextIteration;
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    this.nextIteration = nextIteration;
+  }
 
   @Data
   @EqualsAndHashCode(callSuper = true)
