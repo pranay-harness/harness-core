@@ -13,7 +13,6 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.beans.Log.doneColoring;
-import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
@@ -28,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CommandExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.beans.command.ShellExecutionData;
@@ -118,7 +118,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
   public CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
-    CommandExecutionResult.Builder commandExecutionResult = aCommandExecutionResult().but();
+    CommandExecutionResultBuilder commandExecutionResult = CommandExecutionResult.builder();
     CommandExecutionStatus commandExecutionStatus;
     saveExecutionLog(format("Initializing WinRM connection to %s ...", config.getHostname()), INFO);
     String envVariablesOutputFile = null;
@@ -142,8 +142,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       }
 
       saveExecutionLog(format("%nCommand completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
-      commandExecutionResult.withStatus(commandExecutionStatus);
-      commandExecutionResult.withCommandExecutionData(executionDataBuilder.build());
+      commandExecutionResult.status(commandExecutionStatus);
+      commandExecutionResult.commandExecutionData(executionDataBuilder.build());
       return commandExecutionResult.build();
     } catch (RuntimeException re) {
       throw re;
@@ -154,8 +154,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
     }
-    commandExecutionResult.withStatus(commandExecutionStatus);
-    commandExecutionResult.withCommandExecutionData(executionDataBuilder.build());
+    commandExecutionResult.status(commandExecutionStatus);
+    commandExecutionResult.commandExecutionData(executionDataBuilder.build());
     return commandExecutionResult.build();
   }
 

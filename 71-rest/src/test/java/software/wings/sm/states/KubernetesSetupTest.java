@@ -28,7 +28,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.Constants.BUILD_NO;
@@ -436,12 +435,12 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     CommandExecutionResult result =
-        aCommandExecutionResult()
-            .withCommandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
-                                          .containerServiceName(KUBERNETES_CONTROLLER_NAME)
-                                          .activeServiceCounts(ImmutableList.of(
-                                              new String[] {"old-service", Integer.toString(activeServiceCount)}))
-                                          .build())
+        CommandExecutionResult.builder()
+            .commandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
+                                      .containerServiceName(KUBERNETES_CONTROLLER_NAME)
+                                      .activeServiceCounts(ImmutableList.of(
+                                          new String[] {"old-service", Integer.toString(activeServiceCount)}))
+                                      .build())
             .build();
 
     kubernetesSetup.setMaxInstances(maxInstances);

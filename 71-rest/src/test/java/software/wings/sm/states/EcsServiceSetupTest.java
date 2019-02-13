@@ -28,7 +28,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.MASKED;
@@ -377,8 +376,8 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     CommandExecutionResult result =
-        aCommandExecutionResult()
-            .withCommandExecutionData(
+        CommandExecutionResult.builder()
+            .commandExecutionData(
                 ContainerSetupCommandUnitExecutionData.builder().containerServiceName(ECS_SERVICE_NAME).build())
             .build();
 

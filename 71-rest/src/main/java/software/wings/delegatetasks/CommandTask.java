@@ -1,7 +1,5 @@
 package software.wings.delegatetasks;
 
-import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
-
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.TaskParameters;
@@ -54,10 +52,10 @@ public class CommandTask extends AbstractDelegateRunnableTask {
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
     }
 
-    return aCommandExecutionResult()
-        .withStatus(commandExecutionStatus)
-        .withErrorMessage(errorMessage)
-        .withCommandExecutionData(commandExecutionContext.getCommandExecutionData())
+    return CommandExecutionResult.builder()
+        .status(commandExecutionStatus)
+        .errorMessage(errorMessage)
+        .commandExecutionData(commandExecutionContext.getCommandExecutionData())
         .build();
   }
 }

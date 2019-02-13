@@ -13,7 +13,6 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogLevel.WARN;
-import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
@@ -40,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CommandExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -238,7 +238,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   public CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
-    CommandExecutionResult.Builder commandExecutionResult = aCommandExecutionResult().but();
+    CommandExecutionResultBuilder commandExecutionResult = CommandExecutionResult.builder();
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     Channel channel = null;
     long start = System.currentTimeMillis();
@@ -330,8 +330,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
               }
             }
             executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
-            commandExecutionResult.withStatus(commandExecutionStatus);
-            commandExecutionResult.withCommandExecutionData(executionDataBuilder.build());
+            commandExecutionResult.status(commandExecutionStatus);
+            commandExecutionResult.commandExecutionData(executionDataBuilder.build());
             return commandExecutionResult.build();
           }
           sleep(Duration.ofSeconds(1));
@@ -342,8 +342,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
       logger.error("Command execution failed with error", ex);
       executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
-      commandExecutionResult.withStatus(commandExecutionStatus);
-      commandExecutionResult.withCommandExecutionData(executionDataBuilder.build());
+      commandExecutionResult.status(commandExecutionStatus);
+      commandExecutionResult.commandExecutionData(executionDataBuilder.build());
       return commandExecutionResult.build();
     } finally {
       if (channel != null && !channel.isClosed()) {

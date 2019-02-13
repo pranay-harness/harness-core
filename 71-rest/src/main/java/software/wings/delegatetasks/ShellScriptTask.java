@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
-import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 
 import com.google.inject.Inject;
@@ -104,9 +103,9 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
       }
       default:
         unhandled(parameters.getConnectionType());
-        return aCommandExecutionResult()
-            .withStatus(FAILURE)
-            .withErrorMessage(format("Unsupported ConnectionType %s", parameters.getConnectionType()))
+        return CommandExecutionResult.builder()
+            .status(FAILURE)
+            .errorMessage(format("Unsupported ConnectionType %s", parameters.getConnectionType()))
             .build();
     }
   }

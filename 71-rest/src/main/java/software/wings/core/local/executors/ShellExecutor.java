@@ -9,7 +9,6 @@ import static java.lang.String.format;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
@@ -23,6 +22,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
@@ -88,7 +88,7 @@ public class ShellExecutor {
   private CommandExecutionResult executeBashScript(String command, List<String> envVariablesToCollect)
       throws IOException {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
-    CommandExecutionResult.Builder commandExecutionResult = aCommandExecutionResult().but();
+    CommandExecutionResultBuilder commandExecutionResult = CommandExecutionResult.builder();
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     File workingDirectory;
 
@@ -182,8 +182,8 @@ public class ShellExecutor {
         }
       }
     }
-    commandExecutionResult.withStatus(commandExecutionStatus);
-    commandExecutionResult.withCommandExecutionData(executionDataBuilder.build());
+    commandExecutionResult.status(commandExecutionStatus);
+    commandExecutionResult.commandExecutionData(executionDataBuilder.build());
     return commandExecutionResult.build();
   }
 
