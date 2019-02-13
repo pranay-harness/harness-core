@@ -1,11 +1,16 @@
 package io.harness.generator;
 
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
+import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
+import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
+import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
+import static software.wings.beans.InfrastructureMappingType.AZURE_INFRA;
+import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -23,10 +28,13 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.AwsInstanceFilter.Tag;
+import software.wings.beans.AzureInfrastructureMapping;
+import software.wings.beans.AzureInfrastructureMapping.Builder;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.PhysicalInfrastructureMappingWinRm;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -51,10 +59,18 @@ public class InfrastructureMappingGenerator {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private EnvironmentService environmentService;
   @Inject private ServiceTemplateService serviceTemplateService;
-
   @Inject private WingsPersistence wingsPersistence;
 
-  public enum InfrastructureMappings { AWS_SSH_TEST, TERRAFORM_AWS_SSH_TEST, AWS_SSH_FUNCTIONAL_TEST }
+  private static final String AZURE_SUBSCRIPTION_ID = "20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0";
+  private static final String AZURE_RESOURCE_GROUP = "rathna-rg";
+  private static final String AZURE_DEPLOY_HOST = "vm1-test-rathna.centralus.cloudapp.azure.com";
+  public enum InfrastructureMappings {
+    AWS_SSH_TEST,
+    TERRAFORM_AWS_SSH_TEST,
+    AWS_SSH_FUNCTIONAL_TEST,
+    PHYSICAL_WINRM_TEST,
+    AZURE_WINRM_TEST
+  }
 
   public InfrastructureMapping ensurePredefined(
       Randomizer.Seed seed, Owners owners, InfrastructureMappings predefined) {
@@ -65,10 +81,77 @@ public class InfrastructureMappingGenerator {
         return ensureAwsSshFunctionalTest(seed, owners);
       case TERRAFORM_AWS_SSH_TEST:
         return ensureTerraformAwsSshTest(seed, owners);
+      case PHYSICAL_WINRM_TEST:
+        return ensurePhysicalWinRMTest(seed, owners);
+      case AZURE_WINRM_TEST:
+        return ensureAzureWinRMTest(seed, owners);
       default:
         unhandled(predefined);
     }
     return null;
+  }
+
+  private InfrastructureMapping ensureAzureWinRMTest(Randomizer.Seed seed, Owners owners) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
+      owners.add(service);
+    }
+
+    final SettingAttribute azureCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AZURE_TEST_CLOUD_PROVIDER);
+    final SettingAttribute winRmSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, WINRM_TEST_CONNECTOR);
+
+    return ensureInfrastructureMapping(seed, owners,
+        AzureInfrastructureMapping.Builder.anAzureInfrastructureMapping()
+            .withName("Windows non prod - winrm workflow test")
+            .withAutoPopulate(true)
+            .withInfraMappingType(AZURE_INFRA.name())
+            .withDeploymentType(DeploymentType.WINRM.name())
+            .withComputeProviderType(SettingVariableTypes.AZURE.name())
+            .withComputeProviderSettingId(azureCloudProvider.getUuid())
+            .withWinRmConnectionAttributes(winRmSettingAttribute.getUuid())
+            .withSubscriptionId(AZURE_SUBSCRIPTION_ID)
+            .withResourceGroup(AZURE_RESOURCE_GROUP)
+            .build());
+  }
+
+  private InfrastructureMapping ensurePhysicalWinRMTest(Randomizer.Seed seed, Owners owners) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
+      owners.add(service);
+    }
+
+    final SettingAttribute physicalInfraSettingAttr =
+        settingGenerator.ensurePredefined(seed, owners, PHYSICAL_DATA_CENTER);
+    final SettingAttribute winRmSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, WINRM_TEST_CONNECTOR);
+
+    return ensureInfrastructureMapping(seed, owners,
+        PhysicalInfrastructureMappingWinRm.Builder.aPhysicalInfrastructureMappingWinRm()
+            .withName("Windows non prod - winrm workflow test")
+            .withAutoPopulate(true)
+            .withInfraMappingType(PHYSICAL_DATA_CENTER_WINRM.name())
+            .withDeploymentType(DeploymentType.WINRM.name())
+            .withComputeProviderType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+            .withComputeProviderSettingId(physicalInfraSettingAttr.getUuid())
+            .withWinRmConnectionAttributes(winRmSettingAttribute.getUuid())
+            .withHostNames(asList(AZURE_DEPLOY_HOST))
+            .build());
   }
 
   private InfrastructureMapping ensureAwsSshTest(Randomizer.Seed seed, Owners owners) {
@@ -353,6 +436,221 @@ public class InfrastructureMappingGenerator {
 
         newInfrastructureMapping = builder.build();
         break;
+
+      case AZURE_INFRA:
+        AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infrastructureMapping;
+        final AzureInfrastructureMapping.Builder azureInfraMappingBuilder =
+            Builder.anAzureInfrastructureMapping().withInfraMappingType(infrastructureMappingType.name());
+
+        if (infrastructureMapping.getAppId() != null) {
+          azureInfraMappingBuilder.withAppId(infrastructureMapping.getAppId());
+        } else {
+          final Application application = owners.obtainApplication();
+          azureInfraMappingBuilder.withAppId(application.getUuid());
+        }
+
+        if (infrastructureMapping.getEnvId() != null) {
+          azureInfraMappingBuilder.withEnvId(infrastructureMapping.getEnvId());
+        } else {
+          Environment environment = owners.obtainEnvironment();
+          if (environment == null) {
+            environment = environmentGenerator.ensureRandom(seed, owners);
+            owners.add(environment);
+          }
+          azureInfraMappingBuilder.withEnvId(environment.getUuid());
+        }
+
+        if (infrastructureMapping.getName() != null) {
+          azureInfraMappingBuilder.withName(infrastructureMapping.getName());
+        } else {
+          azureInfraMappingBuilder.withName(random.nextObject(String.class));
+        }
+
+        InfrastructureMapping existingAzureInfraMapping = exists(azureInfraMappingBuilder.build());
+        if (existingAzureInfraMapping != null) {
+          return existingAzureInfraMapping;
+        }
+
+        azureInfraMappingBuilder.withAutoPopulate(infrastructureMapping.isAutoPopulate());
+        azureInfraMappingBuilder.withComputeProviderType(SettingVariableTypes.AZURE.name());
+
+        if (infrastructureMapping.getComputeProviderSettingId() != null) {
+          azureInfraMappingBuilder.withComputeProviderSettingId(infrastructureMapping.getComputeProviderSettingId());
+        } else {
+          final SettingAttribute settingAttribute =
+              settingGenerator.ensurePredefined(seed, owners, AZURE_TEST_CLOUD_PROVIDER);
+          azureInfraMappingBuilder.withComputeProviderSettingId(settingAttribute.getUuid());
+        }
+
+        if (infrastructureMapping.getAccountId() != null) {
+          azureInfraMappingBuilder.withAccountId(infrastructureMapping.getAccountId());
+        } else {
+          final Account account = owners.obtainAccount();
+          azureInfraMappingBuilder.withAccountId(account.getUuid());
+        }
+
+        if (infrastructureMapping.getServiceId() != null) {
+          azureInfraMappingBuilder.withServiceId(infrastructureMapping.getServiceId());
+        } else {
+          Service service = owners.obtainService();
+          if (service == null) {
+            service = serviceGenerator.ensureRandom(seed, owners);
+            owners.add(service);
+          }
+          azureInfraMappingBuilder.withServiceId(service.getUuid());
+        }
+
+        if (infrastructureMapping.getServiceTemplateId() != null) {
+          azureInfraMappingBuilder.withServiceTemplateId(infrastructureMapping.getServiceTemplateId());
+        } else {
+          Service service = owners.obtainService();
+          ServiceTemplate serviceTemplate = owners.obtainServiceTemplate();
+          azureInfraMappingBuilder.withServiceTemplateId(serviceTemplate.getUuid());
+        }
+
+        if (azureInfrastructureMapping.getDeploymentType() != null) {
+          azureInfraMappingBuilder.withDeploymentType(azureInfrastructureMapping.getDeploymentType());
+        } else {
+          DeploymentType deploymentType = owners.obtainService().getDeploymentType();
+          if (deploymentType != null) {
+            azureInfraMappingBuilder.withDeploymentType(deploymentType.name());
+          } else {
+            azureInfraMappingBuilder.withDeploymentType(random.nextObject(DeploymentType.class).name());
+          }
+        }
+
+        if (azureInfrastructureMapping.getSubscriptionId() != null) {
+          azureInfraMappingBuilder.withSubscriptionId(azureInfrastructureMapping.getSubscriptionId());
+        } else {
+          azureInfraMappingBuilder.withSubscriptionId(AZURE_SUBSCRIPTION_ID);
+        }
+
+        if (azureInfrastructureMapping.getResourceGroup() != null) {
+          azureInfraMappingBuilder.withResourceGroup(azureInfrastructureMapping.getResourceGroup());
+        } else {
+          azureInfraMappingBuilder.withResourceGroup(AZURE_RESOURCE_GROUP);
+        }
+
+        if (azureInfrastructureMapping.getWinRmConnectionAttributes() != null) {
+          azureInfraMappingBuilder.withWinRmConnectionAttributes(
+              azureInfrastructureMapping.getWinRmConnectionAttributes());
+        } else {
+          final SettingAttribute winRmSettingAttribute =
+              settingGenerator.ensurePredefined(seed, owners, WINRM_TEST_CONNECTOR);
+          azureInfraMappingBuilder.withWinRmConnectionAttributes(winRmSettingAttribute.getUuid());
+        }
+
+        if (azureInfrastructureMapping.getTags() != null) {
+          azureInfraMappingBuilder.withTags(azureInfrastructureMapping.getTags());
+        }
+
+        azureInfraMappingBuilder.withUsePublicDns(azureInfrastructureMapping.isUsePublicDns());
+        newInfrastructureMapping = azureInfraMappingBuilder.build();
+        break;
+
+      case PHYSICAL_DATA_CENTER_WINRM:
+        PhysicalInfrastructureMappingWinRm physicalInfrastructureMappingWinRm =
+            (PhysicalInfrastructureMappingWinRm) infrastructureMapping;
+        final PhysicalInfrastructureMappingWinRm.Builder phyWinRmbuilder =
+            PhysicalInfrastructureMappingWinRm.Builder.aPhysicalInfrastructureMappingWinRm().withInfraMappingType(
+                infrastructureMappingType.name());
+
+        if (infrastructureMapping.getAppId() != null) {
+          phyWinRmbuilder.withAppId(infrastructureMapping.getAppId());
+        } else {
+          final Application application = owners.obtainApplication();
+          phyWinRmbuilder.withAppId(application.getUuid());
+        }
+
+        if (infrastructureMapping.getEnvId() != null) {
+          phyWinRmbuilder.withEnvId(infrastructureMapping.getEnvId());
+        } else {
+          Environment environment = owners.obtainEnvironment();
+          if (environment == null) {
+            environment = environmentGenerator.ensureRandom(seed, owners);
+            owners.add(environment);
+          }
+          phyWinRmbuilder.withEnvId(environment.getUuid());
+        }
+
+        if (infrastructureMapping.getName() != null) {
+          phyWinRmbuilder.withName(infrastructureMapping.getName());
+        } else {
+          phyWinRmbuilder.withName(random.nextObject(String.class));
+        }
+
+        InfrastructureMapping existingInfraMapping = exists(phyWinRmbuilder.build());
+        if (existingInfraMapping != null) {
+          return existingInfraMapping;
+        }
+
+        phyWinRmbuilder.withAutoPopulate(infrastructureMapping.isAutoPopulate());
+
+        if (infrastructureMapping.getAccountId() != null) {
+          phyWinRmbuilder.withAccountId(infrastructureMapping.getAccountId());
+        } else {
+          final Account account = owners.obtainAccount();
+          phyWinRmbuilder.withAccountId(account.getUuid());
+        }
+
+        if (infrastructureMapping.getServiceId() != null) {
+          phyWinRmbuilder.withServiceId(infrastructureMapping.getServiceId());
+        } else {
+          Service service = owners.obtainService();
+          if (service == null) {
+            service = serviceGenerator.ensureRandom(seed, owners);
+            owners.add(service);
+          }
+          phyWinRmbuilder.withServiceId(service.getUuid());
+        }
+
+        if (infrastructureMapping.getServiceTemplateId() != null) {
+          phyWinRmbuilder.withServiceTemplateId(infrastructureMapping.getServiceTemplateId());
+        } else {
+          Service service = owners.obtainService();
+          ServiceTemplate serviceTemplate = owners.obtainServiceTemplate();
+          phyWinRmbuilder.withServiceTemplateId(serviceTemplate.getUuid());
+        }
+
+        if (infrastructureMapping.getDeploymentType() != null) {
+          phyWinRmbuilder.withDeploymentType(infrastructureMapping.getDeploymentType());
+        } else {
+          DeploymentType deploymentType = owners.obtainService().getDeploymentType();
+          if (deploymentType != null) {
+            phyWinRmbuilder.withDeploymentType(deploymentType.name());
+          } else {
+            phyWinRmbuilder.withDeploymentType(random.nextObject(DeploymentType.class).name());
+          }
+        }
+
+        phyWinRmbuilder.withComputeProviderType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name());
+
+        if (infrastructureMapping.getComputeProviderSettingId() != null) {
+          phyWinRmbuilder.withComputeProviderSettingId(infrastructureMapping.getComputeProviderSettingId());
+        } else {
+          final SettingAttribute physicalInfraSettingAttr =
+              settingGenerator.ensurePredefined(seed, owners, PHYSICAL_DATA_CENTER);
+          phyWinRmbuilder.withComputeProviderSettingId(physicalInfraSettingAttr.getUuid());
+        }
+
+        if (physicalInfrastructureMappingWinRm.getWinRmConnectionAttributes() != null) {
+          phyWinRmbuilder.withWinRmConnectionAttributes(
+              physicalInfrastructureMappingWinRm.getWinRmConnectionAttributes());
+        } else {
+          final SettingAttribute winRmSettingAttribute =
+              settingGenerator.ensurePredefined(seed, owners, WINRM_TEST_CONNECTOR);
+          phyWinRmbuilder.withWinRmConnectionAttributes(winRmSettingAttribute.getUuid());
+        }
+
+        if (physicalInfrastructureMappingWinRm.getHostNames() != null) {
+          phyWinRmbuilder.withHostNames(physicalInfrastructureMappingWinRm.getHostNames());
+        } else {
+          phyWinRmbuilder.withHostNames(asList(AZURE_DEPLOY_HOST));
+        }
+
+        newInfrastructureMapping = phyWinRmbuilder.build();
+        break;
+
       default:
         unhandled(infrastructureMappingType);
         throw new UnsupportedOperationException();

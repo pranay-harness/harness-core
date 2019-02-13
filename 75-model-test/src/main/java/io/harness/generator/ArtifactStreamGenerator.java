@@ -34,12 +34,14 @@ public class ArtifactStreamGenerator {
 
   @Inject WingsPersistence wingsPersistence;
 
-  public enum ArtifactStreams { HARNESS_SAMPLE_ECHO_WAR, ARTIFACTORY_ECHO_WAR }
+  public enum ArtifactStreams { HARNESS_SAMPLE_ECHO_WAR, ARTIFACTORY_ECHO_WAR, HARNESS_SAMPLE_IIS_APP }
 
   public ArtifactStream ensurePredefined(Randomizer.Seed seed, Owners owners, ArtifactStreams predefined) {
     switch (predefined) {
       case HARNESS_SAMPLE_ECHO_WAR:
         return ensureHarnessSampleEchoWar(seed, owners, null);
+      case HARNESS_SAMPLE_IIS_APP:
+        return ensureHarnessSampleIISApp(seed, owners, null);
       case ARTIFACTORY_ECHO_WAR:
         return ensureHarnessArtifactoryEchoWar(seed, owners, null);
       default:
@@ -47,6 +49,28 @@ public class ArtifactStreamGenerator {
     }
 
     return null;
+  }
+
+  public ArtifactStream ensureHarnessSampleIISApp(Randomizer.Seed seed, Owners owners, String serviceId) {
+    if (serviceId == null) {
+      Service service = owners.obtainService();
+      serviceId = service.getUuid();
+    }
+    Application application = owners.obtainApplication();
+
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
+
+    return ensureArtifactStream(seed,
+        AmazonS3ArtifactStream.builder()
+            .appId(application.getUuid())
+            .serviceId(serviceId)
+            .name("harness-iis-app")
+            .sourceName(settingAttribute.getName())
+            .jobname("iis-app-example")
+            .artifactPaths(asList("todolist-v2.0.zip"))
+            .settingId(settingAttribute.getUuid())
+            .build());
   }
 
   public ArtifactStream ensureHarnessSampleEchoWar(Randomizer.Seed seed, Owners owners, String serviceId) {
