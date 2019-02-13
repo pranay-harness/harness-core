@@ -355,7 +355,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         .build();
   }
 
-  private List<GitFileChange> obtainApplicationYamlGitFileChanges(String accountId, Application app) {
+  public List<GitFileChange> obtainApplicationYamlGitFileChanges(String accountId, Application app) {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
 
     FolderNode applicationsFolder = new FolderNode(
