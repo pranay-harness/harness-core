@@ -60,6 +60,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
+import software.wings.beans.template.artifacts.CustomRepositoryMapping.AttributeMapping;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.expression.SecretFunctor;
 import software.wings.helpers.ext.azure.AzureHelperService;
@@ -380,6 +381,16 @@ public class ArtifactCollectionUtil {
     artifactStreamAttributes.setCustomArtifactStreamScript(evaluator.substitute(scriptString, context));
     artifactStreamAttributes.setAccountId(app.getAccountId());
     artifactStreamAttributes.setCustomScriptTimeout(versionScript.getTimeout());
+    if (versionScript.getCustomRepositoryMapping() != null) {
+      artifactStreamAttributes.setCustomAttributeMappingNeeded(true);
+      artifactStreamAttributes.setArtifactRoot(versionScript.getCustomRepositoryMapping().getArtifactRoot());
+      artifactStreamAttributes.setBuildNoPath(versionScript.getCustomRepositoryMapping().getBuildNoPath());
+      Map<String, String> map = new HashMap<>();
+      for (AttributeMapping attributeMapping : versionScript.getCustomRepositoryMapping().getArtifactAttributes()) {
+        map.put(attributeMapping.getRelativePath(), attributeMapping.getMappedAttribute());
+      }
+      artifactStreamAttributes.setArtifactAttributes(map);
+    }
     return artifactStreamAttributes;
   }
 }

@@ -4,7 +4,6 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.artifact.CustomRepositoryMapping;
 import lombok.Builder;
 import lombok.Value;
 

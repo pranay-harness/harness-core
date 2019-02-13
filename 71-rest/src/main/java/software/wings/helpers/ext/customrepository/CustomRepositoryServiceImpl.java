@@ -8,6 +8,9 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.jayway.jsonpath.DocumentContext;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
@@ -16,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse;
+import software.wings.helpers.ext.jenkins.CustomRepositoryResponse.CustomRepositoryResponseBuilder;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse.Result;
 import software.wings.helpers.ext.shell.request.ShellExecutionRequest;
 import software.wings.helpers.ext.shell.response.ShellExecutionResponse;
@@ -25,8 +29,12 @@ import software.wings.utils.Misc;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 @Singleton
 public class CustomRepositoryServiceImpl implements CustomRepositoryService {
@@ -37,6 +45,9 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
 
   @Override
   public List<BuildDetails> getBuilds(ArtifactStreamAttributes artifactStreamAttributes) {
+    if (artifactStreamAttributes.isCustomAttributeMappingNeeded()) {
+      validateAttributeMapping(artifactStreamAttributes.getArtifactRoot(), artifactStreamAttributes.getBuildNoPath());
+    }
     // Call Shell Executor with Request
     ShellExecutionRequest shellExecutionRequest =
         ShellExecutionRequest.builder()
@@ -61,9 +72,18 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
       }
       // Convert to Build details
       File file = new File(artifactResultPath);
+      CustomRepositoryResponse customRepositoryResponse;
       try {
-        final CustomRepositoryResponse customRepositoryResponse =
-            (CustomRepositoryResponse) JsonUtils.readFromFile(file, CustomRepositoryResponse.class);
+        if (EmptyPredicate.isNotEmpty(artifactStreamAttributes.getArtifactRoot())) {
+          JsonNode jsonObject = (JsonNode) JsonUtils.readFromFile(file, JsonNode.class);
+          String json = JsonUtils.asJson(jsonObject);
+          customRepositoryResponse = mapToCustomRepositoryResponse(json, artifactStreamAttributes.getArtifactRoot(),
+              artifactStreamAttributes.getBuildNoPath(), artifactStreamAttributes.getArtifactAttributes());
+        } else {
+          customRepositoryResponse =
+              (CustomRepositoryResponse) JsonUtils.readFromFile(file, CustomRepositoryResponse.class);
+        }
+
         List<Result> results = customRepositoryResponse.getResults();
         List<String> buildNumbers = new ArrayList<>();
         if (isNotEmpty(results)) {
@@ -108,6 +128,43 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
     }
 
     return buildDetails;
+  }
+
+  private void validateAttributeMapping(String artifactRoot, String buildNoPath) {
+    if (EmptyPredicate.isEmpty(artifactRoot)) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
+          .addParam("message",
+              "Artifacts Array Path cannot be null or empty. Please provide a valid value for Artifacts Array Path.");
+    }
+    if (EmptyPredicate.isEmpty(buildNoPath)) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
+          .addParam("message", "BuildNo Path cannot be null or empty. Please provide a valid value for BuildNo Path");
+    }
+  }
+
+  public CustomRepositoryResponse mapToCustomRepositoryResponse(
+      String json, String artifactRoot, String buildNoPath, Map<String, String> map) {
+    DocumentContext ctx = JsonUtils.parseJson(json);
+    CustomRepositoryResponseBuilder customRepositoryResponse = CustomRepositoryResponse.builder();
+    List<Result> result = new ArrayList<>();
+
+    LinkedList<LinkedHashMap> children = JsonUtils.jsonPath(ctx, artifactRoot + "[*]");
+    for (int i = 0; i < children.size(); i++) {
+      Map<String, String> metadata = new HashMap<>();
+      CustomRepositoryResponse.Result.ResultBuilder res = CustomRepositoryResponse.Result.builder();
+      res.buildNo(JsonUtils.jsonPath(ctx, artifactRoot + "[" + i + "]." + buildNoPath));
+      for (Entry<String, String> entry : map.entrySet()) {
+        String mappedAttribute = EmptyPredicate.isEmpty(entry.getValue())
+            ? entry.getKey().substring(entry.getKey().lastIndexOf('.') + 1)
+            : entry.getValue().substring(entry.getValue().lastIndexOf('.') + 1);
+        String value = JsonUtils.jsonPath(ctx, artifactRoot + "[" + i + "]." + entry.getKey()).toString();
+        metadata.put(mappedAttribute, value);
+      }
+      res.metadata(metadata);
+      result.add(res.build());
+    }
+    customRepositoryResponse.results(result);
+    return customRepositoryResponse.build();
   }
 
   @Override

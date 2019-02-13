@@ -1,4 +1,4 @@
-package io.harness.artifact;
+package software.wings.beans.template.artifacts;
 
 import lombok.Builder;
 import lombok.Value;
@@ -9,12 +9,13 @@ import java.util.List;
 @Builder
 public class CustomRepositoryMapping {
   private String artifactRoot;
+  private String buildNoPath;
   private List<AttributeMapping> artifactAttributes;
 
   @Value
   @Builder
   public static class AttributeMapping {
-    private String fromField;
-    private String toField;
+    private String relativePath;
+    private String mappedAttribute;
   }
 }

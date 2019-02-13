@@ -1,12 +1,11 @@
 package io.harness.functional.artifactstream;
 
-import static io.harness.artifact.CustomRepositoryMapping.AttributeMapping.builder;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.template.artifacts.CustomRepositoryMapping.AttributeMapping.builder;
 
 import com.google.inject.Inject;
 
-import io.harness.artifact.CustomRepositoryMapping;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
@@ -30,6 +29,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Script;
+import software.wings.beans.template.artifacts.CustomRepositoryMapping;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,10 +111,13 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
     String scriptString =
         "echo '{\"results\":[{\"buildNo\":\"1.0\",\"metadata\":{\"repository\":\"maven-releases\",\"downloadUrl\":\"http://localhost:8081/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war\"}}]}' > $ARTIFACT_RESULT_PATH";
     List<CustomRepositoryMapping.AttributeMapping> attributeMapping = new ArrayList<>();
-    attributeMapping.add(builder().fromField("version").toField("buildNo").build());
-    attributeMapping.add(builder().fromField("assets.downloadUrl").toField("metadata.downloadUrl").build());
-    CustomRepositoryMapping mapping =
-        CustomRepositoryMapping.builder().artifactRoot("$.results").artifactAttributes(attributeMapping).build();
+    attributeMapping.add(builder().relativePath("metadata.downloadUrl").mappedAttribute("downloadUrl").build());
+    attributeMapping.add(builder().relativePath("metadata.repository").mappedAttribute("repo").build());
+    CustomRepositoryMapping mapping = CustomRepositoryMapping.builder()
+                                          .artifactRoot("$.results")
+                                          .buildNoPath("buildNo")
+                                          .artifactAttributes(attributeMapping)
+                                          .build();
     String name = "Custom Artifact Stream" + System.currentTimeMillis();
     ArtifactStream customArtifactStream = CustomArtifactStream.builder()
                                               .appId(application.getUuid())
@@ -146,17 +149,18 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
     Script script = savedCustomArtifactStream.getScripts().stream().findFirst().orElse(null);
     assertThat(script.getScriptString()).isEqualTo(scriptString);
     assertThat(script.getCustomRepositoryMapping()).isNotNull();
+    assertThat(script.getCustomRepositoryMapping().getBuildNoPath()).isEqualTo("buildNo");
     assertThat(script.getCustomRepositoryMapping().getArtifactAttributes().size()).isEqualTo(2);
     assertThat(script.getCustomRepositoryMapping().getArtifactAttributes())
-        .extracting("fromField")
-        .contains("version", "assets.downloadUrl");
+        .extracting("mappedAttribute")
+        .contains("downloadUrl", "repo");
 
     // Delete custom artifactStream
     given()
         .auth()
         .oauth2(bearerToken)
         .queryParam("appId", application.getUuid())
-        .pathParam("id", savedCustomArtifactStream.getUuid())
+        .pathParam("id", savedArtifactSteam.getUuid())
         .delete("/artifactstreams/{id}")
         .then()
         .statusCode(200);
@@ -166,7 +170,7 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
                        .auth()
                        .oauth2(bearerToken)
                        .queryParam("appId", application.getUuid())
-                       .pathParam("streamId", savedCustomArtifactStream.getUuid())
+                       .pathParam("streamId", savedArtifactSteam.getUuid())
                        .get("/artifactstreams/{streamId}")
                        .as(artifactStreamType.getType());
     assertThat(restResponse.getResource()).isNull();

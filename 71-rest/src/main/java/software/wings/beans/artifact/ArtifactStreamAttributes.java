@@ -43,6 +43,10 @@ public class ArtifactStreamAttributes {
   @Getter @Setter private String customScriptTimeout;
   @Getter @Setter private String accountId;
   @Getter @Setter private String customArtifactStreamScript;
+  @Getter @Setter private String artifactRoot;
+  @Getter @Setter private String buildNoPath;
+  @Getter @Setter private Map<String, String> artifactAttributes;
+  @Getter @Setter private boolean customAttributeMappingNeeded;
 
   /**
    * Gets job name.
@@ -346,6 +350,10 @@ public class ArtifactStreamAttributes {
     private String customScriptTimeout;
     private String accountId;
     private String customArtifactStreamScript;
+    private String artifactRoot;
+    private String buildNoPath;
+    private Map<String, String> artifactAttributes;
+    private boolean customAttributeMappingNeeded;
 
     private Builder() {}
 
@@ -539,6 +547,26 @@ public class ArtifactStreamAttributes {
       return this;
     }
 
+    public Builder withArtifactRoot(String artifactRoot) {
+      this.artifactRoot = artifactRoot;
+      return this;
+    }
+
+    public Builder withBuildNoPath(String buildNoPath) {
+      this.buildNoPath = buildNoPath;
+      return this;
+    }
+
+    public Builder withArtifactAttributes(Map<String, String> artifactAttributes) {
+      this.artifactAttributes = artifactAttributes;
+      return this;
+    }
+
+    public Builder withCustomAttributeMappingNeeded(boolean customAttributeMappingNeeded) {
+      this.customAttributeMappingNeeded = customAttributeMappingNeeded;
+      return this;
+    }
+
     /**
      * Build artifact stream attributes.
      *
@@ -572,6 +600,10 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setNexusDockerPort(nexusDockerPort);
       artifactStreamAttributes.setCustomScriptTimeout(customScriptTimeout);
       artifactStreamAttributes.setCustomArtifactStreamScript(customArtifactStreamScript);
+      artifactStreamAttributes.setArtifactRoot(artifactRoot);
+      artifactStreamAttributes.setBuildNoPath(buildNoPath);
+      artifactStreamAttributes.setArtifactAttributes(artifactAttributes);
+      artifactStreamAttributes.setCustomAttributeMappingNeeded(customAttributeMappingNeeded);
       return artifactStreamAttributes;
     }
   }
