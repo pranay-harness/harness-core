@@ -27,6 +27,7 @@ import java.util.Map;
 @Data
 @Builder
 public class NewRelicMetricValueDefinition {
+  public static String ERROR_DISPLAY_METRIC_NAME = "Error Percentage";
   public static String ERROR = "error";
   public static String THROUGHPUT = "throughput";
   public static String AVERAGE_RESPONSE_TIME = "averageResponseTime";

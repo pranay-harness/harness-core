@@ -10,4 +10,7 @@ public interface AppdynamicsConstants {
   String NUMBER_OF_SLOW_CALLS = "Number of Slow Calls";
   String CALLS_PER_MINUTE = "Calls per Minute";
   String AVG_RESPONSE_TIME = "Average Response Time (ms)";
+
+  String ERROR_DISPLAY_METRIC_NAME = "Error Percentage";
+  String STALL_COUNT_DISPLAY_METRIC_NAME = "Stall Count Percentage";
 }

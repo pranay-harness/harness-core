@@ -3,6 +3,7 @@ package io.harness.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -125,6 +126,40 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
           return restCall;
         });
     setInternalState(continuousVerificationService, "verificationManagerClient", verificationManagerClient);
+  }
+
+  @Test
+  public void testDefaultBaseline() {
+    LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setName(generateUuid());
+    logsCVConfiguration.setAccountId(accountId);
+    logsCVConfiguration.setAppId(appId);
+    logsCVConfiguration.setEnvId(envId);
+    logsCVConfiguration.setServiceId(serviceId);
+    logsCVConfiguration.setEnabled24x7(true);
+    logsCVConfiguration.setConnectorId(connectorId);
+    logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+    logsCVConfiguration.setStateType(StateType.SUMO);
+
+    cvConfigId = wingsPersistence.save(logsCVConfiguration);
+
+    logsCVConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    assertTrue(logsCVConfiguration.getBaselineStartMinute() < 0);
+    assertTrue(logsCVConfiguration.getBaselineEndMinute() < 0);
+  }
+
+  @Test
+  public void testLogsCollectionNoBaselineSet() {
+    LogsCVConfiguration logsCVConfiguration =
+        (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    logsCVConfiguration.setBaselineStartMinute(-1);
+    logsCVConfiguration.setBaselineEndMinute(-1);
+    wingsPersistence.save(logsCVConfiguration);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(logsCVConfiguration));
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+    assertEquals(0, delegateTasks.size());
   }
 
   @Test

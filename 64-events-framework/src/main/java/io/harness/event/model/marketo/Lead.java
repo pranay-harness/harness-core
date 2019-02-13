@@ -1,6 +1,7 @@
 package io.harness.event.model.marketo;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 
 import java.util.List;
@@ -26,8 +27,8 @@ public class Lead {
   /**
    * Valid values are createOnly, updateOnly and createOrUpdate
    */
-  private String action = "createOnly";
-  private String lookupField = "email";
+  @Default private String action = "createOnly";
+  @Default private String lookupField = "email";
   private List<Input> input;
 
   @Data
