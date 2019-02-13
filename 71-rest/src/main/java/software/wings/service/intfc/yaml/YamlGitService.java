@@ -7,6 +7,7 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitConfig;
@@ -201,4 +202,6 @@ public interface YamlGitService {
   void fullSyncForEntireAccount(String accountId);
 
   void asyncFullSyncForEntireAccount(String accountId);
+
+  List<GitFileChange> obtainApplicationYamlGitFileChanges(String accountId, Application app);
 }
