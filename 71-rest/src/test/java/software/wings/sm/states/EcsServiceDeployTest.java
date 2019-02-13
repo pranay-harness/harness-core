@@ -26,7 +26,6 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -75,6 +74,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
@@ -240,7 +240,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     Map<String, ResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
+    notifyResponse.put("key", CommandExecutionResult.builder().status(CommandExecutionStatus.SUCCESS).build());
 
     stateExecutionInstance.getStateExecutionMap().put(
         stateExecutionInstance.getDisplayName(), aCommandStateExecutionData().build());
@@ -257,7 +257,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     Map<String, ResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
+    notifyResponse.put("key", CommandExecutionResult.builder().status(CommandExecutionStatus.SUCCESS).build());
     stateExecutionInstance.getStateExecutionMap().put(
         stateExecutionInstance.getDisplayName(), aCommandStateExecutionData().build());
 

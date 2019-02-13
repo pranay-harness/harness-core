@@ -35,7 +35,6 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -308,7 +307,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
     commandState.handleAsyncResponse(
-        context, ImmutableMap.of(ACTIVITY_ID, aCommandExecutionResult().withStatus(SUCCESS).build()));
+        context, ImmutableMap.of(ACTIVITY_ID, CommandExecutionResult.builder().status(SUCCESS).build()));
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
     verify(serviceResourceService).getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START");
@@ -406,9 +405,9 @@ public class CommandStateTest extends WingsBaseTest {
         .thenReturn(CommandStateExecutionData.Builder.aCommandStateExecutionData().build());
     ExecutionResponse executionResponse = commandState.handleAsyncResponse(context,
         ImmutableMap.of(ACTIVITY_ID,
-            CommandExecutionResult.Builder.aCommandExecutionResult()
-                .withStatus(CommandExecutionStatus.FAILURE)
-                .withErrorMessage("Command Failed")
+            CommandExecutionResult.builder()
+                .status(CommandExecutionStatus.FAILURE)
+                .errorMessage("Command Failed")
                 .build()));
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
@@ -477,7 +476,7 @@ public class CommandStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = commandState.execute(context);
     when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
     commandState.handleAsyncResponse(
-        context, ImmutableMap.of(ACTIVITY_ID, aCommandExecutionResult().withStatus(SUCCESS).build()));
+        context, ImmutableMap.of(ACTIVITY_ID, CommandExecutionResult.builder().status(SUCCESS).build()));
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
     verify(serviceResourceService).get(APP_ID, SERVICE_ID);

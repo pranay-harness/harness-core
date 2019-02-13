@@ -11,7 +11,6 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SweepingOutput.Scope.PIPELINE;
-import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -88,9 +87,9 @@ public class ShellScriptStateTest {
     map.put("A", "aaa");
     ExecutionResponse executionResponse = shellScriptState.handleAsyncResponse(executionContext,
         ImmutableMap.of(ACTIVITY_ID,
-            aCommandExecutionResult()
-                .withStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-                .withCommandExecutionData(ShellExecutionData.builder().sweepingOutputEnvVariables(map).build())
+            CommandExecutionResult.builder()
+                .status(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                .commandExecutionData(ShellExecutionData.builder().sweepingOutputEnvVariables(map).build())
                 .build()));
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(sweepingOutputService, times(1)).save(any(SweepingOutput.class));
@@ -112,9 +111,9 @@ public class ShellScriptStateTest {
     map.put("A", "aaa");
     ExecutionResponse executionResponse = shellScriptState.handleAsyncResponse(executionContext,
         ImmutableMap.of(ACTIVITY_ID,
-            aCommandExecutionResult()
-                .withStatus(CommandExecutionResult.CommandExecutionStatus.FAILURE)
-                .withCommandExecutionData(ShellExecutionData.builder().sweepingOutputEnvVariables(map).build())
+            CommandExecutionResult.builder()
+                .status(CommandExecutionResult.CommandExecutionStatus.FAILURE)
+                .commandExecutionData(ShellExecutionData.builder().sweepingOutputEnvVariables(map).build())
                 .build()));
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
     verify(sweepingOutputService, times(0)).save(any(SweepingOutput.class));
