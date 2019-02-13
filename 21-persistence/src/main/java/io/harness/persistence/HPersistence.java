@@ -265,6 +265,17 @@ public interface HPersistence {
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions);
 
   /**
+   * Find and modify data that is system and it should not refresh any of the trackers.
+   *
+   * @param query                the query
+   * @param updateOperations     the update operations
+   * @param findAndModifyOptions the find and modify options
+   * @return previous or new entity depending on options
+   */
+  <T extends PersistentEntity> T findAndModifySystemData(
+      Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions);
+
+  /**
    * Merge.
    *
    * @param entity   the entity to merge
