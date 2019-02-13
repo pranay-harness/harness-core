@@ -605,7 +605,8 @@ public class WingsModule extends DependencyModule {
         .to(BackgroundJobScheduler.class)
         .asEagerSingleton();
 
-    if (Objects.equals(configuration.getBackgroundSchedulerConfig(), configuration.getServiceSchedulerConfig())) {
+    if (Objects.equals(configuration.getBackgroundSchedulerConfig().getSchedulerName(),
+            configuration.getServiceSchedulerConfig().getSchedulerName())) {
       bind(PersistentScheduler.class)
           .annotatedWith(Names.named("ServiceJobScheduler"))
           .to(BackgroundJobScheduler.class)
