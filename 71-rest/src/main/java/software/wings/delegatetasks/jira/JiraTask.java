@@ -1,8 +1,6 @@
 package software.wings.delegatetasks.jira;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.inject.Inject;
 
@@ -242,9 +240,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         issue.transition().execute(parameters.getStatus());
       }
 
-      commandExecutionStatus = CommandExecutionStatus.SUCCESS;
-      saveExecutionLog(
-          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
+      logger.info("Script execution finished with status: " + ExecutionStatus.SUCCESS);
 
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.SUCCESS)
@@ -255,10 +251,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .build();
 
     } catch (JiraException e) {
-      commandExecutionStatus = CommandExecutionStatus.FAILURE;
-      saveExecutionLog(
-          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
-
       String errorMessage = "Failed to update the new JIRA ticket " + parameters.getIssueId();
       logger.error(errorMessage, e);
       return JiraExecutionData.builder()
@@ -324,9 +316,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       if (isNotBlank(parameters.getStatus())) {
         issue.transition().execute(parameters.getStatus());
       }
-      commandExecutionStatus = CommandExecutionStatus.SUCCESS;
-      saveExecutionLog(
-          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
+
+      logger.info("Script execution finished with status SUCCESS");
 
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.SUCCESS)
@@ -338,10 +329,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .build();
     } catch (JiraException e) {
       logger.error("Unable to create a new JIRA ticket", e);
-      commandExecutionStatus = CommandExecutionStatus.FAILURE;
-
-      saveExecutionLog(
-          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage("Unable to create a new JIRA ticket. ")
@@ -358,9 +345,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       issue = jira.getIssue(parameters.getIssueId());
     } catch (JiraException e) {
       CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.FAILURE;
-      saveExecutionLog(
-          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
-
       String errorMessage = "Failed to fetch jira issue for " + parameters.getIssueId();
       logger.error(errorMessage, e);
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
@@ -404,18 +388,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return null;
   }
 
-  private void saveExecutionLog(
-      JiraTaskParameters parameters, String line, CommandExecutionStatus commandExecutionStatus) {
-    logService.save(parameters.getAccountId(),
-        aLog()
-            .withAppId(parameters.getAppId())
-            .withActivityId(parameters.getActivityId())
-            .withLogLevel(INFO)
-            .withLogLine(line)
-            .withExecutionResult(commandExecutionStatus)
-            .build());
-  }
-
   private JiraClient getJiraClient(JiraTaskParameters parameters) throws JiraException {
     JiraConfig jiraConfig = parameters.getJiraConfig();
     encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
@@ -437,10 +409,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     } catch (JiraException e) {
       String error = "Unable to fetch Jira for id: " + parameters.getIssueId();
       logger.error(error, e);
-      commandExecutionStatus = CommandExecutionStatus.FAILURE;
-      saveExecutionLog(
-          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
-
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(error).build();
     }
     String message = "Approval/Rejection provided on ticket: " + issue.getKey();
@@ -456,16 +424,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       jira.getRestClient().delete(new URI(parameters.getWebhookUrl()));
     } catch (IOException | URISyntaxException | RestException e) {
       logger.error("Unable to delete a new JIRA webhook", e);
-      commandExecutionStatus = CommandExecutionStatus.FAILURE;
-      saveExecutionLog(
-          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
-
       return jiraExecutionData;
     }
-    commandExecutionStatus = CommandExecutionStatus.SUCCESS;
-    saveExecutionLog(
-        parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
-
     return jiraExecutionData;
   }
 
@@ -481,10 +441,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     } catch (JiraException e) {
       String error = "Unable to fetch Jira for id: " + parameters.getIssueId();
       logger.error(error, e);
-      commandExecutionStatus = CommandExecutionStatus.FAILURE;
-      saveExecutionLog(
-          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
-
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(error).build();
     }
 
@@ -519,18 +475,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     } catch (RestException | IOException | URISyntaxException e) {
       String error = "Unable to create a new JIRA webhook for " + getIssueUrl(jiraConfig, issue);
       logger.error(error, e);
-
-      commandExecutionStatus = CommandExecutionStatus.FAILURE;
-      saveExecutionLog(
-          parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
-
       return jiraExecutionData;
     }
-
-    commandExecutionStatus = CommandExecutionStatus.SUCCESS;
-    saveExecutionLog(
-        parameters, "Script execution finished with status: " + commandExecutionStatus, commandExecutionStatus);
-
     jiraExecutionData.setWebhookUrl(webhookUrl);
     return jiraExecutionData;
   }
