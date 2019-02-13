@@ -5,35 +5,42 @@ replicaSetName: rs0
 
 podDisruptionBudget: {}
   # maxUnavailable: 1
-  # minAvailable: 2
+# minAvailable: 2
 
 auth:
-  enabled: false
-  # adminUser: username
-  # adminPassword: password
+  enabled: true
+  adminUser: adminUser
+  adminPassword: adminPass
   # metricsUser: metrics
   # metricsPassword: password
-  # key: keycontent
+  key: Harness
   # existingKeySecret:
   # existingAdminSecret:
   # exisitingMetricsSecret:
 
+## Optionally specify an array of imagePullSecrets.
+## Secrets must be manually created in the namespace.
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+##
+imagePullSecrets: []
+#   - myRegistrKeySecretName
+
 # Specs for the Docker image for the init container that establishes the replica set
 installImage:
-  repository: k8s.gcr.io/mongodb-install
-  tag: 0.6
+  repository: harness/mongodb-install
+  tag: 0.8
+  pullPolicy: IfNotPresent
+
+# Specs for the Docker image for the copyConfig init container
+copyConfigImage:
+  repository: busybox
+  tag: 1.29.3
   pullPolicy: IfNotPresent
 
 # Specs for the MongoDB image
 image:
   repository: mongo
   tag: 3.6
-  pullPolicy: IfNotPresent
-
-# Specs for busybox image
-busyboxImage:
-  repository: busybox
-  tag: latest
   pullPolicy: IfNotPresent
 
 # Additional environment variables to be set in the container
@@ -63,6 +70,10 @@ securityContext:
   fsGroup: 999
   runAsNonRoot: true
 
+init:
+  resources: {}
+  timeout: 900
+
 resources: {}
 # limits:
 #   cpu: 500m
@@ -81,6 +92,8 @@ tolerations: []
 
 extraLabels: {}
 
+# priorityClassName: ""
+
 persistentVolume:
   enabled: true
   ## mongodb-replicaset data Persistent Volume Storage Class
@@ -90,14 +103,16 @@ persistentVolume:
   ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
   ##   GKE, AWS & OpenStack)
   ##
-  # storageClass: "-"
+  storageClass: "standard"
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
   size: 10Gi
   annotations: {}
 
 # Annotations to be added to the service
 serviceAnnotations: {}
+
+terminationGracePeriodSeconds: 30
 
 tls:
   # Enable or disable MongoDB TLS support
@@ -111,7 +126,7 @@ tls:
   # cakey:
 
 # Entries for the MongoDB config file
-configmap:
+configmap: {}
 
 # Javascript code to execute on each replica at initContainer time
 # This is the recommended way to create indexes on replicasets.

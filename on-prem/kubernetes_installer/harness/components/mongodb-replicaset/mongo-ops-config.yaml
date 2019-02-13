@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: harness-mongo-ops
+  namespace: harness-mongo
+data:
+  projectName: Project 0
+  ordId: 5beb8d218ef8d61a98bdf075
+  baseUrl: http://mongo.harness.io:8080
