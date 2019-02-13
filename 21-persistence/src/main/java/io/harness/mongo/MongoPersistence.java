@@ -324,6 +324,12 @@ public class MongoPersistence implements HPersistence {
   }
 
   @Override
+  public <T extends PersistentEntity> T findAndModifySystemData(
+      Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions) {
+    return getDatastore(query.getEntityClass(), CRITICAL).findAndModify(query, updateOperations, findAndModifyOptions);
+  }
+
+  @Override
   public <T extends PersistentEntity> String merge(T entity) {
     onEntityUpdate(entity, currentTimeMillis());
     return getDatastore(entity, NORMAL).merge(entity).getId().toString();

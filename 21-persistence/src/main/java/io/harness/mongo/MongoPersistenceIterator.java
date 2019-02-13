@@ -118,7 +118,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
     final UpdateOperations<T> updateOperations =
         persistence.createUpdateOperations(clazz).set(fieldName, base + targetInterval.toMillis());
 
-    return persistence.findAndModify(query, updateOperations, findAndModifyOptions);
+    return persistence.findAndModifySystemData(query, updateOperations, findAndModifyOptions);
   }
 
   void processEntity(T entity) {
