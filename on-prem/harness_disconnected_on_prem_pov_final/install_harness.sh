@@ -316,6 +316,25 @@ function setupDelegateJars(){
 }
 
 
+function setupClientUtils(){
+   echo "################################Setting up Client Utils ################################"
+
+   echo "Copying kubectl and go-template to harness-manager-nginx-0"
+
+    for platform in linux darwin; do
+        for kubectlversion in v1.13.2; do
+            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
+            cp images/kubectl/${platform}/$kubectlversion/kubectl ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
+        done
+
+        for gotemplateversion in v0.2; do
+            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
+            cp images/go-template/${platform}/$gotemplateversion/go-template ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
+        done
+    done
+}
+
+
 function loadDockerImages(){
     docker load --input images/proxy.tar
     docker load --input images/manager.tar
@@ -340,6 +359,7 @@ function startUp(){
     setupUI
     setUpLearningEngine
     setupDelegateJars
+    setupClientUtils
 }
 
 function cleanupAfterStart(){
