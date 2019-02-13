@@ -6,10 +6,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.common.Constants.USER_CACHE;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -41,6 +43,8 @@ import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
+import io.harness.iterator.PersistenceIterator;
+import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.ManageDistributedLockSvc;
@@ -49,6 +53,7 @@ import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoModule;
+import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
@@ -77,6 +82,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.beans.User;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.common.Constants;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -95,6 +101,7 @@ import software.wings.notification.EmailNotificationListener;
 import software.wings.prune.PruneEntityListener;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.AdministrativeJob;
+import software.wings.scheduler.ArtifactCollectionHandler;
 import software.wings.scheduler.BarrierBackupJob;
 import software.wings.scheduler.ExecutionLogsPruneJob;
 import software.wings.scheduler.InstanceStatsMetricsJob;
@@ -133,6 +140,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import javax.cache.Caching;
 import javax.cache.configuration.Configuration;
@@ -303,6 +312,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Authentication/Authorization filters
     registerAuthFilters(configuration, environment, injector);
 
+    // Register collection iterators
+    registerIterators(injector);
+
     environment.healthChecks().register("WingsApp", new WingsHealthCheck());
 
     startPlugins(injector);
@@ -459,6 +471,28 @@ public class WingsApplication extends Application<MainConfiguration> {
     settingsService.getManipulationSubject().register(workflowService);
     stateMachineExecutor.getStatusUpdateSubject().register(workflowExecutionService);
     stateInspectionService.getSubject().register(stateMachineExecutor);
+  }
+
+  public static void registerIterators(Injector injector) {
+    final ScheduledThreadPoolExecutor artifactCollectionExecutor =
+        new ScheduledThreadPoolExecutor(25, new ThreadFactoryBuilder().setNameFormat("ArtifactCollection").build());
+
+    final ArtifactCollectionHandler artifactCollectionHandler = new ArtifactCollectionHandler();
+    injector.injectMembers(artifactCollectionHandler);
+
+    PersistenceIterator iterator = MongoPersistenceIterator.<ArtifactStream>builder()
+                                       .clazz(ArtifactStream.class)
+                                       .fieldName(ArtifactStream.NEXT_ITERATION_KEY)
+                                       .targetInterval(ofMinutes(1))
+                                       .acceptableDelay(ofSeconds(30))
+                                       .executorService(artifactCollectionExecutor)
+                                       .semaphore(new Semaphore(25))
+                                       .handler(artifactCollectionHandler)
+                                       .redistribute(true)
+                                       .build();
+
+    injector.injectMembers(iterator);
+    artifactCollectionExecutor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
   }
 
   private void registerCronJobs(Injector injector) {
