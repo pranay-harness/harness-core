@@ -35,6 +35,26 @@ JRE_SOLARIS_2=jre-8u191-solaris-x64.tar.gz
 JRE_MACOSX_2=jre-8u191-macosx-x64.tar.gz
 JRE_LINUX_2=jre-8u191-linux-x64.tar.gz
 
+KUBECTL_VERSION=v1.13.2
+GOTEMPLATE_VERSION=v0.2
+
+KUBECTL_LINUX_DIR="${IMAGES_DIR}/kubectl/linux/$KUBECTL_VERSION/"
+KUBECTL_MAC_DIR="${IMAGES_DIR}/kubectl/darwin/$KUBECTL_VERSION/"
+
+GOTEMPLATE_LINUX_DIR="${IMAGES_DIR}/go-template/linux/$GOTEMPLATE_VERSION/"
+GOTEMPLATE_MAC_DIR="${IMAGES_DIR}/go-template/darwin/$GOTEMPLATE_VERSION/"
+
+echo "$KUBECTL_MAC_DIR"
+echo "$KUBECTL_LINUX_DIR"
+echo "$GOTEMPLATE_MAC_DIR"
+echo "$GOTEMPLATE_LINUX_DIR"
+
+
+KUBECTL_LINUX_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/linux/amd64/kubectl
+KUBECTL_MAC_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/darwin/amd64/kubectl
+
+GOTEMPLATE_LINUX_URL=https://app.harness.io/storage/harness-download/snapshot-go-template/release/"$GOTEMPLATE_VERSION"/bin/linux/amd64/go-template
+GOTEMPLATE_MAC_URL=https://app.harness.io/storage/harness-download/snapshot-go-template/release/"$GOTEMPLATE_VERSION"/bin/darwin/amd64/go-template
 
 rm -f "${INSTALLER_COMPRESSED_FILE}"
 
@@ -51,9 +71,16 @@ echo "Watcher version is ${WATCHER_VERSION}"
 echo "Proxy version is ${PROXY_VERSION}"
 echo "UI version is ${UI_VERSION}"
 echo "Learning Engine version is ${LEARNING_ENGINE_VERSION}"
+echo "kubectl version is ${KUBECTL_VERSION}"
+echo "go-template version is ${GOTEMPLATE_VERSION}"
 
 cp -r ../${INSTALLER_TEMPLATE_DIR}/* ${INSTALLER_DIR}/
 cp "${VERSION_PROPERTIES_FILE}" "${INSTALLER_DIR}/"
+
+mkdir -p $KUBECTL_LINUX_DIR
+mkdir -p $KUBECTL_MAC_DIR
+mkdir -p $GOTEMPLATE_LINUX_DIR
+mkdir -p $GOTEMPLATE_MAC_DIR
 
 if [[ -z $1 ]]; then
    echo "No license file supplied, skipping setting the license file in the installer"
@@ -84,6 +111,12 @@ curl "${JRE_SOURCE_URL_1}/${JRE_LINUX_1}" > "${JRE_LINUX_1}"
 curl "${JRE_SOURCE_URL_2}/${JRE_SOLARIS_2}" > "${JRE_SOLARIS_2}"
 curl "${JRE_SOURCE_URL_2}/${JRE_MACOSX_2}" > "${JRE_MACOSX_2}"
 curl "${JRE_SOURCE_URL_2}/${JRE_LINUX_2}" > "${JRE_LINUX_2}"
+
+curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
+curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
+
+curl -L -o "${GOTEMPLATE_LINUX_DIR}go-template" "${GOTEMPLATE_LINUX_URL}"
+curl -L -o "${GOTEMPLATE_MAC_DIR}go-template" "${GOTEMPLATE_MAC_URL}"
 
 
 cp delegate.jar "${IMAGES_DIR}/"
