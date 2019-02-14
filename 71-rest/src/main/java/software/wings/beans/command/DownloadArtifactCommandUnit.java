@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.delegates.beans.ScriptType;
+import io.harness.delegate.beans.ScriptType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;

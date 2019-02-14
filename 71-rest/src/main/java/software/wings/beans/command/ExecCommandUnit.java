@@ -8,7 +8,7 @@ import com.google.common.base.MoreObjects;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.delegates.beans.ScriptType;
+import io.harness.delegate.beans.ScriptType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

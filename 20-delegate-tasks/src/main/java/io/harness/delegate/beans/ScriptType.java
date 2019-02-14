@@ -1,4 +1,4 @@
-package io.harness.delegates.beans;
+package io.harness.delegate.beans;
 
 public enum ScriptType {
   BASH("Bash Script"),

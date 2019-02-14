@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
-import io.harness.delegates.beans.ScriptType;
+import io.harness.delegate.beans.ScriptType;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;

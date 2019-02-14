@@ -1,9 +1,9 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.delegate.beans.ScriptType;
+import io.harness.delegate.beans.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.task.protocol.AwsElbListener;
-import io.harness.delegates.beans.ScriptType;
-import io.harness.delegates.beans.ShellScriptApprovalTaskParameters;
 import io.harness.serializer.KryoRegistrar;
 
 public class DelegateTasksKryoRegister implements KryoRegistrar {
