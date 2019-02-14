@@ -38,6 +38,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
@@ -65,7 +67,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
         final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
         rv.add(heatMap);
 
-        List<HeatMapUnit> units = createAllHeatMapUnits(appId, startTime, endTime, cvConfig, false);
+        List<HeatMapUnit> units = createAllHeatMapUnits(appId, startTime, endTime, cvConfig);
         List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
         heatMap.getRiskLevelSummary().addAll(resolvedUnits);
       }
@@ -87,10 +89,11 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   }
 
   private List<HeatMapUnit> createAllHeatMapUnits(
-      String appId, long startTime, long endTime, CVConfiguration cvConfiguration, boolean isTimeSeries) {
+      String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
     long cronPollIntervalMs = TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES);
     Preconditions.checkState((endTime - startTime) >= cronPollIntervalMs);
-    List<LogMLAnalysisRecord> records = getLogAnalysisRecordsInTimeRange(appId, startTime, endTime, cvConfiguration);
+    List<LogMLAnalysisRecord> records =
+        getLogAnalysisRecordsInTimeRange(appId, startTime, endTime, false, cvConfiguration);
 
     long startMinute = TimeUnit.MILLISECONDS.toMinutes(startTime);
     long endMinute = TimeUnit.MILLISECONDS.toMinutes(endTime);
@@ -109,7 +112,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       return units;
     }
 
-    List<HeatMapUnit> unitsFromDB = new ArrayList<>();
+    SortedSet<HeatMapUnit> sortedUnitsFromDB = new TreeSet<>();
     records.forEach(record -> {
       HeatMapUnit heatMapUnit =
           HeatMapUnit.builder()
@@ -119,17 +122,18 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
               .build();
 
       heatMapUnit.updateOverallScore(record.getScore());
-      unitsFromDB.add(heatMapUnit);
+      sortedUnitsFromDB.add(heatMapUnit);
     });
 
     // find the actual start time so that we fill from there
-    HeatMapUnit heatMapUnit = unitsFromDB.get(0);
+    HeatMapUnit heatMapUnit = sortedUnitsFromDB.first();
     long actualUnitStartTime = heatMapUnit.getStartTime();
     while (startTime < actualUnitStartTime - cronPollIntervalMs) {
       actualUnitStartTime -= cronPollIntervalMs;
     }
 
     int dbUnitIndex = 0;
+    List<HeatMapUnit> unitsFromDB = new ArrayList<>(sortedUnitsFromDB);
     for (long unitTime = actualUnitStartTime; unitTime <= endTime; unitTime += cronPollIntervalMs) {
       heatMapUnit = dbUnitIndex < unitsFromDB.size() ? unitsFromDB.get(dbUnitIndex) : null;
       if (heatMapUnit != null) {
@@ -201,7 +205,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   }
 
   private List<LogMLAnalysisRecord> getLogAnalysisRecordsInTimeRange(
-      String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
+      String appId, long startTime, long endTime, boolean readDetails, CVConfiguration cvConfiguration) {
     return wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeCount)
         .filter("appId", appId)
         .filter("cvConfigId", cvConfiguration.getUuid())
@@ -209,7 +213,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
         .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
         .field("logCollectionMinute")
         .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-        .order("logCollectionMinute")
+        .project("analysisDetailsCompressedJson", readDetails)
         .asList();
   }
 
@@ -220,7 +224,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       return null;
     }
     List<LogMLAnalysisRecord> analysisRecords =
-        getLogAnalysisRecordsInTimeRange(appId, startTime, endTime, cvConfiguration);
+        getLogAnalysisRecordsInTimeRange(appId, startTime, endTime, true, cvConfiguration);
 
     if (analysisRecords == null) {
       return null;

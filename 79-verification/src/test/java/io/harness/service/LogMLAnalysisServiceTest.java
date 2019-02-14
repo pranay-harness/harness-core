@@ -17,7 +17,6 @@ import com.google.inject.Inject;
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.managerclient.VerificationManagerClient;
-import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LogAnalysisService;
@@ -615,7 +614,6 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io")
   public void testAnalysisSummaryCompression() throws Exception {
     ArrayList<List<SplunkAnalysisCluster>> unknownEvents = Lists.newArrayList(getEvents(r.nextInt(10)).values());
     Map<String, List<SplunkAnalysisCluster>> testEvents = getEvents(1 + r.nextInt(10));

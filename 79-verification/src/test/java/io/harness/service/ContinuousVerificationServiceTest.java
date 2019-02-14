@@ -12,14 +12,13 @@ import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
-import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
+import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.LOG_ANALYSIS;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
@@ -384,14 +383,14 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         "LOGS_CLUSTER_L2_" + cvConfigId + "_" + clusterMinute, learningEngineAnalysisTask.getState_execution_id());
     assertEquals(serviceId, learningEngineAnalysisTask.getService_id());
     assertEquals(clusterMinute, learningEngineAnalysisTask.getAnalysis_minute());
-    assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId="
+    assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId="
             + cvConfigId + "&appId=" + appId + "&clusterLevel=L1&startMinute=100&endMinute=" + clusterMinute,
         learningEngineAnalysisTask.getControl_input_url());
     assertNull(learningEngineAnalysisTask.getTest_input_url());
     assertEquals(VERIFICATION_SERVICE_BASE_URL + "/" + LOG_ANALYSIS + ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL
             + "?cvConfigId=" + cvConfigId + "&appId=" + appId + "&clusterLevel=L2&logCollectionMinute=" + clusterMinute,
         learningEngineAnalysisTask.getAnalysis_save_url());
-    assertEquals(Sets.newHashSet(DUMMY_HOST_NAME), learningEngineAnalysisTask.getControl_nodes());
+    assertNull(learningEngineAnalysisTask.getControl_nodes());
     assertNull(learningEngineAnalysisTask.getTest_nodes());
   }
 }

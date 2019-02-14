@@ -18,6 +18,7 @@ import static software.wings.service.intfc.analysis.ClusterLevel.H0;
 import static software.wings.service.intfc.analysis.ClusterLevel.H1;
 import static software.wings.service.intfc.analysis.ClusterLevel.H2;
 import static software.wings.service.intfc.analysis.ClusterLevel.HF;
+import static software.wings.service.intfc.analysis.ClusterLevel.L0;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -385,6 +386,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     Preconditions.checkState(
         logCollectionMinute > 0 ? startMinute <= 0 && endMinute <= 0 : startMinute >= 0 && endMinute >= 0,
         "both logCollectionMinute and start end minute set");
+    Preconditions.checkState(!L0.equals(clusterLevel) || (L0.equals(clusterLevel) && isNotEmpty(logRequest.getNodes())),
+        "for L0 -> L1 clustering nodes can not be empty, level: " + clusterLevel + " logRequest: " + logRequest);
     Set<LogDataRecord> logDataRecords = new HashSet<>();
     int previousOffSet = 0;
     PageRequest<LogDataRecord> pageRequest = aPageRequest()
@@ -395,7 +398,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                  .addFilter("clusterLevel", Operator.EQ, clusterLevel)
                                                  .build();
 
-    if (isNotEmpty(logRequest.getNodes()) && !logRequest.getNodes().contains(DUMMY_HOST_NAME)) {
+    if (isNotEmpty(logRequest.getNodes())) {
       pageRequest.addFilter("host", Operator.IN, logRequest.getNodes().toArray());
     }
 
@@ -1134,18 +1137,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                .filter("workflowExecutionId", workflowExecution.getUuid())
                .count(new CountOptions().limit(1))
         > 0;
-  }
-
-  private void deleteNotRequiredLogs(StateType stateType, WorkflowExecution workflowExecution) {
-    wingsPersistence.createQuery(LogDataRecord.class)
-        .filter("appId", workflowExecution.getAppId())
-        .filter("stateType", stateType)
-        .filter("workflowId", workflowExecution.getWorkflowId())
-        .field("workflowExecutionId")
-        .notEqual(workflowExecution.getUuid());
-    logger.info("deleting " + stateType + " logs for workflow:" + workflowExecution.getWorkflowId()
-        + " last successful execution: " + workflowExecution.getUuid());
-    // wingsPersistence.delete(deleteQuery);
   }
 
   @Override

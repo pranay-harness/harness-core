@@ -120,7 +120,7 @@ public class ElkResource implements LogAnalysisResource {
           .toElasticSearchJsonObject();
       return new RestResponse<>(true);
     } catch (Exception ex) {
-      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR).addParam("reason", Misc.getMessage(ex));
+      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, ex).addParam("reason", Misc.getMessage(ex));
     }
   }
 

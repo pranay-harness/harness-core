@@ -107,7 +107,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
                                                            .build(),
         "1m", null, startTime, endTime, false, 5, 0, null);
 
-    if (isEmpty(responseWithoutHost)) {
+    if (isEmpty(responseWithoutHost) || isEmpty(hostName)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())

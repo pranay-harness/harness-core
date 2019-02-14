@@ -107,7 +107,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Repeat(times = 5, successes = 1)
   public void testGetAllTiers() throws Exception {
     // get all applications
     WebTarget target = client.target(

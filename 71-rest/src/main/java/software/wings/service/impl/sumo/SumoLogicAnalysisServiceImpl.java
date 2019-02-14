@@ -37,7 +37,9 @@ public class SumoLogicAnalysisServiceImpl extends AnalysisServiceImpl implements
     return delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
         .getLogDataByHost(accountId, (SumoConfig) settingAttribute.getValue(), sumoLogicSetupTestNodedata.getQuery(),
             sumoLogicSetupTestNodedata.getHostNameField(),
-            sumoLogicSetupTestNodedata.getInstanceElement().getHostName(), encryptedDataDetails,
+            sumoLogicSetupTestNodedata.isServiceLevel() ? null
+                                                        : sumoLogicSetupTestNodedata.getInstanceElement().getHostName(),
+            encryptedDataDetails,
             createApiCallLog(settingAttribute.getAccountId(), sumoLogicSetupTestNodedata.getAppId(),
                 sumoLogicSetupTestNodedata.getGuid()));
   }

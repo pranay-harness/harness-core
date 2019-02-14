@@ -163,7 +163,6 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void getNewRelicApplicationInstances() throws Exception {
     WebTarget target = client.target(API_BASE + "/newrelic/nodes?settingId=" + newRelicConfigId
         + "&accountId=" + accountId + "&applicationId=" + 107019083);
@@ -171,7 +170,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         new GenericType<RestResponse<List<NewRelicApplicationInstance>>>() {});
 
     assertEquals(0, restResponse.getResponseMessages().size());
-    assertFalse(restResponse.getResource().isEmpty());
+    assertFalse("failed" + restResponse.getResponseMessages(), restResponse.getResource().isEmpty());
   }
 
   @Test
@@ -186,8 +185,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     assertTrue(restResponse.getResource().size() >= 0);
   }
 
-  //  @Test
-  //  @Repeat(times = 5, successes = 1)
+  @Test
+  @Owner(emails = "pranjal@harness.io", intermittent = true)
   public void getNewRelicDataForNode() {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
@@ -1186,7 +1185,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = {"raghu@harness.io", "sriram@harness.io"}, intermittent = true)
+  @Owner(emails = {"praveen.sugavanam@harness.io", "sriram@harness.io"}, intermittent = true)
   public void txnDatadog() throws IOException, InterruptedException {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();

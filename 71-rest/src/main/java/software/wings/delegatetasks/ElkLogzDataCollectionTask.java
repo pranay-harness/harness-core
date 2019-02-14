@@ -97,9 +97,11 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         String delegateTaskId, LogDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
       this.delegateTaskId = delegateTaskId;
       this.dataCollectionInfo = dataCollectionInfo;
-      this.logCollectionMinute = dataCollectionInfo.getStartMinute();
-      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
-          + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
+      this.logCollectionMinute = is24X7Task() ? (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime())
+                                              : dataCollectionInfo.getStartMinute();
+      this.collectionStartTime = is24X7Task() ? dataCollectionInfo.getStartTime()
+                                              : Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
+              + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
       this.taskResult = taskResult;
     }
 
@@ -130,7 +132,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                           .hosts(hostName.equals(DUMMY_HOST_NAME) ? Collections.emptySet()
                                                                   : Collections.singleton(hostName))
                           .startTime(collectionStartTime)
-                          .endTime(collectionStartTime + TimeUnit.MINUTES.toMillis(1))
+                          .endTime(is24X7Task() ? dataCollectionInfo.getEndTime()
+                                                : collectionStartTime + TimeUnit.MINUTES.toMillis(1))
                           .queryType(elkDataCollectionInfo.getQueryType())
                           .build();
                   logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
@@ -154,7 +157,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                           .hosts(hostName.equals(DUMMY_HOST_NAME) ? Collections.emptySet()
                                                                   : Collections.singleton(hostName))
                           .startTime(collectionStartTime)
-                          .endTime(collectionStartTime + TimeUnit.MINUTES.toMillis(1))
+                          .endTime(is24X7Task() ? dataCollectionInfo.getEndTime()
+                                                : collectionStartTime + TimeUnit.MINUTES.toMillis(1))
                           .queryType(logzDataCollectionInfo.getQueryType())
                           .build();
 
@@ -179,7 +183,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
               List<LogElement> logElements;
               try {
                 logElements = parseElkResponse(searchResponse, dataCollectionInfo.getQuery(), timestampField,
-                    timestampFieldFormat, hostnameField, hostName, messageField, logCollectionMinute, !is24X7Task());
+                    timestampFieldFormat, hostnameField, hostName, messageField, logCollectionMinute, is24X7Task(),
+                    dataCollectionInfo.getStartTime(), dataCollectionInfo.getEndTime());
               } catch (Exception pe) {
                 retry = RETRIES;
                 taskResult.setErrorMessage(Misc.getMessage(pe));
@@ -259,7 +264,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
 
   public static List<LogElement> parseElkResponse(Object searchResponse, String query, String timestampField,
       String timestampFieldFormat, String hostnameField, String hostName, String messageField, int logCollectionMinute,
-      boolean validateHost) {
+      boolean is24x7Task, long collectionStartTime, long collectionEndTime) {
     List<LogElement> logElements = new ArrayList<>();
     JSONObject responseObject = new JSONObject(JsonUtils.asJson(searchResponse));
     JSONObject hits = responseObject.getJSONObject("hits");
@@ -280,7 +285,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
 
       // if this elkResponse doesn't belong to this host, ignore it.
       // We ignore case because we don't know if elasticsearch might just lowercase everything in the index.
-      if (validateHost && !hostName.trim().equalsIgnoreCase(host.trim())) {
+      if (!is24x7Task && !hostName.trim().equalsIgnoreCase(host.trim())) {
         continue;
       }
 
@@ -296,6 +301,11 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
             pe);
       }
 
+      if (is24x7Task && (timeStampValue < collectionStartTime || timeStampValue > collectionEndTime)) {
+        logger.info("received response outside the time range");
+        continue;
+      }
+
       final LogElement elkLogElement = new LogElement();
       elkLogElement.setQuery(query);
       elkLogElement.setClusterLabel(String.valueOf(i));
@@ -303,7 +313,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       elkLogElement.setCount(1);
       elkLogElement.setLogMessage(logMessage);
       elkLogElement.setTimeStamp(timeStampValue);
-      elkLogElement.setLogCollectionMinute(logCollectionMinute);
+      elkLogElement.setLogCollectionMinute(
+          is24x7Task ? TimeUnit.MILLISECONDS.toMinutes(timeStampValue) : logCollectionMinute);
       logElements.add(elkLogElement);
     }
 

@@ -61,6 +61,20 @@ public class LogVerificationResource {
 
   @Produces({"application/json", "application/v1+json"})
   @POST
+  @Path(LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Set<LogDataRecord>> getAllRawLogData(@QueryParam("appId") String appId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
+      @QueryParam("logCollectionMinute") int logCollectionMinute, @QueryParam("startMinute") int startMinute,
+      @QueryParam("endMinute") int endMinute) {
+    return getRawLogData(
+        appId, cvConfigId, clusterLevel, logCollectionMinute, startMinute, endMinute, new LogRequest());
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
   @Path(LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL)
   @Timed
   @ExceptionMetered

@@ -136,7 +136,7 @@ public class ElkLogFetchRequestTest {
     LinkedHashMap map = mapper.readValue(
         new File(getClass().getClassLoader().getResource("./elk/elk.txt").getFile()), LinkedHashMap.class);
     List<LogElement> logElements = parseElkResponse(map, "info", "@timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSSX",
-        "kubernetes.pod.name", "harness-learning-engine", "log", 0, false);
+        "kubernetes.pod.name", "rddashboard-prod-5-67d88f4657-ff7k9", "log", 0, false, -1, -1);
     assertFalse(logElements.isEmpty());
     assertEquals("Hostname should be correct", "rddashboard-prod-5-67d88f4657-ff7k9", logElements.get(0).getHost());
   }
