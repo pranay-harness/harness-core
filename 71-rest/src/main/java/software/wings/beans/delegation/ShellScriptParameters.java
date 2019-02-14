@@ -2,8 +2,8 @@ package software.wings.beans.delegation;
 
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
+import io.harness.delegate.beans.ScriptType;
 import io.harness.delegate.task.protocol.TaskParameters;
-import io.harness.delegates.beans.ScriptType;
 import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Setter;

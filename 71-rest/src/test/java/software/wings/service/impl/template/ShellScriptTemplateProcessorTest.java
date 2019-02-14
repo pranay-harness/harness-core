@@ -30,7 +30,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
-import io.harness.delegates.beans.ScriptType;
+import io.harness.delegate.beans.ScriptType;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;

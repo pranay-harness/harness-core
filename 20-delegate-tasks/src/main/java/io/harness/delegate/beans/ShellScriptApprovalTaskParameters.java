@@ -1,4 +1,4 @@
-package io.harness.delegates.beans;
+package io.harness.delegate.beans;
 
 import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.expression.Expression;
@@ -13,7 +13,7 @@ public class ShellScriptApprovalTaskParameters implements TaskParameters {
   private String activityId;
   private String commandName;
 
-  private ScriptType scriptType;
+  private io.harness.delegate.beans.ScriptType scriptType;
   private final String outputVars;
   @Expression private final String script;
   private String workingDirectory;
