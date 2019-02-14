@@ -17,7 +17,6 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
-import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -45,7 +44,6 @@ import java.util.concurrent.TimeUnit;
  *
  * @author rktummala on 09/14/17
  */
-@DisallowConcurrentExecution
 public class InstanceSyncJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(InstanceSyncJob.class);
 
