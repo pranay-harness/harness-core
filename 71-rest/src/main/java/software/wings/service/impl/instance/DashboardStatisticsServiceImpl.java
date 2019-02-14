@@ -438,8 +438,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       return getEmptyPageResponse();
     }
 
-    long count = query.count();
-
     List<ServiceInstanceCount> instanceInfoList = new ArrayList<>();
     AggregationPipeline aggregationPipeline =
         wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
@@ -450,23 +448,22 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                 grouping("serviceInfo",
                     grouping("$first", projection("id", "serviceId"), projection("name", "serviceName"))),
                 grouping("envTypeList", grouping("$push", projection("type", "envType"))))
-            .sort(descending("count"), ascending("createdAt"));
+            .sort(descending("count"), ascending("serviceId"));
     aggregationPipeline.skip(offset);
     aggregationPipeline.limit(limit);
 
     aggregationPipeline.aggregate(ServiceInstanceCount.class)
         .forEachRemaining(serviceInstanceCount -> instanceInfoList.add(serviceInstanceCount));
-    return constructInstanceSummaryStatsByService(instanceInfoList, (int) count, offset, limit);
+    return constructInstanceSummaryStatsByService(instanceInfoList, offset, limit);
   }
 
   private PageResponse<InstanceSummaryStatsByService> constructInstanceSummaryStatsByService(
-      List<ServiceInstanceCount> serviceInstanceCountList, int totalSize, int offset, int limit) {
+      List<ServiceInstanceCount> serviceInstanceCountList, int offset, int limit) {
     List<InstanceSummaryStatsByService> instanceSummaryStatsByServiceList =
         serviceInstanceCountList.stream().map(s -> getInstanceSummaryStatsByService(s)).collect(toList());
     return aPageResponse()
         .withResponse(instanceSummaryStatsByServiceList)
-        .withTotal(totalSize)
-        .withOffset(Integer.toString(offset + serviceInstanceCountList.size()))
+        .withOffset(Integer.toString(offset))
         .withLimit(Integer.toString(limit))
         .build();
   }
