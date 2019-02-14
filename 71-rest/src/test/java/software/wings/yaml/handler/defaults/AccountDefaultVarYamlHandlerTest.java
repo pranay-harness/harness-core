@@ -11,6 +11,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -21,7 +22,6 @@ import software.wings.beans.defaults.Defaults.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
-import software.wings.exception.HarnessException;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.yaml.handler.defaults.DefaultVariablesYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;

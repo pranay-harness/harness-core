@@ -5,11 +5,11 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
+import io.harness.exception.HarnessException;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 
 import java.util.List;
 

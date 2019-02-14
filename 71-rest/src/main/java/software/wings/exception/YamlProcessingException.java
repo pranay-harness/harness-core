@@ -1,5 +1,6 @@
 package software.wings.exception;
 
+import io.harness.exception.HarnessException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.yaml.Change;

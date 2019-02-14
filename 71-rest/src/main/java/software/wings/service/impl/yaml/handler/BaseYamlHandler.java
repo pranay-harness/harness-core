@@ -1,9 +1,9 @@
 package software.wings.service.impl.yaml.handler;
 
+import io.harness.exception.HarnessException;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.ChangeContext.Builder;
-import software.wings.exception.HarnessException;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
 

@@ -4,11 +4,11 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
+import io.harness.exception.HarnessException;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NewRelicConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 
 import java.util.List;
 

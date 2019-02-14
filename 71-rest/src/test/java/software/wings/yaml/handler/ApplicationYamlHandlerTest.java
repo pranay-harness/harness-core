@@ -11,6 +11,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
@@ -23,7 +24,6 @@ import software.wings.beans.Application.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
-import software.wings.exception.HarnessException;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;

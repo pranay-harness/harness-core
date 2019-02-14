@@ -6,12 +6,12 @@ import static software.wings.beans.EntityType.APPLICATION;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.HarnessException;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Yaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;

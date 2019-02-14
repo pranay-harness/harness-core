@@ -20,6 +20,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.exception.HarnessException;
 import io.harness.queue.Queue;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
@@ -65,7 +66,6 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeploy
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.common.Constants;
-import software.wings.exception.HarnessException;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
