@@ -135,6 +135,25 @@ public class SettingGenerator {
     return null;
   }
 
+  public SettingAttribute ensureAzureTestCloudProvider(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(CLOUD_PROVIDER)
+                                            .withName("Test Azure Cloud Provider")
+                                            .withAppId(GLOBAL_APP_ID)
+                                            .withEnvId(GLOBAL_ENV_ID)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(AzureConfig.builder()
+                                                           .clientId(AZURE_CLIENT_ID)
+                                                           .tenantId(AZURE_TENANT_ID)
+                                                           .accountId(account.getUuid())
+                                                           .key(AZURE_KEY.toCharArray())
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
+    return ensureSettingAttribute(seed, settingAttribute);
+  }
+
   public SettingAttribute ensureWinRmTestConnector(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute settingAttribute = aSettingAttribute()
@@ -167,25 +186,6 @@ public class SettingGenerator {
                                             .withAccountId(account.getUuid())
                                             .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
                                                            .withType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
-                                                           .build())
-                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-                                            .build();
-    return ensureSettingAttribute(seed, settingAttribute);
-  }
-
-  public SettingAttribute ensureAzureTestCloudProvider(Randomizer.Seed seed, Owners owners) {
-    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-    SettingAttribute settingAttribute = aSettingAttribute()
-                                            .withCategory(CLOUD_PROVIDER)
-                                            .withName(AZURE_TEST_CLOUD_PROVIDER.name())
-                                            .withAppId(GLOBAL_APP_ID)
-                                            .withEnvId(GLOBAL_ENV_ID)
-                                            .withAccountId(account.getUuid())
-                                            .withValue(AzureConfig.builder()
-                                                           .clientId(AZURE_CLIENT_ID)
-                                                           .tenantId(AZURE_TENANT_ID)
-                                                           .accountId(account.getUuid())
-                                                           .key(AZURE_KEY.toCharArray())
                                                            .build())
                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                             .build();
