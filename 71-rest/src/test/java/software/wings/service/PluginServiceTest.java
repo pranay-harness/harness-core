@@ -218,7 +218,7 @@ public class PluginServiceTest {
                 .withSettingClass(SlackConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName("SLACK")
+                .withDisplayName("Slack")
                 .withType("SLACK")
                 .withPluginCategories(asList(Collaboration))
                 .build(),
@@ -314,7 +314,7 @@ public class PluginServiceTest {
                 .withSettingClass(JiraConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName("JIRA")
+                .withDisplayName("Jira")
                 .withType("JIRA")
                 .withPluginCategories(asList(Collaboration))
                 .build());
