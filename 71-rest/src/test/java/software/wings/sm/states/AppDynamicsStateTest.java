@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -31,6 +32,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
+import software.wings.metrics.MetricType;
+import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -217,5 +220,21 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
             .get(0);
     assertEquals(continuousVerificationExecutionMetaData1.getAccountId(), accountId);
     assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
+  }
+
+  @Test
+  public void testGetMetricType() {
+    MetricType errType = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.ERRORS_PER_MINUTE);
+    assertNotNull(errType);
+    assertEquals("Error Type should be", MetricType.ERROR, errType);
+    MetricType throughput = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.CALLS_PER_MINUTE);
+    assertNotNull(throughput);
+    assertEquals("Error Type should be", MetricType.THROUGHPUT, throughput);
+    MetricType respTime = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.AVG_RESPONSE_TIME);
+    assertNotNull(respTime);
+    assertEquals("Error Type should be", MetricType.RESP_TIME, respTime);
+
+    MetricType dummy = AppDynamicsState.getMetricTypeForMetric("incorrectName");
+    assertNull(dummy);
   }
 }

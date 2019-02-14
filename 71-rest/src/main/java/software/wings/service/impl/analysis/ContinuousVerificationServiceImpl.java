@@ -70,6 +70,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.MetricType;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
@@ -770,6 +771,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return metricName;
   }
 
+  private MetricType getMetricType(CVConfiguration cvConfig, String metricName) {
+    switch (cvConfig.getStateType()) {
+      case APP_DYNAMICS:
+        return AppDynamicsState.getMetricTypeForMetric(metricName);
+      case NEW_RELIC:
+        return NewRelicState.getMetricTypeForMetric(metricName);
+      default:
+        logger.info("Unsupported stateType {} for deeplinking", cvConfig.getStateType());
+        return null;
+    }
+  }
   private String getDeeplinkUrl(
       CVConfiguration cvConfig, SettingValue connectorConfig, long startTime, long endTime, String metricString) {
     switch (cvConfig.getStateType()) {
@@ -1052,6 +1064,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         metricMap.get(metricName)
             .addToTimeSeriesMap(
                 metricRecord.getDataCollectionMinute(), getNormalizedMetricValue(metricName, metricRecord));
+        metricMap.get(metricName).setMetricType(getMetricType(cvConfiguration, metricName));
         if (isNotEmpty(metricRecord.getDeeplinkMetadata())) {
           if (metricRecord.getDeeplinkMetadata().containsKey(metricName)) {
             String deeplinkUrl = getDeeplinkUrl(cvConfiguration, connectorConfig, startTime, endTime,
