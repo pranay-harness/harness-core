@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
@@ -108,7 +109,7 @@ public class AwsAmiServiceSetup extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(Misc.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -294,7 +295,7 @@ public class AwsAmiServiceSetup extends State {
     } catch (Exception exception) {
       logger.error("Ami setup step failed with error ", exception);
       executionStatus = ExecutionStatus.FAILED;
-      errorMessage = Misc.getMessage(exception);
+      errorMessage = ExceptionUtils.getMessage(exception);
       awsAmiExecutionData.setStatus(executionStatus);
       awsAmiExecutionData.setErrorMsg(errorMessage);
       Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);

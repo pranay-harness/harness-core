@@ -8,6 +8,7 @@ import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
@@ -15,7 +16,6 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
 import software.wings.beans.PcfConfig;
-import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +31,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       List<OrganizationSummary> organizationSummaries = pcfClient.getOrganizations(pcfRequestConfig);
       return organizationSummaries.stream().map(organizationSummary -> organizationSummary.getName()).collect(toList());
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -39,7 +39,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     try {
       return pcfClient.getSpacesForOrganization(pcfRequestConfig);
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -47,7 +47,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     try {
       return pcfClient.getRoutesForSpace(pcfRequestConfig);
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -57,7 +57,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       pcfClient.pushApplicationUsingManifest(pcfRequestConfig, manifestFilePath);
       return getApplicationByName(pcfRequestConfig);
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -65,7 +65,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     try {
       return pcfClient.getApplicationByName(pcfRequestConfig);
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -84,7 +84,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
 
       return pcfClient.getApplicationByName(pcfRequestConfig);
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -93,7 +93,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     try {
       pcfClient.unmapRoutesForApplication(pcfRequestConfig, paths);
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -102,7 +102,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     try {
       pcfClient.mapRoutesForApplication(pcfRequestConfig, paths);
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -122,7 +122,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
           .collect(toList());
 
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -141,7 +141,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
           .collect(toList());
 
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -149,7 +149,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     try {
       pcfClient.deleteApplication(pcfRequestConfig);
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -158,7 +158,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       pcfClient.stopApplication(pcfRequestConfig);
       return getDetailedApplicationState(pcfRequestConfig);
     } catch (Exception e) {
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + Misc.getMessage(e), e);
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
   }
 

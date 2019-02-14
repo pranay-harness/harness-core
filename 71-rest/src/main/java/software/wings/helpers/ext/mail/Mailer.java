@@ -13,6 +13,7 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.Email;
@@ -23,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -73,7 +73,7 @@ public class Mailer {
       try {
         email.setReplyTo(ImmutableList.of(new InternetAddress(smtpConfig.getFromAddress())));
       } catch (AddressException e) {
-        logger.error(Misc.getMessage(e), e);
+        logger.error(ExceptionUtils.getMessage(e), e);
       }
       email.setFrom(smtpConfig.getFromAddress(), HARNESS_NAME);
 
@@ -113,10 +113,10 @@ public class Mailer {
 
       email.send();
     } catch (EmailException | IOException e) {
-      logger.warn("Failed to send email. Reason: " + Misc.getMessage(e));
+      logger.warn("Failed to send email. Reason: " + ExceptionUtils.getMessage(e));
       throw new WingsException(ErrorCode.EMAIL_FAILED, e);
     } catch (TemplateException e) {
-      logger.warn("Failed to parse email template . Reason: " + Misc.getMessage(e));
+      logger.warn("Failed to parse email template . Reason: " + ExceptionUtils.getMessage(e));
       throw new WingsException(ErrorCode.EMAIL_FAILED, e);
     }
   }

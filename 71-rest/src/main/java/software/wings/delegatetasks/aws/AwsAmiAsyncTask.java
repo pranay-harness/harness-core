@@ -1,11 +1,11 @@
 package software.wings.delegatetasks.aws;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -75,7 +75,10 @@ public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
         }
       }
     } catch (Exception ex) {
-      return AwsAmiServiceSetupResponse.builder().executionStatus(FAILED).errorMessage(getMessage(ex)).build();
+      return AwsAmiServiceSetupResponse.builder()
+          .executionStatus(FAILED)
+          .errorMessage(ExceptionUtils.getMessage(ex))
+          .build();
     }
   }
 }

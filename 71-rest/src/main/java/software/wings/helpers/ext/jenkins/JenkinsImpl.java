@@ -33,6 +33,7 @@ import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import org.apache.commons.lang3.NotImplementedException;
@@ -42,7 +43,6 @@ import org.apache.http.client.HttpResponseException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -155,7 +155,7 @@ public class JenkinsImpl implements Jenkins {
             }
             jobWithDetails = jenkinsServer.getJob(folderJob, childJobName);
           } catch (HttpResponseException e) {
-            if (e.getStatusCode() == 500 || Misc.getMessage(e).contains("Server Error")) {
+            if (e.getStatusCode() == 500 || ExceptionUtils.getMessage(e).contains("Server Error")) {
               logger.warn(format("Error occurred while retrieving job %s. Retrying ", jobname), e);
               sleep(ofSeconds(1L));
               continue;
@@ -169,7 +169,7 @@ public class JenkinsImpl implements Jenkins {
       }, 120L, TimeUnit.SECONDS, true);
     } catch (Exception e) {
       logger.warn("Failure in fetching job: [{}]", e.getMessage());
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -205,7 +205,7 @@ public class JenkinsImpl implements Jenkins {
         }
       }, 120L, TimeUnit.SECONDS, true);
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -483,7 +483,7 @@ public class JenkinsImpl implements Jenkins {
             .addParam("message", "User not authorized to access jenkins");
       }
     }
-    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
+    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
   }
 
   private Pair<String, InputStream> downloadArtifactFromABuild(Build build, String artifactpathRegex)

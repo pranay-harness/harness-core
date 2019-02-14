@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.queue.QueueListener;
 import io.harness.waiter.WaitNotifyEngine;
@@ -43,7 +44,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.Misc;
 
 /**
  * Created by peeyushaggarwal on 5/11/16.
@@ -92,7 +92,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
       delegateService.queueTask(delegateTask);
 
     } catch (Exception ex) {
-      logger.error(format("Failed to collect artifact. Reason %s", Misc.getMessage(ex)), ex);
+      logger.error(format("Failed to collect artifact. Reason %s", ExceptionUtils.getMessage(ex)), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED, ContentStatus.FAILED);
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());

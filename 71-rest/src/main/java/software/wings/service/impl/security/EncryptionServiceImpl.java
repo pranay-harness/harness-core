@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.DelegateRetryableException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KmsOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -62,7 +62,7 @@ public class EncryptionServiceImpl implements EncryptionService {
       } catch (Exception e) {
         // Log the root cause exception of failed decryption attempts.
         logger.error("Failed to decrypt encrypted settings.", e);
-        throw new KmsOperationException(Misc.getMessage(e), USER);
+        throw new KmsOperationException(ExceptionUtils.getMessage(e), USER);
       }
     }
     object.setDecrypted(true);

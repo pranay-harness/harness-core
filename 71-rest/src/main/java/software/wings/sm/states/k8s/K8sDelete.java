@@ -12,6 +12,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
@@ -42,7 +43,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.Misc;
 
 import java.util.Map;
 
@@ -91,7 +91,7 @@ public class K8sDelete extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(Misc.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -118,7 +118,7 @@ public class K8sDelete extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(Misc.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 

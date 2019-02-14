@@ -16,6 +16,7 @@ import com.google.inject.Singleton;
 
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
@@ -35,7 +36,6 @@ import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -82,7 +82,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       throw e;
     } catch (IOException ex) {
       throw new InvalidRequestException(
-          "Failed to fetch build details jenkins server. Reason:" + Misc.getMessage(ex), USER);
+          "Failed to fetch build details jenkins server. Reason:" + ExceptionUtils.getMessage(ex), USER);
     }
   }
 
@@ -101,7 +101,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       throw e;
     } catch (IOException e) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Failed to fetch Jobs. Reason:" + Misc.getMessage(e));
+          .addParam("message", "Failed to fetch Jobs. Reason:" + ExceptionUtils.getMessage(e));
     }
   }
 
@@ -123,7 +123,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       throw e;
     } catch (Exception ex) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Error in artifact paths from jenkins server. Reason:" + Misc.getMessage(ex));
+          .addParam("message", "Error in artifact paths from jenkins server. Reason:" + ExceptionUtils.getMessage(ex));
     }
   }
 
@@ -140,7 +140,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       throw e;
     } catch (IOException ex) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER_ADMIN)
-          .addParam("message", "Error in fetching build from jenkins server. Reason:" + Misc.getMessage(ex));
+          .addParam("message", "Error in fetching build from jenkins server. Reason:" + ExceptionUtils.getMessage(ex));
     }
   }
 
@@ -219,7 +219,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       throw e;
     } catch (Exception ex) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Error in fetching builds from jenkins server. Reason:" + Misc.getMessage(ex));
+          .addParam("message", "Error in fetching builds from jenkins server. Reason:" + ExceptionUtils.getMessage(ex));
     }
   }
 

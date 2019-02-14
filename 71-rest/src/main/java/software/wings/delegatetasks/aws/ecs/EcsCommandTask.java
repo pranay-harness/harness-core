@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
@@ -17,7 +18,6 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler
 import software.wings.delegatetasks.pcf.PcfCommandTask;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
-import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Map;
@@ -49,7 +49,7 @@ public class EcsCommandTask extends AbstractDelegateRunnableTask {
       logger.error(format("Exception in processing ECS task [%s]", ecsCommandRequest.toString()), ex);
       return EcsCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(Misc.getMessage(ex))
+          .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
   }

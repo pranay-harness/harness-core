@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,6 @@ import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.Clo
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -73,7 +73,7 @@ public class CloudFormationCommandTask extends AbstractDelegateRunnableTask {
       logger.error(format("Exception in processing cloud formation task [%s]", request.toString()), ex);
       return CloudFormationCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(Misc.getMessage(ex))
+          .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
   }

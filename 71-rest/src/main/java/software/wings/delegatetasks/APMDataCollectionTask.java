@@ -43,7 +43,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -302,7 +301,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               + response.code() + ". Error: " + response.errorBody().string());
         }
       } catch (Exception e) {
-        throw new WingsException("Error while fetching data. " + Misc.getMessage(e), e);
+        throw new WingsException("Error while fetching data. " + ExceptionUtils.getMessage(e), e);
       }
     }
 
@@ -534,7 +533,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             break;
           } else {
             if (retry == 1) {
-              taskResult.setErrorMessage(Misc.getMessage(ex));
+              taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn(
                 "error fetching apm metrics for minute " + dataCollectionMinute + ". retrying in " + RETRY_SLEEP + "s",

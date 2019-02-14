@@ -15,6 +15,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -35,7 +36,6 @@ import software.wings.beans.Schema;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.utils.Misc;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -158,7 +158,7 @@ public class MigrationServiceImpl implements MigrationService {
                 yamlGitService.fullSyncForEntireAccount(account.getUuid());
               } catch (Exception ex) {
                 logger.error("Git full sync failed for account: {}. Reason is: {}", account.getAccountName(),
-                    Misc.getMessage(ex));
+                    ExceptionUtils.getMessage(ex));
               }
             }
           }

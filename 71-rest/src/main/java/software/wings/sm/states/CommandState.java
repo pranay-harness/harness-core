@@ -25,6 +25,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ScriptType;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
 import org.mongodb.morphia.annotations.Transient;
@@ -98,7 +99,6 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.Expand;
-import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.List;
@@ -436,7 +436,7 @@ public class CommandState extends State {
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
           .withStateExecutionData(executionDataBuilder.build())
-          .withErrorMessage(Misc.getMessage(e))
+          .withErrorMessage(ExceptionUtils.getMessage(e))
           .build();
     }
 

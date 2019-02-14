@@ -43,6 +43,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -112,7 +113,6 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Misc;
 import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.verification.CVConfiguration;
@@ -463,7 +463,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (ExecutionException e) {
-        logger.error(Misc.getMessage(e), e);
+        logger.error(ExceptionUtils.getMessage(e), e);
       }
     }
 
@@ -685,7 +685,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (ExecutionException e) {
-        logger.error(Misc.getMessage(e), e);
+        logger.error(ExceptionUtils.getMessage(e), e);
       }
     }
 

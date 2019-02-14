@@ -13,7 +13,6 @@ import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AWS_ECS_UPDATE_ROUTE_53_DNS_WEIGHT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_ROUTE53_DNS_WEIGHT_UPDATE;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 
@@ -21,6 +20,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
@@ -87,7 +87,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -110,7 +110,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 

@@ -20,6 +20,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
@@ -70,7 +71,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.states.ManagerExecutionLogCallback;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.HashMap;
@@ -314,7 +314,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       infrastructureMapping.applyProvisionerVariables(stringMap, nodeFilteringType);
       infrastructureMappingService.update(infrastructureMapping);
     } catch (Exception e) {
-      addToExecutionLog(executionLogCallbackOptional, Misc.getMessage(e));
+      addToExecutionLog(executionLogCallbackOptional, ExceptionUtils.getMessage(e));
       throw e;
     }
   }

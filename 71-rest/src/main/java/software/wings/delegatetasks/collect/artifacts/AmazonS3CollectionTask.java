@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
@@ -15,7 +16,6 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -58,7 +58,7 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
       amazonS3Service.downloadArtifacts(
           awsConfig, encryptionDetails, bucketName, artifactPaths, getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {
-      logger.error(format("Exception occurred while collecting S3 artifacts %s", Misc.getMessage(e)), e);
+      logger.error(format("Exception occurred while collecting S3 artifacts %s", ExceptionUtils.getMessage(e)), e);
       // TODO: Change list
     }
     return res;

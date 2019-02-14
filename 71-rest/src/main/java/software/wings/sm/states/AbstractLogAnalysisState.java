@@ -12,6 +12,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.metrics.RiskLevel;
@@ -30,7 +31,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -195,7 +195,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .withAsync(false)
           .withCorrelationIds(Collections.singletonList(corelationId))
           .withExecutionStatus(ExecutionStatus.ERROR)
-          .withErrorMessage(Misc.getMessage(ex))
+          .withErrorMessage(ExceptionUtils.getMessage(ex))
           .withStateExecutionData(LogAnalysisExecutionData.builder()
                                       .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
                                       .serverConfigId(getAnalysisServerConfigId())

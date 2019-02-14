@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +20,6 @@ import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.Arrays;
 import java.util.List;
@@ -72,7 +72,7 @@ public class PcfCreatePcfResourceCommandTaskHandler extends PcfCommandTaskHandle
       pcfInfraMappingDataResponse.setSpaces(emptyList());
       pcfInfraMappingDataResponse.setRouteMaps(emptyList());
       pcfInfraMappingDataResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
-      pcfInfraMappingDataResponse.setOutput(Misc.getMessage(e));
+      pcfInfraMappingDataResponse.setOutput(ExceptionUtils.getMessage(e));
     }
 
     pcfCommandExecutionResponse.setCommandExecutionStatus(pcfInfraMappingDataResponse.getCommandExecutionStatus());

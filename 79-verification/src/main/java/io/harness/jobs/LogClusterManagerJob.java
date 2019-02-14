@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
@@ -23,7 +24,6 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.Set;
@@ -129,7 +129,7 @@ public class LogClusterManagerJob implements Job {
         }
       } catch (Exception ex) {
         completeCron = true;
-        throw new RuntimeException("Verification L0 => L1 cluster failed, " + Misc.getMessage(ex), ex);
+        throw new RuntimeException("Verification L0 => L1 cluster failed, " + ExceptionUtils.getMessage(ex), ex);
       } finally {
         // Delete cron.
         try {

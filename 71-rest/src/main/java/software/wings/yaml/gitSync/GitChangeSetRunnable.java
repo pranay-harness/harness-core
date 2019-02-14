@@ -9,6 +9,7 @@ import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import org.slf4j.Logger;
@@ -19,7 +20,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.utils.Misc;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 
 import java.util.ArrayList;
@@ -114,7 +114,7 @@ public class GitChangeSetRunnable implements Runnable {
             queuedChangeSets.stream().map(yamlChangeSet -> builder.append(yamlChangeSet.getUuid()).append("  "));
             stringBuilder.append(" and for changeSet: ").append(builder.toString());
           }
-          stringBuilder.append(" Reason: ").append(Misc.getMessage(ex));
+          stringBuilder.append(" Reason: ").append(ExceptionUtils.getMessage(ex));
           logger.error(GIT_YAML_LOG_PREFIX + stringBuilder.toString(), ex);
         }
       });

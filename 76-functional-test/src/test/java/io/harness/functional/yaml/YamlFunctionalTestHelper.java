@@ -11,6 +11,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.functional.AbstractFunctionalTest;
@@ -39,7 +40,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.Misc;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
@@ -164,7 +164,7 @@ public class YamlFunctionalTestHelper {
       ProcessResult processResult = processExecutor.execute();
       assertThat(processResult.getExitValue()).isEqualTo(0);
     } catch (InterruptedException | TimeoutException | IOException ex) {
-      logger.error(Misc.getMessage(ex));
+      logger.error(ExceptionUtils.getMessage(ex));
       assertTrue(false);
     }
   }
@@ -185,10 +185,10 @@ public class YamlFunctionalTestHelper {
           .filter(path -> !path.toString().contains(".git"))
           .forEach(path -> addFilesToMap(path, clonedRepoPath + "/" + repoName, map));
     } catch (IOException ex) {
-      logger.error(Misc.getMessage(ex));
+      logger.error(ExceptionUtils.getMessage(ex));
       assertTrue(false);
     } catch (Exception e) {
-      logger.error(Misc.getMessage(e));
+      logger.error(ExceptionUtils.getMessage(e));
     }
 
     return map;
@@ -255,7 +255,7 @@ public class YamlFunctionalTestHelper {
     try {
       file = ResourceUtils.getFile("classpath:io/harness/yaml/" + oldAppName + ".zip");
     } catch (FileNotFoundException ex) {
-      logger.error(Misc.getMessage(ex));
+      logger.error(ExceptionUtils.getMessage(ex));
       assertTrue(false);
     }
 
@@ -314,7 +314,7 @@ public class YamlFunctionalTestHelper {
 
       FileIo.deleteDirectoryAndItsContentIfExists(harnessYamPath);
     } catch (IOException ex) {
-      logger.error("Exception during cleaning up harness repo " + Misc.getMessage(ex));
+      logger.error("Exception during cleaning up harness repo " + ExceptionUtils.getMessage(ex));
     }
   }
 

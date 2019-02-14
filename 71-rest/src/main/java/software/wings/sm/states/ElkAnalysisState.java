@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +43,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -349,7 +349,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
           .build()
           .toElasticSearchJsonObject();
     } catch (Exception ex) {
-      invalidFields.put("query", Misc.getMessage(ex));
+      invalidFields.put("query", ExceptionUtils.getMessage(ex));
     }
     return invalidFields;
   }

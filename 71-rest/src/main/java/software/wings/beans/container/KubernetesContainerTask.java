@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
@@ -35,7 +36,6 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
 import software.wings.stencils.EnumData;
 import software.wings.utils.KubernetesConvention;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -210,7 +210,7 @@ public class KubernetesContainerTask extends ContainerTask {
       }
       return controller;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", Misc.getMessage(e));
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -221,7 +221,7 @@ public class KubernetesContainerTask extends ContainerTask {
           .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
           .replaceAll(DUMMY_SECRET_NAME, REGISTRY_SECRET_NAME_PLACEHOLDER_REGEX);
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", Misc.getMessage(e));
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", ExceptionUtils.getMessage(e));
     }
   }
 

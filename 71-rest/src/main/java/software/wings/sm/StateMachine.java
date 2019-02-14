@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.serializer.MapperUtils;
@@ -38,7 +39,6 @@ import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SubWorkflowState;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -119,7 +119,7 @@ public class StateMachine extends Base {
       valid = true;
     } catch (WingsException wingsException) {
       logger.error("Error in State Machine transform", wingsException);
-      errorMsg = Misc.getMessage(wingsException);
+      errorMsg = ExceptionUtils.getMessage(wingsException);
     }
     orchestrationWorkflow.validate();
     if (orchestrationWorkflow.isValid() && !valid) {

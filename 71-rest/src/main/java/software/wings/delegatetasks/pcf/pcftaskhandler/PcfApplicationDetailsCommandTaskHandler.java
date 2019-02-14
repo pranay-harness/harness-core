@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
@@ -21,7 +22,6 @@ import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.List;
 
@@ -68,7 +68,7 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
       pcfInstanceSyncResponse.setOutput(StringUtils.EMPTY);
     } catch (Exception e) {
       pcfInstanceSyncResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
-      pcfInstanceSyncResponse.setOutput(Misc.getMessage(e));
+      pcfInstanceSyncResponse.setOutput(ExceptionUtils.getMessage(e));
     }
 
     pcfCommandExecutionResponse.setErrorMessage(pcfInstanceSyncResponse.getOutput());

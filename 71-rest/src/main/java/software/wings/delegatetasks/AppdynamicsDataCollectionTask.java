@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
@@ -36,7 +37,6 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -376,7 +376,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             break;
           } else {
             if (retry == 1) {
-              taskResult.setErrorMessage(Misc.getMessage(ex));
+              taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.info(
                 "error fetching appdynamics metrics for minute {} for state {}. retrying in " + RETRY_SLEEP + "s",

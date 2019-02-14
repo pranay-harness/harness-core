@@ -1,8 +1,7 @@
 package software.wings.sm.states;
 
-import static software.wings.utils.Misc.getMessage;
-
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import software.wings.sm.ExecutionContext;
@@ -21,7 +20,7 @@ public class AwsAmiRollbackSwitchRoutesState extends AwsAmiSwitchRoutesState {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 

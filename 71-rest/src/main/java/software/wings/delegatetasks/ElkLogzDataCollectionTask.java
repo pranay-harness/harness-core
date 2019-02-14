@@ -7,6 +7,7 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
@@ -28,7 +29,6 @@ import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -187,7 +187,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                     dataCollectionInfo.getStartTime(), dataCollectionInfo.getEndTime());
               } catch (Exception pe) {
                 retry = RETRIES;
-                taskResult.setErrorMessage(Misc.getMessage(pe));
+                taskResult.setErrorMessage(ExceptionUtils.getMessage(pe));
                 throw pe;
               }
               /**
@@ -226,7 +226,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                  * more meaningful to trouble shoot.
                  */
                 if (retry == 1) {
-                  taskResult.setErrorMessage(Misc.getMessage(ex));
+                  taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
                 }
                 logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP + "s", ex);
                 sleep(RETRY_SLEEP);

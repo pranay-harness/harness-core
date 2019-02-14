@@ -62,6 +62,7 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.FileUtils;
@@ -88,7 +89,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
-import software.wings.utils.Misc;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
 
@@ -390,10 +390,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             message = "Not a well-formed yaml. The field " + snippet + " in line " + contextMark.getLine()
                 + " doesn't end with :";
           } else {
-            message = Misc.getMessage(ex);
+            message = ExceptionUtils.getMessage(ex);
           }
         } else {
-          message = Misc.getMessage(ex);
+          message = ExceptionUtils.getMessage(ex);
         }
         logger.warn(message, ex);
         addToFailedYamlMap(failedYamlFileChangeMap, change, message);
@@ -405,11 +405,11 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           addToFailedYamlMap(failedYamlFileChangeMap, change, error);
         } else {
           logger.warn("Unable to load yaml from string for file: " + yamlFilePath, ex);
-          addToFailedYamlMap(failedYamlFileChangeMap, change, Misc.getMessage(ex));
+          addToFailedYamlMap(failedYamlFileChangeMap, change, ExceptionUtils.getMessage(ex));
         }
       } catch (Exception ex) {
         logger.warn("Unable to load yaml from string for file: " + yamlFilePath, ex);
-        addToFailedYamlMap(failedYamlFileChangeMap, change, Misc.getMessage(ex));
+        addToFailedYamlMap(failedYamlFileChangeMap, change, ExceptionUtils.getMessage(ex));
       }
     }
 
@@ -484,8 +484,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
         } catch (Exception ex) {
           logger.warn(format("Exception while processing yaml file %s", yamlFilePath), ex);
-          ChangeWithErrorMsg changeWithErrorMsg =
-              ChangeWithErrorMsg.builder().change(changeContext.getChange()).errorMsg(Misc.getMessage(ex)).build();
+          ChangeWithErrorMsg changeWithErrorMsg = ChangeWithErrorMsg.builder()
+                                                      .change(changeContext.getChange())
+                                                      .errorMsg(ExceptionUtils.getMessage(ex))
+                                                      .build();
           // We continue processing the yaml files we understand, the failures are reported at the end
           failedYamlFileChangeMap.put(changeContext.getChange().getFilePath(), changeWithErrorMsg);
         }

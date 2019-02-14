@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.exception.ExceptionUtils;
 import io.harness.notifications.NotificationReceiverInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -27,7 +28,6 @@ import software.wings.service.impl.notifications.UseNotificationGroup;
 import software.wings.service.impl.notifications.UseUserGroup;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.UserGroupService;
-import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Map;
@@ -132,7 +132,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     try {
       emailDispatcher.dispatch(notifications, asList(user.getEmail()));
     } catch (Exception e) {
-      logger.warn(Misc.getMessage(e));
+      logger.warn(ExceptionUtils.getMessage(e));
     }
   }
 }

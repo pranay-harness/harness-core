@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
@@ -134,7 +135,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       Misc.logAllMessages(e, executionLogCallback);
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
-      pcfDeployCommandResponse.setOutput(Misc.getMessage(e));
+      pcfDeployCommandResponse.setOutput(ExceptionUtils.getMessage(e));
     }
 
     return PcfCommandExecutionResponse.builder()

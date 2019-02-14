@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.version.VersionInfoManager;
@@ -35,7 +36,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -207,7 +207,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .withAsync(false)
           .withCorrelationIds(Collections.singletonList(corelationId))
           .withExecutionStatus(ExecutionStatus.ERROR)
-          .withErrorMessage(Misc.getMessage(ex))
+          .withErrorMessage(ExceptionUtils.getMessage(ex))
           .withStateExecutionData(MetricAnalysisExecutionData.builder()
                                       .appId(context.getAppId())
                                       .workflowExecutionId(context.getWorkflowExecutionId())

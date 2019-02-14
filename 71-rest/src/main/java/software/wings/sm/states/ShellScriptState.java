@@ -22,6 +22,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ScriptType;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
@@ -77,7 +78,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.List;
@@ -157,7 +157,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(Misc.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 

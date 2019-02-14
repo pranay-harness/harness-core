@@ -20,6 +20,7 @@ import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
@@ -44,7 +45,6 @@ import software.wings.service.impl.newrelic.NewRelicWebTransactions;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -264,7 +264,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           }
           retry++;
           if (retry >= RETRIES) {
-            throw new WingsException("Fetching for web transaction metrics failed. reason " + Misc.getMessage(e));
+            throw new WingsException(
+                "Fetching for web transaction metrics failed. reason " + ExceptionUtils.getMessage(e));
           }
         }
       }
@@ -305,7 +306,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           }
           retry++;
           if (retry >= RETRIES) {
-            throw new WingsException("Fetching for error metrics failed. reason " + Misc.getMessage(e));
+            throw new WingsException("Fetching for error metrics failed. reason " + ExceptionUtils.getMessage(e));
           }
         }
       }
@@ -349,7 +350,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           }
           retry++;
           if (retry >= RETRIES) {
-            throw new WingsException("Fetching for apdex metrics failed. reason " + Misc.getMessage(e));
+            throw new WingsException("Fetching for apdex metrics failed. reason " + ExceptionUtils.getMessage(e));
           }
         }
       }
@@ -468,7 +469,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
              * more meaningful to trouble shoot.
              */
             if (retry == 1) {
-              taskResult.setErrorMessage(Misc.getMessage(ex));
+              taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn("error fetching new relic metrics for {} for minute {}. retrying in {}s",
                 dataCollectionInfo.getStateExecutionId(), dataCollectionMinute, RETRY_SLEEP, ex);

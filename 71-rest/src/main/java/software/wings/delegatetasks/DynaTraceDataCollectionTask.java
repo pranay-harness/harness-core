@@ -12,6 +12,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
@@ -33,7 +34,6 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DynatraceState;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -169,7 +169,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
           } else {
             if (retry == 1) {
               if (ex instanceof WingsException) {
-                taskResult.setErrorMessage(Misc.getMessage(ex));
+                taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
               }
             }
             logger.warn("error fetching Dynatrace metrics for minute " + dataCollectionMinute + ". retrying in "

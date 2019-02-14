@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import okhttp3.Request;
@@ -54,7 +55,6 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -116,7 +116,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
       assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getCode());
       logger.info("got execption", e);
       assertEquals("got exception: " + e + " params: " + e.getParams(),
-          "Could not reach AppDynamics server. " + Misc.getMessage(runtimeException), e.getParams().get("reason"));
+          "Could not reach AppDynamics server. " + ExceptionUtils.getMessage(runtimeException),
+          e.getParams().get("reason"));
     }
   }
 

@@ -6,6 +6,7 @@ import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -111,7 +112,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Resize failed to complete successfully");
       Misc.logAllMessages(e, executionLogCallback);
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
-      pcfDeployCommandResponse.setOutput(Misc.getMessage(e));
+      pcfDeployCommandResponse.setOutput(ExceptionUtils.getMessage(e));
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
     }
 

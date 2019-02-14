@@ -23,6 +23,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.protocol.AwsElbListener;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
@@ -49,7 +50,6 @@ import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.ManagerExecutionLogCallback;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -162,8 +162,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       return awsEc2HelperServiceManager.listEc2Instances(awsConfig, encryptedDataDetails,
           awsInfrastructureMapping.getRegion(), filters, awsInfrastructureMapping.getAppId());
     } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
 
@@ -308,8 +308,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       return awsEc2HelperServiceManager.listTags(
           awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, "");
     } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
 
@@ -319,8 +319,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       return awsAsgHelperServiceManager.listAutoScalingGroupNames(
           awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
     } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
 

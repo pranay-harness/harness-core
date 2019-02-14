@@ -20,6 +20,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,7 +149,7 @@ public class EnvState extends State {
           .withStateExecutionData(envStateExecutionData)
           .build();
     } catch (Exception e) {
-      String message = Misc.getMessage(e);
+      String message = ExceptionUtils.getMessage(e);
       return anExecutionResponse()
           .withExecutionStatus(FAILED)
           .withErrorMessage(message)

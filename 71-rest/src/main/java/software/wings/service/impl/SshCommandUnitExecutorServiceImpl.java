@@ -18,6 +18,7 @@ import com.google.inject.Singleton;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import org.slf4j.Logger;
@@ -33,7 +34,6 @@ import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
-import software.wings.utils.Misc;
 import software.wings.utils.SshHelperUtil;
 
 import java.util.List;
@@ -110,7 +110,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     } catch (ExecutionException e) {
       if (e.getCause() instanceof WingsException) {
         WingsException ex = (WingsException) e.getCause();
-        String errorMessage = Misc.getMessage(ex);
+        String errorMessage = ExceptionUtils.getMessage(ex);
         logService.save(context.getAccountId(),
             logBuilder.withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
                 .withLogLine(errorMessage)

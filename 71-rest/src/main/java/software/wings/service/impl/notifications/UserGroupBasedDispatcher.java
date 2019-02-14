@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.ExceptionUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,6 @@ import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserService;
-import software.wings.utils.Misc;
 
 import java.util.List;
 
@@ -54,7 +54,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       try {
         slackMessageDispatcher.dispatch(notifications, userGroup.getSlackConfig());
       } catch (Exception e) {
-        log.error(Misc.getMessage(e));
+        log.error(ExceptionUtils.getMessage(e));
       }
     }
 
@@ -62,7 +62,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       try {
         emailDispatcher.dispatch(notifications, userGroup.getEmailAddresses());
       } catch (Exception e) {
-        log.error(Misc.getMessage(e));
+        log.error(ExceptionUtils.getMessage(e));
       }
     }
   }

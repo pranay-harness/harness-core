@@ -25,6 +25,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,7 +36,6 @@ import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelp
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -110,7 +110,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         ((WingsException) e).excludeReportTarget(AWS_ACCESS_DENIED, EVERYBODY);
       }
 
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER, e).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER, e).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 

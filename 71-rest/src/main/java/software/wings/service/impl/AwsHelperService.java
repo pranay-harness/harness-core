@@ -157,6 +157,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
@@ -179,7 +180,6 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -952,9 +952,9 @@ public class AwsHelperService {
           region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
           .listTasks(listTasksRequest);
     } catch (ClusterNotFoundException ex) {
-      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND).addParam("message", Misc.getMessage(ex));
+      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND).addParam("message", ExceptionUtils.getMessage(ex));
     } catch (ServiceNotFoundException ex) {
-      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND).addParam("message", Misc.getMessage(ex));
+      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND).addParam("message", ExceptionUtils.getMessage(ex));
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {

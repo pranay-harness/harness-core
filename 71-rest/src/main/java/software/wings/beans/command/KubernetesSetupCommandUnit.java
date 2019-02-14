@@ -95,6 +95,7 @@ import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -514,7 +515,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
-      logger.error(Misc.getMessage(ex), ex);
+      logger.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
       return CommandExecutionStatus.FAILURE;
     } finally {
@@ -1716,7 +1717,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         executionLogCallback.saveExecutionLog("Setting service:\n\n" + toDisplayYaml(service));
         return service;
       } catch (Exception e) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", Misc.getMessage(e));
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", ExceptionUtils.getMessage(e));
       }
     } else {
       ServiceSpecBuilder spec =
@@ -1988,7 +1989,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
     } catch (Exception e) {
       logger.error("Couldn't get path from ingress rule.", e);
-      executionLogCallback.saveExecutionLog("Error getting Ingress rule - " + Misc.getMessage(e), LogLevel.WARN);
+      executionLogCallback.saveExecutionLog(
+          "Error getting Ingress rule - " + ExceptionUtils.getMessage(e), LogLevel.WARN);
     }
   }
 

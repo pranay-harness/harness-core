@@ -6,6 +6,7 @@ import static io.harness.filesystem.FileIo.deleteFileIfExists;
 
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.shell.ShellExecutionRequest;
 import io.harness.shell.ShellExecutionResponse;
@@ -15,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -107,7 +107,7 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
       }
     } catch (IOException | InterruptedException | TimeoutException e) {
       logger.error("Exception in Script execution ", e);
-      shellExecutionResponseBuilder.message(Misc.getMessage(e));
+      shellExecutionResponseBuilder.message(ExceptionUtils.getMessage(e));
       shellExecutionResponseBuilder.exitValue(1);
     } finally {
       try {

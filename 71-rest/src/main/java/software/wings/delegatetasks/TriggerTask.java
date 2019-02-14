@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
@@ -25,7 +26,6 @@ import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.util.HashSet;
 import java.util.List;
@@ -75,7 +75,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
       logger.error(format("Exception in processing trigger task for account %s, triggerCommandType %s",
                        triggerRequest.getAccountId(), triggerCommandType),
           ex);
-      return new TriggerResponse(null, ExecutionStatus.FAILED, Misc.getMessage(ex));
+      return new TriggerResponse(null, ExecutionStatus.FAILED, ExceptionUtils.getMessage(ex));
     }
   }
 
@@ -103,7 +103,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
           .deploymentNeeded(deploymentNeeded)
           .build();
     } catch (Exception ex) {
-      logger.error("Exception in checking if deployment needed " + Misc.getMessage(ex));
+      logger.error("Exception in checking if deployment needed " + ExceptionUtils.getMessage(ex));
       throw ex;
     }
   }

@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessException;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
@@ -26,7 +27,6 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
-import software.wings.utils.Misc;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -87,7 +87,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
           throw new HarnessException("Operation not supported");
       }
     } catch (Exception ex) {
-      String errorMsg = Misc.getMessage(ex);
+      String errorMsg = ExceptionUtils.getMessage(ex);
       logger.error(
           format("Exception in processing helm task [%s] and error is %s", helmCommandRequest.toString(), errorMsg));
       return HelmCommandExecutionResponse.builder()

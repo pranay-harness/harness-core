@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.csv.CSVFormat;
@@ -46,7 +47,6 @@ import software.wings.helpers.ext.helm.response.RepoListInfo;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -127,16 +127,16 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(
           "Timed out waiting for controller to reach in steady state", LogLevel.ERROR);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(e));
     } catch (WingsException e) {
-      StringBuilder stringBuilder = new StringBuilder(e.getMessage()).append(' ').append(Misc.getMessage(e));
+      StringBuilder stringBuilder = new StringBuilder(e.getMessage()).append(' ').append(ExceptionUtils.getMessage(e));
       executionLogCallback.saveExecutionLog(stringBuilder.toString(), LogLevel.ERROR);
       throw e;
     } catch (Exception e) {
       String msg = format("Exception in deploying helm chart [%s]", commandRequest.toString());
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(e));
     } finally {
       if (checkDeleteReleaseNeeded(commandRequest)) {
         executionLogCallback.saveExecutionLog("Deployment failed.");
@@ -173,12 +173,12 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(
           "Timed out waiting for controller to reach in steady state", LogLevel.ERROR);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(e));
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       logger.error(format("Helm chart rollback failed [%s]", commandRequest.toString()), e);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(e));
     }
   }
 
@@ -253,7 +253,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       logger.error("Helm list releases failed", e);
       return HelmListReleasesCommandResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .output(Misc.getMessage(e))
+          .output(ExceptionUtils.getMessage(e))
           .build();
     }
   }
@@ -465,7 +465,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         executionLogCallback.saveExecutionLog("No values yaml file found on git");
       }
     } catch (Exception ex) {
-      String msg = "Exception in adding values yaml from git. " + Misc.getMessage(ex);
+      String msg = "Exception in adding values yaml from git. " + ExceptionUtils.getMessage(ex);
       logger.error(msg);
       executionLogCallback.saveExecutionLog(msg);
       throw ex;

@@ -11,7 +11,6 @@ import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.LogLevel.ERROR;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -47,6 +46,7 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
@@ -368,7 +368,7 @@ public class AwsAsgHelperServiceDelegateImpl
       amazonAutoScalingClient.updateAutoScalingGroup(updateAutoScalingGroupRequest);
     } catch (AmazonServiceException amazonServiceException) {
       logCallback.saveExecutionLog(
-          format("Exception: [%s] while setting Asg limits", getMessage(amazonServiceException)));
+          format("Exception: [%s] while setting Asg limits", ExceptionUtils.getMessage(amazonServiceException)));
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
@@ -411,7 +411,7 @@ public class AwsAsgHelperServiceDelegateImpl
       }
     } catch (AmazonServiceException amazonServiceException) {
       logCallback.saveExecutionLog(
-          format("Exception: [%s] while setting Asg limits", getMessage(amazonServiceException)));
+          format("Exception: [%s] while setting Asg limits", ExceptionUtils.getMessage(amazonServiceException)));
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);

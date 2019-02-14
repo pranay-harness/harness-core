@@ -37,6 +37,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
@@ -109,7 +110,6 @@ import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DynatraceState;
 import software.wings.sm.states.NewRelicState;
-import software.wings.utils.Misc;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
@@ -1176,7 +1176,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           throw new WingsException("Invalid StateType provided" + type);
       }
     } catch (Exception e) {
-      String errorMsg = e.getCause() != null ? Misc.getMessage(e.getCause()) : Misc.getMessage(e);
+      String errorMsg = e.getCause() != null ? ExceptionUtils.getMessage(e.getCause()) : ExceptionUtils.getMessage(e);
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", errorMsg);
     }
   }

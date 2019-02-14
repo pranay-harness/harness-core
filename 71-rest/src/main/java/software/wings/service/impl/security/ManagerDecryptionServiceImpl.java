@@ -9,6 +9,7 @@ import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KmsOperationException;
 import io.harness.security.encryption.EncryptionType;
 import org.slf4j.Logger;
@@ -21,7 +22,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
-import software.wings.utils.Misc;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -85,7 +85,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
       }
       object.setDecrypted(true);
     } catch (Exception e) {
-      throw new KmsOperationException(Misc.getMessage(e), e);
+      throw new KmsOperationException(ExceptionUtils.getMessage(e), e);
     }
   }
 }

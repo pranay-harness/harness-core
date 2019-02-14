@@ -4,13 +4,13 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
@@ -75,7 +75,7 @@ public class EcsBlueGreenRoute53SetupCommandHandler extends EcsCommandTaskHandle
           .ecsCommandResponse(EcsBGRoute53ServiceSetupResponse.builder().commandExecutionStatus(SUCCESS).build())
           .build();
     } catch (Exception ex) {
-      String errorMessage = getMessage(ex);
+      String errorMessage = ExceptionUtils.getMessage(ex);
       executionLogCallback.saveExecutionLog(errorMessage, ERROR);
       return EcsCommandExecutionResponse.builder()
           .commandExecutionStatus(FAILURE)

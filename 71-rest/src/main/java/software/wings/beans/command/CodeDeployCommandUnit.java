@@ -13,6 +13,7 @@ import com.amazonaws.services.codedeploy.model.S3Location;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
@@ -122,7 +123,7 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
       if (ex instanceof WingsException) {
         throw ex;
       }
-      throw new WingsException(ErrorCode.GENERAL_ERROR, ex).addParam("message", Misc.getMessage(ex));
+      throw new WingsException(ErrorCode.GENERAL_ERROR, ex).addParam("message", ExceptionUtils.getMessage(ex));
     }
     executionLogCallback.saveExecutionLog(
         format("Deployment finished with status [%s]", commandExecutionStatus), LogLevel.INFO);

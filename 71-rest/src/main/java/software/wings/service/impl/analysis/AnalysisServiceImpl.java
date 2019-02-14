@@ -31,6 +31,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.serializer.JsonUtils;
@@ -645,7 +646,7 @@ public class AnalysisServiceImpl implements AnalysisService {
           throw new IllegalStateException("Invalid state type: " + stateType);
       }
     } catch (Exception e) {
-      throw new WingsException(errorCode, USER, e).addParam("reason", Misc.getMessage(e));
+      throw new WingsException(errorCode, USER, e).addParam("reason", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -682,7 +683,7 @@ public class AnalysisServiceImpl implements AnalysisService {
           throw new IllegalStateException("Invalid state type: " + stateType);
       }
     } catch (Exception e) {
-      throw new WingsException(errorCode).addParam("reason", Misc.getMessage(e));
+      throw new WingsException(errorCode).addParam("reason", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -733,7 +734,7 @@ public class AnalysisServiceImpl implements AnalysisService {
           throw new IllegalStateException("Invalid state type: " + stateType);
       }
     } catch (Exception e) {
-      throw new WingsException(errorCode, e).addParam("reason", Misc.getMessage(e));
+      throw new WingsException(errorCode, e).addParam("reason", ExceptionUtils.getMessage(e));
     }
 
     try {

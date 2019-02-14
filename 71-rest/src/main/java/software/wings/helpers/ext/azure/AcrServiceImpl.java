@@ -11,6 +11,7 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,6 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +41,7 @@ public class AcrServiceImpl implements AcrService {
     try {
       return azureHelperService.listContainerRegistries(config, encryptionDetails, subscriptionId);
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -66,7 +66,7 @@ public class AcrServiceImpl implements AcrService {
           })
           .collect(toList());
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 

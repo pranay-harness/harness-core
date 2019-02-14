@@ -16,6 +16,7 @@ import static software.wings.delegatetasks.k8s.K8sTaskHelper.getResourcesInStrin
 import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.KubernetesResourceId;
@@ -31,7 +32,6 @@ import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sDeleteResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.utils.Misc;
 
 import java.util.List;
 
@@ -95,7 +95,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
 
       return true;
     } catch (Exception e) {
-      executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
+      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", ERROR, CommandExecutionStatus.FAILURE);
       return false;
     }

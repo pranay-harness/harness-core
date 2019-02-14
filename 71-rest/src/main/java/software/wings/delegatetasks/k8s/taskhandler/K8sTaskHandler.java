@@ -5,13 +5,13 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.utils.Misc;
 
 public abstract class K8sTaskHandler {
   @Inject protected DelegateLogService delegateLogService;
@@ -27,7 +27,7 @@ public abstract class K8sTaskHandler {
           ex);
       return K8sTaskExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(Misc.getMessage(ex))
+          .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
   }

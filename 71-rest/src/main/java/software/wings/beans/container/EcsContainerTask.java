@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.expression.RegexFunctor;
 import io.harness.serializer.JsonUtils;
@@ -33,7 +34,6 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
 import software.wings.stencils.EnumData;
 import software.wings.utils.EcsConvention;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -190,7 +190,7 @@ public class EcsContainerTask extends ContainerTask {
 
       return removeEmptySecretsContainerDefinitionString(containerDefinitionStr);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", Misc.getMessage(e));
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", ExceptionUtils.getMessage(e));
     }
   }
 

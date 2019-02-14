@@ -36,6 +36,7 @@ import io.fabric8.kubernetes.api.model.Context;
 import io.fabric8.kubernetes.client.internal.KubeConfigUtils;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
@@ -57,7 +58,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -379,7 +379,7 @@ public class AzureHelperService {
       logger.error("Error occurred while getting repositories from subscriptionId/registryName :" + subscriptionId + "/"
               + registryName,
           e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", Misc.getMessage(e));
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -405,7 +405,7 @@ public class AzureHelperService {
       logger.error("Error occurred while getting repositories from subscriptionId/registryName/repositoryName :"
               + subscriptionId + "/" + registryName + "/" + repositoryName,
           e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", Misc.getMessage(e));
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -485,7 +485,7 @@ public class AzureHelperService {
           .clientKey(currentAuthInfo.getClientKeyData().toCharArray())
           .build();
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", Misc.getMessage(e));
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -573,6 +573,6 @@ public class AzureHelperService {
       }
     }
 
-    throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", Misc.getMessage(e));
+    throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", ExceptionUtils.getMessage(e));
   }
 }

@@ -7,6 +7,7 @@ import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -15,7 +16,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 @Singleton
@@ -45,7 +45,7 @@ public class SampleDataProviderService {
       createK8sSampleApp(account, kubernetesClusterConfig, dockerConnector);
     } catch (Exception ex) {
       logger.error("Failed to create Sample Application for the account [" + account.getUuid()
-              + "]. Reason: " + Misc.getMessage(ex),
+              + "]. Reason: " + ExceptionUtils.getMessage(ex),
           ex);
     }
   }
@@ -105,7 +105,7 @@ public class SampleDataProviderService {
 
     } catch (Exception ex) {
       logger.error("Failed to create Sample Application for the account [" + account.getUuid()
-              + "]. Reason: " + Misc.getMessage(ex),
+              + "]. Reason: " + ExceptionUtils.getMessage(ex),
           ex);
     }
   }

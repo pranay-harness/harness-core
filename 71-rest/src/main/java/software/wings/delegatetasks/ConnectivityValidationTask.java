@@ -9,11 +9,11 @@ import static java.util.Collections.singletonList;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.settings.validation.SmtpConnectivityValidationAttributes.DEFAULT_TEXT;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -121,7 +121,7 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
           mailer.send((SmtpConfig) settingValue, encryptedDataDetails, emailData);
           valid = true;
         } catch (Exception ex) {
-          errorMessage = getMessage(ex);
+          errorMessage = ExceptionUtils.getMessage(ex);
         }
         return ConnectivityValidationDelegateResponse.builder()
             .executionStatus(SUCCESS)
@@ -143,7 +143,7 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
                                                   : "Test Slack connectivity message from Harness Inc.");
           valid = true;
         } catch (Exception ex) {
-          errorMessage = getMessage(ex);
+          errorMessage = ExceptionUtils.getMessage(ex);
         }
         return ConnectivityValidationDelegateResponse.builder()
             .executionStatus(SUCCESS)
@@ -157,7 +157,7 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
     } catch (WingsException exception) {
       throw exception;
     } catch (Exception ex) {
-      throw new InvalidRequestException(getMessage(ex), USER);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(ex), USER);
     }
   }
 }

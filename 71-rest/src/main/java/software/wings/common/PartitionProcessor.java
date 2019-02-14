@@ -9,13 +9,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PartitionElement;
 import software.wings.sm.ContextElement;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +98,7 @@ public interface PartitionProcessor {
             + breakdowns.toString() + "percentages:" + percentages.toString() + ", counts:" + counts.toString());
       }
     } catch (Exception e) {
-      log().error(Misc.getMessage(e), e);
+      log().error(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException("Incorrect partition expressions- breakdowns:" + breakdowns.toString()
               + "percentages:" + percentages.toString() + ", counts:" + counts.toString(),
           e);

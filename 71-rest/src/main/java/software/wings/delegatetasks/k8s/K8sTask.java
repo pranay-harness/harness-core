@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,6 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
-import software.wings.utils.Misc;
 
 import java.nio.file.Paths;
 import java.util.Map;
@@ -63,7 +63,7 @@ public class K8sTask extends AbstractDelegateRunnableTask {
         logger.error(format("Exception in processing k8s task [%s]", k8sTaskParameters.toString()), ex);
         return K8sTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .errorMessage(Misc.getMessage(ex))
+            .errorMessage(ExceptionUtils.getMessage(ex))
             .build();
       }
     } else {
@@ -95,7 +95,7 @@ public class K8sTask extends AbstractDelegateRunnableTask {
         logger.error(format("Exception in processing k8s task [%s]", k8sTaskParameters.toString()), ex);
         return K8sTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .errorMessage(Misc.getMessage(ex))
+            .errorMessage(ExceptionUtils.getMessage(ex))
             .build();
       } finally {
         cleanup(workingDirectory);

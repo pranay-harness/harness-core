@@ -61,6 +61,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -109,7 +110,6 @@ import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
-import software.wings.utils.Misc;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -770,7 +770,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       logger.error("Error when processing exception", ex);
     }
 
-    updateStateExecutionData(stateExecutionInstance, null, FAILED, Misc.getMessage(exception), null, null);
+    updateStateExecutionData(stateExecutionInstance, null, FAILED, ExceptionUtils.getMessage(exception), null, null);
 
     try {
       ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);

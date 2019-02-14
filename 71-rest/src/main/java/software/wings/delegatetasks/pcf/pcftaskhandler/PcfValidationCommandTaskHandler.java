@@ -3,6 +3,7 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
@@ -14,7 +15,6 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.List;
 
@@ -53,7 +53,7 @@ public class PcfValidationCommandTaskHandler extends PcfCommandTaskHandler {
       logger.error("Exception in processing PCF validation task for Account {} ",
           pcfInfraMappingDataRequest.getPcfConfig().getAccountId(), e);
       pcfCommandExecutionResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
-      pcfCommandExecutionResponse.setErrorMessage(Misc.getMessage(e));
+      pcfCommandExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
     }
 
     return pcfCommandExecutionResponse;

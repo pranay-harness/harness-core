@@ -54,6 +54,7 @@ import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -74,7 +75,6 @@ import software.wings.cloudprovider.aws.TaskMetadata.Container;
 import software.wings.cloudprovider.aws.TaskMetadata.Network;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -898,7 +898,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     try {
       createServiceRequest = mapper.readValue(serviceDefinition, CreateServiceRequest.class);
     } catch (IOException ex) {
-      throw new InvalidRequestException(Misc.getMessage(ex), ex);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
     }
     logger.info("Begin service deployment " + createServiceRequest.getServiceName());
     CreateServiceResult createServiceResult =
@@ -1019,7 +1019,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       return getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName, serviceName,
           originalTaskArns, executionLogCallback, desiredCount <= previousCount);
     } catch (Exception ex) {
-      throw new InvalidRequestException(Misc.getMessage(ex), ex);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
     }
   }
 
@@ -1218,7 +1218,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                        containerTaskArns.get(containerInstance.getContainerInstanceArn())))
                                    .build());
           } catch (Exception e) {
-            throw new InvalidRequestException(Misc.getMessage(e), e);
+            throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
           }
         } else {
           logger.warn("Could not connect to {}", uri);
@@ -1323,7 +1323,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
         throw new InvalidRequestException(msg, e);
       }
-      throw new InvalidRequestException(Misc.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 

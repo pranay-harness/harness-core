@@ -7,6 +7,7 @@ import com.google.inject.Key;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.intfc.BuildService;
 import software.wings.settings.SettingValue;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,7 +86,7 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
       logger.error("Exception in processing BuildSource task [{}]", ex);
       return BuildSourceExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(Misc.getMessage(ex))
+          .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
   }

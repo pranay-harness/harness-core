@@ -23,6 +23,7 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import net.redhogs.cronparser.DescriptionTypeEnum;
@@ -50,7 +51,6 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.utils.CryptoUtil;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -204,8 +204,8 @@ public class TriggerServiceHelper {
             getCronDescription(ScheduledTriggerJob.PREFIX + scheduledTriggerCondition.getCronExpression()));
       }
     } catch (Exception ex) {
-      logger.warn(
-          "Error parsing cron expression: {} : {}", scheduledTriggerCondition.getCronExpression(), Misc.getMessage(ex));
+      logger.warn("Error parsing cron expression: {} : {}", scheduledTriggerCondition.getCronExpression(),
+          ExceptionUtils.getMessage(ex));
       throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
     }
   }

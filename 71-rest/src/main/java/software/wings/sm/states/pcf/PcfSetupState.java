@@ -15,6 +15,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
@@ -197,7 +198,7 @@ public class PcfSetupState extends State {
     try {
       return executeInternal(context);
     } catch (Exception e) {
-      throw new InvalidRequestException(Misc.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -368,7 +369,7 @@ public class PcfSetupState extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(Misc.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 

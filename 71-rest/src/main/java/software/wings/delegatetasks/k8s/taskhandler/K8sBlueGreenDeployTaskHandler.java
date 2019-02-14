@@ -30,6 +30,7 @@ import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.Service;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
@@ -61,7 +62,6 @@ import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -194,7 +194,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
     } catch (Exception e) {
-      executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
+      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
@@ -255,7 +255,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         stageColor = getInverseColor(primaryColor);
 
       } catch (Exception e) {
-        executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, FAILURE);
+        executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, FAILURE);
         return false;
       }
 
@@ -282,7 +282,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
           + color(managedWorkload.getResourceId().kindNameRef(), getLogColor(stageColor), Bold));
 
     } catch (Exception e) {
-      executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, FAILURE);
+      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, FAILURE);
       return false;
     }
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
