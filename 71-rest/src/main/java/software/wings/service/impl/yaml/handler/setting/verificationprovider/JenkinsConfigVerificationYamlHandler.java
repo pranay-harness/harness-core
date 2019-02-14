@@ -4,12 +4,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Singleton;
 
+import io.harness.exception.HarnessException;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsConfig.VerificationYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.common.Constants;
-import software.wings.exception.HarnessException;
 
 import java.util.List;
 

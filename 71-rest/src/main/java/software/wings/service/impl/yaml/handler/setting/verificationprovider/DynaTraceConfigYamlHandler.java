@@ -1,10 +1,10 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
+import io.harness.exception.HarnessException;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.DynaTraceConfig.DynaTraceYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 
 import java.util.List;
 

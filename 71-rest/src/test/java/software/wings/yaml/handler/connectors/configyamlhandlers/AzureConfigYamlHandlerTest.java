@@ -8,12 +8,12 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.HarnessException;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
-import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AzureConfigYamlHandler;
 
 import java.io.IOException;

@@ -14,6 +14,7 @@ import static software.wings.yaml.handler.workflow.WorkflowYamlConstant.CANARY_V
 
 import com.google.inject.Inject;
 
+import io.harness.exception.HarnessException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -24,7 +25,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.workflow.CanaryWorkflowYamlHandler;
 import software.wings.utils.WingsTestConstants.MockChecker;
 import software.wings.yaml.workflow.CanaryWorkflowYaml;

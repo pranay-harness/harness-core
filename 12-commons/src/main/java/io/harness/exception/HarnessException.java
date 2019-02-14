@@ -1,8 +1,7 @@
-package software.wings.exception;
+package io.harness.exception;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
-import io.harness.exception.WingsException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,9 +11,8 @@ import java.util.Map;
 /**
  * The base checked exception class.
  * If you want to extend runtime exception, use {@link WingsException}
- *
- * @author rktummala on 10/17/17
  */
+@Deprecated
 public class HarnessException extends Exception {
   private static final long serialVersionUID = -3266129015976960503L;
 

@@ -11,6 +11,7 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.HarnessException;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
@@ -32,7 +33,6 @@ import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
-import software.wings.exception.HarnessException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;

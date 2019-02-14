@@ -1,11 +1,11 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
+import io.harness.exception.HarnessException;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DatadogConfig.DatadogYaml;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 
 import java.util.List;
 

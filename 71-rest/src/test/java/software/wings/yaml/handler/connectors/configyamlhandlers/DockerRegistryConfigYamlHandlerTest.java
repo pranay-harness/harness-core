@@ -8,13 +8,13 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
-import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.DockerRegistryConfigYamlHandler;
 
 import java.io.IOException;

@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.deploymentspec;
 
+import io.harness.exception.HarnessException;
 import software.wings.beans.DeploymentSpecification;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 
 /**

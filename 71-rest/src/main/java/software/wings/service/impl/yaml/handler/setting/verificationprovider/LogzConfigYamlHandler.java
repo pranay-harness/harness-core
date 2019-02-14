@@ -2,11 +2,11 @@ package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import com.google.inject.Singleton;
 
+import io.harness.exception.HarnessException;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.LogzConfig.Yaml;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 
 import java.util.List;
 

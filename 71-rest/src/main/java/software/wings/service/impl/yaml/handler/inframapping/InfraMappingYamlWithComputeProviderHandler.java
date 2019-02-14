@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import io.harness.exception.HarnessException;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 
 /**
  * @author rktummala on 10/15/17

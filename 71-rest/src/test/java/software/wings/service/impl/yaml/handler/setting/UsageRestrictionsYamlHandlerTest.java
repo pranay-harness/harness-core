@@ -13,6 +13,7 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -24,7 +25,6 @@ import software.wings.beans.JenkinsConfig.VerificationYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.common.Constants;
-import software.wings.exception.HarnessException;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;

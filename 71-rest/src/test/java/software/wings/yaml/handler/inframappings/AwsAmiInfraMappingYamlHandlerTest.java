@@ -11,6 +11,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.HarnessException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -19,7 +20,6 @@ import software.wings.beans.AwsAmiInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.inframapping.AwsAmiInfraMappingYamlHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
 
