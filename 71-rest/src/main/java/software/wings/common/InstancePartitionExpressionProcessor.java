@@ -3,16 +3,12 @@ package software.wings.common;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.List;
 
-/**
- * Created by peeyushaggarwal on 7/1/16.
- */
 public class InstancePartitionExpressionProcessor extends InstanceExpressionProcessor implements PartitionProcessor {
   /**
    * The constant DEFAULT_EXPRESSION_FOR_PARTITION.
@@ -24,9 +20,9 @@ public class InstancePartitionExpressionProcessor extends InstanceExpressionProc
 
   private static final String INSTANCE_PHASE_EXPR_PROCESSOR = "phaseExpressionProcessor";
 
-  private String[] breakdowns;
-  private String[] percentages;
-  private String[] counts;
+  private List<String> breakdowns;
+  private List<String> percentages;
+  private List<String> counts;
 
   /**
    * Instantiates a new instance expression processor.
@@ -46,39 +42,33 @@ public class InstancePartitionExpressionProcessor extends InstanceExpressionProc
     return this;
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP")
   @Override
-  public String[] getCounts() {
+  public List<String> getCounts() {
     return counts;
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   @Override
-  public void setCounts(String[] counts) {
+  public void setCounts(List<String> counts) {
     this.counts = counts;
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP")
   @Override
-  public String[] getPercentages() {
+  public List<String> getPercentages() {
     return percentages;
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   @Override
-  public void setPercentages(String[] percentages) {
+  public void setPercentages(List<String> percentages) {
     this.percentages = percentages;
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP")
   @Override
-  public String[] getBreakdowns() {
+  public List<String> getBreakdowns() {
     return breakdowns;
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   @Override
-  public void setBreakdowns(String[] breakdowns) {
+  public void setBreakdowns(List<String> breakdowns) {
     this.breakdowns = breakdowns;
   }
 
