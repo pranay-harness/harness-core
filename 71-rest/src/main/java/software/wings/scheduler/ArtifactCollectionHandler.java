@@ -16,31 +16,22 @@ import software.wings.beans.Application;
 import software.wings.beans.Permit;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.impl.PermitServiceImpl;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PermitService;
-import software.wings.service.intfc.TriggerService;
 
 import java.util.Date;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionHandler.class);
 
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private PermitService permitService;
-  @Inject private AppService appService;
-  @Inject private TriggerService triggerService;
 
-  @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
-  @Inject @Named("artifactCollectionExecutor") private ExecutorService artifactCollectionExecutor;
 
   @Override
   public void handle(ArtifactStream artifactStream) {
-    logger.info("Handing the artifact collection for ArtifactStreamId {}", artifactStream.getUuid());
+    logger.info("Received the artifact collection for ArtifactStreamId {}", artifactStream.getUuid());
     executeInternal(artifactStream.getAppId(), artifactStream);
   }
 
