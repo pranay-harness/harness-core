@@ -9,7 +9,6 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
-import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Assert;
@@ -53,8 +52,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
-  public void testElkConfigNoPassword() throws Exception {
+  public void testElkConfigNoPassword() {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
     elkConfig.setElkUrl("some url");
@@ -71,8 +69,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
-  public void testElkConfigNoUserName() throws Exception {
+  public void testElkConfigNoUserName() {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
     elkConfig.setElkUrl("some url");
@@ -89,8 +86,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
-  public void testInvalidUrl() throws Exception {
+  public void testInvalidUrl() {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
     elkConfig.setElkUrl("some url");
@@ -107,7 +103,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
 
   @Test
   @Ignore
-  public void testValidConfig() throws Exception {
+  public void testValidConfig() {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
     elkConfig.setElkUrl("https://ec2-34-207-78-53.compute-1.amazonaws.com:9200");

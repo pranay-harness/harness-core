@@ -32,7 +32,6 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.WingsException;
 import io.harness.persistence.UuidAware;
-import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
@@ -1159,7 +1158,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void multipleFileRefrence() throws IOException, IllegalAccessException {
+  public void multipleFileRefrence() throws IOException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
@@ -1277,7 +1276,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void deleteSecretFile() throws IOException, IllegalAccessException, InterruptedException {
+  public void deleteSecretFile() throws IOException, InterruptedException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
@@ -1382,7 +1381,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void deleteEncryptedConfigFile() throws IOException, IllegalAccessException, InterruptedException {
+  public void deleteEncryptedConfigFile() throws IOException, InterruptedException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
@@ -1465,7 +1464,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  public void updateLocalToKms() throws IllegalAccessException {
+  public void updateLocalToKms() {
     if (encryptionType != EncryptionType.LOCAL) {
       return;
     }
@@ -1557,7 +1556,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void serviceVariableSearchTags() throws IllegalAccessException, InterruptedException {
+  public void serviceVariableSearchTags() throws InterruptedException {
     String secretName = "name1";
     String secretValue = generateUuid();
     String secretId =
@@ -1718,7 +1717,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void serviceVariableTemplateSearchTags() throws IllegalAccessException {
+  public void serviceVariableTemplateSearchTags() {
     String secretName = "name1";
     String secretValue = generateUuid();
     String secretId =
@@ -1902,7 +1901,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void serviceVariableEnvironmentSearchTags() throws IllegalAccessException {
+  public void serviceVariableEnvironmentSearchTags() {
     String secretName = "name1";
     String secretValue = generateUuid();
     String secretId =
@@ -2044,7 +2043,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  public void serviceVariableSyncSearchTags() throws IllegalAccessException {
+  public void serviceVariableSyncSearchTags() {
     String secretName = generateUuid();
     String secretValue = generateUuid();
     String secretId =
@@ -2122,8 +2121,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
-  public void filterSecretSearchTags() throws IllegalAccessException {
+  public void filterSecretSearchTags() {
     int numOfServiceVariables = 6;
     int numOfSecrets = numOfServiceVariables * 5;
     List<String> secretIds = new ArrayList<>();

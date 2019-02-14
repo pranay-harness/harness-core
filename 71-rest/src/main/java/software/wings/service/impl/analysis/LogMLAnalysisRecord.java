@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.WingsException;
@@ -38,12 +39,15 @@ import java.util.Map;
  */
 @Entity(value = "logAnalysisRecords", noClassnameStored = true)
 @Indexes(@Index(fields =
-    { @Field("applicationId")
-      , @Field("stateExecutionId"), @Field("stateType"), @Field("logCollectionMinute") },
+    {
+      @Field("applicationId")
+      , @Field("stateExecutionId"), @Field("cvConfigId"), @Field("stateType"), @Field("logCollectionMinute")
+    },
     options = @IndexOptions(unique = true, name = "logAnalysisUniqueIdx")))
 @Data
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
   @Indexed private String cvConfigId;

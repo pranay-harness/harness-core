@@ -55,7 +55,9 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -359,6 +361,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     .stateType(cvConfiguration.getStateType())
                     .query(Lists.newArrayList(((LogsCVConfiguration) cvConfiguration).getQuery()))
                     .is24x7Task(true)
+                    .cvConfigId(cvConfiguration.getUuid())
                     .build();
             analysisTask.setAppId(cvConfiguration.getAppId());
 
@@ -431,7 +434,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               cvConfiguration.getUuid(), minLogRecordL1Minute, maxLogRecordL1Minute);
 
           String inputLogsUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
-              + LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId=" + cvConfiguration.getUuid()
+              + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId=" + cvConfiguration.getUuid()
               + "&appId=" + cvConfiguration.getAppId() + "&clusterLevel=" + ClusterLevel.L1
               + "&startMinute=" + minLogRecordL1Minute + "&endMinute=" + maxLogRecordL1Minute;
           String clusteredLogSaveUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
@@ -445,7 +448,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   .analysis_save_url(clusteredLogSaveUrl)
                   .state_execution_id("LOGS_CLUSTER_L2_" + cvConfiguration.getUuid() + "_" + maxLogRecordL1Minute)
                   .service_id(cvConfiguration.getServiceId())
-                  .control_nodes(Sets.newHashSet(DUMMY_HOST_NAME))
+                  .control_nodes(Collections.emptySet())
                   .sim_threshold(0.99)
                   .analysis_minute(maxLogRecordL1Minute)
                   .cluster_level(ClusterLevel.L2.getLevel())
@@ -453,6 +456,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   .stateType(cvConfiguration.getStateType())
                   .query(Lists.newArrayList(((LogsCVConfiguration) cvConfiguration).getQuery()))
                   .is24x7Task(true)
+                  .cvConfigId(cvConfiguration.getUuid())
                   .build();
           analysisTask.setAppId(cvConfiguration.getAppId());
 
@@ -520,17 +524,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
           String controlInputUrl = null;
           String testInputUrl = null;
+          boolean isBaselineRun = false;
           // this is the baseline prep case
           if (analysisStartMin < logsCVConfiguration.getBaselineStartMinute()
               || (analysisStartMin >= logsCVConfiguration.getBaselineStartMinute()
                      && analysisStartMin < logsCVConfiguration.getBaselineEndMinute())) {
             controlInputUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
-                + LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId=" + logsCVConfiguration.getUuid()
+                + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId=" + logsCVConfiguration.getUuid()
                 + "&appId=" + logsCVConfiguration.getAppId() + "&clusterLevel=" + ClusterLevel.L2
                 + "&startMinute=" + analysisStartMin + "&endMinute=" + analysisEndMin;
+            isBaselineRun = true;
           } else {
             testInputUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
-                + LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL + "?cvConfigId=" + logsCVConfiguration.getUuid()
+                + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL + "?cvConfigId=" + logsCVConfiguration.getUuid()
                 + "&appId=" + logsCVConfiguration.getAppId() + "&clusterLevel=" + ClusterLevel.L2
                 + "&startMinute=" + analysisStartMin + "&endMinute=" + analysisEndMin;
           }
@@ -542,7 +548,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
           final String logAnalysisGetUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
               + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL + "?appId=" + logsCVConfiguration.getAppId()
-              + "&cvConfigId=" + logsCVConfiguration.getUuid() + "&analysisMinute=" + analysisEndMin;
+              + "&cvConfigId=" + logsCVConfiguration.getUuid()
+              + "&analysisMinute=" + ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute();
 
           LearningEngineAnalysisTask analysisTask =
               LearningEngineAnalysisTask.builder()
@@ -561,10 +568,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   .is24x7Task(true)
                   .stateType(logsCVConfiguration.getStateType())
                   .tolerance(cvConfiguration.getAnalysisTolerance().tolerance())
+                  .cvConfigId(logsCVConfiguration.getUuid())
                   .build();
 
           analysisTask.setAppId(logsCVConfiguration.getAppId());
           analysisTask.setUuid(taskId);
+          if (isBaselineRun) {
+            analysisTask.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(6).toInstant()));
+          }
           learningEngineService.addLearningEngineAnalysisTask(analysisTask);
 
           if (lastCVAnalysisMinute <= 0) {

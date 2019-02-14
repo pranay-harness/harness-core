@@ -25,6 +25,8 @@ public interface LogAnalysisResource {
    */
   String ANALYSIS_STATE_GET_LOG_URL = "/get-logs";
 
+  String ANALYSIS_GET_24X7_ALL_LOGS_URL = "/get-all-24X7-logs";
+
   String ANALYSIS_GET_24X7_LOG_URL = "/get-24X7-logs";
 
   /**

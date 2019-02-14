@@ -107,11 +107,11 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       logger.info("Error while getting data ", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
-    List<LogElement> logElements =
-        parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(), elkSetupTestNodeData.getTimeStampField(),
-            elkSetupTestNodeData.getTimeStampFieldFormat(), elkSetupTestNodeData.getHostNameField(),
-            elkSetupTestNodeData.getInstanceElement().getHostName(), elkSetupTestNodeData.getMessageField(), 0, false);
-    if (logElements.isEmpty()) {
+    List<LogElement> logElements = parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(),
+        elkSetupTestNodeData.getTimeStampField(), elkSetupTestNodeData.getTimeStampFieldFormat(),
+        elkSetupTestNodeData.getHostNameField(), elkSetupTestNodeData.getInstanceElement().getHostName(),
+        elkSetupTestNodeData.getMessageField(), 0, false, -1, -1);
+    if (logElements.isEmpty() || elkSetupTestNodeData.isServiceLevel()) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())
@@ -149,7 +149,8 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     }
     parseElkResponse(responseWithHost, elkSetupTestNodeData.getQuery(), elkSetupTestNodeData.getTimeStampField(),
         elkSetupTestNodeData.getTimeStampFieldFormat(), hostName,
-        elkSetupTestNodeData.getInstanceElement().getHostName(), elkSetupTestNodeData.getMessageField(), 0, false);
+        elkSetupTestNodeData.getInstanceElement().getHostName(), elkSetupTestNodeData.getMessageField(), 0, false, -1,
+        -1);
 
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)

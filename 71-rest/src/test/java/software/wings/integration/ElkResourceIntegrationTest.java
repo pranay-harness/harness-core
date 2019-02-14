@@ -119,7 +119,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
     RestResponse<Object> response =
         getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Object>>() {});
     List<LogElement> logElements = parseElkResponse(response.getResource(), "info", "@timestamp",
-        "yyyy-MM-dd'T'HH:mm:ssXXX", "kubernetes.pod_name", "harness-learning-engine", "log", 0, false);
+        "yyyy-MM-dd'T'HH:mm:ssXXX", "kubernetes.pod_name", "harness-learning-engine", "log", 0, false, -1, -1);
     assertFalse(logElements.isEmpty());
   }
 

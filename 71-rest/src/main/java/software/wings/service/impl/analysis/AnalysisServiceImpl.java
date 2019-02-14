@@ -737,8 +737,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     try {
-      parseElkResponse(
-          searchResponse, query, timeStampField, timeStampFieldFormat, hostNameField, hostName, messageField, 0, false);
+      parseElkResponse(searchResponse, query, timeStampField, timeStampFieldFormat, hostNameField, hostName,
+          messageField, 0, false, -1, -1);
     } catch (Exception e) {
       throw new WingsException("Data fetch successful but date parsing failed.", e);
     }
