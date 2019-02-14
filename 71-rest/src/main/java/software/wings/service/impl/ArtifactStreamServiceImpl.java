@@ -28,14 +28,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.queue.Queue;
-import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -57,7 +55,6 @@ import software.wings.beans.config.ArtifactSourceable;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
-import software.wings.scheduler.ArtifactCollectionJob;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -92,7 +89,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject private Queue<PruneEvent> pruneQueue;
-  @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private AppService appService;
@@ -139,9 +135,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     String id = wingsPersistence.save(artifactStream);
     String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
-
-    ArtifactCollectionJob.addDefaultJob(
-        serviceJobScheduler, accountId, artifactStream.getAppId(), artifactStream.getUuid());
 
     yamlPushService.pushYamlChangeSet(
         accountId, null, artifactStream, Type.CREATE, artifactStream.isSyncFromGit(), false);

@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -297,11 +296,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     if (buildDetails == null) {
       throw new InvalidRequestException("Build details can not null", USER);
     }
-    if (featureFlagService.isEnabled(FeatureName.ASYNC_ARTIFACT_COLLECTION, appService.getAccountIdByAppId(appId))) {
-      return artifactCollectionServiceAsync.collectArtifact(appId, artifactStreamId, buildDetails);
-    } else {
-      return artifactCollectionService.collectArtifact(appId, artifactStreamId, buildDetails);
-    }
+    return artifactCollectionServiceAsync.collectArtifact(appId, artifactStreamId, buildDetails);
   }
 
   private BuildService getBuildService(SettingAttribute settingAttribute, String appId, String artifactStreamType) {

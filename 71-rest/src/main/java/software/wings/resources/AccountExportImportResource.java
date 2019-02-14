@@ -79,7 +79,6 @@ import software.wings.dl.exportimport.ImportStatusReport;
 import software.wings.dl.exportimport.ImportStatusReport.ImportStatus;
 import software.wings.dl.exportimport.WingsMongoExportImport;
 import software.wings.scheduler.AlertCheckJob;
-import software.wings.scheduler.ArtifactCollectionJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
 import software.wings.scheduler.InstanceSyncJob;
 import software.wings.scheduler.LdapGroupSyncJob;
@@ -533,13 +532,6 @@ public class AccountExportImportResource {
     // Recreate application or lower level jobs each need some special handling.
     List<String> appIds = appService.getAppIdsByAccountId(accountId);
     int importedJobCount = 0;
-
-    // 2. ArtifactCollectionJob
-    List<ArtifactStream> artifactStreams = getAllArtifactStreamsForAccount(accountId, appIds);
-    for (ArtifactStream artifactStream : artifactStreams) {
-      ArtifactCollectionJob.addWithDelay(scheduler, accountId, artifactStream.getAppId(), artifactStream.getUuid());
-      importedJobCount++;
-    }
 
     // 3. ScheduledTriggerJob
     List<Trigger> triggers = getAllScheduledTriggersForAccount(accountId, appIds);

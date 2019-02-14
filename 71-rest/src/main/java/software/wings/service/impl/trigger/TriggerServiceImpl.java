@@ -61,7 +61,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
@@ -98,7 +97,6 @@ import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -130,9 +128,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
   @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -1136,13 +1132,10 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private Artifact collectNewArtifactForBuildNumber(String appId, ArtifactStream artifactStream, String buildNumber) {
-    boolean featureFlagEnabled =
-        featureFlagService.isEnabled(FeatureName.ASYNC_ARTIFACT_COLLECTION, appService.getAccountIdByAppId(appId));
-    Artifact artifact = featureFlagEnabled
-        ? artifactCollectionServiceAsync.collectNewArtifacts(appId, artifactStream, buildNumber)
-        : artifactCollectionService.collectNewArtifacts(appId, artifactStream, buildNumber);
+    Artifact artifact = artifactCollectionServiceAsync.collectNewArtifacts(appId, artifactStream, buildNumber);
     if (artifact != null) {
-      logger.info("Artifact collected for the build number {} of stream id {}", buildNumber, artifactStream.getUuid());
+      logger.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
+          artifactStream.getUuid());
     } else {
       logger.warn(
           "Artifact collection invoked. However, Artifact not yet collected for the build number {} of stream id {}",

@@ -136,7 +136,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactService artifactService;
-  @Mock private ArtifactCollectionService artifactCollectionService;
+  @Mock private ArtifactCollectionService artifactCollectionServiceAsync;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private WorkflowService workflowService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
@@ -1297,13 +1297,14 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(artifactService.getArtifactByBuildNumber(artifactStream, buildNumber, false))
         .thenReturn(null)
         .thenReturn(artifact);
-    when(artifactCollectionService.collectNewArtifacts(APP_ID, jenkinsArtifactStream, buildNumber))
+
+    when(artifactCollectionServiceAsync.collectNewArtifacts(APP_ID, jenkinsArtifactStream, buildNumber))
         .thenReturn(artifact);
 
     triggerService.triggerExecutionByWebHook(APP_ID, webhookConditionTrigger.getWebHookToken(),
         ImmutableMap.of("Catalog", buildNumber), new HashMap<>(), null);
 
-    verify(artifactCollectionService).collectNewArtifacts(APP_ID, jenkinsArtifactStream, buildNumber);
+    verify(artifactCollectionServiceAsync).collectNewArtifacts(APP_ID, jenkinsArtifactStream, buildNumber);
     verify(artifactService).fetchLastCollectedArtifact(artifactStream);
   }
 

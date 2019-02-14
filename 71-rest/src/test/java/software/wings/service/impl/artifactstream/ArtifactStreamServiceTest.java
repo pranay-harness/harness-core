@@ -40,8 +40,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.quartz.JobDetail;
-import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
@@ -67,7 +65,6 @@ import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.template.artifacts.CustomRepositoryMapping;
 import software.wings.scheduler.BackgroundJobScheduler;
-import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -86,7 +83,6 @@ import java.util.Map;
 
 public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private BackgroundJobScheduler backgroundJobScheduler;
-  @Mock private ServiceJobScheduler serviceJobScheduler;
   @Mock private YamlPushService yamlPushService;
   @Mock private AppService appService;
   @Mock private BuildSourceService buildSourceService;
@@ -142,7 +138,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedJenkinsArtifactStream.getJobname()).isEqualTo("todolistwar");
     assertThat(savedJenkinsArtifactStream.getArtifactPaths()).contains("target/todolist.war");
 
-    verify(serviceJobScheduler).ensureJob__UnderConstruction(any(JobDetail.class), any(Trigger.class));
     verify(appService).getAccountIdByAppId(APP_ID);
   }
 
@@ -221,7 +216,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedBambooArtifactStream.getJobname()).isEqualTo("TOD-TOD");
     assertThat(savedBambooArtifactStream.getArtifactPaths()).contains("artifacts/todolist.war");
 
-    verify(serviceJobScheduler).ensureJob__UnderConstruction(any(JobDetail.class), any(Trigger.class));
     verify(appService).getAccountIdByAppId(APP_ID);
   }
 
