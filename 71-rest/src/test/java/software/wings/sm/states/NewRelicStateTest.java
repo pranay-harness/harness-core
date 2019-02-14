@@ -1,6 +1,8 @@
 package software.wings.sm.states;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
@@ -195,5 +197,21 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
         expectedMetricDefinitions.get("averageResponseTime"), actualMetricDefinitions.get("averageResponseTime"));
     assertEquals(expectedMetricDefinitions.get("error"), actualMetricDefinitions.get("error"));
     assertEquals(expectedMetricDefinitions.get("apdexScore"), actualMetricDefinitions.get("apdexScore"));
+  }
+
+  @Test
+  public void testGetMetricType() {
+    MetricType errType = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.ERROR);
+    assertNotNull(errType);
+    assertEquals("Error Type should be", MetricType.ERROR, errType);
+    MetricType throughput = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE);
+    assertNotNull(throughput);
+    assertEquals("Error Type should be", MetricType.THROUGHPUT, throughput);
+    MetricType respTime = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME);
+    assertNotNull(respTime);
+    assertEquals("Error Type should be", MetricType.RESP_TIME, respTime);
+
+    MetricType dummy = NewRelicState.getMetricTypeForMetric("incorrectName");
+    assertNull(dummy);
   }
 }

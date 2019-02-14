@@ -255,6 +255,17 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     return null;
   }
 
+  public static MetricType getMetricTypeForMetric(String metricName) {
+    if (isEmpty(metricName)) {
+      return null;
+    }
+    if (NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.containsKey(metricName)) {
+      return NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.get(metricName).getMetricType();
+    }
+    logger.error("Invalid metricName in NewRelic {}", metricName);
+    return null;
+  }
+
   @Attributes(required = false, title = "Expression for Host/Container name")
   public String getHostnameTemplate() {
     return hostnameTemplate;

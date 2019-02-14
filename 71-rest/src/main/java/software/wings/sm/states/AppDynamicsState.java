@@ -6,6 +6,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APP_DYNAMICS_24X7_VALUES_TO_ANALYZE;
+import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -27,6 +29,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
+import software.wings.metrics.MetricType;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -40,7 +44,6 @@ import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -149,7 +152,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APP_DYNAMICS,
-        context.getStateExecutionInstanceId(), null, NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
+        context.getStateExecutionInstanceId(), null, APP_DYNAMICS_VALUES_TO_ANALYZE);
 
     SettingAttribute settingAttribute = null;
     String finalApplicationId = applicationId;
@@ -385,5 +388,19 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
               .replace("{metricString}", metricString)
               .replace("{startTimeMs}", String.valueOf(startTime))
               .replace("{endTimeMs}", String.valueOf(endTime));
+  }
+
+  public static MetricType getMetricTypeForMetric(String metricName) {
+    if (isEmpty(metricName)) {
+      return null;
+    }
+    Map<String, TimeSeriesMetricDefinition> appDMetrics = new HashMap<>(APP_DYNAMICS_VALUES_TO_ANALYZE);
+    appDMetrics.putAll(APP_DYNAMICS_24X7_VALUES_TO_ANALYZE);
+
+    if (appDMetrics.containsKey(metricName)) {
+      return appDMetrics.get(metricName).getMetricType();
+    }
+    logger.error("Invalid metricName in AppDynamics {}", metricName);
+    return null;
   }
 }
