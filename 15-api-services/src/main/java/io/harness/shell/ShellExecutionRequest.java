@@ -1,15 +1,16 @@
-package software.wings.helpers.ext.shell.request;
+package io.harness.shell;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
 public class ShellExecutionRequest {
   @NotEmpty private String scriptString;
   private String workingDirectory;
-  @Builder.Default private long timeoutSeconds = 60;
+  @Default private long timeoutSeconds = 60;
 }

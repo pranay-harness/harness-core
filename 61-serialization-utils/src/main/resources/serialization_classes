@@ -4,31 +4,6 @@
 # Do not delete any line from this file. Once an ID is used it is permanently assigned.
 # If a class no longer exists then comment out the line with a leading '#'.
 
-com.amazonaws.services.ec2.model.Instance, 1001
-com.amazonaws.internal.SdkInternalList, 1002
-com.amazonaws.services.ec2.model.InstanceBlockDeviceMapping, 1003
-com.amazonaws.services.ec2.model.EbsInstanceBlockDevice, 1004
-com.amazonaws.services.ec2.model.IamInstanceProfile, 1005
-com.amazonaws.services.ec2.model.Monitoring, 1006
-com.amazonaws.services.ec2.model.InstanceNetworkInterface, 1007
-com.amazonaws.services.ec2.model.InstanceNetworkInterfaceAssociation, 1008
-com.amazonaws.services.ec2.model.InstanceNetworkInterfaceAttachment, 1009
-com.amazonaws.services.ec2.model.GroupIdentifier, 1010
-com.amazonaws.services.ec2.model.InstancePrivateIpAddress, 1011
-com.amazonaws.services.ec2.model.Placement, 1012
-com.amazonaws.services.ec2.model.InstanceState, 1013
-com.amazonaws.services.ec2.model.Tag, 1014
-com.amazonaws.AbortedException, 1015
-com.amazonaws.services.ec2.model.StateReason, 1016
-com.amazonaws.SdkClientException, 1017
-com.amazonaws.services.ec2.model.InstanceIpv6Address, 1018
-com.amazonaws.services.ec2.model.ProductCode, 1019
-com.amazonaws.services.ec2.model.Filter, 1020
-com.amazonaws.regions.Regions, 1021
-com.amazonaws.services.ec2.model.CpuOptions, 1022
-com.amazonaws.services.ec2.model.CapacityReservationSpecificationResponse, 1023
-com.amazonaws.services.ec2.model.CapacityReservationTargetResponse, 1024
-
 #Third party related exception classes
 io.fabric8.kubernetes.client.KubernetesClientException, 2000
 org.json.JSONException, 2001

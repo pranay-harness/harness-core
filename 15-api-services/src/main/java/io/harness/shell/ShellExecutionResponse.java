@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.shell.response;
+package io.harness.shell;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

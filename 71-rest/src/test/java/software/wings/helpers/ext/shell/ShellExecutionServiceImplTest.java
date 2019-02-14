@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.shell.ShellExecutionRequest;
+import io.harness.shell.ShellExecutionResponse;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
-import software.wings.helpers.ext.shell.request.ShellExecutionRequest;
-import software.wings.helpers.ext.shell.response.ShellExecutionResponse;
 import software.wings.helpers.ext.shell.response.ShellExecutionServiceImpl;
 
 public class ShellExecutionServiceImplTest extends WingsBaseTest {

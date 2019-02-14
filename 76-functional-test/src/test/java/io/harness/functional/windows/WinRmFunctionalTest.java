@@ -41,6 +41,7 @@ import io.harness.generator.SettingGenerator;
 import io.restassured.http.ContentType;
 import org.awaitility.Awaitility;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -93,6 +94,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
+  @Ignore
   public void shouldDeployIISAppWorkflow() {
     Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
     Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
