@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.persistence.PersistentIterable;
 import io.harness.validation.Update;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,7 +43,7 @@ import javax.annotation.Nullable;
     fields = { @Field("appId")
                , @Field("envId"), @Field("name") }))
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class InfrastructureMapping extends Base implements EncryptableSetting {
+public abstract class InfrastructureMapping extends Base implements EncryptableSetting, PersistentIterable {
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
   public static final String PROVISIONER_ID_KEY = "provisionerId";
@@ -67,6 +68,8 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
   @SchemaIgnore @NotEmpty private String accountId;
 
   @Nullable @Indexed private String provisionerId;
+
+  @Indexed private Long nextIteration;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -281,6 +284,16 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
 
   public void setProvisionerId(String provisionerId) {
     this.provisionerId = provisionerId;
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return nextIteration;
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    this.nextIteration = nextIteration;
   }
 
   @Override
