@@ -174,6 +174,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void testGetDependentTiers() throws IOException {
     WebTarget target = client.target(
         API_BASE + "/appdynamics/applications?settingId=" + appdynamicsSettingId + "&accountId=" + accountId);
@@ -206,7 +207,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Owner(emails = "pranjal@harness.io", intermittent = true)
   public void testGetDataForNode() throws Exception {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
