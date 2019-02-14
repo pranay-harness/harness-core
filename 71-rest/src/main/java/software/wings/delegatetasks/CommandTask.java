@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,6 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.service.intfc.ServiceCommandExecutorService;
-import software.wings.utils.Misc;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -47,8 +47,8 @@ public class CommandTask extends AbstractDelegateRunnableTask {
     try {
       commandExecutionStatus = serviceCommandExecutorService.execute(command, commandExecutionContext);
     } catch (Exception e) {
-      logger.warn("Exception while executing task {}: {}", getTaskId(), Misc.getMessage(e), e);
-      errorMessage = Misc.getMessage(e);
+      logger.warn("Exception while executing task {}: {}", getTaskId(), ExceptionUtils.getMessage(e), e);
+      errorMessage = ExceptionUtils.getMessage(e);
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
     }
 

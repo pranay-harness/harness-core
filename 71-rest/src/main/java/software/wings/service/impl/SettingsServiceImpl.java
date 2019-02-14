@@ -30,7 +30,6 @@ import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
 import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTED_FIELD_MASK;
-import static software.wings.utils.Misc.getMessage;
 import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.equalCheck;
@@ -45,6 +44,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Rejection;
@@ -134,7 +134,7 @@ public class SettingsServiceImpl implements SettingsService {
           .build();
 
     } catch (Exception e) {
-      throw new InvalidRequestException(getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -212,7 +212,7 @@ public class SettingsServiceImpl implements SettingsService {
 
       return settingValidationService.validateConnectivity(settingAttribute);
     } catch (Exception ex) {
-      return new ValidationResult(false, getMessage(ex));
+      return new ValidationResult(false, ExceptionUtils.getMessage(ex));
     }
   }
 
@@ -220,7 +220,7 @@ public class SettingsServiceImpl implements SettingsService {
     try {
       return new ValidationResult(settingValidationService.validate(settingAttribute), "");
     } catch (Exception ex) {
-      return new ValidationResult(false, getMessage(ex));
+      return new ValidationResult(false, ExceptionUtils.getMessage(ex));
     }
   }
 

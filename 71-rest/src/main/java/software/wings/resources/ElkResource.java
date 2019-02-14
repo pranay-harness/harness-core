@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
@@ -22,7 +23,6 @@ import software.wings.service.impl.elk.ElkSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.List;
@@ -120,7 +120,7 @@ public class ElkResource implements LogAnalysisResource {
           .toElasticSearchJsonObject();
       return new RestResponse<>(true);
     } catch (Exception ex) {
-      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, ex).addParam("reason", Misc.getMessage(ex));
+      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR).addParam("reason", ExceptionUtils.getMessage(ex));
     }
   }
 

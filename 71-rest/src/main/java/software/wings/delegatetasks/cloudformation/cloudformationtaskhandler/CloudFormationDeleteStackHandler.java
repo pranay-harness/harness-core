@@ -9,6 +9,7 @@ import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Stack;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import lombok.NoArgsConstructor;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
@@ -17,7 +18,6 @@ import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteSta
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse.CloudFormationCommandExecutionResponseBuilder;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Optional;
@@ -107,7 +107,8 @@ public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskH
         builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
       }
     } catch (Exception ex) {
-      String errorMessage = String.format("# Exception: %s while deleting stack: %s", Misc.getMessage(ex), stackName);
+      String errorMessage =
+          String.format("# Exception: %s while deleting stack: %s", ExceptionUtils.getMessage(ex), stackName);
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
     }

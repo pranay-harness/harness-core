@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.jayway.jsonpath.DocumentContext;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.shell.ShellExecutionRequest;
@@ -24,7 +25,6 @@ import software.wings.helpers.ext.jenkins.CustomRepositoryResponse;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse.CustomRepositoryResponseBuilder;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse.Result;
 import software.wings.helpers.ext.shell.response.ShellExecutionService;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.IOException;
@@ -109,7 +109,7 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
       } catch (Exception ex) {
         String msg =
             "Failed to transform results to the Custom Repository Response. Please verify if the script output is in the required format. Reason ["
-            + Misc.getMessage(ex) + "]";
+            + ExceptionUtils.getMessage(ex) + "]";
         logger.error(msg);
         throw new WingsException(msg);
 

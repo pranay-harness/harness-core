@@ -3,6 +3,7 @@ package software.wings.delegatetasks.collect.artifacts;
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
@@ -14,7 +15,6 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -63,7 +63,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
             getDelegateId(), getTaskId(), getAccountId(), res);
       }
     } catch (Exception e) {
-      logger.warn("Exception: " + Misc.getMessage(e), e);
+      logger.warn("Exception: " + ExceptionUtils.getMessage(e), e);
     }
     return res;
   }

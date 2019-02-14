@@ -27,6 +27,7 @@ import com.jcraft.jsch.Session;
 import groovy.lang.Singleton;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
@@ -91,7 +92,6 @@ import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.GitPushResult.RefUpdate;
 import software.wings.service.intfc.yaml.GitClient;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.IOException;
@@ -128,7 +128,7 @@ public class GitClientImpl implements GitClient {
         FileUtils.deleteDirectory(new File(gitRepoDirectory));
       }
     } catch (IOException ioex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", Misc.getMessage(ioex));
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", ExceptionUtils.getMessage(ioex));
     }
 
     logger.info(GIT_YAML_LOG_PREFIX + "cloning repo, Git repo directory :{}", gitRepoDirectory);
@@ -449,7 +449,7 @@ public class GitClientImpl implements GitClient {
       }
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-      String errorMsg = Misc.getMessage(ex);
+      String errorMsg = ExceptionUtils.getMessage(ex);
       if (ex instanceof InvalidRemoteException || ex.getCause() instanceof NoRemoteRepositoryException) {
         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:" + gitConfig.getRepoUrl();
       }
@@ -811,7 +811,7 @@ public class GitClientImpl implements GitClient {
         }
       }
       // Any generic error
-      return Misc.getMessage(e);
+      return ExceptionUtils.getMessage(e);
     }
     return null; // no error
   }

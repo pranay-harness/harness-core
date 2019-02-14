@@ -2,11 +2,11 @@ package software.wings.delegatetasks.aws;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -55,7 +55,7 @@ public class AwsRoute53Task extends AbstractDelegateRunnableTask {
     } catch (WingsException exception) {
       throw exception;
     } catch (Exception ex) {
-      throw new InvalidRequestException(getMessage(ex), USER);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(ex), USER);
     }
   }
 }

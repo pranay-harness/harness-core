@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,6 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -82,7 +82,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
           .gitCommandStatus(GitCommandStatus.SUCCESS)
           .build();
     } catch (Exception ex) {
-      String msg = "Exception in processing GitFetchFilesTask. " + Misc.getMessage(ex);
+      String msg = "Exception in processing GitFetchFilesTask. " + ExceptionUtils.getMessage(ex);
       logger.error(msg, ex);
       executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
       return GitCommandExecutionResponse.builder().errorMessage(msg).gitCommandStatus(GitCommandStatus.FAILURE).build();

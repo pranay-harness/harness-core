@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import net.jodah.expiringmap.ExpirationPolicy;
@@ -29,7 +30,6 @@ import software.wings.beans.DockerConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.net.URL;
@@ -77,7 +77,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
             dockerPublicRegistryProcessor.getBuilds(dockerConfig, encryptionDetails, imageName, maxNumberOfBuilds);
       }
     } catch (IOException e) {
-      throw new WingsException(GENERAL_ERROR, WingsException.USER, e).addParam("message", Misc.getMessage(e));
+      throw new WingsException(GENERAL_ERROR, WingsException.USER, e).addParam("message", ExceptionUtils.getMessage(e));
     }
     return buildDetails;
   }
@@ -216,7 +216,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         }
         return isSuccessful(response);
       } catch (IOException e) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
+            .addParam("message", ExceptionUtils.getMessage(e));
       }
     }
     return true;

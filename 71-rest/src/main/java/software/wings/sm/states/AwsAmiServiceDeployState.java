@@ -17,7 +17,6 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -27,6 +26,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
@@ -92,7 +92,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.Collections;
@@ -161,7 +160,7 @@ public class AwsAmiServiceDeployState extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new InvalidRequestException(getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -449,7 +448,7 @@ public class AwsAmiServiceDeployState extends State {
     } catch (Exception ex) {
       logger.error("Ami deploy step failed with error ", ex);
       executionStatus = ExecutionStatus.FAILED;
-      errorMessage = Misc.getMessage(ex);
+      errorMessage = ExceptionUtils.getMessage(ex);
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
     }
 

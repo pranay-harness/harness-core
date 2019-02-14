@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,6 @@ import software.wings.beans.SftpConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.SftpHelperService;
-import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +49,7 @@ public class SftpServiceImpl implements SftpService {
       buildDetailsList = sftpHelperService.getArtifactDetails(sftpConfig, encryptionDetails, artifactPaths);
     } catch (Exception e) {
       logger.error("Error while retrieving artifacts build details from SFTP Server : {}", sftpConfig.getSftpUrl());
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
     return buildDetailsList;
   }

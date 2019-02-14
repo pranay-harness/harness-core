@@ -16,6 +16,7 @@ import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.waiter.ListNotifyResponseData;
@@ -41,7 +42,6 @@ import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
 import software.wings.helpers.ext.nexus.model.Project;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -287,7 +287,7 @@ public class NexusTwoServiceImpl {
                   }
 
                 } catch (IOException ex) {
-                  throw new InvalidRequestException(Misc.getMessage(ex), ex);
+                  throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
                 }
               }
             }

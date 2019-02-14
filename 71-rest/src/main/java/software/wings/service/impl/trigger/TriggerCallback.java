@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import org.slf4j.Logger;
@@ -14,7 +15,6 @@ import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.service.intfc.TriggerService;
-import software.wings.utils.Misc;
 
 import java.util.Map;
 
@@ -43,7 +43,8 @@ public class TriggerCallback implements NotifyCallback {
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       triggerResponse.setErrorMsg(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
     } else if (notifyResponseData instanceof RemoteMethodReturnValueData) {
-      triggerResponse.setErrorMsg(Misc.getMessage(((RemoteMethodReturnValueData) notifyResponseData).getException()));
+      triggerResponse.setErrorMsg(
+          ExceptionUtils.getMessage(((RemoteMethodReturnValueData) notifyResponseData).getException()));
     } else if (!(notifyResponseData instanceof TriggerDeploymentNeededResponse)) {
       triggerResponse.setErrorMsg("Unknown Response from delegate");
     } else {

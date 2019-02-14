@@ -15,6 +15,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -44,7 +45,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.LambdaConvention;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -123,7 +123,7 @@ public class AwsLambdaVerification extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(Misc.getMessage(e), e);
+      throw new WingsException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -199,7 +199,7 @@ public class AwsLambdaVerification extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(Misc.getMessage(e), e);
+      throw new WingsException(ExceptionUtils.getMessage(e), e);
     }
   }
 

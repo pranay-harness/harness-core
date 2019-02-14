@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.ExceptionUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,6 @@ import software.wings.beans.DeploymentPreference;
 import software.wings.beans.Preference;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PreferenceService;
-import software.wings.utils.Misc;
 
 @Singleton
 public class PreferenceServiceImpl implements PreferenceService {
@@ -31,7 +31,7 @@ public class PreferenceServiceImpl implements PreferenceService {
     try {
       savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
     } catch (Exception e) {
-      logger.error("Exception while saving preference to DB: ", Misc.getMessage(e));
+      logger.error("Exception while saving preference to DB: ", ExceptionUtils.getMessage(e));
     }
     return savedPreference;
   }

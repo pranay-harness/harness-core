@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,6 @@ import software.wings.helpers.ext.bamboo.Result;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.states.FilePathAssertionEntry;
 import software.wings.sm.states.ParameterEntry;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.List;
@@ -55,7 +55,7 @@ public class BambooTask extends AbstractDelegateRunnableTask {
       bambooExecutionResponse = run((BambooConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1],
           (String) parameters[2], (List<ParameterEntry>) parameters[3], (List<FilePathAssertionEntry>) parameters[4]);
     } catch (Exception e) {
-      logger.warn("Failed to execute Bamboo verification task: " + Misc.getMessage(e), e);
+      logger.warn("Failed to execute Bamboo verification task: " + ExceptionUtils.getMessage(e), e);
       bambooExecutionResponse.setExecutionStatus(ExecutionStatus.FAILED);
     }
     logger.info("Bamboo task  completed");
@@ -94,8 +94,8 @@ public class BambooTask extends AbstractDelegateRunnableTask {
         bambooExecutionResponse.setParameters(parameterEntries);
       }
     } catch (Exception e) {
-      logger.warn("Failed to execute Bamboo verification task: " + Misc.getMessage(e), e);
-      errorMessage = Misc.getMessage(e);
+      logger.warn("Failed to execute Bamboo verification task: " + ExceptionUtils.getMessage(e), e);
+      errorMessage = ExceptionUtils.getMessage(e);
       executionStatus = ExecutionStatus.FAILED;
     }
     bambooExecutionResponse.setErrorMessage(errorMessage);

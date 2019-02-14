@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -127,7 +128,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
       status = CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
-      logger.error(Misc.getMessage(ex), ex);
+      logger.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
       logger.error("Completed operation with errors");
       executionLogCallback.saveExecutionLog(

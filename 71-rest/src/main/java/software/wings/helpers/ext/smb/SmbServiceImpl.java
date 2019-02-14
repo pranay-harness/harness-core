@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,6 @@ import software.wings.beans.SmbConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.SmbHelperService;
-import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,9 +49,7 @@ public class SmbServiceImpl implements SmbService {
     try {
       buildDetailsList = smbHelperService.getArtifactDetails(smbConfig, encryptionDetails, artifactPaths);
     } catch (Exception e) {
-      logger.error("Error while retrieving artifacts build details from SMB Server : {} and message {} ",
-          smbConfig.getSmbUrl(), Misc.getMessage(e));
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
     return buildDetailsList;
   }

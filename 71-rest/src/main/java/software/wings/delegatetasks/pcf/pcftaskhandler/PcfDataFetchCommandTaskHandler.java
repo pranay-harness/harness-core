@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,6 @@ import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.List;
 
@@ -84,7 +84,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
       pcfInfraMappingDataResponse.setSpaces(emptyList());
       pcfInfraMappingDataResponse.setRouteMaps(emptyList());
       pcfInfraMappingDataResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
-      pcfInfraMappingDataResponse.setOutput(Misc.getMessage(e));
+      pcfInfraMappingDataResponse.setOutput(ExceptionUtils.getMessage(e));
     }
 
     pcfCommandExecutionResponse.setCommandExecutionStatus(pcfInfraMappingDataResponse.getCommandExecutionStatus());

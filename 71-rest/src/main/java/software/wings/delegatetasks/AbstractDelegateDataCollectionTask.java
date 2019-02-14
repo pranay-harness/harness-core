@@ -9,6 +9,7 @@ import com.google.inject.name.Named;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.NotImplementedException;
@@ -22,7 +23,6 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -129,7 +129,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
       return DataCollectionTaskResult.builder()
           .status(DataCollectionTaskStatus.FAILURE)
           .stateType(getStateType())
-          .errorMessage("Data collection task failed : " + Misc.getMessage(e))
+          .errorMessage("Data collection task failed : " + ExceptionUtils.getMessage(e))
           .build();
     }
   }

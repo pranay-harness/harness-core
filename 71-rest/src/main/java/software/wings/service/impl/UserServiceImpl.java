@@ -66,6 +66,7 @@ import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
@@ -126,7 +127,6 @@ import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
-import software.wings.utils.Misc;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
@@ -1463,8 +1463,7 @@ public class UserServiceImpl implements UserService {
       JWSSigner signer = new MACSigner(jwtZendeskSecret.getBytes(UTF_8));
       jwsObject.sign(signer);
     } catch (com.nimbusds.jose.JOSEException e) {
-      logger.error("Error signing JWT: " + Misc.getMessage(e), e);
-      throw new InvalidRequestException("Error signing JWT: " + Misc.getMessage(e));
+      throw new InvalidRequestException("Error signing JWT: " + ExceptionUtils.getMessage(e));
     }
 
     // Serialise to JWT compact form

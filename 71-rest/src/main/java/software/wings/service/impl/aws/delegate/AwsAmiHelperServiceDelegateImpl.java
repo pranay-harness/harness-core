@@ -13,7 +13,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.utils.AsgConvention.getRevisionFromTag;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -31,6 +30,7 @@ import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.ec2.model.Instance;
 import io.fabric8.utils.Lists;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -183,7 +183,7 @@ public class AwsAmiHelperServiceDelegateImpl
       logCallback.saveExecutionLog("Completed switch routes");
       return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
     } catch (Exception ex) {
-      String errorMessage = getMessage(ex);
+      String errorMessage = ExceptionUtils.getMessage(ex);
       logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
       logger.error(errorMessage, ex);
       return AwsAmiSwitchRoutesResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
@@ -283,7 +283,7 @@ public class AwsAmiHelperServiceDelegateImpl
       logCallback.saveExecutionLog("Completed rollback switch routes");
       return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
     } catch (Exception ex) {
-      String errorMessage = getMessage(ex);
+      String errorMessage = ExceptionUtils.getMessage(ex);
       logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
       logger.error(errorMessage, ex);
       return AwsAmiSwitchRoutesResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
@@ -317,7 +317,7 @@ public class AwsAmiHelperServiceDelegateImpl
                                           .collect(toList());
       return AwsAmiServiceDeployResponse.builder().instancesAdded(instancesAdded).executionStatus(SUCCESS).build();
     } catch (Exception ex) {
-      String errorMessage = getMessage(ex);
+      String errorMessage = ExceptionUtils.getMessage(ex);
       logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
       logger.error(errorMessage, ex);
       return AwsAmiServiceDeployResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
@@ -495,7 +495,10 @@ public class AwsAmiHelperServiceDelegateImpl
     } catch (Exception exception) {
       logCallback.saveExecutionLog(format("Exception: [%s].", exception.getMessage()), ERROR);
       logger.error(exception.getMessage(), exception);
-      return AwsAmiServiceSetupResponse.builder().errorMessage(getMessage(exception)).executionStatus(FAILED).build();
+      return AwsAmiServiceSetupResponse.builder()
+          .errorMessage(ExceptionUtils.getMessage(exception))
+          .executionStatus(FAILED)
+          .build();
     }
   }
 

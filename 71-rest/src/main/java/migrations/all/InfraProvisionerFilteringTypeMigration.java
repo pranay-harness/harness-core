@@ -4,11 +4,11 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
+import io.harness.exception.ExceptionUtils;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +39,7 @@ public class InfraProvisionerFilteringTypeMigration implements Migration {
             wingsPersistence.saveAndGet(InfrastructureProvisioner.class, provisioner);
           }
         } catch (Exception ex) {
-          logger.error(getMessage(ex), ex);
+          logger.error(ExceptionUtils.getMessage(ex), ex);
         }
       });
     }

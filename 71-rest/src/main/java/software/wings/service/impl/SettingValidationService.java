@@ -8,13 +8,13 @@ import static java.util.Collections.emptyList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
@@ -146,7 +146,8 @@ public class SettingValidationService {
               .build();
         } else if (notifyResponseData instanceof RemoteMethodReturnValueData) {
           return ValidationResult.builder()
-              .errorMessage(getMessage(((RemoteMethodReturnValueData) notifyResponseData).getException()))
+              .errorMessage(
+                  ExceptionUtils.getMessage(((RemoteMethodReturnValueData) notifyResponseData).getException()))
               .valid(false)
               .build();
         }
@@ -163,13 +164,13 @@ public class SettingValidationService {
               .build();
         }
       } catch (InterruptedException ex) {
-        throw new InvalidRequestException(getMessage(ex), USER);
+        throw new InvalidRequestException(ExceptionUtils.getMessage(ex), USER);
       }
     } else {
       try {
         return ValidationResult.builder().valid(validate(settingAttribute)).errorMessage("").build();
       } catch (Exception ex) {
-        return ValidationResult.builder().valid(false).errorMessage(getMessage(ex)).build();
+        return ValidationResult.builder().valid(false).errorMessage(ExceptionUtils.getMessage(ex)).build();
       }
     }
   }
@@ -235,7 +236,8 @@ public class SettingValidationService {
               .setKibanaVersion(elkAnalysisService.getVersion(
                   settingAttribute.getAccountId(), (ElkConfig) settingValue, Collections.emptyList()));
         } catch (Exception ex) {
-          throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, USER, ex).addParam("reason", getMessage(ex));
+          throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, USER, ex)
+              .addParam("reason", ExceptionUtils.getMessage(ex));
         }
       }
       analysisService.validateConfig(settingAttribute, StateType.ELK, encryptedDataDetails);
@@ -292,8 +294,7 @@ public class SettingValidationService {
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
-      logger.warn(getMessage(e), e);
-      throw new InvalidRequestException(getMessage(e), USER);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
 
@@ -309,8 +310,7 @@ public class SettingValidationService {
       try {
         awsEc2HelperServiceManager.validateAwsAccountCredential(value, encryptedDataDetails);
       } catch (Exception e) {
-        logger.warn(getMessage(e), e);
-        throw new InvalidRequestException(getMessage(e), USER);
+        throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
   }
@@ -321,8 +321,7 @@ public class SettingValidationService {
       gitConfig.setDecrypted(true);
       gitConfigHelperService.validateGitConfig(gitConfig, fetchEncryptionDetails(gitConfig));
     } catch (Exception e) {
-      logger.warn(getMessage(e), e);
-      throw new InvalidRequestException(getMessage(e), USER);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
 

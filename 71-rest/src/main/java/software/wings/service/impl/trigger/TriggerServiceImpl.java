@@ -47,6 +47,7 @@ import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -104,7 +105,6 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -834,13 +834,15 @@ public class TriggerServiceImpl implements TriggerService {
             }
           } catch (WingsException exception) {
             // Update trigger Status Failed
-            triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.FAILED, Misc.getMessage(exception));
+            triggerExecutionService.updateStatus(
+                appId, triggerExecutionId, Status.FAILED, ExceptionUtils.getMessage(exception));
             exception.addContext(Application.class, trigger.getAppId());
             exception.addContext(TriggerExecution.class, triggerExecution.getUuid());
             exception.addContext(Trigger.class, trigger.getUuid());
             ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
           } catch (Exception exception) {
-            triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.FAILED, Misc.getMessage(exception));
+            triggerExecutionService.updateStatus(
+                appId, triggerExecutionId, Status.FAILED, ExceptionUtils.getMessage(exception));
             logger.error("Exception occurred while starting deployment of the trigger execution {}",
                 triggerExecution.getUuid(), exception);
           }

@@ -19,6 +19,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -45,7 +46,6 @@ import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
-import software.wings.utils.Misc;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -122,7 +122,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       logger.error("Exception in processing git operation", ex);
       return TerraformExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
-          .errorMessage(Misc.getMessage(ex))
+          .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
     String scriptDirectory = resolveScriptDirectory(gitConfig, parameters.getScriptPath());
@@ -322,7 +322,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       logger.error("Exception in processing terraform operation", ex);
       return TerraformExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
-          .errorMessage(Misc.getMessage(ex))
+          .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     } finally {
       FileUtils.deleteQuietly(tfVariablesFile);

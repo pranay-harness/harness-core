@@ -22,6 +22,7 @@ import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
@@ -65,7 +66,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
-import software.wings.utils.Misc;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -450,7 +450,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       logger.info("assertion status: {}", assertionStatus);
       return assertionStatus;
     } catch (ClassCastException e) {
-      logger.info("Invalid assertion " + Misc.getMessage(e), e);
+      logger.info("Invalid assertion " + ExceptionUtils.getMessage(e), e);
       executionData.setErrorMsg(ASSERTION_ERROR_MSG);
       throw new InvalidRequestException(ASSERTION_ERROR_MSG, WingsException.USER);
     } catch (JexlException e) {

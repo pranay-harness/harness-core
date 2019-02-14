@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
@@ -27,7 +28,6 @@ import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.List;
@@ -65,7 +65,7 @@ public class PcfHelperService {
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(Misc.getMessage(e))
+                                        .errorMessage(ExceptionUtils.getMessage(e))
                                         .build();
     }
 
@@ -159,7 +159,7 @@ public class PcfHelperService {
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(Misc.getMessage(e))
+                                        .errorMessage(ExceptionUtils.getMessage(e))
                                         .build();
     }
 
@@ -201,7 +201,7 @@ public class PcfHelperService {
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(Misc.getMessage(e))
+                                        .errorMessage(ExceptionUtils.getMessage(e))
                                         .build();
     }
 
@@ -236,7 +236,7 @@ public class PcfHelperService {
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(Misc.getMessage(e))
+                                        .errorMessage(ExceptionUtils.getMessage(e))
                                         .build();
     }
 
@@ -272,7 +272,7 @@ public class PcfHelperService {
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(Misc.getMessage(e))
+                                        .errorMessage(ExceptionUtils.getMessage(e))
                                         .build();
     }
 
@@ -309,7 +309,7 @@ public class PcfHelperService {
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(Misc.getMessage(e))
+                                        .errorMessage(ExceptionUtils.getMessage(e))
                                         .build();
     }
 

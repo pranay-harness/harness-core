@@ -7,6 +7,7 @@ import static software.wings.beans.FeatureName.LOGML_NEURAL_NET;
 import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.exception.ExceptionUtils;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
@@ -24,7 +25,6 @@ import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Set;
@@ -226,7 +226,7 @@ public class LogMLAnalysisGenerator implements Runnable {
 
     } catch (Exception e) {
       throw new RuntimeException("Log analysis failed for " + context.getStateExecutionId() + " for minute "
-              + logAnalysisMinute + ", reason: " + Misc.getMessage(e),
+              + logAnalysisMinute + ", reason: " + ExceptionUtils.getMessage(e),
           e);
     }
   }

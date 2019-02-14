@@ -34,7 +34,6 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.log.LogResponseParser;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -275,7 +274,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
              * more meaningful to trouble shoot.
              */
             if (retry == 1) {
-              taskResult.setErrorMessage(Misc.getMessage(ex));
+              taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn("error fetching logs. Retrying in " + RETRY_SLEEP + "s", ex);
             sleep(RETRY_SLEEP);

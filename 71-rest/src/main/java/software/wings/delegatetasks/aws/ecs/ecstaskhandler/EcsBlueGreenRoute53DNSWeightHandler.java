@@ -4,11 +4,11 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
 import static software.wings.beans.Log.LogLevel.ERROR;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
@@ -93,7 +93,7 @@ public class EcsBlueGreenRoute53DNSWeightHandler extends EcsCommandTaskHandler {
           .ecsCommandResponse(EcsBGRoute53DNSWeightUpdateResponse.builder().commandExecutionStatus(SUCCESS).build())
           .build();
     } catch (Exception ex) {
-      String errorMessage = getMessage(ex);
+      String errorMessage = ExceptionUtils.getMessage(ex);
       executionLogCallback.saveExecutionLog(errorMessage, ERROR);
       return EcsCommandExecutionResponse.builder()
           .commandExecutionStatus(FAILURE)

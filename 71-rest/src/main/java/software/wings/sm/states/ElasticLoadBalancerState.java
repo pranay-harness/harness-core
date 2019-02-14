@@ -8,6 +8,7 @@ import com.amazonaws.regions.Regions;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ElbStateExecutionData;
@@ -31,7 +32,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
-import software.wings.utils.Misc;
 
 /**
  * Created by peeyushaggarwal on 10/3/16.
@@ -112,7 +112,7 @@ public class ElasticLoadBalancerState extends State {
       status = result ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     } catch (Exception e) {
       status = ExecutionStatus.ERROR;
-      errorMessage = Misc.getMessage(e);
+      errorMessage = ExceptionUtils.getMessage(e);
     }
 
     return anExecutionResponse()

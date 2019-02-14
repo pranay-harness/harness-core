@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Stack;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import lombok.NoArgsConstructor;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
@@ -17,7 +18,6 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandE
 import software.wings.helpers.ext.cloudformation.response.CloudFormationListStacksResponse;
 import software.wings.helpers.ext.cloudformation.response.StackSummaryInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.List;
@@ -57,7 +57,7 @@ public class CloudFormationListStacksHandler extends CloudFormationCommandTaskHa
       builder.commandExecutionStatus(CommandExecutionStatus.SUCCESS)
           .commandResponse(CloudFormationListStacksResponse.builder().stackSummaryInfos(summaryInfos).build());
     } catch (Exception ex) {
-      String errorMessage = String.format("Exception: %s while getting stacks list: %s", Misc.getMessage(ex),
+      String errorMessage = String.format("Exception: %s while getting stacks list: %s", ExceptionUtils.getMessage(ex),
           cloudFormationListStacksRequest.getStackId());
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);

@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,7 +87,8 @@ public class EmailState extends State {
                                         .build());
       executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
     } catch (Exception e) {
-      executionResponse.setErrorMessage(e.getCause() == null ? Misc.getMessage(e) : Misc.getMessage(e.getCause()));
+      executionResponse.setErrorMessage(
+          e.getCause() == null ? ExceptionUtils.getMessage(e) : ExceptionUtils.getMessage(e.getCause()));
       executionResponse.setExecutionStatus(ignoreDeliveryFailure ? ExecutionStatus.SUCCESS : ExecutionStatus.ERROR);
       logger.error("Exception while sending email", e);
     }

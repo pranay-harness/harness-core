@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 import groovy.lang.Singleton;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -39,7 +40,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -88,7 +88,7 @@ public class ContainerDeploymentDelegateHelper {
         return file.getAbsolutePath();
       }
     } catch (Exception e) {
-      throw new InvalidRequestException(Misc.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -139,7 +139,7 @@ public class ContainerDeploymentDelegateHelper {
       }
       return getConfigFileContent(kubernetesConfig);
     } catch (Exception e) {
-      throw new InvalidRequestException(Misc.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 

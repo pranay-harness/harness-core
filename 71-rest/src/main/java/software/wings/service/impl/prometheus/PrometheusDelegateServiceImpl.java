@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,6 @@ import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -47,7 +47,7 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
         throw new WingsException(response.errorBody().string());
       }
     } catch (Exception e) {
-      throw new WingsException("Could not validate prometheus server. " + Misc.getMessage(e), e);
+      throw new WingsException("Could not validate prometheus server. " + ExceptionUtils.getMessage(e), e);
     }
   }
 

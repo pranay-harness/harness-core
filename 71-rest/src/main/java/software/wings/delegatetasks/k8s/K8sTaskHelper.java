@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
@@ -65,7 +66,6 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -348,7 +348,7 @@ public class K8sTaskHelper {
         FileIo.writeUtf8StringToFile(k8sDelegateTaskParams.getWorkingDirectory() + '/' + valuesFileName, item);
         valuesFilesOptionsBuilder.append(" -f ").append(valuesFileName);
       } catch (Exception e) {
-        executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
+        executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
         throw e;
       }
     }
@@ -404,7 +404,7 @@ public class K8sTaskHelper {
           result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
         } catch (KubernetesYamlException e) {
           executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
-          String message = Misc.getMessage(e);
+          String message = ExceptionUtils.getMessage(e);
           if (e.getCause() != null) {
             message += e.getCause().getMessage();
           }
@@ -412,7 +412,7 @@ public class K8sTaskHelper {
           throw e;
         } catch (Exception e) {
           executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
-          executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
+          executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
           throw e;
         }
       }
@@ -504,7 +504,7 @@ public class K8sTaskHelper {
       executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
       return manifestFilesFromGit;
     } catch (Exception e) {
-      executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return null;
     }
   }

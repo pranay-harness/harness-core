@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
@@ -161,7 +162,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       Misc.logAllMessages(e, executionLogCallback);
       return PcfCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(Misc.getMessage(e))
+          .errorMessage(ExceptionUtils.getMessage(e))
           .build();
     }
   }

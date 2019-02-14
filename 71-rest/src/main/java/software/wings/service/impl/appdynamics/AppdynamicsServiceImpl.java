@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -127,7 +127,8 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
           .validateConfig(appDynamicsConfig, encryptedDataDetails);
     } catch (Exception e) {
       logger.info("Failed to validate", e);
-      throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR).addParam("reason", Misc.getMessage(e));
+      throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR)
+          .addParam("reason", ExceptionUtils.getMessage(e));
     }
   }
 

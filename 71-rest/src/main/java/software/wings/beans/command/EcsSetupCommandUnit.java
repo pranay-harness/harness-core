@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -68,7 +69,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
             commandExecutionDataBuilder, executionLogCallback);
       }
     } catch (Exception ex) {
-      logger.error(Misc.getMessage(ex), ex);
+      logger.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
       return CommandExecutionStatus.FAILURE;
     } finally {

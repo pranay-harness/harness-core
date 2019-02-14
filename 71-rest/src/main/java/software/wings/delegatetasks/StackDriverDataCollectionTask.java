@@ -169,7 +169,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
             break;
           } else {
             if (retry == 1) {
-              taskResult.setErrorMessage(Misc.getMessage(ex));
+              taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn("error fetching stack driver metrics for minute " + dataCollectionMinute + ". retrying in "
                     + RETRY_SLEEP + "s",

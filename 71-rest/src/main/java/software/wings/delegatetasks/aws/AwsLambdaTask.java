@@ -1,12 +1,12 @@
 package software.wings.delegatetasks.aws;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -27,7 +27,6 @@ import software.wings.service.impl.aws.model.AwsLambdaRequest;
 import software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
-import software.wings.utils.Misc;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -58,7 +57,7 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
         } catch (Exception ex) {
           return AwsLambdaExecuteFunctionResponse.builder()
               .executionStatus(ExecutionStatus.FAILED)
-              .errorMessage(Misc.getMessage(ex))
+              .errorMessage(ExceptionUtils.getMessage(ex))
               .build();
         }
       }
@@ -70,14 +69,20 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
               awsLambdaExecuteWfRequest.getActivityId(), awsLambdaExecuteWfRequest.getCommandName());
           return awsLambdaHelperServiceDelegate.executeWf(awsLambdaExecuteWfRequest, logCallback);
         } catch (Exception ex) {
-          return AwsLambdaExecuteWfResponse.builder().executionStatus(FAILED).errorMessage(getMessage(ex)).build();
+          return AwsLambdaExecuteWfResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage(ExceptionUtils.getMessage(ex))
+              .build();
         }
       }
       case LIST_LAMBDA_FUNCTION: {
         try {
           return awsLambdaHelperServiceDelegate.getLambdaFunctions((AwsLambdaFunctionRequest) request);
         } catch (Exception ex) {
-          return AwsLambdaFunctionResponse.builder().executionStatus(FAILED).errorMessage(getMessage(ex)).build();
+          return AwsLambdaFunctionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage(ExceptionUtils.getMessage(ex))
+              .build();
         }
       }
       default: { throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER); }

@@ -2,17 +2,13 @@ package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.ReportTarget.REST_API;
-import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
-import io.harness.eraro.ResponseMessage;
-import io.harness.exception.HarnessException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import io.harness.logging.ExceptionLogger;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Log.LogLevel;
@@ -27,7 +23,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.validation.ConstraintViolationException;
 
 /**
  * Miscellaneous utility class.
@@ -113,7 +108,7 @@ public class Misc {
     int i = 0;
     Throwable t = ex;
     while (t != null && i++ < MAX_CAUSES) {
-      String msg = getMessage(t);
+      String msg = ExceptionUtils.getMessage(t);
       if (isNotBlank(msg)) {
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
@@ -126,43 +121,11 @@ public class Misc {
     int i = 0;
     Throwable t = ex;
     while (t != null && i++ < MAX_CAUSES) {
-      String msg = getMessage(t);
+      String msg = ExceptionUtils.getMessage(t);
       if (isNotBlank(msg)) {
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR, commandExecutionStatus);
       }
       t = t.getCause();
-    }
-  }
-
-  public static String getMessage(Throwable t) {
-    if (t instanceof WingsException) {
-      WingsException we = (WingsException) t;
-      return ExceptionLogger.getResponseMessageList(we, REST_API)
-          .stream()
-          .map(ResponseMessage::getMessage)
-          .collect(joining(". "));
-    } else if (t instanceof ConstraintViolationException) {
-      ConstraintViolationException constraintViolationException = (ConstraintViolationException) t;
-      return constraintViolationException.getConstraintViolations()
-          .stream()
-          .map(item
-              -> String.format("Constraint Violation. Class: %s, Field: %s, InvalidValue: %s, Message: %s",
-                  item.getRootBeanClass(), item.getPropertyPath(), item.getInvalidValue(), item.getMessage()))
-          .collect(joining(". "));
-    } else if (t instanceof HarnessException) {
-      HarnessException he = (HarnessException) t;
-      Throwable cause = he.getCause();
-      if (cause instanceof WingsException) {
-        WingsException we = (WingsException) cause;
-        return ExceptionLogger.getResponseMessageList(we, REST_API)
-            .stream()
-            .map(ResponseMessage::getMessage)
-            .collect(joining(". "));
-      } else {
-        return t.getClass().getSimpleName() + (t.getMessage() == null ? "" : ": " + t.getMessage());
-      }
-    } else {
-      return t.getClass().getSimpleName() + (t.getMessage() == null ? "" : ": " + t.getMessage());
     }
   }
 

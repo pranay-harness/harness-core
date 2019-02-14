@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.serializer.JsonUtils;
@@ -41,7 +42,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
-import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -122,11 +122,12 @@ public class WebHookServiceImpl implements WebHookService {
       return constructSuccessResponse(appId, app, workflowExecution);
     } catch (WingsException ex) {
       ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
-      return prepareResponse(WebHookResponse.builder().error(Misc.getMessage(ex)).build(), Response.Status.BAD_REQUEST);
+      return prepareResponse(
+          WebHookResponse.builder().error(ExceptionUtils.getMessage(ex)).build(), Response.Status.BAD_REQUEST);
     } catch (Exception ex) {
       logger.warn(format("Webhook Request call failed"), ex);
-      return prepareResponse(
-          WebHookResponse.builder().error(Misc.getMessage(ex)).build(), Response.Status.INTERNAL_SERVER_ERROR);
+      return prepareResponse(WebHookResponse.builder().error(ExceptionUtils.getMessage(ex)).build(),
+          Response.Status.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -173,7 +174,7 @@ public class WebHookServiceImpl implements WebHookService {
         webhookTriggerProcessor.validateBranchName(trigger, triggerExecution);
       } catch (WingsException ex) {
         ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
-        triggerExecution.setMessage(Misc.getMessage(ex));
+        triggerExecution.setMessage(ExceptionUtils.getMessage(ex));
         triggerExecution.setStatus(Status.REJECTED);
         triggerExecutionService.save(triggerExecution);
         WebHookResponse webHookResponse = WebHookResponse.builder().error(triggerExecution.getMessage()).build();
@@ -203,7 +204,7 @@ public class WebHookServiceImpl implements WebHookService {
     } catch (WingsException ex) {
       ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
       triggerExecution.setStatus(Status.FAILED);
-      triggerExecution.setMessage(Misc.getMessage(ex));
+      triggerExecution.setMessage(ExceptionUtils.getMessage(ex));
       triggerExecutionService.save(triggerExecution);
       WebHookResponse webHookResponse = WebHookResponse.builder().error(triggerExecution.getMessage()).build();
 
@@ -211,7 +212,7 @@ public class WebHookServiceImpl implements WebHookService {
     } catch (Exception ex) {
       logger.error(format("Webhook Request call failed "), ex);
       triggerExecution.setStatus(Status.FAILED);
-      triggerExecution.setMessage(Misc.getMessage(ex));
+      triggerExecution.setMessage(ExceptionUtils.getMessage(ex));
       triggerExecutionService.save(triggerExecution);
       WebHookResponse webHookResponse = WebHookResponse.builder().error(triggerExecution.getMessage()).build();
 

@@ -18,7 +18,6 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogLevel.WARN;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_FILE_SIZE;
-import static software.wings.utils.Misc.getMessage;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
 import com.google.inject.Inject;
@@ -33,6 +32,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.IOUtils;
@@ -365,7 +365,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     int i = 0;
     Throwable t = ex;
     while (t != null && i++ < Misc.MAX_CAUSES) {
-      String msg = getMessage(t);
+      String msg = ExceptionUtils.getMessage(t);
       if (isNotBlank(msg)) {
         saveExecutionLogError(msg);
       }

@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import okhttp3.Credentials;
@@ -29,7 +30,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GcpHelperService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -83,7 +83,7 @@ public class GcrServiceImpl implements GcrService {
       checkValidImage(imageName, response);
       return processBuildResponse(artifactStreamAttributes, response.body());
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -130,7 +130,7 @@ public class GcrServiceImpl implements GcrService {
         return validateImageName(imageName);
       }
     } catch (IOException e) {
-      logger.error(Misc.getMessage(e), e);
+      logger.error(ExceptionUtils.getMessage(e), e);
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, USER).addParam("name", "Registry server");
     }
     return true;
@@ -153,7 +153,7 @@ public class GcrServiceImpl implements GcrService {
           registryRestClient.listImageTags(basicAuthHeader, artifactStreamAttributes.getImageName()).execute();
       return isSuccessful(response);
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 

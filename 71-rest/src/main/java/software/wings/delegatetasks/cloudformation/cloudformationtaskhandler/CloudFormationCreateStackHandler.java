@@ -15,6 +15,7 @@ import com.amazonaws.services.cloudformation.model.Parameter;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import lombok.NoArgsConstructor;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
@@ -27,7 +28,6 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateSt
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo.ExistingStackInfoBuilder;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Optional;
@@ -95,8 +95,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         }
       }
     } catch (Exception ex) {
-      String errorMessage =
-          String.format("# Exception: %s while Updating stack: %s", Misc.getMessage(ex), stack.getStackName());
+      String errorMessage = String.format(
+          "# Exception: %s while Updating stack: %s", ExceptionUtils.getMessage(ex), stack.getStackName());
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
     }
@@ -141,7 +141,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         }
       }
     } catch (Exception ex) {
-      String errorMessage = String.format("Exception: %s while creating stack: %s", Misc.getMessage(ex), stackName);
+      String errorMessage =
+          String.format("Exception: %s while creating stack: %s", ExceptionUtils.getMessage(ex), stackName);
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
     }

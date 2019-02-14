@@ -7,10 +7,10 @@ import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.Level;
 import io.harness.eraro.MessageManager;
 import io.harness.eraro.ResponseMessage;
+import io.harness.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
-import software.wings.utils.Misc;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.MediaType;
@@ -27,7 +27,7 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
 
   @Override
   public Response toResponse(Throwable exception) {
-    logger.error("Exception occurred: " + Misc.getMessage(exception), exception);
+    logger.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
 
     if (exception instanceof ClientErrorException) {
       return getHttpErrorResponse((ClientErrorException) exception);

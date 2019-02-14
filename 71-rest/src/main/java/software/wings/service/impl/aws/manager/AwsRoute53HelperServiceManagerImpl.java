@@ -5,12 +5,12 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
@@ -65,7 +65,7 @@ public class AwsRoute53HelperServiceManagerImpl implements AwsRoute53HelperServi
       }
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {
-      throw new InvalidRequestException(getMessage(ex), WingsException.USER);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(ex), WingsException.USER);
     }
   }
 }

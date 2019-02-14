@@ -7,10 +7,10 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.BeanAccess;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.Property;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.utils.Misc;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -29,7 +29,7 @@ class CustomPropertyUtils extends PropertyUtils {
 
       return result;
     } catch (Exception e) {
-      logger.error("Error while converting the object to yaml string: " + Misc.getMessage(e), e);
+      logger.error("Error while converting the object to yaml string: " + ExceptionUtils.getMessage(e), e);
     }
 
     return null;

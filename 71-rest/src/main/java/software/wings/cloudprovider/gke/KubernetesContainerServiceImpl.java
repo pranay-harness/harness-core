@@ -72,6 +72,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
 import io.fabric8.kubernetes.client.dsl.ScalableResource;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
@@ -244,8 +245,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               success = true;
             }
           } catch (Exception e) {
-            logger.warn(
-                "Exception while getting controller {}: {}:{}", name, e.getClass().getSimpleName(), Misc.getMessage(e));
+            logger.warn("Exception while getting controller {}: {}:{}", name, e.getClass().getSimpleName(),
+                ExceptionUtils.getMessage(e));
             if (e.getCause() != null) {
               logger.warn("Caused by: {}:{}", e.getCause().getClass().getSimpleName(), e.getCause().getMessage());
             }

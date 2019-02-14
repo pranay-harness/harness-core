@@ -11,6 +11,7 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.DelegateRetryableException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.ErrorNotifyResponseData;
@@ -21,7 +22,6 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.DelegateTaskResponseBuilder;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.List;
@@ -106,16 +106,19 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     } catch (DelegateRetryableException exception) {
       exception.addContext(DelegateTask.class, taskId);
       ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
-      taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
+      taskResponse.response(
+          ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build());
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
     } catch (WingsException exception) {
       exception.addContext(DelegateTask.class, taskId);
       ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
-      taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
+      taskResponse.response(
+          ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build());
       taskResponse.responseCode(ResponseCode.FAILED);
     } catch (Throwable exception) {
       logger.error(format("Unexpected error executing delegate task %s", taskId), exception);
-      taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
+      taskResponse.response(
+          ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build());
       taskResponse.responseCode(ResponseCode.FAILED);
     } finally {
       if (consumer != null) {

@@ -52,6 +52,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.delegate.task.protocol.AwsElbListener;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery.QueryChecks;
@@ -637,8 +638,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
 
@@ -671,8 +671,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
 
@@ -730,8 +730,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
 
@@ -758,8 +758,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
 
@@ -1108,8 +1108,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return awsEc2HelperServiceManager.listRegions(
             awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), appId);
       } catch (Exception e) {
-        logger.warn(Misc.getMessage(e), e);
-        throw new InvalidRequestException(Misc.getMessage(e), USER);
+        logger.warn(ExceptionUtils.getMessage(e), e);
+        throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
     return emptyList();
@@ -1159,8 +1159,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return awsEc2HelperServiceManager.listTags(
             awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
       } catch (Exception e) {
-        logger.warn(Misc.getMessage(e), e);
-        throw new InvalidRequestException(Misc.getMessage(e), USER);
+        logger.warn(ExceptionUtils.getMessage(e), e);
+        throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
     return Collections.emptySet();
@@ -1177,8 +1177,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return azureHelperService.listTagsBySubscription(
             subscriptionId, azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null));
       } catch (Exception e) {
-        logger.warn(Misc.getMessage(e), e);
-        throw new InvalidRequestException(Misc.getMessage(e), USER);
+        logger.warn(ExceptionUtils.getMessage(e), e);
+        throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
     return Collections.emptySet();
@@ -1195,8 +1195,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return azureHelperService.listResourceGroups(
             azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
       } catch (Exception e) {
-        logger.warn(Misc.getMessage(e), e);
-        throw new InvalidRequestException(Misc.getMessage(e), USER);
+        logger.warn(ExceptionUtils.getMessage(e), e);
+        throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
     return Collections.emptySet();
@@ -1252,8 +1252,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return awsEc2HelperServiceManager.listVPCs(
             awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
       } catch (Exception e) {
-        logger.warn(Misc.getMessage(e), e);
-        throw new InvalidRequestException(Misc.getMessage(e), USER);
+        logger.warn(ExceptionUtils.getMessage(e), e);
+        throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
     return emptyList();
@@ -1318,8 +1318,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return awsEc2HelperServiceManager.listSGs(
             awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, vpcIds, appId);
       } catch (Exception e) {
-        logger.warn(Misc.getMessage(e), e);
-        throw new InvalidRequestException(Misc.getMessage(e), USER);
+        logger.warn(ExceptionUtils.getMessage(e), e);
+        throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
     return emptyList();
@@ -1336,8 +1336,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return awsEc2HelperServiceManager.listSubnets(
             awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, vpcIds, appId);
       } catch (Exception e) {
-        logger.warn(Misc.getMessage(e), e);
-        throw new InvalidRequestException(Misc.getMessage(e), USER);
+        logger.warn(ExceptionUtils.getMessage(e), e);
+        throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
     return emptyList();
@@ -1759,7 +1759,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                      .getActiveServiceCounts(containerServiceParams);
       return Integer.toString(activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum());
     } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
+      logger.warn(ExceptionUtils.getMessage(e), e);
       return "0";
     }
   }

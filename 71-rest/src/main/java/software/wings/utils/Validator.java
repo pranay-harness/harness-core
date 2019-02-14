@@ -4,6 +4,7 @@ import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
@@ -95,7 +96,7 @@ public class Validator {
       if (e.getCause() != null && e.getCause() instanceof DuplicateKeyException) {
         throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Duplicate " + field + " " + value);
       }
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 }

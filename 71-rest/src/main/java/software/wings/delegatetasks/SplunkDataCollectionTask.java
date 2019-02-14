@@ -4,6 +4,7 @@ import static io.harness.threading.Morpheus.sleep;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
@@ -17,7 +18,6 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -169,7 +169,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
              * more meaningful to trouble shoot.
              */
             if (retry == 1) {
-              taskResult.setErrorMessage(Misc.getMessage(ex));
+              taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn("error fetching splunk logs. retrying in " + RETRY_SLEEP + "s", ex);
             sleep(RETRY_SLEEP);

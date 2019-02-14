@@ -12,6 +12,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.waiter.ListNotifyResponseData;
@@ -26,7 +27,6 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +48,7 @@ public class NexusServiceImpl implements NexusService {
   @Inject private TimeLimiter timeLimiter;
 
   public static void handleException(IOException e) {
-    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
+    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
   }
 
   public static boolean isSuccessful(Response<?> response) {
@@ -121,7 +121,7 @@ public class NexusServiceImpl implements NexusService {
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
       }
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -146,7 +146,7 @@ public class NexusServiceImpl implements NexusService {
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
       }
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
     return groupIds;
   }
@@ -188,7 +188,7 @@ public class NexusServiceImpl implements NexusService {
           delegateId, taskId, accountId, notifyResponseData);
     } catch (IOException e) {
       logger.error("Error occurred while downloading the artifact", e);
-      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -252,7 +252,7 @@ public class NexusServiceImpl implements NexusService {
       try {
         return getRepositories(nexusConfig, encryptionDetails, ArtifactType.DOCKER) != null;
       } catch (WingsException e) {
-        if (Misc.getMessage(e).contains("Invalid Nexus credentials")) {
+        if (ExceptionUtils.getMessage(e).contains("Invalid Nexus credentials")) {
           throw e;
         }
         return true;

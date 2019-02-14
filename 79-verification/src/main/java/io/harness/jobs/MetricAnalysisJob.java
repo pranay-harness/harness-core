@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
@@ -44,7 +45,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.MetricDataAnalysisService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -448,7 +448,7 @@ public class MetricAnalysisJob implements Job {
       } catch (RuntimeException | IOException ex) {
         completeCron = true;
         error = true;
-        errMsg = Misc.getMessage(ex);
+        errMsg = ExceptionUtils.getMessage(ex);
         logger.warn("analysis failed", ex);
       } finally {
         try {

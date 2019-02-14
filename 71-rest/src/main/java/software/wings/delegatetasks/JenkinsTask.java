@@ -18,6 +18,7 @@ import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import org.apache.commons.lang3.NotImplementedException;
@@ -35,7 +36,6 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -112,11 +112,11 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         } catch (WingsException e) {
           ExceptionLogger.logProcessedMessages(e, DELEGATE, logger);
           executionStatus = ExecutionStatus.FAILED;
-          jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
+          jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
         } catch (Exception e) {
           logger.error("Error occurred while starting Jenkins task", e);
           executionStatus = ExecutionStatus.FAILED;
-          jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
+          jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
         }
         jenkinsExecutionResponse.setExecutionStatus(executionStatus);
         jenkinsExecutionResponse.setSubTaskType(JenkinsSubTaskType.START_TASK);
@@ -176,7 +176,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE, unexpected exception
             logger.error("Error occurred while retrieving build parameters for build number {}",
                 jenkinsBuildWithDetails.getNumber(), e);
-            jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
+            jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
           }
 
           if (buildResult != BuildResult.SUCCESS
@@ -186,11 +186,11 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         } catch (WingsException e) {
           ExceptionLogger.logProcessedMessages(e, DELEGATE, logger);
           executionStatus = ExecutionStatus.FAILED;
-          jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
+          jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
         } catch (Exception e) {
           logger.error("Error occurred while running Jenkins task", e);
           executionStatus = ExecutionStatus.FAILED;
-          jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
+          jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
         }
         break;
 
@@ -220,7 +220,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           }
         }
         logger.error("Error occurred while waiting for Job {} to finish execution. Reasonn {}. Retrying.",
-            jenkinsBuild.getUrl(), Misc.getMessage(e));
+            jenkinsBuild.getUrl(), ExceptionUtils.getMessage(e));
       }
 
     } while (jenkinsBuildWithDetails == null || jenkinsBuildWithDetails.isBuilding());

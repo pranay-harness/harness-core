@@ -6,6 +6,7 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import com.google.inject.Inject;
 
 import com.sumologic.client.SumoLogicClient;
+import io.harness.exception.ExceptionUtils;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,6 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -165,7 +165,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
              * more meaningful to trouble shoot.
              */
             if (retry == 1) {
-              taskResult.setErrorMessage(Misc.getMessage(ex));
+              taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
             logger.warn("error fetching sumo logs for stateExecutionId {}. retrying in {}s",
                 dataCollectionInfo.getStateExecutionId(), RETRY_SLEEP, ex);

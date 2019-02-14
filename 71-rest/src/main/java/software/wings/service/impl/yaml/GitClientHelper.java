@@ -16,6 +16,7 @@ import com.google.common.cache.LoadingCache;
 
 import groovy.lang.Singleton;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -27,7 +28,6 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFile;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.IOException;
@@ -158,7 +158,7 @@ public class GitClientHelper {
     // TransportException is subclass of GitAPIException. This is thrown when there is any issue in connecting to git
     // repo, like invalid authorization and invalid repo
     if (ex instanceof GitAPIException && ex.getCause() instanceof TransportException) {
-      throw new WingsException(ErrorCode.GIT_CONNECTION_ERROR + ":" + Misc.getMessage(ex), USER_ADMIN)
+      throw new WingsException(ErrorCode.GIT_CONNECTION_ERROR + ":" + ExceptionUtils.getMessage(ex), USER_ADMIN)
           .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
     }
   }

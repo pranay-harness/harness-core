@@ -29,7 +29,6 @@ import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,7 +62,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       initSplunkService(splunkConfig, encryptedDataDetails);
       return true;
     } catch (Exception exception) {
-      throw new WingsException("Error connecting to Splunk " + Misc.getMessage(exception), exception);
+      throw new WingsException("Error connecting to Splunk " + ExceptionUtils.getMessage(exception), exception);
     }
   }
 
@@ -163,7 +162,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       splunkService = Service.connect(loginArgs);
       return splunkService;
     } catch (Exception ex) {
-      throw new WingsException("Unable to connect to server : " + Misc.getMessage(ex));
+      throw new WingsException("Unable to connect to server : " + ExceptionUtils.getMessage(ex));
     }
   }
 
