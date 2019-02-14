@@ -27,7 +27,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
 /**
@@ -146,7 +145,9 @@ public class Misc {
       ConstraintViolationException constraintViolationException = (ConstraintViolationException) t;
       return constraintViolationException.getConstraintViolations()
           .stream()
-          .map(ConstraintViolation::getMessage)
+          .map(item
+              -> String.format("Constraint Violation. Class: %s, Field: %s, InvalidValue: %s, Message: %s",
+                  item.getRootBeanClass(), item.getPropertyPath(), item.getInvalidValue(), item.getMessage()))
           .collect(joining(". "));
     } else if (t instanceof HarnessException) {
       HarnessException he = (HarnessException) t;
