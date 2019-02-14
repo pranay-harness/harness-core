@@ -93,7 +93,6 @@ software.wings.beans.command.CleanupSshCommandUnit, 5031
 software.wings.beans.command.CodeDeployCommandExecutionData, 5032
 software.wings.beans.command.CodeDeployCommandUnit, 5033
 software.wings.beans.command.CommandExecutionContext, 5034
-software.wings.beans.command.CommandExecutionData, 5035
 software.wings.beans.command.CommandExecutionResult, 5036
 software.wings.beans.command.CommandExecutionResult$CommandExecutionStatus, 5037
 software.wings.beans.command.CommandType, 5038

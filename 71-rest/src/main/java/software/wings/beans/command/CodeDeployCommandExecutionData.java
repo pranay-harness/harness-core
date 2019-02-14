@@ -1,14 +1,12 @@
 package software.wings.beans.command;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.delegate.command.CommandExecutionData;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by anubhaw on 6/23/17.
- */
-public class CodeDeployCommandExecutionData extends CommandExecutionData {
+public class CodeDeployCommandExecutionData implements CommandExecutionData {
   /**
    * The Instances.
    */
