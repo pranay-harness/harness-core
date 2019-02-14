@@ -7,13 +7,14 @@ import static io.harness.filesystem.FileIo.deleteFileIfExists;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import io.harness.shell.ShellExecutionRequest;
+import io.harness.shell.ShellExecutionResponse;
+import io.harness.shell.ShellExecutionResponse.ShellExecutionResponseBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
-import software.wings.helpers.ext.shell.request.ShellExecutionRequest;
-import software.wings.helpers.ext.shell.response.ShellExecutionResponse.ShellExecutionResponseBuilder;
 import software.wings.utils.Misc;
 
 import java.io.File;

@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.shell.response;
 
-import software.wings.helpers.ext.shell.request.ShellExecutionRequest;
+import io.harness.shell.ShellExecutionRequest;
+import io.harness.shell.ShellExecutionResponse;
 
 public interface ShellExecutionService { ShellExecutionResponse execute(ShellExecutionRequest shellExecutionRequest); }
