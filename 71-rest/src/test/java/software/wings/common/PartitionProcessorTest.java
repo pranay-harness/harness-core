@@ -265,9 +265,9 @@ public class PartitionProcessorTest {
    * The type Sample partition processor.
    */
   public class SamplePartitionProcessor implements PartitionProcessor {
-    private String[] breakdowns;
-    private String[] percentages;
-    private String[] counts;
+    private List<String> breakdowns;
+    private List<String> percentages;
+    private List<String> counts;
 
     private List<SampleElement> sampleElements;
 
@@ -281,32 +281,32 @@ public class PartitionProcessorTest {
     }
 
     @Override
-    public String[] getCounts() {
+    public List<String> getCounts() {
       return counts;
     }
 
     @Override
-    public void setCounts(String[] counts) {
+    public void setCounts(List<String> counts) {
       this.counts = counts;
     }
 
     @Override
-    public String[] getPercentages() {
+    public List<String> getPercentages() {
       return percentages;
     }
 
     @Override
-    public void setPercentages(String[] percentages) {
+    public void setPercentages(List<String> percentages) {
       this.percentages = percentages;
     }
 
     @Override
-    public String[] getBreakdowns() {
+    public List<String> getBreakdowns() {
       return breakdowns;
     }
 
     @Override
-    public void setBreakdowns(String[] breakdowns) {
+    public void setBreakdowns(List<String> breakdowns) {
       this.breakdowns = breakdowns;
     }
 

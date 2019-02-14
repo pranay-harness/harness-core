@@ -6,6 +6,7 @@ package software.wings.common;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Arrays.asList;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -17,7 +18,6 @@ import software.wings.sm.ContextElement;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -42,7 +42,7 @@ public interface PartitionProcessor {
    * @return the partition processor
    */
   default PartitionProcessor withBreakdowns(String... breakdowns) {
-    setBreakdowns(breakdowns);
+    setBreakdowns(asList(breakdowns));
     return this;
   }
 
@@ -53,7 +53,7 @@ public interface PartitionProcessor {
    * @return the partition processor
    */
   default PartitionProcessor withPercentages(String... percentages) {
-    setPercentages(percentages);
+    setPercentages(asList(percentages));
     return this;
   }
 
@@ -64,7 +64,7 @@ public interface PartitionProcessor {
    * @return the partition processor
    */
   default PartitionProcessor withCounts(String... counts) {
-    setCounts(counts);
+    setCounts(asList(counts));
     return this;
   }
 
@@ -76,7 +76,7 @@ public interface PartitionProcessor {
    */
   default List<PartitionElement> partitions(String... breakdownsParams) {
     if (isNotEmpty(breakdownsParams)) {
-      setBreakdowns(breakdownsParams);
+      setBreakdowns(asList(breakdownsParams));
     }
 
     List<ContextElement> elements = elements();
@@ -84,9 +84,9 @@ public interface PartitionProcessor {
       return null;
     }
 
-    String[] breakdowns = getBreakdowns();
-    String[] percentages = getPercentages();
-    String[] counts = getCounts();
+    List<String> breakdowns = getBreakdowns();
+    List<String> percentages = getPercentages();
+    List<String> counts = getCounts();
     if (isEmpty(breakdowns) && isEmpty(percentages) && isEmpty(counts)) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "breakdowns, percentages, counts");
     }
@@ -94,14 +94,13 @@ public interface PartitionProcessor {
     try {
       finalCounts = computeCounts(elements.size());
       if (isEmpty(finalCounts)) {
-        throw new InvalidRequestException(
-            "Incorrect partition breakdown expressions- breakdowns:" + Arrays.toString(breakdowns)
-            + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts));
+        throw new InvalidRequestException("Incorrect partition breakdown expressions- breakdowns:"
+            + breakdowns.toString() + "percentages:" + percentages.toString() + ", counts:" + counts.toString());
       }
     } catch (Exception e) {
       log().error(Misc.getMessage(e), e);
-      throw new InvalidRequestException("Incorrect partition expressions- breakdowns:" + Arrays.toString(breakdowns)
-              + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts),
+      throw new InvalidRequestException("Incorrect partition expressions- breakdowns:" + breakdowns.toString()
+              + "percentages:" + percentages.toString() + ", counts:" + counts.toString(),
           e);
     }
 
@@ -131,9 +130,9 @@ public interface PartitionProcessor {
    * @return the list
    */
   default List<Integer> computeCounts(int total) {
-    String[] breakdowns = getBreakdowns();
-    String[] percentages = getPercentages();
-    String[] counts = getCounts();
+    List<String> breakdowns = getBreakdowns();
+    List<String> percentages = getPercentages();
+    List<String> counts = getCounts();
 
     List<Integer> finalCounts = new ArrayList<>();
 
@@ -167,42 +166,42 @@ public interface PartitionProcessor {
    *
    * @return Value for property 'counts'.
    */
-  String[] getCounts();
+  List<String> getCounts();
 
   /**
    * Sets counts.
    *
    * @param counts the counts
    */
-  void setCounts(String[] counts);
+  void setCounts(List<String> counts);
 
   /**
    * Getter for property 'percentages'.
    *
    * @return Value for property 'percentages'.
    */
-  String[] getPercentages();
+  List<String> getPercentages();
 
   /**
    * Sets percentages.
    *
    * @param percentages the percentages
    */
-  void setPercentages(String[] percentages);
+  void setPercentages(List<String> percentages);
 
   /**
    * Getter for property 'breakdowns'.
    *
    * @return Value for property 'breakdowns'.
    */
-  String[] getBreakdowns();
+  List<String> getBreakdowns();
 
   /**
    * Setter for property 'breakdowns'.
    *
    * @param breakdowns Value to set for property 'breakdowns'.
    */
-  void setBreakdowns(String[] breakdowns);
+  void setBreakdowns(List<String> breakdowns);
 
   /**
    * Pct count value integer.
