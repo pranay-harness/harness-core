@@ -8,9 +8,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.command.CommandRefYaml;
 

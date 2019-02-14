@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.Service;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -17,7 +18,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.KubernetesSwapServiceSelectorsParams;
 import software.wings.cloudprovider.gke.KubernetesContainerService;

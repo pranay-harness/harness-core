@@ -18,12 +18,12 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.cache.StringTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.common.Constants;
 import software.wings.utils.Validator;
 

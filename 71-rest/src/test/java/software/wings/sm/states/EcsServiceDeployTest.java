@@ -51,6 +51,8 @@ import com.google.common.collect.Lists;
 
 import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
@@ -74,8 +76,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.CommandExecutionResult;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.VariableProcessor;

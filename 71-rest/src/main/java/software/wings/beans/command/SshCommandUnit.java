@@ -1,10 +1,10 @@
 package software.wings.beans.command;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.DeploymentType;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 /**
  * Created by peeyushaggarwal on 2/1/17.

@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -35,7 +36,6 @@ import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;

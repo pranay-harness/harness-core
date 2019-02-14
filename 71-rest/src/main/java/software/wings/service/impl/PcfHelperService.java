@@ -6,6 +6,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.TaskType;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;

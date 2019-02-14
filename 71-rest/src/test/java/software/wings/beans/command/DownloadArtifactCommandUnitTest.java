@@ -21,6 +21,7 @@ import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import io.harness.delegate.beans.ScriptType;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -37,7 +38,6 @@ import software.wings.beans.HostConnectionAttributes.Builder;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;

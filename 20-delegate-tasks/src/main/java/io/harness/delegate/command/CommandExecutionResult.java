@@ -1,7 +1,5 @@
-package software.wings.beans.command;
+package io.harness.delegate.command;
 
-import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import lombok.Builder;
@@ -36,20 +34,5 @@ public class CommandExecutionResult implements DelegateTaskNotifyResponseData {
      * Queued execution status.
      */
     QUEUED;
-
-    public static CommandExecutionStatus translateExecutionStatus(ExecutionStatus executionStatus) {
-      switch (executionStatus) {
-        case SUCCESS:
-          return SUCCESS;
-        case FAILED:
-          return FAILURE;
-        case RUNNING:
-          return RUNNING;
-        case QUEUED:
-          return QUEUED;
-        default:
-          throw new IllegalArgumentException("invalid status: " + executionStatus);
-      }
-    }
   }
 }

@@ -44,6 +44,7 @@ import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Injector;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +56,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;

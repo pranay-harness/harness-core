@@ -16,6 +16,7 @@ import static software.wings.beans.command.KubernetesResizeParams.KubernetesResi
 import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -27,7 +28,6 @@ import software.wings.beans.InstanceUnitType;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;

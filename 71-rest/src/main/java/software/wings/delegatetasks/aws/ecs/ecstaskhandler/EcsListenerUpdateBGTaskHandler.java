@@ -7,7 +7,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;

@@ -6,10 +6,10 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Stack;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.NoArgsConstructor;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationListStacksRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;

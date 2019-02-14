@@ -1,11 +1,12 @@
 package software.wings.delegatetasks;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
-import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.local.executors.ShellExecutor;
 import software.wings.core.local.executors.ShellExecutorFactory;

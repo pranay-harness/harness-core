@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.cloudformation.response;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 @Data
 @AllArgsConstructor
