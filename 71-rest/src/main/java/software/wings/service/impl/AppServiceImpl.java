@@ -57,7 +57,6 @@ import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
-import software.wings.scheduler.InstanceSyncJob;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -154,7 +153,6 @@ public class AppServiceImpl implements AppService {
       settingsService.createDefaultApplicationSettings(
           application.getUuid(), application.getAccountId(), app.isSyncFromGit());
       sendNotification(application, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
-      InstanceSyncJob.add(serviceJobScheduler, accountId, application.getUuid());
 
       // Save the Git Configuration for application if not null
       YamlGitConfig yamlGitConfig = app.getYamlGitConfig();

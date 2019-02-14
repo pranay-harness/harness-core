@@ -112,6 +112,7 @@ import software.wings.scheduler.UsageMetricsJob;
 import software.wings.scheduler.WorkflowExecutionMonitorJob;
 import software.wings.scheduler.YamlChangeSetPruneJob;
 import software.wings.scheduler.ZombieHunterJob;
+import software.wings.scheduler.instance.InstanceSyncHandler;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
@@ -493,6 +494,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     injector.injectMembers(iterator);
     artifactCollectionExecutor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
+
+    InstanceSyncHandler.InstanceSyncExecutor.registerIterators(injector);
   }
 
   private void registerCronJobs(Injector injector) {
