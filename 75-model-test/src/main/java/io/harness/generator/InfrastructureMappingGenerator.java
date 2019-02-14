@@ -100,7 +100,7 @@ public class InfrastructureMappingGenerator {
 
     Service service = owners.obtainService();
     if (service == null) {
-      service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
       owners.add(service);
     }
 
@@ -111,8 +111,8 @@ public class InfrastructureMappingGenerator {
 
     return ensureInfrastructureMapping(seed, owners,
         AzureInfrastructureMapping.Builder.anAzureInfrastructureMapping()
-            .withName("Windows non prod - winrm workflow test")
-            .withAutoPopulate(true)
+            .withName("Windows non prod - winrm azure workflow test")
+            .withAutoPopulate(false)
             .withInfraMappingType(AZURE_INFRA.name())
             .withDeploymentType(DeploymentType.WINRM.name())
             .withComputeProviderType(SettingVariableTypes.AZURE.name())
@@ -120,6 +120,7 @@ public class InfrastructureMappingGenerator {
             .withWinRmConnectionAttributes(winRmSettingAttribute.getUuid())
             .withSubscriptionId(AZURE_SUBSCRIPTION_ID)
             .withResourceGroup(AZURE_RESOURCE_GROUP)
+            .withUsePublicDns(true)
             .build());
   }
 
@@ -143,8 +144,8 @@ public class InfrastructureMappingGenerator {
 
     return ensureInfrastructureMapping(seed, owners,
         PhysicalInfrastructureMappingWinRm.Builder.aPhysicalInfrastructureMappingWinRm()
-            .withName("Windows non prod - winrm workflow test")
-            .withAutoPopulate(true)
+            .withName("Windows - winrm physical-infra workflow test")
+            .withAutoPopulate(false)
             .withInfraMappingType(PHYSICAL_DATA_CENTER_WINRM.name())
             .withDeploymentType(DeploymentType.WINRM.name())
             .withComputeProviderType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
