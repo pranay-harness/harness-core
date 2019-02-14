@@ -1,10 +1,10 @@
 package software.wings.helpers.ext.k8s.response;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 @Data
 @Builder

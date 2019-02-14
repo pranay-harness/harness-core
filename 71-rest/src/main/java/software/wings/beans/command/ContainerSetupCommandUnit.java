@@ -4,11 +4,11 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
 

@@ -1,5 +1,8 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -13,12 +16,12 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.beans.Log.doneColoring;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.utils.WinRmHelperUtil.buildErrorDetailsFromWinRmClientException;
 
 import io.harness.data.encoding.EncodingUtils;
+import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ResponseMessage;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
@@ -26,9 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.command.CommandExecutionResult;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionResultBuilder;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;

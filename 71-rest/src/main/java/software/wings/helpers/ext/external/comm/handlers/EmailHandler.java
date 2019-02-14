@@ -7,11 +7,11 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.serializer.KryoUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.helpers.ext.external.comm.CollaborationHandler;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;

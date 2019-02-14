@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.util.concurrent.TimeLimiter;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +22,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;

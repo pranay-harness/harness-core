@@ -1,13 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static java.lang.String.format;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
@@ -23,7 +24,6 @@ import io.harness.logging.ExceptionLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.ShellCommandExecutionContext;

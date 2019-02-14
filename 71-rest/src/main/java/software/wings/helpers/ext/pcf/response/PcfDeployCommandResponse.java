@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.pcf.response;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 import java.util.List;
 

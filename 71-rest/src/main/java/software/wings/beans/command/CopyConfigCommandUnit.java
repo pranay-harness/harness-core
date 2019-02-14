@@ -1,16 +1,17 @@
 package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +21,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;

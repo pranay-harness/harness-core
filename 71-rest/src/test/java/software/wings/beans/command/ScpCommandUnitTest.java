@@ -16,6 +16,7 @@ import static software.wings.utils.WingsTestConstants.S3_URL;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -25,7 +26,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.Constants;

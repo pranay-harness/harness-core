@@ -1,9 +1,9 @@
 package software.wings.helpers.ext.ecs.response;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.ContainerServiceData;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.sm.InstanceStatusSummary;
 

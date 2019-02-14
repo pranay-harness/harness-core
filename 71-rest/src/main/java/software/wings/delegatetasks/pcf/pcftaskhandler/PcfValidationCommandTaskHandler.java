@@ -2,13 +2,13 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import com.google.inject.Singleton;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.PcfConfig;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;

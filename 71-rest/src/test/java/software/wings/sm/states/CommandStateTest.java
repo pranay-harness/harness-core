@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -35,7 +36,6 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -67,6 +67,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -93,8 +95,6 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.Command;
-import software.wings.beans.command.CommandExecutionResult;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;

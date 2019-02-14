@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdsFromKindName;
 import static software.wings.beans.Log.LogColor.Gray;
 import static software.wings.beans.Log.LogColor.White;
@@ -8,13 +9,13 @@ import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.K8sDummyCommandUnit.Delete;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.getResourcesInStringFormat;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.KubernetesResourceId;
@@ -23,7 +24,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;

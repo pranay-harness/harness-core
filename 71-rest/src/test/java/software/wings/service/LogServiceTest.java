@@ -13,12 +13,12 @@ import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Log;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.service.intfc.LogService;
 
 import java.io.File;

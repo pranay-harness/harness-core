@@ -1,7 +1,7 @@
 package software.wings.utils;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
 import lombok.Builder;
 import software.wings.beans.Log.LogLevel;

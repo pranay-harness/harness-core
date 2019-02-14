@@ -1,9 +1,9 @@
 package software.wings.beans.command;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.core.BaseExecutor;
 import software.wings.service.intfc.FileService.FileBucket;

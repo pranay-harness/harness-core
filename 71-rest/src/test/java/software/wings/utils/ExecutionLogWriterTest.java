@@ -1,8 +1,8 @@
 package software.wings.utils;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;

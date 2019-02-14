@@ -1,14 +1,15 @@
 package software.wings.delegatetasks.collect.artifacts;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static java.lang.String.format;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ListNotifyResponseData;
@@ -20,7 +21,6 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateFile;

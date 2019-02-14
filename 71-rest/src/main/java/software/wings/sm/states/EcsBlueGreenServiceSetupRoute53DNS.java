@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.command.CommandExecutionResult;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -19,7 +20,6 @@ import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
-import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;

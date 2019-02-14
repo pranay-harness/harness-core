@@ -1,9 +1,9 @@
 package software.wings.core;
 
+import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.command.CommandExecutionResult;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.service.intfc.FileService.FileBucket;
 

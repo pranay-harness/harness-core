@@ -1,9 +1,9 @@
 package software.wings.delegatetasks.jira;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.common.Constants.SCRIPT_APPROVAL_ENV_VARIABLE;
 
 import com.google.inject.Inject;
@@ -11,6 +11,8 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ShellScriptApprovalTaskParameters;
+import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.delegate.task.protocol.TaskParameters;
 import org.apache.commons.collections4.MapUtils;
@@ -21,8 +23,6 @@ import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
-import software.wings.beans.command.CommandExecutionResult;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.core.local.executors.ShellExecutor;
 import software.wings.core.local.executors.ShellExecutorConfig;

@@ -13,11 +13,11 @@ import static software.wings.sm.states.pcf.PcfDeployState.PCF_RESIZE_COMMAND;
 import static software.wings.sm.states.pcf.PcfSetupState.PCF_SETUP_COMMAND;
 import static software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes.PCF_BG_SWAP_ROUTE_COMMAND;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 /**
  * Created by rsingh on 11/17/17.

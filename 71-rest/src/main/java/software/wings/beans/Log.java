@@ -20,6 +20,7 @@ import com.google.cloud.datastore.StringValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.Data;
@@ -28,7 +29,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;

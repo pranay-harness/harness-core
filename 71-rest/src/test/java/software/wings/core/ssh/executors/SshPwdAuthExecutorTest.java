@@ -1,6 +1,8 @@
 package software.wings.core.ssh.executors;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_ERROR;
 import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
@@ -14,8 +16,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
@@ -24,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 
 import com.google.common.io.CharStreams;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,7 +36,6 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;

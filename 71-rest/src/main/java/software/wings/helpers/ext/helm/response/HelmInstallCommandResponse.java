@@ -1,9 +1,9 @@
 package software.wings.helpers.ext.helm.response;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.List;

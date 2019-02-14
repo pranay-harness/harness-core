@@ -4,7 +4,6 @@ import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROV
 import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
-import static io.harness.generator.SettingGenerator.Settings.HARNESS_EXPLORATION_GCS;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_TEST_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;

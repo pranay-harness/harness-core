@@ -5,6 +5,7 @@ import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_
 
 import com.google.inject.Singleton;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -17,7 +18,6 @@ import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.ResizeStrategy;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;

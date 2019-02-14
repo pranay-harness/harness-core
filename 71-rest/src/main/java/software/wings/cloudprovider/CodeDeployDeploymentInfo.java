@@ -1,9 +1,9 @@
 package software.wings.cloudprovider;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 import java.util.List;
 

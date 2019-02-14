@@ -1,21 +1,21 @@
 package software.wings.service.impl;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static java.lang.String.format;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateLogService;

@@ -1,10 +1,10 @@
 package software.wings.beans.command;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.DeploymentType;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 /**
  * Created by anubhaw on 12/20/17.

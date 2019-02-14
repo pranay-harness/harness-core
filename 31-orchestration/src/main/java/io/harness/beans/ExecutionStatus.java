@@ -1,5 +1,7 @@
 package io.harness.beans;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -82,5 +84,20 @@ public enum ExecutionStatus {
 
   public static boolean isPositiveStatus(ExecutionStatus status) {
     return status != null && positiveStatuses.contains(status);
+  }
+
+  public static CommandExecutionStatus translateExecutionStatus(ExecutionStatus executionStatus) {
+    switch (executionStatus) {
+      case SUCCESS:
+        return CommandExecutionStatus.SUCCESS;
+      case FAILED:
+        return CommandExecutionStatus.FAILURE;
+      case RUNNING:
+        return CommandExecutionStatus.RUNNING;
+      case QUEUED:
+        return CommandExecutionStatus.QUEUED;
+      default:
+        throw new IllegalArgumentException("invalid status: " + executionStatus);
+    }
   }
 }

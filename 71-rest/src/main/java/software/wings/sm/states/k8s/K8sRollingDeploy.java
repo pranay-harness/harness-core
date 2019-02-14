@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,6 @@ import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;

@@ -2,12 +2,12 @@ package software.wings.delegatetasks.buildsource;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams;
 

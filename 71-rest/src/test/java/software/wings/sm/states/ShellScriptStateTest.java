@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.waiter.ErrorNotifyResponseData;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,7 +34,6 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SweepingOutput;
-import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.SweepingOutputService;

@@ -11,6 +11,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.csv.CSVFormat;
@@ -21,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.yaml.GitFetchFilesResult;

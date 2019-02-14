@@ -9,6 +9,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
@@ -19,7 +20,6 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;

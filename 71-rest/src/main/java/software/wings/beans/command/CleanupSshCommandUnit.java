@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 
 import java.io.File;
 

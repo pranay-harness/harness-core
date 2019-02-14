@@ -12,6 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -25,7 +26,6 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Log;
 import software.wings.beans.command.Command;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.dl.WingsPersistence;
@@ -131,7 +131,7 @@ public class ActivityServiceImpl implements ActivityService {
         case AWS_ECS_UPDATE_LISTENER_BG:
         case AWS_ECS_UPDATE_ROUTE_53_DNS_WEIGHT:
           rv.add(CommandUnitDetails.builder()
-                     .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
+                     .commandExecutionStatus(ExecutionStatus.translateExecutionStatus(activity.getStatus()))
                      .name(activity.getCommandUnitType().getName())
                      .commandUnitType(activity.getCommandUnitType())
                      .build());
@@ -141,7 +141,7 @@ public class ActivityServiceImpl implements ActivityService {
         case PCF_MAP_ROUTE:
         case PCF_BG_SWAP_ROUTE:
           rv.add(CommandUnitDetails.builder()
-                     .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
+                     .commandExecutionStatus(ExecutionStatus.translateExecutionStatus(activity.getStatus()))
                      .name(activity.getCommandUnitType().getName())
                      .commandUnitType(activity.getCommandUnitType())
                      .build());

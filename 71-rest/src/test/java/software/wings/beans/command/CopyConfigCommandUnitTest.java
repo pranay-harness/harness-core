@@ -7,6 +7,7 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -15,7 +16,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Service;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmExecutor;
 import software.wings.delegatetasks.DelegateConfigService;
