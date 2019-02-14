@@ -149,6 +149,48 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  public void testLogsCollectionBaselineInFuture() {
+    LogsCVConfiguration logsCVConfiguration =
+        (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    logsCVConfiguration.setBaselineStartMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) + 1);
+    logsCVConfiguration.setBaselineEndMinute(logsCVConfiguration.getBaselineStartMinute() + 15);
+    wingsPersistence.save(logsCVConfiguration);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(logsCVConfiguration));
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+    assertEquals(0, delegateTasks.size());
+
+    logsCVConfiguration.setBaselineStartMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - 10);
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    delegateTasks = wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+    assertEquals(0, delegateTasks.size());
+
+    logsCVConfiguration.setBaselineStartMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - 20);
+
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    delegateTasks = wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+    assertEquals(1, delegateTasks.size());
+
+    DelegateTask delegateTask = delegateTasks.get(0);
+    assertEquals(accountId, delegateTask.getAccountId());
+    assertEquals(appId, delegateTask.getAppId());
+    assertEquals(TaskType.SUMO_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getTaskType()));
+    SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getParameters()[0];
+    assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
+    assertEquals(cvConfigId, sumoDataCollectionInfo.getCvConfigId());
+    assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
+    assertEquals(accountId, sumoDataCollectionInfo.getAccountId());
+    assertEquals(serviceId, sumoDataCollectionInfo.getServiceId());
+
+    assertEquals(
+        TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()), sumoDataCollectionInfo.getStartTime());
+    assertEquals(
+        TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1),
+        sumoDataCollectionInfo.getEndTime());
+  }
+
+  @Test
   public void testLogsCollectionNoBaselineSet() {
     LogsCVConfiguration logsCVConfiguration =
         (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);

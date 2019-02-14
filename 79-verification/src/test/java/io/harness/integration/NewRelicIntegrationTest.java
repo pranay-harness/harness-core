@@ -147,8 +147,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     }
   }
 
-  // TODO: move test to rest
   @Test
+  @Repeat(successes = 1, times = 5)
   public void getAllTxnNames() throws Exception {
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, newRelicConfigId);
     NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
