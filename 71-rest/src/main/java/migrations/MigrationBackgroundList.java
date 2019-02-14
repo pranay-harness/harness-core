@@ -29,6 +29,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(7, RemoveSupportEmailFromSalesContacts.class))
         .add(Pair.of(8, BaseMigration.class))
         .add(Pair.of(9, BaseMigration.class))
+        .add(Pair.of(10, BaseMigration.class))
         .add(Pair.of(11, DeleteAndAddInstanceSyncJobToAllAccounts.class))
         .add(Pair.of(12, TerraformIsTemplatizedMigration.class))
         .add(Pair.of(13, VaultTokenMigration.class))
