@@ -1,14 +1,13 @@
 package software.wings.beans.command;
 
+import io.harness.delegate.command.CommandExecutionData;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.Map;
 
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
-public class ShellExecutionData extends CommandExecutionData {
+public class ShellExecutionData implements CommandExecutionData {
   private Map<String, String> sweepingOutputEnvVariables;
 }

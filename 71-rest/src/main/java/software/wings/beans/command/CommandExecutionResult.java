@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import lombok.Builder;

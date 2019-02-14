@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.delegate.command.CommandExecutionData;
 import lombok.Data;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;

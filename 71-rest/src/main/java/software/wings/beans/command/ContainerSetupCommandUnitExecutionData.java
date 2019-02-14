@@ -1,9 +1,9 @@
 package software.wings.beans.command;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.delegate.command.CommandExecutionData;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.Label;
 
@@ -15,8 +15,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
-public class ContainerSetupCommandUnitExecutionData extends CommandExecutionData {
+public class ContainerSetupCommandUnitExecutionData implements CommandExecutionData {
   private String containerServiceName;
   private String namespace;
   private List<String[]> activeServiceCounts;
