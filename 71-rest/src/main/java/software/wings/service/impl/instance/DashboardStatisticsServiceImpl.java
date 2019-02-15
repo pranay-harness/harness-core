@@ -447,8 +447,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                 grouping("appInfo", grouping("$first", projection("id", "appId"), projection("name", "appName"))),
                 grouping("serviceInfo",
                     grouping("$first", projection("id", "serviceId"), projection("name", "serviceName"))),
-                grouping("envTypeList", grouping("$push", projection("type", "envType"))))
-            .sort(descending("count"), ascending("serviceId"));
+                grouping("envTypeList", grouping("$push", projection("type", "envType"))));
     aggregationPipeline.skip(offset);
     aggregationPipeline.limit(limit);
 
