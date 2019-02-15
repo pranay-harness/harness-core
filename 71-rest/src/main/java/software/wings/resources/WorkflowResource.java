@@ -44,6 +44,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeScope;
@@ -74,15 +75,18 @@ import javax.ws.rs.QueryParam;
 @AuthRule(permissionType = WORKFLOW)
 public class WorkflowResource {
   private WorkflowService workflowService;
+  private AuthService authService;
 
   /**
    * Instantiates a new orchestration resource.
    *
    * @param workflowService the workflow service
+   * @param authService the auth service
    */
   @Inject
-  public WorkflowResource(WorkflowService workflowService) {
+  public WorkflowResource(WorkflowService workflowService, AuthService authService) {
     this.workflowService = workflowService;
+    this.authService = authService;
   }
 
   /**
@@ -174,6 +178,7 @@ public class WorkflowResource {
     workflow.setAppId(appId);
     workflow.setWorkflowType(WorkflowType.ORCHESTRATION);
     try {
+      authService.checkWorkflowPermissionsForEnv(appId, workflow, Action.CREATE);
       Workflow wf = workflowService.createWorkflow(workflow);
       return new RestResponse<>(wf);
     } catch (WingsException e) {
@@ -182,7 +187,6 @@ public class WorkflowResource {
             "You have reached the maximum number of allowed Workflows. Please contact Harness Support.",
             WingsException.USER);
       }
-
       throw e;
     }
   }
@@ -240,6 +244,7 @@ public class WorkflowResource {
   public RestResponse<Workflow> updatePreDeployment(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, Workflow workflow) {
     validateUuid(workflow, "workflowId", workflowId);
+    authService.checkWorkflowPermissionsForEnv(appId, workflow, Action.UPDATE);
     workflow.setAppId(appId);
     return new RestResponse<>(workflowService.updateWorkflow(workflow, null));
   }
@@ -259,7 +264,15 @@ public class WorkflowResource {
   public RestResponse<Workflow> cloneWorkflow(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, CloneMetadata cloneMetadata) {
     try {
-      Workflow wf = workflowService.cloneWorkflow(appId, workflowId, cloneMetadata);
+      Workflow originalWorkflow = workflowService.readWorkflow(appId, workflowId);
+      String targetAppId = cloneMetadata.getTargetAppId();
+      if (targetAppId == null || targetAppId.equals(appId)) {
+        authService.checkWorkflowPermissionsForEnv(appId, originalWorkflow, Action.CREATE);
+      } else {
+        authService.checkIfUserCanCloneWorkflowToOtherApp(targetAppId, originalWorkflow);
+      }
+
+      Workflow wf = workflowService.cloneWorkflow(appId, originalWorkflow, cloneMetadata);
       return new RestResponse<>(wf);
     } catch (WingsException e) {
       if (e.getCode() == ErrorCode.USAGE_LIMITS_EXCEEDED) {

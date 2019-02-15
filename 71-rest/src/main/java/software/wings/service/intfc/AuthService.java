@@ -2,7 +2,9 @@ package software.wings.service.intfc;
 
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Pipeline;
 import software.wings.beans.User;
+import software.wings.beans.Workflow;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -109,4 +111,10 @@ public interface AuthService extends OwnedByAccount {
   void checkIfUserAllowedToDeployToEnv(String appId, String envId);
 
   void checkIfUserCanCreateEnv(String appId, EnvironmentType envType);
+
+  void checkWorkflowPermissionsForEnv(String appId, Workflow workflow, Action action);
+
+  void checkIfUserCanCloneWorkflowToOtherApp(String targetAppId, Workflow workflow);
+
+  void checkPipelinePermissionsForEnv(String appId, Pipeline pipeline, Action action);
 }

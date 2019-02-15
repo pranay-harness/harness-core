@@ -443,7 +443,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
 
     Workflow clonedWorkflow =
-        workflowService.cloneWorkflow(APP_ID, workflow2.getUuid(), CloneMetadata.builder().workflow(workflow2).build());
+        workflowService.cloneWorkflow(APP_ID, workflow2, CloneMetadata.builder().workflow(workflow2).build());
 
     assertClonedWorkflow(workflow2, clonedWorkflow);
   }
@@ -487,7 +487,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     CloneMetadata cloneMetadata = constructCloneMetadata(workflow2);
 
-    Workflow clonedWorkflow = workflowService.cloneWorkflow(APP_ID, workflow2.getUuid(), cloneMetadata);
+    Workflow clonedWorkflow = workflowService.cloneWorkflow(APP_ID, workflow2, cloneMetadata);
     assertClonedWorkflowAcrossApps(workflow2, clonedWorkflow);
   }
 
@@ -517,7 +517,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
 
     CloneMetadata cloneMetadata = constructCloneMetadata(workflow2);
-    workflowService.cloneWorkflow(APP_ID, workflow2.getUuid(), cloneMetadata);
+    workflowService.cloneWorkflow(APP_ID, workflow2, cloneMetadata);
   }
 
   /**

@@ -55,9 +55,11 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Permission;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Role;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
+import software.wings.beans.Workflow;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.GenericDbCache;
@@ -912,16 +914,16 @@ public class AuthServiceImpl implements AuthService {
       return;
     }
 
-    Set<String> deploymentEnvPermissions = user.getUserRequestContext()
-                                               .getUserPermissionInfo()
-                                               .getAppPermissionMapInternal()
-                                               .get(appId)
-                                               .getDeploymentEnvPermissions();
-    if (isEmpty(deploymentEnvPermissions)) {
+    Set<String> deploymentEnvExecutePermissions = user.getUserRequestContext()
+                                                      .getUserPermissionInfo()
+                                                      .getAppPermissionMapInternal()
+                                                      .get(appId)
+                                                      .getDeploymentExecutePermissionsForEnvs();
+    if (isEmpty(deploymentEnvExecutePermissions)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
 
-    if (!deploymentEnvPermissions.contains(envId)) {
+    if (!deploymentEnvExecutePermissions.contains(envId)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
   }
@@ -941,13 +943,120 @@ public class AuthServiceImpl implements AuthService {
                                                     .getUserPermissionInfo()
                                                     .getAppPermissionMapInternal()
                                                     .get(appId)
-                                                    .getEnvCreatePermissions();
+                                                    .getEnvCreatePermissionsForEnvTypes();
 
     if (isEmpty(envCreatePermissions)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
 
+    if (envCreatePermissions.contains(EnvironmentType.ALL)) {
+      return;
+    }
+
     if (!envCreatePermissions.contains(envType)) {
+      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
+  }
+
+  @Override
+  public void checkWorkflowPermissionsForEnv(String appId, Workflow workflow, Action action) {
+    if (workflow == null) {
+      return;
+    }
+    boolean envTemplatized = authHandler.isEnvTemplatized(workflow);
+    String envId = workflow.getEnvId();
+
+    if (!envTemplatized && isEmpty(envId)) {
+      return;
+    }
+
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return;
+    }
+
+    AppPermissionSummary appPermissionSummary =
+        user.getUserRequestContext().getUserPermissionInfo().getAppPermissionMapInternal().get(appId);
+    if (envTemplatized) {
+      if (appPermissionSummary.isCanCreateTemplatizedWorkflow()) {
+        return;
+      } else {
+        throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+      }
+    }
+
+    Set<String> allowedEnvIds;
+    switch (action) {
+      case CREATE:
+        allowedEnvIds = appPermissionSummary.getWorkflowCreatePermissionsForEnvs();
+        break;
+      case UPDATE:
+        allowedEnvIds = appPermissionSummary.getWorkflowUpdatePermissionsForEnvs();
+        break;
+      default:
+        return;
+    }
+
+    if (isEmpty(allowedEnvIds)) {
+      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
+    if (!allowedEnvIds.contains(envId)) {
+      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
+  }
+
+  @Override
+  public void checkIfUserCanCloneWorkflowToOtherApp(String targetAppId, Workflow workflow) {
+    if (workflow == null) {
+      return;
+    }
+    boolean envTemplatized = authHandler.isEnvTemplatized(workflow);
+
+    if (!envTemplatized) {
+      return;
+    }
+
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return;
+    }
+
+    AppPermissionSummary appPermissionSummary =
+        user.getUserRequestContext().getUserPermissionInfo().getAppPermissionMapInternal().get(targetAppId);
+
+    if (!appPermissionSummary.isCanCreateTemplatizedWorkflow()) {
+      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
+  }
+
+  @Override
+  public void checkPipelinePermissionsForEnv(String appId, Pipeline pipeline, Action action) {
+    User user = UserThreadLocal.get();
+
+    if (user == null) {
+      return;
+    }
+
+    AppPermissionSummary appPermissionSummary =
+        user.getUserRequestContext().getUserPermissionInfo().getAppPermissionMapInternal().get(appId);
+    Set<String> allowedEnvIds;
+
+    switch (action) {
+      case CREATE:
+        allowedEnvIds = appPermissionSummary.getPipelineCreatePermissionsForEnvs();
+        break;
+      case UPDATE:
+        allowedEnvIds = appPermissionSummary.getPipelineUpdatePermissionsForEnvs();
+        break;
+      default:
+        return;
+    }
+
+    if (isEmpty(allowedEnvIds)) {
+      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
+
+    if (!authHandler.checkIfPipelineHasOnlyGivenEnvs(pipeline, allowedEnvIds)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
   }
