@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.WorkflowType;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.generator.NotificationGroupGenerator.NotificationGroups;
 import io.harness.generator.OwnerManager.Owners;
@@ -38,7 +39,6 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.states.ResourceConstraintState.HoldingScope;

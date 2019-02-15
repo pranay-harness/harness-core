@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -17,7 +18,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT;
-import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
 import static software.wings.expression.ManagerExpressionEvaluator.getName;

@@ -14,6 +14,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.WorkflowType;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Entity;

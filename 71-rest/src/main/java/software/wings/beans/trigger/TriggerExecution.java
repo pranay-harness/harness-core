@@ -1,6 +1,7 @@
 package software.wings.beans.trigger;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.WorkflowType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,7 +11,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.trigger.Condition.Type;
 
 import java.time.OffsetDateTime;

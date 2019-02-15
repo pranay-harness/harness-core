@@ -7,13 +7,13 @@ import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.beans.WorkflowType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.LogDataRecord;

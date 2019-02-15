@@ -1,9 +1,9 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
-import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.PRIMARY_SERVICE_NAME_EXPRESSION;
 import static software.wings.common.Constants.STAGE_SERVICE_NAME_EXPRESSION;

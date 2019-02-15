@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -8,7 +9,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;

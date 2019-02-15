@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import software.wings.beans.Variable.VariableBuilder;
 import software.wings.common.Constants;

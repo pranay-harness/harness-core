@@ -19,6 +19,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.WorkflowType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
@@ -31,7 +32,6 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;

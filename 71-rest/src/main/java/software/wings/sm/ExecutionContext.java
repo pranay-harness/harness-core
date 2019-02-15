@@ -4,11 +4,11 @@
 
 package software.wings.sm;
 
+import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.WorkflowType;
 import software.wings.beans.ErrorStrategy;
-import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.SweepingOutput;
 import software.wings.beans.SweepingOutput.SweepingOutputBuilder;
-import software.wings.beans.WorkflowType;
 import software.wings.settings.SettingValue;
 
 import java.util.List;

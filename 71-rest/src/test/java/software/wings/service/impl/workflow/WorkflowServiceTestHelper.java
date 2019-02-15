@@ -59,6 +59,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.WorkflowType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.BasicOrchestrationWorkflow;
@@ -83,7 +84,6 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;

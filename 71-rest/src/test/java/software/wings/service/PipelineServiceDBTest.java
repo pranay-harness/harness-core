@@ -13,6 +13,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.WorkflowType;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -31,7 +32,6 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AccountService;

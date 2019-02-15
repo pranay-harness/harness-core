@@ -6,6 +6,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.WorkflowType;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;

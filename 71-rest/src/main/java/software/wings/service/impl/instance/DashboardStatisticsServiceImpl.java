@@ -5,6 +5,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
@@ -19,7 +20,6 @@ import static org.mongodb.morphia.query.Sort.descending;
 import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ARTIFACT;
-import static software.wings.beans.WorkflowType.ORCHESTRATION;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

@@ -1,12 +1,12 @@
 package software.wings.sm;
 
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
 import static software.wings.common.Constants.PHASE_PARAM;
 import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.WorkflowType;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +43,6 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.InstanceExpressionProcessor;

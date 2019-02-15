@@ -49,6 +49,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.WorkflowType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -61,7 +62,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.SubEntityType;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;

@@ -2,13 +2,13 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.WorkflowType;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerExecution;

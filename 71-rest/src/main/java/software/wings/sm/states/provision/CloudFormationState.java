@@ -1,11 +1,11 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 

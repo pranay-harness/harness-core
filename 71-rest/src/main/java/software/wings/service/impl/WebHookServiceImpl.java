@@ -1,10 +1,10 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
-import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 

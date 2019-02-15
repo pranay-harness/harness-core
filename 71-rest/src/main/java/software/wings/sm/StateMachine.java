@@ -1,9 +1,9 @@
 package software.wings.sm;
 
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.Transition.Builder.aTransition;

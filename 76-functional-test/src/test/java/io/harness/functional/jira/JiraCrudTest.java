@@ -1,5 +1,6 @@
 package io.harness.functional.jira;
 
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_JIRA;
@@ -9,7 +10,6 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.sm.StateType.JIRA_CREATE_UPDATE;
 
 import com.google.common.collect.ImmutableMap;
@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 
 import io.harness.RestUtils.WorkflowRestUtil;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.AccountGenerator;
@@ -42,7 +43,6 @@ import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;

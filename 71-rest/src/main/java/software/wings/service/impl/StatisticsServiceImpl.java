@@ -1,6 +1,9 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
+import static io.harness.beans.WorkflowType.PIPELINE;
+import static io.harness.beans.WorkflowType.SIMPLE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.time.EpochUtils.PST_ZONE_ID;
 import static java.util.Comparator.comparing;
@@ -10,9 +13,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
-import static software.wings.beans.WorkflowType.ORCHESTRATION;
-import static software.wings.beans.WorkflowType.PIPELINE;
-import static software.wings.beans.WorkflowType.SIMPLE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

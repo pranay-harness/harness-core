@@ -17,11 +17,11 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.WorkflowType;
 import org.junit.Before;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.template.Template;
 import software.wings.common.Constants;
 import software.wings.service.intfc.template.TemplateFolderService;

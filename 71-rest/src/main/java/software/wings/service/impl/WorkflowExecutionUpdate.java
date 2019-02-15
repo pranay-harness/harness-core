@@ -11,6 +11,7 @@ import static java.util.Collections.emptySet;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.WorkflowType;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
@@ -25,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AccountService;

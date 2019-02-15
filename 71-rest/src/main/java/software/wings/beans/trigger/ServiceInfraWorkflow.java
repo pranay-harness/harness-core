@@ -1,8 +1,8 @@
 package software.wings.beans.trigger;
 
+import io.harness.beans.WorkflowType;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.WorkflowType;
 
 @Data
 @Builder

@@ -1,8 +1,8 @@
 package io.harness.functional.trigger;
 
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.WorkflowType.ORCHESTRATION;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

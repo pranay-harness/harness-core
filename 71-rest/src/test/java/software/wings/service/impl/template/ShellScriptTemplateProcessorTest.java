@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
+import io.harness.beans.WorkflowType;
 import io.harness.delegate.beans.ScriptType;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -38,7 +39,6 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;

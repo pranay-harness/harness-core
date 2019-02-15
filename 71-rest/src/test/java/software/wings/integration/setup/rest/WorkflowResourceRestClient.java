@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
+import io.harness.beans.WorkflowType;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -29,7 +30,6 @@ import software.wings.beans.PhaseStepType;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
-import software.wings.beans.WorkflowType;
 import software.wings.integration.UserResourceRestClient;
 import software.wings.sm.StateType;
 

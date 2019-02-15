@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -11,7 +12,6 @@ import static software.wings.beans.PipelineStage.PipelineStageElement;
 import static software.wings.beans.PipelineStage.builder;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.APP_ID;

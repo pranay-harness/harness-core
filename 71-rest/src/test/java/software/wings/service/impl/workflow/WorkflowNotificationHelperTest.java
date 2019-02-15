@@ -38,6 +38,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,7 +59,6 @@ import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
-import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
