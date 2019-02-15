@@ -7,11 +7,11 @@ import static org.junit.Assert.assertTrue;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;

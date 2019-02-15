@@ -19,12 +19,12 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.rest.RestResponse;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.AdditionalAnswers;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;

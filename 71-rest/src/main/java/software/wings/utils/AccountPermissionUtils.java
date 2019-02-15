@@ -6,8 +6,8 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
-import software.wings.beans.RestResponse;
-import software.wings.beans.RestResponse.Builder;
+import io.harness.rest.RestResponse;
+import io.harness.rest.RestResponse.Builder;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.HarnessUserGroupService;

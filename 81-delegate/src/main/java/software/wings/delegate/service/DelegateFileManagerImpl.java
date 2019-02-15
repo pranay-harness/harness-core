@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.rest.RestResponse;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
@@ -23,7 +24,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
-import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.common.Constants;
 import software.wings.delegate.app.DelegateConfiguration;

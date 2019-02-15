@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.rest.RestResponse;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.RestResponse;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.SettingsService;
 

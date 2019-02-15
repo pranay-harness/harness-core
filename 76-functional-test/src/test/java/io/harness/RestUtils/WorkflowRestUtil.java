@@ -5,10 +5,10 @@ import static io.restassured.RestAssured.given;
 import com.google.inject.Singleton;
 
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;

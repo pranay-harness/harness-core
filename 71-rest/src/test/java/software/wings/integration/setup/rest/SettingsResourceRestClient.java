@@ -23,8 +23,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
+import io.harness.rest.RestResponse;
 import software.wings.beans.Account;
-import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.integration.UserResourceRestClient;
 

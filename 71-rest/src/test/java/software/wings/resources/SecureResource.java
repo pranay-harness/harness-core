@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import software.wings.beans.RestResponse;
+import io.harness.rest.RestResponse;
 import software.wings.beans.User;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;

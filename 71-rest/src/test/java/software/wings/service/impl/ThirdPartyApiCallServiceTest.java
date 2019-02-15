@@ -7,10 +7,10 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.beans.RestResponse;
 import software.wings.resources.ActivityResource;
 import software.wings.resources.DelegateResource;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;

@@ -4,10 +4,10 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.rest.RestResponse;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import io.swagger.annotations.Api;
-import software.wings.beans.RestResponse;
 import software.wings.security.annotations.PublicApi;
 
 import javax.ws.rs.GET;

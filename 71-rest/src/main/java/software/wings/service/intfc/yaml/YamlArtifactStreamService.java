@@ -4,8 +4,8 @@ package software.wings.service.intfc.yaml;
  * Api interface for all artifact stream/build source types
  * @author rktummala on 10/09/17
  */
+import io.harness.rest.RestResponse;
 import software.wings.beans.Base;
-import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.yaml.YamlPayload;
 

@@ -60,7 +60,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>62-rest-utils</artifactId>
+            <artifactId>20-delegate-tasks</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

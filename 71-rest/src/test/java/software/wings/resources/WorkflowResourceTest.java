@@ -18,13 +18,13 @@ import com.google.common.collect.Lists;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.rest.RestResponse;
 import io.harness.serializer.JsonUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import software.wings.WingsBaseTest;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.exception.WingsExceptionMapper;

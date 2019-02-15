@@ -21,13 +21,13 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rest.RestResponse;
 import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;

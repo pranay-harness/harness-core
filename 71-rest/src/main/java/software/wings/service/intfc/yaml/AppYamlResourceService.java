@@ -1,7 +1,7 @@
 package software.wings.service.intfc.yaml;
 
+import io.harness.rest.RestResponse;
 import software.wings.beans.Application;
-import software.wings.beans.RestResponse;
 import software.wings.yaml.YamlPayload;
 
 public interface AppYamlResourceService {

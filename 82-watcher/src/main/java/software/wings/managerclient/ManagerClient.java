@@ -1,12 +1,12 @@
 package software.wings.managerclient;
 
+import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateScripts;
+import io.harness.rest.RestResponse;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-import software.wings.beans.DelegateConfiguration;
-import software.wings.beans.DelegateScripts;
-import software.wings.beans.RestResponse;
 
 public interface ManagerClient {
   @GET("delegates/delegateScripts")

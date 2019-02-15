@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.rest;
 
 import com.google.common.base.MoreObjects;
 

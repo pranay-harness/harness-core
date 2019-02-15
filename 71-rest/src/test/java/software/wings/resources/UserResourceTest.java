@@ -12,11 +12,11 @@ import static software.wings.beans.User.Builder.anUser;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.rest.RestResponse;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-import software.wings.beans.RestResponse;
 import software.wings.beans.User;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.security.authentication.AuthenticationManager;

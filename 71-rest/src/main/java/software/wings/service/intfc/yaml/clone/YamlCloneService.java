@@ -1,6 +1,6 @@
 package software.wings.service.intfc.yaml.clone;
 
-import software.wings.beans.RestResponse;
+import io.harness.rest.RestResponse;
 
 public interface YamlCloneService {
   RestResponse cloneEntityUsingYaml(

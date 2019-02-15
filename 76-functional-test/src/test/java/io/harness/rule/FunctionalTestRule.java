@@ -21,6 +21,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
+import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.security.AsymmetricDecryptor;
 import io.harness.threading.CurrentThreadExecutor;
@@ -39,7 +40,6 @@ import software.wings.app.ManagerQueueModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
-import software.wings.beans.RestResponse;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 

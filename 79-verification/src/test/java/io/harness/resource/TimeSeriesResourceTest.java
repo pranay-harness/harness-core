@@ -9,12 +9,12 @@ import static org.mockito.Mockito.when;
 
 import io.harness.VerificationBaseTest;
 import io.harness.resources.TimeSeriesResource;
+import io.harness.rest.RestResponse;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.beans.RestResponse;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;

@@ -3,8 +3,8 @@ package software.wings.resources;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import software.wings.beans.RestResponse;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;

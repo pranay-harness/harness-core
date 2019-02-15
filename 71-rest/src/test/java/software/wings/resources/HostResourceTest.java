@@ -14,12 +14,12 @@ import static software.wings.utils.WingsTestConstants.HOST_NAME;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.rest.RestResponse;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.RestResponse;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Host.Builder;
 import software.wings.exception.WingsExceptionMapper;

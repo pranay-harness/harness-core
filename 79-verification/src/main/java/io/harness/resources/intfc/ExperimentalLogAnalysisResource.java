@@ -3,7 +3,7 @@ package io.harness.resources.intfc;
 import com.google.inject.ImplementedBy;
 
 import io.harness.resources.ExperimentalLogAnalysisResourceImpl;
-import software.wings.beans.RestResponse;
+import io.harness.rest.RestResponse;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;

@@ -10,6 +10,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.rest.RestResponse;
 import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -18,7 +19,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Base;
-import software.wings.beans.RestResponse;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppContainerService;
 

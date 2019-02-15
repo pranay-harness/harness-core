@@ -15,6 +15,7 @@ import static org.junit.Assert.fail;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -24,7 +25,6 @@ import org.junit.Test;
 import software.wings.beans.Account;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.VaultConfig;
 import software.wings.common.Constants;

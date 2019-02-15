@@ -6,8 +6,8 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
-import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.Artifact;
 
 import javax.ws.rs.core.GenericType;

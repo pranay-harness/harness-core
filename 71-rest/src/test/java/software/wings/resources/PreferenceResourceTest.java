@@ -16,13 +16,13 @@ import static software.wings.utils.WingsTestConstants.USER_ID;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.rest.RestResponse;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DeploymentPreference;
 import software.wings.beans.Preference;
-import software.wings.beans.RestResponse;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.PreferenceService;

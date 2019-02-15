@@ -1,6 +1,8 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.ScriptType;
 import io.harness.delegate.beans.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.command.CommandExecutionData;
@@ -18,5 +20,7 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(CommandExecutionData.class, 5035);
     kryo.register(CommandExecutionResult.class, 5036);
     kryo.register(CommandExecutionStatus.class, 5037);
+    kryo.register(DelegateScripts.class, 5002);
+    kryo.register(DelegateConfiguration.class, 5469);
   }
 }

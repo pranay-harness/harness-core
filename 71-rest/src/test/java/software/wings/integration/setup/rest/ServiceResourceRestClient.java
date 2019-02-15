@@ -17,7 +17,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
-import software.wings.beans.RestResponse;
+import io.harness.rest.RestResponse;
 import software.wings.beans.Service;
 import software.wings.integration.UserResourceRestClient;
 import software.wings.utils.ArtifactType;

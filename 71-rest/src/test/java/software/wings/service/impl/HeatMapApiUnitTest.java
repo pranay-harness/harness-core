@@ -17,6 +17,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
+import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.time.Timestamp;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +31,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.LicenseInfo;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.VerificationConstants;
@@ -845,6 +845,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
   public void testRiskArrayEndpointContainment() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())

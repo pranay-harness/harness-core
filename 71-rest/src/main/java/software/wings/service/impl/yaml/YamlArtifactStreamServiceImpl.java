@@ -8,8 +8,8 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.rest.RestResponse;
 import software.wings.beans.Base;
-import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;

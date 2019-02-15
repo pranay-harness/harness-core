@@ -1,10 +1,10 @@
 package software.wings.verification;
 
+import io.harness.rest.RestResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
-import software.wings.beans.RestResponse;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;

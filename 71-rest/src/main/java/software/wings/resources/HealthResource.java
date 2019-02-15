@@ -12,12 +12,12 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.configuration.ConfigurationType;
 import io.harness.exception.WingsException;
 import io.harness.mongo.MongoConfig;
+import io.harness.rest.RestResponse;
 import io.harness.security.AsymmetricEncryptor;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.RestResponse;
 import software.wings.security.annotations.PublicApi;
 
 import java.security.InvalidKeyException;
