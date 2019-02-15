@@ -533,7 +533,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>20-delegate-tasks</artifactId>
+            <artifactId>19-delegate-tasks-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -11,6 +11,7 @@
         <module>12-commons</module>
         <module>14-api-services-beans</module>
         <module>15-api-services</module>
+        <module>19-delegate-tasks-beans</module>
         <module>20-delegate-tasks</module>
         <module>20-persistence-test</module>
         <module>21-persistence</module>
