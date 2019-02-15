@@ -4,9 +4,9 @@ import static org.junit.Assert.assertTrue;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.resources.intfc.ExperimentalLogAnalysisResource;
+import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.Test;
-import software.wings.beans.RestResponse;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 
 import java.net.UnknownHostException;

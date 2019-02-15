@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.rest.RestResponse;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.junit.Before;
@@ -19,7 +20,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.beans.RestResponse;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.sm.StateType;

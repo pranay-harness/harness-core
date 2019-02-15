@@ -20,12 +20,12 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
+import io.harness.rest.RestResponse;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStepType;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;

@@ -14,6 +14,7 @@ import static software.wings.beans.CatalogNames.EXECUTION_TYPE;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import io.harness.rest.RestResponse;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
@@ -27,7 +28,6 @@ import org.junit.runner.RunWith;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.SettingsService;

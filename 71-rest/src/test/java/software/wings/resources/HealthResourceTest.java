@@ -6,11 +6,11 @@ import static org.mockito.Mockito.when;
 
 import io.harness.configuration.ConfigurationType;
 import io.harness.mongo.MongoConfig;
+import io.harness.rest.RestResponse;
 import io.harness.security.AsymmetricEncryptor;
 import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.RestResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.utils.ResourceTestRule;
 

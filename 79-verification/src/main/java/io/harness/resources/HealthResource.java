@@ -2,10 +2,10 @@ package io.harness.resources;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.RestResponse;
 import software.wings.security.annotations.PublicApi;
 
 import javax.ws.rs.Consumes;

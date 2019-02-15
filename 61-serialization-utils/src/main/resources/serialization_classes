@@ -36,7 +36,7 @@ software.wings.sm.ExecutionInterrupt, 4009
 software.wings.api.ContainerRollbackRequestElement, 4010
 
 software.wings.beans.Base, 5001
-software.wings.beans.DelegateScripts, 5002
+#used: 5002
 software.wings.beans.DelegateTask, 5003
 software.wings.beans.DelegateTask$Status, 5004
 software.wings.beans.TaskType, 5005
@@ -252,7 +252,7 @@ software.wings.api.AmiServiceDeployElement, 5220
 software.wings.beans.InstanceUnitType, 5221
 software.wings.beans.container.PortMapping, 5222
 software.wings.beans.container.LogConfiguration$LogOption, 5223
-software.wings.beans.RestResponse, 5224
+io.harness.rest.RestResponse, 5224
 software.wings.service.impl.newrelic.MetricAnalysisExecutionData, 5225
 software.wings.beans.NameValuePair, 5226
 software.wings.sm.WorkflowStandardParams, 5227
@@ -495,7 +495,7 @@ software.wings.api.HelmDeployStateExecutionData, 5465
 software.wings.beans.container.IstioConfig, 5466
 software.wings.beans.DatadogConfig, 5467
 software.wings.beans.DatadogConfig$DatadogYaml, 5468
-software.wings.beans.DelegateConfiguration, 5469
+#used: 5469
 software.wings.beans.yaml.GitFetchFilesRequest, 5470
 software.wings.beans.yaml.GitFetchFilesResult, 5471
 software.wings.beans.GitFileConfig, 5472

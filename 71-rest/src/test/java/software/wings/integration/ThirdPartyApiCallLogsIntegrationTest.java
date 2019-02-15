@@ -12,9 +12,9 @@ import com.google.common.collect.Lists;
 
 import io.harness.beans.PageResponse;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.Test;
-import software.wings.beans.RestResponse;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;

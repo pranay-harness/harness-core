@@ -5,7 +5,7 @@ import com.google.inject.ImplementedBy;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.resources.ExperimentalTimeseriesAnalysisResourceImpl;
-import software.wings.beans.RestResponse;
+import io.harness.rest.RestResponse;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.sm.StateType;

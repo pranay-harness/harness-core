@@ -1,7 +1,7 @@
 package software.wings.service.intfc.yaml.sync;
 
+import io.harness.rest.RestResponse;
 import software.wings.beans.Base;
-import software.wings.beans.RestResponse;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.YamlProcessingException;

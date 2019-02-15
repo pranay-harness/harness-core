@@ -10,10 +10,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
+import io.harness.rest.RestResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
-import software.wings.beans.RestResponse;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

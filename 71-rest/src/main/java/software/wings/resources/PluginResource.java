@@ -1,14 +1,14 @@
 package software.wings.resources;
 
-import static software.wings.beans.RestResponse.Builder.aRestResponse;
+import static io.harness.rest.RestResponse.Builder.aRestResponse;
 
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.AccountPlugin;
-import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.PluginService;

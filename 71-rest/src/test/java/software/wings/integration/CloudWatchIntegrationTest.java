@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
+import io.harness.rest.RestResponse;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
@@ -25,7 +26,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.Application;
-import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;

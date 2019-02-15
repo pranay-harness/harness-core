@@ -1,8 +1,8 @@
 package software.wings.exception;
 
+import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;

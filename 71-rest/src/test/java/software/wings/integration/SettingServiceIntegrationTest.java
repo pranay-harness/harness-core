@@ -14,6 +14,7 @@ import static software.wings.utils.WingsTestConstants.HARNESS_NEXUS;
 import com.google.inject.Inject;
 
 import io.harness.eraro.ResponseMessage;
+import io.harness.rest.RestResponse;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -23,7 +24,6 @@ import org.junit.Test;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.config.NexusConfig;

@@ -3,8 +3,8 @@ package software.wings.exception;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
+import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;

@@ -8,6 +8,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import io.harness.rest.RestResponse;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
@@ -20,7 +21,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Pipeline;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;

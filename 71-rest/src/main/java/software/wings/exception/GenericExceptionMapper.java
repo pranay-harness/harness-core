@@ -8,9 +8,9 @@ import io.harness.eraro.Level;
 import io.harness.eraro.MessageManager;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
+import io.harness.rest.RestResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.RestResponse;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.MediaType;

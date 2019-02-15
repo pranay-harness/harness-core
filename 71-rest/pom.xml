@@ -338,6 +338,10 @@
             <artifactId>cache-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>me.snowdrop</groupId>
             <artifactId>istio-client-uberjar</artifactId>
         </dependency>
@@ -446,6 +450,10 @@
             <artifactId>jersey-test-framework-provider-inmemory</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jfrog.artifactory.client</groupId>
             <artifactId>artifactory-java-client-services</artifactId>
         </dependency>
@@ -549,16 +557,6 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>61-serialization-utils</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>62-rest-utils</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>63-limits</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -31,7 +32,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
-import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.Schema;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.MigrationService;

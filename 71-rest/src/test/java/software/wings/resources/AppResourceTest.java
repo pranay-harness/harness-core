@@ -8,13 +8,13 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rest.RestResponse;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.RestResponse;
 import software.wings.service.intfc.AppService;
 import software.wings.utils.ResourceTestRule;
 

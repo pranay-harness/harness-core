@@ -16,13 +16,13 @@ import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkRes
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.rest.RestResponse;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.ElkConfig;
-import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogElement;

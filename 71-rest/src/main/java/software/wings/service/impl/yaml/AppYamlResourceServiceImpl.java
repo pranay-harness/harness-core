@@ -5,8 +5,8 @@ import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.rest.RestResponse;
 import software.wings.beans.Application;
-import software.wings.beans.RestResponse;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;

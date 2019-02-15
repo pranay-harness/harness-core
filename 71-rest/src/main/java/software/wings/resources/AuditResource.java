@@ -7,9 +7,9 @@ import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.jersey.caching.CacheControl;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.audit.AuditHeader;
-import software.wings.beans.RestResponse;
 import software.wings.service.intfc.AuditService;
 
 import java.util.concurrent.TimeUnit;

@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.rest.RestResponse;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
@@ -16,7 +17,6 @@ import org.junit.Test;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
-import software.wings.beans.RestResponse;
 
 import java.io.File;
 import javax.ws.rs.client.WebTarget;

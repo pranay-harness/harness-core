@@ -17,7 +17,6 @@
         <module>21-persistence</module>
         <module>31-orchestration</module>
         <module>61-serialization-utils</module>
-        <module>62-rest-utils</module>
         <module>64-events-framework</module>
         <module>71-rest</module>
         <module>79-verification</module>
@@ -850,6 +849,11 @@
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>
                 <version>3.20.0-GA</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>13.0</version>
             </dependency>
             <dependency>
                 <groupId>org.jfrog.artifactory.client</groupId>

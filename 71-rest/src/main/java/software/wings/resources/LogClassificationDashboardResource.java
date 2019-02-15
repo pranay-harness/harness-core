@@ -4,9 +4,9 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import retrofit2.http.Body;
-import software.wings.beans.RestResponse;
 import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;

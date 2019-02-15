@@ -5,6 +5,7 @@ import static software.wings.common.VerificationConstants.LAST_SUCCESSFUL_WORKFL
 import static software.wings.common.VerificationConstants.WORKFLOW_FOR_STATE_EXEC;
 
 import io.harness.beans.PageResponse;
+import io.harness.rest.RestResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -14,7 +15,6 @@ import retrofit2.http.Query;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.Account;
 import software.wings.beans.FeatureName;
-import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.LogAnalysisResponse;

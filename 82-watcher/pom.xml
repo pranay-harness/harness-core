@@ -35,8 +35,14 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>62-rest-utils</artifactId>
+            <artifactId>19-delegate-tasks-beans</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>61-serialization-utils</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

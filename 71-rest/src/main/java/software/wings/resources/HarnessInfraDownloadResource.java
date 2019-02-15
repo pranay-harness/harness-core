@@ -2,9 +2,9 @@ package software.wings.resources;
 
 import com.google.inject.Inject;
 
+import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.RestResponse;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.impl.infra.InfraDownloadService;
 

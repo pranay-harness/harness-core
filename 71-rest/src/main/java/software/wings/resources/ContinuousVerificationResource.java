@@ -4,10 +4,10 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.APMFetchConfig;
 import software.wings.api.MetricDataAnalysisResponse;
-import software.wings.beans.RestResponse;
 import software.wings.common.VerificationConstants;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;

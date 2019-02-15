@@ -8,9 +8,9 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.Application;
-import software.wings.beans.RestResponse;
 import software.wings.beans.SampleAppStatus;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;

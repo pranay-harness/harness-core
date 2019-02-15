@@ -5,11 +5,11 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.beans.AccountPlugin;
-import software.wings.beans.RestResponse;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.PluginService;

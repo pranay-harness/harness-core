@@ -1,5 +1,7 @@
 package software.wings.managerclient;
 
+import io.harness.delegate.beans.DelegateScripts;
+import io.harness.rest.RestResponse;
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -16,12 +18,10 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegateProfileParams;
-import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.Log;
-import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.impl.ThirdPartyApiCallLog;
