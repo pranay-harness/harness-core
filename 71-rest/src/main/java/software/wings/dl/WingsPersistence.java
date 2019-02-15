@@ -27,7 +27,7 @@ public interface WingsPersistence extends HPersistence {
    * @param id    the id
    * @return the t
    */
-  <T extends Base> T getWithAppId(Class<T> cls, String appId, String id);
+  <T extends PersistentEntity> T getWithAppId(Class<T> cls, String appId, String id);
 
   /**
    * Get t.
@@ -39,7 +39,7 @@ public interface WingsPersistence extends HPersistence {
    * @param readPref the read pref
    * @return the t
    */
-  <T extends Base> T getWithAppId(Class<T> cls, String appId, String id, ReadPref readPref);
+  <T extends PersistentEntity> T getWithAppId(Class<T> cls, String appId, String id, ReadPref readPref);
 
   /**
    * Save and get.

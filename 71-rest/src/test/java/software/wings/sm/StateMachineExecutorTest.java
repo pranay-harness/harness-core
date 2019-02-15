@@ -843,7 +843,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
                                                         .withStatus(FAILED)
                                                         .build();
 
-    stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
+    wingsPersistence.save(stateExecutionInstance);
     stateMachineExecutor.clearStateExecutionData(stateExecutionInstance, null);
 
     stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
