@@ -19,15 +19,15 @@ import static software.wings.sm.states.KubernetesSetup.TARGET_PORT_KEY;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.WorkflowType;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
-import software.wings.beans.WorkflowType;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 import software.wings.utils.Validator;

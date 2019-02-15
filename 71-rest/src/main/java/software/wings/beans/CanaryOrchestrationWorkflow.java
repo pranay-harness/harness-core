@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -23,7 +24,6 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SUMOLOGIC_CONFIGID;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
-import static software.wings.beans.OrchestrationWorkflowType.CANARY;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.POST_DEPLOYMENT;
 import static software.wings.common.Constants.PRE_DEPLOYMENT;

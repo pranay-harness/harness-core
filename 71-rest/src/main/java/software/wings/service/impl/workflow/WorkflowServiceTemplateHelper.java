@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -9,7 +10,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.common.Constants.APPD_APP_VAR_DESC;
 import static software.wings.common.Constants.APPD_SERVER_VAR_DESC;
 import static software.wings.common.Constants.APPD_TIER_VAR_DESC;
@@ -25,6 +25,7 @@ import static software.wings.common.Constants.SERVICE_VAR_DESC;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -32,7 +33,6 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.OrchestrationWorkflow;
-import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;

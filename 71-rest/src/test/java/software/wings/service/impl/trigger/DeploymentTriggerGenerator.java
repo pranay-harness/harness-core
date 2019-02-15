@@ -8,7 +8,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.WorkflowType;
+import io.harness.beans.WorkflowType;
 import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.Condition;
 import software.wings.beans.trigger.DeploymentTrigger;

@@ -1,5 +1,11 @@
 package software.wings.app;
 
+import static io.harness.beans.OrchestrationWorkflowType.BASIC;
+import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.beans.OrchestrationWorkflowType.CANARY;
+import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
+import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static software.wings.beans.InfrastructureMappingType.AWS_AMI;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_CODEDEPLOY;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
@@ -12,12 +18,6 @@ import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
-import static software.wings.beans.OrchestrationWorkflowType.BASIC;
-import static software.wings.beans.OrchestrationWorkflowType.BLUE_GREEN;
-import static software.wings.beans.OrchestrationWorkflowType.BUILD;
-import static software.wings.beans.OrchestrationWorkflowType.CANARY;
-import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
-import static software.wings.beans.OrchestrationWorkflowType.ROLLING;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;

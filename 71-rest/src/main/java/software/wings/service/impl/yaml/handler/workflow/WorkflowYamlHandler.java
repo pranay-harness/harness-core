@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
+import io.harness.beans.WorkflowType;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import lombok.Builder;
@@ -29,7 +30,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.Yaml;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;

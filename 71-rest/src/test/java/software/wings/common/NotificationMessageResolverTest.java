@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.WorkflowType;
 import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -27,7 +28,6 @@ import software.wings.WingsBaseTest;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.alert.AlertType;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;

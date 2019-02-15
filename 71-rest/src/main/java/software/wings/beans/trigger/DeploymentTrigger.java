@@ -1,6 +1,7 @@
 package software.wings.beans.trigger;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import lombok.Builder;
@@ -14,7 +15,6 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.beans.WorkflowType;
 
 import javax.validation.constraints.NotNull;
 

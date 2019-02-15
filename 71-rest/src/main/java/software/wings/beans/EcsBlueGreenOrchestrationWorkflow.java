@@ -1,7 +1,7 @@
 package software.wings.beans;
 
+import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static software.wings.beans.EcsBlueGreenOrchestrationWorkflow.EcsBlueGreenOrchestrationWorkflowBuilder.anEcsBlueGreenOrchestrationWorkflow;
-import static software.wings.beans.OrchestrationWorkflowType.BLUE_GREEN;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.EqualsAndHashCode;

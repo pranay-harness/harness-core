@@ -58,7 +58,7 @@ software.wings.beans.ElasticLoadBalancerConfig, 5020
 software.wings.beans.SSHExecutionCredential, 5022
 software.wings.beans.ExecutionCredential$ExecutionType, 5023
 software.wings.beans.CanaryWorkflowExecutionAdvisor, 5024
-software.wings.beans.WorkflowType, 5025
+io.harness.beans.WorkflowType, 5025
 software.wings.beans.PhaseStepType, 5026
 software.wings.beans.ElementExecutionSummary, 5027
 software.wings.beans.ServiceInstance, 5028
@@ -177,7 +177,7 @@ software.wings.sm.StateTypeScope, 5144
 software.wings.sm.StepExecutionSummary, 5145
 software.wings.sm.states.JenkinsState$JenkinsExecutionResponse, 5146
 software.wings.sm.ElementNotifyResponseData, 5147
-software.wings.beans.OrchestrationWorkflowType, 5148
+io.harness.beans.OrchestrationWorkflowType, 5148
 software.wings.beans.command.KubernetesSetupCommandUnit, 5149
 software.wings.beans.command.KubernetesSetupParams, 5150
 software.wings.beans.container.ImageDetails, 5151

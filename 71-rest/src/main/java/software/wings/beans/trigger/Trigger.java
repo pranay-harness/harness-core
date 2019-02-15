@@ -1,11 +1,12 @@
 package software.wings.beans.trigger;
 
+import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.WorkflowType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,7 +19,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.beans.WorkflowType;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

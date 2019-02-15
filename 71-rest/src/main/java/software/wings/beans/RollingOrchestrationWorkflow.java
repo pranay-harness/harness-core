@@ -3,6 +3,7 @@ package software.wings.beans;
 import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.common.Constants;
 
 import java.util.ArrayList;

@@ -34,6 +34,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageResponse;
+import io.harness.beans.WorkflowType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -47,7 +48,6 @@ import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.NotificationMessageResolver;

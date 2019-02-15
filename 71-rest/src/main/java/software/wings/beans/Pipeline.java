@@ -4,8 +4,8 @@
 
 package software.wings.beans;
 
+import static io.harness.beans.WorkflowType.PIPELINE;
 import static java.util.Arrays.asList;
-import static software.wings.beans.WorkflowType.PIPELINE;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
