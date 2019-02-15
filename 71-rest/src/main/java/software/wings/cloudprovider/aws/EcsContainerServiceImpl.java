@@ -79,6 +79,7 @@ import software.wings.service.impl.AwsHelperService;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -947,11 +948,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private boolean notAllDesiredTasksRunning(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback, Integer desiredCount) {
-    Service service = awsHelperService
-                          .describeServices(region, awsConfig, encryptedDataDetails,
-                              new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-                          .getServices()
-                          .get(0);
+    Service service =
+        getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, Arrays.asList(serviceName))
+            .get(0);
 
     logger.info(
         "Waiting for pending tasks to finish. {}/{} running ...", service.getRunningCount(), service.getDesiredCount());
@@ -976,11 +975,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
 
-    Service service = awsHelperService
-                          .describeServices(region, awsConfig, encryptedDataDetails,
-                              new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-                          .getServices()
-                          .get(0);
+    Service service =
+        getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, Arrays.asList(serviceName))
+            .get(0);
 
     waitForTasksToBeInRunningStateButDontThrowException(region, awsConfig, encryptedDataDetails, clusterName,
         serviceName, executionLogCallback, service.getDesiredCount());
@@ -997,17 +994,18 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
 
     try {
-      List<String> originalTaskArns = awsHelperService
-                                          .listTasks(region, awsConfig, encryptedDataDetails,
-                                              new ListTasksRequest()
-                                                  .withCluster(clusterName)
-                                                  .withServiceName(serviceName)
-                                                  .withDesiredStatus(DesiredStatus.RUNNING))
-                                          .getTaskArns();
-      if (desiredCount != previousCount) {
+      List<String> originalTaskArns =
+          getTaskArns(region, encryptedDataDetails, clusterName, serviceName, awsConfig, DesiredStatus.RUNNING);
+      Service service =
+          getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, Arrays.asList(serviceName))
+              .get(0);
+
+      // If service task count is already equal to desired count, don't try to resize
+      if (service.getDesiredCount().intValue() != desiredCount) {
         updateServiceCount(
             region, encryptedDataDetails, clusterName, serviceName, desiredCount, executionLogCallback, awsConfig);
         executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
+
         waitForTasksToBeInRunningStateButDontThrowException(
             region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback, desiredCount);
         if (desiredCount > previousCount) { // don't do it for downsize.
@@ -1038,13 +1036,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   public List<ContainerInfo> getContainerInfosAfterEcsWait(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       List<String> originalTaskArns, ExecutionLogCallback executionLogCallback, boolean isDownsizeInitiatedByHarness) {
-    List<String> taskArns = awsHelperService
-                                .listTasks(region, awsConfig, encryptedDataDetails,
-                                    new ListTasksRequest()
-                                        .withCluster(clusterName)
-                                        .withServiceName(serviceName)
-                                        .withDesiredStatus(DesiredStatus.RUNNING))
-                                .getTaskArns();
+    List<String> taskArns =
+        getTaskArns(region, encryptedDataDetails, clusterName, serviceName, awsConfig, DesiredStatus.RUNNING);
     if (isEmpty(taskArns) || isDownsizeInitiatedByHarness) {
       logger.info("Downsize complete for ECS deployment, Service: " + serviceName);
       return emptyList();
@@ -1297,11 +1290,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
           executionLogCallback.saveExecutionLog("Waiting for service to be in steady state...", LogLevel.INFO);
-          List<Service> services =
-              awsHelperService
-                  .describeServices(region, awsConfig, encryptedDataDetails,
-                      new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-                  .getServices();
+          List<Service> services = getEcsServicesForCluster(
+              region, awsConfig, encryptedDataDetails, clusterName, Arrays.asList(serviceName));
           if (isNotEmpty(services)) {
             if (hasServiceReachedSteadyState(services.get(0))) {
               executionLogCallback.saveExecutionLog("Service has reached a steady state", LogLevel.INFO);
@@ -1336,11 +1326,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     try {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
-          service[0] = awsHelperService
-                           .describeServices(region, awsConfig, encryptedDataDetails,
-                               new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-                           .getServices()
-                           .get(0);
+          service[0] =
+              getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, Arrays.asList(serviceName))
+                  .get(0);
           executionLogCallback.saveExecutionLog(
               "Current service desired count return from aws for Service: " + serviceName + " is: " + desiredCount,
               LogLevel.INFO);
@@ -1393,12 +1381,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       if (isEmpty(listServicesResult.getServiceArns())) {
         break;
       }
-      services.addAll(awsHelperService
-                          .describeServices(region, awsConfig, encryptedDataDetails,
-                              new DescribeServicesRequest()
-                                  .withCluster(clusterName)
-                                  .withServices(listServicesResult.getServiceArns()))
-                          .getServices());
+
+      services.addAll(getEcsServicesForCluster(
+          region, awsConfig, encryptedDataDetails, clusterName, listServicesResult.getServiceArns()));
       listServicesRequest.setNextToken(listServicesResult.getNextToken());
     } while (listServicesResult.getNextToken() != null && listServicesResult.getServiceArns().size() == 10);
 
@@ -1421,5 +1406,24 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     DescribeTaskDefinitionResult taskDefinitionResult =
         awsHelperService.describeTaskDefinition(region, awsConfig, encryptedDataDetails, describeTaskDefinitionRequest);
     return taskDefinitionResult.getTaskDefinition();
+  }
+
+  private List<String> getTaskArns(String region, List<EncryptedDataDetail> encryptedDataDetails, String clusterName,
+      String serviceName, AwsConfig awsConfig, DesiredStatus desiredStatus) {
+    return awsHelperService
+        .listTasks(region, awsConfig, encryptedDataDetails,
+            new ListTasksRequest()
+                .withCluster(clusterName)
+                .withServiceName(serviceName)
+                .withDesiredStatus(desiredStatus))
+        .getTaskArns();
+  }
+
+  private List<Service> getEcsServicesForCluster(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, List<String> serviceName) {
+    return awsHelperService
+        .describeServices(region, awsConfig, encryptedDataDetails,
+            new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+        .getServices();
   }
 }
