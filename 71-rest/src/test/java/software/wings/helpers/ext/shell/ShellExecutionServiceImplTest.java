@@ -6,10 +6,10 @@ import com.google.inject.Inject;
 
 import io.harness.shell.ShellExecutionRequest;
 import io.harness.shell.ShellExecutionResponse;
+import io.harness.shell.ShellExecutionServiceImpl;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
-import software.wings.helpers.ext.shell.response.ShellExecutionServiceImpl;
 
 public class ShellExecutionServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private ShellExecutionServiceImpl shellExecutionService;

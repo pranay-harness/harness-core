@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.shell.response;
+package io.harness.shell;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
@@ -8,8 +8,6 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import io.harness.shell.ShellExecutionRequest;
-import io.harness.shell.ShellExecutionResponse;
 import io.harness.shell.ShellExecutionResponse.ShellExecutionResponseBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

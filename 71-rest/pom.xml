@@ -528,7 +528,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>15-api-services</artifactId>
+            <artifactId>14-api-services-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
