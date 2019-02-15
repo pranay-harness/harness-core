@@ -1777,18 +1777,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public Workflow cloneWorkflow(String appId, String originalWorkflowId, Workflow workflow) {
+  public Workflow cloneWorkflow(String appId, Workflow originalWorkflow, Workflow workflow) {
     String accountId = appService.getAccountIdByAppId(workflow.getAppId());
 
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new Action(accountId, ActionType.CREATE_WORKFLOW));
 
     return LimitEnforcementUtils.withLimitCheck(
-        checker, () -> cloneWorkflowInternal(appId, originalWorkflowId, workflow));
+        checker, () -> cloneWorkflowInternal(appId, originalWorkflow, workflow));
   }
 
-  private Workflow cloneWorkflowInternal(String appId, String originalWorkflowId, Workflow workflow) {
-    Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
+  private Workflow cloneWorkflowInternal(String appId, Workflow originalWorkflow, Workflow workflow) {
     Workflow clonedWorkflow = cloneWorkflow(workflow, originalWorkflow);
 
     clonedWorkflow.setDefaultVersion(1);
@@ -1812,19 +1811,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public Workflow cloneWorkflow(String appId, String originalWorkflowId, CloneMetadata cloneMetadata) {
+  public Workflow cloneWorkflow(String appId, Workflow originalWorkflow, CloneMetadata cloneMetadata) {
     notNullCheck("cloneMetadata", cloneMetadata, USER);
     Workflow workflow = cloneMetadata.getWorkflow();
     notNullCheck("workflow", workflow, USER);
     workflow.setAppId(appId);
     String targetAppId = cloneMetadata.getTargetAppId();
     if (targetAppId == null || targetAppId.equals(appId)) {
-      return cloneWorkflow(appId, originalWorkflowId, workflow);
+      return cloneWorkflow(appId, originalWorkflow, workflow);
     }
     logger.info("Cloning workflow across applications. "
         + "Environment, Service Infrastructure and Node selection will not be cloned");
     workflowServiceHelper.validateServiceMapping(appId, targetAppId, cloneMetadata.getServiceMapping());
-    Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
     Workflow clonedWorkflow = cloneWorkflow(workflow, originalWorkflow);
     clonedWorkflow.setAppId(targetAppId);
     clonedWorkflow.setEnvId(null);

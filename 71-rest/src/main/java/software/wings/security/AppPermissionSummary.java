@@ -21,18 +21,52 @@ public class AppPermissionSummary {
   private boolean canCreateProvisioner;
   private boolean canCreateEnvironment;
   private boolean canCreateWorkflow;
+  private boolean canCreateTemplatizedWorkflow;
   private boolean canCreatePipeline;
 
-  private Set<EnvironmentType> envCreatePermissions;
-  private Set<String> workflowCreatePermissions;
-  private Set<String> pipelineCreatePermissions;
-  private Set<String> deploymentEnvPermissions;
+  /**
+   * The environment types that the user can create.
+   * The Set contains Env Ids
+   */
+  private Set<EnvironmentType> envCreatePermissionsForEnvTypes;
+
+  /**
+   * The environments that the user can create workflows for.
+   * The Set contains Env Ids
+   */
+  private Set<String> workflowCreatePermissionsForEnvs;
+
+  /**
+   * The environments that the user can update workflows for.
+   * The Set contains Env Ids
+   */
+  private Set<String> workflowUpdatePermissionsForEnvs;
+
+  /**
+   * The environments that the user can create pipelines for.
+   * The Set contains Env Ids
+   */
+  private Set<String> pipelineCreatePermissionsForEnvs;
+
+  /**
+   * The environments that the user can update pipelines for.
+   * The Set contains Env Ids
+   */
+  private Set<String> pipelineUpdatePermissionsForEnvs;
+
+  /**
+   * The environments that the user can deploy to.
+   * This mapping is required for handling of rbac for templates
+   * The Set contains Env Ids
+   */
+  private Set<String> deploymentExecutePermissionsForEnvs;
 
   // Key - action, Value - set of entity ids
   private Map<Action, Set<String>> servicePermissions;
   private Map<Action, Set<String>> provisionerPermissions;
   private Map<Action, Set<EnvInfo>> envPermissions;
   private Map<Action, Set<String>> workflowPermissions;
+  // Key - action, Value - set of workflow ids / pipeline ids
   private Map<Action, Set<String>> deploymentPermissions;
   private Map<Action, Set<String>> pipelinePermissions;
 
@@ -45,26 +79,30 @@ public class AppPermissionSummary {
 
   @Builder
   public AppPermissionSummary(boolean canCreateService, boolean canCreateProvisioner, boolean canCreateEnvironment,
-      boolean canCreateWorkflow, boolean canCreatePipeline, Set<EnvironmentType> envCreatePermissions,
-      Set<String> workflowCreatePermissions, Set<String> pipelineCreatePermissions,
+      boolean canCreateWorkflow, boolean canCreateTemplatizedWorkflow, boolean canCreatePipeline,
+      Set<EnvironmentType> envCreatePermissionsForEnvTypes, Set<String> workflowCreatePermissionsForEnvs,
+      Set<String> workflowUpdatePermissionsForEnvs, Set<String> pipelineCreatePermissionsForEnvs,
+      Set<String> pipelineUpdatePermissionsForEnvs, Set<String> deploymentExecutePermissionsForEnvs,
       Map<Action, Set<String>> servicePermissions, Map<Action, Set<String>> provisionerPermissions,
       Map<Action, Set<EnvInfo>> envPermissions, Map<Action, Set<String>> workflowPermissions,
-      Map<Action, Set<String>> deploymentPermissions, Map<Action, Set<String>> pipelinePermissions,
-      Set<String> deploymentEnvPermissions) {
+      Map<Action, Set<String>> deploymentPermissions, Map<Action, Set<String>> pipelinePermissions) {
     this.canCreateService = canCreateService;
     this.canCreateProvisioner = canCreateProvisioner;
     this.canCreateEnvironment = canCreateEnvironment;
     this.canCreateWorkflow = canCreateWorkflow;
+    this.canCreateTemplatizedWorkflow = canCreateTemplatizedWorkflow;
     this.canCreatePipeline = canCreatePipeline;
-    this.envCreatePermissions = envCreatePermissions;
-    this.workflowCreatePermissions = workflowCreatePermissions;
-    this.pipelineCreatePermissions = pipelineCreatePermissions;
+    this.envCreatePermissionsForEnvTypes = envCreatePermissionsForEnvTypes;
+    this.workflowCreatePermissionsForEnvs = workflowCreatePermissionsForEnvs;
+    this.workflowUpdatePermissionsForEnvs = workflowUpdatePermissionsForEnvs;
+    this.pipelineCreatePermissionsForEnvs = pipelineCreatePermissionsForEnvs;
+    this.pipelineUpdatePermissionsForEnvs = pipelineUpdatePermissionsForEnvs;
+    this.deploymentExecutePermissionsForEnvs = deploymentExecutePermissionsForEnvs;
     this.servicePermissions = servicePermissions;
     this.provisionerPermissions = provisionerPermissions;
     this.envPermissions = envPermissions;
     this.workflowPermissions = workflowPermissions;
     this.deploymentPermissions = deploymentPermissions;
     this.pipelinePermissions = pipelinePermissions;
-    this.deploymentEnvPermissions = deploymentEnvPermissions;
   }
 }

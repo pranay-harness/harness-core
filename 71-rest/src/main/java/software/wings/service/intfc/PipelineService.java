@@ -101,14 +101,7 @@ public interface PipelineService extends OwnedByApplication {
    */
   void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String pipelineId);
 
-  /**
-   * Clone pipeline pipeline.
-   *
-   * @param originalPipelineId the original pipeline id
-   * @param pipeline           the pipeline
-   * @return the pipeline
-   */
-  Pipeline clonePipeline(String originalPipelineId, Pipeline pipeline);
+  Pipeline clonePipeline(Pipeline originalPipeline, Pipeline pipeline);
 
   List<EntityType> getRequiredEntities(String appId, String pipelineId);
 

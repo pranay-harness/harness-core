@@ -343,9 +343,9 @@ public class AuthHandler {
         case ENV: {
           if (actions.contains(Action.CREATE)) {
             appPermissionSummary.setCanCreateEnvironment(true);
-            Set<EnvironmentType> environmentTypeSet =
-                addEnvTypesByFilter(finalAppPermissionSummary.getEnvCreatePermissions(), (EnvFilter) entityFilter);
-            finalAppPermissionSummary.setEnvCreatePermissions(environmentTypeSet);
+            Set<EnvironmentType> environmentTypeSet = addEnvTypesByFilter(
+                finalAppPermissionSummary.getEnvCreatePermissionsForEnvTypes(), (EnvFilter) entityFilter);
+            finalAppPermissionSummary.setEnvCreatePermissionsForEnvTypes(environmentTypeSet);
           }
 
           if (isEmpty(entityActions)) {
@@ -363,17 +363,35 @@ public class AuthHandler {
           break;
         }
         case WORKFLOW: {
+          Set<String> envIdSet = null;
           if (actions.contains(Action.CREATE)) {
             appPermissionSummary.setCanCreateWorkflow(true);
-            Set<String> envIdSet =
-                getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
+            envIdSet = getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
             Set<String> updatedEnvIdSet =
-                addToExistingEntityIdSet(finalAppPermissionSummary.getWorkflowCreatePermissions(), envIdSet);
-            finalAppPermissionSummary.setWorkflowCreatePermissions(updatedEnvIdSet);
+                addToExistingEntityIdSet(finalAppPermissionSummary.getWorkflowCreatePermissionsForEnvs(), envIdSet);
+            finalAppPermissionSummary.setWorkflowCreatePermissionsForEnvs(updatedEnvIdSet);
+
+            if (entityFilter != null && !finalAppPermissionSummary.isCanCreateTemplatizedWorkflow()) {
+              Set<String> filterTypes = ((WorkflowFilter) entityFilter).getFilterTypes();
+              if (isNotEmpty(filterTypes)) {
+                boolean hasTemplateFilterType = filterTypes.contains(WorkflowFilter.FilterType.TEMPLATES);
+                finalAppPermissionSummary.setCanCreateTemplatizedWorkflow(hasTemplateFilterType);
+              }
+            }
           }
 
           if (isEmpty(entityActions)) {
             break;
+          }
+
+          if (entityActions.contains(Action.UPDATE)) {
+            if (envIdSet == null) {
+              envIdSet = getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
+            }
+
+            Set<String> updatedEnvIdSet =
+                addToExistingEntityIdSet(finalAppPermissionSummary.getWorkflowUpdatePermissionsForEnvs(), envIdSet);
+            finalAppPermissionSummary.setWorkflowUpdatePermissionsForEnvs(updatedEnvIdSet);
           }
 
           Set<String> entityIds = getWorkflowIdsByFilter(permissionTypeAppIdEntityMap.get(permissionType).get(appId),
@@ -407,8 +425,8 @@ public class AuthHandler {
               getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
           if (entityActions.contains(Action.EXECUTE)) {
             Set<String> updatedEnvIdSet =
-                addToExistingEntityIdSet(finalAppPermissionSummary.getDeploymentEnvPermissions(), envIdSet);
-            finalAppPermissionSummary.setDeploymentEnvPermissions(updatedEnvIdSet);
+                addToExistingEntityIdSet(finalAppPermissionSummary.getDeploymentExecutePermissionsForEnvs(), envIdSet);
+            finalAppPermissionSummary.setDeploymentExecutePermissionsForEnvs(updatedEnvIdSet);
           }
           break;
         }
@@ -450,17 +468,26 @@ public class AuthHandler {
       Multimap<String, Action> pipelineIdActionMap;
       switch (permissionType) {
         case PIPELINE:
+          Set<String> envIdSet = null;
           if (actions.contains(Action.CREATE)) {
             appPermissionSummary.setCanCreatePipeline(true);
-            Set<String> envIdSet =
-                getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
+            envIdSet = getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
             Set<String> updatedEnvIdSet =
-                addToExistingEntityIdSet(finalAppPermissionSummary.getWorkflowCreatePermissions(), envIdSet);
-            finalAppPermissionSummary.setPipelineCreatePermissions(updatedEnvIdSet);
+                addToExistingEntityIdSet(finalAppPermissionSummary.getPipelineCreatePermissionsForEnvs(), envIdSet);
+            finalAppPermissionSummary.setPipelineCreatePermissionsForEnvs(updatedEnvIdSet);
           }
 
           if (isEmpty(entityActions)) {
             break;
+          }
+
+          if (entityActions.contains(Action.UPDATE)) {
+            if (envIdSet == null) {
+              envIdSet = getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
+            }
+            Set<String> updatedEnvIdSet =
+                addToExistingEntityIdSet(finalAppPermissionSummary.getPipelineUpdatePermissionsForEnvs(), envIdSet);
+            finalAppPermissionSummary.setPipelineUpdatePermissionsForEnvs(updatedEnvIdSet);
           }
 
           pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
@@ -1114,7 +1141,41 @@ public class AuthHandler {
     return pipelineActionMap;
   }
 
-  private boolean isEnvTemplatized(Workflow workflow) {
+  public boolean checkIfPipelineHasOnlyGivenEnvs(Pipeline pipeline, Set<String> allowedEnvIds) {
+    if (pipeline.getPipelineStages() == null) {
+      return true;
+    }
+
+    return pipeline.getPipelineStages().stream().allMatch(pipelineStage
+        -> pipelineStage != null && pipelineStage.getPipelineStageElements() != null
+            && pipelineStage.getPipelineStageElements().stream().allMatch(pipelineStageElement -> {
+                 if (pipelineStageElement.getType().equals(StateType.APPROVAL.name())) {
+                   return true;
+                 }
+
+                 if (pipelineStageElement.getProperties() == null) {
+                   return false;
+                 }
+
+                 Object stageEnvIdObj = pipelineStageElement.getProperties().get("envId");
+                 if (stageEnvIdObj == null) {
+                   return true;
+                 }
+                 // TODO: For now we are comparing if env has expression then not check for env permissions
+                 // TODO: We should find a better way of handling
+                 String stageEnvId = (String) stageEnvIdObj;
+                 if (ManagerExpressionEvaluator.matchesVariablePattern(stageEnvId)) {
+                   return true;
+                 }
+                 if (allowedEnvIds.contains(stageEnvId)) {
+                   return true;
+                 }
+
+                 return false;
+               }));
+  }
+
+  public boolean isEnvTemplatized(Workflow workflow) {
     List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
     if (CollectionUtils.isNotEmpty(templateExpressions)) {
       return templateExpressions.stream()

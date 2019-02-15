@@ -20,9 +20,11 @@ import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
@@ -54,17 +56,20 @@ import javax.ws.rs.QueryParam;
 public class PipelineResource {
   private WorkflowService workflowService;
   private PipelineService pipelineService;
+  private AuthService authService;
 
   /**
    * Instantiates a new pipeline resource.
    *
    * @param workflowService the workflow service
    * @param pipelineService the pipeline service
+   * @param authService the auth service
    */
   @Inject
-  public PipelineResource(WorkflowService workflowService, PipelineService pipelineService) {
+  public PipelineResource(WorkflowService workflowService, PipelineService pipelineService, AuthService authService) {
     this.workflowService = workflowService;
     this.pipelineService = pipelineService;
+    this.authService = authService;
   }
 
   /**
@@ -111,6 +116,7 @@ public class PipelineResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Pipeline> create(@QueryParam("appId") String appId, Pipeline pipeline) {
+    authService.checkPipelinePermissionsForEnv(appId, pipeline, Action.CREATE);
     pipeline.setAppId(appId);
     return new RestResponse<>(pipelineService.save(pipeline));
   }
@@ -129,6 +135,7 @@ public class PipelineResource {
   @ExceptionMetered
   public RestResponse<Pipeline> update(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
+    authService.checkPipelinePermissionsForEnv(appId, pipeline, Action.UPDATE);
     pipeline.setAppId(appId);
     pipeline.setUuid(pipelineId);
     try {
@@ -161,10 +168,12 @@ public class PipelineResource {
   @Path("{pipelineId}/clone")
   @Timed
   @ExceptionMetered
-  public RestResponse<Pipeline> read(
+  public RestResponse<Pipeline> clone(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
+    Pipeline originalPipeline = pipelineService.readPipeline(appId, pipelineId, false);
+    authService.checkPipelinePermissionsForEnv(appId, originalPipeline, Action.CREATE);
     pipeline.setAppId(appId);
-    return new RestResponse<>(pipelineService.clonePipeline(pipelineId, pipeline));
+    return new RestResponse<>(pipelineService.clonePipeline(originalPipeline, pipeline));
   }
 
   /**
