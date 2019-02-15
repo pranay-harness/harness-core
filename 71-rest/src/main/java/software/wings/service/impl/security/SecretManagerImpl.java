@@ -30,7 +30,6 @@ import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
-import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.UUIDGenerator;
@@ -56,6 +55,7 @@ import software.wings.beans.Base;
 import software.wings.beans.BaseFile;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -99,6 +99,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -695,8 +696,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public String saveSecret(
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
-    return upsertSecretInternal(accountId, null, name, value, path, getEncryptionType(accountId),
-        SettingVariableTypes.SECRET_TEXT, usageRestrictions, false, true);
+    return upsertSecretInternal(accountId, null, name, value, path, getEncryptionType(accountId), usageRestrictions);
   }
 
   @Override
@@ -705,9 +705,8 @@ public class SecretManagerImpl implements SecretManager {
     EncryptionType encryptionType = getEncryptionType(accountId);
     for (SecretText secretText : secretTexts) {
       try {
-        String secretId =
-            upsertSecretInternal(accountId, null, secretText.getName(), secretText.getValue(), secretText.getPath(),
-                encryptionType, SettingVariableTypes.SECRET_TEXT, secretText.getUsageRestrictions(), false, true);
+        String secretId = upsertSecretInternal(accountId, null, secretText.getName(), secretText.getValue(),
+            secretText.getPath(), encryptionType, secretText.getUsageRestrictions());
         secretIds.add(secretId);
         logger.info("Imported secret '{}' successfully with uid: {}", secretText.getName(), secretId);
       } catch (WingsException e) {
@@ -720,15 +719,14 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public String saveSecretUsingLocalMode(
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
-    return upsertSecretInternal(accountId, null, name, value, path, EncryptionType.LOCAL,
-        SettingVariableTypes.SECRET_TEXT, usageRestrictions, false, true);
+    return upsertSecretInternal(accountId, null, name, value, path, EncryptionType.LOCAL, usageRestrictions);
   }
 
   @Override
   public boolean updateSecret(
       String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions) {
-    String encryptedDataId = upsertSecretInternal(accountId, uuId, name, value, path, getEncryptionType(accountId),
-        SettingVariableTypes.SECRET_TEXT, usageRestrictions, false, true);
+    String encryptedDataId =
+        upsertSecretInternal(accountId, uuId, name, value, path, getEncryptionType(accountId), usageRestrictions);
     return encryptedDataId != null;
   }
 
@@ -742,8 +740,7 @@ public class SecretManagerImpl implements SecretManager {
    * doesn't exist.
    */
   private String upsertSecretInternal(String accountId, String uuid, String name, String value, String path,
-      EncryptionType encryptionType, SettingVariableTypes settingVariableType, UsageRestrictions usageRestrictions,
-      boolean upsert, boolean audit) {
+      EncryptionType encryptionType, UsageRestrictions usageRestrictions) {
     String auditMessage;
     String encryptedDataId;
 
@@ -767,8 +764,8 @@ public class SecretManagerImpl implements SecretManager {
       // INSERT use case
       usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
 
-      EncryptedData encryptedData =
-          encrypt(encryptionType, accountId, settingVariableType, secretValue, path, null, name, usageRestrictions);
+      EncryptedData encryptedData = encrypt(encryptionType, accountId, SettingVariableTypes.SECRET_TEXT, secretValue,
+          path, null, name, usageRestrictions);
       encryptedData.addSearchTag(name);
       try {
         encryptedDataId = wingsPersistence.save(encryptedData);
@@ -781,7 +778,7 @@ public class SecretManagerImpl implements SecretManager {
     } else {
       // UPDATE use case
       EncryptedData savedData = wingsPersistence.get(EncryptedData.class, uuid);
-      if (!upsert && savedData == null) {
+      if (savedData == null) {
         // UPDATE use case. Return directly when record doesn't exist.
         return null;
       }
@@ -789,9 +786,12 @@ public class SecretManagerImpl implements SecretManager {
       // validate usage restriction.
       usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
           accountId, savedData.getUsageRestrictions(), usageRestrictions);
+      if (!Objects.equals(savedData.getUsageRestrictions(), usageRestrictions)) {
+        // Validate if change of the usage scope is resulting in with dangling references in service/environments.
+        validateAppEnvChangesInUsageRestrictions(savedData, usageRestrictions);
+      }
 
       encryptedDataId = uuid;
-
       boolean nameChanged = !Objects.equals(name, savedData.getName());
       boolean valueChanged = isNotEmpty(value) && !value.equals(SECRET_MASK);
       boolean pathChanged = !Objects.equals(path, savedData.getPath());
@@ -819,8 +819,8 @@ public class SecretManagerImpl implements SecretManager {
       // Re-encrypt if secret value or path has changed. Update should not change the existing Encryption type and
       // secret manager if the secret is 'path' enabled!
       if (valueChanged || pathChanged) {
-        EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, settingVariableType, secretValue,
-            path, savedData, name, usageRestrictions);
+        EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT,
+            secretValue, path, savedData, name, usageRestrictions);
         savedData.setEncryptionKey(encryptedData.getEncryptionKey());
         savedData.setEncryptedValue(encryptedData.getEncryptedValue());
         savedData.setEncryptionType(encryptedData.getEncryptionType());
@@ -830,7 +830,7 @@ public class SecretManagerImpl implements SecretManager {
       wingsPersistence.save(savedData);
     }
 
-    if (audit && UserThreadLocal.get() != null) {
+    if (UserThreadLocal.get() != null) {
       wingsPersistence.save(SecretChangeLog.builder()
                                 .accountId(accountId)
                                 .encryptedDataId(encryptedDataId)
@@ -855,6 +855,11 @@ public class SecretManagerImpl implements SecretManager {
     }
     usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
         accountId, savedData.getUsageRestrictions(), usageRestrictions);
+    if (!Objects.equals(savedData.getUsageRestrictions(), usageRestrictions)) {
+      // Validate if change of the usage scope is resulting in with dangling references in service/environments.
+      validateAppEnvChangesInUsageRestrictions(savedData, usageRestrictions);
+    }
+
     savedData.setUsageRestrictions(usageRestrictions);
 
     try {
@@ -915,7 +920,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public String saveFile(
       String accountId, String name, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
-    return upsertFileInternal(accountId, name, null, usageRestrictions, inputStream, false, true);
+    return upsertFileInternal(accountId, name, null, usageRestrictions, inputStream);
   }
 
   @Override
@@ -992,8 +997,8 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean updateFile(
       String accountId, String name, String uuid, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
-    String recordId = upsertFileInternal(accountId, name, uuid, usageRestrictions, inputStream, false, true);
-    return recordId != null;
+    String recordId = upsertFileInternal(accountId, name, uuid, usageRestrictions, inputStream);
+    return isNotEmpty(recordId);
   }
 
   /**
@@ -1002,8 +1007,8 @@ public class SecretManagerImpl implements SecretManager {
    * use case in which we would like to preserve the 'uuid' field while importing the exported encrypted keys from other
    * system.
    */
-  private String upsertFileInternal(String accountId, String name, String uuid, UsageRestrictions usageRestrictions,
-      BoundedInputStream inputStream, boolean upsert, boolean audit) {
+  private String upsertFileInternal(
+      String accountId, String name, String uuid, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
     boolean update = false;
     String oldName = null;
     String savedFileId = null;
@@ -1016,7 +1021,7 @@ public class SecretManagerImpl implements SecretManager {
 
     if (isNotEmpty(uuid)) {
       encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
-      if (encryptedData == null && !upsert) {
+      if (encryptedData == null) {
         // Pure UPDATE case, need to throw exception is the record doesn't exist.
         throw new WingsException(DEFAULT_ERROR_CODE, "could not find file with id " + uuid);
       }
@@ -1031,6 +1036,11 @@ public class SecretManagerImpl implements SecretManager {
       update = true;
       usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
           accountId, encryptedData.getUsageRestrictions(), usageRestrictions);
+      if (!Objects.equals(encryptedData.getUsageRestrictions(), usageRestrictions)) {
+        // Validate if change of the usage scope is resulting in with dangling references in service/environments.
+        validateAppEnvChangesInUsageRestrictions(encryptedData, usageRestrictions);
+      }
+
       oldName = encryptedData.getName();
       savedFileId = String.valueOf(encryptedData.getEncryptedValue());
       encryptionType = encryptedData.getEncryptionType();
@@ -1061,15 +1071,18 @@ public class SecretManagerImpl implements SecretManager {
         break;
 
       case KMS:
-        encryptedFileData = kmsService.encryptFile(accountId, kmsService.getSecretConfig(accountId), name, inputStream);
+        KmsConfig kmsConfig = update ? kmsService.getKmsConfig(accountId, encryptedData.getKmsId())
+                                     : kmsService.getSecretConfig(accountId);
+        encryptedFileData = kmsService.encryptFile(accountId, kmsConfig, name, inputStream);
         if (update) {
           fileService.deleteFile(savedFileId, CONFIGS);
         }
         break;
 
       case VAULT:
-        encryptedFileData = vaultService.encryptFile(
-            accountId, vaultService.getSecretConfig(accountId), name, inputStream, encryptedData);
+        VaultConfig vaultConfig = update ? vaultService.getVaultConfig(accountId, encryptedData.getKmsId())
+                                         : vaultService.getSecretConfig(accountId);
+        encryptedFileData = vaultService.encryptFile(accountId, vaultConfig, name, inputStream, encryptedData);
         break;
 
       default:
@@ -1119,7 +1132,7 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     // Logging the secret file changes.
-    if (audit && UserThreadLocal.get() != null) {
+    if (UserThreadLocal.get() != null) {
       String auditMessage;
       if (update) {
         auditMessage = (isNotEmpty(oldName) && oldName.equals(name)) ? "Changed File" : "Changed Name and File";
@@ -1280,33 +1293,6 @@ public class SecretManagerImpl implements SecretManager {
     // The requested page size may have not been filled, may need to fetch another batch and adjusting the offset
     // accordingly;
     return batchOffSet + index;
-  }
-
-  /**
-   * Get all secrets associated with an account. No usage restriction filtering will be applied as this method
-   * is used in secret export/import only right now.
-   */
-  private List<EncryptedData> getAllSecretsForAccountInternal(String accountId) {
-    List<EncryptedData> fullEncryptedDataList = new ArrayList<>();
-
-    boolean loadedAll;
-    int offset = 0;
-    int pageSize = PageRequest.DEFAULT_UNLIMITED;
-    // Load all secrets page by page till exhausted from mongo collection.
-    do {
-      PageRequest<EncryptedData> pageRequest = PageRequestBuilder.aPageRequest()
-                                                   .withLimit(PageRequest.UNLIMITED)
-                                                   .withOffset(String.valueOf(offset))
-                                                   .addFilter(ACCOUNT_ID, Operator.EQ, accountId)
-                                                   .build();
-      PageResponse<EncryptedData> pageResponse = wingsPersistence.query(EncryptedData.class, pageRequest);
-      List<EncryptedData> encryptedDataList = pageResponse.getResponse();
-      fullEncryptedDataList.addAll(encryptedDataList);
-      offset += pageSize;
-      loadedAll = encryptedDataList.size() < pageSize;
-    } while (!loadedAll);
-
-    return fullEncryptedDataList;
   }
 
   @Override
@@ -1619,5 +1605,67 @@ public class SecretManagerImpl implements SecretManager {
     public int compareTo(EncryptionDetail o) {
       return this.encryptionType.compareTo(o.encryptionType);
     }
+  }
+
+  // Creating a map of appId/envIds which are referring the specific secret through service variable etc.
+  private Map<String, Set<String>> getSetupAppEnvMap(EncryptedData encryptedData) {
+    Map<String, Set<String>> referredAppEnvMap = new HashMap<>();
+    List<UuidAware> secretUsages = getSecretUsage(encryptedData.getAccountId(), encryptedData.getUuid());
+    for (UuidAware uuidAware : secretUsages) {
+      String appId = null;
+      String envId = null;
+      String entityId = null;
+      EntityType entityType = null;
+      if (uuidAware instanceof ServiceVariable) {
+        ServiceVariable serviceVariable = (ServiceVariable) uuidAware;
+        appId = serviceVariable.getAppId();
+        envId = serviceVariable.getEnvId();
+        entityType = serviceVariable.getEntityType();
+        entityId = serviceVariable.getEntityId();
+      } else if (uuidAware instanceof ConfigFile) {
+        ConfigFile configFile = (ConfigFile) uuidAware;
+        appId = configFile.getAppId();
+        envId = configFile.getEnvId();
+        entityType = configFile.getEntityType();
+        entityId = configFile.getEntityId();
+      }
+
+      // Retrieve envId from entity Id reference.
+      if (entityType == EntityType.ENVIRONMENT) {
+        Environment environment = envService.get(appId, entityId);
+        if (environment != null) {
+          envId = environment.getUuid();
+        }
+      }
+
+      if (isNotEmpty(appId) && !Base.GLOBAL_APP_ID.equals(appId)) {
+        Set<String> envIds = referredAppEnvMap.get(appId);
+        if (envIds == null) {
+          envIds = new HashSet<>();
+          referredAppEnvMap.put(appId, envIds);
+        }
+        if (isNotEmpty(envId) && !Base.GLOBAL_ENV_ID.equals(envId)) {
+          envIds.add(envId);
+        }
+      }
+    }
+    return referredAppEnvMap;
+  }
+
+  /**
+   * We should fail the secret usage restriction update if the app/env is still referred by other setup entities
+   * but the update will remove such references. It will result in RBAC enforcement inconsistencies if this type of
+   * operations are not prevented.
+   */
+  private void validateAppEnvChangesInUsageRestrictions(
+      EncryptedData encryptedData, UsageRestrictions usageRestrictions) {
+    Map<String, Set<String>> setupAppEnvMap = getSetupAppEnvMap(encryptedData);
+    if (setupAppEnvMap.size() == 0) {
+      // This secret is not referred by any setup entities. no need to check.
+      return;
+    }
+
+    usageRestrictionsService.validateSetupUsagesOnUsageRestrictionsUpdate(
+        encryptedData.getAccountId(), setupAppEnvMap, usageRestrictions);
   }
 }

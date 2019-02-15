@@ -66,6 +66,7 @@ import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.settings.UsageRestrictionsReferenceSummary;
 import software.wings.settings.UsageRestrictionsReferenceSummary.IdNameReference;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -933,6 +934,42 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     if (!canUpdateEntity) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+    }
+  }
+
+  @Override
+  public void validateSetupUsagesOnUsageRestrictionsUpdate(
+      String accountId, Map<String, Set<String>> setupUsages, UsageRestrictions newUsageRestrictions) {
+    Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+    Map<String, Set<String>> newAppEnvMap = newUsageRestrictions == null
+        ? new HashMap<>()
+        : getAppEnvMap(
+              newUsageRestrictions.getAppEnvRestrictions(), environmentService.getAppIdEnvMap(appsByAccountId));
+
+    for (Entry<String, Set<String>> setupUsage : setupUsages.entrySet()) {
+      String appId = setupUsage.getKey();
+
+      if (!newAppEnvMap.containsKey(appId)) {
+        Application referredApplication = appService.get(appId);
+        String appName = referredApplication == null ? "" : referredApplication.getName();
+        String errorMessage = "Can't update usage scope, application '" + appName + "' is still referring this secret.";
+        throw new WingsException(errorMessage, USER);
+      }
+
+      Set<String> setupEnvIds = setupUsage.getValue();
+      if (isEmpty(setupEnvIds)) {
+        continue;
+      }
+
+      Set<String> envIdsFromUsageRestrictions = newAppEnvMap.get(appId);
+      setupEnvIds.removeAll(envIdsFromUsageRestrictions);
+
+      if (!setupEnvIds.isEmpty()) {
+        Environment environment = environmentService.get(appId, setupEnvIds.iterator().next());
+        String envName = environment == null ? "" : environment.getName();
+        String errorMessage = "Can't update usage scope, environment '" + envName + "' is still referring this secret.";
+        throw new WingsException(errorMessage, USER);
+      }
     }
   }
 

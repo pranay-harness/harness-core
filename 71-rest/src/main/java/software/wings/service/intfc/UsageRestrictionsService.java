@@ -115,6 +115,18 @@ public interface UsageRestrictionsService {
   void validateUsageRestrictionsOnEntityUpdate(
       String accountId, UsageRestrictions oldUsageRestrictions, UsageRestrictions newUsageRestrictions);
 
+  /**
+   * The update of usage restrictions should not leave setup entities references to be dangling. This method will
+   * validate all app/envs referring to the secret is still covered by the new usage restrictions/scopes.
+   *
+   * @param accountId   account ID.
+   * @param setupUsages The app/env map indicating usages by setup entities such as service variable, environment config
+   *     override.
+   * @param newUsageRestrictions The usage restrictions to be updated to.
+   */
+  void validateSetupUsagesOnUsageRestrictionsUpdate(
+      String accountId, Map<String, Set<String>> setupUsages, UsageRestrictions newUsageRestrictions);
+
   boolean isAccountAdmin(String accountId);
 
   /**

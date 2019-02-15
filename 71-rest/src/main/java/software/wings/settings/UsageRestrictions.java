@@ -15,12 +15,14 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 @Builder
 public class UsageRestrictions {
   private Set<AppEnvRestriction> appEnvRestrictions;
 
   @Data
   @Builder
+  @EqualsAndHashCode
   public static class AppEnvRestriction {
     private GenericEntityFilter appFilter;
     private EnvFilter envFilter;
