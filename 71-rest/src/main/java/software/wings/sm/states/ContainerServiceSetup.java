@@ -125,7 +125,10 @@ public abstract class ContainerServiceSetup extends State {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
       if (artifact == null) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, WingsException.USER)
+            .addParam("args",
+                "Artifact is required. "
+                    + " Please ensure that artifact provided as part of execution either Manual or through Trigger");
       }
 
       ImageDetails imageDetails = artifactCollectionUtil.fetchContainerImageDetails(
