@@ -41,6 +41,10 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
+@Deprecated
+// Do not use base class for your collection class. Instead use subset of the interfaces from the persistence layer:
+// PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware
+// To implement these interfaces simply define the respective field
 public class Base
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   public static final String APP_ID_KEY = "appId";
