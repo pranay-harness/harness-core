@@ -7,16 +7,19 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UuidAware;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.simpleframework.xml.Transient;
-import software.wings.beans.Base;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -33,7 +36,6 @@ import java.util.Map;
  */
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 @Data
-@EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes({
   @Index(options = @IndexOptions(name = "stateTypes"),
@@ -44,7 +46,8 @@ import java.util.Map;
         @Field("appId"), @Field("executionUuid"), @Field("parentInstanceId")
       })
 })
-public class StateExecutionInstance extends Base {
+public class StateExecutionInstance implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+  public static final String APP_ID_KEY = "appId";
   public static final String CALLBACK_KEY = "callback";
   public static final String CONTEXT_ELEMENT_KEY = "contextElement";
   public static final String CONTEXT_ELEMENTS_KEY = "contextElements";
@@ -69,6 +72,11 @@ public class StateExecutionInstance extends Base {
   public static final String STATUS_KEY = "status";
   public static final String STEP_ID_KEY = "stepId";
   public static final String WORKFLOW_ID_KEY = "workflowId";
+
+  @Id private String uuid;
+  @Indexed protected String appId;
+  @Indexed private long createdAt;
+  private long lastUpdatedAt;
 
   private String stateMachineId;
   private String childStateMachineId;
@@ -133,14 +141,6 @@ public class StateExecutionInstance extends Base {
 
   public StateExecutionData getStateExecutionData() {
     return stateExecutionMap.get(displayName);
-  }
-
-  @Override
-  @JsonIgnore
-  public Map<String, Object> getShardKeys() {
-    Map<String, Object> shardKeys = super.getShardKeys();
-    shardKeys.put("executionUuid", executionUuid);
-    return shardKeys;
   }
 
   /**
@@ -376,9 +376,7 @@ public class StateExecutionInstance extends Base {
           .withEndTs(endTs)
           .withUuid(uuid)
           .withAppId(appId)
-          .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt);
     }
 
@@ -410,9 +408,7 @@ public class StateExecutionInstance extends Base {
       stateExecutionInstance.setEndTs(endTs);
       stateExecutionInstance.setUuid(uuid);
       stateExecutionInstance.setAppId(appId);
-      stateExecutionInstance.setCreatedBy(createdBy);
       stateExecutionInstance.setCreatedAt(createdAt);
-      stateExecutionInstance.setLastUpdatedBy(lastUpdatedBy);
       stateExecutionInstance.setLastUpdatedAt(lastUpdatedAt);
       return stateExecutionInstance;
     }

@@ -310,7 +310,8 @@ public class StateMachineExecutor implements StateInspectionListener {
       timeout += state.getWaitInterval() * 1000;
     }
     stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + timeout);
-    return wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
+    wingsPersistence.save(stateExecutionInstance);
+    return stateExecutionInstance;
   }
 
   /**

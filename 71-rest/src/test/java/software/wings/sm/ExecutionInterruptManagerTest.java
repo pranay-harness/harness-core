@@ -108,7 +108,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                         .withAppId(app.getUuid())
                                                         .withDisplayName("state1")
                                                         .build();
-    stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
+    wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.RESUME)
@@ -137,7 +137,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                         .withAppId(app.getUuid())
                                                         .withDisplayName("state1")
                                                         .build();
-    stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
+    wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.RETRY)
@@ -167,7 +167,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                         .withDisplayName("state1")
                                                         .withStatus(ExecutionStatus.SUCCESS)
                                                         .build();
-    stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
+    wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
@@ -197,7 +197,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                         .withDisplayName("state1")
                                                         .withStatus(ExecutionStatus.SUCCESS)
                                                         .build();
-    stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
+    wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.ABORT)
