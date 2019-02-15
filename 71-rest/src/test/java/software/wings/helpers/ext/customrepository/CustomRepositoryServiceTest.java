@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import io.harness.shell.ShellExecutionRequest;
 import io.harness.shell.ShellExecutionResponse;
+import io.harness.shell.ShellExecutionService;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -16,7 +17,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.helpers.ext.shell.response.ShellExecutionService;
 
 import java.io.BufferedWriter;
 import java.io.File;

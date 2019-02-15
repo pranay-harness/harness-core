@@ -10,6 +10,7 @@
         <module>tools</module>
         <module>11-commons-test</module>
         <module>12-commons</module>
+        <module>14-api-services-beans</module>
         <module>15-api-services</module>
         <module>20-delegate-tasks</module>
         <module>20-persistence-test</module>

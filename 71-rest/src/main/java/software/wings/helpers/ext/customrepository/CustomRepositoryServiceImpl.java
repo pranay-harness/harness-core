@@ -17,6 +17,7 @@ import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.shell.ShellExecutionRequest;
 import io.harness.shell.ShellExecutionResponse;
+import io.harness.shell.ShellExecutionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -24,7 +25,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse.CustomRepositoryResponseBuilder;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse.Result;
-import software.wings.helpers.ext.shell.response.ShellExecutionService;
 
 import java.io.File;
 import java.io.IOException;

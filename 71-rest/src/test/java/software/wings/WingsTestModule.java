@@ -6,6 +6,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import io.harness.shell.ShellExecutionService;
+import io.harness.shell.ShellExecutionServiceImpl;
 import io.harness.threading.ThreadPool;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -22,8 +24,6 @@ import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfClientImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
-import software.wings.helpers.ext.shell.response.ShellExecutionService;
-import software.wings.helpers.ext.shell.response.ShellExecutionServiceImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
 import software.wings.service.impl.ContainerServiceImpl;

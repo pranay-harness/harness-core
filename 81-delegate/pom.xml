@@ -55,6 +55,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>15-api-services</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>62-rest-utils</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
