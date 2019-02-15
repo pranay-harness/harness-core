@@ -29,7 +29,7 @@ public class ManagerExecutor {
   private static boolean failedAlready;
   private static final Logger logger = LoggerFactory.getLogger(ManagerExecutor.class);
   private static final String alpnJar =
-      "org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar";
+      "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
 
   public static void ensureManager() throws IOException {
     if (!isHealthy()) {
