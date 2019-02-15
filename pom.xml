@@ -6,7 +6,6 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <!-- Harness Commons provides all aspects of reusable Java components. -->
         <module>tools</module>
         <module>11-commons-test</module>
         <module>12-commons</module>
@@ -18,7 +17,6 @@
         <module>31-orchestration</module>
         <module>61-serialization-utils</module>
         <module>62-rest-utils</module>
-        <module>63-limits</module>
         <module>64-events-framework</module>
         <module>71-rest</module>
         <module>79-verification</module>
