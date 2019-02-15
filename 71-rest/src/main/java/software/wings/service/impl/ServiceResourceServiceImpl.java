@@ -174,7 +174,10 @@ import javax.validation.executable.ValidateOnExecution;
 public class ServiceResourceServiceImpl implements ServiceResourceService, DataProvider {
   private static final Logger logger = LoggerFactory.getLogger(ServiceResourceServiceImpl.class);
   private static final String IISWEBSITE_KEYWORD = "iiswebsite";
-  public static final String IISAPP_KEYWORD = "iisapp";
+  private static final String IISAPP_KEYWORD = "iisapp";
+  private static final String IIS_INSTALL_COMMAND_NAME = "Install";
+  private static final String INSTALL_IIS_WEBSITE_TEMPLATE_NAME = "Install IIS Website";
+  private static final String INSTALL_IIS_APPLICATION_TEMPLATE_NAME = "Install IIS Application";
   private static String default_k8s_spec_yaml;
   private static String default_k8s_values_yaml;
 
@@ -471,6 +474,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           template = templateService.fetchTemplateByKeyword(accountId, IISWEBSITE_KEYWORD);
           command = sshCommandTemplateProcessor.fetchEntityFromTemplate(template);
           if (command != null) {
+            if (template.getName().equals(INSTALL_IIS_WEBSITE_TEMPLATE_NAME)) {
+              command.setName(IIS_INSTALL_COMMAND_NAME);
+            }
             commands = asList(command);
           }
           break;
@@ -479,6 +485,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           template = templateService.fetchTemplateByKeyword(accountId, IISAPP_KEYWORD);
           command = sshCommandTemplateProcessor.fetchEntityFromTemplate(template);
           if (command != null) {
+            if (template.getName().equals(INSTALL_IIS_APPLICATION_TEMPLATE_NAME)) {
+              command.setName(IIS_INSTALL_COMMAND_NAME);
+            }
             commands = asList(command);
           }
           break;
