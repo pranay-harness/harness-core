@@ -33,8 +33,10 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.exception.InvalidRequestException;
@@ -633,12 +635,20 @@ public class AccountServiceImpl implements AccountService {
 
     List<CVEnabledService> cvEnabledServices = new ArrayList<>();
 
-    List<Service> serviceList = wingsPersistence.createQuery(Service.class)
-                                    .field("appId")
-                                    .in(userAppPermissions.keySet())
-                                    .field("_id")
-                                    .in(services)
-                                    .asList();
+    List<Service> serviceList = new ArrayList<>();
+
+    PageRequest<Service> servicePageRequest =
+        PageRequestBuilder.aPageRequest().withLimit("999").withOffset("0").build();
+    servicePageRequest.addFilter("appId", Operator.IN, userAppPermissions.keySet().toArray());
+    servicePageRequest.addFilter("uuid", Operator.IN, services.toArray());
+    PageResponse<Service> servicePageResponse = wingsPersistence.query(Service.class, servicePageRequest);
+    int previousOffSet = 0;
+    while (!servicePageResponse.isEmpty()) {
+      serviceList.addAll(servicePageResponse.getResponse());
+      previousOffSet += servicePageResponse.size();
+      servicePageRequest.setOffset(String.valueOf(previousOffSet));
+      servicePageResponse = wingsPersistence.query(Service.class, servicePageRequest);
+    }
 
     List<Environment> envList =
         wingsPersistence.createQuery(Environment.class).field("appId").in(userAppPermissions.keySet()).asList();
@@ -657,13 +667,23 @@ public class AccountServiceImpl implements AccountService {
         continue;
       }
 
-      List<CVConfiguration> cvConfigurationList = null;
-      cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class)
-                                .filter("serviceId", service.getUuid())
-                                .field("envId")
-                                .in(allowedEnvs)
-                                .filter("appId", service.getAppId())
-                                .asList();
+      List<CVConfiguration> cvConfigurationList = new ArrayList<>();
+      PageRequest<CVConfiguration> cvConfigurationPageRequest =
+          PageRequestBuilder.aPageRequest().withLimit("999").withOffset("0").build();
+      cvConfigurationPageRequest.addFilter("serviceId", Operator.EQ, service.getUuid());
+      cvConfigurationPageRequest.addFilter("appId", Operator.EQ, service.getAppId());
+      cvConfigurationPageRequest.addFilter("enabled24x7", Operator.EQ, true);
+      cvConfigurationPageRequest.addFilter("envId", Operator.IN, allowedEnvs.toArray());
+
+      previousOffSet = 0;
+      PageResponse<CVConfiguration> cvConfigurationPageResponse =
+          wingsPersistence.query(CVConfiguration.class, cvConfigurationPageRequest);
+      while (!cvConfigurationPageResponse.isEmpty()) {
+        cvConfigurationList.addAll(cvConfigurationPageResponse.getResponse());
+        previousOffSet += cvConfigurationPageResponse.size();
+        cvConfigurationPageRequest.setOffset(String.valueOf(previousOffSet));
+        cvConfigurationPageResponse = wingsPersistence.query(CVConfiguration.class, cvConfigurationPageRequest);
+      }
 
       if (isNotEmpty(cvConfigurationList)) {
         for (CVConfiguration cvConfiguration : cvConfigurationList) {
