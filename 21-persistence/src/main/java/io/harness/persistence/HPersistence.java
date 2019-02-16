@@ -1,6 +1,7 @@
 package io.harness.persistence;
 
 import com.mongodb.DBCollection;
+import com.mongodb.MongoSocketOpenException;
 import io.harness.annotation.StoreIn;
 import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -282,4 +283,22 @@ public interface HPersistence {
    * @return the key of the entity
    */
   <T extends PersistentEntity> String merge(T entity);
+
+  int RETRIES = 3;
+
+  interface Executor<R> {
+    R execute();
+  }
+
+  static <R> R retry(Executor<R> executor) {
+    for (int i = 1; i < RETRIES; ++i) {
+      try {
+        return executor.execute();
+      } catch (MongoSocketOpenException ignore) {
+        continue;
+      }
+    }
+    // one last try
+    return executor.execute();
+  }
 }

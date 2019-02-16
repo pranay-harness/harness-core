@@ -90,17 +90,21 @@ public class HQuery<T> extends QueryImpl<T> {
   @Override
   public List<Key<T>> asKeyList(FindOptions options) {
     enforceHarnessRules();
-    final List<Key<T>> list = super.asKeyList(options);
-    checkKeyListSize(list);
-    return list;
+    return HPersistence.retry(() -> {
+      final List<Key<T>> list = super.asKeyList(options);
+      checkKeyListSize(list);
+      return list;
+    });
   }
 
   @Override
   public List<T> asList(FindOptions options) {
     enforceHarnessRules();
-    final List<T> list = super.asList(options);
-    checkListSize(list);
-    return list;
+    return HPersistence.retry(() -> {
+      final List<T> list = super.asList(options);
+      checkListSize(list);
+      return list;
+    });
   }
 
   public MorphiaIterator<T, T> fetch() {
@@ -111,13 +115,13 @@ public class HQuery<T> extends QueryImpl<T> {
   @Override
   public MorphiaIterator<T, T> fetchEmptyEntities(FindOptions options) {
     enforceHarnessRules();
-    return super.fetchEmptyEntities(options);
+    return HPersistence.retry(() -> { return super.fetchEmptyEntities(options); });
   }
 
   @Override
   public MorphiaKeyIterator<T> fetchKeys(FindOptions options) {
     enforceHarnessRules();
-    return super.fetchKeys(options);
+    return HPersistence.retry(() -> { return super.fetchKeys(options); });
   }
 
   @Override
