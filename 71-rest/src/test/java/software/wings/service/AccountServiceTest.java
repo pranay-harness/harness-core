@@ -260,8 +260,9 @@ public class AccountServiceTest extends WingsBaseTest {
     List<Service> cvConfigs = accountService.getServicesBreadCrumb(accountId, user);
 
     // verify results
-    assertTrue("Service list should size 1", cvConfigs.size() == 2);
-    assertEquals("Service id should be same", serviceId, cvConfigs.get(1).getUuid());
+    assertTrue("Service list should size 2", cvConfigs.size() == 2);
+    assertTrue("Service id should be same",
+        serviceId.equals(cvConfigs.get(0).getUuid()) || serviceId.equals(cvConfigs.get(1).getUuid()));
     assertEquals("Service name should be same", "serviceTest", cvConfigs.get(0).getName());
   }
 
@@ -346,6 +347,7 @@ public class AccountServiceTest extends WingsBaseTest {
     config.setServiceId(serviceId);
     config.setEnvId(envId);
     config.setAppId(appId);
+    config.setEnabled24x7(true);
     config.setUuid(cvConfigId);
     config.setName("NewRelic");
     config.setStateType(StateType.NEW_RELIC);
