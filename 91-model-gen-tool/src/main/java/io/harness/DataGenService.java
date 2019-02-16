@@ -189,6 +189,8 @@ public class DataGenService {
    */
   public void populateData() throws IOException {
     dropDBAndEnsureIndexes();
+    templateGalleryService.loadHarnessGallery();
+    templateGalleryService.copyHarnessTemplates();
 
     final Seed seed = new Seed(0);
     Owners owners = ownerManager.create();
