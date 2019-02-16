@@ -200,7 +200,8 @@ public class MongoPersistence implements HPersistence {
   @Override
   public <T extends PersistentEntity> String save(T entity) {
     onSave(entity);
-    return getDatastore(entity, NORMAL).save(entity).getId().toString();
+    final AdvancedDatastore datastore = getDatastore(entity, NORMAL);
+    return HPersistence.retry(() -> { return datastore.save(entity).getId().toString(); });
   }
 
   @Override
@@ -233,7 +234,7 @@ public class MongoPersistence implements HPersistence {
     InsertOptions insertOptions = new InsertOptions();
     insertOptions.continueOnError(true);
     try {
-      datastore.insert(ts, insertOptions);
+      HPersistence.retry(() -> { return datastore.insert(ts, insertOptions); });
     } catch (DuplicateKeyException ignore) {
       // ignore
     }
@@ -246,26 +247,35 @@ public class MongoPersistence implements HPersistence {
 
   @Override
   public <T extends PersistentEntity> T get(Class<T> cls, String id, ReadPref readPref) {
-    return createQuery(cls, readPref).filter(ID_KEY, id).get();
+    final Query<T> query = createQuery(cls, readPref).filter(ID_KEY, id);
+    return HPersistence.retry(() -> { return query.get(); });
   }
 
   @Override
   public <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid) {
     final AdvancedDatastore datastore = getDatastore(cls, NORMAL);
-    WriteResult result = datastore.delete(cls, uuid);
-    return !(result == null || result.getN() == 0);
+    return HPersistence.retry(() -> {
+      WriteResult result = datastore.delete(cls, uuid);
+      return !(result == null || result.getN() == 0);
+    });
   }
 
   @Override
   public <T extends PersistentEntity> boolean delete(Query<T> query) {
-    WriteResult result = getDatastore(query.getEntityClass(), NORMAL).delete(query);
-    return !(result == null || result.getN() == 0);
+    final AdvancedDatastore datastore = getDatastore(query.getEntityClass(), NORMAL);
+    return HPersistence.retry(() -> {
+      WriteResult result = datastore.delete(query);
+      return !(result == null || result.getN() == 0);
+    });
   }
 
   @Override
   public <T extends PersistentEntity> boolean delete(T entity) {
-    WriteResult result = getDatastore(entity, NORMAL).delete(entity);
-    return !(result == null || result.getN() == 0);
+    final AdvancedDatastore datastore = getDatastore(entity, NORMAL);
+    return HPersistence.retry(() -> {
+      WriteResult result = datastore.delete(entity);
+      return !(result == null || result.getN() == 0);
+    });
   }
 
   @Override
@@ -286,7 +296,8 @@ public class MongoPersistence implements HPersistence {
 
     onUpdate(query, updateOperations, currentTime);
     // TODO: this ignores the read preferences in the query
-    return getDatastore(query.getEntityClass(), NORMAL).findAndModify(query, updateOperations, options);
+    final AdvancedDatastore datastore = getDatastore(query.getEntityClass(), NORMAL);
+    return HPersistence.retry(() -> { return datastore.findAndModify(query, updateOperations, options); });
   }
 
   private <T extends PersistentEntity> void onUpdate(
@@ -305,7 +316,8 @@ public class MongoPersistence implements HPersistence {
     // TODO: add encryption handling; right now no encrypted classes use update
     // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
     onEntityUpdate(entity, currentTimeMillis());
-    return getDatastore(entity, NORMAL).update(entity, ops);
+    final AdvancedDatastore datastore = getDatastore(entity, NORMAL);
+    return HPersistence.retry(() -> { return datastore.update(entity, ops); });
   }
 
   @Override
@@ -313,25 +325,29 @@ public class MongoPersistence implements HPersistence {
     // TODO: add encryption handling; right now no encrypted classes use update
     // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
     onUpdate(updateQuery, updateOperations, currentTimeMillis());
-    return getDatastore(updateQuery.getEntityClass(), NORMAL).update(updateQuery, updateOperations);
+    final AdvancedDatastore datastore = getDatastore(updateQuery.getEntityClass(), NORMAL);
+    return HPersistence.retry(() -> { return datastore.update(updateQuery, updateOperations); });
   }
 
   @Override
   public <T extends PersistentEntity> T findAndModify(
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions) {
     onUpdate(query, updateOperations, currentTimeMillis());
-    return getDatastore(query.getEntityClass(), CRITICAL).findAndModify(query, updateOperations, findAndModifyOptions);
+    final AdvancedDatastore datastore = getDatastore(query.getEntityClass(), CRITICAL);
+    return HPersistence.retry(() -> { return datastore.findAndModify(query, updateOperations, findAndModifyOptions); });
   }
 
   @Override
   public <T extends PersistentEntity> T findAndModifySystemData(
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions) {
-    return getDatastore(query.getEntityClass(), CRITICAL).findAndModify(query, updateOperations, findAndModifyOptions);
+    final AdvancedDatastore datastore = getDatastore(query.getEntityClass(), CRITICAL);
+    return HPersistence.retry(() -> { return datastore.findAndModify(query, updateOperations, findAndModifyOptions); });
   }
 
   @Override
   public <T extends PersistentEntity> String merge(T entity) {
     onEntityUpdate(entity, currentTimeMillis());
-    return getDatastore(entity, NORMAL).merge(entity).getId().toString();
+    final AdvancedDatastore datastore = getDatastore(entity, NORMAL);
+    return HPersistence.retry(() -> { return datastore.merge(entity).getId().toString(); });
   }
 }
