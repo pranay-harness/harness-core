@@ -371,8 +371,9 @@ public class AuthHandler {
                 addToExistingEntityIdSet(finalAppPermissionSummary.getWorkflowCreatePermissionsForEnvs(), envIdSet);
             finalAppPermissionSummary.setWorkflowCreatePermissionsForEnvs(updatedEnvIdSet);
 
-            if (entityFilter != null && !finalAppPermissionSummary.isCanCreateTemplatizedWorkflow()) {
-              Set<String> filterTypes = ((WorkflowFilter) entityFilter).getFilterTypes();
+            if (!finalAppPermissionSummary.isCanCreateTemplatizedWorkflow()) {
+              WorkflowFilter workflowFilter = getDefaultWorkflowFilterIfNull((WorkflowFilter) entityFilter);
+              Set<String> filterTypes = workflowFilter.getFilterTypes();
               if (isNotEmpty(filterTypes)) {
                 boolean hasTemplateFilterType = filterTypes.contains(WorkflowFilter.FilterType.TEMPLATES);
                 finalAppPermissionSummary.setCanCreateTemplatizedWorkflow(hasTemplateFilterType);
@@ -989,16 +990,21 @@ public class AuthHandler {
     return existingEnvTypes;
   }
 
+  private WorkflowFilter getDefaultWorkflowFilterIfNull(WorkflowFilter workflowFilter) {
+    if (workflowFilter == null || isEmpty(workflowFilter.getFilterTypes())) {
+      workflowFilter = new WorkflowFilter();
+      workflowFilter.setFilterTypes(Sets.newHashSet(PROD, NON_PROD, WorkflowFilter.FilterType.TEMPLATES));
+    }
+    return workflowFilter;
+  }
+
   private Set<String> getWorkflowIdsByFilter(
       List<Base> workflows, List<Base> environments, WorkflowFilter workflowFilter) {
     if (workflows == null) {
       return new HashSet<>();
     }
 
-    if (workflowFilter == null || isEmpty(workflowFilter.getFilterTypes())) {
-      workflowFilter = new WorkflowFilter();
-      workflowFilter.setFilterTypes(Sets.newHashSet(PROD, NON_PROD, WorkflowFilter.FilterType.TEMPLATES));
-    }
+    workflowFilter = getDefaultWorkflowFilterIfNull(workflowFilter);
 
     Set<String> filterEnvIds = workflowFilter.getIds();
     if (filterEnvIds == null) {
