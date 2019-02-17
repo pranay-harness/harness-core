@@ -2127,7 +2127,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else if (workflowPhase != null && HELM.equals(workflowPhase.getDeploymentType())
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
         String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
-        if (infraMappingId != null) {
+        if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)) {
           InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
           if (infrastructureMapping != null) {
             if (serviceResourceService.checkArtifactNeededForHelm(
@@ -2144,7 +2144,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
 
         String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
-        if (isNotEmpty(getInfraMappingId(workflowPhase, workflowVariables))
+        if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)
             && k8sStateHelper.doManifestsUseArtifact(appId, infraMappingId)) {
           artifactNeeded = true;
           break;
