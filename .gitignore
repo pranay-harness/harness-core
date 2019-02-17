@@ -11,6 +11,7 @@
 .idea
 .project
 .settings
+setting.xml
 access*gz
 access.log
 delegate-gc-logs.gc
