@@ -48,7 +48,7 @@ public class Application extends Base {
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<Environment> environments = new ArrayList<>();
 
-  @Transient private Setup setup;
+  private transient Setup setup;
   @Transient private List<WorkflowExecution> recentExecutions;
   @Transient private List<Notification> notifications;
   @Transient private long nextDeploymentOn;
