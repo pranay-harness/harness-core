@@ -14,12 +14,6 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>14-api-services-beans</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
