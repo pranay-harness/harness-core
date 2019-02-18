@@ -21,6 +21,7 @@ import lombok.Setter;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.security.UserThreadLocal;
 
 import java.util.ArrayList;
@@ -70,10 +71,14 @@ public class Base
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
-  // TODO: Add isDeleted boolean field to enable soft delete. @swagat
+  /**
+   * TODO: Add isDeleted boolean field to enable soft delete. @swagat
+   */
 
-  // TODO:: remove it with changeSet batching
-  @SchemaIgnore @JsonIgnore private transient String entityYamlPath;
+  @SchemaIgnore
+  @JsonIgnore
+  @Transient
+  private transient String entityYamlPath; // TODO:: remove it with changeSet batching
 
   @JsonIgnore
   @SchemaIgnore

@@ -87,16 +87,8 @@ public class HQuery<T> extends QueryImpl<T> {
     }
   }
 
-  public T get() {
-    return HPersistence.retry(() -> super.get());
-  }
-
   public T get(FindOptions options) {
     return HPersistence.retry(() -> super.get(options));
-  }
-
-  public Key<T> getKey() {
-    return HPersistence.retry(() -> super.getKey());
   }
 
   public Key<T> getKey(FindOptions options) {

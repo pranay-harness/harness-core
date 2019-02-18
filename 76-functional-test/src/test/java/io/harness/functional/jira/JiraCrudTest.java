@@ -32,7 +32,6 @@ import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
 import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -79,7 +78,6 @@ public class JiraCrudTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Ignore
   public void shouldCreateJiraStepinWorkflow() {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();

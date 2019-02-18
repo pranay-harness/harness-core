@@ -19,6 +19,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 
 import java.util.ArrayList;
@@ -52,17 +53,17 @@ public class Workflow extends Base {
 
   @SchemaIgnore @Indexed @Getter @Setter private List<String> keywords;
 
-  private transient String notes;
+  @Transient private String notes;
 
-  private transient OrchestrationWorkflow orchestrationWorkflow;
+  @Transient private OrchestrationWorkflow orchestrationWorkflow;
 
-  private transient List<Service> services = new ArrayList<>();
-  private transient List<WorkflowExecution> workflowExecutions = new ArrayList<>();
+  @Transient private List<Service> services = new ArrayList<>();
+  @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
   // Only for UI payload to support BasicOrchestration workflow {{
-  private transient String serviceId;
-  private transient String infraMappingId;
-  @Getter @Setter private transient WorkflowCreationFlags creationFlags;
+  @Transient private String serviceId;
+  @Transient private String infraMappingId;
+  @Transient @Getter @Setter private WorkflowCreationFlags creationFlags;
   // }}
 
   private transient List<String> templatizedServiceIds = new ArrayList<>();
