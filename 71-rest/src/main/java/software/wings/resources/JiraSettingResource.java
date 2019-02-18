@@ -81,7 +81,8 @@ public class JiraSettingResource {
   @Timed
   @ExceptionMetered
   public RestResponse getCreateMetadata(@QueryParam("appId") String appId,
-      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("connectorId") String connectorId) {
-    return new RestResponse<>(jiraHelperService.getCreateMetadata(connectorId, accountId, appId));
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("connectorId") String connectorId,
+      @QueryParam("expand") String expand, @QueryParam("project") String project) {
+    return new RestResponse<>(jiraHelperService.getCreateMetadata(connectorId, expand, project, accountId, appId));
   }
 }

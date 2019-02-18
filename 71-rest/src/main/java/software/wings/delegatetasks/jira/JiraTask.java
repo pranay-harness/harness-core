@@ -132,7 +132,12 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     try {
       JiraClient jiraClient = getJiraClient(parameters);
       Map<String, String> queryParams = new HashMap<>();
-      queryParams.put("expand", "projects.issuetypes.fields");
+      if (EmptyPredicate.isNotEmpty(parameters.getCreatemetaExpandParam())) {
+        queryParams.put("expand", parameters.getCreatemetaExpandParam());
+      } else {
+        queryParams.put("expand", "projects.issuetypes.fields");
+      }
+      queryParams.put("projectKeys", parameters.getProject());
 
       uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/createmeta", queryParams);
 
@@ -143,7 +148,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .createMetadata((JSONObject) response)
           .build();
     } catch (URISyntaxException | RestException | IOException | JiraException | RuntimeException e) {
-      String errorMessage = "Failed to fetch issue metadata from JIRA server.";
+      String errorMessage = "Failed to fetch issue metadata from Jira server.";
       logger.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
@@ -161,7 +166,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .statuses((JSONArray) response)
           .build();
     } catch (URISyntaxException | RestException | IOException | JiraException | RuntimeException e) {
-      String errorMessage = "Failed to fetch statuses from JIRA server.";
+      String errorMessage = "Failed to fetch statuses from Jira server.";
       logger.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
@@ -183,7 +188,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       return JiraExecutionData.builder().fields((JSONObject) response).executionStatus(ExecutionStatus.SUCCESS).build();
     } catch (URISyntaxException | IOException | RestException | JiraException | RuntimeException e) {
-      String errorMessage = "Failed to fetch fields from JIRA server.";
+      String errorMessage = "Failed to fetch fields from Jira server.";
       logger.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
@@ -197,7 +202,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       JSONArray projectsArray = JSONArray.fromObject(response);
       return JiraExecutionData.builder().projects(projectsArray).executionStatus(ExecutionStatus.SUCCESS).build();
     } catch (URISyntaxException | IOException | RestException | JiraException | RuntimeException e) {
-      String errorMessage = "Failed to fetch projects from JIRA server.";
+      String errorMessage = "Failed to fetch projects from Jira server.";
       logger.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
