@@ -25,6 +25,7 @@ public class JiraTaskParameters {
   private String issueId;
   private String status;
   private String comment;
+  private String createmetaExpandParam;
   List<EncryptedDataDetail> encryptionDetails;
 
   private String accountId;

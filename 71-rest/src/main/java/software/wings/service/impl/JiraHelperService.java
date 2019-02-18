@@ -228,9 +228,13 @@ public class JiraHelperService {
     }
   }
 
-  public Object getCreateMetadata(String connectorId, String accountId, String appId) {
-    JiraTaskParameters jiraTaskParameters =
-        JiraTaskParameters.builder().accountId(accountId).jiraAction(JiraAction.GET_CREATE_METADATA).build();
+  public Object getCreateMetadata(String connectorId, String expand, String project, String accountId, String appId) {
+    JiraTaskParameters jiraTaskParameters = JiraTaskParameters.builder()
+                                                .accountId(accountId)
+                                                .jiraAction(JiraAction.GET_CREATE_METADATA)
+                                                .createmetaExpandParam(expand)
+                                                .project(project)
+                                                .build();
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
     if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
