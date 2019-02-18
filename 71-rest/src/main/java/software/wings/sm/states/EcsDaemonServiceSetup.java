@@ -1,107 +1,170 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.exception.ExceptionUtils.getMessage;
+import static java.util.Collections.singletonList;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.command.CommandExecutionResult;
-import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import lombok.Getter;
+import lombok.Setter;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
-import software.wings.beans.Application;
-import software.wings.beans.ContainerInfrastructureMapping;
-import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.Service;
+import software.wings.api.PhaseElement;
+import software.wings.beans.Activity;
+import software.wings.beans.DeploymentExecutionContext;
+import software.wings.beans.ResizeStrategy;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
-import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.EcsSetupParams;
-import software.wings.beans.container.ContainerTask;
-import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
+import software.wings.common.Constants;
+import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
+import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
+import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
+import software.wings.service.impl.artifact.ArtifactCollectionUtil;
+import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.State;
 
-import java.util.List;
+import java.util.Map;
 
-/**
- * Created by peeyushaggarwal on 2/3/17.
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EcsDaemonServiceSetup extends ContainerServiceSetup {
-  // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/ECSLoadBalancerModal.js
+public class EcsDaemonServiceSetup extends State {
+  public static final String ECS_DAEMON_SERVICE_SETUP_COMMAND = "ECS Daemon Service Setup";
 
-  private static final Logger logger = LoggerFactory.getLogger(EcsDaemonServiceSetup.class);
+  @Getter @Setter private String ecsServiceName;
+  @Getter @Setter private String maxInstances;
+  @Getter @Setter private String fixedInstances;
+  @Getter @Setter private boolean useLoadBalancer;
+  @Getter @Setter private String loadBalancerName;
+  @Getter @Setter private String targetGroupArn;
+  @Getter @Setter private String roleArn;
+  @Getter @Setter private String targetContainerName;
+  @Getter @Setter private String targetPort;
+  @Getter @Setter private String desiredInstanceCount;
+  @Getter @Setter private int serviceSteadyStateTimeout;
+  @Getter @Setter private ResizeStrategy resizeStrategy;
 
-  private String ecsServiceName;
-  private boolean useLoadBalancer;
-  private String loadBalancerName;
-  private String targetGroupArn;
-  private String roleArn;
-  private String targetContainerName;
-  private String targetPort;
-  private String commandName = "Setup Service Cluster";
-  @Inject EcsStateHelper ecsStateHelper;
+  @Inject private transient SecretManager secretManager;
+  @Inject private transient EcsStateHelper ecsStateHelper;
+  @Inject private transient ActivityService activityService;
+  @Inject private transient SettingsService settingsService;
+  @Inject private transient DelegateService delegateService;
+  @Inject private transient ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private transient ServiceResourceService serviceResourceService;
+  @Inject private transient InfrastructureMappingService infrastructureMappingService;
 
-  /**
-   * Instantiates a new state.
-   *
-   * @param name the name
-   */
   public EcsDaemonServiceSetup(String name) {
     super(name, ECS_DAEMON_SERVICE_SETUP.name());
   }
 
   @Override
-  protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
-      ImageDetails imageDetails, Application app, Environment env, Service service,
-      ContainerInfrastructureMapping infrastructureMapping, ContainerTask containerTask, String clusterName) {
-    int serviceSteadyStateTimeout =
-        getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
-
-    EcsServiceSpecification serviceSpecification =
-        serviceResourceService.getEcsServiceSpecification(app.getUuid(), service.getUuid());
-    return ecsStateHelper.buildContainerSetupParams(context,
-        EcsSetupStateConfig.builder()
-            .app(app)
-            .env(env)
-            .service(service)
-            .infrastructureMapping(infrastructureMapping)
-            .clusterName(clusterName)
-            .containerTask(containerTask)
-            .ecsServiceName(ecsServiceName)
-            .imageDetails(imageDetails)
-            .loadBalancerName(loadBalancerName)
-            .roleArn(roleArn)
-            .serviceSteadyStateTimeout(serviceSteadyStateTimeout)
-            .targetContainerName(targetContainerName)
-            .targetGroupArn(targetGroupArn)
-            .targetPort(targetPort)
-            .useLoadBalancer(useLoadBalancer)
-            .serviceName(serviceName)
-            .ecsServiceSpecification(serviceSpecification)
-            .isDaemonSchedulingStrategy(true)
-            .build());
-  }
-
-  private String[] getSubnetArray(List<String> input) {
-    if (CollectionUtils.isEmpty(input)) {
-      return new String[0];
-    } else {
-      return input.toArray(new String[0]);
+  public ExecutionResponse execute(ExecutionContext context) {
+    try {
+      return executeInternal(context);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(getMessage(e), e);
     }
   }
 
   @Override
-  protected ContainerServiceElement buildContainerServiceElement(ExecutionContext context,
-      CommandExecutionResult executionResult, ExecutionStatus status, ImageDetails imageDetails) {
+  public void handleAbortEvent(ExecutionContext context) {}
+
+  private ExecutionResponse executeInternal(ExecutionContext context) {
+    EcsSetUpDataBag dataBag = ecsStateHelper.prepareBagForEcsSetUp(context, serviceSteadyStateTimeout,
+        artifactCollectionUtil, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
+
+    Activity activity = ecsStateHelper.createActivity(context, ECS_DAEMON_SERVICE_SETUP_COMMAND, getStateType(),
+        CommandUnitType.AWS_ECS_SERVICE_SETUP_DAEMON, activityService);
+
+    EcsSetupParams ecsSetupParams = (EcsSetupParams) ecsStateHelper.buildContainerSetupParams(context,
+        EcsSetupStateConfig.builder()
+            .app(dataBag.getApplication())
+            .env(dataBag.getEnvironment())
+            .service(dataBag.getService())
+            .infrastructureMapping(dataBag.getEcsInfrastructureMapping())
+            .clusterName(dataBag.getEcsInfrastructureMapping().getClusterName())
+            .containerTask(dataBag.getContainerTask())
+            .ecsServiceName(ecsServiceName)
+            .imageDetails(dataBag.getImageDetails())
+            .loadBalancerName(loadBalancerName)
+            .roleArn(roleArn)
+            .serviceSteadyStateTimeout(dataBag.getServiceSteadyStateTimeout())
+            .targetContainerName(targetContainerName)
+            .targetGroupArn(targetGroupArn)
+            .targetPort(targetPort)
+            .useLoadBalancer(useLoadBalancer)
+            .serviceName(dataBag.getService().getName())
+            .ecsServiceSpecification(dataBag.getServiceSpecification())
+            .isDaemonSchedulingStrategy(true)
+            .build());
+
+    CommandStateExecutionData stateExecutionData =
+        ecsStateHelper.getStateExecutionData(dataBag, ECS_DAEMON_SERVICE_SETUP_COMMAND, ecsSetupParams, activity);
+
+    EcsSetupContextVariableHolder variables = ecsStateHelper.renderEcsSetupContextVariables(context);
+
+    EcsServiceSetupRequest request = EcsServiceSetupRequest.builder()
+                                         .ecsSetupParams(ecsSetupParams)
+                                         .awsConfig(dataBag.getAwsConfig())
+                                         .clusterName(ecsSetupParams.getClusterName())
+                                         .region(ecsSetupParams.getRegion())
+                                         .accountId(dataBag.getApplication().getAccountId())
+                                         .appId(dataBag.getApplication().getUuid())
+                                         .commandName(ECS_DAEMON_SERVICE_SETUP_COMMAND)
+                                         .activityId(activity.getUuid())
+                                         .safeDisplayServiceVariables(variables.getSafeDisplayServiceVariables())
+                                         .serviceVariables(variables.getServiceVariables())
+                                         .build();
+
+    String delegateTaskId =
+        ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(request, dataBag, activity, delegateService);
+
+    return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(singletonList(activity.getUuid()))
+        .withStateExecutionData(stateExecutionData)
+        .withDelegateTaskId(delegateTaskId)
+        .build();
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    try {
+      return handleAsyncInternal(context, response);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(getMessage(e), e);
+    }
+  }
+
+  private ContainerServiceElement buildContainerServiceElement(
+      ExecutionContext context, ContainerSetupCommandUnitExecutionData setupExecutionData, ImageDetails imageDetails) {
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     EcsSetupParams setupParams = (EcsSetupParams) executionData.getContainerSetupParams();
     int serviceSteadyStateTimeout =
@@ -114,92 +177,42 @@ public class EcsDaemonServiceSetup extends ContainerServiceSetup {
             .clusterName(executionData.getClusterName())
             .deploymentType(DeploymentType.ECS)
             .infraMappingId(setupParams.getInfraMappingId());
-    if (executionResult != null) {
-      ContainerSetupCommandUnitExecutionData setupExecutionData =
-          (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
-      if (setupExecutionData != null) {
-        containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName());
-      }
+    if (setupExecutionData != null) {
+      containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName());
     }
     return containerServiceElementBuilder.build();
   }
 
-  @Override
-  protected String getDeploymentType() {
-    return DeploymentType.ECS.name();
-  }
+  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+    String activityId = response.keySet().iterator().next();
+    EcsCommandExecutionResponse executionResponse = (EcsCommandExecutionResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus =
+        CommandExecutionStatus.SUCCESS.equals(executionResponse.getCommandExecutionStatus()) ? SUCCESS : FAILED;
+    activityService.updateStatus(activityId, context.getAppId(), executionStatus);
 
-  @Override
-  public String getCommandName() {
-    return commandName;
-  }
+    EcsServiceSetupResponse ecsServiceSetupResponse =
+        (EcsServiceSetupResponse) executionResponse.getEcsCommandResponse();
+    ContainerSetupCommandUnitExecutionData setupExecutionData = ecsServiceSetupResponse.getSetupData();
+    CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
+    if (artifact == null) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
+    }
+    ImageDetails imageDetails = artifactCollectionUtil.fetchContainerImageDetails(
+        artifact, context.getAppId(), context.getWorkflowExecutionId());
 
-  @Override
-  protected boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping) {
-    return infrastructureMapping instanceof EcsInfrastructureMapping;
-  }
+    ContainerServiceElement containerServiceElement =
+        buildContainerServiceElement(context, setupExecutionData, imageDetails);
 
-  protected String getClusterNameFromContextElement(ExecutionContext context) {
-    return super.getClusterNameFromContextElement(context).split("/")[1];
-  }
+    ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
 
-  public void setCommandName(String commandName) {
-    this.commandName = commandName;
-  }
-
-  public void setLoadBalancerName(String loadBalancerName) {
-    this.loadBalancerName = loadBalancerName;
-  }
-
-  public String getLoadBalancerName() {
-    return loadBalancerName;
-  }
-
-  public void setTargetGroupArn(String targetGroupArn) {
-    this.targetGroupArn = targetGroupArn;
-  }
-
-  public String getTargetGroupArn() {
-    return targetGroupArn;
-  }
-
-  public void setRoleArn(String roleArn) {
-    this.roleArn = roleArn;
-  }
-
-  public String getRoleArn() {
-    return roleArn;
-  }
-
-  public void setTargetContainerName(String targetContainerName) {
-    this.targetContainerName = targetContainerName;
-  }
-
-  public String getTargetContainerName() {
-    return targetContainerName;
-  }
-
-  public boolean isUseLoadBalancer() {
-    return useLoadBalancer;
-  }
-
-  public void setUseLoadBalancer(boolean useLoadBalancer) {
-    this.useLoadBalancer = useLoadBalancer;
-  }
-
-  public String getEcsServiceName() {
-    return ecsServiceName;
-  }
-
-  public void setEcsServiceName(String ecsServiceName) {
-    this.ecsServiceName = ecsServiceName;
-  }
-
-  public String getTargetPort() {
-    return targetPort;
-  }
-
-  public void setTargetPort(String targetPort) {
-    this.targetPort = targetPort;
+    return anExecutionResponse()
+        .withStateExecutionData(executionData)
+        .withExecutionStatus(executionStatus)
+        .addContextElement(containerServiceElement)
+        .addNotifyElement(containerServiceElement)
+        .build();
   }
 }

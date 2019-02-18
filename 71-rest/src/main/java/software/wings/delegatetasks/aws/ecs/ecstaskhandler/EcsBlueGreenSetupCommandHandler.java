@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -62,11 +63,10 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
     }
 
     EcsBGServiceSetupRequest ecsBGServiceSetupRequest = (EcsBGServiceSetupRequest) ecsCommandRequest;
-    this.executionLogCallback = ecsBGServiceSetupRequest.getExecutionLogCallback();
 
     EcsSetupParams setupParams = ecsBGServiceSetupRequest.getEcsSetupParams();
     ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder =
-        ecsBGServiceSetupRequest.getCommandUnitExecutionDataBuilder();
+        ContainerSetupCommandUnitExecutionData.builder();
     commandExecutionDataBuilder.ecsRegion(setupParams.getRegion());
     setTargetGroupForProdListener(
         encryptedDataDetails, ecsBGServiceSetupRequest, setupParams, commandExecutionDataBuilder);
@@ -83,6 +83,7 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
         aSettingAttribute().withValue(ecsBGServiceSetupRequest.getAwsConfig()).build(), encryptedDataDetails,
         commandExecutionDataBuilder, executionLogCallback);
 
+    ecsCommandResponse.setSetupData(commandExecutionDataBuilder.build());
     return EcsCommandExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
         .ecsCommandResponse(ecsCommandResponse)

@@ -10,8 +10,11 @@ import software.wings.beans.NotificationChannelType;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
+import software.wings.helpers.ext.ecs.request.EcsBGServiceSetupRequest;
+import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateResponse;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
+import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sDeleteResponse;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
@@ -46,5 +49,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PcfInfraMappingDataRequest.ActionType.class, 7118);
     kryo.register(SlackNotificationSetting.class, 7119);
     kryo.register(AwsAmiSetupExecutionData.class, 7120);
+    kryo.register(EcsServiceSetupRequest.class, 7121);
+    kryo.register(EcsServiceSetupResponse.class, 7122);
+    kryo.register(EcsBGServiceSetupRequest.class, 7123);
   }
 }

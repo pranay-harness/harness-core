@@ -9,7 +9,6 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
@@ -53,7 +52,7 @@ public class EcsBGUpdateListnerState extends State {
   @Inject private transient SettingsService settingsService;
   @Inject private transient ActivityService activityService;
   @Inject private transient EcsStateHelper ecsStateHelper;
-  @Inject @Transient protected transient LogService logService;
+  @Inject protected transient LogService logService;
 
   public static final String ECS_UPDATE_LISTENER_COMMAND = "ECS Update Listener Command";
 
