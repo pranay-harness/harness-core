@@ -48,7 +48,7 @@ public class JiraExecutionData extends StateExecutionData implements ResponseDat
     putNotNull(
         executionDetails, "issueUrl", ExecutionDataValue.builder().displayName("Issue Url").value(issueUrl).build());
     putNotNull(executionDetails, "jiraServerResponse",
-        ExecutionDataValue.builder().displayName("JIRA Response").value(getJiraServerResponse()).build());
+        ExecutionDataValue.builder().displayName("Jira Response").value(getJiraServerResponse()).build());
     return executionDetails;
   }
 }
