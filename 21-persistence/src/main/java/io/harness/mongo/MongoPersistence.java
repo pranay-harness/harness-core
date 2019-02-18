@@ -248,7 +248,7 @@ public class MongoPersistence implements HPersistence {
   @Override
   public <T extends PersistentEntity> T get(Class<T> cls, String id, ReadPref readPref) {
     final Query<T> query = createQuery(cls, readPref).filter(ID_KEY, id);
-    return HPersistence.retry(() -> { return query.get(); });
+    return query.get();
   }
 
   @Override

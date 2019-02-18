@@ -13,6 +13,7 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.distribution.barrier.Barrier;
 import lombok.Getter;
 import lombok.Setter;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.BarrierExecutionData;
 import software.wings.beans.BarrierInstance;
 import software.wings.service.intfc.BarrierService;
@@ -61,7 +62,7 @@ public class BarrierState extends State {
   private static String errorMsg =
       "The barrier endures since some of the tasks failed before all instances were reached.";
 
-  @Inject private transient BarrierService barrierService;
+  @Inject @Transient private transient BarrierService barrierService;
 
   @Getter @Setter @Attributes(title = "Identifier") private String identifier;
 
