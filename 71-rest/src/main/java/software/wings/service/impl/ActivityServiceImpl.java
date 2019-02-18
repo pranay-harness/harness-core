@@ -130,6 +130,11 @@ public class ActivityServiceImpl implements ActivityService {
         case KUBERNETES_SWAP_SERVICE_SELECTORS:
         case AWS_ECS_UPDATE_LISTENER_BG:
         case AWS_ECS_UPDATE_ROUTE_53_DNS_WEIGHT:
+        case AWS_ECS_SERVICE_SETUP:
+        case AWS_ECS_SERVICE_SETUP_ROUTE53:
+        case AWS_ECS_SERVICE_SETUP_ELB:
+        case AWS_ECS_SERVICE_SETUP_DAEMON:
+        case AWS_ECS_SERVICE_ROLLBACK_DAEMON:
           rv.add(CommandUnitDetails.builder()
                      .commandExecutionStatus(ExecutionStatus.translateExecutionStatus(activity.getStatus()))
                      .name(activity.getCommandUnitType().getName())

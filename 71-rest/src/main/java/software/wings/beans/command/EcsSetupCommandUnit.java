@@ -21,7 +21,6 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsBlueGreenSetupComm
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandHandler;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGServiceSetupRequest;
-import software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType;
 import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
@@ -90,9 +89,6 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
                                            .region(containerSetupParams.getRegion())
                                            .safeDisplayServiceVariables(safeDisplayServiceVariables)
                                            .serviceVariables(serviceVariables)
-                                           .commandUnitExecutionDataBuilder(commandExecutionDataBuilder)
-                                           .executionLogCallback(executionLogCallback)
-                                           .ecsCommandType(EcsCommandType.SERVICE_SETUP)
                                            .build(),
         encryptedDataDetails);
 
@@ -112,8 +108,6 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
                                                            .region(containerSetupParams.getRegion())
                                                            .safeDisplayServiceVariables(safeDisplayServiceVariables)
                                                            .serviceVariables(serviceVariables)
-                                                           .commandUnitExecutionDataBuilder(commandExecutionDataBuilder)
-                                                           .executionLogCallback(executionLogCallback)
                                                            .build(),
         encryptedDataDetails);
     return CommandExecutionStatus.SUCCESS;
@@ -132,8 +126,6 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
                                                     .region(containerSetupParams.getRegion())
                                                     .safeDisplayServiceVariables(safeDisplayServiceVariables)
                                                     .serviceVariables(serviceVariables)
-                                                    .commandUnitExecutionDataBuilder(commandExecutionDataBuilder)
-                                                    .executionLogCallback(executionLogCallback)
                                                     .build(),
         encryptedDataDetails);
     return CommandExecutionStatus.SUCCESS;

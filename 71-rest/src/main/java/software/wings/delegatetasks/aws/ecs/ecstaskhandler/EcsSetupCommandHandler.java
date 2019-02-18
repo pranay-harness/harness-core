@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -22,7 +23,6 @@ import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
-import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -33,14 +33,13 @@ import java.util.Optional;
 @Singleton
 public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
   private static final Logger logger = LoggerFactory.getLogger(EcsSetupCommandHandler.class);
-  private static final String DELIMITER = "__";
   @Inject private AwsHelperService awsHelperService;
   @Inject private EcsContainerService ecsContainerService;
   @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
 
   public EcsCommandExecutionResponse executeTaskInternal(
       EcsCommandRequest ecsCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
-    EcsCommandResponse commandResponse =
+    EcsServiceSetupResponse commandResponse =
         EcsServiceSetupResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
 
     if (!(ecsCommandRequest instanceof EcsServiceSetupRequest)) {
@@ -53,38 +52,36 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
     }
 
     EcsServiceSetupRequest ecsServiceSetupRequest = (EcsServiceSetupRequest) ecsCommandRequest;
-    this.executionLogCallback = ecsServiceSetupRequest.getExecutionLogCallback();
     EcsSetupParams setupParams = ecsServiceSetupRequest.getEcsSetupParams();
-
     ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder =
-        ecsServiceSetupRequest.getCommandUnitExecutionDataBuilder();
+        ContainerSetupCommandUnitExecutionData.builder();
     commandExecutionDataBuilder.ecsRegion(setupParams.getRegion());
 
     SettingAttribute cloudProviderSetting =
         aSettingAttribute().withValue(ecsServiceSetupRequest.getAwsConfig()).build();
+
     // Rollback Setup happens for ECS Daemon service, as for daemon scheduling strategy actual deployment happens in
-    // setup state. in this case, we dont need to launch actual tasks, as ECS will schedule 1 task per instance in
+    // setup state. In this case, we don't need to launch actual tasks, as ECS will schedule 1 task per instance in
     // cluster so only thing we need to do is, create taskDefinition and service.
     if (setupParams.isRollback()) {
       ecsSetupCommandTaskHelper.handleRollback(
           setupParams, cloudProviderSetting, commandExecutionDataBuilder, encryptedDataDetails, executionLogCallback);
-      // return CommandExecutionStatus.SUCCESS;
-    }
-
-    // 1. Create new Task Definition
-    TaskDefinition taskDefinition = ecsSetupCommandTaskHelper.createTaskDefinition(
-        ecsServiceSetupRequest.getAwsConfig(), encryptedDataDetails, ecsServiceSetupRequest.getServiceVariables(),
-        ecsServiceSetupRequest.getSafeDisplayServiceVariables(), executionLogCallback, setupParams);
-
-    // 2. Create ECS Service
-    if (!setupParams.isDaemonSchedulingStrategy()) {
-      createServiceWithReplicaSchedulingStrategy(setupParams, taskDefinition, cloudProviderSetting,
-          encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback);
     } else {
-      handleDaemonServiceRequest(setupParams, taskDefinition, executionLogCallback, cloudProviderSetting,
-          encryptedDataDetails, commandExecutionDataBuilder);
-    }
+      // 1. Create new Task Definition
+      TaskDefinition taskDefinition = ecsSetupCommandTaskHelper.createTaskDefinition(
+          ecsServiceSetupRequest.getAwsConfig(), encryptedDataDetails, ecsServiceSetupRequest.getServiceVariables(),
+          ecsServiceSetupRequest.getSafeDisplayServiceVariables(), executionLogCallback, setupParams);
 
+      // 2. Create ECS Service
+      if (!setupParams.isDaemonSchedulingStrategy()) {
+        createServiceWithReplicaSchedulingStrategy(setupParams, taskDefinition, cloudProviderSetting,
+            encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback);
+      } else {
+        handleDaemonServiceRequest(setupParams, taskDefinition, executionLogCallback, cloudProviderSetting,
+            encryptedDataDetails, commandExecutionDataBuilder);
+      }
+    }
+    commandResponse.setSetupData(commandExecutionDataBuilder.build());
     return EcsCommandExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
         .ecsCommandResponse(commandResponse)
