@@ -15,7 +15,7 @@ export IMAGE_TAG="us.gcr.io/platform-205701/harness${PURPOSE}/${SNAPSHOT_PREFIX}
 docker build -t ${IMAGE_TAG} destination/dist/${SERVICE} -f destination/dist/${SERVICE}/Dockerfile-gcr
 docker push ${IMAGE_TAG}
 
-if [ -z "${SNAPSHOT_PREFIX}" ]
+if [ "${PURPOSE}" = /on-prem ]
 then
     docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
