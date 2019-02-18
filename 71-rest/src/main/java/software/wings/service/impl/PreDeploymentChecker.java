@@ -21,9 +21,11 @@ import io.harness.limits.lib.RateLimitChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -32,6 +34,7 @@ import javax.annotation.Nullable;
 public class PreDeploymentChecker {
   @Inject private AppService appService;
   @Inject private LicenseService licenseService;
+  @Inject private GovernanceConfigService governanceConfigService;
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private WingsPersistence persistence;
 
@@ -92,14 +95,31 @@ public class PreDeploymentChecker {
         action.key() + "_hourly");
   }
 
-  public void checkIfAccountExpired(String appId) throws WingsException {
+  public void isDeploymentAllowed(String appId) throws WingsException {
     Application application = appService.get(appId, false);
     requireNonNull(application, "Application not found. Is the application ID correct? AppId: " + appId);
+    String accountId = application.getAccountId();
+    checkIfAccountExpired(accountId);
+    checkIfDeploymentFreeze(accountId);
+  }
 
-    boolean isAccountExpired = licenseService.isAccountExpired(application.getAccountId());
+  private void checkIfAccountExpired(String accountId) throws WingsException {
+    boolean isAccountExpired = licenseService.isAccountExpired(accountId);
     if (isAccountExpired) {
       throw new WingsException(GENERAL_ERROR, USER)
           .addParam("message", "License expired!!! Please contact Harness Support.");
+    }
+  }
+
+  private void checkIfDeploymentFreeze(String accountId) throws WingsException {
+    GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
+    if (governanceConfig == null) {
+      return;
+    }
+
+    if (governanceConfig.isDeploymentFreeze()) {
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam("message", "Deployment Freeze is active. No deployments are allowed.");
     }
   }
 
