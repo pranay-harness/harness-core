@@ -137,7 +137,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       } else {
         queryParams.put("expand", "projects.issuetypes.fields");
       }
-      queryParams.put("projectKeys", parameters.getProject());
+
+      if (EmptyPredicate.isNotEmpty(parameters.getProject())) {
+        queryParams.put("projectKeys", parameters.getProject());
+      }
 
       uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/createmeta", queryParams);
 
