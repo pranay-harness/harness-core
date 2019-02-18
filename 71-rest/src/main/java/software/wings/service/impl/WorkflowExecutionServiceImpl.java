@@ -308,7 +308,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   void trigger(String appId, String stateMachineId, String executionUuid, String executionName,
       StateMachineExecutionCallback callback) {
-    preDeploymentChecker.checkIfAccountExpired(appId);
+    preDeploymentChecker.isDeploymentAllowed(appId);
     stateMachineExecutor.execute(appId, stateMachineId, executionUuid, executionName, null, callback);
   }
 
@@ -930,7 +930,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
-    preDeploymentChecker.checkIfAccountExpired(appId);
+    preDeploymentChecker.isDeploymentAllowed(appId);
     Pipeline pipeline =
         pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
     if (pipeline == null) {
@@ -1031,7 +1031,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String workflowId,
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
       Trigger trigger) {
-    preDeploymentChecker.checkIfAccountExpired(appId);
+    preDeploymentChecker.isDeploymentAllowed(appId);
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
@@ -1601,7 +1601,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   private WorkflowExecution triggerSimpleExecution(
       String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
-    preDeploymentChecker.checkIfAccountExpired(appId);
+    preDeploymentChecker.isDeploymentAllowed(appId);
     Workflow workflow = workflowService.readLatestSimpleWorkflow(appId, envId);
     String workflowId = workflow.getUuid();
 

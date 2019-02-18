@@ -195,6 +195,7 @@ import software.wings.service.impl.aws.manager.AwsElbHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsIamHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsLambdaHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsRoute53HelperServiceManagerImpl;
+import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
 import software.wings.service.impl.dynatrace.DynaTraceServiceImpl;
 import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
@@ -348,6 +349,7 @@ import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
@@ -644,6 +646,8 @@ public class WingsModule extends DependencyModule {
 
     bind(LimitVicinityHandler.class).to(LimitVicinityHandlerImpl.class);
     bind(PermitService.class).to(PermitServiceImpl.class);
+
+    bind(GovernanceConfigService.class).to(GovernanceConfigServiceImpl.class);
 
     // Start of deployment trigger dependencies
     bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);

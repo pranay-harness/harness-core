@@ -44,6 +44,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.TerraformfConfig;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
@@ -172,5 +173,5 @@ public class ManagerMorphiaClasses {
       ExecutionEvent.class, ManifestFile.class, GcsFileMetadata.class, QueableEvent.class, PruneEvent.class,
       LogsCVConfiguration.class, ElkCVConfiguration.class, Permit.class, LabeledLogRecord.class,
       AlertNotificationRule.class, CustomArtifactStream.class, NotificationReceiverInfo.class,
-      DelegateSequenceConfig.class);
+      DelegateSequenceConfig.class, GovernanceConfig.class);
 }
