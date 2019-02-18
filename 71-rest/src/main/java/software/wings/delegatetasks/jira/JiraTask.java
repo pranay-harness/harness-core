@@ -205,11 +205,22 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
   private ResponseData updateTicket(JiraTaskParameters parameters) {
     CommandExecutionStatus commandExecutionStatus;
+    Issue issue = null;
     try {
       JiraClient jira = getJiraClient(parameters);
-      Issue issue = jira.getIssue(parameters.getIssueId());
-      boolean fieldsUpdated = false;
+      issue = jira.getIssue(parameters.getIssueId());
+    } catch (JiraException e) {
+      String errorMessage = "Failed to fetch jira issue : " + parameters.getIssueId();
+      logger.error(errorMessage, e);
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMessage(errorMessage)
+          .jiraServerResponse(extractResponseMessage(e))
+          .build();
+    }
 
+    try {
+      boolean fieldsUpdated = false;
       FluentUpdate update = issue.update();
       if (EmptyPredicate.isNotEmpty(parameters.getSummary())) {
         update.field(Field.SUMMARY, parameters.getSummary());
@@ -241,17 +252,16 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       }
 
       logger.info("Script execution finished with status: " + ExecutionStatus.SUCCESS);
-
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.SUCCESS)
-          .errorMessage("Updated JIRA ticket " + issue.getKey())
+          .errorMessage("Updated Jira ticket " + issue.getKey())
           .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
           .issueId(issue.getId())
           .issueKey(issue.getKey())
           .build();
 
     } catch (JiraException e) {
-      String errorMessage = "Failed to update the new JIRA ticket " + parameters.getIssueId();
+      String errorMessage = "Failed to update the new Jira ticket " + issue.getKey();
       logger.error(errorMessage, e);
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
@@ -288,7 +298,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         String errorsKey = (String) errorsKeys[0];
         return errorsKey + " : " + (String) errors.get((String) errorsKey);
       } catch (Exception ex) {
-        logger.error("Failed to parse json response from JIRA", ex);
+        logger.error("Failed to parse json response from Jira", ex);
       }
     }
 
@@ -322,16 +332,16 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.SUCCESS)
           .jiraAction(JiraAction.CREATE_TICKET)
-          .errorMessage("Created JIRA ticket " + issue.getKey())
+          .errorMessage("Created Jira ticket " + issue.getKey())
           .issueId(issue.getId())
           .issueKey(issue.getKey())
           .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
           .build();
     } catch (JiraException e) {
-      logger.error("Unable to create a new JIRA ticket", e);
+      logger.error("Unable to create a new Jira ticket", e);
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
-          .errorMessage("Unable to create a new JIRA ticket. ")
+          .errorMessage("Unable to create a new Jira ticket. ")
           .jiraServerResponse(extractResponseMessage(e))
           .build();
     }
@@ -423,7 +433,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     try {
       jira.getRestClient().delete(new URI(parameters.getWebhookUrl()));
     } catch (IOException | URISyntaxException | RestException e) {
-      logger.error("Unable to delete a new JIRA webhook", e);
+      logger.error("Unable to delete a new Jira webhook", e);
       return jiraExecutionData;
     }
     return jiraExecutionData;
@@ -473,7 +483,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       JSONObject object = JSONObject.fromObject(resp);
       webhookUrl = object.getString("self");
     } catch (RestException | IOException | URISyntaxException e) {
-      String error = "Unable to create a new JIRA webhook for " + getIssueUrl(jiraConfig, issue);
+      String error = "Unable to create a new Jira webhook for " + getIssueUrl(jiraConfig, issue);
       logger.error(error, e);
       return jiraExecutionData;
     }
