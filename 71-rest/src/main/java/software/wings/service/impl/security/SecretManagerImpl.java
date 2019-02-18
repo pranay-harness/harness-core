@@ -855,10 +855,8 @@ public class SecretManagerImpl implements SecretManager {
     }
     usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
         accountId, savedData.getUsageRestrictions(), usageRestrictions);
-    if (!Objects.equals(savedData.getUsageRestrictions(), usageRestrictions)) {
-      // Validate if change of the usage scope is resulting in with dangling references in service/environments.
-      validateAppEnvChangesInUsageRestrictions(savedData, usageRestrictions);
-    }
+    // No validation of `validateAppEnvChangesInUsageRestrictions` is performed in this method
+    // because usually this update is a result of removing application/environment.
 
     savedData.setUsageRestrictions(usageRestrictions);
 
