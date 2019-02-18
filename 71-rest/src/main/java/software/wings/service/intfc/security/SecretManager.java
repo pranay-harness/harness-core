@@ -84,6 +84,10 @@ public interface SecretManager extends OwnedByAccount {
   boolean updateSecret(
       String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions);
 
+  /**
+   *  This method is called when removing application/environment, and all its referring secrets need to clear their
+   *  references in usage scope to the application/environment to be deleted.
+   */
   boolean updateUsageRestrictionsForSecretOrFile(String accountId, String uuId, UsageRestrictions usageRestrictions);
 
   boolean deleteSecret(String accountId, String uuId);
