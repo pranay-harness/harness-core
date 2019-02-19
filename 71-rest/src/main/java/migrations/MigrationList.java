@@ -44,6 +44,7 @@ import migrations.all.HelmValuesYamlToManifestFileMigration;
 import migrations.all.InfraProvisionerFilteringTypeMigration;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
+import migrations.all.InitServiceCounters;
 import migrations.all.InitUserCounters;
 import migrations.all.InitWorkflowCounters;
 import migrations.all.LdapSettingsMigration;
@@ -186,7 +187,8 @@ public class MigrationList {
         .add(Pair.of(222, HelmValuesYamlToManifestFileMigration.class))
         .add(Pair.of(223, InitWorkflowCounters.class))
         .add(Pair.of(224, CreateDefaultAlertNotificationRule.class))
-        .add(Pair.of(225, InitInfraProvisionerCounters.class))
+        .add(Pair.of(225, InitServiceCounters.class))
+        .add(Pair.of(226, InitInfraProvisionerCounters.class))
         .build();
   }
 }

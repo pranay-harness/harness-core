@@ -61,7 +61,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   @Inject @InjectMocks private AppService appService;
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ServiceResourceService serviceResourceService;
+  @Inject @InjectMocks private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private EnvironmentService environmentService;

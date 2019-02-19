@@ -8,6 +8,7 @@ import java.util.List;
 
 public enum ActionType {
   CREATE_APPLICATION(Collections.singletonList(LimitType.STATIC)),
+  CREATE_SERVICE(Collections.singletonList(LimitType.STATIC)),
   CREATE_USER(Collections.singletonList(LimitType.STATIC)),
   CREATE_PIPELINE(Collections.singletonList(LimitType.STATIC)),
   CREATE_WORKFLOW(Collections.singletonList(LimitType.STATIC)),

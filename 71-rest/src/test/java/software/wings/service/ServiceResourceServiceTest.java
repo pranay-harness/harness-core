@@ -82,6 +82,9 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.WingsException;
+import io.harness.limits.Action;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
 import io.harness.persistence.HQuery;
 import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
@@ -155,6 +158,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.stencils.Stencil;
+import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -177,6 +181,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
 
   @Inject private WingsPersistence wingsPersistence;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Rule public TemporaryFolder folder = new TemporaryFolder();
 
@@ -295,6 +300,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldSaveService() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     Service service = serviceBuilder.build();
     doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(ServiceCommand.class), eq(true));
     Service savedService = spyServiceResourceService.save(service);
@@ -363,6 +370,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDeleteService() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
     when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(asList());
     when(workflowService.listWorkflows(any(PageRequest.class)))
@@ -380,6 +389,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldThrowExceptionOnDeleteReferencedByWorkflow() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
     when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID))
         .thenReturn(asList("Referenced Workflow"));
@@ -393,6 +404,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldThrowExceptionOnDeleteReferencedByInfraProvisioner() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
     when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(asList());
     when(infrastructureProvisionerService.listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null))
@@ -411,6 +424,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldThrowExceptionOnDeleteReferencedByPipeline() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
     when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(asList());
     when(infrastructureProvisionerService.listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null))
@@ -429,6 +444,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldThrowExceptionOnDeleteReferencedByTrigger() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
     when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(asList());
     when(infrastructureProvisionerService.listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null))
@@ -527,6 +544,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class), any()))
         .thenReturn(aPageResponse().withResponse(asList(aServiceTemplate().build())).build());
+
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
 
     Service clonedService = spyServiceResourceService.clone(
         APP_ID, SERVICE_ID, Service.builder().name("Clone Service").description("clone description").build());
