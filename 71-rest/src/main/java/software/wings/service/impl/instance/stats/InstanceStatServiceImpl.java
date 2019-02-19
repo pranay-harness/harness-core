@@ -3,6 +3,7 @@ package software.wings.service.impl.instance.stats;
 import static software.wings.resources.stats.model.InstanceTimeline.top;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -32,6 +33,7 @@ import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -67,16 +69,25 @@ public class InstanceStatServiceImpl implements InstanceStatService {
   public InstanceTimeline aggregate(String accountId, long fromTsMillis, long toTsMillis) {
     Instant from = Instant.ofEpochMilli(fromTsMillis);
     Instant to = Instant.ofEpochMilli(toTsMillis);
-    List<InstanceStatsSnapshot> stats = aggregate(accountId, from, to);
 
+    Stopwatch stopwatch = Stopwatch.createStarted();
+
+    List<InstanceStatsSnapshot> stats = aggregate(accountId, from, to);
+    log.info("Aggregate Time: {} ms, accountId={}, from={} to={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId,
+        from, to);
     Set<String> deletedAppIds = dashboardStatsService.getDeletedAppIds(accountId, fromTsMillis, toTsMillis);
+    log.info("Get Deleted App Time: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
+
     User user = UserThreadLocal.get();
     if (null != user) {
       TimelineRbacFilters rbacFilters = new TimelineRbacFilters(user, accountId, appService, usageRestrictionsService);
       List<InstanceStatsSnapshot> filteredStats = rbacFilters.filter(stats, deletedAppIds);
       log.info("Stats before and after filtering. Before: {}, After: {}", stats.size(), filteredStats.size());
+      log.info("Time till RBAC filters: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
       InstanceTimeline timeline = new InstanceTimeline(filteredStats, deletedAppIds);
-      return top(timeline, 5);
+      InstanceTimeline top = top(timeline, 5);
+      log.info("Total time taken: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
+      return top;
     } else {
       throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
     }
