@@ -56,6 +56,11 @@ import io.harness.data.validator.EntityNameValidator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.limits.Action;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.LimitEnforcementUtils;
+import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.stream.BoundedInputStream;
@@ -220,6 +225,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private PipelineService pipelineService;
   @Inject private SshCommandTemplateProcessor sshCommandTemplateProcessor;
   @Inject private ApplicationManifestService applicationManifestService;
+  @Inject private LimitCheckerFactory limitCheckerFactory;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -252,25 +258,31 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   @ValidationGroups(Create.class)
   public Service save(Service service, boolean createdFromYaml, boolean createDefaultCommands) {
-    setKeyWords(service);
-    Service savedService =
-        duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
-    if (createDefaultCommands && !skipDefaultCommands(service)) {
-      savedService = addDefaultCommands(savedService, !createdFromYaml);
-    }
+    String accountId = appService.getAccountIdByAppId(service.getAppId());
 
-    savedService = createDefaultHelmValueYaml(savedService, createdFromYaml);
-    serviceTemplateService.createDefaultTemplatesByService(savedService);
-    createDefaultK8sManifests(savedService, service.isSyncFromGit());
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_SERVICE));
 
-    sendNotificationAsync(savedService, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
+    return LimitEnforcementUtils.withLimitCheck(checker, () -> {
+      setKeyWords(service);
+      Service savedService =
+          duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
+      if (createDefaultCommands && !skipDefaultCommands(service)) {
+        savedService = addDefaultCommands(savedService, !createdFromYaml);
+      }
 
-    if (!createdFromYaml) {
-      String accountId = appService.getAccountIdByAppId(service.getAppId());
-      yamlPushService.pushYamlChangeSet(accountId, null, savedService, Type.CREATE, service.isSyncFromGit(), false);
-    }
+      savedService = createDefaultHelmValueYaml(savedService, createdFromYaml);
+      serviceTemplateService.createDefaultTemplatesByService(savedService);
+      createDefaultK8sManifests(savedService, service.isSyncFromGit());
 
-    return savedService;
+      sendNotificationAsync(savedService, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
+
+      if (!createdFromYaml) {
+        yamlPushService.pushYamlChangeSet(accountId, null, savedService, Type.CREATE, service.isSyncFromGit(), false);
+      }
+
+      return savedService;
+    });
   }
 
   private void sendNotificationAsync(Service savedService, NotificationMessageType entityCreateNotification) {
@@ -292,60 +304,67 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service clone(String appId, String originalServiceId, Service service) {
-    Service originalService = get(appId, originalServiceId);
-    Service clonedService = originalService.cloneInternal();
-    clonedService.setName(service.getName());
-    clonedService.setDescription(service.getDescription());
-    setKeyWords(clonedService);
-    Service savedCloneService =
-        duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, clonedService), "name", service.getName());
+    String accountId = appService.getAccountIdByAppId(service.getAppId());
 
-    boolean shouldPushToYaml = !hasInternalCommands(originalService);
-    originalService.getServiceCommands().forEach(serviceCommand -> {
-      ServiceCommand clonedServiceCommand = serviceCommand.cloneInternal();
-      addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, shouldPushToYaml);
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_SERVICE));
+
+    return LimitEnforcementUtils.withLimitCheck(checker, () -> {
+      Service originalService = get(appId, originalServiceId);
+      Service clonedService = originalService.cloneInternal();
+      clonedService.setName(service.getName());
+      clonedService.setDescription(service.getDescription());
+      setKeyWords(clonedService);
+      Service savedCloneService =
+          duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, clonedService), "name", service.getName());
+
+      boolean shouldPushToYaml = !hasInternalCommands(originalService);
+      originalService.getServiceCommands().forEach(serviceCommand -> {
+        ServiceCommand clonedServiceCommand = serviceCommand.cloneInternal();
+        addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, shouldPushToYaml);
+      });
+
+      // Copy ContainerTask, HelmChartSpecification, PcfSpecification
+      cloneServiceSpecifications(appId, originalService, savedCloneService.getUuid());
+
+      List<ServiceTemplate> serviceTemplates =
+          serviceTemplateService
+              .list(aPageRequest()
+                        .addFilter(ServiceTemplate.APP_ID_KEY, EQ, originalService.getAppId())
+                        .addFilter(ServiceTemplate.SERVICE_ID_KEY, EQ, originalService.getUuid())
+                        .build(),
+                  false, OBTAIN_VALUE)
+              .getResponse();
+
+      serviceTemplates.forEach(serviceTemplate -> {
+        ServiceTemplate clonedServiceTemplate = serviceTemplate.cloneInternal();
+        clonedServiceTemplate.setName(savedCloneService.getName());
+        clonedServiceTemplate.setServiceId(savedCloneService.getUuid());
+        serviceTemplateService.save(clonedServiceTemplate);
+      });
+
+      originalService.getConfigFiles().forEach(originalConfigFile -> {
+        try {
+          File file = configService.download(originalConfigFile.getAppId(), originalConfigFile.getUuid());
+          ConfigFile clonedConfigFile = originalConfigFile.cloneInternal();
+          clonedConfigFile.setEntityId(savedCloneService.getUuid());
+          configService.save(clonedConfigFile, new BoundedInputStream(new FileInputStream(file)));
+        } catch (FileNotFoundException e) {
+          logger.error("Error in cloning config file " + originalConfigFile.toString(), e);
+          // Ignore and continue adding more files
+        }
+      });
+
+      originalService.getServiceVariables().forEach(originalServiceVariable -> {
+        ServiceVariable clonedServiceVariable = originalServiceVariable.cloneInternal();
+        if (ENCRYPTED_TEXT.equals(clonedServiceVariable.getType())) {
+          clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
+        }
+        clonedServiceVariable.setEntityId(savedCloneService.getUuid());
+        serviceVariableService.save(clonedServiceVariable);
+      });
+      return savedCloneService;
     });
-
-    // Copy ContainerTask, HelmChartSpecification, PcfSpecification
-    cloneServiceSpecifications(appId, originalService, savedCloneService.getUuid());
-
-    List<ServiceTemplate> serviceTemplates =
-        serviceTemplateService
-            .list(aPageRequest()
-                      .addFilter(ServiceTemplate.APP_ID_KEY, EQ, originalService.getAppId())
-                      .addFilter(ServiceTemplate.SERVICE_ID_KEY, EQ, originalService.getUuid())
-                      .build(),
-                false, OBTAIN_VALUE)
-            .getResponse();
-
-    serviceTemplates.forEach(serviceTemplate -> {
-      ServiceTemplate clonedServiceTemplate = serviceTemplate.cloneInternal();
-      clonedServiceTemplate.setName(savedCloneService.getName());
-      clonedServiceTemplate.setServiceId(savedCloneService.getUuid());
-      serviceTemplateService.save(clonedServiceTemplate);
-    });
-
-    originalService.getConfigFiles().forEach(originalConfigFile -> {
-      try {
-        File file = configService.download(originalConfigFile.getAppId(), originalConfigFile.getUuid());
-        ConfigFile clonedConfigFile = originalConfigFile.cloneInternal();
-        clonedConfigFile.setEntityId(savedCloneService.getUuid());
-        configService.save(clonedConfigFile, new BoundedInputStream(new FileInputStream(file)));
-      } catch (FileNotFoundException e) {
-        logger.error("Error in cloning config file " + originalConfigFile.toString(), e);
-        // Ignore and continue adding more files
-      }
-    });
-
-    originalService.getServiceVariables().forEach(originalServiceVariable -> {
-      ServiceVariable clonedServiceVariable = originalServiceVariable.cloneInternal();
-      if (ENCRYPTED_TEXT.equals(clonedServiceVariable.getType())) {
-        clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
-      }
-      clonedServiceVariable.setEntityId(savedCloneService.getUuid());
-      serviceVariableService.save(clonedServiceVariable);
-    });
-    return savedCloneService;
   }
 
   private void cloneServiceSpecifications(String appId, Service originalService, String clonedServiceId) {
@@ -635,22 +654,26 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (service == null) {
       return;
     }
-    if (!forceDelete) {
-      // Ensure service is safe to delete
-      ensureServiceSafeToDelete(service);
-    }
-
     String accountId = appService.getAccountIdByAppId(service.getAppId());
-    yamlPushService.pushYamlChangeSet(accountId, service, null, Type.DELETE, syncFromGit, false);
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_SERVICE));
+    LimitEnforcementUtils.withCounterDecrement(checker, () -> {
+      if (!forceDelete) {
+        // Ensure service is safe to delete
+        ensureServiceSafeToDelete(service);
+      }
 
-    pruneQueue.send(new PruneEvent(Service.class, service.getAppId(), service.getUuid()));
+      yamlPushService.pushYamlChangeSet(accountId, service, null, Type.DELETE, syncFromGit, false);
 
-    // safe to delete
-    if (wingsPersistence.delete(Service.class, service.getUuid())) {
-      getServiceCommands(appId, serviceId, false)
-          .forEach(serviceCommand -> deleteServiceCommand(service, serviceCommand, syncFromGit));
-      sendNotificationAsync(service, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
-    }
+      pruneQueue.send(new PruneEvent(Service.class, service.getAppId(), service.getUuid()));
+
+      // safe to delete
+      if (wingsPersistence.delete(Service.class, service.getUuid())) {
+        getServiceCommands(appId, serviceId, false)
+            .forEach(serviceCommand -> deleteServiceCommand(service, serviceCommand, syncFromGit));
+        sendNotificationAsync(service, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
+      }
+    });
   }
 
   @Override
@@ -842,10 +865,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public void pruneByApplication(String appId) {
-    findServicesByApp(appId).forEach(service -> {
+    String accountId = appService.getAccountIdByAppId(appId);
+
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_SERVICE));
+
+    findServicesByApp(appId).forEach(service -> LimitEnforcementUtils.withCounterDecrement(checker, () -> {
       wingsPersistence.delete(Service.class, service.getUuid());
       pruneDescendingEntities(appId, service.getUuid());
-    });
+    }));
   }
 
   @Override

@@ -41,7 +41,7 @@ import java.util.UUID;
 @SetupScheduler
 public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
   @Inject @InjectMocks private AppService appService;
-  @Inject private ServiceResourceService serviceResourceService;
+  @Inject @InjectMocks private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceVariableService serviceVariableService;
   @Mock private LimitCheckerFactory limitCheckerFactory;

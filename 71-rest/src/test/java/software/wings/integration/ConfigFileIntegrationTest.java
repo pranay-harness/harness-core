@@ -68,7 +68,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
-  @Inject private ServiceResourceService serviceResourceService;
+  @Inject @InjectMocks private ServiceResourceService serviceResourceService;
   @Inject private FileService fileService;
   @Inject private ServiceTemplateService serviceTemplateService;
 

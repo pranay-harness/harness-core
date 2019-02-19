@@ -27,6 +27,10 @@ public class ApproachingLimitsMessage {
         template =
             "You have consumed {}% of allowed Workflow creation limits. Please contact Harness Support to avoid any interruptions.";
         break;
+      case CREATE_SERVICE:
+        template =
+            "You have consumed {}% of allowed Service creation limits. Please contact Harness Support to avoid any interruptions.";
+        break;
       case CREATE_INFRA_PROVISIONER:
         template =
             "You have consumed {}% of allowed Infrastructure Provisioner creation limits. Please contact Harness Support to avoid any interruptions.";
