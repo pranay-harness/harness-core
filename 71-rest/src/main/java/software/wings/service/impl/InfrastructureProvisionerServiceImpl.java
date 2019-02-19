@@ -23,6 +23,11 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.limits.Action;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.LimitEnforcementUtils;
+import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
@@ -104,18 +109,26 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
+  @Inject private LimitCheckerFactory limitCheckerFactory;
+
   @Override
   @ValidationGroups(Create.class)
   public InfrastructureProvisioner save(@Valid InfrastructureProvisioner infrastructureProvisioner) {
-    populateDerivedFields(infrastructureProvisioner);
-    InfrastructureProvisioner finalInfraProvisioner =
-        wingsPersistence.saveAndGet(InfrastructureProvisioner.class, infrastructureProvisioner);
-
     String accountId = appService.getAccountIdByAppId(infrastructureProvisioner.getAppId());
-    yamlPushService.pushYamlChangeSet(
-        accountId, null, infrastructureProvisioner, Type.CREATE, infrastructureProvisioner.isSyncFromGit(), false);
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_INFRA_PROVISIONER));
 
-    return finalInfraProvisioner;
+    return LimitEnforcementUtils.withLimitCheck(checker, () -> {
+      populateDerivedFields(infrastructureProvisioner);
+
+      InfrastructureProvisioner finalInfraProvisioner =
+          wingsPersistence.saveAndGet(InfrastructureProvisioner.class, infrastructureProvisioner);
+
+      yamlPushService.pushYamlChangeSet(
+          accountId, null, infrastructureProvisioner, Type.CREATE, infrastructureProvisioner.isSyncFromGit(), false);
+
+      return finalInfraProvisioner;
+    });
   }
 
   private void populateDerivedFields(InfrastructureProvisioner infrastructureProvisioner) {
@@ -270,17 +283,21 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public void delete(String appId, String infrastructureProvisionerId, boolean syncFromGit) {
     InfrastructureProvisioner infrastructureProvisioner = get(appId, infrastructureProvisionerId);
-
     if (infrastructureProvisioner == null) {
       return;
     }
 
-    ensureSafeToDelete(appId, infrastructureProvisionerId);
-
     String accountId = appService.getAccountIdByAppId(infrastructureProvisioner.getAppId());
-    yamlPushService.pushYamlChangeSet(accountId, infrastructureProvisioner, null, Type.DELETE, syncFromGit, false);
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_INFRA_PROVISIONER));
 
-    wingsPersistence.delete(InfrastructureProvisioner.class, appId, infrastructureProvisionerId);
+    LimitEnforcementUtils.withCounterDecrement(checker, () -> {
+      ensureSafeToDelete(appId, infrastructureProvisionerId);
+
+      yamlPushService.pushYamlChangeSet(accountId, infrastructureProvisioner, null, Type.DELETE, syncFromGit, false);
+
+      wingsPersistence.delete(InfrastructureProvisioner.class, appId, infrastructureProvisionerId);
+    });
   }
 
   @Override
