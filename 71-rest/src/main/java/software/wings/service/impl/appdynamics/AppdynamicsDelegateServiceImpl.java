@@ -104,7 +104,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     } else {
       logger.info("Request not successful. Reason: {}", response);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, USER)
-          .addParam("reason", "could not fetch Appdynamics tiers " + response.errorBody().string());
+          .addParam("reason", "could not fetch Appdynamics tiers " + response.message());
     }
   }
 
