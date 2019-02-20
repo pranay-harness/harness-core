@@ -177,21 +177,31 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
   private ResponseData getFieldsAndOptions(JiraTaskParameters parameters) {
     URI uri;
+    SearchResult issues;
+    JiraClient jiraClient;
     try {
-      JiraClient jiraClient = getJiraClient(parameters);
+      jiraClient = getJiraClient(parameters);
       String jqlQuery = "project = " + parameters.getProject();
-      SearchResult issues = jiraClient.searchIssues(jqlQuery, 1);
-      Issue issue = null;
-      if (CollectionUtils.isNotEmpty(issues.issues)) {
-        issue = issues.issues.get(0);
-      }
-      String issueKey = (issue == null) ? (parameters.getProject() + "-1") : issue.getKey();
+      issues = jiraClient.searchIssues(jqlQuery, 1);
+    } catch (JiraException | RuntimeException e) {
+      String errorMessage = "Failed to fetch issues from Jira server for project - " + parameters.getProject();
+      logger.error(errorMessage, e);
+      return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
+    }
+
+    Issue issue = null;
+    if (CollectionUtils.isNotEmpty(issues.issues)) {
+      issue = issues.issues.get(0);
+    }
+    String issueKey = (issue == null) ? (parameters.getProject() + "-1") : issue.getKey();
+
+    try {
       uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/" + issueKey + "/editmeta");
       JSON response = jiraClient.getRestClient().get(uri);
 
       return JiraExecutionData.builder().fields((JSONObject) response).executionStatus(ExecutionStatus.SUCCESS).build();
-    } catch (URISyntaxException | IOException | RestException | JiraException | RuntimeException e) {
-      String errorMessage = "Failed to fetch fields from Jira server.";
+    } catch (URISyntaxException | IOException | RestException | RuntimeException e) {
+      String errorMessage = "Failed to fetch editmeta from Jira server. Issue - " + issueKey;
       logger.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
