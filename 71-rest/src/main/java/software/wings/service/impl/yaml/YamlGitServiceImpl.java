@@ -621,7 +621,13 @@ public class YamlGitServiceImpl implements YamlGitService {
               .asList();
 
       if (isEmpty(settingAttributes)) {
-        logger.error(GIT_YAML_LOG_PREFIX + "Invalid git webhook request [{}]", webhookToken);
+        logger.warn(new StringBuilder(128)
+                        .append(GIT_YAML_LOG_PREFIX)
+                        .append("Invalid git webhook request [{")
+                        .append(webhookToken)
+                        .append("}], AccountId: ")
+                        .append(accountId)
+                        .toString());
         return;
       }
 
