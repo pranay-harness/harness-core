@@ -40,6 +40,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.CustomArtifactStream;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.delegatetasks.buildsource.BuildSourceCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceRequest;
 import software.wings.delegatetasks.buildsource.BuildSourceRequest.BuildSourceRequestType;
@@ -82,6 +83,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
   @Inject private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private AwsCommandHelper awsCommandHelper;
 
   public static final Duration timeout = Duration.ofMinutes(10);
 
@@ -197,6 +199,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       delegateTaskBuilder.withAccountId(accountId);
       delegateTaskBuilder.withParameters(new Object[] {buildSourceRequest});
       delegateTaskBuilder.withTimeout(TimeUnit.MINUTES.toMillis(1));
+      delegateTaskBuilder.withTags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
     }
 
     waitNotifyEngine.waitForAll(new BuildSourceCallback(accountId, appId, artifactStream.getUuid(), permitId), waitId);
