@@ -16,6 +16,7 @@ import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplicat
 
 import java.util.Optional;
 import javax.cache.Cache;
+import javax.cache.CacheException;
 import javax.cache.Caching;
 import javax.cache.configuration.Factory;
 import javax.cache.configuration.MutableConfiguration;
@@ -35,8 +36,16 @@ public class CacheHelper {
     configuration.setTypes(keyType, valueType);
     configuration.setStoreByValue(true);
     configuration.setExpiryPolicyFactory(expiryPolicy);
-    return Optional.ofNullable(Caching.getCache(cacheName, keyType, valueType))
-        .orElseGet(() -> Caching.getCachingProvider().getCacheManager().createCache(cacheName, configuration));
+
+    try {
+      return Optional.ofNullable(Caching.getCache(cacheName, keyType, valueType))
+          .orElseGet(() -> Caching.getCachingProvider().getCacheManager().createCache(cacheName, configuration));
+    } catch (CacheException ce) {
+      if (ce.getMessage().equalsIgnoreCase("A cache named " + cacheName + " already exists.")) {
+        return Caching.getCache(cacheName, keyType, valueType);
+      }
+      throw ce;
+    }
   }
 
   public <K, V> Cache<K, V> getCache(String cacheName, Class<K> keyType, Class<V> valueType) {
