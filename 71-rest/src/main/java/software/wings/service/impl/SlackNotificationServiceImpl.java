@@ -30,10 +30,11 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 import retrofit2.http.Url;
 import software.wings.beans.notification.SlackNotificationConfiguration;
+import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.service.intfc.SlackNotificationService;
-import software.wings.utils.Validator;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 12/14/16.
@@ -48,11 +49,14 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
   @Override
   public void sendMessage(
       SlackNotificationConfiguration slackConfig, String slackChannel, String senderName, String message) {
-    Validator.notNullCheck("Slack Config", slackConfig);
+    if (Objects.requireNonNull(slackConfig, "slack Config can't be null")
+            .equals(SlackNotificationSetting.emptyConfig())) {
+      return;
+    }
 
     String webhookUrl = slackConfig.getOutgoingWebhookUrl();
     if (StringUtils.isEmpty(webhookUrl)) {
-      log.error("Webhook URL is empty. No message will be send. Config: {}, Message: {}", slackConfig, message);
+      log.error("Webhook URL is empty. No message will be sent. Config: {}, Message: {}", slackConfig, message);
       return;
     }
 
