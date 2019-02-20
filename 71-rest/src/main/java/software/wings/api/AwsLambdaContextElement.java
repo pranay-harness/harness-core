@@ -2,9 +2,9 @@ package software.wings.api;
 
 import static software.wings.common.Constants.AWS_LAMBDA_REQUEST_PARAM;
 
+import io.harness.context.ContextElementType;
 import software.wings.beans.AwsConfig;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;

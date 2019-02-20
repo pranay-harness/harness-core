@@ -6,6 +6,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
 import com.google.common.collect.Lists;
 
+import io.harness.context.ContextElementType;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiDeployStateExecutionData;
@@ -20,7 +21,6 @@ import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 

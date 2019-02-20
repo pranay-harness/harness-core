@@ -9,12 +9,12 @@ import static software.wings.service.intfc.ServiceTemplateService.EncryptedField
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.context.ContextElementType;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InstanceElement;
 import software.wings.beans.ServiceVariable;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Deque;

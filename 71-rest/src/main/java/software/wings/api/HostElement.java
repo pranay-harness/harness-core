@@ -10,8 +10,8 @@ import com.google.common.base.MoreObjects;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.context.ContextElementType;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;

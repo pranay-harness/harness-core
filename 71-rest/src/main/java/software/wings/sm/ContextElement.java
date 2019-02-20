@@ -1,11 +1,11 @@
 package software.wings.sm;
 
+import io.harness.context.ContextElementType;
+
 import java.util.Map;
 
 /**
  * Interface for all RepeatElements.
- *
- * @author Rishi
  */
 public interface ContextElement {
   String WORKFLOW = "workflow";

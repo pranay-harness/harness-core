@@ -1,8 +1,9 @@
 package software.wings.api;
 
-import static software.wings.sm.ContextElementType.CONTAINER_SERVICE;
+import static io.harness.context.ContextElementType.CONTAINER_SERVICE;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.context.ContextElementType;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.api.ecs.EcsBGSetupData;
@@ -10,7 +11,6 @@ import software.wings.beans.ResizeStrategy;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.Label;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.List;

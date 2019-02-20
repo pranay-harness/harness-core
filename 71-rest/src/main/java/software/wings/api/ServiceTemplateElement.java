@@ -7,8 +7,8 @@ package software.wings.api;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.context.ContextElementType;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;

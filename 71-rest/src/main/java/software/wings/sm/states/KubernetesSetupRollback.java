@@ -7,6 +7,7 @@ import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.command.CommandExecutionResult;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
@@ -27,7 +28,6 @@ import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 /**

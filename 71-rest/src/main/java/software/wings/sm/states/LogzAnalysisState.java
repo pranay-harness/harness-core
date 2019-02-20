@@ -6,6 +6,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.context.ContextElementType;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.StringUtils;
@@ -24,7 +25,6 @@ import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;

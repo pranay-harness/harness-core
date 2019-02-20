@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.intfc.MetricDataAnalysisService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionResponse;
 
 import java.text.ParseException;

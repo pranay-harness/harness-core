@@ -6,13 +6,13 @@ package software.wings.api;
 
 import com.google.inject.Inject;
 
+import io.harness.context.ContextElementType;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;

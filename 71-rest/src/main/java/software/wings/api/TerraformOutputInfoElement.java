@@ -2,9 +2,9 @@ package software.wings.api;
 
 import com.google.common.collect.Maps;
 
+import io.harness.context.ContextElementType;
 import lombok.Builder;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;

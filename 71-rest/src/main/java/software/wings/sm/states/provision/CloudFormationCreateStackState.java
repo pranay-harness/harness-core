@@ -9,6 +9,7 @@ import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 
 import com.google.inject.Inject;
 
+import io.harness.context.ContextElementType;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import software.wings.api.cloudformation.CloudFormationElement;
@@ -24,7 +25,6 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandR
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.service.intfc.AppService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateType;

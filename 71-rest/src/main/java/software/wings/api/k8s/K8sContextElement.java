@@ -1,10 +1,10 @@
 package software.wings.api.k8s;
 
+import io.harness.context.ContextElementType;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.TaskType;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.Map;
