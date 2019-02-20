@@ -1189,6 +1189,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         accountId, delegateId, profileId, lastUpdatedAt);
     Delegate delegate = get(accountId, delegateId, true);
 
+    if (delegate == null) {
+      return null;
+    }
+
     if (isNotBlank(profileId) && isBlank(delegate.getDelegateProfileId())) {
       return DelegateProfileParams.builder().profileId("NONE").build();
     }
