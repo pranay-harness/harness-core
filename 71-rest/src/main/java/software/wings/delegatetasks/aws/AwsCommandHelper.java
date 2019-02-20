@@ -43,6 +43,16 @@ public class AwsCommandHelper {
     return emptyList();
   }
 
+  public List<String> getAwsConfigTagsFromSettingAttribute(SettingAttribute settingAttribute) {
+    if (settingAttribute != null) {
+      SettingValue settingValue = settingAttribute.getValue();
+      if (settingValue instanceof AwsConfig) {
+        return nonEmptyTag((AwsConfig) settingValue);
+      }
+    }
+    return emptyList();
+  }
+
   private List<String> nonEmptyTag(AwsConfig awsConfig) {
     String tag = awsConfig.getTag();
     return isNotEmpty(tag) ? singletonList(tag) : null;
