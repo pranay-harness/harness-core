@@ -5,6 +5,7 @@ import static com.google.common.collect.Maps.newHashMap;
 import com.google.common.collect.ImmutableMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.context.ContextElementType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +13,6 @@ import lombok.NoArgsConstructor;
 import software.wings.beans.ResizeStrategy;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.List;

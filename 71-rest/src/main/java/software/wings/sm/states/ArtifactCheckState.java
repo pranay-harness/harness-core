@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,6 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.impl.DelayEventNotifyData;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;

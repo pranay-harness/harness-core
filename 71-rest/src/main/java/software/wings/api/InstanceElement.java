@@ -9,8 +9,8 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.context.ContextElementType;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;

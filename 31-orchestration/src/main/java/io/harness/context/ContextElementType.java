@@ -1,9 +1,7 @@
-package software.wings.sm;
+package io.harness.context;
 
 /**
  * Describes what type of element is being repeated on.
- *
- * @author Rishi
  */
 public enum ContextElementType {
   /**
@@ -71,16 +69,21 @@ public enum ContextElementType {
   /**
    * Aws lambda function context element type.
    */
-  AWS_LAMBDA_FUNCTION, /**
-                        * Ami service context element type.
-                        */
-  AMI_SERVICE_SETUP, /**
-                      * Ami service deploy context element type.
-                      */
-  AMI_SERVICE_DEPLOY, /**
-                       * Artifact context element type.
-                       */
+  AWS_LAMBDA_FUNCTION,
 
+  /**
+   * Ami service context element type.
+   */
+  AMI_SERVICE_SETUP,
+
+  /**
+   * Ami service deploy context element type.
+   */
+  AMI_SERVICE_DEPLOY,
+
+  /**
+   * Artifact context element type.
+   */
   AMI_SWITCH_ROUTES,
 
   PCF_SERVICE_SETUP,
@@ -91,9 +94,11 @@ public enum ContextElementType {
 
   PCF_INSTANCE,
 
-  ARTIFACT, /**
-             * Helm deploy context element type.
-             */
+  ARTIFACT,
+
+  /**
+   * Helm deploy context element type.
+   */
   HELM_DEPLOY,
 
   CLOUD_FORMATION_PROVISION,

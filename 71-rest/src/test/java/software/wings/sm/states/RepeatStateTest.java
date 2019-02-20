@@ -9,13 +9,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.context.ContextElementType;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ServiceElement;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.SpawningExecutionResponse;

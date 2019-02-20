@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.joor.Reflect;
@@ -51,7 +52,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;

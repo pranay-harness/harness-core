@@ -4,6 +4,7 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.context.ContextElementType;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.beans.Application;
@@ -18,7 +19,6 @@ import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;

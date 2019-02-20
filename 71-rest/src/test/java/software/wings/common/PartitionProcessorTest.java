@@ -7,11 +7,11 @@ package software.wings.common;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.context.ContextElementType;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import software.wings.api.PartitionElement;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.List;

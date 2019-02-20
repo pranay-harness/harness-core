@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -30,7 +31,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;

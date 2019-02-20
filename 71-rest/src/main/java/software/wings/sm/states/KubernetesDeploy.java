@@ -4,12 +4,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 
+import io.harness.context.ContextElementType;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerApiVersions;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.container.Label;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.Map;

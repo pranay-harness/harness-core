@@ -27,7 +27,7 @@ software.wings.sm.ExecutionInterruptType, 4000
 software.wings.sm.StateType, 4001
 software.wings.beans.ExecutionStrategy, 4002
 software.wings.sm.states.RepeatState$RepeatStateExecutionData, 4003
-software.wings.sm.ContextElementType, 4004
+#used: 4004
 software.wings.beans.ErrorStrategy, 4005
 software.wings.sm.states.ForkState$ForkStateExecutionData, 4006
 software.wings.api.ForkElement, 4007

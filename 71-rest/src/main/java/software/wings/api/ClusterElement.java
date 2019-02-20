@@ -1,9 +1,9 @@
 package software.wings.api;
 
-import static software.wings.sm.ContextElementType.CLUSTER;
+import static io.harness.context.ContextElementType.CLUSTER;
 
+import io.harness.context.ContextElementType;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.Map;

@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
+import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;

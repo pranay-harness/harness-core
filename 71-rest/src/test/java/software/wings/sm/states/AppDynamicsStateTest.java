@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -40,7 +41,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 

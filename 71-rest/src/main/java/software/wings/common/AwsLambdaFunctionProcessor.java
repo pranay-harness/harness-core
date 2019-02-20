@@ -3,11 +3,11 @@ package software.wings.common;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.api.AwsLambdaFunctionElement.Builder.anAwsLambdaFunctionElement;
 
+import io.harness.context.ContextElementType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaFunctionElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExpressionProcessor;
 

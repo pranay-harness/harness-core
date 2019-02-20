@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.context.ContextElementType;
 import io.harness.time.Timestamp;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,7 +32,6 @@ import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;

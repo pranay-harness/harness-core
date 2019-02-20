@@ -13,6 +13,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -31,7 +32,6 @@ import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;

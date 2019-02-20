@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -49,7 +50,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;

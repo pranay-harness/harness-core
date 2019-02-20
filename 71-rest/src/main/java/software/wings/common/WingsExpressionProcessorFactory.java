@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
-import software.wings.sm.ContextElementType;
+import io.harness.context.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExpressionProcessor;
 import software.wings.sm.ExpressionProcessorFactory;

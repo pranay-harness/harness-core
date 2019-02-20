@@ -37,6 +37,7 @@ import com.google.inject.name.Named;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
+import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
@@ -79,7 +80,6 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;

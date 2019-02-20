@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.context.ContextElementType;
 import software.wings.api.AwsCodeDeployRequestElement;
 import software.wings.api.CommandStateExecutionData.Builder;
 import software.wings.beans.CodeDeployInfrastructureMapping;
@@ -8,7 +9,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 

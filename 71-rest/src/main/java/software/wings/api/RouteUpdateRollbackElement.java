@@ -1,10 +1,10 @@
 package software.wings.api;
 
+import io.harness.context.ContextElementType;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.Map;

@@ -2,11 +2,11 @@ package software.wings.api.cloudformation;
 
 import com.google.common.collect.Maps;
 
+import io.harness.context.ContextElementType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
 import java.util.Map;

@@ -15,6 +15,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +39,6 @@ import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 

@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.context.ContextElementType;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -28,7 +29,6 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 
 import java.util.List;

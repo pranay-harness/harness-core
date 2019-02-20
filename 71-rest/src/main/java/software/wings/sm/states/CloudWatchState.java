@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.context.ContextElementType;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import lombok.Builder;
@@ -42,7 +43,6 @@ import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.intfc.CloudWatchService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;

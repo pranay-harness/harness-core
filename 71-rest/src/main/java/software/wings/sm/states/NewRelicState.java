@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.context.ContextElementType;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import lombok.Builder;
@@ -39,7 +40,6 @@ import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.newrelic.NewRelicService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;

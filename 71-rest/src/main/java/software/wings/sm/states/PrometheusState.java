@@ -9,6 +9,7 @@ import com.google.common.base.Preconditions;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.context.ContextElementType;
 import io.harness.time.Timestamp;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,7 +35,6 @@ import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;

@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.context.ContextElementType;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +46,6 @@ import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;

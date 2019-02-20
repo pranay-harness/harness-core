@@ -8,6 +8,7 @@ import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aP
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -35,7 +36,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;

@@ -29,6 +29,7 @@ import com.google.inject.Injector;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.context.ContextElementType;
 import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -47,7 +48,6 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 
 import java.util.List;
