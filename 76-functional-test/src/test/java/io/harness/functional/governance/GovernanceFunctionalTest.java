@@ -31,6 +31,7 @@ import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.awaitility.Awaitility;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -72,6 +73,7 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
+  @Ignore
   public void shouldBlockDeploymentsWhenFreezeIsEnabled() {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
