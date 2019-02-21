@@ -636,7 +636,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     HeatMapUnit mergedUnit = HeatMapUnit.builder()
                                  .startTime(units.get(0).getStartTime())
                                  .endTime(units.get(units.size() - 1).getEndTime())
-                                 .overallScore(-1)
+                                 .overallScore(-2)
                                  .build();
     units.forEach(unit -> {
       if (unit.getScoreList() != null) {
@@ -664,6 +664,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                       .startTime(TimeUnit.MINUTES.toMillis(startMinute))
                       .endTime(TimeUnit.MINUTES.toMillis(startMinute + CRON_POLL_INTERVAL_IN_MINUTES))
                       .na(1)
+                      .overallScore(-2)
                       .build());
         startMinute += CRON_POLL_INTERVAL_IN_MINUTES;
       }
@@ -677,7 +678,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           HeatMapUnit.builder()
               .startTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
               .endTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()))
-              .overallScore(-1)
+              .overallScore(-2)
               .build();
 
       heatMapUnit.updateOverallScore(record.getOverallMetricScores());
