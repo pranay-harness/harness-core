@@ -67,6 +67,12 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
       pcfInstanceSyncResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       pcfInstanceSyncResponse.setOutput(StringUtils.EMPTY);
     } catch (Exception e) {
+      logger.warn(new StringBuilder(128)
+                      .append("Failed while collecting PCF Application Details For Application: ")
+                      .append(((PcfInstanceSyncRequest) pcfCommandRequest).getPcfApplicationName())
+                      .append(", with Error: ")
+                      .append(e)
+                      .toString());
       pcfInstanceSyncResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       pcfInstanceSyncResponse.setOutput(ExceptionUtils.getMessage(e));
     }
