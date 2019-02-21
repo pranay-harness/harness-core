@@ -224,17 +224,17 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
 
   @Test
   public void testGetMetricType() {
-    MetricType errType = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.ERRORS_PER_MINUTE);
+    String errType = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.ERRORS_PER_MINUTE);
     assertNotNull(errType);
-    assertEquals("Error Type should be", MetricType.ERROR, errType);
-    MetricType throughput = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.CALLS_PER_MINUTE);
+    assertEquals("Error Type should be", MetricType.ERROR.name(), errType);
+    String throughput = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.CALLS_PER_MINUTE);
     assertNotNull(throughput);
-    assertEquals("Error Type should be", MetricType.THROUGHPUT, throughput);
-    MetricType respTime = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.AVG_RESPONSE_TIME);
+    assertEquals("Error Type should be", MetricType.THROUGHPUT.name(), throughput);
+    String respTime = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.AVG_RESPONSE_TIME);
     assertNotNull(respTime);
-    assertEquals("Error Type should be", MetricType.RESP_TIME, respTime);
+    assertEquals("Error Type should be", MetricType.RESP_TIME.name(), respTime);
 
-    MetricType dummy = AppDynamicsState.getMetricTypeForMetric("incorrectName");
+    String dummy = AppDynamicsState.getMetricTypeForMetric("incorrectName");
     assertNull(dummy);
   }
 }

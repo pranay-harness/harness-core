@@ -30,7 +30,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
-import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
@@ -390,7 +389,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
               .replace("{endTimeMs}", String.valueOf(endTime));
   }
 
-  public static MetricType getMetricTypeForMetric(String metricName) {
+  public static String getMetricTypeForMetric(String metricName) {
     if (isEmpty(metricName)) {
       return null;
     }
@@ -398,7 +397,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     appDMetrics.putAll(APP_DYNAMICS_24X7_VALUES_TO_ANALYZE);
 
     if (appDMetrics.containsKey(metricName)) {
-      return appDMetrics.get(metricName).getMetricType();
+      return appDMetrics.get(metricName).getMetricType().name();
     }
     logger.error("Invalid metricName in AppDynamics {}", metricName);
     return null;

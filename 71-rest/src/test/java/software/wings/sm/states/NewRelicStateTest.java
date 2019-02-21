@@ -201,17 +201,17 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
 
   @Test
   public void testGetMetricType() {
-    MetricType errType = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.ERROR);
+    String errType = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.ERROR);
     assertNotNull(errType);
-    assertEquals("Error Type should be", MetricType.ERROR, errType);
-    MetricType throughput = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE);
+    assertEquals("Error Type should be", MetricType.ERROR.name(), errType);
+    String throughput = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE);
     assertNotNull(throughput);
-    assertEquals("Error Type should be", MetricType.THROUGHPUT, throughput);
-    MetricType respTime = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME);
+    assertEquals("Error Type should be", MetricType.THROUGHPUT.name(), throughput);
+    String respTime = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME);
     assertNotNull(respTime);
-    assertEquals("Error Type should be", MetricType.RESP_TIME, respTime);
+    assertEquals("Error Type should be", MetricType.RESP_TIME.name(), respTime);
 
-    MetricType dummy = NewRelicState.getMetricTypeForMetric("incorrectName");
+    String dummy = NewRelicState.getMetricTypeForMetric("incorrectName");
     assertNull(dummy);
   }
 }
