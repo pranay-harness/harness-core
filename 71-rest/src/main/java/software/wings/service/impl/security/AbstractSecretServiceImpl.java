@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,24 @@ public abstract class AbstractSecretServiceImpl {
         // This is for backward compatibility. Existing vault configs may still have their root token
         // encrypted by KMS.
         KmsConfig kmsConfig = kmsService.getKmsConfig(accountId, encryptedVaultToken.getKmsId());
-        return kmsService.decrypt(encryptedVaultToken, accountId, kmsConfig);
+        char[] decrypted = kmsService.decrypt(encryptedVaultToken, accountId, kmsConfig);
+
+        // Runtime migration of vault root token from KMS to LOCAL at time of reading
+        try {
+          EncryptedData reencryptedData = encryptLocal(decrypted);
+          encryptedVaultToken.setEncryptionType(reencryptedData.getEncryptionType());
+          encryptedVaultToken.setEncryptionKey(reencryptedData.getEncryptionKey());
+          encryptedVaultToken.setEncryptedValue(reencryptedData.getEncryptedValue());
+          encryptedVaultToken.setKmsId(null);
+          wingsPersistence.save(encryptedVaultToken);
+          logger.info(
+              "Successfully migrated vault token {} from KMS to LOCAL encryption.", encryptedVaultToken.getName());
+        } catch (WingsException e) {
+          logger.warn(
+              "Failed in migrating vault token " + encryptedVaultToken.getName() + " from KMS to LOCAL encryption.", e);
+        }
+
+        return decrypted;
       default:
         throw new IllegalStateException("Unexpected Vault root token encryption type: " + encryptionType);
     }
