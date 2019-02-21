@@ -162,6 +162,7 @@ public class ServiceSampleDataProvider {
                                            + "  type: LoadBalancer\n"
                                            + "  ports:\n"
                                            + "  - port: 80\n"
+                                           + "    targetPort: 8080\n"
                                            + "    protocol: TCP\n"
                                            + "  selector:\n"
                                            + "    app: {{.Values.name}}")
