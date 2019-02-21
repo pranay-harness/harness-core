@@ -31,6 +31,7 @@ import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
 import lombok.Builder;
 import lombok.Data;
@@ -71,6 +72,10 @@ public class KubernetesResource {
   public KubernetesResource addLabelsInDeploymentSelector(Map<String, String> labels) {
     HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
     Deployment deployment = (Deployment) resource;
+
+    if (deployment.getSpec().getSelector() == null) {
+      throw new KubernetesYamlException("Deployment spec does not have selector");
+    }
 
     Map<String, String> matchLabels = deployment.getSpec().getSelector().getMatchLabels();
     if (matchLabels == null) {

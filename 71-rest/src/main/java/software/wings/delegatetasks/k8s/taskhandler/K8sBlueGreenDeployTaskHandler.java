@@ -194,6 +194,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
     } catch (Exception e) {
+      logger.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
@@ -255,6 +256,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         stageColor = getInverseColor(primaryColor);
 
       } catch (Exception e) {
+        logger.error("Exception:", e);
         executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, FAILURE);
         return false;
       }
@@ -282,6 +284,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
           + color(managedWorkload.getResourceId().kindNameRef(), getLogColor(stageColor), Bold));
 
     } catch (Exception e) {
+      logger.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, FAILURE);
       return false;
     }
