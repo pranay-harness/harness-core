@@ -127,8 +127,9 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     String name, email = null;
     LdapAttribute ldapEmailAttribute = user.getAttribute(userConfig.getEmailAttr());
     if (ldapEmailAttribute != null) {
-      logger.error("UserConfig email attribute = {} is missing in LdapEntry user object", userConfig.getEmailAttr());
       email = ldapEmailAttribute.getStringValue();
+    } else {
+      logger.warn("UserConfig email attribute = {} is missing in LdapEntry user object", userConfig.getEmailAttr());
     }
 
     if (Arrays.asList(user.getAttributeNames()).contains(userConfig.getDisplayNameAttr())) {
