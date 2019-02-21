@@ -104,14 +104,20 @@ public class PcfHelperService {
           (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
       if (CommandExecutionStatus.FAILURE.equals(pcfCommandExecutionResponse.getCommandExecutionStatus())) {
-        logger.error("Failed to fetch PCF application details for Instance Sync, check delegate logs");
+        logger.warn("Failed to fetch PCF application details for Instance Sync, check delegate logs"
+            + pcfCommandExecutionResponse.getPcfCommandResponse().getOutput());
         if (pcfCommandExecutionResponse.getErrorMessage().contains(pcfApplicationName + " does not exist")
             || pcfCommandExecutionResponse.getErrorMessage().contains(organization + " does not exist")
             || pcfCommandExecutionResponse.getErrorMessage().contains(space + " does not exist")) {
           throw new PcfAppNotFoundException(pcfCommandExecutionResponse.getErrorMessage());
         } else {
-          throw new WingsException(ErrorCode.GENERAL_ERROR)
-              .addParam("message", "Failed to fetch app details for PCF" + pcfInstanceSyncResponse.getOutput());
+          String errMsg = new StringBuilder(128)
+                              .append("Failed to fetch app details for PCF APP: ")
+                              .append(pcfApplicationName)
+                              .append(" with Error: ")
+                              .append(pcfInstanceSyncResponse.getOutput())
+                              .toString();
+          throw new WingsException(ErrorCode.GENERAL_ERROR, errMsg).addParam("message", errMsg);
         }
       }
 

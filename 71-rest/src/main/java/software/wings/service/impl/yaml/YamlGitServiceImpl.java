@@ -642,7 +642,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       }
 
       if (isEmpty(gitConnectorId)) {
-        logger.error(GIT_YAML_LOG_PREFIX + "Could not obtain valid git connector for webhook token " + webhookToken);
+        logger.warn(GIT_YAML_LOG_PREFIX + "Could not obtain valid git connector for webhook token " + webhookToken);
         return;
       }
 
