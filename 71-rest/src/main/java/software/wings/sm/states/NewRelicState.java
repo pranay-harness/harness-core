@@ -255,12 +255,12 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     return null;
   }
 
-  public static MetricType getMetricTypeForMetric(String metricName) {
+  public static String getMetricTypeForMetric(String metricName) {
     if (isEmpty(metricName)) {
       return null;
     }
     if (NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.containsKey(metricName)) {
-      return NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.get(metricName).getMetricType();
+      return NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.get(metricName).getMetricType().name();
     }
     logger.error("Invalid metricName in NewRelic {}", metricName);
     return null;

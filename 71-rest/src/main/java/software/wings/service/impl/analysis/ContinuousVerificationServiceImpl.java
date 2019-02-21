@@ -72,7 +72,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.metrics.MetricType;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
@@ -773,7 +772,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return metricName;
   }
 
-  private MetricType getMetricType(CVConfiguration cvConfig, String metricName) {
+  private String getMetricType(CVConfiguration cvConfig, String metricName) {
     switch (cvConfig.getStateType()) {
       case APP_DYNAMICS:
         return AppDynamicsState.getMetricTypeForMetric(metricName);

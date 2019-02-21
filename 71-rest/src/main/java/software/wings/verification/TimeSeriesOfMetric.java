@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.metrics.MetricType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,7 +33,7 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
 
   @Builder.Default int risk = -1;
   private String metricName;
-  private MetricType metricType;
+  private String metricType;
   private String metricDeeplinkUrl;
   private boolean isLongTermPattern;
   private long lastSeenTime;
