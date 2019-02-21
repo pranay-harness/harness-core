@@ -11,6 +11,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
+import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -115,6 +116,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -322,8 +324,8 @@ public class TriggerServiceImpl implements TriggerService {
         List<Artifact> matchedArtifacts =
             collectedArtifacts.stream()
                 .filter(artifact
-                    -> triggerServiceHelper.checkArtifactMatchesArtifactFilter(
-                        artifact, artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex()))
+                    -> triggerServiceHelper.checkArtifactMatchesArtifactFilter(trigger.getUuid(), artifact,
+                        artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex()))
                 .collect(Collectors.toList());
         if (isNotEmpty(matchedArtifacts)) {
           logger.info(
@@ -928,12 +930,32 @@ public class TriggerServiceImpl implements TriggerService {
 
   private void validateAndSetNewArtifactCondition(Trigger trigger) {
     ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
+    String artifactFilter = artifactTriggerCondition.getArtifactFilter();
+    if (isNotEmpty(artifactFilter)) {
+      validateArtifactFilter(artifactTriggerCondition.isRegex(), artifactFilter);
+    }
     ArtifactStream artifactStream =
         artifactStreamService.get(trigger.getAppId(), artifactTriggerCondition.getArtifactStreamId());
     notNullCheck("Artifact Source is mandatory for New Artifact Condition Trigger", artifactStream, USER);
     Service service = serviceResourceService.get(trigger.getAppId(), artifactStream.getServiceId(), false);
     notNullCheck("Service does not exist", service, USER);
     artifactTriggerCondition.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
+  }
+
+  private void validateArtifactFilter(Boolean isRegex, String artifactFilter) {
+    if (isRegex) {
+      try {
+        compile(artifactFilter);
+      } catch (PatternSyntaxException pe) {
+        throw new WingsException("Invalid Build/Tag Filter, Please provide a valid regex", USER);
+      }
+    } else {
+      try {
+        compile(artifactFilter.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+      } catch (PatternSyntaxException pe) {
+        throw new WingsException("Invalid Build/Tag Filter", USER);
+      }
+    }
   }
 
   private void validateAndSetArtifactSelections(Trigger trigger, List<Service> services) {

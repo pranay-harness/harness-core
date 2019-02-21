@@ -62,6 +62,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -300,13 +301,20 @@ public class TriggerServiceHelper {
     return triggerWorkflowVariableValues;
   }
 
-  public boolean checkArtifactMatchesArtifactFilter(Artifact artifact, String artifactFilter, boolean isRegEx) {
+  public boolean checkArtifactMatchesArtifactFilter(
+      String triggerId, Artifact artifact, String artifactFilter, boolean isRegEx) {
     Pattern pattern;
-    if (isRegEx) {
-      pattern = compile(artifactFilter);
-    } else {
-      pattern = compile(artifactFilter.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+    try {
+      if (isRegEx) {
+        pattern = compile(artifactFilter);
+      } else {
+        pattern = compile(artifactFilter.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+      }
+    } catch (PatternSyntaxException pe) {
+      logger.error("Invalid Build/Tag Filter {} for triggerId {}", artifactFilter, triggerId, pe);
+      throw new WingsException("Invalid Build/Tag Filter", USER);
     }
+
     if (isEmpty(artifact.getArtifactFiles())) {
       if (pattern.matcher(artifact.getBuildNo()).find()) {
         logger.info(
