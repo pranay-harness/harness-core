@@ -1,6 +1,8 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.notifications.NotificationReceiverInfo;
 import lombok.Builder;
@@ -36,11 +38,14 @@ import javax.validation.constraints.NotNull;
 @Indexes(
     @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
+@HarnessExportableEntity
 @Deprecated
 public class NotificationGroup extends Base implements NotificationReceiverInfo {
   public static final String NAME_KEY = "name";
 
-  @NotEmpty private String accountId;
+  @NotEmpty @NaturalKey private String accountId;
+  @NotNull @NaturalKey private String name;
+  private boolean editable = true;
 
   @Override
   public boolean equals(Object o) {
@@ -64,9 +69,6 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo 
     return Objects.hash(
         super.hashCode(), accountId, name, editable, roles, defaultNotificationGroupForAccount, addressesByChannelType);
   }
-
-  @NotNull private String name;
-  private boolean editable = true;
 
   // roles to notify
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();

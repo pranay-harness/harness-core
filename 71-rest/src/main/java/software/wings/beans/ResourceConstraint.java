@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.data.validator.Trimmed;
 import io.harness.distribution.constraint.Constraint;
 import lombok.Builder;
@@ -20,14 +22,15 @@ import javax.validation.constraints.Min;
 @Indexes(@Index(
     options = @IndexOptions(unique = true, name = "uniqueName"), fields = { @Field("accountId")
                                                                             , @Field("name") }))
+@HarnessExportableEntity
 @EqualsAndHashCode(callSuper = false)
 @Data
 @NoArgsConstructor
 public class ResourceConstraint extends Base {
   public static final String NAME_KEY = "name";
 
-  @NotEmpty private String accountId;
-  @NotEmpty @Trimmed private String name;
+  @NotEmpty @NaturalKey private String accountId;
+  @NotEmpty @Trimmed @NaturalKey private String name;
   @Min(value = 1) @Max(value = 1000) private int capacity;
   private Constraint.Strategy strategy;
 

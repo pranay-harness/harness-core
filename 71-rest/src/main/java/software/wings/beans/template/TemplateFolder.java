@@ -7,6 +7,8 @@ import static java.util.Arrays.asList;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.validation.Create;
@@ -29,6 +31,7 @@ import java.util.List;
 
 @Data
 @Entity(value = "templateFolders", noClassnameStored = true)
+@HarnessExportableEntity
 @NoArgsConstructor
 @JsonInclude(NON_NULL)
 @EqualsAndHashCode(callSuper = false)
@@ -43,8 +46,8 @@ public class TemplateFolder extends Base {
   public static final String PATH_ID_KEY = "pathId";
   public static final String PATH_KEY = "path";
 
-  @NotEmpty private String accountId;
-  @NotEmpty @EntityName(groups = {Create.class, Update.class}) String name;
+  @NotEmpty @NaturalKey private String accountId;
+  @NotEmpty @EntityName(groups = {Create.class, Update.class}) @NaturalKey String name;
   private String description;
   private String parentId;
   private transient String nodeType = NodeType.FILE.name();

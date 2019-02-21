@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,14 +31,15 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 @Entity(value = "gcsFileMetadata", noClassnameStored = true)
+@HarnessExportableEntity
 public class GcsFileMetadata extends Base {
-  @NotEmpty private String accountId;
-  @NotEmpty @Indexed private String fileId; // Mongo GridFs fileId.
-  @NotEmpty @Indexed private String gcsFileId;
-  @NotEmpty private String fileName;
-  @NotEmpty private FileBucket fileBucket;
-  private String entityId;
-  private int version;
+  @NotEmpty @NaturalKey private String accountId;
+  @NotEmpty @Indexed @NaturalKey private String fileId; // Mongo GridFs fileId.
+  @NotEmpty @Indexed @NaturalKey private String gcsFileId;
+  @NotEmpty @NaturalKey private String fileName;
+  @NotEmpty @NaturalKey private FileBucket fileBucket;
+  @NaturalKey private String entityId;
+  @NaturalKey private int version;
   private long fileLength;
   private String mimeType;
   private ChecksumType checksumType;

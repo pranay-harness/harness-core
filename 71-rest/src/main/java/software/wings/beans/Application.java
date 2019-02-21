@@ -5,6 +5,8 @@ import static java.util.Arrays.asList;
 import com.google.common.base.MoreObjects;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,16 +36,17 @@ import java.util.Objects;
  * @author Rishi
  */
 @Entity(value = "applications", noClassnameStored = true)
+@HarnessExportableEntity
 @Indexes(
     @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
 public class Application extends Base {
   public static final String NAME_KEY = "name";
 
-  @NotEmpty private String name;
+  @NotEmpty @NaturalKey private String name;
   private String description;
 
-  @NotEmpty private String accountId;
+  @NotEmpty @NaturalKey private String accountId;
 
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<Environment> environments = new ArrayList<>();

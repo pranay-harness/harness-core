@@ -12,6 +12,8 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
@@ -32,18 +34,19 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "workflows", noClassnameStored = true)
+@HarnessExportableEntity
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class Workflow extends Base {
   public static final String NAME_KEY = "name";
   public static final String KEYWORDS_KEY = "keywords";
 
-  @NotNull @EntityName private String name;
+  @NotNull @EntityName @NaturalKey private String name;
 
   private String description;
 
-  private WorkflowType workflowType;
+  @NaturalKey private WorkflowType workflowType;
 
-  private String envId;
+  @NaturalKey private String envId;
 
   private Integer defaultVersion;
 

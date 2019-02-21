@@ -5,6 +5,8 @@ import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVIC
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.data.validator.EntityName;
 import io.harness.encryption.Encrypted;
 import io.harness.encryption.EncryptionReflectUtils;
@@ -40,6 +42,7 @@ import javax.validation.constraints.NotNull;
           @Field("name")
     },
     options = @IndexOptions(unique = true, name = "serviceVariableUniqueIdx")))
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
@@ -53,30 +56,31 @@ public class ServiceVariable extends Base implements EncryptableSetting {
 
   private String templateId = DEFAULT_TEMPLATE_ID;
 
-  @NotEmpty(groups = {Create.class}) private String envId;
+  @NotEmpty(groups = {Create.class}) @NaturalKey private String envId;
 
-  @NotNull(groups = {Create.class}) private EntityType entityType;
+  @NotNull(groups = {Create.class}) @NaturalKey private EntityType entityType;
 
-  @NotEmpty(groups = {Create.class}) private String entityId;
+  @NotEmpty(groups = {Create.class}) @NaturalKey private String entityId;
 
   private String parentServiceVariableId;
 
   @Transient private ServiceVariable overriddenServiceVariable;
 
-  private OverrideType overrideType;
+  @NaturalKey private OverrideType overrideType;
 
   private List<String> instances;
-  private String expression;
+  @NaturalKey private String expression;
 
   @SchemaIgnore private String accountId;
 
   @NotEmpty(groups = {Create.class})
   @EntityName(charSetString = ALLOWED_CHARS_SERVICE_VARIABLE_STRING, message = ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE)
+  @NaturalKey
   private String name;
 
   @Encrypted private char[] value;
 
-  private Type type;
+  @NaturalKey private Type type;
 
   @SchemaIgnore private String encryptedValue;
 

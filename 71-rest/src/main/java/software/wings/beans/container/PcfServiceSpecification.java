@@ -2,6 +2,8 @@ package software.wings.beans.container;
 
 import static software.wings.yaml.YamlHelper.trimYaml;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,11 +14,12 @@ import software.wings.beans.DeploymentSpecification;
 import javax.validation.constraints.NotNull;
 
 @Entity("pcfServiceSpecification")
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
 public class PcfServiceSpecification extends DeploymentSpecification {
-  @NotNull private String serviceId;
+  @NotNull @NaturalKey private String serviceId;
   @NotNull private String manifestYaml;
 
   public static final String preamble = "# Enter your Task Definition JSON spec below.\n"

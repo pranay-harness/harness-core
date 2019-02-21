@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,15 +13,16 @@ import org.mongodb.morphia.annotations.Entity;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "schema", noClassnameStored = true)
+@HarnessExportableEntity
 public class Schema extends Base {
   public static final String SCHEMA_ID = "schema";
   public static final String VERSION_KEY = "version";
   public static final String BACKGROUND_VERSION_KEY = "backgroundVersion";
   public static final String SEED_DATA_VERSION_KEY = "seedDataVersion";
 
-  private int version;
-  private int backgroundVersion;
-  private int seedDataVersion;
+  @NaturalKey private int version;
+  @NaturalKey private int backgroundVersion;
+  @NaturalKey private int seedDataVersion;
 
   public static final class SchemaBuilder {
     private int version;

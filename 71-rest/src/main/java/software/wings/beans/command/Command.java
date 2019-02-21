@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.serializer.MapperUtils;
@@ -40,18 +42,19 @@ import java.util.Optional;
 @JsonTypeName("COMMAND")
 @Attributes(title = "Command")
 @Entity(value = "commands")
+@HarnessExportableEntity
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field("appId")
                , @Field("originEntityId"), @Field("version") }))
 public class Command extends Base implements CommandUnit {
-  @NotEmpty @SchemaIgnore private String name;
+  @NotEmpty @SchemaIgnore @NaturalKey private String name;
   @SchemaIgnore private CommandUnitType commandUnitType;
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
 
   @SchemaIgnore private boolean artifactNeeded;
   @Deprecated @SchemaIgnore private String deploymentType;
 
-  @NotEmpty @SchemaIgnore private String originEntityId;
+  @NotEmpty @SchemaIgnore @NaturalKey private String originEntityId;
 
   @SchemaIgnore private ContainerFamily containerFamily;
 
@@ -64,7 +67,7 @@ public class Command extends Base implements CommandUnit {
   private String referenceUuid;
   @SchemaIgnore private transient Graph graph;
 
-  @SchemaIgnore private Long version;
+  @SchemaIgnore @NaturalKey private Long version;
 
   @SchemaIgnore private List<CommandUnit> commandUnits = Lists.newArrayList();
 

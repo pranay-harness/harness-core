@@ -1,5 +1,7 @@
 package software.wings.yaml.gitSync;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,8 +19,9 @@ import software.wings.beans.Base;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "gitSyncWebhook", noClassnameStored = true)
+@HarnessExportableEntity
 public class GitSyncWebhook extends Base {
-  private String accountId;
-  private String webhookToken;
-  private String entityId;
+  @NaturalKey private String accountId;
+  @NaturalKey private String webhookToken;
+  @NaturalKey private String entityId;
 }

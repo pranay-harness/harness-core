@@ -4,6 +4,8 @@ import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -38,6 +40,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
                                                                                   , @Field("name") }))
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
@@ -45,7 +48,7 @@ public class Service extends Base {
   public static final String NAME_KEY = "name";
   public static final String ARTIFACT_TYPE = "artifactType";
 
-  @Trimmed @EntityName private String name;
+  @Trimmed @EntityName @NaturalKey private String name;
   private String description;
   private ArtifactType artifactType;
   private DeploymentType deploymentType;

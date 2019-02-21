@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.PersistentIterable;
@@ -42,6 +44,7 @@ import javax.annotation.Nullable;
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field("appId")
                , @Field("envId"), @Field("name") }))
+@HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class InfrastructureMapping extends Base implements EncryptableSetting, PersistentIterable {
   public static final String ENV_ID_KEY = "envId";
@@ -50,8 +53,8 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
   public static final String SERVICE_ID_KEY = "serviceId";
 
   @NotEmpty private String computeProviderSettingId;
-  @NotEmpty private String envId;
-  @NotEmpty private String serviceTemplateId;
+  @NotEmpty @NaturalKey private String envId;
+  @NotEmpty @NaturalKey private String serviceTemplateId;
 
   @NotEmpty(groups = {Update.class}) private String serviceId;
 
@@ -60,12 +63,12 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
   @NotEmpty private String deploymentType;
   @SchemaIgnore private String computeProviderName;
 
-  @EntityName private String name;
+  @EntityName @NaturalKey private String name;
 
   // auto populate name
   @SchemaIgnore private boolean autoPopulate = true;
 
-  @SchemaIgnore @NotEmpty private String accountId;
+  @SchemaIgnore @NotEmpty @NaturalKey private String accountId;
 
   @Nullable @Indexed private String provisionerId;
 

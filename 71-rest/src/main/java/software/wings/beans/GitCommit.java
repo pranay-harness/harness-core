@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,14 +29,15 @@ import java.util.List;
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("commitId") },
     options = @IndexOptions(name = "gitCommitIdx", unique = true, dropDups = true)))
+@HarnessExportableEntity
 public class GitCommit extends Base {
   public static final String YAML_GIT_CONFIG_ID_KEY = "yamlGitConfigId";
   public static final String YAML_GIT_CONFIG_IDS_KEY = "yamlGitConfigIds";
   public static final String STATUS_KEY = "status";
 
-  private String accountId;
-  private String yamlGitConfigId;
-  private String commitId;
+  @NaturalKey private String accountId;
+  @NaturalKey private String yamlGitConfigId;
+  @NaturalKey private String commitId;
   private YamlChangeSet yamlChangeSet;
   private GitCommandResult gitCommandResult;
   private Status status;

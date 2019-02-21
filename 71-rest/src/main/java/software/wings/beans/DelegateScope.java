@@ -3,6 +3,8 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,13 +18,14 @@ import java.util.List;
  * Created by brett on 7/20/17
  */
 @Entity(value = "delegateScopes")
+@HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class DelegateScope extends Base {
-  @NotEmpty private String accountId;
-  private String name;
+  @NotEmpty @NaturalKey private String accountId;
+  @NaturalKey private String name;
   private List<TaskGroup> taskTypes;
   private List<EnvironmentType> environmentTypes;
   private List<String> applications;

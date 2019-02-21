@@ -42,6 +42,8 @@ import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -73,6 +75,7 @@ import javax.validation.Valid;
 @Indexes(@Index(options = @IndexOptions(name = "locate", unique = true),
     fields = { @Field("accountId")
                , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") }))
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class SettingAttribute extends Base {
@@ -81,12 +84,12 @@ public class SettingAttribute extends Base {
   public static final String NAME_KEY = "name";
   public static final String VALUE_TYPE_KEY = "value.type";
 
-  @NotEmpty private String envId = GLOBAL_ENV_ID;
-  @NotEmpty private String accountId;
-  @NotEmpty @EntityName @Trimmed private String name;
+  @NotEmpty @NaturalKey private String envId = GLOBAL_ENV_ID;
+  @NotEmpty @NaturalKey private String accountId;
+  @NotEmpty @EntityName @Trimmed @NaturalKey private String name;
   @Valid private SettingValue value;
   @Valid @Transient private ConnectivityValidationAttributes validationAttributes;
-  private Category category = Category.SETTING;
+  @NaturalKey private Category category = Category.SETTING;
   private List<String> appIds;
   private UsageRestrictions usageRestrictions;
 

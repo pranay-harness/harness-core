@@ -6,6 +6,8 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
@@ -46,6 +48,7 @@ import javax.ws.rs.DefaultValue;
     },
     options = @IndexOptions(
         unique = true, name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1")))
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
@@ -59,23 +62,23 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
   public static final String RELATIVE_FILE_PATH_KEY = "relativeFilePath";
   public static final String TEMPLATE_ID_KEY = "templateId";
 
-  @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
+  @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) @NaturalKey private String templateId;
 
-  @FormDataParam("envId") @NotEmpty(groups = {Create.class}) private String envId;
+  @FormDataParam("envId") @NotEmpty(groups = {Create.class}) @NaturalKey private String envId;
 
-  @FormDataParam("entityType") @NotNull(groups = {Create.class}) private EntityType entityType;
+  @FormDataParam("entityType") @NotNull(groups = {Create.class}) @NaturalKey private EntityType entityType;
 
-  @FormDataParam("entityId") @NotEmpty(groups = {Create.class}) private String entityId;
+  @FormDataParam("entityId") @NotEmpty(groups = {Create.class}) @NaturalKey private String entityId;
 
   @FormDataParam("description") private String description;
 
-  @FormDataParam("parentConfigFileId") private String parentConfigFileId;
+  @FormDataParam("parentConfigFileId") @NaturalKey private String parentConfigFileId;
 
-  @FormDataParam("relativeFilePath") private String relativeFilePath;
+  @FormDataParam("relativeFilePath") @NaturalKey private String relativeFilePath;
 
-  @FormDataParam("targetToAllEnv") private boolean targetToAllEnv;
+  @FormDataParam("targetToAllEnv") @NaturalKey private boolean targetToAllEnv;
 
-  @FormDataParam("defaultVersion") private int defaultVersion;
+  @FormDataParam("defaultVersion") @NaturalKey private int defaultVersion;
 
   @Default private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
 

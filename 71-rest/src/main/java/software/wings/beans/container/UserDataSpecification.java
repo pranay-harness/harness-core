@@ -1,5 +1,7 @@
 package software.wings.beans.container;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,11 +18,12 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 12/18/17.
  */
 @Entity("userDataSpecifications")
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
 public class UserDataSpecification extends DeploymentSpecification {
-  @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
+  @NotEmpty @Indexed(options = @IndexOptions(unique = true)) @NaturalKey private String serviceId;
   @NotNull private String data;
 
   @Data

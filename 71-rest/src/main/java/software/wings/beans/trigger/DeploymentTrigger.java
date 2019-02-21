@@ -1,5 +1,7 @@
 package software.wings.beans.trigger;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
@@ -28,11 +30,12 @@ import javax.validation.constraints.NotNull;
 @Indexes(@Index(
     options = @IndexOptions(name = "uniqueTriggerIdx", unique = true), fields = { @Field("appId")
                                                                                   , @Field("name") }))
+@HarnessExportableEntity
 public class DeploymentTrigger extends Base {
-  @EntityName @NotEmpty @Trimmed private String name;
+  @EntityName @NotEmpty @Trimmed @NaturalKey private String name;
   private String description;
-  @NotEmpty private String workflowId;
-  private String workflowName;
+  @NotEmpty @NaturalKey private String workflowId;
+  @NaturalKey private String workflowName;
   @NotNull private WorkflowType workflowType;
   @NotNull private Condition condition;
 

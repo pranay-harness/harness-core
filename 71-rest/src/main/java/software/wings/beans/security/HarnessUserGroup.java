@@ -3,6 +3,8 @@ package software.wings.beans.security;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -22,11 +24,12 @@ import java.util.Set;
  */
 @JsonInclude(NON_EMPTY)
 @Entity(value = "harnessUserGroups", noClassnameStored = true)
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 public class HarnessUserGroup extends Base {
-  @NotEmpty private String name;
+  @NotEmpty @NaturalKey private String name;
   private String description;
   private Set<Action> actions;
   private boolean applyToAllAccounts;
