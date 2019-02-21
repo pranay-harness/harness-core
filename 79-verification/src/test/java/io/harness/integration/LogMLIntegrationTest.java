@@ -401,7 +401,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
         new LogMLClusterGenerator(learningEngineService, logClusterContext, ClusterLevel.L0, ClusterLevel.L1,
             new LogRequest(query, appId, stateExecutionId, workflowId, serviceId,
-                Sets.newHashSet(Collections.singletonList(host)), logCollectionMinute))
+                Sets.newHashSet(Collections.singletonList(host)), logCollectionMinute),
+            0)
             .run();
 
         final LogRequest logRequest = new LogRequest(

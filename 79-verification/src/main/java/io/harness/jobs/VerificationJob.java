@@ -213,10 +213,12 @@ public class VerificationJob implements Job {
     disabledAccounts.forEach(account -> {
       if (jobScheduler.checkExists(account.getUuid(), METRIC_DATA_PROCESSOR_CRON_GROUP)) {
         jobScheduler.deleteJob(account.getUuid(), METRIC_DATA_PROCESSOR_CRON_GROUP);
+        logger.info("Deleting crons for account {} ", account.getUuid());
       }
 
       if (jobScheduler.checkExists(account.getUuid(), LOG_DATA_PROCESSOR_CRON_GROUP)) {
         jobScheduler.deleteJob(account.getUuid(), LOG_DATA_PROCESSOR_CRON_GROUP);
+        logger.info("Deleting crons for account {} ", account.getUuid());
       }
     });
   }

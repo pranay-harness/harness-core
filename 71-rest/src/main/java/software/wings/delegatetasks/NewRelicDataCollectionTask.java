@@ -68,7 +68,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   private static final String ALL_WEB_TXN_NAME = "WebTransaction/all";
   private static final String ALL_ERRORS_TXN_NAME = "Errors/all";
   private static final String OVERALL_APDEX_TXN_NAME = "Apdex";
-  private static final int INITIAL_DELAY_MINUTES = 2;
   private static final int PERIOD_MINS = 1;
 
   @Inject private NewRelicDelegateService newRelicDelegateService;

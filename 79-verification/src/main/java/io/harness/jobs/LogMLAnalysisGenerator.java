@@ -191,20 +191,55 @@ public class LogMLAnalysisGenerator implements Runnable {
         featureName = null;
       }
 
-      LearningEngineAnalysisTaskBuilder analysisTaskBuilder =
-          LearningEngineAnalysisTask.builder()
-              .query(Lists.newArrayList(query.split(" ")))
-              .workflow_id(context.getWorkflowId())
-              .workflow_execution_id(context.getWorkflowExecutionId())
-              .state_execution_id(context.getStateExecutionId())
-              .service_id(context.getServiceId())
-              .sim_threshold(0.9)
-              .analysis_minute(logAnalysisMinute)
-              .analysis_save_url(logAnalysisSaveUrl)
-              .log_analysis_get_url(logAnalysisGetUrl)
-              .ml_analysis_type(MLAnalysisType.LOG_ML)
-              .feature_name(featureName)
-              .stateType(context.getStateType());
+      LearningEngineAnalysisTaskBuilder analysisTaskBuilder;
+      if (context.getStateType().equals(StateType.SUMO)) {
+        if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+          analysisTaskBuilder = LearningEngineAnalysisTask.builder()
+                                    .query(Lists.newArrayList(query.split(" ")))
+                                    .workflow_id(context.getWorkflowId())
+                                    .workflow_execution_id(context.getWorkflowExecutionId())
+                                    .state_execution_id(context.getStateExecutionId())
+                                    .service_id(context.getServiceId())
+                                    .sim_threshold(0.9)
+                                    .analysis_minute(logAnalysisMinute)
+                                    .analysis_start_min((int) context.getStartDataCollectionMinute())
+                                    .analysis_save_url(logAnalysisSaveUrl)
+                                    .log_analysis_get_url(logAnalysisGetUrl)
+                                    .ml_analysis_type(MLAnalysisType.LOG_ML)
+                                    .feature_name(featureName)
+                                    .stateType(context.getStateType());
+        } else {
+          analysisTaskBuilder = LearningEngineAnalysisTask.builder()
+                                    .query(Lists.newArrayList(query.split(" ")))
+                                    .workflow_id(context.getWorkflowId())
+                                    .workflow_execution_id(context.getWorkflowExecutionId())
+                                    .state_execution_id(context.getStateExecutionId())
+                                    .service_id(context.getServiceId())
+                                    .sim_threshold(0.9)
+                                    .analysis_minute(logAnalysisMinute - context.getStartDataCollectionMinute())
+                                    .analysis_start_min((int) context.getStartDataCollectionMinute())
+                                    .analysis_save_url(logAnalysisSaveUrl)
+                                    .log_analysis_get_url(logAnalysisGetUrl)
+                                    .ml_analysis_type(MLAnalysisType.LOG_ML)
+                                    .feature_name(featureName)
+                                    .stateType(context.getStateType());
+        }
+      } else {
+        analysisTaskBuilder = LearningEngineAnalysisTask.builder()
+                                  .query(Lists.newArrayList(query.split(" ")))
+                                  .workflow_id(context.getWorkflowId())
+                                  .workflow_execution_id(context.getWorkflowExecutionId())
+                                  .state_execution_id(context.getStateExecutionId())
+                                  .service_id(context.getServiceId())
+                                  .sim_threshold(0.9)
+                                  .analysis_minute(logAnalysisMinute)
+                                  .analysis_start_min((int) context.getStartDataCollectionMinute())
+                                  .analysis_save_url(logAnalysisSaveUrl)
+                                  .log_analysis_get_url(logAnalysisGetUrl)
+                                  .ml_analysis_type(MLAnalysisType.LOG_ML)
+                                  .feature_name(featureName)
+                                  .stateType(context.getStateType());
+      }
 
       if (!isEmpty(feedback_url)) {
         analysisTaskBuilder.feedback_url(feedback_url);
@@ -216,7 +251,7 @@ public class LogMLAnalysisGenerator implements Runnable {
             .control_nodes(controlNodes)
             .test_nodes(testNodes);
       } else {
-        analysisTaskBuilder.control_input_url(testInputUrl).control_nodes(testNodes);
+        analysisTaskBuilder.control_input_url(testInputUrl).control_nodes(testNodes).analysis_minute(logAnalysisMinute);
       }
 
       LearningEngineAnalysisTask analysisTask = analysisTaskBuilder.build();

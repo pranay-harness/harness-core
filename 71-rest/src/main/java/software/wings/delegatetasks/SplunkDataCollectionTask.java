@@ -32,7 +32,6 @@ import java.util.function.Supplier;
  * Created by rsingh on 5/18/17.
  */
 public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  public static final int DELAY_MINUTES = 2;
   public static final Duration RETRY_SLEEP = Duration.ofSeconds(30);
 
   private static final Logger logger = LoggerFactory.getLogger(SplunkDataCollectionTask.class);

@@ -63,8 +63,13 @@ public class AnalysisContext extends Base {
   private Map<String, List<TimeSeries>> timeSeriesToCollect = new HashMap<>();
   private boolean runTillConvergence;
   private String delegateTaskId;
+  private String envId;
+  private String hostNameField;
   private MLAnalysisType analysisType;
   private @Indexed ExecutionStatus executionStatus;
+  private long startDataCollectionMinute;
+  // Collection interval in minutes
+  private int collectionInterval;
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
 
   private int retry;
@@ -85,7 +90,8 @@ public class AnalysisContext extends Base {
       String analysisServerConfigId, String correlationId, int smooth_window, int tolerance,
       String prevWorkflowExecutionId, int minimumRequestsPerMinute, int comparisonWindow, int parallelProcesses,
       Map<String, List<TimeSeries>> timeSeriesToCollect, boolean runTillConvergence, String delegateTaskId,
-      MLAnalysisType analysisType, ExecutionStatus executionStatus, String managerVersion) {
+      MLAnalysisType analysisType, ExecutionStatus executionStatus, String managerVersion, String envId,
+      String hostNameField, int collectionInterval, long startDataCollectionMinute) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, syncFromGit);
     this.accountId = accountId;
     this.workflowId = workflowId;
@@ -117,6 +123,10 @@ public class AnalysisContext extends Base {
     this.version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
     this.retry = 0;
     this.managerVersion = managerVersion;
+    this.envId = envId;
+    this.hostNameField = hostNameField;
+    this.collectionInterval = collectionInterval;
+    this.startDataCollectionMinute = startDataCollectionMinute;
   }
 
   public LogClusterContext getClusterContext() {

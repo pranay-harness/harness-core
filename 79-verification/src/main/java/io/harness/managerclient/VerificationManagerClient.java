@@ -60,4 +60,8 @@ public interface VerificationManagerClient {
   @GET("apm" + VerificationConstants.COLLECT_24_7_DATA)
   Call<RestResponse<Boolean>> triggerCVDataCollection(@Query("cvConfigId") String cvConfigId,
       @Query("stateType") StateType stateType, @Query("startTime") long startTime, @Query("endTime") long endTime);
+
+  @GET("apm" + VerificationConstants.COLLECT_DATA)
+  Call<RestResponse<Boolean>> triggerWorkflowDataCollection(
+      @Query("analysisContextId") String contextId, @Query("startDataCollectionMinute") long collectionMinute);
 }

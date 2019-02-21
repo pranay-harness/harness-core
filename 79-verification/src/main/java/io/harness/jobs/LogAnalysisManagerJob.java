@@ -91,12 +91,16 @@ public class LogAnalysisManagerJob implements Job {
 
       switch (context.getStateType()) {
         case SUMO:
+          new LogMLClusterGenerator(learningEngineService, context.getClusterContext(), ClusterLevel.L1,
+              ClusterLevel.L2, logRequest, (int) context.getStartDataCollectionMinute())
+              .run();
+          break;
         case ELK:
         case LOGZ:
         case BUG_SNAG:
         case LOG_VERIFICATION:
           new LogMLClusterGenerator(
-              learningEngineService, context.getClusterContext(), ClusterLevel.L1, ClusterLevel.L2, logRequest)
+              learningEngineService, context.getClusterContext(), ClusterLevel.L1, ClusterLevel.L2, logRequest, 0)
               .run();
           break;
         case SPLUNKV2:
@@ -135,7 +139,8 @@ public class LogAnalysisManagerJob implements Job {
         }
 
         if (analysisService.isProcessingComplete(context.getQuery(), context.getAppId(), context.getStateExecutionId(),
-                context.getStateType(), context.getTimeDuration())) {
+                context.getStateType(), context.getTimeDuration(), context.getStartDataCollectionMinute(),
+                context.getAccountId())) {
           completeCron = true;
         } else {
           long logAnalysisClusteringTestMinute =

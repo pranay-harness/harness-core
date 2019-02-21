@@ -23,6 +23,7 @@ public class VerificationConstants {
   public static final String LAST_SUCCESSFUL_WORKFLOW_IDS = "/last-successful-workflow-ids";
   public static final String NOTIFY_METRIC_STATE = "/notify-metric-state";
   public static final String COLLECT_24_7_DATA = "/collect-24-7-data";
+  public static final String COLLECT_DATA = "/collect-data";
   public static final String NOTIFY_LOG_STATE = "/notify-log-state";
   public static final String CHECK_STATE_VALID = "/state-valid";
   public static final String GET_DEPLOYMENTS_24_7 = "/cv24-7-deployment-list";
@@ -47,6 +48,7 @@ public class VerificationConstants {
   public static final String LAMBDA_HOST_NAME = "LAMBDA_HOST";
   public static final String DEFAULT_GROUP_NAME = "default";
   public static final String ECS_HOST_NAME = "ECS_HOST";
+  public static final String WORKFLOW_CV_COLLECTION_CRON_GROUP = "_WORKFLOW_CV_COLLECTION_CRON_GROUP";
 
   // DEMO Workflow Constants
   public static final String DEMO_APPLICAITON_ID = "CV-Demo";
@@ -65,12 +67,13 @@ public class VerificationConstants {
   public static final int CANARY_DAYS_TO_COLLECT = 7;
   public static final int PERIODIC_GAP_IN_DAYS = 7;
   public static final int TIME_DELAY_QUERY_MINS = 2;
+  public static final int DEFAULT_TIMEOUT_IN_MINS = 2;
+
+  public static final int DELAY_MINUTES = 2;
 
   public static final int CRON_POLL_INTERVAL_IN_MINUTES = 15;
   public static final long CRON_POLL_INTERVAL = TimeUnit.MINUTES.toSeconds(CRON_POLL_INTERVAL_IN_MINUTES); // in seconds
-
-  public static final int MIN_TIMESERIES_QUERY_INTERVAL_IN_HOURS = 1;
-  public static final int MAX_TIMESERIES_QUERY_INTERVAL_IN_HOURS = 12;
+  public static final int DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS = 60;
 
   public static final String DATA_COLLECTION_TASKS_PER_MINUTE = "data_collection_tasks_per_min";
   public static final String DATA_ANALYSIS_TASKS_PER_MINUTE = "data_analysis_tasks_per_min";

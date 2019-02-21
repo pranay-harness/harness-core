@@ -6,6 +6,8 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.APMFetchConfig;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.common.VerificationConstants;
@@ -25,6 +27,8 @@ import javax.ws.rs.QueryParam;
 @Path("/apm")
 @Produces("application/json")
 public class ContinuousVerificationResource {
+  private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationResource.class);
+
   @Inject private ContinuousVerificationService verificationService;
 
   /**
@@ -63,5 +67,16 @@ public class ContinuousVerificationResource {
       @QueryParam("stateType") StateType stateType, @QueryParam("startTime") long startTime,
       @QueryParam("endTime") long endTime) {
     return new RestResponse<>(verificationService.collect247Data(cvConfigId, stateType, startTime, endTime));
+  }
+
+  @GET
+  @Path(VerificationConstants.COLLECT_DATA)
+  @Timed
+  @LearningEngineAuth
+  public RestResponse<Boolean> collectWorkflowData(@QueryParam("analysisContextId") String contextId,
+      @QueryParam("startDataCollectionMinute") long collectionMinute) {
+    logger.info(
+        "Trigger Data Collection for workflow with contextId {}, CollectionMinute {}", contextId, collectionMinute);
+    return new RestResponse<>(verificationService.collectCVDataForWorkflow(contextId, collectionMinute));
   }
 }

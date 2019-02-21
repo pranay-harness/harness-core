@@ -2,6 +2,7 @@ package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyLong;
@@ -13,6 +14,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL;
@@ -24,7 +26,9 @@ import com.google.inject.Inject;
 import io.harness.VerificationBaseTest;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.metrics.HarnessMetricRegistry;
+import io.harness.rest.RestResponse;
 import io.harness.service.intfc.ContinuousVerificationService;
+import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +39,8 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -49,14 +55,17 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class ContinuousVerificationServiceTest extends VerificationBaseTest {
-  private String accountId, appId, envId, serviceId, connectorId, query, cvConfigId;
+  private String accountId, appId, envId, serviceId, connectorId, query, cvConfigId, workflowId, workflowExecutionId,
+      stateExecutionId;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ContinuousVerificationService continuousVerificationService;
@@ -77,6 +86,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     serviceId = generateUuid();
     connectorId = generateUuid();
     query = generateUuid();
+    workflowId = generateUuid();
+    workflowExecutionId = generateUuid();
+    stateExecutionId = generateUuid();
 
     sumoConfig = SumoConfig.builder()
                      .sumoUrl(generateUuid())
@@ -124,6 +136,14 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
           when(restCall.execute()).thenReturn(Response.success(true));
           return restCall;
         });
+
+    when(verificationManagerClient.triggerWorkflowDataCollection(anyString(), anyLong())).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      managerVerificationService.collectCVDataForWorkflow((String) args[0], (long) args[1]);
+      Call<Boolean> restCall = mock(Call.class);
+      when(restCall.execute()).thenReturn(Response.success(true));
+      return restCall;
+    });
     setInternalState(continuousVerificationService, "verificationManagerClient", verificationManagerClient);
   }
 
@@ -259,6 +279,109 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertEquals(TimeUnit.MINUTES.toMillis(
                      logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES + numOfMinutesSaved),
         sumoDataCollectionInfo.getEndTime());
+  }
+
+  @Test
+  public void testTriggerLogsCollection() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    AnalysisContext context =
+        createMockAnalysisContext(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
+    wingsPersistence.save(context);
+    continuousVerificationService.triggerLogDataCollection(context);
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter("accountId", accountId).asList();
+    assertEquals(1, delegateTasks.size());
+    DelegateTask delegateTask = delegateTasks.get(0);
+
+    assertEquals(accountId, delegateTask.getAccountId());
+    assertEquals(appId, delegateTask.getAppId());
+    assertEquals(TaskType.SUMO_COLLECT_LOG_DATA, TaskType.valueOf(delegateTask.getTaskType()));
+    SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getParameters()[0];
+    assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
+    assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
+    assertEquals(accountId, sumoDataCollectionInfo.getAccountId());
+    assertEquals(serviceId, sumoDataCollectionInfo.getServiceId());
+  }
+
+  @Test
+  public void testTriggerLogsCollectionInvalidState() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    AnalysisContext context =
+        createMockAnalysisContext(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
+    wingsPersistence.save(context);
+    boolean isTriggered = continuousVerificationService.triggerLogDataCollection(context);
+    assertFalse(isTriggered);
+  }
+
+  @Test
+  public void testTriggerLogsCollectionCompletedCollection() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    AnalysisContext context = createMockAnalysisContext(startTimeInterval);
+    wingsPersistence.save(context);
+
+    LogDataRecord record = createLogDataRecord(startTimeInterval);
+    wingsPersistence.save(record);
+
+    boolean isTriggered = continuousVerificationService.triggerLogDataCollection(context);
+    assertFalse(isTriggered);
+  }
+
+  @Test
+  public void testTriggerLogsCollectionNextMinuteDataCollection() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    AnalysisContext context = createMockAnalysisContext(startTimeInterval);
+    context.setTimeDuration(2);
+    wingsPersistence.save(context);
+
+    LogDataRecord record = createLogDataRecord(startTimeInterval);
+    wingsPersistence.save(record);
+
+    boolean isTriggered = continuousVerificationService.triggerLogDataCollection(context);
+    assertTrue(isTriggered);
+  }
+
+  private LogDataRecord createLogDataRecord(long startTimeInterval) {
+    LogDataRecord record = new LogDataRecord();
+    record.setStateType(StateType.SUMO);
+    record.setWorkflowId(workflowId);
+    record.setLogCollectionMinute(startTimeInterval);
+    record.setQuery(query);
+    record.setAppId(appId);
+    record.setStateExecutionId(stateExecutionId);
+    return record;
+  }
+
+  private AnalysisContext createMockAnalysisContext(long startTimeInterval) {
+    return AnalysisContext.builder()
+        .accountId(accountId)
+        .appId(appId)
+        .workflowId(workflowId)
+        .query(query)
+        .workflowExecutionId(workflowExecutionId)
+        .stateExecutionId(stateExecutionId)
+        .serviceId(serviceId)
+        .controlNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
+        .testNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
+        .isSSL(true)
+        .analysisServerConfigId(connectorId)
+        .appPort(9090)
+        .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+        .timeDuration(1)
+        .stateType(StateType.SUMO)
+        .correlationId(UUID.randomUUID().toString())
+        .prevWorkflowExecutionId("-1")
+        .startDataCollectionMinute(startTimeInterval)
+        .build();
   }
 
   @Test

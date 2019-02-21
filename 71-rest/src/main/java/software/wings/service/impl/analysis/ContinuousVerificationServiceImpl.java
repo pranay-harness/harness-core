@@ -21,6 +21,7 @@ import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 import static software.wings.common.VerificationConstants.NEW_RELIC_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.PROMETHEUS_DEEPLINK_FORMAT;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.sm.states.AbstractLogAnalysisState.HOST_BATCH_SIZE;
 import static software.wings.sm.states.DatadogState.metricEndpointsInfo;
 import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeriesDataPointsList;
 
@@ -1230,7 +1231,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         break;
       case SUMO:
         LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
-        task = createLogsCollectionDelegateTask(logsCVConfiguration, waitId, startTime, endTime);
+        task = createDataCollectionDelegateTask(logsCVConfiguration, waitId, startTime, endTime);
         isLogCollection = true;
         break;
       case ELK:
@@ -1250,6 +1251,20 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     logger.info("Queuing 24x7 data collection task for {}, cvConfigurationId: {}", stateType, cvConfigId);
     delegateService.queueTask(task);
     return true;
+  }
+
+  @Override
+  public boolean collectCVDataForWorkflow(String contextId, long collectionMinute) {
+    AnalysisContext context = wingsPersistence.createQuery(AnalysisContext.class).filter("_id", contextId).get();
+    logger.info("Trigger Data Collection for workflow with stateType {}, stateExecutionId {}, CollectionMinute {}",
+        context.getStateType(), context.getStateExecutionId(), collectionMinute);
+    switch (context.getStateType()) {
+      case SUMO:
+        return createDataCollectionDelegateTask(context, collectionMinute);
+      default:
+        logger.error("Calling collect data for an unsupported state");
+        return false;
+    }
   }
 
   private MetricAnalysisExecutionData getExecutionData(
@@ -1285,8 +1300,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .encryptedDataDetails(secretManager.getEncryptionDetails(dynaTraceConfig, config.getAppId(), null))
             .analysisComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE)
             .build();
-    return createDelegateTask(
-        config, waitId, new Object[] {dataCollectionInfo}, TaskType.DYNATRACE_COLLECT_24_7_METRIC_DATA);
+
+    return createDelegateTask(TaskType.DYNATRACE_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
   }
 
   private DelegateTask createAppDynamicsDelegateTask(
@@ -1309,8 +1325,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .encryptedDataDetails(secretManager.getEncryptionDetails(appDynamicsConfig, config.getAppId(), null))
             .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .build();
-    return createDelegateTask(
-        config, waitId, new Object[] {dataCollectionInfo}, TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA);
+    return createDelegateTask(TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
   }
 
   private DelegateTask createNewRelicDelegateTask(
@@ -1335,8 +1351,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .encryptedDataDetails(secretManager.getEncryptionDetails(newRelicConfig, config.getAppId(), null))
             .settingAttributeId(config.getConnectorId())
             .build();
-    return createDelegateTask(
-        config, waitId, new Object[] {dataCollectionInfo}, TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA);
+    return createDelegateTask(TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
   }
 
   private DelegateTask createPrometheusDelegateTask(
@@ -1357,8 +1373,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .dataCollectionMinute(0)
             .build();
-    return createDelegateTask(
-        config, waitId, new Object[] {dataCollectionInfo}, TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA);
+    return createDelegateTask(TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
   }
 
   private DelegateTask createDatadogDelegateTask(
@@ -1387,8 +1403,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionFrequency(1)
             .dataCollectionTotalTime(timeDuration)
             .build();
-    return createDelegateTask(
-        config, waitId, new Object[] {dataCollectionInfo}, TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK);
+    return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
   }
 
   private DelegateTask createCloudWatchDelegateTask(
@@ -1415,8 +1431,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .region(config.getRegion())
             .dataCollectionMinute(0)
             .build();
-    return createDelegateTask(
-        config, waitId, new Object[] {dataCollectionInfo}, TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA);
+    return createDelegateTask(TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
   }
 
   private DelegateTask createElkDelegateTask(ElkCVConfiguration config, String waitId, long startTime, long endTime) {
@@ -1442,46 +1458,117 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
             .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, config.getAppId(), null))
             .build();
-    return createDelegateTask(config, waitId, new Object[] {dataCollectionInfo}, TaskType.ELK_COLLECT_24_7_LOG_DATA);
+    return createDelegateTask(TaskType.ELK_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
+        new Object[] {dataCollectionInfo}, config.getEnvId());
   }
 
-  private DelegateTask createLogsCollectionDelegateTask(
-      LogsCVConfiguration logsCVConfiguration, String waitId, long startTime, long endTime) {
-    switch (logsCVConfiguration.getStateType()) {
+  private DelegateTask createDataCollectionDelegateTask(
+      LogsCVConfiguration config, String waitId, long startTime, long endTime) {
+    switch (config.getStateType()) {
       case SUMO:
-        SumoConfig sumoConfig = (SumoConfig) settingsService.get(logsCVConfiguration.getConnectorId()).getValue();
+        SumoConfig sumoConfig = (SumoConfig) settingsService.get(config.getConnectorId()).getValue();
         final SumoDataCollectionInfo dataCollectionInfo =
             SumoDataCollectionInfo.builder()
                 .sumoConfig(sumoConfig)
                 .accountId(sumoConfig.getAccountId())
-                .applicationId(logsCVConfiguration.getAppId())
-                .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + logsCVConfiguration.getUuid())
-                .cvConfigId(logsCVConfiguration.getUuid())
-                .serviceId(logsCVConfiguration.getServiceId())
-                .query(logsCVConfiguration.getQuery())
+                .applicationId(config.getAppId())
+                .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+                .cvConfigId(config.getUuid())
+                .serviceId(config.getServiceId())
+                .query(config.getQuery())
                 .startTime(startTime)
                 .endTime(endTime)
-                .encryptedDataDetails(
-                    secretManager.getEncryptionDetails(sumoConfig, logsCVConfiguration.getAppId(), null))
+                .encryptedDataDetails(secretManager.getEncryptionDetails(sumoConfig, config.getAppId(), null))
                 .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
                 .build();
-        return createDelegateTask(
-            logsCVConfiguration, waitId, new Object[] {dataCollectionInfo}, TaskType.SUMO_COLLECT_24_7_LOG_DATA);
+        return createDelegateTask(TaskType.SUMO_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
+            new Object[] {dataCollectionInfo}, config.getEnvId());
       default:
-        throw new IllegalStateException("Invalid state: " + logsCVConfiguration.getStateType());
+        throw new IllegalStateException("Invalid state: " + config.getStateType());
     }
   }
 
+  private boolean createDataCollectionDelegateTask(AnalysisContext context, long collectionStartMinute) {
+    Set<String> canaryNewHostNames = context.getTestNodes().keySet();
+    Map<String, String> lastExecutionNodes = context.getControlNodes();
+    List<String> hostsToBeCollected = new ArrayList<>();
+    if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+        && lastExecutionNodes != null) {
+      hostsToBeCollected.addAll(lastExecutionNodes.keySet());
+    }
+    hostsToBeCollected.addAll(canaryNewHostNames);
+    switch (context.getStateType()) {
+      case SUMO:
+        final LogAnalysisExecutionData executionData =
+            createLogAnalysisExecutionData(context, canaryNewHostNames, lastExecutionNodes);
+        try {
+          SumoConfig sumoConfig = (SumoConfig) settingsService.get(context.getAnalysisServerConfigId()).getValue();
+          List<DelegateTask> delegateTasks = new ArrayList<>();
+          for (List<String> hostBatch : Lists.partition(hostsToBeCollected, HOST_BATCH_SIZE)) {
+            final SumoDataCollectionInfo dataCollectionInfo =
+                createSUMODataCollectionInfo(sumoConfig, context, collectionStartMinute, new HashSet<>(hostBatch));
+            String waitId = generateUuid();
+            delegateTasks.add(createDelegateTask(TaskType.SUMO_COLLECT_LOG_DATA, context.getAccountId(),
+                context.getAppId(), waitId, new Object[] {dataCollectionInfo}, context.getEnvId()));
+            waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, true, true,
+                                            context.getStateExecutionId(), context.getStateType()),
+                waitId);
+          }
+          for (DelegateTask task : delegateTasks) {
+            delegateService.queueTask(task);
+          }
+        } catch (Exception ex) {
+          throw new WingsException("log analysis state failed ", ex);
+        }
+        break;
+      default:
+        throw new IllegalStateException("Invalid state: " + context.getStateType());
+    }
+    return true;
+  }
+
+  private SumoDataCollectionInfo createSUMODataCollectionInfo(
+      SumoConfig sumoConfig, AnalysisContext context, long collectionStartMinute, Set<String> hostBatch) {
+    return SumoDataCollectionInfo.builder()
+        .sumoConfig(sumoConfig)
+        .accountId(context.getAccountId())
+        .applicationId(context.getAppId())
+        .stateExecutionId(context.getStateExecutionId())
+        .workflowId(context.getWorkflowId())
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .serviceId(context.getServiceId())
+        .query(context.getQuery())
+        .startMinute((int) collectionStartMinute)
+        .collectionTime(1)
+        .hosts(hostBatch)
+        .hostnameField(context.getHostNameField())
+        .encryptedDataDetails(
+            secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()))
+        .build();
+  }
+
+  private LogAnalysisExecutionData createLogAnalysisExecutionData(
+      AnalysisContext context, Set<String> canaryNewHostNames, Map<String, String> lastExecutionNodes) {
+    return LogAnalysisExecutionData.builder()
+        .stateExecutionInstanceId(context.getStateExecutionId())
+        .serverConfigId(context.getAnalysisServerConfigId())
+        .query(context.getQuery())
+        .timeDuration((int) TimeUnit.MINUTES.toMillis(1))
+        .canaryNewHostNames(canaryNewHostNames)
+        .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes.keySet()))
+        .correlationId(context.getCorrelationId())
+        .build();
+  }
+
   private DelegateTask createDelegateTask(
-      CVConfiguration request, String waitId, Object[] dataCollectionInfo, TaskType taskType) {
+      TaskType taskType, String accountId, String appId, String waitId, Object[] dataCollectionInfo, String envId) {
     return aDelegateTask()
         .withTaskType(taskType)
-        .withAccountId(request.getAccountId())
-        .withAppId(request.getAppId())
-        .withEnvId(request.getEnvId())
+        .withAccountId(accountId)
+        .withAppId(appId)
         .withWaitId(waitId)
         .withParameters(dataCollectionInfo)
-        .withEnvId(request.getEnvId())
+        .withEnvId(envId)
         .withTimeout(TimeUnit.MINUTES.toMillis(30))
         .build();
   }

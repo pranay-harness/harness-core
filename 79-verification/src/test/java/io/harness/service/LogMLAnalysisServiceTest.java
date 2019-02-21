@@ -182,8 +182,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     final LogRequest logRequest = new LogRequest(
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
 
-    Set<LogDataRecord> logDataRecords =
-        analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
+    Set<LogDataRecord> logDataRecords = analysisService.getLogData(
+        logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertTrue(logDataRecords.isEmpty());
 
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
@@ -191,8 +191,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     assertTrue(status);
 
-    logDataRecords =
-        analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
+    logDataRecords = analysisService.getLogData(
+        logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertEquals(1, logDataRecords.size());
     final LogDataRecord logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
@@ -238,8 +238,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     assertTrue(status);
 
-    Set<LogDataRecord> logData =
-        analysisService.getLogData(logRequest, true, UUID.randomUUID().toString(), ClusterLevel.L1, StateType.SPLUNKV2);
+    Set<LogDataRecord> logData = analysisService.getLogData(
+        logRequest, true, UUID.randomUUID().toString(), ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertEquals(0, logData.size());
   }
 
@@ -286,8 +286,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     assertTrue(status);
 
-    Set<LogDataRecord> logDataRecords =
-        analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
+    Set<LogDataRecord> logDataRecords = analysisService.getLogData(
+        logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertEquals(1, logDataRecords.size());
     final LogDataRecord logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
@@ -332,8 +332,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     final LogRequest logRequest = new LogRequest(
         query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
-    Set<LogDataRecord> logDataRecords =
-        analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
+    Set<LogDataRecord> logDataRecords = analysisService.getLogData(
+        logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertEquals(1, logDataRecords.size());
     LogDataRecord logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());
@@ -345,12 +345,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     analysisService.bumpClusterLevel(StateType.SPLUNKV2, stateExecutionId, appId, query, Collections.singleton(host),
         logCollectionMinute, ClusterLevel.L1, ClusterLevel.L2);
 
-    logDataRecords =
-        analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2);
+    logDataRecords = analysisService.getLogData(
+        logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertTrue(logDataRecords.isEmpty());
 
-    logDataRecords =
-        analysisService.getLogData(logRequest, true, workflowExecutionId, ClusterLevel.L2, StateType.SPLUNKV2);
+    logDataRecords = analysisService.getLogData(
+        logRequest, true, workflowExecutionId, ClusterLevel.L2, StateType.SPLUNKV2, accountId);
     assertEquals(1, logDataRecords.size());
     logDataRecord = logDataRecords.iterator().next();
     assertEquals(logElement.getLogMessage(), logDataRecord.getLogMessage());

@@ -2,6 +2,7 @@ package io.harness.jobs;
 
 import com.google.common.collect.Lists;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.service.intfc.LearningEngineService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,7 @@ import software.wings.service.intfc.analysis.LogAnalysisResource;
  * Created by sriram_parthasarathy on 8/24/17.
  */
 public class LogMLClusterGenerator implements Runnable {
-  private static final Logger logger = LoggerFactory.getLogger(LogMLClusterGenerator.class);
+  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(LogMLClusterGenerator.class);
 
   private LearningEngineService learningEngineService;
 
@@ -24,14 +25,16 @@ public class LogMLClusterGenerator implements Runnable {
   private final ClusterLevel fromLevel;
   private final ClusterLevel toLevel;
   private final LogRequest logRequest;
+  private final int startDataCollectionMinute;
 
   public LogMLClusterGenerator(LearningEngineService learningEngineService, LogClusterContext context,
-      ClusterLevel fromLevel, ClusterLevel toLevel, LogRequest logRequest) {
+      ClusterLevel fromLevel, ClusterLevel toLevel, LogRequest logRequest, int startDataCollectionMinute) {
     this.learningEngineService = learningEngineService;
     this.context = context;
     this.fromLevel = fromLevel;
     this.toLevel = toLevel;
     this.logRequest = logRequest;
+    this.startDataCollectionMinute = startDataCollectionMinute;
   }
 
   @Override
@@ -46,6 +49,8 @@ public class LogMLClusterGenerator implements Runnable {
         + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&serviceId=" + context.getServiceId()
         + "&appId=" + context.getAppId() + "&clusterLevel=" + toLevel.name() + "&stateType=" + context.getStateType();
 
+    logger.info("Creating Learning Engine Analysis Task for Log ML clustering with context {}", context);
+
     LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder()
                                                   .control_input_url(inputLogsUrl)
                                                   .analysis_save_url(clusteredLogSaveUrl)
@@ -56,6 +61,7 @@ public class LogMLClusterGenerator implements Runnable {
                                                   .control_nodes(logRequest.getNodes())
                                                   .sim_threshold(0.99)
                                                   .analysis_minute(logRequest.getLogCollectionMinute())
+                                                  .analysis_start_min(startDataCollectionMinute)
                                                   .cluster_level(toLevel.getLevel())
                                                   .ml_analysis_type(MLAnalysisType.LOG_CLUSTER)
                                                   .stateType(context.getStateType())

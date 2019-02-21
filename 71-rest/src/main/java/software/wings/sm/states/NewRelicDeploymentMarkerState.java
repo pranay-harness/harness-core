@@ -45,9 +45,7 @@ import java.util.UUID;
 
 @Attributes
 public class NewRelicDeploymentMarkerState extends State {
-  @Transient
-  @SchemaIgnore
-  private static final Logger logger = LoggerFactory.getLogger(NewRelicDeploymentMarkerState.class);
+  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(NewRelicDeploymentMarkerState.class);
 
   @Transient @Inject private DelegateService delegateService;
   @Transient @Inject protected SettingsService settingsService;

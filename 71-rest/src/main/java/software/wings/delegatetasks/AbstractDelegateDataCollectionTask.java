@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.common.collect.TreeBasedTable;
@@ -58,6 +59,10 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
   public AbstractDelegateDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
+  }
+
+  public static OkHttpClient getUnsafeHttpClient(String baseUrl) {
+    return Http.getUnsafeOkHttpClient(baseUrl, 15, 60);
   }
 
   @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})
@@ -170,7 +175,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     if (is24X7Task()) {
       return 0;
     }
-    return SplunkDataCollectionTask.DELAY_MINUTES;
+    return DELAY_MINUTES;
   }
 
   protected abstract boolean is24X7Task();
@@ -205,9 +210,5 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
                             .build());
       }
     }
-  }
-
-  public static OkHttpClient getUnsafeHttpClient(String baseUrl) {
-    return Http.getUnsafeOkHttpClient(baseUrl, 15, 60);
   }
 }

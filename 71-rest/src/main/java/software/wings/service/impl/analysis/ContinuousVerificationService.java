@@ -50,4 +50,6 @@ public interface ContinuousVerificationService {
   boolean sendNotifyForMetricAnalysis(String correlationId, MetricDataAnalysisResponse response);
 
   boolean collect247Data(String cvConfigId, StateType stateType, long startTime, long endTime);
+
+  boolean collectCVDataForWorkflow(String contextId, long collectionMinute);
 }

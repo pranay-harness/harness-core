@@ -1,5 +1,7 @@
 package io.harness.jobs;
 
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -18,7 +20,6 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
-import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.service.impl.analysis.AnalysisContext;
 
 import java.util.Date;
@@ -62,8 +63,7 @@ public class VerificationServiceExecutorJob implements Job {
   }
 
   private void scheduleTimeSeriesAnalysisCronJob(AnalysisContext context) {
-    Date startDate =
-        new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(SplunkDataCollectionTask.DELAY_MINUTES + 1));
+    Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES + 1));
     JobDetail job = JobBuilder.newJob(MetricAnalysisJob.class)
                         .withIdentity(context.getStateExecutionId(),
                             context.getStateType().name().toUpperCase() + "METRIC_VERIFY_CRON_GROUP")
@@ -88,8 +88,7 @@ public class VerificationServiceExecutorJob implements Job {
   }
 
   private void scheduleLogAnalysisCronJob(AnalysisContext context) {
-    Date startDate =
-        new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(SplunkDataCollectionTask.DELAY_MINUTES + 1));
+    Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES + 1));
     JobDetail job = JobBuilder.newJob(LogAnalysisManagerJob.class)
                         .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
                         .usingJobData("jobParams", JsonUtils.asJson(context))
