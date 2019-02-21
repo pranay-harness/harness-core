@@ -1,6 +1,8 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -11,6 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.context.ContextElementType;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
@@ -45,14 +48,22 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     return COMMAND_UNIT;
   }
 
+  private void ensureNonEmptyStringField(String field, String fieldName) {
+    if (isEmpty(field)) {
+      throw new InvalidRequestException(format("Field: [%s] in provisioner is required", fieldName));
+    }
+  }
+
   protected DelegateTask getDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
     CloudFormationCreateStackRequestBuilder builder = CloudFormationCreateStackRequest.builder();
     if (provisioner.provisionByUrl()) {
+      ensureNonEmptyStringField(provisioner.getTemplateFilePath(), "Template Url");
       builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL)
-          .data(provisioner.getTemplateFilePath());
+          .data(executionContext.renderExpression(provisioner.getTemplateFilePath()));
     } else if (provisioner.provisionByBody()) {
       String templateBody = provisioner.getTemplateBody();
+      ensureNonEmptyStringField(templateBody, "Template Body");
       String renderedTemplate = executionContext.renderExpression(templateBody);
       builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY).data(renderedTemplate);
     } else {
