@@ -13,6 +13,7 @@ import static software.wings.common.VerificationConstants.LOGS_MEDIUM_RISK_THRES
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.VerificationConstants;
@@ -105,6 +106,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
                       .startTime(TimeUnit.MINUTES.toMillis(startMinute))
                       .endTime(TimeUnit.MINUTES.toMillis(startMinute + CRON_POLL_INTERVAL_IN_MINUTES))
                       .na(1)
+                      .overallScore(-2)
                       .build());
         startMinute += CRON_POLL_INTERVAL_IN_MINUTES;
       }
@@ -118,7 +120,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
           HeatMapUnit.builder()
               .startTime(TimeUnit.MINUTES.toMillis(record.getLogCollectionMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
               .endTime(TimeUnit.MINUTES.toMillis(record.getLogCollectionMinute()))
-              .overallScore(-1)
+              .overallScore(-2)
               .build();
 
       heatMapUnit.updateOverallScore(record.getScore());
@@ -193,7 +195,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     HeatMapUnit mergedUnit = HeatMapUnit.builder()
                                  .startTime(units.get(0).getStartTime())
                                  .endTime(units.get(units.size() - 1).getEndTime())
-                                 .overallScore(-1)
+                                 .overallScore(-2)
                                  .build();
     units.forEach(unit -> {
       if (unit.getScoreList() != null) {
@@ -206,15 +208,23 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
 
   private List<LogMLAnalysisRecord> getLogAnalysisRecordsInTimeRange(
       String appId, long startTime, long endTime, boolean readDetails, CVConfiguration cvConfiguration) {
-    return wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeCount)
-        .filter("appId", appId)
-        .filter("cvConfigId", cvConfiguration.getUuid())
-        .field("logCollectionMinute")
-        .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
-        .field("logCollectionMinute")
-        .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-        .project("analysisDetailsCompressedJson", readDetails)
-        .asList();
+    Query<LogMLAnalysisRecord> analysisRecordQuery =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeCount)
+            .filter("appId", appId)
+            .filter("cvConfigId", cvConfiguration.getUuid())
+            .field("logCollectionMinute")
+            .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
+            .project("analysisDetailsCompressedJson", readDetails)
+            .project("cluster_scores", readDetails);
+
+    if (readDetails) {
+      analysisRecordQuery =
+          analysisRecordQuery.field("logCollectionMinute").greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime));
+    } else {
+      analysisRecordQuery =
+          analysisRecordQuery.field("logCollectionMinute").greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime));
+    }
+    return analysisRecordQuery.asList();
   }
 
   public LogMLAnalysisSummary getAnalysisSummary(String cvConfigId, long startTime, long endTime, String appId) {
