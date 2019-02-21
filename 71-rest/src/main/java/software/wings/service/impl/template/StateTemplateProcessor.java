@@ -85,8 +85,8 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
             stepProperties.putAll(templateStep.getProperties());
           }
           step.setProperties(stepProperties);
-          templateHelper.updateVariables(templateStep.getTemplateVariables(), step.getTemplateVariables(), true);
-          step.setTemplateVariables(templateStep.getTemplateVariables());
+          step.setTemplateVariables(
+              templateHelper.overrideVariables(templateStep.getTemplateVariables(), step.getTemplateVariables()));
           updateNeeded = true;
         }
       }
