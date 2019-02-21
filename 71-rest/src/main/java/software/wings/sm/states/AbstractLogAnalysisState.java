@@ -14,8 +14,10 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.ExceptionUtils;
+import io.harness.time.Timestamp;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.FeatureName;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -39,12 +41,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 7/6/17.
  */
 public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
-  protected static final int HOST_BATCH_SIZE = 5;
+  public static final int HOST_BATCH_SIZE = 5;
 
   protected String query;
 
@@ -54,6 +57,23 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   public AbstractLogAnalysisState(String name, String stateType) {
     super(name, stateType);
+  }
+
+  @SchemaIgnore
+  public static String getStateBaseUrl(StateType stateType) {
+    switch (stateType) {
+      case ELK:
+        return LogAnalysisResource.ELK_RESOURCE_BASE_URL;
+      case LOGZ:
+        return LogAnalysisResource.LOGZ_RESOURCE_BASE_URL;
+      case SPLUNKV2:
+        return LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL;
+      case SUMO:
+        return LogAnalysisResource.SUMO_RESOURCE_BASE_URL;
+
+      default:
+        throw new IllegalArgumentException("invalid stateType: " + stateType);
+    }
   }
 
   @Attributes(required = true, title = "Search Keywords")
@@ -170,10 +190,18 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       hostsToBeCollected.remove(null);
       getLogger().info("triggering data collection for {} state, id: {} ", getStateType(),
           executionContext.getStateExecutionInstanceId());
-      delegateTaskId = triggerAnalysisDataCollection(executionContext, executionData, hostsToBeCollected);
-      getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
-          executionContext.getStateExecutionInstanceId(), delegateTaskId);
-      // Set the rendered query into the analysiscontext which will be used during task analysis.
+
+      // Currently only SUMO implemented for creating separate data collection job each minute
+      if (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, executionContext.getAccountId())
+          && getStateType().equals(StateType.SUMO.name())) {
+        getLogger().info(
+            "Feature flag CV_DATA_COLLECTION_JOB is enabled will use data collection for triggering delegate task");
+      } else {
+        delegateTaskId = triggerAnalysisDataCollection(executionContext, executionData, hostsToBeCollected);
+        getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
+            executionContext.getStateExecutionInstanceId(), delegateTaskId);
+      }
+      // Set the rendered query into the analysis context which will be used during task analysis.
       analysisContext.setQuery(getRenderedQuery());
 
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
@@ -324,29 +352,19 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         .build();
   }
 
-  @SchemaIgnore
-  public static String getStateBaseUrl(StateType stateType) {
-    switch (stateType) {
-      case ELK:
-        return LogAnalysisResource.ELK_RESOURCE_BASE_URL;
-      case LOGZ:
-        return LogAnalysisResource.LOGZ_RESOURCE_BASE_URL;
-      case SPLUNKV2:
-        return LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL;
-      case SUMO:
-        return LogAnalysisResource.SUMO_RESOURCE_BASE_URL;
-
-      default:
-        throw new IllegalArgumentException("invalid stateType: " + stateType);
-    }
-  }
-
   private AnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {
     Map<String, String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
         ? Collections.emptyMap()
         : getLastExecutionNodes(context);
     Map<String, String> testNodes = getCanaryNewHostNames(context);
     testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+
+    String hostNameField = null;
+    if (StateType.valueOf(getStateType()).equals(StateType.SUMO)) {
+      hostNameField = ((SumoLogicAnalysisState) this).getHostnameField();
+    }
     return AnalysisContext.builder()
         .accountId(this.appService.get(context.getAppId()).getAccountId())
         .appId(context.getAppId())
@@ -366,6 +384,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         .analysisServerConfigId(getAnalysisServerConfigId())
         .correlationId(correlationId)
         .managerVersion(versionInfoManager.getVersionInfo().getVersion())
+        .envId(envId)
+        .hostNameField(hostNameField)
+        .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
         .build();
   }
 

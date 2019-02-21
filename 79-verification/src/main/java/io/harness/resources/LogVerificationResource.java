@@ -55,8 +55,8 @@ public class LogVerificationResource {
       @QueryParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("clusterLevel") ClusterLevel clusterLevel, @QueryParam("compareCurrent") boolean compareCurrent,
       @QueryParam("stateType") StateType stateType, LogRequest logRequest) {
-    return new RestResponse<>(
-        analysisService.getLogData(logRequest, compareCurrent, workflowExecutionId, clusterLevel, stateType));
+    return new RestResponse<>(analysisService.getLogData(
+        logRequest, compareCurrent, workflowExecutionId, clusterLevel, stateType, accountId));
   }
 
   @Produces({"application/json", "application/v1+json"})

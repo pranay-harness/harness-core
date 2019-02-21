@@ -1,12 +1,19 @@
 package io.harness.scheduler;
 
+import static software.wings.common.VerificationConstants.DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS;
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
+import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION_CRON_GROUP;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.jobs.DataCollectionForWorkflowJob;
 import io.harness.jobs.LogAnalysisManagerJob;
 import io.harness.jobs.LogClusterManagerJob;
 import io.harness.jobs.MetricAnalysisJob;
+import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import org.quartz.JobBuilder;
@@ -16,9 +23,10 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
-import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.sm.StateType;
 
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,6 +45,8 @@ public class VerificationServiceExecutorService {
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private LearningEngineService learningEngineService;
+  @Inject private VerificationManagerClient verificationManagerClient;
+  @Inject private VerificationManagerClientHelper verificationManagerClientHelper;
 
   public void scheduleTaskPoll() {
     taskPollService.scheduleAtFixedRate(() -> {
@@ -45,6 +55,8 @@ public class VerificationServiceExecutorService {
         try {
           verificationAnalysisTask = learningEngineService.getNextVerificationAnalysisTask(ServiceApiVersion.V1);
           if (verificationAnalysisTask != null) {
+            // for both Log and Metric
+            scheduleDataCollectionCronJob(verificationAnalysisTask);
             logger.info("pulled analysis task {}", verificationAnalysisTask);
             switch (verificationAnalysisTask.getAnalysisType()) {
               case TIME_SERIES:
@@ -67,9 +79,41 @@ public class VerificationServiceExecutorService {
     }, 5, 5, TimeUnit.SECONDS);
   }
 
+  private void scheduleDataCollectionCronJob(AnalysisContext context) {
+    if (verificationManagerClientHelper
+            .callManagerWithRetry(
+                verificationManagerClient.isFeatureEnabled(FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId()))
+            .getResource()) {
+      if (context.getStateType().equals(StateType.SUMO)) {
+        Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES));
+        JobDetail job = JobBuilder.newJob(DataCollectionForWorkflowJob.class)
+                            .withIdentity(context.getStateExecutionId(),
+                                context.getStateType().name().toUpperCase() + WORKFLOW_CV_COLLECTION_CRON_GROUP)
+                            .usingJobData("jobParams", JsonUtils.asJson(context))
+                            .usingJobData("timestamp", System.currentTimeMillis())
+                            .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
+                            .build();
+
+        Trigger trigger = TriggerBuilder.newTrigger()
+                              .withIdentity(context.getStateExecutionId(),
+                                  context.getStateType().name().toUpperCase() + WORKFLOW_CV_COLLECTION_CRON_GROUP)
+                              .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                                .withIntervalInSeconds(context.getCollectionInterval() == 0
+                                                        ? DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS
+                                                        : context.getCollectionInterval()
+                                                            * DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS)
+                                                .withMisfireHandlingInstructionNowWithExistingCount()
+                                                .repeatForever())
+                              .startAt(startDate)
+                              .build();
+        jobScheduler.scheduleJob(job, trigger);
+        logger.info("Scheduled Data Collection Cron Job with details : {}", job);
+      }
+    }
+  }
+
   private void scheduleTimeSeriesAnalysisCronJob(AnalysisContext context) {
-    Date startDate =
-        new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(SplunkDataCollectionTask.DELAY_MINUTES + 1));
+    Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES + 1));
     JobDetail job = JobBuilder.newJob(MetricAnalysisJob.class)
                         .withIdentity(context.getStateExecutionId(),
                             context.getStateType().name().toUpperCase() + "METRIC_VERIFY_CRON_GROUP")
@@ -94,8 +138,7 @@ public class VerificationServiceExecutorService {
   }
 
   private void scheduleLogAnalysisCronJob(AnalysisContext context) {
-    Date startDate =
-        new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(SplunkDataCollectionTask.DELAY_MINUTES + 1));
+    Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES + 1));
     JobDetail job = JobBuilder.newJob(LogAnalysisManagerJob.class)
                         .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
                         .usingJobData("jobParams", JsonUtils.asJson(context))

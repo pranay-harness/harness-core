@@ -1,11 +1,12 @@
 package software.wings.service.impl.analysis;
 
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.ExecutionDataValue;
-import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -45,7 +46,7 @@ public class LogAnalysisExecutionData extends StateExecutionData {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(
         executionDetails, "errorMsg", ExecutionDataValue.builder().displayName("Message").value(getErrorMsg()).build());
-    final int total = timeDuration + SplunkDataCollectionTask.DELAY_MINUTES + 1;
+    final int total = timeDuration + DELAY_MINUTES + 1;
     putNotNull(executionDetails, "total", ExecutionDataValue.builder().displayName("Total").value(total).build());
     putNotNull(executionDetails, "timeDuration",
         ExecutionDataValue.builder().displayName("Analysis duration").value(timeDuration).build());

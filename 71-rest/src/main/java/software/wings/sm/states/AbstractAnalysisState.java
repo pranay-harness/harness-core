@@ -148,7 +148,7 @@ public abstract class AbstractAnalysisState extends State {
 
   @Transient @Inject @SchemaIgnore private DelegateProxyFactory delegateProxyFactory;
 
-  @Transient @Inject private FeatureFlagService featureFlagService;
+  @Transient @Inject protected FeatureFlagService featureFlagService;
 
   @Transient @Inject private HostService hostService;
 

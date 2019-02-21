@@ -35,7 +35,7 @@ public interface LogAnalysisService {
 
   @ValidationGroups(Create.class)
   Set<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
-      ClusterLevel clusterLevel, StateType stateType);
+      ClusterLevel clusterLevel, StateType stateType, String accountId);
 
   Set<LogDataRecord> getLogData(String appId, String cvConfigId, ClusterLevel clusterLevel, int logCollectionMinute,
       int startMinute, int endMinute, LogRequest logRequest);
@@ -80,8 +80,8 @@ public interface LogAnalysisService {
 
   boolean isStateValid(String appId, String stateExecutionID);
 
-  boolean isProcessingComplete(
-      String query, String appId, String stateExecutionId, StateType type, int timeDurationMins);
+  boolean isProcessingComplete(String query, String appId, String stateExecutionId, StateType type,
+      int timeDurationMins, long collectionMinute, String accountId);
 
   long getCollectionMinuteForLevel(String query, String appId, String stateExecutionId, StateType type,
       ClusterLevel clusterLevel, Set<String> testNodes);
@@ -111,4 +111,6 @@ public interface LogAnalysisService {
 
   List<LogDataRecord> getLogRecords(
       String appId, String cvConfigId, ClusterLevel clusterLevel, long startMin, long endMin);
+
+  long getLastLogDataCollectedMinute(String query, String appId, String stateExecutionId, StateType type);
 }

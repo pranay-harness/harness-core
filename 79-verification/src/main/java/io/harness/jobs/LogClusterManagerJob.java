@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ExceptionUtils;
+import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
@@ -24,6 +25,7 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.sm.StateType;
 
 import java.util.Collections;
 import java.util.Set;
@@ -36,6 +38,7 @@ public class LogClusterManagerJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LogClusterManagerJob.class);
 
   @org.simpleframework.xml.Transient @Inject private VerificationManagerClientHelper managerClientHelper;
+  @org.simpleframework.xml.Transient @Inject private VerificationManagerClient managerClient;
 
   @org.simpleframework.xml.Transient @Inject private LogAnalysisService analysisService;
 
@@ -46,7 +49,8 @@ public class LogClusterManagerJob implements Job {
     try {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      new LogClusterTask(analysisService, managerClientHelper, jobExecutionContext, context, learningEngineService)
+      new LogClusterTask(
+          analysisService, managerClientHelper, jobExecutionContext, context, learningEngineService, managerClient)
           .run();
     } catch (Exception ex) {
       logger.warn("Log cluster cron failed with error", ex);
@@ -66,6 +70,7 @@ public class LogClusterManagerJob implements Job {
     private JobExecutionContext jobExecutionContext;
     private AnalysisContext context;
     private LearningEngineService learningEngineService;
+    private VerificationManagerClient managerClient;
 
     private Set<String> getCollectedNodes() {
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
@@ -107,17 +112,23 @@ public class LogClusterManagerJob implements Job {
                     Collections.singleton(log.getHost()), log.getLogCollectionMinute());
 
                 if (hasDataRecords) {
-                  logger.info("Running cluster task for " + context.getStateExecutionId() + " , minute "
-                      + logRequest.getLogCollectionMinute());
-                  new LogMLClusterGenerator(
-                      learningEngineService, context.getClusterContext(), ClusterLevel.L0, ClusterLevel.L1, logRequest)
-                      .run();
+                  logger.info("Running cluster task for stateExecutionId {}, minute {}, stateType {}, ",
+                      context.getStateExecutionId(), logRequest.getLogCollectionMinute(), context.getStateType());
+                  if (context.getStateType().equals(StateType.SUMO)) {
+                    new LogMLClusterGenerator(learningEngineService, context.getClusterContext(), ClusterLevel.L0,
+                        ClusterLevel.L1, logRequest, (int) context.getStartDataCollectionMinute())
+                        .run();
+                  } else {
+                    new LogMLClusterGenerator(learningEngineService, context.getClusterContext(), ClusterLevel.L0,
+                        ClusterLevel.L1, logRequest, 0)
+                        .run();
+                  }
                   logger.info(" queued cluster task for " + context.getStateExecutionId() + " , minute "
                       + logRequest.getLogCollectionMinute());
 
                 } else {
-                  logger.info(" skipping cluster task no data found. for " + context.getStateExecutionId()
-                      + " , minute " + logRequest.getLogCollectionMinute());
+                  logger.info("Skipping cluster task no data found. for " + context.getStateExecutionId() + " , minute "
+                      + logRequest.getLogCollectionMinute());
                   analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
                       context.getAppId(), logRequest.getQuery(), logRequest.getNodes(),
                       logRequest.getLogCollectionMinute(), ClusterLevel.getHeartBeatLevel(ClusterLevel.L0),

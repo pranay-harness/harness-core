@@ -17,7 +17,6 @@ import io.harness.context.ContextElementType;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import lombok.Builder;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.AwsLambdaContextElement;
@@ -61,7 +60,7 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 12/7/16.
  */
 public class CloudWatchState extends AbstractMetricAnalysisState {
-  @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(CloudWatchState.class);
+  @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(CloudWatchState.class);
 
   @Inject private transient AwsHelperService awsHelperService;
   @Inject private transient CloudWatchService cloudWatchService;

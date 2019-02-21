@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 
 import com.sumologic.client.SumoLogicClient;
 import io.harness.exception.ExceptionUtils;
-import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -63,6 +62,11 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
   }
 
   @Override
+  protected int getInitialDelayMinutes() {
+    return dataCollectionInfo.getInitialDelayMinutes();
+  }
+
+  @Override
   protected Logger getLogger() {
     return logger;
   }
@@ -95,9 +99,8 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
       this.logCollectionMinute = is247Task ? (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime())
                                            : dataCollectionInfo.getStartMinute();
       this.taskResult = taskResult;
-      this.collectionStartTime = is247Task ? dataCollectionInfo.getStartTime()
-                                           : Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
-              + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
+      this.collectionStartTime =
+          is247Task ? dataCollectionInfo.getStartTime() : logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
     }
 
     @Override
@@ -173,16 +176,23 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           }
         }
       }
-      collectionStartTime += TimeUnit.MINUTES.toMillis(1);
-      logCollectionMinute++;
-      dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
-      if (dataCollectionInfo.getCollectionTime() <= 0) {
-        // We are done with all data collection, so setting task status to success and quitting.
+      if (taskResult.getStatus().equals(DataCollectionTaskStatus.FAILURE)) {
         logger.info(
-            "Completed SumoLogic collection task. So setting task status to success and quitting. StateExecutionId {}",
+            "Failed Data collection for SumoLogic collection task so quitting the task with StateExecutionId {}",
             dataCollectionInfo.getStateExecutionId());
         completed.set(true);
-        taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+      } else {
+        collectionStartTime += TimeUnit.MINUTES.toMillis(1);
+        logCollectionMinute++;
+        dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
+        if (dataCollectionInfo.getCollectionTime() <= 0) {
+          // We are done with all data collection, so setting task status to success and quitting.
+          logger.info(
+              "Completed SumoLogic collection task. So setting task status to success and quitting. StateExecutionId {}",
+              dataCollectionInfo.getStateExecutionId());
+          completed.set(true);
+          taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+        }
       }
 
       if (completed.get()) {

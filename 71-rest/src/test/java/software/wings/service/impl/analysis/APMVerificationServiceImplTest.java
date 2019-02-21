@@ -201,6 +201,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     config.setUuid("cvConfigId");
     config.setAppId("appId");
     config.setServiceId("serviceId");
+    config.setStateType(StateType.DATA_DOG);
     wingsPersistence.save(config);
 
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
@@ -238,6 +239,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     config.setUuid("cvConfigId");
     config.setAppId("appId");
     config.setServiceId("serviceId");
+    config.setStateType(StateType.APP_DYNAMICS);
     wingsPersistence.save(config);
 
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
@@ -274,6 +276,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     config.setUuid("cvConfigId");
     config.setAppId("appId");
     config.setServiceId("serviceId");
+    config.setStateType(StateType.NEW_RELIC);
     wingsPersistence.save(config);
 
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
@@ -316,6 +319,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     config.setUuid("cvConfigId");
     config.setAppId("appId");
     config.setServiceId("serviceId");
+    config.setStateType(StateType.PROMETHEUS);
     wingsPersistence.save(config);
 
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
@@ -350,6 +354,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     config.setUuid("cvConfigId");
     config.setAppId("appId");
     config.setServiceId("serviceId");
+    config.setStateType(StateType.CLOUD_WATCH);
     wingsPersistence.save(config);
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
     when(mockWaitNotifyEngine.waitForAll(anyObject(), anyString())).thenReturn("waitId");

@@ -45,6 +45,7 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -126,6 +127,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .filter(cvConfiguration
             -> cvConfiguration.isEnabled24x7() && getMetricAnalysisStates().contains(cvConfiguration.getStateType()))
         .forEach(cvConfiguration -> {
+          logger.info(
+              "Executing APM data analysis Job for accountId {} and configId {}", accountId, cvConfiguration.getUuid());
           long lastCVDataCollectionMinute =
               timeSeriesAnalysisService.getMaxCVCollectionMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
           if (lastCVDataCollectionMinute <= 0) {
@@ -160,6 +163,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
             learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
 
+            logger.info("Triggering Data Analysis for account {} ", accountId);
             logger.info("Queuing analysis task for state {} config {} with startTime {}",
                 cvConfiguration.getStateType(), cvConfiguration.getUuid(), analysisStartMinute);
           }
@@ -309,8 +313,52 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   @Counted
   @Timed
+  public boolean triggerLogDataCollection(AnalysisContext context) {
+    final long lastDataCollectionMinute = logAnalysisService.getLastLogDataCollectedMinute(
+        context.getQuery(), context.getAppId(), context.getStateExecutionId(), context.getStateType());
+    logger.info("Inside triggerLogDataCollection with stateType {}, stateExecutionId {}", context.getStateType(),
+        context.getStateExecutionId());
+    boolean isStateValid = verificationManagerClientHelper
+                               .callManagerWithRetry(verificationManagerClient.isStateValid(
+                                   context.getAppId(), context.getStateExecutionId()))
+                               .getResource();
+    if (isStateValid) {
+      try {
+        if (lastDataCollectionMinute < 0) {
+          return verificationManagerClientHelper
+              .callManagerWithRetry(verificationManagerClient.triggerWorkflowDataCollection(
+                  context.getUuid(), context.getStartDataCollectionMinute()))
+              .getResource();
+        } else {
+          if (lastDataCollectionMinute - context.getStartDataCollectionMinute() < context.getTimeDuration() - 1) {
+            logger.info("Trigger Log Data Collection with stateType {}, stateExecutionId {}", context.getStateType(),
+                context.getStateExecutionId());
+            return verificationManagerClientHelper
+                .callManagerWithRetry(verificationManagerClient.triggerWorkflowDataCollection(
+                    context.getUuid(), lastDataCollectionMinute + 1))
+                .getResource();
+          } else {
+            logger.info("Completed Log Data Collection for stateType {}, stateExecutionId {}", context.getStateType(),
+                context.getStateExecutionId());
+            return false;
+          }
+        }
+      } catch (Exception e) {
+        logger.error("Failed to call manager for log data collection for workflow with context {} with exception {}",
+            context, e);
+      }
+      return true;
+    } else {
+      logger.info("State is no longer valid for stateType {}, stateExecutionId {}", context.getStateType(),
+          context.getStateExecutionId());
+      return false;
+    }
+  }
+
+  @Override
+  @Counted
+  @Timed
   public void triggerLogsL1Clustering(String accountId) {
-    logger.info("Triggering log clustering for account {} ", accountId);
     // List all the CV configurations for a given account
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
 
@@ -322,6 +370,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             -> cvConfiguration.isEnabled24x7() && getLogAnalysisStates().contains(cvConfiguration.getStateType())
                 && !cvConfiguration.getStateType().equals(StateType.SPLUNKV2))
         .forEach(cvConfiguration -> {
+          logger.info(
+              "triggering logs L1 Clustering for account {} and cvConfigId {}", accountId, cvConfiguration.getUuid());
           long lastCVDataCollectionMinute =
               logAnalysisService.getMaxCVCollectionMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
           if (lastCVDataCollectionMinute <= 0) {
@@ -378,7 +428,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Counted
   @Timed
   public void triggerLogsL2Clustering(String accountId) {
-    logger.info("Triggering log clustering for account {} ", accountId);
     // List all the CV configurations for a given account
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
 
@@ -390,6 +439,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             -> cvConfiguration.isEnabled24x7() && getLogAnalysisStates().contains(cvConfiguration.getStateType())
                 && !cvConfiguration.getStateType().equals(StateType.SPLUNKV2))
         .forEach(cvConfiguration -> {
+          logger.info(
+              "triggering logs L2 Clustering for account {} and cvConfigId {}", accountId, cvConfiguration.getUuid());
           long minLogRecordL1Minute = logAnalysisService.getLogRecordMinute(
               cvConfiguration.getAppId(), cvConfiguration.getUuid(), ClusterLevel.H1, OrderType.ASC);
 
@@ -472,7 +523,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Counted
   @Timed
   public void triggerLogDataAnalysis(String accountId) {
-    logger.info("Triggering Log Analysis for account {} ", accountId);
     // List all the CV configurations for a given account
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
 
@@ -484,6 +534,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             -> cvConfiguration.isEnabled24x7() && getLogAnalysisStates().contains(cvConfiguration.getStateType()))
 
         .forEach(cvConfiguration -> {
+          logger.info(
+              "triggering logs Data Analysis for account {} and cvConfigId {}", accountId, cvConfiguration.getUuid());
           LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
           long analysisStartMin = logAnalysisService.getLogRecordMinute(
               logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), ClusterLevel.H2, OrderType.ASC);

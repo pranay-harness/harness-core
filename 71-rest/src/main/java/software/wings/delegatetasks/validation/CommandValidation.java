@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
@@ -46,7 +45,7 @@ import java.util.function.Consumer;
  * Created by brett on 11/5/17
  */
 public class CommandValidation extends AbstractDelegateValidateTask {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(CommandValidation.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommandValidation.class);
 
   @Inject private transient EncryptionService encryptionService;
   @Inject private transient GkeClusterService gkeClusterService;

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -139,12 +140,13 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
               .serviceId(getPhaseServiceId(context))
               .query(getRenderedQuery())
               .startTime(logCollectionStartTimeStamp)
-              .startMinute(0)
+              .startMinute((int) (logCollectionStartTimeStamp / TimeUnit.MINUTES.toMillis(1)))
               .collectionTime(Integer.parseInt(getTimeDuration()))
               .hosts(hostBatch)
               .encryptedDataDetails(
                   secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()))
               .hostnameField(getHostnameField())
+              .initialDelayMinutes(DELAY_MINUTES)
               .build();
 
       String waitId = generateUuid();

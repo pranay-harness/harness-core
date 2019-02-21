@@ -341,7 +341,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public Set<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
-      ClusterLevel clusterLevel, StateType stateType) {
+      ClusterLevel clusterLevel, StateType stateType, String accountId) {
     Query<LogDataRecord> recordQuery;
     if (compareCurrent) {
       recordQuery = wingsPersistence.createQuery(LogDataRecord.class)
@@ -355,16 +355,43 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                         .filter("logCollectionMinute", logRequest.getLogCollectionMinute())
                         .field("host")
                         .hasAnyOf(logRequest.getNodes());
-
     } else {
-      recordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                        .filter("stateType", stateType)
-                        .filter("workflowExecutionId", workflowExecutionId)
-                        .filter("appId", logRequest.getApplicationId())
-                        .filter("query", logRequest.getQuery())
-                        .filter("serviceId", logRequest.getServiceId())
-                        .filter("clusterLevel", clusterLevel)
-                        .filter("logCollectionMinute", logRequest.getLogCollectionMinute());
+      // todo: Pranjal this will be removed once other verifiers have data collection job every minute
+      if (stateType.equals(StateType.SUMO)) {
+        long logCollectionStartMinute = 0;
+        LogDataRecord logDataRecord = wingsPersistence.createQuery(LogDataRecord.class)
+                                          .project("logCollectionMinute", true)
+                                          .filter("stateType", stateType)
+                                          .filter("workflowExecutionId", workflowExecutionId)
+                                          .filter("appId", logRequest.getApplicationId())
+                                          .filter("query", logRequest.getQuery())
+                                          .filter("serviceId", logRequest.getServiceId())
+                                          .filter("clusterLevel", clusterLevel)
+                                          .order(Sort.ascending("logCollectionMinute"))
+                                          .get();
+
+        if (logDataRecord != null) {
+          logCollectionStartMinute = logDataRecord.getLogCollectionMinute();
+        }
+        recordQuery =
+            wingsPersistence.createQuery(LogDataRecord.class)
+                .filter("stateType", stateType)
+                .filter("workflowExecutionId", workflowExecutionId)
+                .filter("appId", logRequest.getApplicationId())
+                .filter("query", logRequest.getQuery())
+                .filter("serviceId", logRequest.getServiceId())
+                .filter("clusterLevel", clusterLevel)
+                .filter("logCollectionMinute", logCollectionStartMinute + logRequest.getLogCollectionMinute());
+      } else {
+        recordQuery = wingsPersistence.createQuery(LogDataRecord.class)
+                          .filter("stateType", stateType)
+                          .filter("workflowExecutionId", workflowExecutionId)
+                          .filter("appId", logRequest.getApplicationId())
+                          .filter("query", logRequest.getQuery())
+                          .filter("serviceId", logRequest.getServiceId())
+                          .filter("clusterLevel", clusterLevel)
+                          .filter("logCollectionMinute", logRequest.getLogCollectionMinute());
+      }
     }
 
     Set<LogDataRecord> rv = new HashSet<>();
@@ -373,10 +400,10 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         rv.add(records.next());
       }
     }
-
-    if (logger.isDebugEnabled()) {
-      logger.debug("returning " + rv.size() + " records for request: " + logRequest);
-    }
+    logger.info(
+        "fetched total records {},  compare current {}, stateExecutionId {}, workflowExecutionId {}, logCollectionMinute {}",
+        rv.size(), compareCurrent, logRequest.getStateExecutionId(), workflowExecutionId,
+        logRequest.getLogCollectionMinute());
     return rv;
   }
 
@@ -661,10 +688,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
     }
-    if (logger.isDebugEnabled()) {
-      logger.debug("inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getAppId()
-          + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
-    }
+    logger.info("inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getAppId()
+        + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
     bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getAppId(),
         mlAnalysisResponse.getQuery(), emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
         ClusterLevel.getHeartBeatLevel(ClusterLevel.L2), ClusterLevel.getFinal());
@@ -1276,9 +1301,13 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
-  public boolean isProcessingComplete(
-      String query, String appId, String stateExecutionId, StateType type, int timeDurationMins) {
-    return getLastProcessedMinute(query, appId, stateExecutionId, type) >= timeDurationMins - 1;
+  public boolean isProcessingComplete(String query, String appId, String stateExecutionId, StateType type,
+      int timeDurationMins, long collectionMinute, String accountId) {
+    if (type.equals(StateType.SUMO)) {
+      return getLastProcessedMinute(query, appId, stateExecutionId, type) - collectionMinute >= timeDurationMins - 1;
+    } else {
+      return getLastProcessedMinute(query, appId, stateExecutionId, type) >= timeDurationMins - 1;
+    }
   }
 
   @Override
@@ -1406,5 +1435,16 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         .lessThanOrEq(endMin)
         .order("logCollectionMinute")
         .asList();
+  }
+
+  public long getLastLogDataCollectedMinute(String query, String appId, String stateExecutionId, StateType type) {
+    LogDataRecord logDataRecords = wingsPersistence.createQuery(LogDataRecord.class)
+                                       .filter("appId", appId)
+                                       .filter("stateExecutionId", stateExecutionId)
+                                       .filter("stateType", type)
+                                       .filter("query", query)
+                                       .order("-logCollectionMinute")
+                                       .get();
+    return logDataRecords == null ? -1 : logDataRecords.getLogCollectionMinute();
   }
 }

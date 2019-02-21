@@ -1,5 +1,7 @@
 package io.harness.service.intfc;
 
+import software.wings.service.impl.analysis.AnalysisContext;
+
 /**
  * Created by rsingh on 10/9/18.
  */
@@ -21,4 +23,6 @@ public interface ContinuousVerificationService {
   void triggerLogDataAnalysis(String accountId);
 
   void cleanupStuckLocks();
+
+  boolean triggerLogDataCollection(AnalysisContext context);
 }

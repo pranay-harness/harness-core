@@ -66,7 +66,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
       analysisService.validateConfig(settingAttribute, StateType.ELK, Collections.emptyList());
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
-      assertEquals("User name is given but password is empty", e.getParams().get("reason"));
+      assertEquals("WingsException: User name is given but password is empty", e.getParams().get("reason"));
     }
   }
 
@@ -84,7 +84,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
       analysisService.validateConfig(settingAttribute, StateType.ELK, Collections.emptyList());
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
-      assertEquals("User name is empty but password is given", e.getParams().get("reason"));
+      assertEquals("WingsException: User name is empty but password is given", e.getParams().get("reason"));
     }
   }
 
