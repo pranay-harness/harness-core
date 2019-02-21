@@ -84,8 +84,8 @@ public class SamlBasedAuthHandler implements AuthHandler {
                 return getUser(samlResponseString, samlSettings);
               }
             } catch (SamlException e) {
-              logger.warn(
-                  "Could not validate SAML Response idpUrl:[{}], samlSettings url:[{}]", idpUrl, samlSettings.getUrl());
+              logger.warn("Could not validate SAML Response idpUrl:[{}], samlSettings url:[{}]", idpUrl,
+                  samlSettings.getUrl(), e);
             }
           }
 
@@ -107,7 +107,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
                 return getUser(samlResponseString, samlSettings);
               } catch (SamlException e) {
                 logger.warn("Could not validate SAML Response idpUrl:[{}], samlSettings url:[{}]", idpUrl,
-                    samlSettings.getUrl());
+                    samlSettings.getUrl(), e);
               }
             }
           }
@@ -143,7 +143,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
           return getUser(samlResponseString, samlSettings);
         } catch (SamlException e) {
           logger.warn(
-              "Could not validate SAML Response idpUrl:[{}], samlSettings url:[{}]", idpUrl, samlSettings.getUrl());
+              "Could not validate SAML Response idpUrl:[{}], samlSettings url:[{}]", idpUrl, samlSettings.getUrl(), e);
         }
       }
     }
@@ -222,7 +222,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
     } catch (WingsException e) {
       logger.warn("SamlResponse contains nameId=[{}] which does not exist in db, url=[{}], accountId=[{}]", nameId,
           samlSettings.getUrl(), samlSettings.getAccountId());
-      throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
+      throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, e);
     }
   }
 
