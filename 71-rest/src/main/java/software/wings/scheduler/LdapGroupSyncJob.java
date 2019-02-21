@@ -51,6 +51,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -149,7 +150,7 @@ public class LdapGroupSyncJob implements Job {
     }
 
     Set<String> expectedMemberEmails =
-        expectedMembers.stream().map(LdapUserResponse::getEmail).collect(Collectors.toSet());
+        expectedMembers.stream().map(LdapUserResponse::getEmail).filter(Objects::nonNull).collect(Collectors.toSet());
 
     Set<User> removedUsers = userGroup.getMembers()
                                  .stream()
@@ -171,12 +172,14 @@ public class LdapGroupSyncJob implements Job {
       existingUserEmails = userGroup.getMembers().stream().map(User::getEmail).collect(Collectors.toSet());
     }
 
-    expectedMembers.stream().filter(member -> !existingUserEmails.contains(member.getEmail())).forEach(member -> {
-      if (!addedGroupMembers.containsKey(member)) {
-        addedGroupMembers.put(member, Sets.newHashSet());
-      }
-      addedGroupMembers.get(member).add(userGroup);
-    });
+    expectedMembers.stream()
+        .filter(member -> member.getEmail() != null && !existingUserEmails.contains(member.getEmail()))
+        .forEach(member -> {
+          if (!addedGroupMembers.containsKey(member)) {
+            addedGroupMembers.put(member, Sets.newHashSet());
+          }
+          addedGroupMembers.get(member).add(userGroup);
+        });
   }
 
   private UserGroup syncUserGroupMetadata(UserGroup userGroup, LdapGroupResponse groupResponse) {
