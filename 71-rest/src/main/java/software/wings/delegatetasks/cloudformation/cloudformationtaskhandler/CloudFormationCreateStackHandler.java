@@ -2,6 +2,7 @@ package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toMap;
 
@@ -60,8 +61,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       CloudFormationCreateStackRequest updateRequest, Stack stack) {
     CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
     try {
-      executionLogCallback.saveExecutionLog(
-          String.format("# Starting to Update stack with name: %s", stack.getStackName()));
+      executionLogCallback.saveExecutionLog(format("# Starting to Update stack with name: %s", stack.getStackName()));
       UpdateStackRequest updateStackRequest = new UpdateStackRequest().withStackName(stack.getStackName());
       if (isNotEmpty(updateRequest.getVariables())) {
         updateStackRequest.withParameters(
@@ -81,7 +81,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           break;
         }
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL: {
-          executionLogCallback.saveExecutionLog("# Using Template Url to Update Stack");
+          executionLogCallback.saveExecutionLog(
+              format("# Using Template Url: [%s] to Update Stack", updateRequest.getData()));
           updateStackRequest.withTemplateURL(updateRequest.getData());
           setCapabilitiesOnRequest(updateRequest.getAwsConfig(), updateRequest.getRegion(), updateRequest.getData(),
               "s3", updateStackRequest);
@@ -89,14 +90,14 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           break;
         }
         default: {
-          String errorMessage = String.format("# Unsupported stack create type: %s", updateRequest.getCreateType());
+          String errorMessage = format("# Unsupported stack create type: %s", updateRequest.getCreateType());
           executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
         }
       }
     } catch (Exception ex) {
-      String errorMessage = String.format(
-          "# Exception: %s while Updating stack: %s", ExceptionUtils.getMessage(ex), stack.getStackName());
+      String errorMessage =
+          format("# Exception: %s while Updating stack: %s", ExceptionUtils.getMessage(ex), stack.getStackName());
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
     }
@@ -107,7 +108,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
     String stackName = stackNamePrefix + createRequest.getStackNameSuffix();
     try {
-      executionLogCallback.saveExecutionLog(String.format("# Creating stack with name: %s", stackName));
+      executionLogCallback.saveExecutionLog(format("# Creating stack with name: %s", stackName));
       CreateStackRequest createStackRequest = new CreateStackRequest().withStackName(stackName);
       if (isNotEmpty(createRequest.getVariables())) {
         createStackRequest.withParameters(
@@ -127,7 +128,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           break;
         }
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL: {
-          executionLogCallback.saveExecutionLog("# Using Template URL to create Stack");
+          executionLogCallback.saveExecutionLog(
+              format("# Using Template Url: [%s] to Create Stack", createRequest.getData()));
           createStackRequest.withTemplateURL(createRequest.getData());
           setCapabilitiesOnRequest(createRequest.getAwsConfig(), createRequest.getRegion(), createRequest.getData(),
               "s3", createStackRequest);
@@ -135,14 +137,13 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           break;
         }
         default: {
-          String errorMessage = String.format("Unsupported stack create type: %s", createRequest.getCreateType());
+          String errorMessage = format("Unsupported stack create type: %s", createRequest.getCreateType());
           executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
         }
       }
     } catch (Exception ex) {
-      String errorMessage =
-          String.format("Exception: %s while creating stack: %s", ExceptionUtils.getMessage(ex), stackName);
+      String errorMessage = format("Exception: %s while creating stack: %s", ExceptionUtils.getMessage(ex), stackName);
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
     }
@@ -152,12 +153,12 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
   private void createStackAndWaitWithEvents(CloudFormationCreateStackRequest createRequest,
       CreateStackRequest createStackRequest, CloudFormationCommandExecutionResponseBuilder builder) {
     executionLogCallback.saveExecutionLog(
-        String.format("# Calling Aws API to Create stack: %s", createStackRequest.getStackName()));
+        format("# Calling Aws API to Create stack: %s", createStackRequest.getStackName()));
     long stackEventsTs = System.currentTimeMillis();
     CreateStackResult result = awsHelperService.createStack(createRequest.getRegion(),
         createRequest.getAwsConfig().getAccessKey(), createRequest.getAwsConfig().getSecretKey(), createStackRequest,
         createRequest.getAwsConfig().isUseEc2IamCredentials());
-    executionLogCallback.saveExecutionLog(String.format(
+    executionLogCallback.saveExecutionLog(format(
         "# Create Stack request submitted for stack: %s. Now polling for status.", createStackRequest.getStackName()));
     int timeOutMs = createRequest.getTimeoutInMs() > 0 ? createRequest.getTimeoutInMs() : DEFAULT_TIMEOUT_MS;
     long endTime = System.currentTimeMillis() + timeOutMs;
@@ -182,8 +183,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           return;
         }
         case "CREATE_FAILED": {
-          errorMsg =
-              String.format("# Error: %s while creating stack: %s", stack.getStackStatusReason(), stack.getStackName());
+          errorMsg = format("# Error: %s while creating stack: %s", stack.getStackStatusReason(), stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMsg, LogLevel.ERROR);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
           return;
@@ -197,19 +197,19 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           break;
         }
         case "ROLLBACK_FAILED": {
-          errorMsg = String.format("# Creation of stack: %s failed, Rollback failed as well.", stack.getStackName());
+          errorMsg = format("# Creation of stack: %s failed, Rollback failed as well.", stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMsg);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
           return;
         }
         case "ROLLBACK_COMPLETE": {
-          errorMsg = String.format("# Creation of stack: %s failed, Rollback complete", stack.getStackName());
+          errorMsg = format("# Creation of stack: %s failed, Rollback complete", stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMsg);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
           return;
         }
         default: {
-          String errorMessage = String.format("# Unexpected status: %s while Creating stack ", stack.getStackStatus());
+          String errorMessage = format("# Unexpected status: %s while Creating stack ", stack.getStackStatus());
           executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
           return;
@@ -217,7 +217,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       }
       sleep(ofSeconds(10));
     }
-    String errorMessage = String.format("# Timing out while Creating stack: %s", createStackRequest.getStackName());
+    String errorMessage = format("# Timing out while Creating stack: %s", createStackRequest.getStackName());
     executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
     builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
   }
@@ -237,12 +237,12 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     ExistingStackInfo existingStackInfo =
         getExistingStackInfo(request.getAwsConfig(), request.getRegion(), originalStack);
     executionLogCallback.saveExecutionLog(
-        String.format("# Calling Aws API to Update stack: %s", originalStack.getStackName()));
+        format("# Calling Aws API to Update stack: %s", originalStack.getStackName()));
     long stackEventsTs = System.currentTimeMillis();
     awsHelperService.updateStack(request.getRegion(), request.getAwsConfig().getAccessKey(),
         request.getAwsConfig().getSecretKey(), updateStackRequest, request.getAwsConfig().isUseEc2IamCredentials());
-    executionLogCallback.saveExecutionLog(String.format(
-        "# Update Stack Request submitted for stack: %s. Now polling for status", originalStack.getStackName()));
+    executionLogCallback.saveExecutionLog(
+        format("# Update Stack Request submitted for stack: %s. Now polling for status", originalStack.getStackName()));
     int timeOutMs = request.getTimeoutInMs() > 0 ? request.getTimeoutInMs() : DEFAULT_TIMEOUT_MS;
     long endTime = System.currentTimeMillis() + timeOutMs;
     while (System.currentTimeMillis() < endTime) {
@@ -270,7 +270,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           break;
         }
         case "UPDATE_ROLLBACK_FAILED": {
-          String errorMessage = String.format("# Error: %s when updating stack: %s, Rolling back stack update failed",
+          String errorMessage = format("# Error: %s when updating stack: %s, Rolling back stack update failed",
               stack.getStackStatusReason(), stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
@@ -287,18 +287,18 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         }
         case "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS": {
           executionLogCallback.saveExecutionLog(
-              String.format("Rollback of stack update: %s completed, cleanup in progress", stack.getStackName()));
+              format("Rollback of stack update: %s completed, cleanup in progress", stack.getStackName()));
           break;
         }
         case "UPDATE_ROLLBACK_COMPLETE": {
-          String errorMsg = String.format("# Rollback of stack update: %s completed", stack.getStackName());
+          String errorMsg = format("# Rollback of stack update: %s completed", stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMsg);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
           return;
         }
         default: {
-          String errorMessage = String.format(
-              "# Unexpected status: %s while creating stack: %s ", stack.getStackStatus(), stack.getStackName());
+          String errorMessage =
+              format("# Unexpected status: %s while creating stack: %s ", stack.getStackStatus(), stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
           return;
@@ -306,7 +306,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       }
       sleep(ofSeconds(10));
     }
-    String errorMessage = String.format("# Timing out while Updating stack: %s", originalStack.getStackName());
+    String errorMessage = format("# Timing out while Updating stack: %s", originalStack.getStackName());
     executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
     builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
   }
