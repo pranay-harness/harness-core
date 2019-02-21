@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
+import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
 import org.ldaptive.LdapException;
 import org.ldaptive.ResultCode;
@@ -123,8 +124,12 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
   }
 
   private LdapUserResponse buildLdapUserResponse(LdapEntry user, LdapUserConfig userConfig) {
-    String name;
-    String email = user.getAttribute(userConfig.getEmailAttr()).getStringValue();
+    String name, email = null;
+    LdapAttribute ldapEmailAttribute = user.getAttribute(userConfig.getEmailAttr());
+    if (ldapEmailAttribute != null) {
+      logger.error("UserConfig email attribute = {} is missing in LdapEntry user object", userConfig.getEmailAttr());
+      email = ldapEmailAttribute.getStringValue();
+    }
 
     if (Arrays.asList(user.getAttributeNames()).contains(userConfig.getDisplayNameAttr())) {
       name = user.getAttribute(userConfig.getDisplayNameAttr()).getStringValue();
