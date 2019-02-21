@@ -3,6 +3,7 @@ package software.wings.security.authentication;
 public enum AuthenticationMechanism {
   USER_PASSWORD("NON_SSO"),
   SAML("SSO"),
+  OAUTH("SSO"),
   LDAP("SSO");
   private String type;
 
