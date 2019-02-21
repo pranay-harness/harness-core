@@ -58,31 +58,40 @@ public class WorkflowServiceTemplateHelper {
   @Inject private TemplateHelper templateHelper;
 
   public void updateLinkedPhaseStepTemplate(PhaseStep phaseStep, PhaseStep oldPhaseStep) {
+    updateLinkedPhaseStepTemplate(phaseStep, oldPhaseStep, false);
+  }
+
+  public void updateLinkedPhaseStepTemplate(PhaseStep phaseStep, PhaseStep oldPhaseStep, boolean fromYaml) {
     if (phaseStep != null && phaseStep.getSteps() != null) {
       phaseStep.getSteps().stream().filter(step -> step.getTemplateUuid() != null).forEach((GraphNode step) -> {
         GraphNode oldTemplateStep = null;
         if (oldPhaseStep != null && oldPhaseStep.getSteps() != null) {
           oldTemplateStep = oldPhaseStep.getSteps()
                                 .stream()
-                                .filter(graphNode -> step.getTemplateUuid().equals(graphNode.getTemplateUuid()))
+                                .filter(fromYaml ? graphNode
+                                    -> step.getTemplateUuid().equals(graphNode.getTemplateUuid())
+                                        && step.getName().equals(graphNode.getName())
+                                                 : graphNode
+                                    -> step.getTemplateUuid().equals(graphNode.getTemplateUuid())
+                                        && step.getId().equals(graphNode.getId()))
                                 .findFirst()
                                 .orElse(null);
         }
         boolean versionChanged = false;
-        List<Variable> oldTemplateVaraibles = null;
+        List<Variable> oldTemplateVariables = null;
         if (oldTemplateStep != null) {
           if (step.getTemplateVersion() != null && oldTemplateStep.getTemplateVersion() != null
               && !step.getTemplateVersion().equals(oldTemplateStep.getTemplateVersion())) {
             versionChanged = true;
           }
-          oldTemplateVaraibles = oldTemplateStep.getTemplateVariables();
+          oldTemplateVariables = oldTemplateStep.getTemplateVariables();
         }
         if (versionChanged || oldTemplateStep == null) {
           GraphNode templateStep = (GraphNode) templateService.constructEntityFromTemplate(
               step.getTemplateUuid(), step.getTemplateVersion());
           Validator.notNullCheck("Template does not exist", templateStep, USER);
-          step.setTemplateVariables(templateStep.getTemplateVariables());
-          templateHelper.updateVariables(step.getTemplateVariables(), oldTemplateVaraibles, true);
+          step.setTemplateVariables(
+              templateHelper.overrideVariables(templateStep.getTemplateVariables(), oldTemplateVariables));
           if (step.getProperties() != null) {
             if (templateStep.getProperties() != null) {
               List<String> templateProperties =
@@ -109,7 +118,7 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public void updateLinkedWorkflowPhases(
-      List<WorkflowPhase> workflowPhases, List<WorkflowPhase> existingWorkflowPhases) {
+      List<WorkflowPhase> workflowPhases, List<WorkflowPhase> existingWorkflowPhases, boolean fromYaml) {
     for (WorkflowPhase workflowPhase : workflowPhases) {
       WorkflowPhase oldWorkflowPhase = existingWorkflowPhases == null
           ? null
@@ -117,11 +126,16 @@ public class WorkflowServiceTemplateHelper {
                 .filter(existingWorkflowPhase -> workflowPhase.getUuid().equals(existingWorkflowPhase.getUuid()))
                 .findFirst()
                 .orElse(null);
-      updateLinkedWorkflowPhaseTemplate(workflowPhase, oldWorkflowPhase);
+      updateLinkedWorkflowPhaseTemplate(workflowPhase, oldWorkflowPhase, fromYaml);
     }
   }
 
   public void updateLinkedWorkflowPhaseTemplate(WorkflowPhase workflowPhase, WorkflowPhase oldWorkflowPhase) {
+    updateLinkedWorkflowPhaseTemplate(workflowPhase, oldWorkflowPhase, false);
+  }
+
+  public void updateLinkedWorkflowPhaseTemplate(
+      WorkflowPhase workflowPhase, WorkflowPhase oldWorkflowPhase, boolean fromYaml) {
     if (oldWorkflowPhase == null) {
       return;
     }
@@ -134,12 +148,15 @@ public class WorkflowServiceTemplateHelper {
               PhaseStep oldPhaseStep =
                   oldWorkflowPhase.getPhaseSteps()
                       .stream()
-                      .filter(phaseStep1
+                      .filter(fromYaml ? phaseStep1
                           -> phaseStep.getPhaseStepType() != null
-                              && phaseStep.getPhaseStepType().equals(phaseStep1.getPhaseStepType()))
+                              && phaseStep.getPhaseStepType().equals(phaseStep1.getPhaseStepType())
+                              && phaseStep.getName() != null && phaseStep.getName().equals(phaseStep1.getName())
+                                       : phaseStep1
+                          -> phaseStep.getUuid() != null && phaseStep.getUuid().equals(phaseStep1.getUuid()))
                       .findFirst()
                       .orElse(null);
-              updateLinkedPhaseStepTemplate(phaseStep, oldPhaseStep);
+              updateLinkedPhaseStepTemplate(phaseStep, oldPhaseStep, fromYaml);
             });
       }
     }

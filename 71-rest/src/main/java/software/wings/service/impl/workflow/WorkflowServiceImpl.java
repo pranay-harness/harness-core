@@ -998,7 +998,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * {@inheritDoc}
    */
   @Override
-  public Workflow updateLinkedWorkflow(Workflow workflow, Workflow existingWorkflow) {
+  public Workflow updateLinkedWorkflow(Workflow workflow, Workflow existingWorkflow, boolean fromYaml) {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     notNullCheck(
@@ -1011,15 +1011,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     // Update Linked Predeployment steps
     workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(
-        orchestrationWorkflow.getPreDeploymentSteps(), existingOrchestrationWorkflow.getPreDeploymentSteps());
+        orchestrationWorkflow.getPreDeploymentSteps(), existingOrchestrationWorkflow.getPreDeploymentSteps(), fromYaml);
 
     // Update Linked Postdeployment steps
-    workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(
-        orchestrationWorkflow.getPostDeploymentSteps(), existingOrchestrationWorkflow.getPostDeploymentSteps());
+    workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(orchestrationWorkflow.getPostDeploymentSteps(),
+        existingOrchestrationWorkflow.getPostDeploymentSteps(), fromYaml);
 
     // Update Workflow Phase steps
     workflowServiceTemplateHelper.updateLinkedWorkflowPhases(
-        orchestrationWorkflow.getWorkflowPhases(), existingOrchestrationWorkflow.getWorkflowPhases());
+        orchestrationWorkflow.getWorkflowPhases(), existingOrchestrationWorkflow.getWorkflowPhases(), fromYaml);
     return updateWorkflow(workflow, workflow.getOrchestrationWorkflow());
   }
 

@@ -112,6 +112,57 @@ public class TemplateHelper {
     return null;
   }
 
+  public List<Variable> overrideVariables(List<Variable> templateVariables, List<Variable> existingVariables) {
+    List<Variable> updatedVariables = new ArrayList<>();
+    if (isNotEmpty(templateVariables)) {
+      for (Variable variable : templateVariables) {
+        updatedVariables.add(variable.cloneInternal());
+      }
+    }
+
+    Map<String, Variable> oldVariablesMap = obtainVariableMap(existingVariables);
+    for (Variable variable : updatedVariables) {
+      if (oldVariablesMap.containsKey(variable.getName())) {
+        // Do not override the value if it is from template
+        Variable oldVariable = oldVariablesMap.get(variable.getName());
+
+        if (isNotEmpty(oldVariable.getValue())) {
+          variable.setValue(oldVariable.getValue());
+        }
+        if (isNotEmpty(oldVariable.getDescription())) {
+          variable.setDescription(oldVariable.getDescription());
+        }
+
+        oldVariablesMap.remove(variable.getName());
+      }
+    }
+    return updatedVariables;
+  }
+
+  public boolean variablesChanged(List<Variable> updatedVariables, List<Variable> existingVariables) {
+    if (isEmpty(updatedVariables) && isEmpty(existingVariables)) {
+      return false;
+    } else if (isEmpty(updatedVariables) || isEmpty(existingVariables)) {
+      return true;
+    }
+    Map<String, Variable> oldVariablesMap = obtainVariableMap(existingVariables);
+    boolean variablesChanged = false;
+    for (Variable variable : updatedVariables) {
+      if (oldVariablesMap.containsKey(variable.getName())) {
+        Variable oldVariable = oldVariablesMap.get(variable.getName());
+        if (variable.getValue() != null) {
+          if (!variable.getValue().equals(oldVariable.getValue())) {
+            variablesChanged = true;
+          }
+        }
+      } else {
+        // New variable added check if any default value present
+        variablesChanged = true;
+      }
+    }
+    return variablesChanged || oldVariablesMap.size() != 0;
+  }
+
   public boolean updateVariables(List<Variable> variables, List<Variable> oldVariables, boolean donotOverride) {
     if (isEmpty(variables) && isEmpty(oldVariables)) {
       return false;

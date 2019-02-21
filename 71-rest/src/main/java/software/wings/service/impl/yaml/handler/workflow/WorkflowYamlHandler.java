@@ -77,7 +77,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     if (previous != null) {
       previous.setSyncFromGit(changeContext.getChange().isSyncFromGit());
       workflowBuilder.withUuid(previous.getUuid());
-      return workflowService.updateLinkedWorkflow(workflowBuilder.build(), previous);
+      return workflowService.updateLinkedWorkflow(workflowBuilder.build(), previous, true);
     } else {
       return workflowService.createWorkflow(workflowBuilder.build());
     }

@@ -3034,7 +3034,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Workflow oldWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
 
-    Workflow workflow = workflowService.updateLinkedWorkflow(savedWorkflow, oldWorkflow);
+    Workflow workflow = workflowService.updateLinkedWorkflow(savedWorkflow, oldWorkflow, true);
 
     CanaryOrchestrationWorkflow updatedCanaryWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
@@ -3165,7 +3165,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Workflow oldWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
 
-    Workflow updatedWorkflow = workflowService.updateLinkedWorkflow(savedWorkflow, oldWorkflow);
+    Workflow updatedWorkflow = workflowService.updateLinkedWorkflow(savedWorkflow, oldWorkflow, true);
     assertThat(updatedWorkflow).isNotNull();
 
     CanaryOrchestrationWorkflow updatedCanaryWorkflow =
