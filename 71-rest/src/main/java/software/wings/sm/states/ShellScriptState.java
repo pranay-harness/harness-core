@@ -5,6 +5,7 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -278,13 +279,11 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     if (!executeOnDelegate) {
       if (connectionType == ConnectionType.SSH) {
         if (isEmpty(sshKeyRef)) {
-          logger.warn("SSH Connection Attribute not provided in Shell Script Step");
-          throw new WingsException("SSH Connection Attribute not provided in Shell Script Step");
+          throw new WingsException("SSH Connection Attribute not provided in Shell Script Step", USER);
         }
         SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
         if (keySettingAttribute == null) {
-          logger.warn("SSH Connection Attribute provided in Shell Script Step not found");
-          throw new WingsException("SSH Connection Attribute provided in Shell Script Step not found");
+          throw new WingsException("SSH Connection Attribute provided in Shell Script Step not found", USER);
         }
         hostConnectionAttributes = (HostConnectionAttributes) keySettingAttribute.getValue();
         username = ((HostConnectionAttributes) keySettingAttribute.getValue()).getUserName();
@@ -301,13 +300,11 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
       } else if (connectionType == ConnectionType.WINRM) {
         if (isEmpty(connectionAttributes)) {
-          logger.warn("WinRM Connection Attribute not provided in Shell Script Step");
-          throw new WingsException("WinRM Connection Attribute not provided in Shell Script Step");
+          throw new WingsException("WinRM Connection Attribute not provided in Shell Script Step", USER);
         }
         winRmConnectionAttributes = (WinRmConnectionAttributes) settingsService.get(connectionAttributes).getValue();
         if (winRmConnectionAttributes == null) {
-          logger.warn("WinRM Connection Attribute provided in Shell Script Step not found");
-          throw new WingsException("WinRM Connection Attribute provided in Shell Script Step not found");
+          throw new WingsException("WinRM Connection Attribute provided in Shell Script Step not found", USER);
         }
         username = winRmConnectionAttributes.getUsername();
         winrmEdd = secretManager.getEncryptionDetails(
