@@ -6,6 +6,8 @@ import com.google.common.base.MoreObjects;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
@@ -16,11 +18,12 @@ import java.util.Objects;
  * Created by bsollish on 8/30/17
  */
 @Entity(value = "yamlVersion", noClassnameStored = true)
+@HarnessExportableEntity
 public class YamlVersion extends Base implements YamlHistory {
-  private String yamlVersionId;
-  private int version;
-  private Type type;
-  private String entityId;
+  @NaturalKey private String yamlVersionId;
+  @NaturalKey private int version;
+  @NaturalKey private Type type;
+  @NaturalKey private String entityId;
   private long inEffectStart;
   private long inEffectEnd;
   private String yaml;

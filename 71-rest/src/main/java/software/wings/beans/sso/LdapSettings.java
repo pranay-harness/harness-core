@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.annotation.NaturalKey;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -31,7 +32,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LdapSettings extends SSOSettings {
-  @NotBlank String accountId;
+  @NotBlank @NaturalKey String accountId;
   @NotNull @Valid LdapConnectionSettings connectionSettings;
 
   /**

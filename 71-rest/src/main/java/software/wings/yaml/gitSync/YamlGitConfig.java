@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,6 +28,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "yamlGitConfig", noClassnameStored = true)
+@HarnessExportableEntity
 @Indexes(@Index(options = @IndexOptions(name = "locate", unique = true),
     fields = { @Field("accountId")
                , @Field("entityId"), @Field("entityType") }))
@@ -56,10 +59,10 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
   private boolean enabled;
   private String webhookToken;
 
-  @SchemaIgnore @NotEmpty private String accountId;
+  @SchemaIgnore @NotEmpty @NaturalKey private String accountId;
 
-  @NotEmpty private String entityId;
-  @NotNull private EntityType entityType;
+  @NotEmpty @NaturalKey private String entityId;
+  @NotNull @NaturalKey private EntityType entityType;
 
   @Override
   public SettingVariableTypes getSettingType() {

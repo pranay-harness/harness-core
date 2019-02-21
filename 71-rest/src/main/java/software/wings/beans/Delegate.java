@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,6 +23,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Indexes({ @Index(fields = { @Field("accountId") }, options = @IndexOptions(name = "delegateAccountIdIdx")) })
+@HarnessExportableEntity
 public class Delegate extends Base {
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String DELEGATE_GROUP_NAME_KEY = "delegateGroupName";
@@ -32,17 +35,17 @@ public class Delegate extends Base {
   // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
   public static final String SEQUENCE_NUM_KEY = "sequenceNum";
 
-  @NotEmpty private String accountId;
+  @NotEmpty @NaturalKey private String accountId;
   private Status status = Status.ENABLED;
   private String description;
   private boolean connected;
-  private String ip;
-  private String hostName;
+  @NaturalKey private String ip;
+  @NaturalKey private String hostName;
   private String delegateGroupName;
-  private String delegateName;
-  private String delegateProfileId;
+  @NaturalKey private String delegateName;
+  @NaturalKey private String delegateProfileId;
   private long lastHeartBeat;
-  private String version;
+  @NaturalKey private String version;
   @Transient private String sequenceNum;
   private String delegateType;
   @Transient private String delegateRandomToken;

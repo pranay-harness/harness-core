@@ -1,5 +1,7 @@
 package software.wings.beans.appmanifest;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,7 +16,7 @@ import software.wings.beans.Base;
 import software.wings.yaml.BaseEntityYaml;
 
 @Entity("manifestFile")
-
+@HarnessExportableEntity
 @Indexes(@Index(options = @IndexOptions(name = "manifestFileIdx", unique = true),
     fields = { @Field("applicationManifestId")
                , @Field("fileName") }))
@@ -25,7 +27,7 @@ public class ManifestFile extends Base {
   public static final String FILE_NAME_KEY = "fileName";
   public static final String APPLICATION_MANIFEST_ID_KEY = "applicationManifestId";
 
-  @NotEmpty String fileName;
+  @NotEmpty @NaturalKey String fileName;
   private String fileContent;
   private String applicationManifestId;
 

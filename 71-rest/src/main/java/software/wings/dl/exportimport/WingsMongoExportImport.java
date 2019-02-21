@@ -9,15 +9,21 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.DBCollectionFindOptions;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.annotation.NaturalKey;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Entity;
 import software.wings.dl.WingsPersistence;
 import software.wings.dl.exportimport.ImportStatusReport.ImportStatus;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author marklu on 10/24/18
@@ -26,15 +32,7 @@ import java.util.List;
 @Singleton
 public class WingsMongoExportImport {
   private static final int BATCH_SIZE = 1000;
-  private static final String[] CANDIDATE_NATURAL_KEY_FIELDS = new String[] {"name", "email", "hostName", "key",
-      "appName", "artifactSourceName", "source", "sourceName", "fileName", "fileBucket", "clusterName", "imageName",
-      "namespace", "version", "defaultVersion", "status", "filter", "kind", "type", "templatized", "encrypted",
-      "metadataOnly", "metadata", "serviceSpecJson", "expression", "gitFileConfig", "pipelineStages", "artifactType",
-      "artifactStreamType", "computeProviderType", "infraMappingType", "infrastructureProvisionerType", "workflowType",
-      "deploymentType", "overrideType", "instanceType", "stateType", "storeType", "entityType", "completed",
-      "accountId", "appId", "envId", "serviceId", "folderId", "fileId", "gcsFileId", "artifactStreamId",
-      "infraMappingId", "pipelineId", "workflowId", "triggerId", "computeProviderId", "templateId", "serviceTemplateId",
-      "entityId", "originEntityId", "galleryId", "settingId", "cvConfigId", "encryptedDataId", "encryptedFileId"};
+  private static final Set<String> DEFAULT_NATURAL_KEY_FIELDS = new HashSet<>(Arrays.asList("accountId", "appId"));
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -54,10 +52,6 @@ public class WingsMongoExportImport {
     }
 
     return records;
-  }
-
-  public ImportStatus importRecords(String collectionName, List<String> records, ImportMode mode) {
-    return importRecords(collectionName, records, mode, null);
   }
 
   /**
@@ -86,12 +80,7 @@ public class WingsMongoExportImport {
       idClashCount += recordCountFromId;
 
       long recordCountFromNaturalKey = 0;
-      DBObject naturalKeyQuery = null;
-      if (EmptyPredicate.isEmpty(naturalKeyFields)) {
-        naturalKeyQuery = getDefaultNaturalKeyQuery(importRecord);
-      } else {
-        naturalKeyQuery = getNaturalKeyQueryFromKeyFields(naturalKeyFields, importRecord);
-      }
+      DBObject naturalKeyQuery = getNaturalKeyQueryFromKeyFields(naturalKeyFields, importRecord);
       recordCountFromNaturalKey = collection.getCount(naturalKeyQuery);
       if (recordCountFromNaturalKey > 1) {
         // This usually means this entity has no naturaly key. E.g 'secretChangeLogs' collection
@@ -146,7 +135,7 @@ public class WingsMongoExportImport {
     List<BasicDBObject> objectList = new ArrayList<>();
     BasicDBObject lastQuery = null;
     for (String field : naturalKeyFields) {
-      String fieldValue = (String) importRecord.get(field);
+      Object fieldValue = importRecord.get(field);
       if (fieldValue != null) {
         lastQuery = new BasicDBObject(field, fieldValue);
         objectList.add(lastQuery);
@@ -162,34 +151,20 @@ public class WingsMongoExportImport {
     }
   }
 
-  private DBObject getDefaultNaturalKeyQuery(DBObject importRecord) {
-    List<DBObject> filterList = new ArrayList<>();
+  public static String getCollectionName(Class<? extends PersistentEntity> clazz) {
+    return clazz.getAnnotation(Entity.class).value();
+  }
 
-    // Typical Mongo collection in Harness schema should have one subset of the following
-    // combinations as their natural key.
-    for (String fieldName : CANDIDATE_NATURAL_KEY_FIELDS) {
-      Object fieldValue = importRecord.get(fieldName);
-      if (fieldValue != null) {
-        filterList.add(new BasicDBObject(fieldName, fieldValue));
+  public static String[] getNaturalKeyFields(Class<? extends PersistentEntity> clazz) {
+    Set<String> fieldSet = new HashSet<>(DEFAULT_NATURAL_KEY_FIELDS);
+    Field[] fields = clazz.getDeclaredFields();
+    for (Field field : fields) {
+      if (field.isAnnotationPresent(NaturalKey.class)) {
+        fieldSet.add(field.getName());
       }
     }
-
-    // If non of the above field exists, fall back to use '_id' field as their natural key
-    if (filterList.size() == 0) {
-      Object id = importRecord.get("_id");
-      if (id != null) {
-        filterList.add(new BasicDBObject("_id", id));
-      }
-    }
-
-    if (filterList.size() > 1) {
-      BasicDBObject andQuery = new BasicDBObject();
-      andQuery.put("$and", filterList);
-      return andQuery;
-    } else if (filterList.size() == 1) {
-      return filterList.get(0);
-    } else {
-      return null;
-    }
+    String[] naturalKeyFields = new String[fieldSet.size()];
+    fieldSet.toArray(naturalKeyFields);
+    return naturalKeyFields;
   }
 }

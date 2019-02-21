@@ -1,5 +1,7 @@
 package software.wings.beans.appmanifest;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,6 +17,7 @@ import software.wings.beans.GitFileConfig;
 import software.wings.yaml.BaseEntityYaml;
 
 @Entity("applicationManifests")
+@HarnessExportableEntity
 @Indexes(@Index(options = @IndexOptions(name = "appManifestIdx", unique = true),
     fields = { @Field("appId")
                , @Field("envId"), @Field("serviceId"), @Field("kind") }))
@@ -26,9 +29,9 @@ public class ApplicationManifest extends Base {
   public static final String ENV_ID_KEY = "envId";
   public static final String KIND_KEY = "kind";
 
-  private String serviceId;
-  private String envId;
-  private AppManifestKind kind;
+  @NaturalKey private String serviceId;
+  @NaturalKey private String envId;
+  @NaturalKey private AppManifestKind kind;
   @NonNull StoreType storeType;
   GitFileConfig gitFileConfig;
 

@@ -1,6 +1,8 @@
 package software.wings.beans.artifact;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.PersistentIterable;
@@ -30,6 +32,7 @@ import software.wings.yaml.BaseEntityYaml;
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field("appId")
                , @Field("serviceId"), @Field("name") }))
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
@@ -46,9 +49,9 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   private String artifactStreamType;
   private String sourceName;
   private String settingId;
-  @EntityName private String name;
+  @EntityName @NaturalKey private String name;
   private boolean autoPopulate;
-  @NotEmpty @Indexed private String serviceId;
+  @NotEmpty @Indexed @NaturalKey private String serviceId;
   transient @Deprecated private boolean autoDownload;
   transient @Deprecated private boolean autoApproveForProduction;
   private boolean metadataOnly;

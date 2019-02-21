@@ -1,5 +1,7 @@
 package software.wings.beans.container;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,11 +13,12 @@ import software.wings.common.Constants;
 import javax.validation.constraints.NotNull;
 
 @Entity("ecsServiceSpecification")
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
 public class EcsServiceSpecification extends DeploymentSpecification {
-  @NotNull private String serviceId;
+  @NotNull @NaturalKey private String serviceId;
   private String serviceSpecJson;
   private String schedulingStrategy;
 

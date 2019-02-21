@@ -8,6 +8,8 @@ import static io.harness.beans.WorkflowType.PIPELINE;
 import static java.util.Arrays.asList;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import lombok.AllArgsConstructor;
@@ -33,6 +35,7 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Entity(value = "pipelines", noClassnameStored = true)
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
@@ -41,7 +44,7 @@ public class Pipeline extends Base {
   public static final String NAME_KEY = "name";
   public static final String DESCRIPTION_KEY = "description";
 
-  @NotNull @EntityName private String name;
+  @NotNull @EntityName @NaturalKey private String name;
   private String description;
   @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();

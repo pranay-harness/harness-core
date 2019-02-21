@@ -1,5 +1,7 @@
 package software.wings.beans.infrastructure;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -14,16 +16,17 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @Builder(toBuilder = true)
 @Entity(value = "terraformConfig")
+@HarnessExportableEntity
 @Getter
 public class TerraformfConfig extends Base {
   public static final String ENTITY_ID_KEY = "entityId";
   public static final String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
 
-  private final String sourceRepoSettingId;
+  @NaturalKey private final String sourceRepoSettingId;
   /**
    * This is generally represented by commit SHA in git.
    */
-  private final String sourceRepoReference;
+  @NaturalKey private final String sourceRepoReference;
 
   /**
    * All variables of type TEXT & ENCRYPTED_TEXT.
@@ -34,6 +37,6 @@ public class TerraformfConfig extends Base {
   private final List<String> targets;
   private final TerraformCommand command;
 
-  @Indexed private final String entityId;
-  private final String workflowExecutionId;
+  @Indexed @NaturalKey private final String entityId;
+  @NaturalKey private final String workflowExecutionId;
 }

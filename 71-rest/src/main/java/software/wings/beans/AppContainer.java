@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.annotations.Entity;
@@ -23,6 +24,7 @@ import java.util.Objects;
     @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
 @Entity(value = "appContainers", noClassnameStored = true)
+@HarnessExportableEntity
 public class AppContainer extends BaseFile {
   @FormDataParam("standard") private boolean standard;
   @FormDataParam("description") private String description;

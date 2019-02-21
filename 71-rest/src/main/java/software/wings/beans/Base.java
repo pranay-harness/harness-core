@@ -5,6 +5,7 @@ import static java.lang.System.currentTimeMillis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -64,7 +65,7 @@ public class Base
   public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @Indexed @NotNull @SchemaIgnore @NaturalKey protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @Indexed private long createdAt;
 

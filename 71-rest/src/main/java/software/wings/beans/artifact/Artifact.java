@@ -13,6 +13,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,6 +38,7 @@ import java.util.Map;
  * @author Rishi
  */
 @Entity(value = "artifacts", noClassnameStored = true)
+@HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -51,8 +54,8 @@ public class Artifact extends Base {
   public static final String ARTIFACT_SOURCE_NAME_KEY = "artifactSourceName";
   public static final String ARTIFACT_FILES_KEY = "artifactFiles";
 
-  private String artifactStreamId;
-  private String artifactSourceName;
+  @NaturalKey private String artifactStreamId;
+  @NaturalKey private String artifactSourceName;
   private Map<String, String> metadata = Maps.newHashMap();
   @NotEmpty private String displayName;
   private String revision;

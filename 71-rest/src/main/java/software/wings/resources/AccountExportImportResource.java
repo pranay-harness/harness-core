@@ -2,6 +2,8 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.dl.exportimport.WingsMongoExportImport.getCollectionName;
+import static software.wings.dl.exportimport.WingsMongoExportImport.getNaturalKeyFields;
 
 import com.google.common.io.Files;
 import com.google.gson.Gson;
@@ -17,61 +19,28 @@ import com.google.inject.name.Named;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import io.harness.annotation.HarnessExportableEntity;
 import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
-import io.harness.queue.Queuable;
 import io.harness.rest.RestResponse;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.waiter.NotifyResponse;
-import io.harness.waiter.WaitInstance;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.query.Query;
-import software.wings.api.DeploymentSummary;
-import software.wings.audit.AuditHeader;
 import software.wings.beans.Account;
-import software.wings.beans.Activity;
 import software.wings.beans.Application;
-import software.wings.beans.BarrierInstance;
 import software.wings.beans.Base;
-import software.wings.beans.DelegateConnection;
-import software.wings.beans.DelegateTask;
-import software.wings.beans.EntityVersionCollection;
-import software.wings.beans.FeatureFlag;
 import software.wings.beans.GitCommit;
-import software.wings.beans.Idempotent;
-import software.wings.beans.Log;
-import software.wings.beans.Notification;
-import software.wings.beans.NotificationBatch;
-import software.wings.beans.Permit;
-import software.wings.beans.PipelineExecution;
-import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.Schema;
-import software.wings.beans.ServiceInstance;
-import software.wings.beans.SweepingOutput;
 import software.wings.beans.User;
-import software.wings.beans.WorkflowExecution;
-import software.wings.beans.alert.Alert;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.command.Command;
-import software.wings.beans.container.ContainerTask;
-import software.wings.beans.infrastructure.Host;
-import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.beans.infrastructure.instance.ManualSyncJob;
-import software.wings.beans.infrastructure.instance.SyncStatus;
-import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.sso.LdapSettings;
-import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
-import software.wings.beans.trigger.TriggerExecution;
-import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.exportimport.ExportMode;
 import software.wings.dl.exportimport.ImportMode;
@@ -87,35 +56,10 @@ import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.SecretChangeLog;
-import software.wings.security.encryption.SecretUsageLog;
-import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
-import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
-import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
-import software.wings.service.impl.analysis.LogDataRecord;
-import software.wings.service.impl.analysis.LogMLAnalysisRecord;
-import software.wings.service.impl.analysis.LogMLFeedbackRecord;
-import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
-import software.wings.service.impl.analysis.TimeSeriesMLScores;
-import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
-import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
-import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
-import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
-import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
-import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
-import software.wings.service.impl.newrelic.MLExperiments;
-import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
-import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.sm.ExecutionInterrupt;
-import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateMachine;
 import software.wings.utils.AccountPermissionUtils;
-import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 
@@ -180,43 +124,15 @@ public class AccountExportImportResource {
   private Gson gson = new GsonBuilder().setPrettyPrinting().create();
   private JsonParser jsonParser = new JsonParser();
 
+  // Entity classes that need special export handling (e.g. with a special entity filter)
   private static Set<Class<? extends PersistentEntity>> includedEntities =
       new HashSet<>(Arrays.asList(Account.class, User.class, Application.class, Schema.class, EncryptedData.class));
 
-  private static Set<Class<? extends PersistentEntity>> excludedEntities = new HashSet<>(Arrays.asList(
-      // Execution/Command/Audit logs
-      Log.class, LogDataRecord.class, ThirdPartyApiCallLog.class, AuditHeader.class, SecretUsageLog.class,
-      SecretChangeLog.class,
-      // Notification/alert records
-      Notification.class, Alert.class, NotifyResponse.class,
-      // Learning engine related runtime data records
-      LogMLAnalysisRecord.class, LogMLFeedbackRecord.class, ExperimentalLogMLAnalysisRecord.class,
-      EntityVersionCollection.class, TimeSeriesMLAnalysisRecord.class, LearningEngineAnalysisTask.class,
-      LearningEngineExperimentalAnalysisTask.class, MLExperiments.class, NewRelicMetricDataRecord.class,
-      ExperimentalMetricAnalysisRecord.class, ContinuousVerificationExecutionMetaData.class,
-      NewRelicMetricAnalysisRecord.class, TimeSeriesMLScores.class, TimeSeriesRiskSummary.class,
-      TimeSeriesMetricGroup.class, TimeSeriesMetricTemplates.class, TimeSeriesMLTransactionThresholds.class,
-      AnalysisContext.class,
-      // Locks and Tasks
-      Idempotent.class, WaitInstance.class, DelegateTask.class, ExecutionInterrupt.class, BarrierInstance.class,
-      // Global entities not associated with any account
-      FeatureFlag.class, TemplateVersion.class,
-      // Runtime data/instance/status etc.
-      StateExecutionInstance.class, ServiceInstance.class, WorkflowExecution.class, InstanceStatsSnapshot.class,
-      StateMachine.class, SweepingOutput.class, ContainerTask.class, GitSyncError.class, ManualSyncJob.class,
-      SyncStatus.class, Activity.class, Permit.class, Command.class, Instance.class, TriggerExecution.class,
-      PipelineExecution.class, ResourceConstraintInstance.class, Artifact.class, Host.class,
-      DelegateConnectionResult.class, DelegateConnection.class, DeploymentSummary.class, NotificationBatch.class));
-
   private static Set<String> includedMongoCollections = new HashSet<>();
-  private static Set<String> excludedMongoCollections = new HashSet<>();
 
   static {
     for (Class<? extends PersistentEntity> entityClazz : includedEntities) {
       includedMongoCollections.add(getCollectionName(entityClazz));
-    }
-    for (Class<? extends PersistentEntity> entityClazz : excludedEntities) {
-      excludedMongoCollections.add(getCollectionName(entityClazz));
     }
   }
 
@@ -461,37 +377,37 @@ public class AccountExportImportResource {
     String userCollectionName = getCollectionName(User.class);
     JsonArray users = getJsonArray(zipEntryDataMap, userCollectionName);
     if (users != null) {
-      importStatuses.add(
-          mongoExportImport.importRecords(userCollectionName, convertJsonArrayToStringList(users), importMode));
+      importStatuses.add(mongoExportImport.importRecords(
+          userCollectionName, convertJsonArrayToStringList(users), importMode, getNaturalKeyFields(User.class)));
     }
 
     // 4. Import applications
     String applicationsCollectionName = getCollectionName(Application.class);
     JsonArray applications = getJsonArray(zipEntryDataMap, applicationsCollectionName);
     if (applications != null) {
-      importStatuses.add(mongoExportImport.importRecords(
-          applicationsCollectionName, convertJsonArrayToStringList(applications), importMode));
+      importStatuses.add(mongoExportImport.importRecords(applicationsCollectionName,
+          convertJsonArrayToStringList(applications), importMode, getNaturalKeyFields(Application.class)));
     }
 
     // 5. Import all "encryptedRecords", "configs.file" and "configs.chunks" content
     String encryptedDataCollectionName = getCollectionName(EncryptedData.class);
     JsonArray encryptedData = getJsonArray(zipEntryDataMap, encryptedDataCollectionName);
     if (encryptedData != null) {
-      importStatuses.add(mongoExportImport.importRecords(
-          encryptedDataCollectionName, convertJsonArrayToStringList(encryptedData), importMode));
+      importStatuses.add(mongoExportImport.importRecords(encryptedDataCollectionName,
+          convertJsonArrayToStringList(encryptedData), importMode, getNaturalKeyFields(EncryptedData.class)));
     }
     JsonArray configFiles = getJsonArray(zipEntryDataMap, COLLECTION_CONFIG_FILES);
     if (configFiles != null) {
       ImportStatus importStatus = mongoExportImport.importRecords(
-          COLLECTION_CONFIG_FILES, convertJsonArrayToStringList(configFiles), importMode);
+          COLLECTION_CONFIG_FILES, convertJsonArrayToStringList(configFiles), importMode, new String[] {"_id"});
       if (importStatus != null) {
         importStatuses.add(importStatus);
       }
     }
     JsonArray configChunks = getJsonArray(zipEntryDataMap, COLLECTION_CONFIG_CHUNKS);
     if (configChunks != null) {
-      ImportStatus importStatus = mongoExportImport.importRecords(
-          COLLECTION_CONFIG_CHUNKS, convertJsonArrayToStringList(configChunks), importMode);
+      ImportStatus importStatus = mongoExportImport.importRecords(COLLECTION_CONFIG_CHUNKS,
+          convertJsonArrayToStringList(configChunks), importMode, new String[] {"files_id", "n"});
       if (importStatus != null) {
         importStatuses.add(importStatus);
       }
@@ -501,13 +417,11 @@ public class AccountExportImportResource {
     for (Entry<String, Class<? extends Base>> entry : genericExportableEntityTypes.entrySet()) {
       String collectionName = getCollectionName(entry.getValue());
       JsonArray jsonArray = getJsonArray(zipEntryDataMap, collectionName);
-      if (excludedMongoCollections.contains(collectionName)) {
-        log.info("Import of collection '{}' has been skipped since it is in the exclusion list.", collectionName);
-      } else if (jsonArray == null) {
+      if (jsonArray == null) {
         log.info("No data found for collection '{}' to import.", collectionName);
       } else {
-        ImportStatus importStatus =
-            mongoExportImport.importRecords(collectionName, convertJsonArrayToStringList(jsonArray), importMode);
+        ImportStatus importStatus = mongoExportImport.importRecords(
+            collectionName, convertJsonArrayToStringList(jsonArray), importMode, getNaturalKeyFields(entry.getValue()));
         if (importStatus != null) {
           importStatuses.add(importStatus);
         }
@@ -691,10 +605,6 @@ public class AccountExportImportResource {
     }
   }
 
-  private static String getCollectionName(Class<? extends PersistentEntity> clazz) {
-    return clazz.getAnnotation(Entity.class).value();
-  }
-
   @SuppressWarnings("unchecked")
   private void findExportableEntityTypes() {
     Morphia morphia = new Morphia();
@@ -702,17 +612,13 @@ public class AccountExportImportResource {
     morphia.mapPackage("software.wings");
 
     morphia.getMapper().getMappedClasses().forEach(mc -> {
-      if (mc.getEntityAnnotation() != null && !mc.isAbstract()) {
-        // Read class level "Entity" annotation
+      Class<? extends Base> clazz = (Class<? extends Base>) mc.getClazz();
+      if (mc.getEntityAnnotation() != null && clazz.isAnnotationPresent(HarnessExportableEntity.class)) {
+        // Find out non-abstract classes with both 'Entity' and 'HarnessExportableEntity' annotation.
         String mongoCollectionName = mc.getEntityAnnotation().value();
-        if (!excludedMongoCollections.contains(mongoCollectionName)
-            && !includedMongoCollections.contains(mongoCollectionName)) {
-          Class<? extends Base> clazz = (Class<? extends Base>) mc.getClazz();
-          // Queuable entity types don't need to be exported.
-          if (clazz != null && !Queuable.class.isAssignableFrom(clazz) && Base.class.isAssignableFrom(clazz)) {
-            log.debug("Collection '{}' is exportable", mongoCollectionName);
-            genericExportableEntityTypes.put(mongoCollectionName, clazz);
-          }
+        if (!includedMongoCollections.contains(mongoCollectionName)) {
+          log.debug("Collection '{}' is exportable", mongoCollectionName);
+          genericExportableEntityTypes.put(mongoCollectionName, clazz);
         }
       }
     });

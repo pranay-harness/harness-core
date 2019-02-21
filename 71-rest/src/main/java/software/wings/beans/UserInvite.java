@@ -4,6 +4,8 @@ import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.validation.Update;
@@ -20,14 +22,15 @@ import java.util.List;
  * Created by anubhaw on 3/6/17.
  */
 @Entity(value = "userInvites", noClassnameStored = true)
+@HarnessExportableEntity
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 //@Indexes(@Index(fields = {@Field("accountId"), @Field("email")}, options = @IndexOptions(unique = true))) //TODO:
 // handle update with insert and then uncomment
 public class UserInvite extends Base {
   public static final String UUID_KEY = "uuid";
 
-  private String accountId;
-  @NotEmpty(groups = {Update.class}) private String email;
+  @NaturalKey private String accountId;
+  @NotEmpty(groups = {Update.class}) @NaturalKey private String email;
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
   @Transient private List<UserGroup> userGroups = new ArrayList<>();
   private boolean completed;

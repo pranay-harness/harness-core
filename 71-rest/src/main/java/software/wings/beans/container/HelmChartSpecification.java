@@ -1,5 +1,7 @@
 package software.wings.beans.container;
 
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,11 +15,12 @@ import software.wings.beans.DeploymentSpecification;
 import javax.validation.constraints.NotNull;
 
 @Entity("helmChartSpecifications")
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
 public class HelmChartSpecification extends DeploymentSpecification {
-  @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
+  @NotEmpty @Indexed(options = @IndexOptions(unique = true)) @NaturalKey private String serviceId;
   @NotNull private String chartUrl;
   @NotNull private String chartName;
   @NotNull private String chartVersion;

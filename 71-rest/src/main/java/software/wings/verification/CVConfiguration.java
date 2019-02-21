@@ -1,6 +1,8 @@
 package software.wings.verification;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -20,6 +22,7 @@ import javax.validation.constraints.NotNull;
  */
 
 @Entity(value = "verificationServiceConfigurations")
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
@@ -27,11 +30,11 @@ public class CVConfiguration extends Base {
   public static final String NAME_KEY = "name";
   public static final String SERVICE_ID_KEY = "serviceId";
 
-  @NotNull private String name;
-  @NotNull @Indexed private String accountId;
+  @NotNull @NaturalKey private String name;
+  @NotNull @Indexed @NaturalKey private String accountId;
   @NotNull private String connectorId;
-  @NotNull @Indexed private String envId;
-  @NotNull @Indexed private String serviceId;
+  @NotNull @Indexed @NaturalKey private String envId;
+  @NotNull @Indexed @NaturalKey private String serviceId;
   @NotNull private StateType stateType;
   @NotNull private AnalysisTolerance analysisTolerance;
   private boolean enabled24x7;

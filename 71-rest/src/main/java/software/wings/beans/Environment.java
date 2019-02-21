@@ -6,6 +6,8 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import lombok.Data;
@@ -35,13 +37,14 @@ import javax.validation.constraints.NotNull;
 @Indexes({
   @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId"), @Field("name") })
 })
+@HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class Environment extends Base {
   public static final String NAME_KEY = "name";
   public static final String ENVIRONMENT_TYPE_KEY = "environmentType";
 
-  @NotEmpty @EntityName private String name;
+  @NotEmpty @EntityName @NaturalKey private String name;
   private String description;
   private String configMapYaml;
   private String helmValueYaml;

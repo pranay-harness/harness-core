@@ -1,6 +1,8 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.encryption.Encrypted;
@@ -27,6 +29,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 10/11/16.
  */
+@HarnessExportableEntity
 @Entity(value = "accounts", noClassnameStored = true)
 public class Account extends Base {
   public static final String ACCOUNT_NAME_KEY = "accountName";
@@ -34,7 +37,7 @@ public class Account extends Base {
 
   @NotNull private String companyName;
 
-  @Indexed(options = @IndexOptions(unique = true)) @NotNull private String accountName;
+  @Indexed(options = @IndexOptions(unique = true)) @NotNull @NaturalKey private String accountName;
 
   @JsonIgnore @NotNull(groups = Create.class) @Encrypted private String accountKey;
 
