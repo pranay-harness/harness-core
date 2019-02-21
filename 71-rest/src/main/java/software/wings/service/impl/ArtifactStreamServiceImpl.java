@@ -33,6 +33,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -132,6 +133,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
     setAutoPopulatedName(artifactStream);
+    if (!artifactStream.isAutoPopulate() && isEmpty(artifactStream.getName())) {
+      throw new WingsException("Please provide valid artifact name", USER);
+    }
 
     String id = wingsPersistence.save(artifactStream);
     String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
@@ -198,6 +202,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (shouldDeleteArtifactsOnSourceChanged(existingArtifactStream, finalArtifactStream)) {
       // TODO: This logic has to be moved to Prune event or Queue to ensure guaranteed execution
       executorService.submit(() -> artifactService.deleteWhenArtifactSourceNameChanged(existingArtifactStream));
+    }
+
+    if (isEmpty(artifactStream.getName())) {
+      throw new WingsException("Please provide valid artifact name", USER);
     }
     boolean isRename = !artifactStream.getName().equals(existingArtifactStream.getName());
     String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());

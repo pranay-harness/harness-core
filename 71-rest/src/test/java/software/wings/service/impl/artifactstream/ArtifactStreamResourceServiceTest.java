@@ -32,6 +32,7 @@ import java.util.List;
 public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   private static final JenkinsArtifactStream artifactStream = JenkinsArtifactStream.builder()
                                                                   .appId(APP_ID)
+                                                                  .name("Jenkins artifact")
                                                                   .sourceName("job1")
                                                                   .jobname("job1")
                                                                   .settingId("JENKINS_SETTING_ID")
