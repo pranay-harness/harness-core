@@ -166,6 +166,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
 
       return true;
     } catch (Exception e) {
+      logger.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", ERROR, CommandExecutionStatus.FAILURE);
       return false;
