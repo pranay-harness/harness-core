@@ -155,3 +155,76 @@ fi
 if [[ -v "ALLOW_TRIAL_REGISTRATION" ]]; then
     sed -i "s|trialRegistrationAllowed: true|trialRegistrationAllowed: ${ALLOW_TRIAL_REGISTRATION}|" /opt/harness/config.yml
 fi
+
+if [[ -v "GITHUB_OAUTH_CLIENT" ]]; then
+    sed -i "s|githubClientId|${GITHUB_OAUTH_CLIENT}|" /opt/harness/config.yml
+fi
+
+if [[ -v "GITHUB_OAUTH_SECRET" ]]; then
+    sed -i "s|githubClientSecret|${GITHUB_OAUTH_SECRET}|" /opt/harness/config.yml
+fi
+
+if [[ -v "GITHUB_OAUTH_CALLBACK_URL" ]]; then
+    sed -i "s|githubCallbackUrl|${GITHUB_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+fi
+
+if [[ -v "AZURE_OAUTH_CLIENT" ]]; then
+    sed -i "s|azureClientId|${AZURE_OAUTH_CLIENT}|" /opt/harness/config.yml
+fi
+
+if [[ -v "AZURE_OAUTH_SECRET" ]]; then
+    sed -i "s|azureClientSecret|${AZURE_OAUTH_SECRET}|" /opt/harness/config.yml
+fi
+
+if [[ -v "AZURE_OAUTH_CALLBACK_URL" ]]; then
+    sed -i "s|azureCallbackUrl|${AZURE_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+fi
+
+if [[ -v "GOOGLE_OAUTH_CLIENT" ]]; then
+    sed -i "s|googleClientId|${GOOGLE_OAUTH_CLIENT}|" /opt/harness/config.yml
+fi
+
+if [[ -v "GOOGLE_OAUTH_SECRET" ]]; then
+    sed -i "s|googleClientSecret|${GOOGLE_OAUTH_SECRET}|" /opt/harness/config.yml
+fi
+
+if [[ -v "GOOGLE_OAUTH_CALLBACK_URL" ]]; then
+    sed -i "s|googleCallbackUrl|${GOOGLE_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+fi
+
+if [[ -v "BITBUCKET_OAUTH_CLIENT" ]]; then
+    sed -i "s|bitbucketClientId|${BITBUCKET_OAUTH_CLIENT}|" /opt/harness/config.yml
+fi
+
+if [[ -v "BITBUCKET_OAUTH_SECRET" ]]; then
+    sed -i "s|bitbucketClientSecret|${BITBUCKET_OAUTH_SECRET}|" /opt/harness/config.yml
+fi
+
+if [[ -v "BITBUCKET_OAUTH_CALLBACK_URL" ]]; then
+    sed -i "s|bitbucketCallbackUrl|${BITBUCKET_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+fi
+
+if [[ -v "GITLAB_OAUTH_CLIENT" ]]; then
+    sed -i "s|gitlabClientId|${GITLAB_OAUTH_CLIENT}|" /opt/harness/config.yml
+fi
+
+if [[ -v "GITLAB_OAUTH_SECRET" ]]; then
+    sed -i "s|gitlabClientSecret|${GITLAB_OAUTH_SECRET}|" /opt/harness/config.yml
+fi
+
+if [[ -v "GITLAB_OAUTH_CALLBACK_URL" ]]; then
+    sed -i "s|gitlabCallbackUrl|${GITLAB_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+fi
+
+if [[ -v "LINKEDIN_OAUTH_CLIENT" ]]; then
+    sed -i "s|linkedinClientId|${LINKEDIN_OAUTH_CLIENT}|" /opt/harness/config.yml
+fi
+
+if [[ -v "LINKEDIN_OAUTH_SECRET" ]]; then
+    sed -i "s|linkedinClientSecret|${LINKEDIN_OAUTH_SECRET}|" /opt/harness/config.yml
+fi
+
+if [[ -v "LINKEDIN_OAUTH_CALLBACK_URL" ]]; then
+    sed -i "s|linkedinCallbackUrl|${LINKEDIN_OAUTH_CALLBACK_URL}|" /opt/harness/config.yml
+fi
+

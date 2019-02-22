@@ -29,6 +29,12 @@ import software.wings.DataStorageMode;
 import software.wings.beans.DefaultSalesContacts;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.security.authentication.oauth.AzureConfig;
+import software.wings.security.authentication.oauth.BitbucketConfig;
+import software.wings.security.authentication.oauth.GithubConfig;
+import software.wings.security.authentication.oauth.GitlabConfig;
+import software.wings.security.authentication.oauth.GoogleConfig;
+import software.wings.security.authentication.oauth.LinkedinConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -74,6 +80,12 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("clusterName") private String clusterName;
   @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
   @JsonProperty("defaultSalesContacts") private DefaultSalesContacts defaultSalesContacts;
+  @JsonProperty("githubConfig") private GithubConfig githubConfig;
+  @JsonProperty("linkedinConfig") private LinkedinConfig linkedinConfig;
+  @JsonProperty("googleConfig") private GoogleConfig googleConfig;
+  @JsonProperty("azureConfig") private AzureConfig azureConfig;
+  @JsonProperty("bitbucketConfig") private BitbucketConfig bitbucketConfig;
+  @JsonProperty("gitlabConfig") private GitlabConfig gitlabConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

@@ -65,7 +65,7 @@ public class AuthenticationUtil {
   }
 
   public String getBaseUrl() {
-    String baseUrl = configuration.getPortal().getUrl().trim();
+    String baseUrl = configuration.getApiUrl();
     if (!baseUrl.endsWith("/")) {
       baseUrl += "/";
     }

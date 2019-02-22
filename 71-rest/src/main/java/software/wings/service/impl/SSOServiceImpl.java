@@ -15,12 +15,15 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.validator.constraints.NotBlank;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.FeatureName;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
+import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -28,9 +31,12 @@ import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
+import software.wings.security.authentication.oauth.OauthOptions;
+import software.wings.security.authentication.oauth.OauthOptions.SupportedOauthProviders;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
@@ -55,6 +61,10 @@ public class SSOServiceImpl implements SSOService {
   @Inject SamlClientService samlClientService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private MainConfiguration mainConfiguration;
+  @Inject private software.wings.security.SecretManager jwtTokenHelper;
+  @Inject OauthOptions oauthOptions;
 
   @Override
   public SSOConfig uploadSamlConfiguration(String accountId, InputStream inputStream, String displayName,
@@ -66,6 +76,17 @@ public class SSOServiceImpl implements SSOService {
       return getAccountAccessManagementSettings(accountId);
     } catch (SamlException | IOException | URISyntaxException e) {
       throw new WingsException(ErrorCode.INVALID_SAML_CONFIGURATION, e);
+    }
+  }
+
+  @Override
+  public SSOConfig uploadOauthConfiguration(String accountId, String displayName, String filter) {
+    try {
+      SupportedOauthProviders oauthProvider = SupportedOauthProviders.valueOf(displayName);
+      buildAndUploadOauthSettings(accountId, displayName, oauthOptions.getRedirectURI(oauthProvider), filter);
+      return getAccountAccessManagementSettings(accountId);
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.INVALID_OAUTH_CONFIGURATION, e);
     }
   }
 
@@ -129,6 +150,12 @@ public class SSOServiceImpl implements SSOService {
     if (ldapSettings != null) {
       settings.add(ldapSettings.getPublicSSOSettings());
     }
+    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(account.getUuid());
+    if (oauthSettings != null) {
+      if (featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, account.getUuid())) {
+        settings.add(oauthSettings.getPublicSSOSettings());
+      }
+    }
     return settings;
   }
 
@@ -144,6 +171,12 @@ public class SSOServiceImpl implements SSOService {
                                     .groupMembershipAttr(groupMembershipAttr)
                                     .build();
     return ssoSettingService.saveSamlSettings(samlSettings);
+  }
+
+  private OauthSettings buildAndUploadOauthSettings(String accountId, String displayName, String url, String filter) {
+    OauthSettings oauthSettings =
+        OauthSettings.builder().accountId(accountId).displayName(displayName).url(url).filter(filter).build();
+    return ssoSettingService.saveOauthSettings(oauthSettings);
   }
 
   @Override
@@ -280,5 +313,16 @@ public class SSOServiceImpl implements SSOService {
     settings.getConnectionSettings().setEncryptedBindPassword(
         savedSettings.getConnectionSettings().getEncryptedBindPassword());
     return true;
+  }
+
+  @Override
+  public SSOConfig deleteOauthConfiguration(String accountId) {
+    ssoSettingService.deleteOauthSettings(accountId);
+    return setAuthenticationMechanism(accountId, AuthenticationMechanism.USER_PASSWORD);
+  }
+
+  @Override
+  public OauthSettings updateOauthSettings(String accountId, String displayName, String filter) {
+    return ssoSettingService.updateOauthSettings(accountId, displayName, filter);
   }
 }

@@ -38,6 +38,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONME
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -96,12 +97,14 @@ import software.wings.beans.EntityType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Role;
 import software.wings.beans.User;
+import software.wings.beans.User.Builder;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.beans.UserInviteSource;
 import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
@@ -115,6 +118,8 @@ import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
+import software.wings.security.authentication.oauth.OauthClient;
+import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
@@ -123,6 +128,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -183,6 +189,7 @@ public class UserServiceImpl implements UserService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AuthenticationManager authenticationManager;
+  @Inject private SSOService ssoService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -746,7 +753,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private void sendTrialSignupCompletedEmail(UserInvite userInvite) {
+  public void sendTrialSignupCompletedEmail(UserInvite userInvite) {
     try {
       Map<String, String> templateModel = getTrialSignupCompletedTemplatedModel(userInvite);
       sendEmail(userInvite, TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME, templateModel);
@@ -799,6 +806,8 @@ public class UserServiceImpl implements UserService {
       }
     } else if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.LDAP)) {
       ssoSettings = ssoSettingService.getLdapSettingsByAccountId(account.getUuid());
+    } else if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.OAUTH)) {
+      ssoSettings = ssoSettingService.getOauthSettingsByAccountId(account.getUuid());
     } else {
       logger.warn("New authentication mechanism detected. Needs to handle the added role email template flow.");
       throw new WingsException("New authentication mechanism detected.");
@@ -944,6 +953,99 @@ public class UserServiceImpl implements UserService {
 
     eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
     return userInvite;
+  }
+
+  @Override
+  public User completeOauthSignup(OauthUserInfo userInfo, OauthClient oauthClient) {
+    logger.info(String.format("User not found in db. Creating an account for: [%s]", userInfo.getEmail()));
+    checkForFreemiumCluster();
+    final User user = createUser(userInfo);
+    notNullOrEmptyCheck(user.getAccountName(), "Account/Company name");
+    notNullOrEmptyCheck(user.getName(), "User's name");
+
+    throwExceptionIfUserIsAlreadyRegistered(user.getEmail());
+
+    // Create a trial account whose license expires in 15 days.
+    Account account = createAccountWithTrialLicense(user);
+
+    // For trial user just signed up, it will be assigned to the account admin role.
+    assignUserToAccountAdminGroup(user, account);
+
+    String accountId = account.getUuid();
+    createSSOSettingsAndMarkAsDefaultAuthMechanism(accountId, oauthClient);
+
+    eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
+    return user;
+  }
+
+  private void checkForFreemiumCluster() {
+    // A safe check to ensure that no signup is allowed in the paid cluster.
+    if (!configuration.isTrialRegistrationAllowed()) {
+      throw new InvalidRequestException("Signup is not allowed in paid cluster");
+    }
+  }
+
+  private User createUser(OauthUserInfo userInfo) {
+    String email = userInfo.getEmail();
+    final String companyName = accountService.suggestAccountName(userInfo.getName());
+    return Builder.anUser()
+        .withEmail(email)
+        .withName(userInfo.getName())
+        .withAccountName(companyName)
+        .withCompanyName(companyName)
+        .withEmailVerified(true)
+        .build();
+  }
+
+  private void notNullOrEmptyCheck(String name, String errorSubject) {
+    if (Strings.isNullOrEmpty(name)) {
+      throw new InvalidRequestException(errorSubject + " is empty", USER);
+    }
+  }
+
+  private void assignUserToAccountAdminGroup(User user, Account account) {
+    List<UserGroup> accountAdminGroups = getAccountAdminGroup(account.getUuid());
+
+    user.setAppId(GLOBAL_APP_ID);
+    user.setEmailVerified(false);
+    user.getAccounts().add(account);
+    user.setUserGroups(accountAdminGroups);
+    save(user, account.getUuid());
+
+    addUserToUserGroups(account.getUuid(), user, accountAdminGroups, false);
+  }
+
+  private void throwExceptionIfUserIsAlreadyRegistered(final String email) {
+    User existingUser = getUserByEmail(email);
+    if (existingUser != null) {
+      throw new WingsException(USER_ALREADY_REGISTERED, USER);
+    }
+  }
+
+  private Account createAccountWithTrialLicense(User user) {
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(user.getAccountName())
+                          .withCompanyName(user.getCompanyName())
+                          .withAppId(GLOBAL_APP_ID)
+                          .withLicenseInfo(licenseInfo)
+                          .build();
+
+    account = setupAccount(account);
+    return account;
+  }
+
+  private void createSSOSettingsAndMarkAsDefaultAuthMechanism(String accountId, OauthClient oauthClient) {
+    OauthSettings oauthSettings = OauthSettings.builder()
+                                      .accountId(accountId)
+                                      .displayName(oauthClient.getName())
+                                      .url(oauthClient.getRedirectUrl().toString())
+                                      .build();
+    ssoSettingService.saveOauthSettings(oauthSettings);
+    logger.info("Setting authentication mechanism as oauth for account id: {}", accountId);
+    ssoService.setAuthenticationMechanism(accountId, AuthenticationMechanism.OAUTH);
   }
 
   @Override
@@ -1661,6 +1763,10 @@ public class UserServiceImpl implements UserService {
     PageRequest<User> pageRequest = aPageRequest().addFilter("accounts", Operator.IN, accountId).build();
     PageResponse<User> pageResponse = wingsPersistence.query(User.class, pageRequest);
     return pageResponse.getResponse();
+  }
+
+  public AuthenticationMechanism getAuthenticationMechanism(User user) {
+    return getPrimaryAccount(user).getAuthenticationMechanism();
   }
 
   @Override

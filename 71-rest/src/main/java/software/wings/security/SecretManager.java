@@ -33,6 +33,7 @@ public class SecretManager {
   public enum JWT_CATEGORY {
     MULTIFACTOR_AUTH(3 * 60 * 1000), // 3 mins
     SSO_REDIRECT(60 * 1000), // 1 min
+    OAUTH_REDIRECT(3 * 60 * 1000), // 1 min
     PASSWORD_SECRET(4 * 60 * 60 * 1000), // 4 hrs
     ZENDESK_SECRET(4 * 60 * 60 * 1000), // 4 hrs
     EXTERNAL_SERVICE_SECRET(60 * 60 * 1000), // 1hr

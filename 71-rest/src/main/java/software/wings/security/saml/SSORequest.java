@@ -3,6 +3,6 @@ package software.wings.security.saml;
 import lombok.Data;
 
 @Data
-public class SamlRequest {
+public class SSORequest {
   private String idpRedirectUrl;
 }

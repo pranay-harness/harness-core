@@ -26,8 +26,8 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
-import software.wings.security.saml.SamlRequest;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -87,13 +87,13 @@ public class AuthenticationManagerTest extends WingsBaseTest {
         .thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
     LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse(NON_EXISTING_USER);
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
-    assertThat(loginTypeResponse.getSamlRequest()).isNull();
+    assertThat(loginTypeResponse.getSSORequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), any(EnumSet.class))).thenReturn(mockUser);
     loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
-    assertThat(loginTypeResponse.getSamlRequest()).isNull();
+    assertThat(loginTypeResponse.getSSORequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     when(AUTHENTICATION_UTL.getUser("testUser", WingsException.USER)).thenReturn(mockUser);
@@ -102,17 +102,17 @@ public class AuthenticationManagerTest extends WingsBaseTest {
 
     loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
-    assertThat(loginTypeResponse.getSamlRequest()).isNull();
+    assertThat(loginTypeResponse.getSSORequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
     when(account1.getAuthenticationMechanism()).thenReturn(AuthenticationMechanism.SAML);
-    SamlRequest samlRequest = new SamlRequest();
-    samlRequest.setIdpRedirectUrl("TestURL");
-    when(SAML_CLIENT_SERVICE.generateSamlRequest(mockUser)).thenReturn(samlRequest);
+    SSORequest SSORequest = new SSORequest();
+    SSORequest.setIdpRedirectUrl("TestURL");
+    when(SAML_CLIENT_SERVICE.generateSamlRequest(mockUser)).thenReturn(SSORequest);
     loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
-    assertThat(loginTypeResponse.getSamlRequest()).isNotNull();
-    SamlRequest receivedRequest = loginTypeResponse.getSamlRequest();
+    assertThat(loginTypeResponse.getSSORequest()).isNotNull();
+    SSORequest receivedRequest = loginTypeResponse.getSSORequest();
     assertThat(receivedRequest.getIdpRedirectUrl()).isEqualTo("TestURL");
   }
 
