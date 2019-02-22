@@ -3,12 +3,14 @@ package software.wings.beans;
 import static com.amazonaws.util.StringUtils.isNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
+import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ECS_FARGATE;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Data;
@@ -58,20 +60,40 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     super(InfrastructureMappingType.AWS_ECS.name());
   }
 
-  private void applyEcsEc2Variables(Map<String, Object> map) {
-    setLaunchType("EC2");
+  private boolean applyCommonVariable(String key, Object value) {
+    switch (key) {
+      case "region": {
+        setRegion((String) value);
+        return true;
+      }
+      case "ecsCluster": {
+        setClusterName((String) value);
+        return true;
+      }
+      case "ecsVpc": {
+        setVpcId((String) value);
+        return true;
+      }
+      case "ecsSgs": {
+        setSecurityGroupIds(getList(value));
+        return true;
+      }
+      case "ecsSubnets": {
+        setSubnetIds(getList(value));
+        return true;
+      }
+      default: { return false; }
+    }
+  }
+
+  private void applyEcsFargateVariables(Map<String, Object> map) {
+    setLaunchType("FARGATE");
     try {
       for (Entry<String, Object> entry : map.entrySet()) {
-        switch (entry.getKey()) {
-          case "region": {
-            setRegion((String) entry.getValue());
-            break;
-          }
-          case "ecsCluster": {
-            setClusterName((String) entry.getValue());
-            break;
-          }
-          default: {
+        if (!applyCommonVariable(entry.getKey(), entry.getValue())) {
+          if ("ecsTaskExecutionRole".equals(entry.getKey())) {
+            setExecutionRole((String) entry.getValue());
+          } else {
             throw new InvalidRequestException(
                 format("Unsupported infrastructure mapping provisioner variable %s", entry.getKey()));
           }
@@ -82,12 +104,21 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     } catch (RuntimeException exception) {
       throw new InvalidRequestException("Unable to set the provisioner variables to the mapping", exception);
     }
+  }
 
-    if (getRegion() == null) {
-      throw new InvalidRequestException("Region is required.");
-    }
-    if (getClusterName() == null) {
-      throw new InvalidRequestException("ECS cluster name is required.");
+  private void applyEcsEc2Variables(Map<String, Object> map) {
+    setLaunchType("EC2");
+    try {
+      for (Entry<String, Object> entry : map.entrySet()) {
+        if (!applyCommonVariable(entry.getKey(), entry.getValue())) {
+          throw new InvalidRequestException(
+              format("Unsupported infrastructure mapping provisioner variable %s", entry.getKey()));
+        }
+      }
+    } catch (WingsException exception) {
+      throw exception;
+    } catch (RuntimeException exception) {
+      throw new InvalidRequestException("Unable to set the provisioner variables to the mapping", exception);
     }
   }
 
@@ -98,10 +129,37 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
         applyEcsEc2Variables(map);
         break;
       }
+      case AWS_ECS_FARGATE: {
+        applyEcsFargateVariables(map);
+        break;
+      }
       default: {
         // Should never happen
         throw new InvalidRequestException(format("Unidentified: [%s] node filtering type", nodeFilteringType.name()));
       }
+    }
+    ensureSetString(getRegion(), "Region is required");
+    ensureSetString(getClusterName(), "Cluster is required");
+    if (AWS_ECS_FARGATE.equals(nodeFilteringType)) {
+      ensureSetString(getExecutionRole(), "Task execution role is required for Fargate Launch type");
+      ensureSetString(getVpcId(), "VpcId is required for Fargate Launch Type");
+      ensureSetStringArray(getSecurityGroupIds(), "Security group ids are required for Fargate launch type");
+      ensureSetStringArray(getSubnetIds(), "Subnet ids are required for Fargate launch type");
+    }
+  }
+
+  private void ensureSetString(String field, String errorMessage) {
+    if (isEmpty(field)) {
+      throw new InvalidRequestException(errorMessage);
+    }
+  }
+
+  private void ensureSetStringArray(List<String> fields, String errorMessage) {
+    if (EmptyPredicate.isEmpty(fields)) {
+      throw new InvalidRequestException(errorMessage);
+    }
+    if (fields.stream().anyMatch(EmptyPredicate::isEmpty)) {
+      throw new InvalidRequestException(errorMessage);
     }
   }
 

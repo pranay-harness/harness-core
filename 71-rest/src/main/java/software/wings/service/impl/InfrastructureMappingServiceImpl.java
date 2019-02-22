@@ -787,9 +787,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       fieldsToRemove.add("clusterName");
     }
 
-    keyValuePairs.put("region", ecsInfrastructureMapping.getRegion());
+    if (isNotEmpty(ecsInfrastructureMapping.getRegion())) {
+      keyValuePairs.put("region", ecsInfrastructureMapping.getRegion());
+    } else {
+      fieldsToRemove.add("region");
+    }
+
+    if (isNotEmpty(ecsInfrastructureMapping.getLaunchType())) {
+      keyValuePairs.put("launchType", ecsInfrastructureMapping.getLaunchType());
+    } else {
+      fieldsToRemove.add("launchType");
+    }
     keyValuePairs.put("assignPublicIp", ecsInfrastructureMapping.isAssignPublicIp());
-    keyValuePairs.put("launchType", ecsInfrastructureMapping.getLaunchType());
     keyValuePairs.put(
         "vpcId", ecsInfrastructureMapping.getVpcId() == null ? StringUtils.EMPTY : ecsInfrastructureMapping.getVpcId());
     keyValuePairs.put("subnetIds",
