@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.DataStoreService;
@@ -143,11 +144,17 @@ public class LogLabelingServiceImpl implements LogLabelingService {
                              .labels(labels)
                              .timesLabeled(1)
                              .build();
+      if (isEmpty(labeledLogRecord.getUsers())) {
+        labeledLogRecord.setUsers(new ArrayList<>());
+      }
     } else {
       labeledLogRecord = response.getResponse().get(0);
       labels.addAll(labeledLogRecord.getLabels());
       labeledLogRecord.setLabels(labels);
     }
+    List<String> userList = labeledLogRecord.getUsers();
+    userList.add(UserThreadLocal.get().getPublicUser().getName());
+    labeledLogRecord.setUsers(userList);
 
     // save the labelled record.
     dataStoreService.save(LabeledLogRecord.class, Arrays.asList(labeledLogRecord));

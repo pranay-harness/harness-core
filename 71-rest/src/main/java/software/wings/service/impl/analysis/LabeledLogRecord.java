@@ -31,6 +31,7 @@ import java.util.List;
 public class LabeledLogRecord implements GoogleDataStoreAware {
   private String logMessage;
   private List<LogLabel> labels;
+  private List<String> users;
   private int timesLabeled;
   private long createdAt;
   @Id String dataRecordId;
@@ -49,6 +50,9 @@ public class LabeledLogRecord implements GoogleDataStoreAware {
     if (isNotEmpty(labels)) {
       addFieldIfNotEmpty(recordBuilder, "labels", JsonUtils.asJson(labels), true);
     }
+    if (isNotEmpty(users)) {
+      addFieldIfNotEmpty(recordBuilder, "users", JsonUtils.asJson(users), true);
+    }
     return recordBuilder.build();
   }
 
@@ -63,6 +67,11 @@ public class LabeledLogRecord implements GoogleDataStoreAware {
     final String labelsJson = readString(entity, "labels");
     if (isNotEmpty(labelsJson)) {
       dataRecord.setLabels(JsonUtils.asObject(labelsJson, new TypeReference<List<LogLabel>>() {}));
+    }
+
+    final String usersJson = readString(entity, "users");
+    if (isNotEmpty(usersJson)) {
+      dataRecord.setUsers(JsonUtils.asObject(usersJson, new TypeReference<List<String>>() {}));
     }
 
     return dataRecord;
