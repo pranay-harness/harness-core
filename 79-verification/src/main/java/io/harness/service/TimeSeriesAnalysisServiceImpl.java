@@ -131,7 +131,11 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       logger.error("Exception writing data to storage", e);
     }
 
-    if (verificationServiceConfiguration.getDataStorageMode().equals(DataStorageMode.GOOGLE_CLOUD_DATA_STORE)) {
+    if (!managerClientHelper
+             .callManagerWithRetry(
+                 managerClient.isFeatureEnabled(FeatureName.DISABLE_DUAL_WRITE_METRIC_DATA, accountId))
+             .getResource()
+        && verificationServiceConfiguration.getDataStorageMode().equals(DataStorageMode.GOOGLE_CLOUD_DATA_STORE)) {
       wingsPersistence.saveIgnoringDuplicateKeys(metricData);
     }
     if (logger.isDebugEnabled()) {
