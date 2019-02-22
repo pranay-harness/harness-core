@@ -7,16 +7,20 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.Data;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotBlank;
+import software.wings.beans.FeatureName;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
+import software.wings.beans.sso.OauthSettings;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.ldap.LdapResponse.Status;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -72,6 +76,39 @@ public class SSOResource {
       @FormDataParam("authorizationEnabled") Boolean authorizationEnabled) {
     return new RestResponse<>(ssoService.uploadSamlConfiguration(
         accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled));
+  }
+
+  @POST
+  @Path("oauth-settings-upload")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SSOConfig> uploadOathSettings(
+      @QueryParam("accountId") String accountId, OauthSettings oauthSettings) {
+    if (!featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, accountId)) {
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
+    }
+    return new RestResponse<>(
+        ssoService.uploadOauthConfiguration(accountId, oauthSettings.getDisplayName(), oauthSettings.getFilter()));
+  }
+
+  @DELETE
+  @Path("delete-oauth-settings")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SSOConfig> deleteOauthSettings(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(ssoService.deleteOauthConfiguration(accountId));
+  }
+
+  @PUT
+  @Path("oauth-settings-upload")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public RestResponse<OauthSettings> updateOathSettings(
+      @QueryParam("accountId") String accountId, OauthSettings oauthSettings) {
+    if (!featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, accountId)) {
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
+    }
+    return new RestResponse<>(
+        ssoService.updateOauthSettings(accountId, oauthSettings.getDisplayName(), oauthSettings.getFilter()));
   }
 
   /**
@@ -137,6 +174,17 @@ public class SSOResource {
   @ExceptionMetered
   public RestResponse<SSOConfig> enableSamlAuthMechanism(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(ssoService.setAuthenticationMechanism(accountId, AuthenticationMechanism.SAML));
+  }
+
+  @PUT
+  @Path("auth-mechanism/OAUTH")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SSOConfig> enableOauthAuthMechanism(@QueryParam("accountId") String accountId) {
+    if (!featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, accountId)) {
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
+    }
+    return new RestResponse<>(ssoService.setAuthenticationMechanism(accountId, AuthenticationMechanism.OAUTH));
   }
 
   @PUT

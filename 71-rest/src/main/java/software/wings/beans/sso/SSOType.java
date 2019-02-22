@@ -1,3 +1,3 @@
 package software.wings.beans.sso;
 
-public enum SSOType { SAML, LDAP }
+public enum SSOType { SAML, LDAP, OAUTH }

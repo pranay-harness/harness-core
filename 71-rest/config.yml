@@ -55,6 +55,36 @@ marketoConfig:
   clientId: "marketo_client_id"
   clientSecret: "marketo_client_secret"
 
+githubConfig:
+  clientId: githubClientId
+  clientSecret: githubClientSecret
+  callbackUrl: githubCallbackUrl
+
+linkedinConfig:
+  clientId: linkedinClientId
+  clientSecret: linkedinClientSecret
+  callbackUrl: linkedinCallbackUrl
+
+googleConfig:
+  clientId: googleClientId
+  clientSecret: googleClientSecret
+  callbackUrl: googleCallbackUrl
+
+azureConfig:
+  clientId: azureClientId
+  clientSecret: azureClientSecret
+  callbackUrl: azureCallbackUrl
+
+gitlabConfig:
+  clientId: gitlabClientId
+  clientSecret: gitlabClientSecret
+  callbackUrl: gitlabCallbackUrl
+
+bitbucketConfig:
+  clientId: bitbucketClientId
+  clientSecret: bitbucketClientSecret
+  callbackUrl: bitbucketCallbackUrl
+
 smtp:
   type: SMTP
   host: host_placeholder

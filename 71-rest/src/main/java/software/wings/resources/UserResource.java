@@ -81,6 +81,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * Users Resource class.
@@ -462,6 +463,25 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse<LoginTypeResponse> getLoginType(@QueryParam("userName") String userName) {
     return new RestResponse(authenticationManager.getLoginTypeResponse(userName));
+  }
+
+  @GET
+  @Path("oauth2Redirect")
+  @PublicApi
+  public Response oauth2Redirect(@QueryParam("provider") @NotNull String provider) {
+    return authenticationManager.oauth2Redirect(provider.toLowerCase());
+  }
+
+  @GET
+  @Path("oauth2/{provider}")
+  @PublicApi
+  public Response oauth2CallbackUrl(@QueryParam("code") String code, @QueryParam("state") String state,
+      @PathParam("provider") @NotNull String provider) {
+    try {
+      return authenticationManager.oauth2CallbackUrl(code, state, provider.toLowerCase());
+    } catch (URISyntaxException e) {
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
+    }
   }
 
   @POST

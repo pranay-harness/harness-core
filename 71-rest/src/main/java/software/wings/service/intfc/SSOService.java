@@ -4,6 +4,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
+import software.wings.beans.sso.OauthSettings;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
@@ -14,6 +15,8 @@ import javax.validation.constraints.NotNull;
 
 // TODO: Refactor this to make it more abstract and common across different SSO providers
 public interface SSOService {
+  SSOConfig uploadOauthConfiguration(String accountId, String displayName, String filter);
+
   SSOConfig uploadSamlConfiguration(@NotNull String accountId, @NotNull InputStream inputStream,
       @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled);
 
@@ -45,4 +48,8 @@ public interface SSOService {
       @NotNull LdapSettings ldapSettings, @NotBlank String identifier, @NotBlank String password);
 
   Collection<LdapGroupResponse> searchGroupsByName(@NotBlank String ldapSettingsId, @NotBlank String nameQuery);
+
+  OauthSettings updateOauthSettings(String accountId, String displayName, String filter);
+
+  SSOConfig deleteOauthConfiguration(String accountId);
 }

@@ -4,6 +4,7 @@ import io.harness.validation.Create;
 import org.hibernate.validator.constraints.NotBlank;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.sso.LdapSettings;
+import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.service.intfc.ownership.OwnedByAccount;
@@ -18,7 +19,11 @@ public interface SSOSettingService extends OwnedByAccount {
 
   SamlSettings getSamlSettingsByAccountId(@NotNull String accountId);
 
+  OauthSettings getOauthSettingsByAccountId(String accountId);
+
   @ValidationGroups(Create.class) SamlSettings saveSamlSettings(@Valid SamlSettings settings);
+
+  OauthSettings saveOauthSettings(OauthSettings settings);
 
   boolean deleteSamlSettings(@NotNull String accountId);
 
@@ -71,4 +76,8 @@ public interface SSOSettingService extends OwnedByAccount {
    * @param ssoId       sso id
    */
   boolean isDefault(@NotBlank String accountId, @NotBlank String ssoId);
+
+  OauthSettings updateOauthSettings(String accountId, String displayName, String filter);
+
+  boolean deleteOauthSettings(String accountId);
 }

@@ -15,6 +15,9 @@ import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
 import software.wings.security.SecretManager;
+import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.oauth.OauthClient;
+import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.net.URISyntaxException;
@@ -319,6 +322,17 @@ public interface UserService extends OwnedByAccount {
   UserInvite completeTrialSignup(User user, UserInvite userInvite);
 
   /**
+   * Complete the trial user signup using oauth. Both the trial account and the account admin user will be created
+   * as part of this operation. Also a default SSO settings corresponding to the identity provider will be created
+   * and will set up as the default login mechanism.
+   *
+   * @param user The user to be signed up for a free trial
+   * @param oauthClient The oauthClient being used for the signup process.
+   * @return the new User
+   */
+  User completeOauthSignup(OauthUserInfo userInfo, OauthClient oauthClient);
+
+  /**
    * Complete the trial user signup and signin. Both the trial account and the account admin user will be created
    * as part of this operation.
    *
@@ -413,4 +427,6 @@ public interface UserService extends OwnedByAccount {
   boolean isUserVerified(User user);
 
   List<User> getUsersOfAccount(@NotEmpty String accountId);
+
+  AuthenticationMechanism getAuthenticationMechanism(User user);
 }

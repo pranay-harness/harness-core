@@ -27,11 +27,42 @@ xxxxxxxx
         key: 9a3e6eac4dcdbdc41a93ca99100537df
         programName: manager-saas-accesslogs
 
+githubConfig:
+  clientId: "424a251ac2cdfc4a941e"
+  clientSecret: "35fcb1bd449f9e8b17e5d175d67c58394b06cc42"
+  callbackUrl: "https://localhost:9090/api/users/oauth2"
+
+linkedinConfig:
+  clientId: "785sqb1kencxnd"
+  clientSecret: "pe4AAj9QdMqUHmgk"
+  callbackUrl: "https://localhost:9090/api/users/oauth2/linkedin"
+
+googleConfig:
+  clientId: "420325145969-0lc595ui4n6otlihklisr82cn0joc40g.apps.googleusercontent.com"
+  clientSecret: "YSNgCGDNGVVwgT5bVWYiTVnJ"
+  callbackUrl: "https://localhost:9090/api/users/oauth2/google"
+
+azureConfig:
+  clientId: "faeff6fc-4cef-404b-a23d-03c93587e21d"
+  clientSecret: "k@t:--a4JCFr2Brv%"
+  callbackUrl: "https://localhost:9090/api/users/oauth2/azure"
+
 marketoConfig:
   enabled: false
   url:  "marketo_url_place_holder"
   clientId: "marketo_client_id"
   clientSecret: "marketo_client_secret"
+
+gitlabConfig:
+  clientId: "425a78bfb971c5098598d22c87ccec1cee09494fcbc602dacaff1f73c2ae9b1e"
+  clientSecret: "b5eeb70532e47e7ede4c7c4a41403915e810509a429c2e9e82991c5c4174efaa"
+  callbackUrl: "https://dev.harness.io/api/users/oauth2/gitlab"
+
+bitbucketConfig:
+  clientId: "Dgnywpy85JEgDnHTpk"
+  clientSecret: "U4Eq2dJMeEnEjQur9FXnh2MLPDtrpZdw"
+  callbackUrl: "https://dev.harness.io/api/users/oauth2/bitbucket"
+
 
 smtp:
   type: SMTP

@@ -71,16 +71,16 @@ public class SamlClientService {
         new InputStreamReader(new ByteArrayInputStream(samlData.getBytes(UTF_8)), UTF_8));
   }
 
-  public SamlRequest generateSamlRequest(User user) {
+  public SSORequest generateSamlRequest(User user) {
     Account primaryAccount = authenticationUtil.getPrimaryAccount(user);
     if (primaryAccount.getAuthenticationMechanism().equals(AuthenticationMechanism.SAML)) {
-      SamlRequest samlRequest = new SamlRequest();
+      SSORequest SSORequest = new SSORequest();
       try {
         SamlClient samlClient = getSamlClientFromAccount(primaryAccount);
         URIBuilder redirectionUri = new URIBuilder(samlClient.getIdentityProviderUrl());
         redirectionUri.addParameter(SAML_REQUEST_URI_KEY, encodeParamaeters(samlClient.getSamlRequest()));
-        samlRequest.setIdpRedirectUrl(redirectionUri.toString());
-        return samlRequest;
+        SSORequest.setIdpRedirectUrl(redirectionUri.toString());
+        return SSORequest;
       } catch (SamlException | URISyntaxException | IOException e) {
         throw new WingsException("Generating Saml request failed for user: [%s]", e);
       }

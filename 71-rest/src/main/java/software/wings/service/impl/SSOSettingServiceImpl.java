@@ -25,12 +25,15 @@ import software.wings.beans.NotificationRule;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.SSOSyncFailedAlert;
 import software.wings.beans.sso.LdapSettings;
+import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.oauth.OauthOptions;
+import software.wings.security.authentication.oauth.OauthOptions.SupportedOauthProviders;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
@@ -57,6 +60,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private DelegateService delegateService;
   @Inject private AccountService accountService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private OauthOptions oauthOptions;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
@@ -70,6 +74,15 @@ public class SSOSettingServiceImpl implements SSOSettingService {
         .equal(accountId)
         .field("type")
         .equal(SSOType.SAML)
+        .get();
+  }
+
+  public OauthSettings getOauthSettingsByAccountId(String accountId) {
+    return wingsPersistence.createQuery(OauthSettings.class)
+        .field("accountId")
+        .equal(accountId)
+        .field("type")
+        .equal(SSOType.OAUTH)
         .get();
   }
 
@@ -90,6 +103,44 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     }
 
     return savedSettings;
+  }
+
+  @Override
+  public OauthSettings saveOauthSettings(OauthSettings settings) {
+    OauthSettings queriedSettings = getOauthSettingsByAccountId(settings.getAccountId());
+    OauthSettings savedSettings;
+    if (queriedSettings != null) {
+      queriedSettings.setUrl(settings.getUrl());
+      queriedSettings.setDisplayName(settings.getDisplayName());
+      queriedSettings.setFilter(settings.getFilter());
+      savedSettings = wingsPersistence.saveAndGet(OauthSettings.class, queriedSettings);
+    } else {
+      savedSettings = wingsPersistence.saveAndGet(OauthSettings.class, settings);
+      eventPublishHelper.publishSSOEvent(settings.getAccountId());
+    }
+    return savedSettings;
+  }
+
+  @Override
+  public OauthSettings updateOauthSettings(String accountId, String displayName, String filter) {
+    OauthSettings oldSettings = getOauthSettingsByAccountId(accountId);
+    if (oldSettings == null) {
+      throw new InvalidRequestException("No existing Oauth settings found for this account.");
+    }
+    oldSettings.setFilter(filter);
+    oldSettings.setDisplayName(displayName);
+    SupportedOauthProviders oauthProvider = SupportedOauthProviders.valueOf(displayName);
+    oldSettings.setUrl(oauthOptions.getRedirectURI(oauthProvider));
+    return wingsPersistence.saveAndGet(OauthSettings.class, oldSettings);
+  }
+
+  @Override
+  public boolean deleteOauthSettings(String accountId) {
+    OauthSettings settings = getOauthSettingsByAccountId(accountId);
+    if (settings == null) {
+      throw new InvalidRequestException("No Oauth settings found for this account.");
+    }
+    return wingsPersistence.delete(settings);
   }
 
   @Override

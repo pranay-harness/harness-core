@@ -14,16 +14,22 @@ import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
+import software.wings.security.authentication.oauth.OauthBasedAuthHandler;
+import software.wings.security.authentication.oauth.OauthOptions;
+import software.wings.security.authentication.oauth.OauthOptions.SupportedOauthProviders;
+import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
-import software.wings.security.saml.SamlRequest;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
@@ -45,6 +51,8 @@ public class AuthenticationManager {
   @Inject private UserService userService;
   @Inject private AuthService authService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private OauthBasedAuthHandler oauthBasedAuthHandler;
+  @Inject private OauthOptions oauthOptions;
 
   private static Logger logger = LoggerFactory.getLogger(AuthenticationManager.class);
 
@@ -54,6 +62,8 @@ public class AuthenticationManager {
         return samlBasedAuthHandler;
       case LDAP:
         return ldapBasedAuthHandler;
+      case OAUTH:
+        return oauthBasedAuthHandler;
       default:
         return passwordBasedAuthHandler;
     }
@@ -92,6 +102,7 @@ public class AuthenticationManager {
     try {
       User user = authenticationUtil.getUser(userName, USER);
       AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user);
+      SSORequest SSORequest;
       switch (authenticationMechanism) {
         case USER_PASSWORD:
           if (!user.isEmailVerified()) {
@@ -100,8 +111,12 @@ public class AuthenticationManager {
           }
           break;
         case SAML:
-          SamlRequest samlRequest = samlClientService.generateSamlRequest(user);
-          builder.samlRequest(samlRequest);
+          SSORequest = samlClientService.generateSamlRequest(user);
+          builder.SSORequest(SSORequest);
+          break;
+        case OAUTH:
+          SSORequest = oauthOptions.oauthProviderRedirectionUrl(user);
+          builder.SSORequest(SSORequest);
           break;
         case LDAP: // No need to build anything extra for the response.
         default:
@@ -181,10 +196,7 @@ public class AuthenticationManager {
       User user = samlBasedAuthHandler.authenticate(credentials);
       String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getPortal().getUrl());
-      // This means the request is going to a free cluster
-      if (configuration.isTrialRegistrationAllowed()) {
-        encodedApiUrl = encodeBase64(configuration.getPortal().getUrl() + "/gratis");
-      }
+
       Map<String, String> params = new HashMap<>();
       params.put("token", jwtToken);
       params.put("apiurl", encodedApiUrl);
@@ -207,5 +219,39 @@ public class AuthenticationManager {
   public String refreshToken(String oldToken) {
     String token = oldToken.substring("Bearer".length()).trim();
     return authService.refreshToken(token).getToken();
+  }
+
+  public Response oauth2CallbackUrl(String... credentials) throws URISyntaxException {
+    try {
+      if (!featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, null)) {
+        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
+      }
+      User user = oauthBasedAuthHandler.authenticate(credentials);
+      logger.info("OauthAuthentication succeeded for email {}", user.getEmail());
+      String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
+      String encodedApiUrl = encodeBase64(configuration.getPortal().getUrl());
+
+      Map<String, String> params = new HashMap<>();
+      params.put("token", jwtToken);
+      params.put("apiurl", encodedApiUrl);
+      URI redirectUrl = authenticationUtil.buildAbsoluteUrl("/saml.html", params);
+
+      return Response.seeOther(redirectUrl).build();
+    } catch (Exception e) {
+      logger.warn("Failed to login via oauth", e);
+      URI redirectUrl = new URI(authenticationUtil.getBaseUrl() + "#/login?errorCode=invalidsso");
+      return Response.seeOther(redirectUrl).build();
+    }
+  }
+
+  public Response oauth2Redirect(final String provider) {
+    SupportedOauthProviders oauthProvider = SupportedOauthProviders.valueOf(provider);
+    oauthOptions.getRedirectURI(oauthProvider);
+    String returnURI = oauthOptions.getRedirectURI(oauthProvider);
+    try {
+      return Response.seeOther(new URI(returnURI)).build();
+    } catch (URISyntaxException e) {
+      throw new InvalidRequestException("Unable to generate the redirection URL", e);
+    }
   }
 }

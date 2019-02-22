@@ -41,6 +41,12 @@ import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.authentication.oauth.AzureConfig;
+import software.wings.security.authentication.oauth.BitbucketConfig;
+import software.wings.security.authentication.oauth.GithubConfig;
+import software.wings.security.authentication.oauth.GitlabConfig;
+import software.wings.security.authentication.oauth.GoogleConfig;
+import software.wings.security.authentication.oauth.LinkedinConfig;
 import software.wings.service.impl.EventEmitter;
 
 import java.lang.annotation.Annotation;
@@ -108,6 +114,26 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
+    AzureConfig azureConfig =
+        AzureConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
+    LinkedinConfig linkedinConfig =
+        LinkedinConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
+    GoogleConfig googleConfig =
+        GoogleConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
+    GitlabConfig gitlabConfig =
+        GitlabConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
+    GithubConfig githubConfig =
+        GithubConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
+    BitbucketConfig bitbucketConfig =
+        BitbucketConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
+
+    //    configuration.setMarketoConfig(marketoConfig);
+    configuration.setAzureConfig(azureConfig);
+    configuration.setLinkedinConfig(linkedinConfig);
+    configuration.setGoogleConfig(googleConfig);
+    configuration.setBitbucketConfig(bitbucketConfig);
+    configuration.setGithubConfig(githubConfig);
+    configuration.setGitlabConfig(gitlabConfig);
     return configuration;
   }
 
