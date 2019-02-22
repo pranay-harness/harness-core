@@ -17,6 +17,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.security.SecretManager;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
+import java.net.URISyntaxException;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -198,6 +199,8 @@ public interface UserService extends OwnedByAccount {
    */
   User getUserByEmail(String email);
 
+  UserInvite getUserInviteByEmail(String email);
+
   /**
    * Verify registered or allowed.
    *
@@ -251,6 +254,10 @@ public interface UserService extends OwnedByAccount {
    * @return the user invite
    */
   UserInvite inviteUser(UserInvite userInvite);
+
+  String getUserInviteUrl(String email, Account account) throws URISyntaxException;
+
+  String getUserInviteUrl(String email) throws URISyntaxException;
 
   /**
    * Send user invitation email

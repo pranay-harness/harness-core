@@ -245,6 +245,7 @@ public class UserServiceImpl implements UserService {
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
       sendVerificationEmail(userInvite);
+      eventPublishHelper.publishTrialUserSignupEvent(emailAddress);
     } else if (userInvite.isCompleted()) {
       // HAR-7590: If user invite has completed. Send an email saying so and ask the user to login directly.
       sendTrialSignupCompletedEmail(userInvite);
@@ -363,10 +364,20 @@ public class UserServiceImpl implements UserService {
     return user;
   }
 
-  private UserInvite getUserInviteByEmail(String email) {
+  @Override
+  public UserInvite getUserInviteByEmail(String email) {
     UserInvite userInvite = null;
     if (isNotEmpty(email)) {
       userInvite = wingsPersistence.createQuery(UserInvite.class).filter("email", email).get();
+    }
+    return userInvite;
+  }
+
+  private UserInvite getUserInviteByEmailAndAccount(String email, String accountId) {
+    UserInvite userInvite = null;
+    if (isNotEmpty(email)) {
+      userInvite =
+          wingsPersistence.createQuery(UserInvite.class).filter("email", email).filter("accountId", accountId).get();
     }
     return userInvite;
   }
@@ -668,21 +679,43 @@ public class UserServiceImpl implements UserService {
   private Map<String, String> getNewInvitationTemplateModel(UserInvite userInvite, Account account)
       throws URISyntaxException {
     Map<String, String> model = new HashMap<>();
-    String inviteUrl =
-        buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
-            account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
+    String inviteUrl = getUserInviteUrl(userInvite, account);
     model.put("company", account.getCompanyName());
     model.put("name", userInvite.getEmail());
     model.put("url", inviteUrl);
     return model;
   }
 
+  private String getUserInviteUrl(UserInvite userInvite, Account account) throws URISyntaxException {
+    return buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
+        account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
+  }
+
+  @Override
+  public String getUserInviteUrl(String email, Account account) throws URISyntaxException {
+    UserInvite userInvite = getUserInviteByEmailAndAccount(email, account.getUuid());
+    if (userInvite == null) {
+      return null;
+    }
+
+    return buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
+        account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
+  }
+
+  @Override
+  public String getUserInviteUrl(String email) throws URISyntaxException {
+    UserInvite userInvite = getUserInviteByEmail(email);
+    if (userInvite != null) {
+      return buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()));
+    }
+    return null;
+  }
+
   private Map<String, String> getEmailVerificationTemplateModel(UserInvite userInvite) throws URISyntaxException {
     Map<String, String> model = new HashMap<>();
-    String inviteUrl =
-        buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()));
     model.put("name", userInvite.getEmail());
-    model.put("url", inviteUrl);
+    model.put(
+        "url", buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid())));
     return model;
   }
 

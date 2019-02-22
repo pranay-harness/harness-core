@@ -30,6 +30,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.Delegate;
 import software.wings.beans.EntityType;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -85,21 +86,27 @@ public class EventPublishHelper {
 
   private List<StateType> analysisStates = VerificationConstants.getAnalysisStates();
 
-  public void publishAccountTypeChangeEvent(String accountId, String oldAccountType, String newAccountType) {
-    if (oldAccountType == null || newAccountType == null) {
-      return;
-    }
-
-    if (oldAccountType.equals(newAccountType)) {
-      return;
-    }
-
+  public void publishLicenseChangeEvent(String accountId, LicenseInfo oldLicenseInfo, LicenseInfo newLicenseInfo) {
     if (!checkIfMarketoIsEnabled()) {
       return;
     }
 
-    executorService.submit(() -> {
-      EventType eventType = null;
+    Map<String, String> properties = new HashMap<>();
+    properties.put(ACCOUNT_ID, accountId);
+    publishEvent(EventType.LICENSE_UPDATE, properties);
+
+    EventType eventType = null;
+    if (oldLicenseInfo != null && newLicenseInfo != null) {
+      String oldAccountType = oldLicenseInfo.getAccountType();
+      String newAccountType = newLicenseInfo.getAccountType();
+
+      if (oldAccountType == null || newAccountType == null) {
+        return;
+      }
+
+      if (oldAccountType.equals(newAccountType)) {
+        return;
+      }
 
       if (AccountType.TRIAL.equals(oldAccountType) && AccountType.PAID.equals(newAccountType)) {
         eventType = EventType.TRIAL_TO_PAID;
@@ -110,9 +117,10 @@ public class EventPublishHelper {
       }
 
       if (eventType != null) {
-        notifyAllUsersOfAccount(accountId, eventType);
+        EventType finalEventType = eventType;
+        executorService.submit(() -> notifyAllUsersOfAccount(accountId, finalEventType));
       }
-    });
+    }
   }
 
   public void publishSSOEvent(String accountId) {
@@ -470,6 +478,14 @@ public class EventPublishHelper {
     properties.put(ACCOUNT_ID, accountId);
     properties.put(EMAIL_ID, user.getEmail());
     publishEvent(EventType.COMPLETE_USER_REGISTRATION, properties);
+  }
+
+  public void publishTrialUserSignupEvent(String email) {
+    if (isEmpty(email)) {
+      return;
+    }
+
+    publishEvent(EventType.NEW_TRIAL_SIGNUP, getProperties(null, email));
   }
 
   private String checkIfMarketoIsEnabledAndGetUserEmail(EventType eventType) {

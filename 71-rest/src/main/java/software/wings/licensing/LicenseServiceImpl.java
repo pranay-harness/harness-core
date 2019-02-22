@@ -312,9 +312,6 @@ public class LicenseServiceImpl implements LicenseService {
         } else if (AccountType.PAID.equals(newLicenseInfo.getAccountType())) {
           resetExpiryTime = LicenseUtil.getDefaultPaidExpiryTime();
         }
-
-        eventPublishHelper.publishAccountTypeChangeEvent(
-            accountId, currentLicenseInfo.getAccountType(), newLicenseInfo.getAccountType());
       }
       currentLicenseInfo.setAccountType(newLicenseInfo.getAccountType());
     }
@@ -383,6 +380,9 @@ public class LicenseServiceImpl implements LicenseService {
     Account updatedAccount = wingsPersistence.get(Account.class, accountId);
     decryptLicenseInfo(updatedAccount, false);
     //    refreshUsersForAccountUpdate(updatedAccount);
+
+    eventPublishHelper.publishLicenseChangeEvent(accountId, accountInDB.getLicenseInfo(), licenseInfo);
+
     return updatedAccount;
   }
 

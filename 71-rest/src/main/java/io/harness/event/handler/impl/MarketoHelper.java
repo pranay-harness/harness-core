@@ -1,30 +1,32 @@
 package io.harness.event.handler.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.event.handler.marketo.MarketoRestClient;
 import io.harness.event.model.marketo.Error;
-import io.harness.event.model.marketo.Lead;
-import io.harness.event.model.marketo.Lead.Input;
-import io.harness.event.model.marketo.Lead.Input.InputBuilder;
+import io.harness.event.model.marketo.GetLeadResponse;
+import io.harness.event.model.marketo.GetLeadResponse.Result;
+import io.harness.event.model.marketo.LeadRequestWithEmail;
+import io.harness.event.model.marketo.LeadRequestWithId;
+import io.harness.event.model.marketo.LeadRequestWithId.Lead;
+import io.harness.event.model.marketo.LeadRequestWithId.Lead.LeadBuilder;
 import io.harness.event.model.marketo.LoginResponse;
 import io.harness.event.model.marketo.Response;
-import io.harness.event.model.marketo.Response.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
-import software.wings.beans.User;
 import software.wings.common.Constants;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.Validator;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,30 +38,91 @@ public class MarketoHelper {
   private static final Logger logger = LoggerFactory.getLogger(MarketoHelper.class);
 
   @Inject private UserService userService;
-  @Inject private AccountService accountService;
 
-  public long registerLead(String accountId, User user, String accessToken, Retrofit retrofit) throws IOException {
-    Validator.notNullCheck("User is null while registering the lead", user);
-    Account account = accountService.get(accountId);
-    Validator.notNullCheck("Account is null for accountId: " + accountId, account);
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-    Validator.notNullCheck("LicenseInfo is null for accountId: " + accountId, licenseInfo);
+  public long createOrUpdateLead(Account account, String userName, String email, String accessToken, Retrofit retrofit)
+      throws IOException, URISyntaxException {
+    Validator.notNullCheck("Email is null while registering the lead", email);
 
-    InputBuilder input = Input.builder()
-                             .email(user.getEmail())
-                             .firstName(getFirstName(user.getName(), user.getEmail()))
-                             .lastName(getLastName(user.getName(), user.getEmail()))
-                             .company(account.getCompanyName())
-                             .Harness_Account_ID__c_lead(accountId)
-                             .Free_Trial_Status__c(licenseInfo.getAccountStatus())
-                             .Days_Left_in_Trial__c(getDaysLeft(licenseInfo.getExpiryTime()));
+    int existingLeadId = 0;
+    retrofit2.Response<GetLeadResponse> response =
+        retrofit.create(MarketoRestClient.class).getLead(accessToken, "email", email).execute();
+    GetLeadResponse existingLeadResponse = response.body();
 
-    Lead lead =
-        Lead.builder().action("createOrUpdate").lookupField("email").input(Arrays.asList(input.build())).build();
+    if (existingLeadResponse != null) {
+      if (existingLeadResponse.isSuccess()) {
+        List<Result> resultList = existingLeadResponse.getResult();
+        if (isNotEmpty(resultList)) {
+          Result result = resultList.get(0);
+          existingLeadId = result.getId();
+        }
+      } else {
+        logger.error("Marketo http response reported failure while looking up lead. {}",
+            getErrorMsg(existingLeadResponse.getErrors()));
+      }
+    } else {
+      logger.error("Marketo http response reported null while looking up lead");
+    }
 
+    String userInviteUrl = getUserInviteUrl(email, account);
+    retrofit2.Response<Response> createOrUpdateResponse;
+    if (existingLeadId > 0) {
+      LeadBuilder leadBuilderWithId = Lead.builder();
+      leadBuilderWithId.id(existingLeadId);
+      leadBuilderWithId.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
+
+      if (account != null) {
+        leadBuilderWithId.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
+
+        LicenseInfo licenseInfo = account.getLicenseInfo();
+        if (licenseInfo != null) {
+          leadBuilderWithId.Free_Trial_Status__c(licenseInfo.getAccountStatus())
+              .Days_Left_in_Trial__c(getDaysLeft(licenseInfo.getExpiryTime()));
+        }
+      }
+
+      if (isNotEmpty(userInviteUrl)) {
+        leadBuilderWithId.Freemium_Invite_URL__c(userInviteUrl);
+      }
+
+      LeadRequestWithId leadRequestWithId = LeadRequestWithId.builder()
+                                                .action("createOrUpdate")
+                                                .lookupField("id")
+                                                .input(Arrays.asList(leadBuilderWithId.build()))
+                                                .build();
+      createOrUpdateResponse =
+          retrofit.create(MarketoRestClient.class).updateLead(accessToken, leadRequestWithId).execute();
+    } else {
+      LeadRequestWithEmail.Lead.LeadBuilder leadBuilderWithEmail = LeadRequestWithEmail.Lead.builder();
+      leadBuilderWithEmail.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
+
+      if (account != null) {
+        leadBuilderWithEmail.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
+        LicenseInfo licenseInfo = account.getLicenseInfo();
+        if (licenseInfo != null) {
+          leadBuilderWithEmail.Free_Trial_Status__c(licenseInfo.getAccountStatus())
+              .Days_Left_in_Trial__c(getDaysLeft(licenseInfo.getExpiryTime()));
+        }
+      }
+
+      if (isNotEmpty(userInviteUrl)) {
+        leadBuilderWithEmail.Freemium_Invite_URL__c(userInviteUrl);
+      }
+
+      LeadRequestWithEmail leadRequestWithEmail = LeadRequestWithEmail.builder()
+                                                      .action("createOrUpdate")
+                                                      .lookupField("email")
+                                                      .input(Arrays.asList(leadBuilderWithEmail.build()))
+                                                      .build();
+
+      createOrUpdateResponse =
+          retrofit.create(MarketoRestClient.class).createLead(accessToken, leadRequestWithEmail).execute();
+    }
+
+    return processLeadResponse(createOrUpdateResponse);
+  }
+
+  private long processLeadResponse(retrofit2.Response<Response> response) {
     long marketoLeadId = 0L;
-    retrofit2.Response<Response> response =
-        retrofit.create(MarketoRestClient.class).createLead(accessToken, lead).execute();
     if (!response.isSuccessful()) {
       logger.error(
           "Error while creating lead in marketo. Error code is {}, message is {}", response.code(), response.message());
@@ -68,17 +131,18 @@ public class MarketoHelper {
 
     Response leadResponse = response.body();
     if (!leadResponse.isSuccess()) {
-      logger.error("Marketo http response reported failure while creating lead. {}", getErrorMsg(leadResponse));
+      logger.error(
+          "Marketo http response reported failure while creating lead. {}", getErrorMsg(leadResponse.getErrors()));
       return marketoLeadId;
     }
 
-    List<Result> results = leadResponse.getResult();
+    List<Response.Result> results = leadResponse.getResult();
     if (isEmpty(results)) {
       logger.error("Marketo http response reported empty result while creating lead");
       return marketoLeadId;
     }
 
-    Result result = results.get(0);
+    Response.Result result = results.get(0);
 
     String status = result.getStatus();
     if (!("updated".equalsIgnoreCase(status) || "created".equalsIgnoreCase(status))) {
@@ -92,12 +156,15 @@ public class MarketoHelper {
       }
     }
 
-    marketoLeadId = result.getId();
-    if (marketoLeadId > 0L) {
-      user.setMarketoLeadId(marketoLeadId);
-      userService.update(user);
+    return result.getId();
+  }
+
+  private String getUserInviteUrl(String email, Account account) throws URISyntaxException {
+    if (account != null) {
+      return userService.getUserInviteUrl(email, account);
+    } else {
+      return userService.getUserInviteUrl(email);
     }
-    return marketoLeadId;
   }
 
   private String getFirstName(String name, String email) {
@@ -137,8 +204,7 @@ public class MarketoHelper {
     return "" + delta / Constants.DAY;
   }
 
-  public String getErrorMsg(Response response) {
-    List<Error> errors = response.getErrors();
+  public String getErrorMsg(List<Error> errors) {
     if (isEmpty(errors)) {
       return "No error msg reported in response";
     }

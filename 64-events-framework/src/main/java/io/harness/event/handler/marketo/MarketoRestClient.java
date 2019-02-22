@@ -1,7 +1,9 @@
 package io.harness.event.handler.marketo;
 
 import io.harness.event.model.marketo.Campaign;
-import io.harness.event.model.marketo.Lead;
+import io.harness.event.model.marketo.GetLeadResponse;
+import io.harness.event.model.marketo.LeadRequestWithEmail;
+import io.harness.event.model.marketo.LeadRequestWithId;
 import io.harness.event.model.marketo.LoginResponse;
 import io.harness.event.model.marketo.Response;
 import retrofit2.Call;
@@ -24,5 +26,14 @@ public interface MarketoRestClient {
 
   @Headers("Accept: application/json")
   @POST("rest/v1/leads.json")
-  Call<Response> createLead(@Query("access_token") String accessToken, @Body Lead lead);
+  Call<Response> updateLead(@Query("access_token") String accessToken, @Body LeadRequestWithId lead);
+
+  @Headers("Accept: application/json")
+  @POST("rest/v1/leads.json")
+  Call<Response> createLead(@Query("access_token") String accessToken, @Body LeadRequestWithEmail lead);
+
+  @Headers("Accept: application/json")
+  @GET("rest/v1/leads.json")
+  Call<GetLeadResponse> getLead(@Query("access_token") String accessToken, @Query("filterType") String filterType,
+      @Query("filterValues") String filterValues);
 }

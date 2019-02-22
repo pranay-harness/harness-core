@@ -26,6 +26,8 @@ public enum EventType {
   SETUP_DATA,
   INSTANCE_COUNT,
 
-  OPEN_ALERT
+  OPEN_ALERT,
 
+  NEW_TRIAL_SIGNUP,
+  LICENSE_UPDATE
 }

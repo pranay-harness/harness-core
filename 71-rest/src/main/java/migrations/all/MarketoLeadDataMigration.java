@@ -23,6 +23,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 /**
@@ -92,11 +93,15 @@ public class MarketoLeadDataMigration implements Migration {
           }
 
           final String accountId = account.getUuid();
+          final Account finalAccount = account;
           List<User> usersOfAccount = userService.getUsersOfAccount(accountId);
           usersOfAccount.stream().filter(user -> user.getMarketoLeadId() == 0L).forEach(user -> {
             try {
-              marketoHelper.registerLead(accountId, user, accessToken, retrofit);
+              marketoHelper.createOrUpdateLead(finalAccount, user.getName(), user.getEmail(), accessToken, retrofit);
             } catch (IOException e) {
+              logger.error("MarketoMigration - Error while registering lead for user {} in account: {}", user.getUuid(),
+                  accountId, e);
+            } catch (URISyntaxException e) {
               logger.error("MarketoMigration - Error while registering lead for user {} in account: {}", user.getUuid(),
                   accountId, e);
             }
