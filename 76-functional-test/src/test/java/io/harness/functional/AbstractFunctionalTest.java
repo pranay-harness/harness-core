@@ -1,16 +1,17 @@
 package io.harness.functional;
 
-import static io.restassured.RestAssured.given;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
+import io.harness.framework.Setup;
 import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
 import io.restassured.RestAssured;
+import lombok.Getter;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -35,12 +36,7 @@ public abstract class AbstractFunctionalTest implements FunctionalTests {
 
   @BeforeClass
   public static void setup() {
-    String port = System.getProperty("server.port", "9090");
-    RestAssured.port = Integer.valueOf(9090);
-    RestAssured.basePath = System.getProperty("server.base", "/api");
-    RestAssured.baseURI = System.getProperty("server.host", "https://localhost");
-
-    //    RestAssured.authentication = basic("admin@harness.io","admin");
+    Setup.portal();
     RestAssured.useRelaxedHTTPSValidation();
   }
 
@@ -49,7 +45,7 @@ public abstract class AbstractFunctionalTest implements FunctionalTests {
   //  @Inject OwnerManager ownerManager;
   @Inject private AccountSetupService accountSetupService;
 
-  Account account;
+  @Getter Account account;
 
   @Before
   public void testSetup() throws IOException {
@@ -68,7 +64,7 @@ public abstract class AbstractFunctionalTest implements FunctionalTests {
 
     };
     RestResponse<User> userRestResponse =
-        given().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
+        Setup.portal().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
 
     assertThat(userRestResponse).isNotNull();
     User user = userRestResponse.getResource();
@@ -77,7 +73,7 @@ public abstract class AbstractFunctionalTest implements FunctionalTests {
   }
 
   protected void resetCache() {
-    RestResponse<User> userRestResponse = given()
+    RestResponse<User> userRestResponse = Setup.portal()
                                               .auth()
                                               .oauth2(bearerToken)
                                               .queryParam("accountId", account.getUuid())

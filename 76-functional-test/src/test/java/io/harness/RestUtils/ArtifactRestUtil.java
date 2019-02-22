@@ -1,10 +1,9 @@
 package io.harness.RestUtils;
 
-import static io.restassured.RestAssured.given;
-
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
+import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
@@ -17,7 +16,7 @@ public class ArtifactRestUtil extends AbstractFunctionalTest {
   public Artifact getArtifact(String appId, String envId, String serviceId) {
     GenericType<RestResponse<PageResponse<Artifact>>> workflowType =
         new GenericType<RestResponse<PageResponse<Artifact>>>() {};
-    RestResponse<PageResponse<Artifact>> savedArtifactResponse = given()
+    RestResponse<PageResponse<Artifact>> savedArtifactResponse = Setup.portal()
                                                                      .auth()
                                                                      .oauth2(bearerToken)
                                                                      .queryParam("appId", appId)

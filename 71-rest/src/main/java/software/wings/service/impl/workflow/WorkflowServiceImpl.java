@@ -2293,6 +2293,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   /**
    * This method will return defaultNotificationGroup for account. If default notification group is not set,
    * then "Account Administrator" notification group would be returned.
+
    * @param accountId
    * @return
    */

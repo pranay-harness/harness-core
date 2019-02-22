@@ -1,6 +1,5 @@
 package io.harness.rule;
 
-import static io.restassured.RestAssured.given;
 import static org.mockito.Mockito.mock;
 
 import com.google.inject.AbstractModule;
@@ -15,6 +14,7 @@ import io.dropwizard.Configuration;
 import io.harness.configuration.ConfigurationType;
 import io.harness.event.EventsModule;
 import io.harness.factory.ClosingFactory;
+import io.harness.framework.Setup;
 import io.harness.functional.ManagerExecutor;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -77,7 +77,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     ManagerExecutor.ensureManager();
 
     RestResponse<MongoConfig> mongoConfigRestResponse =
-        given()
+        Setup.portal()
             .queryParam("configurationType", ConfigurationType.MONGO)
             .get("/health/configuration")
             .as(new GenericType<RestResponse<MongoConfig>>() {}.getType());

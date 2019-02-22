@@ -1,6 +1,5 @@
 package io.harness.functional;
 
-import static io.restassured.RestAssured.given;
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
@@ -9,10 +8,12 @@ import com.google.inject.Singleton;
 
 import io.fabric8.utils.Strings;
 import io.harness.filesystem.FileIo;
+import io.harness.framework.Setup;
 import io.harness.resource.Project;
 import io.harness.threading.Puller;
 import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
+import org.apache.http.HttpStatus;
 import org.apache.http.params.CoreConnectionPNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +106,7 @@ public class ManagerExecutor {
                                               .setParam(CoreConnectionPNames.CONNECTION_TIMEOUT, 5000)
                                               .setParam(CoreConnectionPNames.SO_TIMEOUT, 5000));
 
-      given().config(config).when().get("/version").then().statusCode(200);
+      Setup.portal().config(config).when().get("/version").then().statusCode(HttpStatus.SC_OK);
     } catch (Exception exception) {
       if (exception.getMessage().equals(previous.getMessage())) {
         logger.info("not healthy");

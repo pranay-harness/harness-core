@@ -1,13 +1,13 @@
 package io.harness.functional.trigger;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
+import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -72,7 +72,7 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
                                          .build())
                           .build();
 
-    RestResponse<Trigger> savedTriggerResponse = given()
+    RestResponse<Trigger> savedTriggerResponse = Setup.portal()
                                                      .auth()
                                                      .oauth2(bearerToken)
                                                      .queryParam("accountId", application.getAccountId())
@@ -90,7 +90,7 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
 
     resetCache();
     // Get the saved workflow
-    savedTriggerResponse = given()
+    savedTriggerResponse = Setup.portal()
                                .auth()
                                .oauth2(bearerToken)
                                .queryParam("appId", application.getUuid())
@@ -104,7 +104,7 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
     assertThat(savedTrigger.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
     // Delete the trigger
-    given()
+    Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("appId", application.getUuid())
@@ -114,7 +114,7 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
         .statusCode(200);
 
     // Make sure that it is deleted
-    savedTriggerResponse = given()
+    savedTriggerResponse = Setup.portal()
                                .auth()
                                .oauth2(bearerToken)
                                .queryParam("appId", application.getUuid())
