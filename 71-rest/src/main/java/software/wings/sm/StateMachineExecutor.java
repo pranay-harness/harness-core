@@ -54,7 +54,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.ExecutionStatus;
@@ -66,7 +65,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.observer.Subject;
-import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.KryoUtils;
 import io.harness.serializer.MapperUtils;
 import io.harness.state.inspection.ExpressionVariableUsage;
@@ -153,8 +151,6 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
   @Inject private WorkflowService workflowService;
-
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   /**
    * Execute.
