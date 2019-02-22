@@ -6,6 +6,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -17,7 +18,7 @@ import software.wings.jersey.JsonViews;
 @NoArgsConstructor
 @Entity(value = "apiKeys", noClassnameStored = true)
 @HarnessExportableEntity
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@EqualsAndHashCode(callSuper = true)
 public class ApiKeyEntry extends Base {
   @Indexed @NotEmpty @NaturalKey private String accountId;
   @JsonView(JsonViews.Internal.class) @NotEmpty private char[] encryptedKey;

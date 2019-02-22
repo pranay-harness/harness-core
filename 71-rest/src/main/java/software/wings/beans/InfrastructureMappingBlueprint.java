@@ -34,7 +34,7 @@ public class InfrastructureMappingBlueprint {
   public enum CloudProviderType { AWS, GCP }
 
   // List of possible node filtering done by the blue print
-  public enum NodeFilteringType { AWS_INSTANCE_FILTER, AWS_AUTOSCALING_GROUP, AWS_ECS_EC2 }
+  public enum NodeFilteringType { AWS_INSTANCE_FILTER, AWS_AUTOSCALING_GROUP, AWS_ECS_EC2, AWS_ECS_FARGATE }
 
   @NotBlank private String serviceId;
   @NotNull private DeploymentType deploymentType;
