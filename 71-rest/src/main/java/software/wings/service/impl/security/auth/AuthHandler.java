@@ -140,17 +140,6 @@ public class AuthHandler {
     Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap =
         fetchRequiredEntities(permissionTypeAppIdSetMap);
 
-    //    // Filter and assign permissions
-    //    Map<String, AppPermissionSummaryForUI> appPermissionMap =
-    //        populateAppPermissions(userGroups, permissionTypeAppIdEntityMap, allAppIds);
-    //
-    //    userPermissionInfoBuilder.appPermissionMap(appPermissionMap)
-    //        .accountPermissionSummary(accountPermissionSummaryBuilder.build());
-    //
-    //    UserPermissionInfo userPermissionInfo = userPermissionInfoBuilder.build();
-    //    setAppPermissionMapInternal(userPermissionInfo, permissionTypeAppIdEntityMap.get(PermissionType.ENV));
-    //    return userPermissionInfo;
-
     // Filter and assign permissions
     Map<String, AppPermissionSummary> appPermissionMap =
         populateAppPermissions(userGroups, permissionTypeAppIdEntityMap, allAppIds);

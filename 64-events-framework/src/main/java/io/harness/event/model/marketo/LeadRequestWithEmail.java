@@ -1,5 +1,6 @@
 package io.harness.event.model.marketo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -11,7 +12,7 @@ import java.util.List;
  */
 @Data
 @Builder
-public class Lead {
+public class LeadRequestWithEmail {
   //  {
   //    "action":"createOrUpdate",
   //      "lookupField":"email",
@@ -27,19 +28,21 @@ public class Lead {
   /**
    * Valid values are createOnly, updateOnly and createOrUpdate
    */
-  @Default private String action = "createOnly";
+  @Default private String action = "createOrUpdate";
   @Default private String lookupField = "email";
-  private List<Input> input;
+  private List<Lead> input;
 
   @Data
   @Builder
-  public static class Input {
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class Lead {
     private String email;
     private String firstName;
     private String lastName;
     private String company;
     private String Harness_Account_ID__c_lead;
     private String Free_Trial_Status__c;
+    private String Freemium_Invite_URL__c;
     private String Days_Left_in_Trial__c;
   }
 }
