@@ -10,6 +10,8 @@ import software.wings.security.authentication.AuthenticationUtil;
 import software.wings.security.saml.SSORequest;
 import software.wings.service.impl.SSOSettingServiceImpl;
 
+import java.net.URISyntaxException;
+
 public class OauthOptions {
   @Inject GithubClientImpl githubClient;
   @Inject LinkedinClientImpl linkedinClient;
@@ -45,12 +47,13 @@ public class OauthOptions {
     }
   }
 
-  public SSORequest oauthProviderRedirectionUrl(User user) {
+  public SSORequest oauthProviderRedirectionUrl(User user) throws URISyntaxException {
     Account primaryAccount = authenticationUtil.getPrimaryAccount(user);
     OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(primaryAccount.getUuid());
-    String redirectUrl = oauthSettings.getPublicSSOSettings().getUrl();
+    String displayName = oauthSettings.getPublicSSOSettings().getDisplayName();
+    OauthClient oauthProvider = getOauthProvider(SupportedOauthProviders.valueOf(displayName));
     SSORequest SSORequest = new SSORequest();
-    SSORequest.setIdpRedirectUrl(redirectUrl);
+    SSORequest.setIdpRedirectUrl(oauthProvider.getRedirectUrl().toString());
     return SSORequest;
   }
 }

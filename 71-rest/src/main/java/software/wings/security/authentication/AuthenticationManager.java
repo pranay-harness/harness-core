@@ -5,6 +5,7 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
@@ -130,6 +131,9 @@ public class AuthenticationManager {
       } else {
         throw we;
       }
+    } catch (URISyntaxException e) {
+      logger.error("Get response type failed", e);
+      throw new WingsException(UNKNOWN_ERROR, USER);
     }
   }
 
