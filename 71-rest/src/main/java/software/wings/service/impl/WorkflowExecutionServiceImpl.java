@@ -2176,6 +2176,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     if (workflowExecution.getOrchestrationType() == OrchestrationWorkflowType.ROLLING
         && !workflowServiceHelper.isExecutionForK8sV2Service(workflowExecution)) {
+      logger.info("Calculating the breakdown for workflowExecutionId {} and workflowId {} ",
+          workflowExecution.getUuid(), workflowExecution.getWorkflowId());
       total = workflowExecution.getTotal();
       if (total == 0) {
         total = refreshTotal(workflowExecution);
@@ -2290,6 +2292,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private int refreshTotal(WorkflowExecution workflowExecution) {
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
+    if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
+      logger.info("Workflow was deleted. Skipping the refresh total");
+      return 0;
+    }
     List<InfrastructureMapping> resolvedInfraMappings = getResolvedInfraMappings(workflow, workflowExecution);
     if (isEmpty(resolvedInfraMappings)) {
       return 0;
