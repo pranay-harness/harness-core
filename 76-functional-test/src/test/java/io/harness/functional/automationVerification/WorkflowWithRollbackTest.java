@@ -1,7 +1,6 @@
 package io.harness.functional.automationVerification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -18,6 +17,7 @@ import io.harness.RestUtils.WorkflowRestUtil;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
+import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
@@ -130,7 +130,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
         .atMost(120, TimeUnit.SECONDS)
         .pollInterval(5, TimeUnit.SECONDS)
         .until(()
-                   -> given()
+                   -> Setup.portal()
                           .auth()
                           .oauth2(bearerToken)
                           .queryParam("appId", application.getUuid())

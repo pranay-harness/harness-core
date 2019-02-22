@@ -1,12 +1,12 @@
 package io.harness.functional.trigger;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
+import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -81,7 +81,7 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
                 ArtifactCondition.builder().type(Type.NEW_ARTIFACT).artifactStreamId(artifactStream.getUuid()).build())
             .build();
 
-    RestResponse<DeploymentTrigger> savedTriggerResponse = given()
+    RestResponse<DeploymentTrigger> savedTriggerResponse = Setup.portal()
                                                                .auth()
                                                                .oauth2(bearerToken)
                                                                .queryParam("accountId", application.getAccountId())
@@ -98,7 +98,7 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
     assertThat(savedTrigger.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
     // Get the saved trigger
-    savedTriggerResponse = given()
+    savedTriggerResponse = Setup.portal()
                                .auth()
                                .oauth2(bearerToken)
                                .queryParam("appId", application.getUuid())
@@ -112,7 +112,7 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
     assertThat(savedTrigger.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
     // Delete the trigger
-    given()
+    Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("appId", application.getUuid())
@@ -122,7 +122,7 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
         .statusCode(200);
 
     // Make sure that it is deleted
-    savedTriggerResponse = given()
+    savedTriggerResponse = Setup.portal()
                                .auth()
                                .oauth2(bearerToken)
                                .queryParam("appId", application.getUuid())

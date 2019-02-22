@@ -1,12 +1,12 @@
 package io.harness.functional.artifactstream;
 
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.template.artifacts.CustomRepositoryMapping.AttributeMapping.builder;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
+import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -77,7 +77,7 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
             .tags(Arrays.asList())
             .build();
 
-    RestResponse<CustomArtifactStream> restResponse = given()
+    RestResponse<CustomArtifactStream> restResponse = Setup.portal()
                                                           .auth()
                                                           .oauth2(bearerToken)
                                                           .queryParam("accountId", application.getAccountId())
@@ -130,7 +130,7 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
                                               .tags(Arrays.asList())
                                               .build();
 
-    RestResponse<CustomArtifactStream> restResponse = given()
+    RestResponse<CustomArtifactStream> restResponse = Setup.portal()
                                                           .auth()
                                                           .oauth2(bearerToken)
                                                           .queryParam("accountId", application.getAccountId())
@@ -156,7 +156,7 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
         .contains("downloadUrl", "repo");
 
     // Delete custom artifactStream
-    given()
+    Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("appId", application.getUuid())
@@ -166,7 +166,7 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
         .statusCode(200);
 
     // Make sure that it is deleted
-    restResponse = given()
+    restResponse = Setup.portal()
                        .auth()
                        .oauth2(bearerToken)
                        .queryParam("appId", application.getUuid())

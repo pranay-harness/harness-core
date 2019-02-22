@@ -2,7 +2,6 @@ package io.harness.functional.yaml;
 
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.generator.AccountGenerator.ACCOUNT_ID;
-import static io.restassured.RestAssured.given;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -14,6 +13,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.resource.Project;
 import io.harness.scm.ScmSecret;
@@ -79,7 +79,7 @@ public class YamlFunctionalTestHelper {
             .withCategory(Category.getCategory(SettingVariableTypes.valueOf(settingValue.getType())))
             .build();
 
-    given()
+    Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("accountId", ACCOUNT_ID)
@@ -238,7 +238,7 @@ public class YamlFunctionalTestHelper {
     HashMap<String, String> objectObjectHashMap = new HashMap<>();
     objectObjectHashMap.put("X-GitHub-Event", "abc");
 
-    given()
+    Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("accountId", accountId)
@@ -259,7 +259,7 @@ public class YamlFunctionalTestHelper {
       assertTrue(false);
     }
 
-    given()
+    Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("accountId", accountId)
@@ -281,7 +281,7 @@ public class YamlFunctionalTestHelper {
                                       .build();
     yamlGitConfig.setAppId(appId);
 
-    given()
+    Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("accountId", accountId)

@@ -2,7 +2,6 @@ package io.harness.functional.windows;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -27,6 +26,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
+import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -183,7 +183,8 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   private void cleanUpWorkflow(String appId, String workflowId) {
     assertThat(appId).isNotNull();
     assertThat(workflowId).isNotNull();
-    given()
+    // Clean up resources
+    Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("appId", appId)
@@ -196,7 +197,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   private Artifact collectArtifact(String appId, String envId, String serviceId) {
     GenericType<RestResponse<PageResponse<Artifact>>> workflowType =
         new GenericType<RestResponse<PageResponse<Artifact>>>() {};
-    RestResponse<PageResponse<Artifact>> savedArtifactResponse = given()
+    RestResponse<PageResponse<Artifact>> savedArtifactResponse = Setup.portal()
                                                                      .auth()
                                                                      .oauth2(bearerToken)
                                                                      .queryParam("appId", appId)

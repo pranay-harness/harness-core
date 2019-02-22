@@ -1,7 +1,6 @@
 package io.harness.functional.template;
 
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER;
-import static io.restassured.RestAssured.given;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -15,6 +14,8 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.delegate.beans.ScriptType;
+import io.harness.framework.Setup;
+
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
@@ -92,7 +93,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
     executionArgs.setOrchestrationId(buildWorkflow.getUuid());
     executionArgs.setWorkflowType(buildWorkflow.getWorkflowType());
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
-    RestResponse<WorkflowExecution> workflowExecutionRestResponse = given()
+    RestResponse<WorkflowExecution> workflowExecutionRestResponse = Setup.portal()
                                                                         .auth()
                                                                         .oauth2(bearerToken)
                                                                         .queryParam("appId", application.getUuid())
@@ -109,7 +110,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
         .atMost(120, TimeUnit.SECONDS)
         .pollInterval(5, TimeUnit.SECONDS)
         .until(()
-                   -> given()
+                   -> Setup.portal()
                           .auth()
                           .oauth2(bearerToken)
                           .queryParam("appId", application.getUuid())
@@ -144,7 +145,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
     };
 
-    RestResponse<Template> savedTemplateResponse = given()
+    RestResponse<Template> savedTemplateResponse = Setup.portal()
                                                        .auth()
                                                        .oauth2(bearerToken)
                                                        .queryParam("accountId", account.getUuid())
@@ -162,7 +163,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
     assertThat(savedTemplate.getVersion()).isEqualTo(1L);
 
     // Get template and validate template object and variables
-    savedTemplateResponse = given()
+    savedTemplateResponse = Setup.portal()
                                 .auth()
                                 .oauth2(bearerToken)
                                 .contentType(ContentType.JSON)
@@ -205,7 +206,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                    .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
                    .version(savedTemplate.getVersion())
                    .build();
-    savedTemplateResponse = given()
+    savedTemplateResponse = Setup.portal()
                                 .auth()
                                 .oauth2(bearerToken)
                                 .contentType(ContentType.JSON)
@@ -232,7 +233,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
             + "export C=\"ccc\"");
 
     // Delete template
-    given()
+    Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("accountId", account.getUuid())
@@ -242,7 +243,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
         .statusCode(200);
 
     // Make sure that it is deleted
-    savedTemplateResponse = given()
+    savedTemplateResponse = Setup.portal()
                                 .auth()
                                 .oauth2(bearerToken)
                                 .queryParam("accountId", account.getUuid())

@@ -1,7 +1,6 @@
 package io.harness.functional.artifactstream;
 
 import static io.harness.threading.Morpheus.sleep;
-import static io.restassured.RestAssured.given;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,6 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.FunctionalTests;
+import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -81,7 +81,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
     GenericType<RestResponse<PageResponse<Artifact>>> artifactType =
         new GenericType<RestResponse<PageResponse<Artifact>>>() {};
 
-    RestResponse<PageResponse<Artifact>> artifactResponse = given()
+    RestResponse<PageResponse<Artifact>> artifactResponse = Setup.portal()
                                                                 .auth()
                                                                 .oauth2(bearerToken)
                                                                 .queryParam("appId", application.getUuid())
@@ -106,7 +106,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
     });
 
     // Clean up all resources
-    given()
+    Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("appId", application.getUuid())
@@ -136,7 +136,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
     GenericType<RestResponse<PageResponse<Artifact>>> artifactType =
         new GenericType<RestResponse<PageResponse<Artifact>>>() {};
 
-    RestResponse<PageResponse<Artifact>> artifactResponse = given()
+    RestResponse<PageResponse<Artifact>> artifactResponse = Setup.portal()
                                                                 .auth()
                                                                 .oauth2(bearerToken)
                                                                 .queryParam("appId", application.getUuid())
@@ -161,7 +161,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
     });
 
     // Clean up all resources
-    given()
+    Setup.portal()
         .auth()
         .oauth2(bearerToken)
         .queryParam("appId", application.getUuid())
@@ -175,7 +175,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
     // List buckets for project
     GenericType<RestResponse<HashMap<String, String>>> bucketType =
         new GenericType<RestResponse<HashMap<String, String>>>() {};
-    RestResponse<HashMap<String, String>> bucketResponse = given()
+    RestResponse<HashMap<String, String>> bucketResponse = Setup.portal()
                                                                .auth()
                                                                .oauth2(bearerToken)
                                                                .queryParam("appId", application.getUuid())
@@ -192,7 +192,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
     // List artifact paths for bucket
     GenericType<RestResponse<ArrayList<String>>> artifactPathType =
         new GenericType<RestResponse<ArrayList<String>>>() {};
-    RestResponse<ArrayList<String>> artifactPathsResponse = given()
+    RestResponse<ArrayList<String>> artifactPathsResponse = Setup.portal()
                                                                 .auth()
                                                                 .oauth2(bearerToken)
                                                                 .queryParam("appId", application.getUuid())
@@ -221,7 +221,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
                                               .autoPopulate(true)
                                               .build();
 
-    RestResponse<GcsArtifactStream> restResponse = given()
+    RestResponse<GcsArtifactStream> restResponse = Setup.portal()
                                                        .auth()
                                                        .oauth2(bearerToken)
                                                        .queryParam("accountId", application.getAccountId())

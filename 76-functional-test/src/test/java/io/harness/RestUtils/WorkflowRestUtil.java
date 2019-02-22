@@ -1,9 +1,8 @@
 package io.harness.RestUtils;
 
-import static io.restassured.RestAssured.given;
-
 import com.google.inject.Singleton;
 
+import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
@@ -20,7 +19,7 @@ public class WorkflowRestUtil extends AbstractFunctionalTest {
   public Workflow createWorkflow(String accountId, String appId, Workflow workflow) {
     GenericType<RestResponse<Workflow>> workflowType = new GenericType<RestResponse<Workflow>>() {};
 
-    RestResponse<Workflow> savedWorkflowResponse = given()
+    RestResponse<Workflow> savedWorkflowResponse = Setup.portal()
                                                        .auth()
                                                        .oauth2(bearerToken)
                                                        .queryParam("accountId", accountId)
@@ -37,7 +36,7 @@ public class WorkflowRestUtil extends AbstractFunctionalTest {
     GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
         new GenericType<RestResponse<WorkflowExecution>>() {};
 
-    RestResponse<WorkflowExecution> savedWorkflowExecutionResponse = given()
+    RestResponse<WorkflowExecution> savedWorkflowExecutionResponse = Setup.portal()
                                                                          .auth()
                                                                          .oauth2(bearerToken)
                                                                          .queryParam("appId", appId)
@@ -53,7 +52,7 @@ public class WorkflowRestUtil extends AbstractFunctionalTest {
   public WorkflowPhase saveWorkflowPhase(String appId, String workflowId, String phaseId, WorkflowPhase phase) {
     GenericType<RestResponse<WorkflowPhase>> workflowExecutionType = new GenericType<RestResponse<WorkflowPhase>>() {};
 
-    RestResponse<WorkflowPhase> savedWorkflowPhaseResponse = given()
+    RestResponse<WorkflowPhase> savedWorkflowPhaseResponse = Setup.portal()
                                                                  .auth()
                                                                  .oauth2(bearerToken)
                                                                  .queryParam("appId", appId)
@@ -67,7 +66,7 @@ public class WorkflowRestUtil extends AbstractFunctionalTest {
 
   public Object deleteWorkflow(String workflowId, String appId) {
     GenericType<RestResponse> workflowType = new GenericType<RestResponse>() {};
-    RestResponse savedResponse = given()
+    RestResponse savedResponse = Setup.portal()
                                      .auth()
                                      .oauth2(bearerToken)
                                      .contentType(ContentType.JSON)
