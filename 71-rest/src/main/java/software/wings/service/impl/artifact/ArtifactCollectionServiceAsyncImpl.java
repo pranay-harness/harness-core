@@ -203,9 +203,9 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     }
 
     waitNotifyEngine.waitForAll(new BuildSourceCallback(accountId, appId, artifactStream.getUuid(), permitId), waitId);
-    logger.info("Queuing delegate task for artifact streamId {} with waitId {}", artifactStream.getUuid(), waitId);
+    logger.info("Queuing delegate task for artifactStreamId {} with waitId {}", artifactStream.getUuid(), waitId);
     final String taskId = delegateService.queueTask(delegateTaskBuilder.build());
-    logger.info("Queued delegate taskId {}", taskId);
+    logger.info("Queued delegate taskId {} for artifactStreamId {}", taskId, artifactStream.getUuid());
   }
 
   private int getLimit(String artifactStreamType, BuildSourceRequestType requestType) {

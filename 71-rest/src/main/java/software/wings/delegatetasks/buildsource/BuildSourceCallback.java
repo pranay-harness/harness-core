@@ -84,7 +84,8 @@ public class BuildSourceCallback implements NotifyCallback {
         }
         List<Artifact> artifacts = processBuilds(appId, artifactStream);
         if (isNotEmpty(artifacts)) {
-          logger.info("[{}] new artifacts collected", artifacts.size());
+          logger.info("[{}] new artifacts collected for artifactStreamId {}",
+              artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
           triggerService.triggerExecutionPostArtifactCollectionAsync(appId, artifactStreamId, artifacts);
         }
       } else {

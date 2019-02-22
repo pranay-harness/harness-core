@@ -349,7 +349,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
         if (workflowPhase == null) {
           throw new InvalidRequestException(
-              "Worflow Phase  not associated with Workflow [" + workflow.getName() + "]", USER);
+              "Workflow Phase not associated with Workflow [" + workflow.getName() + "]", USER);
         }
         String serviceId = workflowPhase.getServiceId();
         if (serviceId != null) {

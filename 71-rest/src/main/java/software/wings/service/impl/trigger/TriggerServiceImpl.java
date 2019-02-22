@@ -310,7 +310,8 @@ public class TriggerServiceImpl implements TriggerService {
   private void triggerExecutionPostArtifactCollection(
       String appId, String artifactStreamId, List<Artifact> collectedArtifacts) {
     triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId).forEach(trigger -> {
-      logger.info("Trigger found {} for artifact streamId {}", trigger.getName(), artifactStreamId);
+      logger.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(), trigger.getUuid(),
+          artifactStreamId);
       ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
       List<Artifact> artifacts = new ArrayList<>();
 
