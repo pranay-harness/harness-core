@@ -1767,10 +1767,10 @@ public class WorkflowServiceHelper {
 
   public List<InfrastructureMapping> getResolvedInfraMappings(
       Workflow workflow, Map<String, String> workflowVariables) {
-    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow == null) {
+    if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
       return new ArrayList<>();
     }
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow.isInfraMappingTemplatized()) {
       return resolvedTemplateInfraMappings(workflow, workflowVariables);
     }
