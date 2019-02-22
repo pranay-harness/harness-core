@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.PCF_SETUP;
@@ -60,7 +61,8 @@ public class PhaseStep {
   private String validationMessage;
 
   private Integer waitInterval;
-  private static final Set<PhaseStepType> setupTypes = new HashSet<>(Arrays.asList(CONTAINER_SETUP, PCF_SETUP));
+  private static final Set<PhaseStepType> setupTypes =
+      new HashSet<>(Arrays.asList(CONTAINER_SETUP, PCF_SETUP, AMI_AUTOSCALING_GROUP_SETUP));
   public PhaseStep() {}
 
   public PhaseStep(PhaseStepType phaseStepType, String name) {
