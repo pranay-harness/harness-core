@@ -115,6 +115,11 @@ public class HQuery<T> extends QueryImpl<T> {
     });
   }
 
+  @Override
+  public long count() {
+    return HPersistence.retry(() -> super.count());
+  }
+
   public MorphiaIterator<T, T> fetch() {
     enforceHarnessRules();
     return super.fetch();

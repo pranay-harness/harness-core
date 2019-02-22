@@ -106,7 +106,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
               .set(Queuable.RUNNING_KEY, true)
               .set(Queuable.RESET_TIMESTAMP_KEY, new Date(now.getTime() + resetDurationMillis()));
 
-      T message = datastore.findAndModify(query, updateOperations);
+      T message = HPersistence.retry(() -> datastore.findAndModify(query, updateOperations));
       if (message != null) {
         return message;
       }
@@ -174,7 +174,8 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     Objects.requireNonNull(message);
     String id = message.getId();
 
-    persistence.getDatastore(klass, ReadPref.CRITICAL).delete(klass, id);
+    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
+    HPersistence.retry(() -> datastore.delete(klass, id));
   }
 
   @Override
@@ -199,7 +200,8 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     Objects.requireNonNull(payload);
     payload.setVersion(versionInfoManager.getVersionInfo().getVersion());
 
-    persistence.getDatastore(klass, ReadPref.CRITICAL).save(payload);
+    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
+    HPersistence.retry(() -> datastore.save(payload));
   }
 
   @Override

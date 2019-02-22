@@ -4,14 +4,8 @@
 
 package software.wings.common;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.harness.beans.PageRequest;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.context.ContextElementType;
 import io.harness.serializer.MapperUtils;
 import software.wings.api.HostElement;
@@ -39,8 +33,6 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   private static final String EXPRESSION_EQUAL_PATTERN = "hosts";
   private static final String HOST_EXPR_PROCESSOR = "hostExpressionProcessor";
   @Inject private HostService hostService;
-  private String[] hostNames;
-  private String appId;
 
   /**
    * Instantiates a new host expression processor.
@@ -90,46 +82,6 @@ public class HostExpressionProcessor implements ExpressionProcessor {
    */
   public HostExpressionProcessor getHosts() {
     return this;
-  }
-
-  /**
-   * Hosts.
-   *
-   * @param hostNames the host names
-   * @return the host expression processor
-   */
-  public HostExpressionProcessor hosts(String... hostNames) {
-    this.hostNames = hostNames;
-    return this;
-  }
-
-  /**
-   * With names.
-   *
-   * @param hostNames the host names
-   * @return the host expression processor
-   */
-  public HostExpressionProcessor withNames(String... hostNames) {
-    this.hostNames = hostNames;
-    return this;
-  }
-
-  /**
-   * List.
-   *
-   * @return the list
-   */
-  @SuppressFBWarnings("UWF_UNWRITTEN_FIELD")
-  public List<HostElement> list() {
-    List<Host> hosts = null;
-    PageRequest<Host> pageRequest =
-        aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", Operator.EQ, appId).build();
-    if (isEmpty(hostNames)) {
-      hosts = hostService.list(pageRequest);
-    }
-    // TODO : else
-
-    return convertToHostElements(hosts);
   }
 
   private List<HostElement> convertToHostElements(List<Host> hosts) {

@@ -3,6 +3,7 @@ package io.harness.persistence;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoSocketOpenException;
 import io.harness.annotation.StoreIn;
+import io.harness.exception.ExceptionUtils;
 import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -296,6 +297,11 @@ public interface HPersistence {
         return executor.execute();
       } catch (MongoSocketOpenException ignore) {
         continue;
+      } catch (RuntimeException exception) {
+        if (ExceptionUtils.cause(MongoSocketOpenException.class, exception) != null) {
+          continue;
+        }
+        throw exception;
       }
     }
     // one last try

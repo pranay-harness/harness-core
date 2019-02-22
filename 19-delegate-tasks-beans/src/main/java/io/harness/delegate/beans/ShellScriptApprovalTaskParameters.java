@@ -13,7 +13,7 @@ public class ShellScriptApprovalTaskParameters implements TaskParameters {
   private String activityId;
   private String commandName;
 
-  private io.harness.delegate.beans.ScriptType scriptType;
+  private ScriptType scriptType;
   private final String outputVars;
   @Expression private final String script;
   private String workingDirectory;

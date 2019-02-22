@@ -9,6 +9,16 @@ import io.harness.logging.ExceptionLogger;
 import javax.validation.ConstraintViolationException;
 
 public class ExceptionUtils {
+  public static <T> T cause(Class<T> clazz, Throwable exception) {
+    while (exception != null) {
+      if (exception.getClass().equals(clazz)) {
+        return (T) exception;
+      }
+      exception = exception.getCause();
+    }
+    return null;
+  }
+
   public static String getMessage(Throwable t) {
     if (t instanceof WingsException) {
       WingsException we = (WingsException) t;
