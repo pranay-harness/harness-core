@@ -26,9 +26,9 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Extension
 @JsonTypeName("APP_DYNAMICS")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "password")
+@EqualsAndHashCode(callSuper = false)
 public class AppDynamicsConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "User Name", required = true) @NotEmpty private String username;
   @Attributes(title = "Account Name", required = true) @NotEmpty private String accountname;
@@ -61,8 +61,8 @@ public class AppDynamicsConfig extends SettingValue implements EncryptableSettin
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends VerificationProviderYaml {
     private String username;
     private String password;

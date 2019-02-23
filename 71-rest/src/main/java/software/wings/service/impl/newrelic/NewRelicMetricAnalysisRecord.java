@@ -42,8 +42,8 @@ import java.util.List;
   }, options = @IndexOptions(unique = true, name = "analysisUniqueIdx"))
 })
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicMetricAnalysisRecord extends Base implements Comparable<NewRelicMetricAnalysisRecord> {
   @NotEmpty private StateType stateType;

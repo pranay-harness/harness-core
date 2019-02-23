@@ -22,9 +22,9 @@ import software.wings.yaml.setting.VerificationProviderYaml;
  */
 @JsonTypeName("SUMO")
 @Data
-@EqualsAndHashCode(callSuper = false)
-@ToString(exclude = {"accessId", "accessKey"})
 @Builder
+@ToString(exclude = {"accessId", "accessKey"})
+@EqualsAndHashCode(callSuper = false)
 public class SumoConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Sumo Logic API Server URL", required = true) @NotEmpty private String sumoUrl;
 
@@ -56,8 +56,8 @@ public class SumoConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends VerificationProviderYaml {
     private String sumoUrl;
     private String accessId;

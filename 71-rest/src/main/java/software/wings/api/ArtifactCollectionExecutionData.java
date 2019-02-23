@@ -14,8 +14,8 @@ import java.util.Map;
  * Created by sgurubelli on 11/20/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class ArtifactCollectionExecutionData extends StateExecutionData implements ResponseData {
   private String artifactSource;
   private String artifactStatus;

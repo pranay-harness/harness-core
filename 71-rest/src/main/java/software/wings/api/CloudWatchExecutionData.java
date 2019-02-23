@@ -20,10 +20,10 @@ import java.util.Map;
  * Created by anubhaw on 12/9/16.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class CloudWatchExecutionData extends StateExecutionData {
   private String region;
   private String namespace;

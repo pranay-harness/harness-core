@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Set;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
   private String baseUrl;
   private String validationUrl;

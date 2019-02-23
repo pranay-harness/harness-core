@@ -32,8 +32,8 @@ import javax.validation.constraints.NotNull;
  * Created by sgurubelli on 10/25/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @Entity(value = "triggers")
 @HarnessExportableEntity
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")

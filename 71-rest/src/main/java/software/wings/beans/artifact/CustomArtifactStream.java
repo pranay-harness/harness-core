@@ -71,8 +71,8 @@ public class CustomArtifactStream extends ArtifactStream {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends ArtifactStream.Yaml {
     @NotNull private List<Script> scripts = new ArrayList<>();
     private List<String> tags = new ArrayList<>();

@@ -12,8 +12,8 @@ import software.wings.sm.StateType;
  */
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class DataCollectionTaskResult implements ResponseData {
   private DataCollectionTaskStatus status;
   private String errorMessage;

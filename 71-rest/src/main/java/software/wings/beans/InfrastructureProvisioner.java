@@ -17,11 +17,11 @@ import java.util.List;
 import javax.validation.Valid;
 
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeInfo(use = Id.NAME, property = "infrastructureProvisionerType")
 @Entity(value = "infrastructureProvisioner")
 @HarnessExportableEntity
-@NoArgsConstructor
 public abstract class InfrastructureProvisioner extends Base {
   public static final String INFRASTRUCTURE_PROVISIONER_TYPE_KEY = "infrastructureProvisionerType";
   public static final String MAPPING_BLUEPRINTS_KEY = "mappingBlueprints";
@@ -46,8 +46,8 @@ public abstract class InfrastructureProvisioner extends Base {
   public abstract String variableKey();
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public abstract static class Yaml extends BaseEntityYaml {
     private String name;
     private String description;

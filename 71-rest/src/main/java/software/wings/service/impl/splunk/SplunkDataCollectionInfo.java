@@ -16,8 +16,8 @@ import java.util.Set;
  * Created by rsingh on 5/18/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class SplunkDataCollectionInfo extends LogDataCollectionInfo {
   private SplunkConfig splunkConfig;
 

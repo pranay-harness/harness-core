@@ -19,10 +19,10 @@ import java.util.Map;
  */
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class AwsAmiSetupExecutionData extends StateExecutionData implements ResponseData {
   private String newAutoScalingGroupName;
   private String oldAutoScalingGroupName;

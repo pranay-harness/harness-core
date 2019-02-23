@@ -79,8 +79,8 @@ public class ContainerDefinition {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseYaml {
     List<PortMapping.Yaml> portMappings;
     private String name;

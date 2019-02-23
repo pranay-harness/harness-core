@@ -15,8 +15,8 @@ import java.util.List;
  * The type Git diff result.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class GitDiffResult extends GitCommandResult {
   private String repoName;
   private String branch;

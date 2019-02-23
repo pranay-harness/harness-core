@@ -9,8 +9,8 @@ import software.wings.yaml.gitSync.YamlGitConfig;
  * Created by anubhaw on 11/2/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class GitDiffRequest extends GitCommandRequest {
   private String lastProcessedCommitId;
   private YamlGitConfig yamlGitConfig;

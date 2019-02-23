@@ -21,12 +21,12 @@ import java.util.Map;
  * Created by sriram_parthasarathy on 10/17/17.
  */
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "timeSeriesMLScores", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("applicationId")
                            , @Field("workflowId"), @Field("stateType") },
     options = @IndexOptions(name = "ScoresUniqueIdx")))
-@NoArgsConstructor
 public class TimeSeriesMLScores extends Base {
   @NotEmpty private StateType stateType;
 

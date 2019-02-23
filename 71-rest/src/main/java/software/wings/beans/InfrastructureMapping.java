@@ -347,8 +347,8 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public abstract static class Yaml extends BaseEntityYaml {
     private String serviceName;
     private String infraMappingType;
@@ -364,8 +364,8 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public abstract static class YamlWithComputeProvider extends Yaml {
     private String computeProviderType;
     private String computeProviderName;

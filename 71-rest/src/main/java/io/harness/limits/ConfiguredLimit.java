@@ -6,7 +6,6 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -19,7 +18,6 @@ import javax.validation.constraints.NotNull;
 
 @Getter
 @EqualsAndHashCode(exclude = "id", callSuper = false)
-@ToString
 @Entity(value = "allowedLimits", noClassnameStored = true)
 @Indexes(
     @Index(fields = { @Field("key")

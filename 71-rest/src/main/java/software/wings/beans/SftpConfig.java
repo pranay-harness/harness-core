@@ -20,9 +20,9 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 
 @JsonTypeName("SFTP")
 @Data
-@EqualsAndHashCode(callSuper = false)
-@ToString(exclude = {"password"})
 @Builder
+@ToString(exclude = {"password"})
+@EqualsAndHashCode(callSuper = false)
 public class SftpConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "SFTP URL", required = true) @NotEmpty private String sftpUrl;
   @Attributes(title = "Domain") private String domain;
@@ -48,8 +48,8 @@ public class SftpConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     String domain;
     @Builder

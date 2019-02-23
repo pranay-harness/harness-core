@@ -22,9 +22,9 @@ import java.util.Set;
  */
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MetricAnalysisExecutionData extends StateExecutionData {
   @JsonIgnore @Inject private MetricDataAnalysisService metricDataAnalysisService;

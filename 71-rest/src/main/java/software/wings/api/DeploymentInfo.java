@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-@EqualsAndHashCode
 @NoArgsConstructor
+@EqualsAndHashCode
 public abstract class DeploymentInfo {}

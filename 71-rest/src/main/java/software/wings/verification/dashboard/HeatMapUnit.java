@@ -23,9 +23,9 @@ import java.util.Map;
  */
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class HeatMapUnit implements Comparable<HeatMapUnit> {
   private long startTime;
   private long endTime;

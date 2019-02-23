@@ -120,9 +120,9 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
   }
 
   @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
   @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class ConfigFileMetaData {
     private String fileId;
     private Long length;

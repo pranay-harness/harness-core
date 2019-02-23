@@ -21,10 +21,10 @@ import java.util.List;
  * Created by bsollish 10/13/17
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = false)
 @Entity(value = "gitCommits", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("commitId") },

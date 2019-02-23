@@ -26,8 +26,8 @@ import java.util.Set;
 @Entity(value = "harnessUserGroups", noClassnameStored = true)
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class HarnessUserGroup extends Base {
   @NotEmpty @NaturalKey private String name;
   private String description;

@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
  * Created by rsingh on 6/20/17.
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class LogElement {
   private String query;
   private String clusterLabel;

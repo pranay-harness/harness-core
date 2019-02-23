@@ -16,8 +16,8 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Entity(value = "resourceConstraintInstances", noClassnameStored = true)
-@EqualsAndHashCode(callSuper = false)
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Indexes(@Index(options = @IndexOptions(unique = true, name = "uniqueUnitOrder"),
     fields = { @Field("resourceConstraintId")
                , @Field("resourceUnit"), @Field("order") }))

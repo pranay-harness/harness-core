@@ -22,8 +22,8 @@ import software.wings.yaml.BaseEntityYaml;
     fields = { @Field("appId")
                , @Field("envId"), @Field("serviceId"), @Field("kind") }))
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class ApplicationManifest extends Base {
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENV_ID_KEY = "envId";
@@ -50,8 +50,8 @@ public class ApplicationManifest extends Base {
   public enum AppManifestType { SERVICE, ENV, ENV_SERVICE }
 
   @Data
-  @EqualsAndHashCode(callSuper = false)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = false)
   public static final class Yaml extends BaseEntityYaml {
     private String storeType;
     private GitFileConfig gitFileConfig;

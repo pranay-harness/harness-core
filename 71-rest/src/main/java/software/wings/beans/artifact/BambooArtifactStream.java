@@ -60,8 +60,8 @@ public class BambooArtifactStream extends ArtifactStream {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends ArtifactStream.Yaml {
     private String planName;
     private List<String> artifactPaths;

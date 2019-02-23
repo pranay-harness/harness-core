@@ -23,9 +23,9 @@ import software.wings.yaml.setting.CloudProviderYaml;
  */
 @JsonTypeName("AWS")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "secretKey")
+@EqualsAndHashCode(callSuper = false)
 public class AwsConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Access Key") private String accessKey;
   @Attributes(title = "Secret Key") @Encrypted private char[] secretKey;
@@ -55,8 +55,8 @@ public class AwsConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CloudProviderYaml {
     private String accessKey;
     private String secretKey;

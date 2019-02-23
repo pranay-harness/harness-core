@@ -66,8 +66,8 @@ public class PcfInfrastructureMapping extends InfrastructureMapping {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends YamlWithComputeProvider {
     private String organization;
     private String space;

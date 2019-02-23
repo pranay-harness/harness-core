@@ -38,11 +38,11 @@ import java.util.Map;
                            , @Field("cvConfigId"), @Field("analysisMinute") },
     options = @IndexOptions(name = "minuteIndex")))
 @Data
-@EqualsAndHashCode(callSuper = true)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Builder
 public class TimeSeriesRiskSummary extends Base {
   @NotEmpty @Indexed private String cvConfigId;
   @NotEmpty @Indexed private int analysisMinute;

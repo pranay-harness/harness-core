@@ -22,9 +22,9 @@ import software.wings.yaml.setting.CloudProviderYaml;
 
 @JsonTypeName("PCF")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "password")
+@EqualsAndHashCode(callSuper = false)
 public class PcfConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Endpoint URL", required = true) @NotEmpty private String endpointUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
@@ -48,8 +48,8 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CloudProviderYaml {
     private String endpointUrl;
     private String username;

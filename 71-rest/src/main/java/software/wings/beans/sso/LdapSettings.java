@@ -28,8 +28,8 @@ import javax.validation.constraints.NotNull;
  * @author Swapnil
  */
 @Extension
-@EqualsAndHashCode(callSuper = true)
 @Data
+@EqualsAndHashCode(callSuper = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LdapSettings extends SSOSettings {
   @NotBlank @NaturalKey String accountId;

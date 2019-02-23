@@ -27,10 +27,11 @@ import org.mongodb.morphia.annotations.Transient;
  */
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"authToken"})
+@EqualsAndHashCode(callSuper = false)
 @Indexes({
   @Index(fields = { @Field("name")
                     , @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
@@ -41,7 +42,6 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "vaultConfig", noClassnameStored = true)
-@ToString(exclude = {"authToken"})
 public class VaultConfig extends Base implements EncryptionConfig {
   @Attributes(title = "Name", required = true) @NaturalKey private String name;
 

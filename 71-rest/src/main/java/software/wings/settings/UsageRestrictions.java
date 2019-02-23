@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Set;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-@Builder
 public class UsageRestrictions {
   private Set<AppEnvRestriction> appEnvRestrictions;
 

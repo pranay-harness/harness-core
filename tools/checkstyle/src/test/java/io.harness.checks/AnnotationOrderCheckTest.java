@@ -22,9 +22,10 @@ public class AnnotationOrderCheckTest extends AbstractModuleTestSupport {
   }
 
   @Test
-  public void testWingsExceptionIssues() throws Exception {
+  public void testIssues() throws Exception {
     final String[] expected = {"7:1: Annotation Value must be placed before annotation Builder",
-        "12:1: Annotation Data must be placed before annotation Builder"};
+        "12:1: Annotation Data must be placed before annotation Builder",
+        "17:1: Annotation Data must be specified before any modifier"};
 
     verify(config(), getPath("AnnotationOrderCheckIssues.jv"), expected);
   }

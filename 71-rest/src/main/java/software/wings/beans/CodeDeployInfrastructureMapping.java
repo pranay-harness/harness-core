@@ -43,8 +43,8 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
     private String region;
     private String applicationName;

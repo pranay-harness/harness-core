@@ -24,8 +24,8 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "verificationServiceConfigurations")
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class CVConfiguration extends Base {
   public static final String NAME_KEY = "name";
   public static final String SERVICE_ID_KEY = "serviceId";
@@ -45,8 +45,8 @@ public class CVConfiguration extends Base {
   @Transient @SchemaIgnore private String appName;
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public abstract static class CVConfigurationYaml extends BaseEntityYaml {
     private String name;
     private String accountId;

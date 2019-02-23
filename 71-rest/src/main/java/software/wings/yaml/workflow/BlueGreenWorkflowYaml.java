@@ -15,10 +15,10 @@ import software.wings.beans.WorkflowPhase;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("BLUE_GREEN")
 @JsonPropertyOrder({"harnessApiVersion"})
-@NoArgsConstructor
 public class BlueGreenWorkflowYaml extends WorkflowYaml {
   @Builder
   public BlueGreenWorkflowYaml(String type, String harnessApiVersion, String description,

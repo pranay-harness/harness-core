@@ -19,6 +19,7 @@ import java.util.Date;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "sweepingOutput", noClassnameStored = true)
+@Value
 @EqualsAndHashCode(callSuper = true)
 @Indexes({
   @Index(options = @IndexOptions(name = "uniquePipelineExecution", unique = true),
@@ -31,7 +32,6 @@ import javax.validation.constraints.NotNull;
         @Field("appId"), @Field("name"), @Field("phaseExecutionId")
       })
 })
-@Value
 public class SweepingOutput extends Base {
   public static final String NAME_KEY = "name";
   public static final String PIPELINE_EXECUTION_ID_KEY = "pipelineExecutionId";

@@ -21,8 +21,8 @@ import software.wings.beans.Base;
 @JsonInclude(NON_EMPTY)
 @Entity(value = "whitelist", noClassnameStored = true)
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class Whitelist extends Base {
   @Indexed @NotEmpty @NaturalKey private String accountId;
   private String description;

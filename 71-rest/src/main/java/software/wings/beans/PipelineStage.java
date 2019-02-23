@@ -18,9 +18,9 @@ import java.util.Map;
  * Created by anubhaw on 11/17/16.
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PipelineStage {
   private String name;
   private boolean parallel;
@@ -29,9 +29,9 @@ public class PipelineStage {
   private transient String validationMessage;
 
   @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
   @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class PipelineStageElement {
     private String uuid;
     private String name;
@@ -45,8 +45,8 @@ public class PipelineStage {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseYamlWithType {
     private String name;
     private boolean parallel;
@@ -67,8 +67,8 @@ public class PipelineStage {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static class WorkflowVariable extends NameValuePair.AbstractYaml {
     String entityType;
 

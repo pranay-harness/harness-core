@@ -12,10 +12,10 @@ import software.wings.verification.CVConfiguration;
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class PrometheusCVServiceConfiguration extends CVConfiguration {
   @Attributes(required = true, title = "Metrics To Monitor") private List<TimeSeries> timeSeriesToAnalyze;
 }

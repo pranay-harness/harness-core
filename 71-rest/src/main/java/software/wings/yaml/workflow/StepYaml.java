@@ -17,8 +17,8 @@ import java.util.Map;
  * @author rktummala on 10/26/17
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class StepYaml extends BaseYamlWithType {
   private String name;
   private Map<String, Object> properties = new HashMap<>();

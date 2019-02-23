@@ -16,8 +16,8 @@ import javax.validation.constraints.NotNull;
 @Entity("pcfServiceSpecification")
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class PcfServiceSpecification extends DeploymentSpecification {
   @NotNull @NaturalKey private String serviceId;
   @NotNull private String manifestYaml;
@@ -60,8 +60,8 @@ public class PcfServiceSpecification extends DeploymentSpecification {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends DeploymentSpecification.Yaml {
     private String maniefstYaml;
     private String serviceName;

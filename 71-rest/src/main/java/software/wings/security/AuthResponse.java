@@ -9,8 +9,8 @@ import lombok.EqualsAndHashCode;
  */
 
 @Data
-@EqualsAndHashCode
 @Builder
+@EqualsAndHashCode
 public class AuthResponse {
   public enum Status { SUCCESS, FAILURE }
 

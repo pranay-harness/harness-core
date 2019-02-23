@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
  * @author rktummala on 08/25/17
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public abstract class ContainerInfo extends InstanceInfo {
   private String clusterName;
 

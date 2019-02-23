@@ -31,9 +31,9 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "activities", noClassnameStored = true)
 @Data
-@EqualsAndHashCode(callSuper = false)
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class Activity extends Base {
   public static final String ARTIFACT_ID_KEY = "artifactId";
   public static final String SERVICE_INSTANCE_ID_KEY = "serviceInstanceId";

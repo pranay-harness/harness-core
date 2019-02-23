@@ -37,8 +37,8 @@ import java.util.Map;
     fields = { @Field("appId")
                , @Field("cvConfigId") }, options = @IndexOptions(unique = true, name = "uniqueIdx")))
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TimeSeriesAnomaliesRecord extends Base {
   @NotEmpty @Indexed private String cvConfigId;

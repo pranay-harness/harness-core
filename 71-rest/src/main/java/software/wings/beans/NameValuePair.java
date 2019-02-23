@@ -17,8 +17,8 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class NameValuePair {
   @NotEmpty @Trimmed private String name;
   /*
@@ -33,8 +33,8 @@ public class NameValuePair {
   private String valueType;
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public abstract static class AbstractYaml extends BaseYaml {
     private String name;
     private String value;
@@ -48,8 +48,8 @@ public class NameValuePair {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends AbstractYaml {
     @Builder
     public Yaml(String name, String value, String valueType) {

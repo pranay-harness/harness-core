@@ -104,8 +104,8 @@ public class SlackConfig extends SettingValue implements SlackNotificationConfig
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CollaborationProviderYaml {
     private String outgoingWebhookUrl;
 

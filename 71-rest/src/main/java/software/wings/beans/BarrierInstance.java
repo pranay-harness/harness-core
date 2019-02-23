@@ -23,9 +23,9 @@ import java.util.List;
     @Field("name"), @Field("pipeline.executionId")
   })
 })
-@EqualsAndHashCode(callSuper = false)
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class BarrierInstance extends Base {
   public static final String NAME_KEY = "name";
   public static final String STATE_KEY = "state";

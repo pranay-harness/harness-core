@@ -18,10 +18,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class BambooExecutionData extends StateExecutionData implements ResponseData {
   private String projectName;
   private String planName;

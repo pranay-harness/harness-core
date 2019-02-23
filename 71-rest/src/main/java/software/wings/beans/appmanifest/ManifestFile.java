@@ -38,8 +38,8 @@ public class ManifestFile extends Base {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = false)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = false)
   public static final class Yaml extends BaseEntityYaml {
     private String fileContent;
 

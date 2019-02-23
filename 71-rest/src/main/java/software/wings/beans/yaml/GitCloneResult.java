@@ -9,8 +9,8 @@ import lombok.EqualsAndHashCode;
  */
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class GitCloneResult extends GitCommandResult {
   public GitCloneResult() {
     super(GitCommandType.CLONE);

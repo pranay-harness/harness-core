@@ -8,8 +8,8 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
 @Value
-@EqualsAndHashCode
 @Builder
+@EqualsAndHashCode
 public class FailureCriteria {
   @Min(value = 0) @Max(value = 100) private int failureThresholdPercentage;
 }

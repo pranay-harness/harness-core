@@ -23,8 +23,8 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 
 @JsonTypeName("GIT")
 @Data
-@EqualsAndHashCode(callSuper = false, exclude = {"sshSettingAttribute"})
 @ToString(exclude = {"password", "sshSettingAttribute"})
+@EqualsAndHashCode(callSuper = false, exclude = {"sshSettingAttribute"})
 public class GitConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Username", required = true) private String username;
 
@@ -79,8 +79,8 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     private String branch;
     private String reference;

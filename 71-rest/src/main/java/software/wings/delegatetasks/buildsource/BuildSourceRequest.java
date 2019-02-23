@@ -15,8 +15,8 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 7/20/18.
  */
 @Data
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
 public class BuildSourceRequest {
   @NotNull private BuildSourceRequestType buildSourceRequestType;
   @NotEmpty private String accountId;

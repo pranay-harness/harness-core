@@ -14,9 +14,9 @@ import software.wings.beans.Base;
  * Created by bsollish on 10/03/17
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "gitSyncWebhook", noClassnameStored = true)
 @HarnessExportableEntity

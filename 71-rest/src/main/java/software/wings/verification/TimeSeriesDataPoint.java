@@ -15,9 +15,9 @@ import java.util.TreeMap;
  */
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class TimeSeriesDataPoint {
   private long timestamp;
   private double value;

@@ -11,8 +11,8 @@ import software.wings.yaml.gitSync.YamlGitConfig;
  * Created by anubhaw on 10/16/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class GitFileChange extends Change {
   private String commitId;
   private String objectId;

@@ -11,8 +11,8 @@ import org.mongodb.morphia.annotations.Transient;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class GitFileConfig {
   @Trimmed private String connectorId;
   @Trimmed private String commitId;

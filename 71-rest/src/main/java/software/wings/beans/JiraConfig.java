@@ -23,8 +23,8 @@ import java.util.Arrays;
 
 @JsonTypeName("JIRA")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class JiraConfig extends SettingValue implements EncryptableSetting {
   public enum JiraSetupType { JIRA_CLOUD, JIRA_SERVER }
   private static final CharSequence JIRA_CLOUD_DOMAINNAME = ".atlassian.net";
@@ -64,8 +64,8 @@ public class JiraConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CollaborationProviderYaml {
     private String baseUrl;
     private String username;

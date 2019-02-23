@@ -42,8 +42,8 @@ import java.util.List;
                                                                                   , @Field("name") }))
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class Service extends Base {
   public static final String NAME_KEY = "name";
   public static final String ARTIFACT_TYPE = "artifactType";
@@ -122,8 +122,8 @@ public class Service extends Base {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private String artifactType;

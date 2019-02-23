@@ -11,9 +11,9 @@ import java.util.List;
  * The type Code deploy params.
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class CodeDeployParams {
   private String applicationName;
   private String deploymentConfigurationName;

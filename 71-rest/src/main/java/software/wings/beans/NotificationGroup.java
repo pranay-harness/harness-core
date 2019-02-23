@@ -381,8 +381,8 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo 
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
     private List<AddressYaml> addresses;
     private String defaultNotificationGroupForAccount;
@@ -400,8 +400,8 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo 
    * Yaml representation of addressesByChannelType in NotificationGroup.
    */
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class AddressYaml extends BaseYaml {
     private String channelType;
     private List<String> addresses;

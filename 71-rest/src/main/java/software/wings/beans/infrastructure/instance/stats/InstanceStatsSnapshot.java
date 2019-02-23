@@ -23,9 +23,9 @@ import java.util.Arrays;
 import java.util.List;
 
 @Value
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "instanceStats", noClassnameStored = true)
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("timestamp") },
     options = @IndexOptions(unique = true, name = "accountId_timestamp_unique_idx", background = true)))

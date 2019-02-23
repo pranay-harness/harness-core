@@ -10,8 +10,8 @@ import software.wings.sm.ExecutionStatusData;
  * Created by rsingh on 5/26/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class MetricDataAnalysisResponse extends ExecutionStatusData {
   private MetricAnalysisExecutionData stateExecutionData;
 }

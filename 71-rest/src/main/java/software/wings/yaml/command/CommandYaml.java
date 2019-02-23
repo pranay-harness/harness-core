@@ -17,8 +17,8 @@ import java.util.List;
  * @author rktummala on 11/09/17
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class CommandYaml extends BaseEntityYaml {
   private String commandUnitType;
   private boolean targetToAllEnv;

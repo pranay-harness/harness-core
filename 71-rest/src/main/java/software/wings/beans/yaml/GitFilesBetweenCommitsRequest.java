@@ -5,8 +5,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class GitFilesBetweenCommitsRequest extends GitCommandRequest {
   private String newCommitId;
   private String oldCommitId;

@@ -14,8 +14,8 @@ import software.wings.sm.StateType;
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class AppdynamicsSetupTestNodeData extends SetupTestNodeData {
   private long applicationId;
   private long tierId;

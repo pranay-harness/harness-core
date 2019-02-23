@@ -29,8 +29,8 @@ import software.wings.yaml.setting.VerificationProviderYaml;
  */
 @JsonTypeName("JENKINS")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = {"password", "token"})
+@EqualsAndHashCode(callSuper = false)
 public class JenkinsConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
   @Attributes(title = "Authentication Mechanism", required = true, enums = {USERNAME_PASSWORD_FIELD, TOKEN_FIELD})
@@ -79,8 +79,8 @@ public class JenkinsConfig extends SettingValue implements EncryptableSetting, A
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     private String token;
     private String authMechanism;
@@ -95,8 +95,8 @@ public class JenkinsConfig extends SettingValue implements EncryptableSetting, A
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class VerificationYaml extends VerificationProviderYaml {
     private String url;
     private String username;

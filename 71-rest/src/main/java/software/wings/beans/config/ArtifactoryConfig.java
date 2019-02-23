@@ -27,9 +27,9 @@ import java.util.Objects;
  */
 @JsonTypeName("ARTIFACTORY")
 @Data
-@EqualsAndHashCode(callSuper = false)
-@ToString(exclude = "password")
 @Builder
+@ToString(exclude = "password")
+@EqualsAndHashCode(callSuper = false)
 public class ArtifactoryConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Artifactory URL", required = true) @NotEmpty private String artifactoryUrl;
 
@@ -77,8 +77,8 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password,

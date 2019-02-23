@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
  */
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class TimeSeriesRisk {
   private long startTime;
   private long endTime;

@@ -20,8 +20,8 @@ import java.util.Set;
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class StackDriverSetupTestNodeData extends SetupTestNodeData {
   private Map<String, List<StackDriverMetric>> loadBalancerMetrics = new HashMap<>();
 

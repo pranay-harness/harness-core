@@ -21,16 +21,16 @@ import javax.validation.Valid;
 @Entity("lambdaSpecifications")
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class LambdaSpecification extends DeploymentSpecification {
   @NotEmpty @Indexed(options = @IndexOptions(unique = true)) @NaturalKey private String serviceId;
   private DefaultSpecification defaults;
   @Valid private List<FunctionSpecification> functions;
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends DeploymentSpecification.Yaml {
     private DefaultSpecification.Yaml defaults;
     private List<FunctionSpecification.Yaml> functions;
@@ -55,8 +55,8 @@ public class LambdaSpecification extends DeploymentSpecification {
     }
 
     @Data
-    @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
     public static final class Yaml extends BaseYaml {
       private String runtime;
       private Integer memorySize = 128;
@@ -91,8 +91,8 @@ public class LambdaSpecification extends DeploymentSpecification {
     }
 
     @Data
-    @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
     public static final class Yaml extends BaseYaml {
       private String runtime;
       private Integer memorySize = 128;

@@ -7,8 +7,8 @@ import lombok.EqualsAndHashCode;
 import java.util.Map;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class GitFetchFilesFromMultipleRepoResult extends GitCommandResult {
   Map<String, GitFetchFilesResult> filesFromMultipleRepo;
 

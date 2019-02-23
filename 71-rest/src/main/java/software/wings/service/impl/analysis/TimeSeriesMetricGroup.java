@@ -54,8 +54,8 @@ public class TimeSeriesMetricGroup extends Base {
   }
 
   @Data
-  @EqualsAndHashCode(exclude = {"dependencyPath", "mlAnalysisType"})
   @Builder
+  @EqualsAndHashCode(exclude = {"dependencyPath", "mlAnalysisType"})
   public static class TimeSeriesMlAnalysisGroupInfo {
     private String groupName;
     private String dependencyPath;

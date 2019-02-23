@@ -15,8 +15,8 @@ import software.wings.helpers.ext.helm.response.HelmCommandResponse;
  */
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class HelmCommandExecutionResponse implements DelegateTaskNotifyResponseData {
   private DelegateMetaInfo delegateMetaInfo;

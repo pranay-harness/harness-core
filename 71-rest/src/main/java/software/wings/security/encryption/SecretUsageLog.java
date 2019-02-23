@@ -21,10 +21,10 @@ import java.util.Date;
  * Created by rsingh on 10/27/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = false)
 @Entity(value = "secretUsageLogs", noClassnameStored = true)
 public class SecretUsageLog extends Base {
   public static final String ENCRYPTED_DATA_ID_KEY = "encryptedDataId";

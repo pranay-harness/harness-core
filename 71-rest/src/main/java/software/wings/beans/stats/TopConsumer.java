@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Id;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class TopConsumer {
   @Id private String appId;
   private String appName;

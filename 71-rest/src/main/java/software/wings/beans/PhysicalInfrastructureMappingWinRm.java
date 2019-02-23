@@ -43,8 +43,8 @@ public class PhysicalInfrastructureMappingWinRm extends PhysicalInfrastructureMa
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends PhysicalInfrastructureMappingBase.Yaml {
     private String winRmProfile;
 

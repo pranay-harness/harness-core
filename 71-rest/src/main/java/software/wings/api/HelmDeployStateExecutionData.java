@@ -19,10 +19,10 @@ import java.util.Map;
  * Created by anubhaw on 3/30/18.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class HelmDeployStateExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
   private String commandName;

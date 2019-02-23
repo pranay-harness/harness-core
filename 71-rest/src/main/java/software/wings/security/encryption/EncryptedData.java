@@ -40,11 +40,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by rsingh on 9/29/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
-@ToString(exclude = {"encryptionKey", "encryptedValue"})
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@ToString(exclude = {"encryptionKey", "encryptedValue"})
+@EqualsAndHashCode(callSuper = false)
 @Entity(value = "encryptedRecords", noClassnameStored = true)
 @HarnessExportableEntity
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -44,10 +44,10 @@ import javax.validation.constraints.NotNull;
     options = @IndexOptions(unique = true, name = "serviceVariableUniqueIdx")))
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = false)
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class ServiceVariable extends Base implements EncryptableSetting {
   /**
    * The constant DEFAULT_TEMPLATE_ID.

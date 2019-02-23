@@ -36,8 +36,8 @@ import javax.validation.constraints.NotNull;
     fields = { @Field("accountId")
                , @Field("name"), @Field("folderId") }))
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class Template extends Base {
   public static final String FOLDER_ID_KEY = "folderId";
   public static final String FOLDER_PATH_ID_KEY = "folderPathId";

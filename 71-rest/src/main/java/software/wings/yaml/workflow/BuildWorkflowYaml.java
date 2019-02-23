@@ -18,10 +18,10 @@ import java.util.List;
  * @author rktummala on 11/1/17
  */
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("BUILD")
 @JsonPropertyOrder({"harnessApiVersion"})
-@NoArgsConstructor
 public class BuildWorkflowYaml extends WorkflowYaml {
   @Builder
   public BuildWorkflowYaml(String type, String harnessApiVersion, String description, List<Yaml> templateExpressions,

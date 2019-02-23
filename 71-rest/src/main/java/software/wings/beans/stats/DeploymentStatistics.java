@@ -12,17 +12,17 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class DeploymentStatistics extends WingsStatistics {
   private Map<EnvironmentType, AggregatedDayStats> statsMap = new HashMap<>();
 
   @Data
   @Builder
-  @AllArgsConstructor
   @NoArgsConstructor
+  @AllArgsConstructor
   public static class AggregatedDayStats {
     private int totalCount;
     private int failedCount;
@@ -31,8 +31,8 @@ public class DeploymentStatistics extends WingsStatistics {
 
     @Data
     @Builder
-    @AllArgsConstructor
     @NoArgsConstructor
+    @AllArgsConstructor
     public static class DayStat {
       private int totalCount;
       private int failedCount;

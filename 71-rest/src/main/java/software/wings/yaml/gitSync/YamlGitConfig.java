@@ -33,8 +33,8 @@ import javax.validation.constraints.NotNull;
     fields = { @Field("accountId")
                , @Field("entityId"), @Field("entityType") }))
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class YamlGitConfig extends Base implements EncryptableSetting {
   public static final String ENTITY_ID_KEY = "entityId";

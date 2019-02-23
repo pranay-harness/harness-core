@@ -37,9 +37,9 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "pipelines", noClassnameStored = true)
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class Pipeline extends Base {
   public static final String NAME_KEY = "name";
   public static final String DESCRIPTION_KEY = "description";
@@ -99,8 +99,8 @@ public class Pipeline extends Base {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private List<PipelineStage.Yaml> pipelineStages = new ArrayList<>();

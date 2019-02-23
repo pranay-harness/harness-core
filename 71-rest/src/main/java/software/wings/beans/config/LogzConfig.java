@@ -23,9 +23,9 @@ import software.wings.yaml.setting.VerificationProviderYaml;
  */
 @JsonTypeName("LOGZ")
 @Data
-@EqualsAndHashCode(callSuper = false)
-@ToString(exclude = "token")
 @Builder
+@ToString(exclude = "token")
+@EqualsAndHashCode(callSuper = false)
 public class LogzConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Logz.io URL", required = true) @NotEmpty private String logzUrl;
 
@@ -50,8 +50,8 @@ public class LogzConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends VerificationProviderYaml {
     private String logzUrl;
     private String token;

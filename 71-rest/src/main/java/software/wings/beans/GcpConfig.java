@@ -24,8 +24,8 @@ import software.wings.yaml.setting.CloudProviderYaml;
  */
 @JsonTypeName("GCP")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class GcpConfig extends SettingValue implements EncryptableSetting {
   @JsonIgnore @Encrypted private char[] serviceAccountKeyFileContent;
 
@@ -47,8 +47,8 @@ public class GcpConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CloudProviderYaml {
     private String serviceAccountKeyFileContent;
 

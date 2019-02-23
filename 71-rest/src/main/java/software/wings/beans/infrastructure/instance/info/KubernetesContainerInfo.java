@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
  * @author rktummala on 09/05/17
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class KubernetesContainerInfo extends ContainerInfo {
   private String controllerType;
   private String controllerName;

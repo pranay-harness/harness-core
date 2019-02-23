@@ -20,9 +20,9 @@ import software.wings.yaml.setting.CloudProviderYaml;
 
 @JsonTypeName("AZURE")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "key")
+@EqualsAndHashCode(callSuper = false)
 public class AzureConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Client ID [Application ID]", required = true) @NotEmpty private String clientId;
 
@@ -52,8 +52,8 @@ public class AzureConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CloudProviderYaml {
     private String clientId;
     private String tenantId;

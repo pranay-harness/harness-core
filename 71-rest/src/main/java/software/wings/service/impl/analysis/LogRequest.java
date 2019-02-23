@@ -10,8 +10,8 @@ import java.util.Set;
  * Created by rsingh on 6/21/17.
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class LogRequest {
   private String query;
   private String applicationId;

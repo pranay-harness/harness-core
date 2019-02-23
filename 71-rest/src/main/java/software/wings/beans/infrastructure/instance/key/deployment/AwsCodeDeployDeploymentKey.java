@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class AwsCodeDeployDeploymentKey extends DeploymentKey {
   // This is Revision Localtion, S3 artifact link
   private String key;

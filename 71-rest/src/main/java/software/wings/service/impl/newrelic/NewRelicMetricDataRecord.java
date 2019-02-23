@@ -59,9 +59,9 @@ import java.util.Map;
       }, options = @IndexOptions(name = "timeSeriesIdx"))
 })
 @Data
-@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAware {
   @Transient public static String DEFAULT_GROUP_NAME = "default";

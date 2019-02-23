@@ -20,9 +20,9 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 
 @JsonTypeName("SMB")
 @Data
-@EqualsAndHashCode(callSuper = false)
-@ToString(exclude = {"password"})
 @Builder
+@ToString(exclude = {"password"})
+@EqualsAndHashCode(callSuper = false)
 public class SmbConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "SMB URL", required = true) @NotEmpty private String smbUrl;
   @Attributes(title = "Domain") private String domain;
@@ -48,8 +48,8 @@ public class SmbConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     String domain;
     @Builder

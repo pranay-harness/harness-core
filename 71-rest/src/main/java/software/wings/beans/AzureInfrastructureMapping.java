@@ -265,8 +265,8 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends YamlWithComputeProvider {
     private String subscriptionId;
     private String resourceGroup;

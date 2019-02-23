@@ -17,10 +17,10 @@ import java.util.List;
  */
 
 @Data
-@EqualsAndHashCode(callSuper = false)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = false)
 public class NewRelicCVServiceConfiguration extends CVConfiguration {
   @Attributes(required = true, title = "Application Name") private String applicationId;
   @Attributes(required = true, title = "Metrics") private List<String> metrics;
@@ -28,10 +28,10 @@ public class NewRelicCVServiceConfiguration extends CVConfiguration {
    * The type Yaml.
    */
   @Data
+  @Builder
+  @AllArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @AllArgsConstructor
-  @Builder
   public static final class NewRelicCVConfigurationYaml extends CVConfigurationYaml {
     private String newRelicApplicationName;
     private List<String> metrics;

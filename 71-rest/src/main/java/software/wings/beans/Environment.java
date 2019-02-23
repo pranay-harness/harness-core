@@ -444,8 +444,8 @@ public class Environment extends Base {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private String configMapYaml;
@@ -467,8 +467,8 @@ public class Environment extends Base {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class VariableOverrideYaml extends NameValuePair.AbstractYaml {
     private String serviceName;
 

@@ -21,8 +21,8 @@ import java.util.Map;
 
 public class APMResponseParser {
   @Data
-  @AllArgsConstructor
   @Builder
+  @AllArgsConstructor
   public static class APMResponseData {
     private String hostName;
     private String groupName;

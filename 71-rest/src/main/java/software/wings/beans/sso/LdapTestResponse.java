@@ -8,9 +8,9 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotBlank;
 
 @Data
+@Builder
 @EqualsAndHashCode
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Builder
 public class LdapTestResponse {
   public enum Status { SUCCESS, FAILURE }
 

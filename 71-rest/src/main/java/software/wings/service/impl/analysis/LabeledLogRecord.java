@@ -26,8 +26,8 @@ import java.util.List;
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class LabeledLogRecord implements GoogleDataStoreAware {
   private String logMessage;
   private List<LogLabel> labels;

@@ -15,8 +15,8 @@ import javax.validation.constraints.NotNull;
 @Entity("ecsServiceSpecification")
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class EcsServiceSpecification extends DeploymentSpecification {
   @NotNull @NaturalKey private String serviceId;
   private String serviceSpecJson;
@@ -46,8 +46,8 @@ public class EcsServiceSpecification extends DeploymentSpecification {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends DeploymentSpecification.Yaml {
     private String serviceSpecJson;
     private String schedulingStrategy = Constants.ECS_REPLICA_SCHEDULING_STRATEGY;

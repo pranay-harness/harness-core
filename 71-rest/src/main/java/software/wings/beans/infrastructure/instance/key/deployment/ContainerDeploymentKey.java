@@ -12,9 +12,9 @@ import java.util.List;
 
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class ContainerDeploymentKey extends DeploymentKey {
   private String containerServiceName;
   @Indexed private List<Label> labels;
