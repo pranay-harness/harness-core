@@ -294,7 +294,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   @Override
-  public @Nonnull List<Instance> getAppInstancesForAccount(String accountId, long timestamp) {
+  @Nonnull
+  public List<Instance> getAppInstancesForAccount(String accountId, long timestamp) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     return getInstancesForAccount(accountId, timestamp, query);
   }

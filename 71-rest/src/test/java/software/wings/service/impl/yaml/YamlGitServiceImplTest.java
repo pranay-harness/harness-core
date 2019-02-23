@@ -31,12 +31,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public class YamlGitServiceImplTest {
-  private @InjectMocks YamlGitServiceImpl yamlGitService = spy(YamlGitServiceImpl.class);
-  private @Mock DelegateService delegateService;
-  private @Mock AlertService alertService;
-  private @Mock SecretManager secretManager;
-  private @Mock AccountService mockAccountService;
-  private @Mock YamlDirectoryService mockYamlDirectoryService;
+  @InjectMocks private YamlGitServiceImpl yamlGitService = spy(YamlGitServiceImpl.class);
+  @Mock private DelegateService delegateService;
+  @Mock private AlertService alertService;
+  @Mock private SecretManager secretManager;
+  @Mock private AccountService mockAccountService;
+  @Mock private YamlDirectoryService mockYamlDirectoryService;
 
   private static final String TEST_GIT_REPO_URL = "https://github.com/rathn/SyncTest";
   private static final String TEST_GIT_REPO_USER = "user";

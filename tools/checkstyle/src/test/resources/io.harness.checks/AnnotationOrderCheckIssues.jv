@@ -17,3 +17,8 @@ public
 @Data
 class Class2 {
 }
+
+public
+@RandomNonTrackedAnnotation
+class Class2 {
+}

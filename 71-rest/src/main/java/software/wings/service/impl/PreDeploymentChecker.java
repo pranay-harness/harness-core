@@ -82,7 +82,8 @@ public class PreDeploymentChecker {
 
   // This is prevent against case where a customer might have a burst of deployment attempts and end up consuming all 24
   // limits and then are blocked for 24 hours. With this change they can only consume 40% of 24 hour limit in an hour.
-  private @Nullable RateLimitChecker shortDurationChecker(RateLimitChecker longDurationChecker, Action action) {
+  @Nullable
+  private RateLimitChecker shortDurationChecker(RateLimitChecker longDurationChecker, Action action) {
     RateLimit limit = longDurationChecker.getLimit();
 
     if (!(limit.getDurationUnit() == LONG_LIMIT_DURATION_UNIT && limit.getDuration() == LONG_LIMIT_DURATION)) {

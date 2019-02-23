@@ -46,7 +46,7 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   private String ml_shell_file_name;
   private String workflow_id;
   private String workflow_execution_id;
-  private @Indexed String state_execution_id;
+  @Indexed private String state_execution_id;
   private String service_id;
   private String auth_token;
   private int analysis_start_min;
@@ -74,7 +74,7 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   private String experiment_name;
   private String feedback_url;
   private String feature_name;
-  private @Indexed ExecutionStatus executionStatus;
+  @Indexed private ExecutionStatus executionStatus;
 
   @Builder.Default
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];

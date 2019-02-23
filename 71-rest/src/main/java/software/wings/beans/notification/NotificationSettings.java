@@ -21,7 +21,8 @@ public class NotificationSettings {
     return Collections.emptyMap();
   }
 
-  public @NotNull SlackNotificationSetting getSlackConfig() {
+  @NotNull
+  public SlackNotificationSetting getSlackConfig() {
     return slackConfig;
   }
 

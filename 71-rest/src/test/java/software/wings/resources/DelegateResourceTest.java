@@ -69,11 +69,11 @@ public class DelegateResourceTest {
 
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
-  private static @Mock MainConfiguration mainConfiguration = mock(MainConfiguration.class);
-  private static @Mock DataStoreService dataStoreService = mock(DataStoreService.class);
-  private static @Mock AccountService accountService = mock(AccountService.class);
+  @Mock private static MainConfiguration mainConfiguration = mock(MainConfiguration.class);
+  @Mock private static DataStoreService dataStoreService = mock(DataStoreService.class);
+  @Mock private static AccountService accountService = mock(AccountService.class);
 
-  public @Parameter String apiUrl;
+  @Parameter public String apiUrl;
 
   @Parameters
   public static String[] data() {

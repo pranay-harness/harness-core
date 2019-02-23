@@ -66,7 +66,7 @@ public class AnalysisContext extends Base {
   private String envId;
   private String hostNameField;
   private MLAnalysisType analysisType;
-  private @Indexed ExecutionStatus executionStatus;
+  @Indexed private ExecutionStatus executionStatus;
   private long startDataCollectionMinute;
   // Collection interval in minutes
   private int collectionInterval;

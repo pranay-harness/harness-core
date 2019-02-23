@@ -49,7 +49,7 @@ public class LogDataRecord extends Base {
 
   @NotEmpty @Indexed private String stateExecutionId;
 
-  private @Indexed String cvConfigId;
+  @Indexed private String cvConfigId;
 
   @NotEmpty private String query;
 

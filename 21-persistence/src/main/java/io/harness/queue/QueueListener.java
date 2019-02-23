@@ -27,7 +27,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
 
   @Inject @Getter @Setter private Queue<T> queue;
 
-  private @Setter boolean runOnce;
+  @Setter private boolean runOnce;
   private final boolean primaryOnly;
 
   private AtomicBoolean shouldStop = new AtomicBoolean(false);

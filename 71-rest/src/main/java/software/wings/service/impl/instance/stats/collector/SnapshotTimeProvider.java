@@ -28,7 +28,8 @@ class SnapshotTimeProvider {
     this.intervalInMinutes = durationInMinutes;
   }
 
-  public @Nullable Instant next() {
+  @Nullable
+  public Instant next() {
     if (hasNext()) {
       currentlyAt = currentlyAt.plus(intervalInMinutes, ChronoUnit.MINUTES);
       return currentlyAt;

@@ -60,10 +60,10 @@ import java.util.List;
 public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
   public static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
   private static final int MAX_JSON_RESPONSE_LENGTH = 16384;
-  private @NotEmpty @Indexed String stateExecutionId;
-  private @NotEmpty String accountId;
-  private @NotEmpty String delegateId;
-  private @NotEmpty String delegateTaskId;
+  @NotEmpty @Indexed private String stateExecutionId;
+  @NotEmpty private String accountId;
+  @NotEmpty private String delegateId;
+  @NotEmpty private String delegateTaskId;
   private String title;
   private List<ThirdPartyApiCallField> request = new ArrayList<>();
   private List<ThirdPartyApiCallField> response = new ArrayList<>();

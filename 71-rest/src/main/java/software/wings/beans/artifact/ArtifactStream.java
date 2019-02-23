@@ -52,8 +52,8 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   @EntityName @NaturalKey private String name;
   private boolean autoPopulate;
   @NotEmpty @Indexed @NaturalKey private String serviceId;
-  transient @Deprecated private boolean autoDownload;
-  transient @Deprecated private boolean autoApproveForProduction;
+  @Deprecated private transient boolean autoDownload;
+  @Deprecated private transient boolean autoApproveForProduction;
   private boolean metadataOnly;
   private int failedCronAttempts;
   @Indexed private Long nextIteration;

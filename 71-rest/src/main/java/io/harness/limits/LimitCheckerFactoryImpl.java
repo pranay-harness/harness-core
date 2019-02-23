@@ -26,7 +26,8 @@ public class LimitCheckerFactoryImpl implements LimitCheckerFactory {
 
   // TODO: add cache once Redis infra is in place. See PR #3150 for relevant discussion
   @Override
-  public @Nonnull LimitChecker getInstance(Action action) {
+  @Nonnull
+  public LimitChecker getInstance(Action action) {
     ConfiguredLimit configuredLimit =
         configuredLimitService.getOrDefault(action.getAccountId(), action.getActionType());
 

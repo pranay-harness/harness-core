@@ -97,7 +97,8 @@ public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement 
     return response.changed;
   }
 
-  private @Nonnull Counter incrementAndGet(String keyToIncrement, int change) {
+  @Nonnull
+  private Counter incrementAndGet(String keyToIncrement, int change) {
     Preconditions.checkArgument(change > 0, "use decrementAndGet for -ve change");
 
     try {
