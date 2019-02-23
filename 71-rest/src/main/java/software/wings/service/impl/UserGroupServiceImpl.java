@@ -312,7 +312,8 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public @Nullable UserGroup getDefaultUserGroup(String accountId) {
+  @Nullable
+  public UserGroup getDefaultUserGroup(String accountId) {
     return wingsPersistence.createQuery(UserGroup.class)
         .filter("accountId", accountId)
         .field("name")

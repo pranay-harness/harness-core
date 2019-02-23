@@ -47,22 +47,21 @@ public class AnnotationOrderCheck extends AbstractCheck {
   public void visitToken(DetailAST annotation) {
     final String name = AnnotationMixin.name(annotation);
     final Integer order = annotationOrder.get(name);
-    if (order == null) {
-      return;
-    }
 
     DetailAST prevAnnotation = annotation.getPreviousSibling();
-    while (prevAnnotation != null && prevAnnotation.getType() == TokenTypes.ANNOTATION) {
-      final String prevName = AnnotationMixin.name(prevAnnotation);
-      prevAnnotation = prevAnnotation.getPreviousSibling();
+    if (order != null) {
+      while (prevAnnotation != null && prevAnnotation.getType() == TokenTypes.ANNOTATION) {
+        final String prevName = AnnotationMixin.name(prevAnnotation);
+        prevAnnotation = prevAnnotation.getPreviousSibling();
 
-      final Integer prevOrder = annotationOrder.get(prevName);
-      if (prevOrder == null) {
-        continue;
-      }
+        final Integer prevOrder = annotationOrder.get(prevName);
+        if (prevOrder == null) {
+          continue;
+        }
 
-      if (prevOrder > order) {
-        log(annotation, ORDER_MSG_KEY, name, prevName);
+        if (prevOrder > order) {
+          log(annotation, ORDER_MSG_KEY, name, prevName);
+        }
       }
     }
 

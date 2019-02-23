@@ -41,7 +41,8 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
   @Inject private DefaultLimitsService defaultLimits;
 
   @Override
-  public @Nullable ConfiguredLimit getOrDefault(String accountId, ActionType actionType) {
+  @Nullable
+  public ConfiguredLimit getOrDefault(String accountId, ActionType actionType) {
     ConfiguredLimit limit = get(accountId, actionType);
 
     if (null == limit) {
@@ -60,7 +61,8 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
         .get();
   }
 
-  private @Nullable ConfiguredLimit getDefaultLimit(ActionType actionType, String accountId) {
+  @Nullable
+  private ConfiguredLimit getDefaultLimit(ActionType actionType, String accountId) {
     Account account = accountService.get(accountId);
     Objects.requireNonNull(account, "account should not be null. AccountId: " + accountId);
 

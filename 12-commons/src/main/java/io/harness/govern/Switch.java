@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Switch {
-  protected static @Setter Logger logger = LoggerFactory.getLogger(Switch.class);
+  @Setter protected static Logger logger = LoggerFactory.getLogger(Switch.class);
 
   /**
    * Reports error for unhandled value in a switch statement.

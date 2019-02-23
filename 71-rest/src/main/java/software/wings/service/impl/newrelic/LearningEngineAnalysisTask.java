@@ -45,7 +45,7 @@ public class LearningEngineAnalysisTask extends Base {
 
   private String workflow_id;
   private String workflow_execution_id;
-  private @Indexed String state_execution_id;
+  @Indexed private String state_execution_id;
   private String service_id;
   private String auth_token;
   private int analysis_start_min;
@@ -77,7 +77,7 @@ public class LearningEngineAnalysisTask extends Base {
   private MLAnalysisType ml_analysis_type;
   private String feedback_url;
   private String feature_name;
-  private @Indexed ExecutionStatus executionStatus;
+  @Indexed private ExecutionStatus executionStatus;
   private String cvConfigId;
   private boolean is24x7Task;
 

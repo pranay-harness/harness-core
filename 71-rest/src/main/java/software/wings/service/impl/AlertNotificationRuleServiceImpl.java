@@ -102,10 +102,10 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
   }
 
   @Override
-  public @Nonnull List<AlertNotificationRule> getAll(String accountId) {
+  @Nonnull
+  public List<AlertNotificationRule> getAll(String accountId) {
     Query<AlertNotificationRule> query =
         wingsPersistence.createQuery(AlertNotificationRule.class).filter(ACCOUNT_ID_KEY, accountId);
-
     return CollectionUtils.emptyIfNull(query.asList());
   }
 

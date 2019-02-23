@@ -121,7 +121,8 @@ public class InstanceStatServiceImpl implements InstanceStatService {
   }
 
   @Override
-  public @Nullable Instant getLastSnapshotTime(String accountId) {
+  @Nullable
+  public Instant getLastSnapshotTime(String accountId) {
     FindOptions options = new FindOptions();
     options.limit(1);
 
@@ -137,8 +138,8 @@ public class InstanceStatServiceImpl implements InstanceStatService {
     return snapshots.get(0).getTimestamp();
   }
 
-  @Nullable
   @Override
+  @Nullable
   public Instant getFirstSnapshotTime(String accountId) {
     FindOptions options = new FindOptions();
     options.limit(1);
