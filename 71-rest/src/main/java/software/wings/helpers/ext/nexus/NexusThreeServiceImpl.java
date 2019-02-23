@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -14,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.artifact.ArtifactUtilities;
+import io.harness.exception.WingsException;
 import okhttp3.Credentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,13 +75,16 @@ public class NexusThreeServiceImpl {
     if (isSuccessful(response)) {
       if (response.body().getResult().isSuccess()) {
         logger.info("Retrieving docker repositories success");
-        return response.body().getResult().getData().stream().collect(
-            Collectors.toMap(o -> o.getId(), o -> o.getName()));
+        final Map<String, String> repositories =
+            response.body().getResult().getData().stream().collect(Collectors.toMap(o -> o.getId(), o -> o.getName()));
+        logger.info("Retrieved repositories are {}", repositories.values());
+        return repositories;
       } else {
-        logger.warn("Failed to fetch the repositories as request is not success");
+        throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
+            .addParam("message", "Failed to fetch the repositories");
       }
     }
-    logger.info("No docker repositories found. Returning empty datas");
+    logger.info("No docker repositories found. Returning empty results");
     return emptyMap();
   }
 
@@ -94,12 +99,14 @@ public class NexusThreeServiceImpl {
             .execute();
     if (isSuccessful(response)) {
       if (response.body() != null && response.body().getRepositories() != null) {
-        logger.info(
-            "Retrieving docker images for repository {} from url {} success", repository, nexusConfig.getNexusUrl());
         images.addAll(response.body().getRepositories().stream().collect(toList()));
+        logger.info("Retrieving docker images for repository {} from url {} success. Images are {}", repository,
+            nexusConfig.getNexusUrl(), images);
       }
     } else {
       logger.warn("Failed to fetch the docker images as request is not success");
+      throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
+          .addParam("message", "Failed to fetch the docker images");
     }
     logger.info("No images found for repository {}", repository);
     return images;
@@ -133,7 +140,8 @@ public class NexusThreeServiceImpl {
             .collect(toList());
       }
     } else {
-      logger.warn("Failed to fetch the repositories as request is not success");
+      throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
+          .addParam("message", "Failed to fetch the docker tags of image [" + imageName + "]");
     }
     logger.info("No tags found for image name {}", imageName);
     return buildDetails;
