@@ -2,6 +2,7 @@ package io.harness.persistence;
 
 import com.mongodb.DBCollection;
 import com.mongodb.MongoSocketOpenException;
+import com.mongodb.MongoSocketReadException;
 import io.harness.annotation.StoreIn;
 import io.harness.exception.ExceptionUtils;
 import io.harness.persistence.HQuery.QueryChecks;
@@ -295,7 +296,7 @@ public interface HPersistence {
     for (int i = 1; i < RETRIES; ++i) {
       try {
         return executor.execute();
-      } catch (MongoSocketOpenException ignore) {
+      } catch (MongoSocketOpenException | MongoSocketReadException ignore) {
         continue;
       } catch (RuntimeException exception) {
         if (ExceptionUtils.cause(MongoSocketOpenException.class, exception) != null) {
