@@ -98,23 +98,6 @@ public abstract class ExpressionBuilder {
   protected static final String INSTANCE_HOSTNAME = "instance.hostName";
   protected static final String INSTANCE_HOST_PUBLICDNS = "instance.host.publicDns";
 
-  protected static final String HOST_NAME = "host.name";
-  protected static final String HOST_HOSTNAME = "host.hostName";
-  protected static final String HOST_IP = "host.ip";
-  protected static final String HOST_PUBLICDNS = "host.publicDns";
-  protected static final String HOST_INSTANCE_ID = "host.ec2Instance.instanceId";
-  protected static final String HOST_INSTANCE_TYPE = "host.ec2Instance.instanceType";
-  protected static final String HOST_INSTANCE_IMAGEID = "host.ec2Instance.imageId";
-  protected static final String HOST_INSTANCE_ARCH = "host.ec2Instance.architecture";
-  protected static final String HOST_INSTANCE_KERNELID = "host.ec2Instance.kernelId";
-  protected static final String HOST_INSTANCE_KEY_NAME = "host.ec2Instance.keyName";
-  protected static final String HOST_INSTANCE_PVTDNS = "host.ec2Instance.privateDnsName";
-  protected static final String HOST_INSTANCE_PRIVATEIP = "host.ec2Instance.privateIpAddress";
-  protected static final String HOST_INSTANCE_PUBLICDNS = "host.ec2Instance.publicDnsName";
-  protected static final String HOST_INSTANCE_PUBLICIP = "host.ec2Instance.publicIpAddress";
-  protected static final String HOST_INSTANCE_SUBNETID = "host.ec2Instance.subnetId";
-  protected static final String HOST_INSTANCE_VPCID = "host.ec2Instance.vpcId";
-
   protected static final String INFRA_KUBERNETES_NAMESPACE = "infra.kubernetes.namespace";
   protected static final String INFRA_KUBERNETES_INFRAID = "infra.kubernetes.infraId";
   protected static final String INFRA_HELM_SHORTID = "infra.helm.shortId";
@@ -171,11 +154,6 @@ public abstract class ExpressionBuilder {
     expressions.addAll(asList(PIPELINE_NAME, PIPELINE_DESCRIPTION, PIPELINE_START_TS));
 
     expressions.addAll(asList(INSTANCE_NAME, INSTANCE_HOSTNAME, INSTANCE_HOST_PUBLICDNS));
-
-    expressions.addAll(asList(HOST_NAME, HOST_HOSTNAME, HOST_IP, HOST_PUBLICDNS, HOST_INSTANCE_ID, HOST_INSTANCE_TYPE,
-        HOST_INSTANCE_IMAGEID, HOST_INSTANCE_ARCH, HOST_INSTANCE_KERNELID, HOST_INSTANCE_KEY_NAME, HOST_INSTANCE_PVTDNS,
-        HOST_INSTANCE_PRIVATEIP, HOST_INSTANCE_PUBLICDNS, HOST_INSTANCE_PUBLICIP, HOST_INSTANCE_SUBNETID,
-        HOST_INSTANCE_VPCID));
 
     expressions.addAll(asList(INFRA_KUBERNETES_NAMESPACE, INFRA_KUBERNETES_INFRAID));
     expressions.addAll(asList(INFRA_ROUTE_PCF, INFRA_TEMP_ROUTE_PCF));

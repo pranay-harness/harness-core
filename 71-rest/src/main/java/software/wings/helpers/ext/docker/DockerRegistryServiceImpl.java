@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.docker;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
@@ -77,7 +77,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
             dockerPublicRegistryProcessor.getBuilds(dockerConfig, encryptionDetails, imageName, maxNumberOfBuilds);
       }
     } catch (IOException e) {
-      throw new WingsException(GENERAL_ERROR, WingsException.USER, e).addParam("message", ExceptionUtils.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER, e)
+          .addParam("message", ExceptionUtils.getMessage(e));
     }
     return buildDetails;
   }
