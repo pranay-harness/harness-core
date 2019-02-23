@@ -199,7 +199,7 @@ public class AuthenticationManager {
     try {
       User user = samlBasedAuthHandler.authenticate(credentials);
       String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
-      String encodedApiUrl = encodeBase64(configuration.getPortal().getUrl());
+      String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = new HashMap<>();
       params.put("token", jwtToken);
@@ -233,7 +233,7 @@ public class AuthenticationManager {
       User user = oauthBasedAuthHandler.authenticate(credentials);
       logger.info("OauthAuthentication succeeded for email {}", user.getEmail());
       String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
-      String encodedApiUrl = encodeBase64(configuration.getPortal().getUrl());
+      String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = new HashMap<>();
       params.put("token", jwtToken);
