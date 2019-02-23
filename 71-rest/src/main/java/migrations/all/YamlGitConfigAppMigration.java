@@ -1,7 +1,7 @@
 package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
 

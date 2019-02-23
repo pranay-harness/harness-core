@@ -6,8 +6,8 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Account.ACCOUNT_NAME_KEY;
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.common.Constants.HARNESS_NAME;
 
 import com.google.common.collect.ImmutableMap;

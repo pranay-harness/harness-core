@@ -2,10 +2,12 @@ package io.harness.jobs;
 
 import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -13,6 +15,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
+import org.apache.http.HttpStatus;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -20,14 +23,18 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -47,16 +54,16 @@ public class LogAnalysisManagerJob implements Job {
   @Transient @Inject private VerificationManagerClientHelper managerClientHelper;
   @Transient @Inject private VerificationManagerClient managerClient;
 
+  @Inject private DataStoreService dataStoreService;
+
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     try {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
-      String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
-
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
       logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
-      new LogAnalysisTask(analysisService, context, jobExecutionContext, delegateTaskId, learningEngineService,
-          managerClient, managerClientHelper)
+      new LogAnalysisTask(analysisService, context, jobExecutionContext, learningEngineService, managerClient,
+          managerClientHelper, dataStoreService)
           .call();
       logger.info("Finish log analysis cron " + context.getStateExecutionId());
     } catch (Exception ex) {
@@ -76,10 +83,10 @@ public class LogAnalysisManagerJob implements Job {
 
     private AnalysisContext context;
     private JobExecutionContext jobExecutionContext;
-    private String delegateTaskId;
     private LearningEngineService learningEngineService;
     private VerificationManagerClient managerClient;
     private VerificationManagerClientHelper managerClientHelper;
+    private DataStoreService dataStoreService;
 
     protected void preProcess(long logAnalysisMinute, String query, Set<String> nodes) {
       if (context.getTestNodes() == null) {
@@ -126,13 +133,19 @@ public class LogAnalysisManagerJob implements Job {
       boolean error = false;
       String errorMsg = "";
       long logAnalysisMinute = -1;
+      ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
+                                            .stateExecutionId(context.getStateExecutionId())
+                                            .appId(context.getAppId())
+                                            .title("Triggering Log analysis task")
+                                            .requestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli())
+                                            .build();
       try {
         logger.info("running log ml analysis for " + context.getStateExecutionId());
         /*
          * Work flow is invalid
          * exit immediately
          */
-        boolean createExperiment = false;
+        boolean createExperiment;
         if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           logger.warn(" log ml analysis : state is not valid " + context.getStateExecutionId());
           return -1L;
@@ -196,12 +209,12 @@ public class LogAnalysisManagerJob implements Job {
         }
 
         return logAnalysisMinute;
-
       } catch (Exception ex) {
-        completeCron = true;
-        error = true;
-        errorMsg = ex.getMessage();
-        logger.warn("analysis failed", ex);
+        logger.info("Verification Analysis failed for {}", context.getStateExecutionId(), ex);
+        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        apiCallLog.addFieldToResponse(
+            HttpStatus.SC_INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(ex), FieldType.TEXT);
+        dataStoreService.save(ThirdPartyApiCallLog.class, Lists.newArrayList(apiCallLog));
       } finally {
         try {
           // send notification to state manager and delete cron.

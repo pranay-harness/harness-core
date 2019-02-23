@@ -63,6 +63,7 @@ import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateExecutionData;
@@ -103,6 +104,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private VerificationManagerClient managerClient;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private DataStoreService dataStoreService;
   private Random r;
   private String appId;
   private String stateExecutionId;
@@ -1339,8 +1341,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         JobExecutionContext jobExecutionContext, String delegateTaskId, LearningEngineService learningEngineService,
         VerificationManagerClient client, VerificationManagerClientHelper managerClient,
         WingsPersistence wingsPersistence) {
-      super(
-          analysisService, context, jobExecutionContext, delegateTaskId, learningEngineService, client, managerClient);
+      super(analysisService, context, jobExecutionContext, learningEngineService, client, managerClient,
+          dataStoreService);
       this.wingsPersistence = wingsPersistence;
       stateExecutionId = context.getStateExecutionId();
     }

@@ -6,7 +6,6 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -57,7 +56,6 @@ public class SSOResource {
   private SSOService ssoService;
   private FeatureFlagService featureFlagService;
 
-  @SuppressFBWarnings("URF_UNREAD_FIELD")
   @Inject
   public SSOResource(SSOService ssoService, FeatureFlagService featureFlagService) {
     this.ssoService = ssoService;

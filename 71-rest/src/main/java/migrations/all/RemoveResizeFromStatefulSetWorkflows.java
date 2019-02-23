@@ -5,8 +5,8 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.api.DeploymentType.KUBERNETES;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
 

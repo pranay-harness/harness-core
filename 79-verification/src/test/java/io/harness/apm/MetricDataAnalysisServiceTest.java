@@ -30,8 +30,19 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
+import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
+import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
@@ -64,6 +75,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TimeSeriesAnalysisService metricDataAnalysisService;
+  private MetricDataAnalysisService managerAnalysisService;
 
   @Before
   public void setUp() {
@@ -81,6 +93,8 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     cvConfigId = generateUuid();
     groupName = "groupName-";
     delegateTaskId = UUID.randomUUID().toString();
+    managerAnalysisService = new MetricDataAnalysisServiceImpl();
+    setInternalState(managerAnalysisService, "wingsPersistence", wingsPersistence);
   }
 
   @Test
@@ -242,6 +256,68 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         metricDataAnalysisService.getPreviousAnalysis(appId, cvConfigId, analysisMinute);
     assertFalse(isEmpty(readRecord.getTransactions()));
     assertNull(readRecord.getTransactionsCompressedJson());
+  }
+
+  @Test
+  public void testCleanup() {
+    int numOfRecords = 10;
+    for (int i = 0; i < numOfRecords; i++) {
+      wingsPersistence.save(
+          TimeSeriesMetricTemplates.builder().stateExecutionId(stateExecutionId).cvConfigId("cv" + i).build());
+      NewRelicMetricDataRecord newRelicMetricDataRecord = new NewRelicMetricDataRecord();
+      newRelicMetricDataRecord.setStateExecutionId(stateExecutionId);
+      newRelicMetricDataRecord.setAppId(appId);
+      newRelicMetricDataRecord.setDataCollectionMinute(i);
+      wingsPersistence.save(newRelicMetricDataRecord);
+      wingsPersistence.save(NewRelicMetricAnalysisRecord.builder()
+                                .stateExecutionId(stateExecutionId)
+                                .analysisMinute(i)
+                                .appId(appId)
+                                .build());
+      TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
+      timeSeriesMLAnalysisRecord.setStateExecutionId(stateExecutionId);
+      timeSeriesMLAnalysisRecord.setAnalysisMinute(i);
+      wingsPersistence.save(timeSeriesMLAnalysisRecord);
+      wingsPersistence.save(TimeSeriesMLScores.builder().stateExecutionId(stateExecutionId).analysisMinute(i).build());
+      wingsPersistence.save(
+          ContinuousVerificationExecutionMetaData.builder().stateExecutionId(stateExecutionId).build());
+      wingsPersistence.save(
+          LearningEngineAnalysisTask.builder().state_execution_id(stateExecutionId).analysis_minute(i).build());
+      wingsPersistence.save(LearningEngineExperimentalAnalysisTask.builder()
+                                .state_execution_id(stateExecutionId)
+                                .analysis_minute(i)
+                                .build());
+      ExperimentalLogMLAnalysisRecord experimentalLogMLAnalysisRecord = new ExperimentalLogMLAnalysisRecord();
+      experimentalLogMLAnalysisRecord.setStateExecutionId(stateExecutionId);
+      experimentalLogMLAnalysisRecord.setLogCollectionMinute(i);
+      wingsPersistence.save(experimentalLogMLAnalysisRecord);
+
+      wingsPersistence.save(
+          TimeSeriesMetricGroup.builder().stateExecutionId(stateExecutionId).stateType(StateType.values()[i]).build());
+      wingsPersistence.save(
+          AnalysisContext.builder().stateExecutionId(stateExecutionId).serviceId("service-" + i).build());
+    }
+
+    assertEquals(numOfRecords, wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(NewRelicMetricDataRecord.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(TimeSeriesMLScores.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(TimeSeriesMetricGroup.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(AnalysisContext.class).count());
+
+    managerAnalysisService.cleanUpForMetricRetry(stateExecutionId);
+    assertEquals(0, wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).count());
+    assertEquals(0, wingsPersistence.createQuery(NewRelicMetricDataRecord.class).count());
+    assertEquals(0, wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).count());
+    assertEquals(0, wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class).count());
+    assertEquals(0, wingsPersistence.createQuery(TimeSeriesMLScores.class).count());
+    assertEquals(0, wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count());
+    assertEquals(0, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
+    assertEquals(0, wingsPersistence.createQuery(TimeSeriesMetricGroup.class).count());
+    assertEquals(0, wingsPersistence.createQuery(AnalysisContext.class).count());
   }
 
   private Application mockApplication() {

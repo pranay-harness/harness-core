@@ -184,6 +184,10 @@ public class AnalysisServiceImpl implements AnalysisService {
     // delete experimental log analysis records
     wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
                                 .filter("stateExecutionId", stateExecutionId));
+
+    // delete verification service tasks
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(AnalysisContext.class).filter("stateExecutionId", stateExecutionId));
   }
 
   private boolean deleteFeedbackHelper(String feedbackId) {

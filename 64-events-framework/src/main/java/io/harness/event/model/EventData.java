@@ -1,6 +1,7 @@
 package io.harness.event.model;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 
 import java.util.HashMap;
@@ -12,7 +13,7 @@ import java.util.Map;
 @Data
 @Builder
 public class EventData {
-  private Map<String, String> properties = new HashMap<>();
+  @Default private Map<String, String> properties = new HashMap<>();
   private double value;
 
   /**

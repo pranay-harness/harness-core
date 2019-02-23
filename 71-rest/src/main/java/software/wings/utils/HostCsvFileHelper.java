@@ -9,7 +9,6 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
 import org.apache.commons.csv.CSVParser;
@@ -21,7 +20,6 @@ import software.wings.service.intfc.SettingsService;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,8 +32,6 @@ public class HostCsvFileHelper {
       "HOST_NAME", "HOST_CONNECTION_ATTRIBUTES", "BASTION_HOST_CONNECTION_ATTRIBUTES", "TAGS"};
   @Inject private SettingsService attributeService;
   @Inject private AppService appService;
-  @SuppressFBWarnings("URF_UNREAD_FIELD")
-  private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
   public List<Host> parseHosts(String infraId, String appId, String envId, BoundedInputStream inputStream) {
     String accountId = appService.getAccountIdByAppId(appId);
