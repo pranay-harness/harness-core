@@ -39,7 +39,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
+import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -47,6 +50,8 @@ import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -92,6 +97,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private LogAnalysisService analysisService;
   @Inject private WingsPersistence wingsPersistence;
+  private AnalysisService managerAnalysisService;
   @Mock VerificationManagerClient verificationManagerClient;
 
   @Before
@@ -112,6 +118,12 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(managerCall);
     setInternalState(analysisService, "managerClient", verificationManagerClient);
+
+    managerAnalysisService = new AnalysisServiceImpl();
+    setInternalState(managerAnalysisService, "wingsPersistence", wingsPersistence);
+    WorkflowExecutionService workflowExecutionService = new WorkflowExecutionServiceImpl();
+    setInternalState(workflowExecutionService, "wingsPersistence", wingsPersistence);
+    setInternalState(managerAnalysisService, "workflowExecutionService", workflowExecutionService);
   }
 
   @Test
@@ -452,11 +464,6 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    AnalysisService managerAnalysisService = new AnalysisServiceImpl();
-    setInternalState(managerAnalysisService, "wingsPersistence", wingsPersistence);
-    WorkflowExecutionService workflowExecutionService = new WorkflowExecutionServiceImpl();
-    setInternalState(workflowExecutionService, "wingsPersistence", wingsPersistence);
-    setInternalState(managerAnalysisService, "workflowExecutionService", workflowExecutionService);
     assertFalse(managerAnalysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
         StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, query));
   }
@@ -1110,6 +1117,51 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertEquals(unknownClusters, savedRecord.getUnknown_clusters());
     assertEquals(testClusters, savedRecord.getTest_clusters());
     assertEquals(ignoreClusters, savedRecord.getIgnore_clusters());
+  }
+
+  @Test
+  public void testCleanup() {
+    int numOfRecords = 10;
+    for (int i = 0; i < numOfRecords; i++) {
+      LogDataRecord logDataRecord = new LogDataRecord();
+      logDataRecord.setStateExecutionId(stateExecutionId);
+      logDataRecord.setAppId(appId);
+      logDataRecord.setLogCollectionMinute(i);
+      wingsPersistence.save(logDataRecord);
+      wingsPersistence.save(
+          LogMLAnalysisRecord.builder().stateExecutionId(stateExecutionId).logCollectionMinute(i).appId(appId).build());
+      wingsPersistence.save(
+          ContinuousVerificationExecutionMetaData.builder().stateExecutionId(stateExecutionId).build());
+      wingsPersistence.save(
+          LearningEngineAnalysisTask.builder().state_execution_id(stateExecutionId).analysis_minute(i).build());
+      wingsPersistence.save(LearningEngineExperimentalAnalysisTask.builder()
+                                .state_execution_id(stateExecutionId)
+                                .analysis_minute(i)
+                                .build());
+      ExperimentalLogMLAnalysisRecord experimentalLogMLAnalysisRecord = new ExperimentalLogMLAnalysisRecord();
+      experimentalLogMLAnalysisRecord.setStateExecutionId(stateExecutionId);
+      experimentalLogMLAnalysisRecord.setLogCollectionMinute(i);
+      wingsPersistence.save(experimentalLogMLAnalysisRecord);
+      wingsPersistence.save(
+          AnalysisContext.builder().stateExecutionId(stateExecutionId).serviceId("service-" + i).build());
+    }
+
+    assertEquals(numOfRecords, wingsPersistence.createQuery(LogDataRecord.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(LogMLAnalysisRecord.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class).count());
+    assertEquals(numOfRecords, wingsPersistence.createQuery(AnalysisContext.class).count());
+
+    managerAnalysisService.cleanUpForLogRetry(stateExecutionId);
+    assertEquals(0, wingsPersistence.createQuery(LogDataRecord.class).count());
+    assertEquals(0, wingsPersistence.createQuery(LogMLAnalysisRecord.class).count());
+    assertEquals(0, wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class).count());
+    assertEquals(0, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count());
+    assertEquals(0, wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class).count());
+    assertEquals(0, wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class).count());
+    assertEquals(0, wingsPersistence.createQuery(AnalysisContext.class).count());
   }
 
   private Map<String, Map<String, SplunkAnalysisCluster>> createClusters(int numOfClusters) {

@@ -1,7 +1,7 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.Base.ID_KEY;
+import static io.harness.persistence.UuidAccess.ID_KEY;
 
 import com.google.inject.Inject;
 

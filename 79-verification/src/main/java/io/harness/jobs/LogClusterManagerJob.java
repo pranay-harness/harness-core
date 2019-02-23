@@ -2,6 +2,7 @@ package io.harness.jobs;
 
 import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -13,20 +14,24 @@ import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
+import org.apache.http.HttpStatus;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Set;
 
@@ -37,20 +42,22 @@ import java.util.Set;
 public class LogClusterManagerJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LogClusterManagerJob.class);
 
-  @org.simpleframework.xml.Transient @Inject private VerificationManagerClientHelper managerClientHelper;
-  @org.simpleframework.xml.Transient @Inject private VerificationManagerClient managerClient;
+  @Inject private VerificationManagerClientHelper managerClientHelper;
+  @Inject private VerificationManagerClient managerClient;
 
-  @org.simpleframework.xml.Transient @Inject private LogAnalysisService analysisService;
+  @Inject private LogAnalysisService analysisService;
 
-  @org.simpleframework.xml.Transient @Inject private LearningEngineService learningEngineService;
+  @Inject private LearningEngineService learningEngineService;
+
+  @Inject private DataStoreService dataStoreService;
 
   @Override
-  public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+  public void execute(JobExecutionContext jobExecutionContext) {
     try {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      new LogClusterTask(
-          analysisService, managerClientHelper, jobExecutionContext, context, learningEngineService, managerClient)
+      new LogClusterTask(analysisService, managerClientHelper, jobExecutionContext, context, learningEngineService,
+          managerClient, dataStoreService)
           .run();
     } catch (Exception ex) {
       logger.warn("Log cluster cron failed with error", ex);
@@ -71,6 +78,7 @@ public class LogClusterManagerJob implements Job {
     private AnalysisContext context;
     private LearningEngineService learningEngineService;
     private VerificationManagerClient managerClient;
+    private DataStoreService dataStoreService;
 
     private Set<String> getCollectedNodes() {
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
@@ -83,7 +91,13 @@ public class LogClusterManagerJob implements Job {
     }
 
     private void cluster() {
-      boolean completeCron = false;
+      ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
+                                            .stateExecutionId(context.getStateExecutionId())
+                                            .appId(context.getAppId())
+                                            .title("Triggering L0->L1 clustering task")
+                                            .requestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli())
+                                            .build();
+
       try {
         Set<String> nodes = getCollectedNodes();
         // TODO handle pause
@@ -134,17 +148,19 @@ public class LogClusterManagerJob implements Job {
                       logRequest.getLogCollectionMinute(), ClusterLevel.getHeartBeatLevel(ClusterLevel.L0),
                       ClusterLevel.getHeartBeatLevel(ClusterLevel.L0).next());
                 }
-
                 return true;
               });
         }
       } catch (Exception ex) {
-        completeCron = true;
-        throw new RuntimeException("Verification L0 => L1 cluster failed, " + ExceptionUtils.getMessage(ex), ex);
+        logger.info("Verification L0 => L1 cluster failed for {}", context.getStateExecutionId(), ex);
+        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        apiCallLog.addFieldToResponse(
+            HttpStatus.SC_INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(ex), FieldType.TEXT);
+        dataStoreService.save(ThirdPartyApiCallLog.class, Lists.newArrayList(apiCallLog));
       } finally {
         // Delete cron.
         try {
-          if (completeCron || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+          if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
           }
         } catch (SchedulerException e) {

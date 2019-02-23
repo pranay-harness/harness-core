@@ -192,7 +192,7 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
                                                 .delegateTaskId(readString(entity, "delegateTaskId"))
                                                 .title(readString(entity, "title"))
                                                 .requestTimeStamp(readLong(entity, "requestTimeStamp"))
-                                                .requestTimeStamp(readLong(entity, "responseTimeStamp"))
+                                                .responseTimeStamp(readLong(entity, "responseTimeStamp"))
                                                 .createdAt(readLong(entity, "createdAt"))
                                                 .appId(readString(entity, "appId"))
                                                 .build();
