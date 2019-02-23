@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddValidUntilToCommandLog;
+import migrations.all.AddValidUntilToWorkflowExecution;
 import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SetLastLoginTimeToAllUsers;
@@ -31,6 +32,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(10, BaseMigration.class))
         .add(Pair.of(11, DeleteAndAddInstanceSyncJobToAllAccounts.class))
         .add(Pair.of(12, TerraformIsTemplatizedMigration.class))
+        .add(Pair.of(13, AddValidUntilToWorkflowExecution.class))
         .build();
   }
 }
