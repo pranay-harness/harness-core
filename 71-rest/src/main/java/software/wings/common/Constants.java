@@ -12,6 +12,8 @@ import java.util.regex.Pattern;
  * @author Rishi
  */
 public interface Constants {
+  String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
+
   /**
    * The constant CATALOG_STENCILS.
    */

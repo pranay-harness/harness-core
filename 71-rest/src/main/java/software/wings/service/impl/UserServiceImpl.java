@@ -372,6 +372,21 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public User getUserByEmail(String email, String accountId) {
+    User user = null;
+    if (isNotEmpty(email)) {
+      user = wingsPersistence.createQuery(User.class)
+                 .filter("email", email.trim().toLowerCase())
+                 .field("accountId")
+                 .hasThisOne(accountId)
+                 .get();
+      loadSupportAccounts(user);
+    }
+
+    return user;
+  }
+
+  @Override
   public UserInvite getUserInviteByEmail(String email) {
     UserInvite userInvite = null;
     if (isNotEmpty(email)) {

@@ -30,7 +30,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.Delegate;
 import software.wings.beans.EntityType;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -86,40 +85,37 @@ public class EventPublishHelper {
 
   private List<StateType> analysisStates = VerificationConstants.getAnalysisStates();
 
-  public void publishLicenseChangeEvent(String accountId, LicenseInfo oldLicenseInfo, LicenseInfo newLicenseInfo) {
+  public void publishLicenseChangeEvent(String accountId, String oldAccountType, String newAccountType) {
     if (!checkIfMarketoIsEnabled()) {
       return;
     }
 
-    Map<String, String> properties = new HashMap<>();
-    properties.put(ACCOUNT_ID, accountId);
-    publishEvent(EventType.LICENSE_UPDATE, properties);
+    executorService.submit(() -> {
+      Map<String, String> properties = new HashMap<>();
+      properties.put(ACCOUNT_ID, accountId);
+      publishEvent(EventType.LICENSE_UPDATE, properties);
+    });
 
     EventType eventType = null;
-    if (oldLicenseInfo != null && newLicenseInfo != null) {
-      String oldAccountType = oldLicenseInfo.getAccountType();
-      String newAccountType = newLicenseInfo.getAccountType();
+    if (oldAccountType == null || newAccountType == null) {
+      return;
+    }
 
-      if (oldAccountType == null || newAccountType == null) {
-        return;
-      }
+    if (oldAccountType.equals(newAccountType)) {
+      return;
+    }
 
-      if (oldAccountType.equals(newAccountType)) {
-        return;
-      }
+    if (AccountType.TRIAL.equals(oldAccountType) && AccountType.PAID.equals(newAccountType)) {
+      eventType = EventType.TRIAL_TO_PAID;
+    } else if (AccountType.TRIAL.equals(oldAccountType) && AccountType.FREE.equals(newAccountType)) {
+      eventType = EventType.TRIAL_TO_FREE;
+    } else if (AccountType.FREE.equals(oldAccountType) && AccountType.PAID.equals(newAccountType)) {
+      eventType = EventType.FREE_TO_PAID;
+    }
 
-      if (AccountType.TRIAL.equals(oldAccountType) && AccountType.PAID.equals(newAccountType)) {
-        eventType = EventType.TRIAL_TO_PAID;
-      } else if (AccountType.TRIAL.equals(oldAccountType) && AccountType.FREE.equals(newAccountType)) {
-        eventType = EventType.TRIAL_TO_FREE;
-      } else if (AccountType.FREE.equals(oldAccountType) && AccountType.PAID.equals(newAccountType)) {
-        eventType = EventType.FREE_TO_PAID;
-      }
-
-      if (eventType != null) {
-        EventType finalEventType = eventType;
-        executorService.submit(() -> notifyAllUsersOfAccount(accountId, finalEventType));
-      }
+    if (eventType != null) {
+      EventType finalEventType = eventType;
+      executorService.submit(() -> notifyAllUsersOfAccount(accountId, finalEventType));
     }
   }
 

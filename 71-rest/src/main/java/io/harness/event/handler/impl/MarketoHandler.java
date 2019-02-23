@@ -8,6 +8,7 @@ import static io.harness.event.model.EventType.FIRST_ROLLED_BACK_DEPLOYMENT;
 import static io.harness.event.model.EventType.FIRST_VERIFIED_DEPLOYMENT;
 import static io.harness.event.model.EventType.FIRST_WORKFLOW_CREATED;
 import static io.harness.event.model.EventType.FREE_TO_PAID;
+import static io.harness.event.model.EventType.LICENSE_UPDATE;
 import static io.harness.event.model.EventType.NEW_TRIAL_SIGNUP;
 import static io.harness.event.model.EventType.SETUP_2FA;
 import static io.harness.event.model.EventType.SETUP_CV_24X7;
@@ -139,7 +140,7 @@ public class MarketoHandler implements EventHandler {
         Sets.newHashSet(USER_INVITED_FROM_EXISTING_ACCOUNT, COMPLETE_USER_REGISTRATION, FIRST_DELEGATE_REGISTERED,
             FIRST_WORKFLOW_CREATED, FIRST_DEPLOYMENT_EXECUTED, FIRST_VERIFIED_DEPLOYMENT, FIRST_ROLLED_BACK_DEPLOYMENT,
             SETUP_CV_24X7, SETUP_2FA, SETUP_SSO, SETUP_IP_WHITELISTING, SETUP_RBAC, TRIAL_TO_PAID, TRIAL_TO_FREE,
-            FREE_TO_PAID, NEW_TRIAL_SIGNUP));
+            FREE_TO_PAID, NEW_TRIAL_SIGNUP, LICENSE_UPDATE));
   }
 
   @Override
@@ -178,7 +179,7 @@ public class MarketoHandler implements EventHandler {
           return;
         }
 
-        long marketoLeadId = reportLead(email, accessToken);
+        long marketoLeadId = reportLead(email, accessToken, true);
         if (marketoLeadId > 0) {
           reportCampaignEvent(eventType, accessToken, Arrays.asList(Id.builder().id(marketoLeadId).build()));
         }
@@ -192,6 +193,7 @@ public class MarketoHandler implements EventHandler {
       }
 
       Account account = accountService.get(accountId);
+      Validator.notNullCheck("Account is null for accountId:" + accountId, account);
 
       switch (eventType) {
         case FREE_TO_PAID:
@@ -199,6 +201,9 @@ public class MarketoHandler implements EventHandler {
         case TRIAL_TO_PAID:
         case FIRST_DELEGATE_REGISTERED:
           reportToAllUsers(account, accessToken, eventType);
+          return;
+        case LICENSE_UPDATE:
+          updateAllUsersInMarketo(account, accessToken);
           return;
         default:
           break;
@@ -234,9 +239,6 @@ public class MarketoHandler implements EventHandler {
         case COMPLETE_USER_REGISTRATION:
           registerLeadAndReportCampaign(account, user, accessToken, event);
           break;
-        case LICENSE_UPDATE:
-          updateAllUsersInMarketo(accountId, accessToken);
-          break;
         default:
           reportCampaignEvent(account, eventType, accessToken, user);
           break;
@@ -260,18 +262,15 @@ public class MarketoHandler implements EventHandler {
     reportCampaignEvent(eventType, accessToken, leadIdList);
   }
 
-  private void updateAllUsersInMarketo(String accountId, String accessToken) {
-    List<User> usersOfAccount = userService.getUsersOfAccount(accountId);
+  private void updateAllUsersInMarketo(Account account, String accessToken) {
+    List<User> usersOfAccount = userService.getUsersOfAccount(account.getUuid());
     if (isEmpty(usersOfAccount)) {
       return;
     }
 
-    Account account = accountService.get(accountId);
-    Validator.notNullCheck("Account is null for accountId:" + accountId, account);
-
     usersOfAccount.stream().filter(user -> user.getMarketoLeadId() != 0L).forEach(user -> {
       try {
-        reportLead(account, user, accessToken);
+        reportLead(account, user, accessToken, false);
       } catch (IOException | URISyntaxException e) {
         logger.error("Error while updating license to all users in marketo", e);
       }
@@ -282,36 +281,39 @@ public class MarketoHandler implements EventHandler {
       throws IOException, URISyntaxException {
     long marketoLeadId = user.getMarketoLeadId();
     if (marketoLeadId == 0L) {
-      reportLead(account, user, accessToken);
+      reportLead(account, user, accessToken, true);
     }
     // Getting the latest copy since we had a sleep of 10 seconds.
     user = userService.getUserFromCacheOrDB(user.getUuid());
     reportCampaignEvent(account, event.getEventType(), accessToken, user);
   }
 
-  private long reportLead(Account account, User user, String accessToken) throws IOException, URISyntaxException {
+  public long reportLead(Account account, User user, String accessToken, boolean wait)
+      throws IOException, URISyntaxException {
     long marketoLeadId =
         marketoHelper.createOrUpdateLead(account, user.getName(), user.getEmail(), accessToken, retrofit);
     if (marketoLeadId > 0) {
       updateUser(user, marketoLeadId);
 
-      // Sleeping for 10 secs as a work around for marketo issue.
-      // Marketo can't process trigger campaign with a lead just created.
-      try {
-        Thread.sleep(10000);
-      } catch (InterruptedException ex) {
-        logger.warn("Exception while waiting 10 seconds for marketo to catchup");
+      if (wait) {
+        // Sleeping for 10 secs as a work around for marketo issue.
+        // Marketo can't process trigger campaign with a lead just created.
+        try {
+          Thread.sleep(10000);
+        } catch (InterruptedException ex) {
+          logger.warn("Exception while waiting 10 seconds for marketo to catchup");
+        }
       }
     }
     return marketoLeadId;
   }
 
-  private long reportLead(String email, String accessToken) throws IOException, URISyntaxException {
+  public long reportLead(String email, String accessToken, boolean wait) throws IOException, URISyntaxException {
     long marketoLeadId = marketoHelper.createOrUpdateLead(null, null, email, accessToken, retrofit);
 
     // Sleeping for 10 secs as a work around for marketo issue.
     // Marketo can't process trigger campaign with a lead just created.
-    if (marketoLeadId > 0) {
+    if (marketoLeadId > 0 && wait) {
       try {
         Thread.sleep(10000);
       } catch (InterruptedException ex) {
@@ -393,7 +395,7 @@ public class MarketoHandler implements EventHandler {
     String userId = user.getUuid();
     long marketoLeadId = user.getMarketoLeadId();
     if (marketoLeadId == 0L) {
-      marketoLeadId = reportLead(account, user, accessToken);
+      marketoLeadId = reportLead(account, user, accessToken, true);
       if (marketoLeadId == 0L) {
         logger.error("Invalid lead id reported for user {}", userId);
         return;
