@@ -16,8 +16,8 @@ import java.util.Map;
  * Created by peeyushaggarwal on 10/24/16.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class JenkinsExecutionData extends StateExecutionData implements ResponseData {
   private String jobName;
   private String jobStatus;

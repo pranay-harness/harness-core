@@ -17,8 +17,8 @@ import java.util.Map;
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class CloudWatchSetupTestNodeData extends SetupTestNodeData {
   private String region;
   private String hostName;

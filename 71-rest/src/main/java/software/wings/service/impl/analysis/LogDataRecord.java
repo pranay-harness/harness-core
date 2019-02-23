@@ -36,8 +36,8 @@ import java.util.List;
   }, options = @IndexOptions(unique = true, name = "logUniqueIdx"))
 })
 @Data
-@EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "logMessage"})
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "logMessage"})
 public class LogDataRecord extends Base {
   @NotEmpty private StateType stateType;
 

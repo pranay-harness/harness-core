@@ -12,3 +12,8 @@ public class Class1 {
 @Data
 public class Class2 {
 }
+
+public
+@Data
+class Class2 {
+}

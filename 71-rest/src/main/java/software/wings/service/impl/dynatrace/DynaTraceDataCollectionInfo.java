@@ -15,9 +15,9 @@ import java.util.Set;
  * Created by rsingh on 5/18/17.
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DynaTraceDataCollectionInfo {
   private DynaTraceConfig dynaTraceConfig;
   private String applicationId;

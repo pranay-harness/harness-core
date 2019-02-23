@@ -50,10 +50,10 @@ import javax.ws.rs.DefaultValue;
         unique = true, name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1")))
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class ConfigFile extends BaseFile implements EncryptableSetting {
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
   public static final String ENTITY_TYPE_KEY = "entityType";
@@ -190,8 +190,8 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends BaseEntityYaml {
     private String targetFilePath;
     private boolean encrypted;
@@ -222,8 +222,8 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static class OverrideYaml extends BaseEntityYaml {
     private String serviceName;
     private String targetFilePath;

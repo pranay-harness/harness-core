@@ -48,8 +48,8 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public abstract static class Yaml extends InfrastructureMapping.Yaml {
     private String cluster;
 
@@ -61,8 +61,8 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public abstract static class YamlWithComputeProvider extends InfrastructureMapping.YamlWithComputeProvider {
     private String cluster;
 

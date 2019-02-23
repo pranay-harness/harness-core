@@ -254,8 +254,8 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends SettingValue.Yaml {
     private String connectionType;
     private String accessType;

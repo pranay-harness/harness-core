@@ -116,8 +116,8 @@ public class ZombieHunterJob implements Job {
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
-  @AllArgsConstructor
   @Value
+  @AllArgsConstructor
   static class ZombieType {
     private String collection;
     private String ownerFieldName;

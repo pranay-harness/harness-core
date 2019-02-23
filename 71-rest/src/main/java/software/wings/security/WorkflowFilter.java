@@ -11,8 +11,8 @@ import java.util.Set;
  * @author rktummala on 02/08/18
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class WorkflowFilter extends EnvFilter {
   public interface FilterType extends EnvFilter.FilterType { String TEMPLATES = "TEMPLATES"; }
 

@@ -35,9 +35,9 @@ import java.util.Map;
   }, options = @IndexOptions(unique = true, name = "taskUniqueIdx"))
 })
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class AnalysisContext extends Base {
   private String accountId;
   private String workflowId;

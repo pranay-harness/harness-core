@@ -17,10 +17,10 @@ import java.util.Map;
  * Created by Pranjal on 11/08/2018
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = false)
 public class CloudWatchCVServiceConfiguration extends CVConfiguration {
   @Attributes(title = "ELB Metrics") private Map<String, List<CloudWatchMetric>> loadBalancerMetrics;
 

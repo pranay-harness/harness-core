@@ -13,8 +13,8 @@ import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCom
 
 import java.util.List;
 
-@EqualsAndHashCode(callSuper = false)
 @Builder(toBuilder = true)
+@EqualsAndHashCode(callSuper = false)
 @Entity(value = "terraformConfig")
 @HarnessExportableEntity
 @Getter

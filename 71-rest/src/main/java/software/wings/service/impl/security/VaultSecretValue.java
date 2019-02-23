@@ -15,10 +15,10 @@ import java.util.Map;
  * @author mark.lu on 10/11/18
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@NoArgsConstructor
-@AllArgsConstructor
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class VaultSecretValue {
   private Map<String, String> data;
 }

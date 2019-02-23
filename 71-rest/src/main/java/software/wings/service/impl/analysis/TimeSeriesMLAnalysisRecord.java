@@ -22,7 +22,7 @@ import org.mongodb.morphia.annotations.Indexes;
     },
     options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx")))
 @Data
-@EqualsAndHashCode(callSuper = true)
 @Builder
+@EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TimeSeriesMLAnalysisRecord extends MetricAnalysisRecord {}

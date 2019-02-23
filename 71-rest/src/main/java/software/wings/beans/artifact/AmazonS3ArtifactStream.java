@@ -62,8 +62,8 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactStream.Yaml {
     private String bucketName;
     private List<String> artifactPaths;

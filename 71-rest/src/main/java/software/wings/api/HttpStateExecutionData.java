@@ -26,9 +26,9 @@ import javax.xml.parsers.ParserConfigurationException;
  * @author Rishi
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class HttpStateExecutionData extends StateExecutionData implements ResponseData {
   private String httpUrl;
   private String httpMethod;

@@ -327,8 +327,8 @@ public class KubernetesContainerTask extends ContainerTask {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends ContainerTask.Yaml {
     @Builder
     public Yaml(

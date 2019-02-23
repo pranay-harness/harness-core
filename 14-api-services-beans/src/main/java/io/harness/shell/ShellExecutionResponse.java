@@ -10,8 +10,8 @@ import java.util.Map;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class ShellExecutionResponse {
   int exitValue;

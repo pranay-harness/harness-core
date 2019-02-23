@@ -9,10 +9,10 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
+@Value
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "limitCounters", noClassnameStored = true)
 @Indexes(@Index(fields = @Field("key"), options = @IndexOptions(name = "key_idx", unique = true)))
-@Value
 public class Counter extends Base {
   private final String key;
   private final Long value;

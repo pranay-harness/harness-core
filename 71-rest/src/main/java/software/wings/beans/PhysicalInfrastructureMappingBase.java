@@ -22,8 +22,8 @@ public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMa
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
     private List<String> hostNames;
     private String loadBalancer;

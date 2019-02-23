@@ -28,10 +28,10 @@ import javax.validation.constraints.NotNull;
                            , @Field("templateId"), @Field("version") },
     options = @IndexOptions(name = "yaml", unique = true)))
 @Data
-@EqualsAndHashCode(callSuper = false)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = false)
 public class VersionedTemplate extends Base {
   public static final String TEMPLATE_ID_KEY = "templateId";
   public static final String VERSION_KEY = "version";

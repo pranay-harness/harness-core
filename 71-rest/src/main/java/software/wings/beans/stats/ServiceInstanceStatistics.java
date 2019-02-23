@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 @Data
+@Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Builder
 public class ServiceInstanceStatistics extends WingsStatistics {
   private Map<EnvironmentType, List<TopConsumer>> statsMap = new HashMap<>();
 

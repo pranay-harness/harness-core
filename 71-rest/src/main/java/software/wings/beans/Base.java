@@ -39,9 +39,9 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Data
-@EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 @Deprecated
 // Do not use base class for your collection class. Instead use subset of the interfaces from the persistence layer:
 // PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware

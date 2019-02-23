@@ -17,8 +17,8 @@ import java.util.List;
  */
 @Entity(value = "instanceChangeQueue", noClassnameStored = true)
 @Data
-@EqualsAndHashCode(callSuper = true)
 @Builder
+@EqualsAndHashCode(callSuper = true)
 public class InstanceChangeEvent extends Queuable {
   private List<Instance> instanceList;
   private List<String> autoScalingGroupList;

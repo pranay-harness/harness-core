@@ -11,10 +11,10 @@ import software.wings.verification.CVConfiguration;
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = false)
 public class APMCVServiceConfiguration extends CVConfiguration {
   private List<MetricCollectionInfo> metricCollectionInfos;
 }

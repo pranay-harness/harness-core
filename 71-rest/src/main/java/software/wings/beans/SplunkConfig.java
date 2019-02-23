@@ -22,9 +22,9 @@ import software.wings.yaml.setting.VerificationProviderYaml;
  */
 @JsonTypeName("SPLUNK")
 @Data
-@EqualsAndHashCode(callSuper = false)
-@ToString(exclude = "password")
 @Builder
+@ToString(exclude = "password")
+@EqualsAndHashCode(callSuper = false)
 public class SplunkConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "URL", required = true) @NotEmpty private String splunkUrl;
 
@@ -53,8 +53,8 @@ public class SplunkConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends VerificationProviderYaml {
     private String splunkUrl;
     private String username;

@@ -27,16 +27,16 @@ import org.mongodb.morphia.annotations.Transient;
  */
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"secretKey", "kmsArn"})
+@EqualsAndHashCode(callSuper = false)
 @Indexes({
   @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
 })
 @Entity(value = "kmsConfig", noClassnameStored = true)
 @HarnessExportableEntity
-@ToString(exclude = {"secretKey", "kmsArn"})
 public class KmsConfig extends Base implements EncryptionConfig {
   @Attributes(title = "Name", required = true) @NaturalKey private String name;
 

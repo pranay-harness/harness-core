@@ -37,11 +37,11 @@ import java.util.Map;
                            , @Field("cvConfigId"), @Field("analysisMinute") },
     options = @IndexOptions(unique = true, name = "uniqueIdx")))
 @Data
-@EqualsAndHashCode(callSuper = true)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Builder
 public class TimeSeriesCumulativeSums extends Base {
   @NotEmpty @Indexed private String cvConfigId;
   @NotEmpty @Indexed private int analysisMinute;

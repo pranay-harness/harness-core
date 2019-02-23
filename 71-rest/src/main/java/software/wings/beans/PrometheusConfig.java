@@ -21,8 +21,8 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Extension
 @Data
 @JsonTypeName("PROMETHEUS")
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class PrometheusConfig extends SettingValue implements EncryptableSetting {
   @SchemaIgnore @NotEmpty private String accountId;
 
@@ -39,8 +39,8 @@ public class PrometheusConfig extends SettingValue implements EncryptableSetting
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class PrometheusYaml extends VerificationProviderYaml {
     private String prometheusUrl;
 

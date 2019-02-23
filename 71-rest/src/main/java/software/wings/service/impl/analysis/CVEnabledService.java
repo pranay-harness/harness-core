@@ -9,8 +9,8 @@ import software.wings.verification.CVConfiguration;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
 public class CVEnabledService {
   private Service service;
   List<CVConfiguration> cvConfig;

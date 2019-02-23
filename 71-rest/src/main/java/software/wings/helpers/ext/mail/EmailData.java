@@ -13,10 +13,10 @@ import java.util.List;
 
 @Entity(value = "emailQueue", noClassnameStored = true)
 @Data
-@EqualsAndHashCode(callSuper = false)
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class EmailData extends Queuable {
   private String accountId;
   @Builder.Default private List<String> to = new ArrayList<>();

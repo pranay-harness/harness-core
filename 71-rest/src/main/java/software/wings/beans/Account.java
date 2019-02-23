@@ -413,8 +413,8 @@ public class Account extends Base {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
     private List<NameValuePair.Yaml> defaults = new ArrayList<>();
 

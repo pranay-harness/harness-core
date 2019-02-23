@@ -45,8 +45,8 @@ import java.util.Map;
     },
     options = @IndexOptions(unique = true, name = "logAnalysisUniqueIdx")))
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;

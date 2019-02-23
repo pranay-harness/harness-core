@@ -29,8 +29,8 @@ public class FailureStrategy {
   private List<String> specificSteps;
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseYaml {
     private List<String> failureTypes = new ArrayList<>();
     private String executionScope;

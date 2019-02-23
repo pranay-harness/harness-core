@@ -21,8 +21,8 @@ import java.util.stream.IntStream;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 class TestEntity implements PersistentEntity {
   @Id private String uuid;
   private String test;

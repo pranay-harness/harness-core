@@ -53,9 +53,9 @@ import java.util.List;
  */
 @Entity(value = "thirdPartyApiCallLog")
 @Data
-@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @NoArgsConstructor
 @ToString(exclude = {"validUntil"})
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
   public static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";

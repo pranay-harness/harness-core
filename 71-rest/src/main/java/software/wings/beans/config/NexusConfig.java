@@ -22,8 +22,8 @@ import software.wings.yaml.setting.ArtifactServerYaml;
  */
 @JsonTypeName("NEXUS")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class NexusConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Nexus URL", required = true) @NotEmpty private String nexusUrl;
 
@@ -68,8 +68,8 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password,

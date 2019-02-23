@@ -12,8 +12,8 @@ import java.util.Set;
  * @author rktummala on 02/08/18
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class GenericEntityFilter extends Filter {
   public interface FilterType {
     String ALL = "ALL";

@@ -8,8 +8,8 @@ import software.wings.sm.StepExecutionSummary;
 import java.util.Map;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @Builder
+@EqualsAndHashCode(callSuper = true)
 public class ScriptStateExecutionSummary extends StepExecutionSummary {
   private String activityId;
   private Map<String, String> sweepingOutputEnvVariables;

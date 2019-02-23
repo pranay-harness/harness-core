@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Set;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class SumoDataCollectionInfo extends LogDataCollectionInfo {
   private SumoConfig sumoConfig;
   private int initialDelayMinutes;

@@ -17,9 +17,9 @@ import java.util.Map;
  */
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class HeatMap {
   private CVConfiguration cvConfiguration;
   @Default private List<HeatMapUnit> riskLevelSummary = new ArrayList<>();

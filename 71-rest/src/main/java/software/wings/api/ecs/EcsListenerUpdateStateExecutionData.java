@@ -16,10 +16,10 @@ import software.wings.sm.StateExecutionData;
 import java.util.Map;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class EcsListenerUpdateStateExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
   private String accountId;

@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
  * @author rktummala on 09/05/17
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class ContainerSyncRequest {
   private ContainerFilter filter;
 }

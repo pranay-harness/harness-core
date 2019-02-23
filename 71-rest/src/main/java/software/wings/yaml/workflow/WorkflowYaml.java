@@ -24,8 +24,8 @@ import java.util.List;
  * @author rktummala on 10/26/17
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @JsonTypeInfo(use = Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 @JsonSubTypes({
   @Type(value = BasicWorkflowYaml.class, name = "BASIC")

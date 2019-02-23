@@ -17,8 +17,8 @@ import java.util.Set;
  * @author rktummala on 02/08/18
  */
 @Data
-@EqualsAndHashCode
 @NoArgsConstructor
+@EqualsAndHashCode
 @JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "type")
 @JsonSubTypes({
   @Type(value = GenericEntityFilter.class, name = "GenericEntityFilter")

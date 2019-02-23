@@ -44,8 +44,8 @@ import javax.annotation.Nullable;
 @Entity(value = "userGroups", noClassnameStored = true)
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("memberIds") },
     options = @IndexOptions(name = "accountAndMemberIds", background = true)))

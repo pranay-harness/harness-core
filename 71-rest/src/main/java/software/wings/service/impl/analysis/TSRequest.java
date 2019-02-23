@@ -13,8 +13,8 @@ import java.util.Set;
  */
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TSRequest {
   private String stateExecutionId;

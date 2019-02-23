@@ -16,9 +16,9 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("KUBERNETES")
 @Data
-@EqualsAndHashCode(callSuper = true)
 @Builder
 @ToString(exclude = {"password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "serviceAccountToken"})
+@EqualsAndHashCode(callSuper = true)
 public class KubernetesConfig extends SettingValue implements EncryptableSetting {
   @NotEmpty private String masterUrl;
   private String username;

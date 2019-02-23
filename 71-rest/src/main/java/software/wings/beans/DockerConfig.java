@@ -29,8 +29,8 @@ import java.util.Objects;
 @JsonTypeName("DOCKER")
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
+@EqualsAndHashCode(callSuper = false)
 public class DockerConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Docker Registry URL", required = true) @NotEmpty private String dockerRegistryUrl;
   @Attributes(title = "Username") private String username;
@@ -83,8 +83,8 @@ public class DockerConfig extends SettingValue implements EncryptableSetting, Ar
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password,

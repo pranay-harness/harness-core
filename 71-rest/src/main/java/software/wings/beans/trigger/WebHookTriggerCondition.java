@@ -18,8 +18,8 @@ import java.util.Map;
 
 @JsonTypeName("WEBHOOK")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class WebHookTriggerCondition extends TriggerCondition {
   private WebHookToken webHookToken;
   private String artifactStreamId;

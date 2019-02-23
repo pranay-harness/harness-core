@@ -38,8 +38,8 @@ public class LogConfiguration {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseYaml {
     private String logDriver;
     private List<NameValuePair.Yaml> options;

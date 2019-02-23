@@ -20,15 +20,15 @@ import javax.validation.constraints.NotNull;
 @Entity("userDataSpecifications")
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class UserDataSpecification extends DeploymentSpecification {
   @NotEmpty @Indexed(options = @IndexOptions(unique = true)) @NaturalKey private String serviceId;
   @NotNull private String data;
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends DeploymentSpecification.Yaml {
     private String data;
 

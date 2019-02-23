@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @Builder
+@EqualsAndHashCode(callSuper = true)
 public class TerraformExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
 

@@ -18,10 +18,10 @@ import software.wings.beans.Base;
                , @Field("version") }, options = @IndexOptions(name = "yaml", unique = true)))
 @Entity(value = "templateVersions", noClassnameStored = true)
 @Data
-@EqualsAndHashCode(callSuper = false)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = false)
 public class TemplateVersion extends Base {
   public static final long INITIAL_VERSION = 1;
   public static String TEMPLATE_UUID_KEY = "templateUuid";

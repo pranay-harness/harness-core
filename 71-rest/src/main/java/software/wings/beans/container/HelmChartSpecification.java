@@ -17,8 +17,8 @@ import javax.validation.constraints.NotNull;
 @Entity("helmChartSpecifications")
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class HelmChartSpecification extends DeploymentSpecification {
   @NotEmpty @Indexed(options = @IndexOptions(unique = true)) @NaturalKey private String serviceId;
   @NotNull private String chartUrl;
@@ -37,8 +37,8 @@ public class HelmChartSpecification extends DeploymentSpecification {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends DeploymentSpecification.Yaml {
     private String chartUrl;
     private String chartName;

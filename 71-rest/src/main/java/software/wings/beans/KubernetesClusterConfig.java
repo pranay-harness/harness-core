@@ -37,8 +37,8 @@ import java.nio.file.Files;
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-@EqualsAndHashCode(callSuper = true)
 @Builder
+@EqualsAndHashCode(callSuper = true)
 public class KubernetesClusterConfig extends SettingValue implements EncryptableSetting {
   private boolean useKubernetesDelegate;
   private String delegateName;

@@ -9,8 +9,8 @@ import software.wings.yaml.gitSync.YamlGitConfig;
  * Created by anubhaw on 10/16/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class GitCommitAndPushResult extends GitCommandResult {
   private GitCommitResult gitCommitResult;
   private GitPushResult gitPushResult;

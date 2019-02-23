@@ -17,8 +17,8 @@ import java.util.Set;
  * Created by rsingh on 8/21/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class LogzDataCollectionInfo extends LogDataCollectionInfo {
   private LogzConfig logzConfig;
   private String messageField;

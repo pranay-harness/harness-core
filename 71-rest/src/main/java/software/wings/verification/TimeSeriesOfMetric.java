@@ -25,9 +25,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
   private static final Logger logger = LoggerFactory.getLogger(TimeSeriesOfMetric.class);
 

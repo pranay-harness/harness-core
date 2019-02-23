@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
  * @author rktummala on 10/17/17
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public abstract class BaseEntityYaml extends BaseYamlWithType {
   private String harnessApiVersion = "1.0";
 

@@ -17,9 +17,9 @@ import java.util.List;
  * @author rktummala on 11/1/17
  */
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("MULTI_SERVICE")
-@NoArgsConstructor
 public class MultiServiceWorkflowYaml extends WorkflowYaml {
   @Builder
   public MultiServiceWorkflowYaml(String type, String harnessApiVersion, String description,

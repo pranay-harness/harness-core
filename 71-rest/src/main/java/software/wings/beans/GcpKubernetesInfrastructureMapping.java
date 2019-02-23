@@ -353,8 +353,8 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
    * The type Yaml.
    */
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ContainerInfrastructureMapping.YamlWithComputeProvider {
     private String namespace;
 

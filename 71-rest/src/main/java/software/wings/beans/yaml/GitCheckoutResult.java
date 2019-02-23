@@ -8,8 +8,8 @@ import lombok.EqualsAndHashCode;
  * Created by anubhaw on 10/16/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class GitCheckoutResult extends GitCommandResult {
   private String refName;
   private String objectId;

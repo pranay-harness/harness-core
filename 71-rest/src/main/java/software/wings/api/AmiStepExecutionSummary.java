@@ -12,8 +12,8 @@ import java.util.List;
  * Created by anubhaw on 12/22/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class AmiStepExecutionSummary extends StepExecutionSummary {
   private int instanceCount;
   private InstanceUnitType instanceUnitType;

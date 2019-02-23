@@ -26,10 +26,10 @@ import java.util.Map;
  * @author marklu on 2018-12-04
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = false)
 @Entity(value = "gcsFileMetadata", noClassnameStored = true)
 @HarnessExportableEntity
 public class GcsFileMetadata extends Base {

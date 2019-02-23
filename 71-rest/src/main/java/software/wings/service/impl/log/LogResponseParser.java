@@ -28,8 +28,8 @@ public class LogResponseParser {
   private static final String DEFAULT_TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   private static final int MAX_CONCAT_JSON_FIELDS = 100;
   @Data
-  @AllArgsConstructor
   @Builder
+  @AllArgsConstructor
   public static class LogResponseData {
     String responseText;
     Set<String> hostList;

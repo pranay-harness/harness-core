@@ -24,9 +24,9 @@ import software.wings.yaml.setting.ArtifactServerYaml;
  */
 @JsonTypeName("BAMBOO")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "password")
+@EqualsAndHashCode(callSuper = false)
 public class BambooConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Bamboo URL", required = true) @NotEmpty private String bambooUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
@@ -63,8 +63,8 @@ public class BambooConfig extends SettingValue implements EncryptableSetting, Ar
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password,

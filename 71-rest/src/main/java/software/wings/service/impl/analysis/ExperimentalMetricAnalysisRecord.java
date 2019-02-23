@@ -21,8 +21,8 @@ import org.mongodb.morphia.annotations.Indexes;
       , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") },
     options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx")))
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExperimentalMetricAnalysisRecord extends MetricAnalysisRecord {
   private String envId;

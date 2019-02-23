@@ -15,8 +15,8 @@ public class StorageConfiguration {
   @Attributes(title = "Options") private boolean readonly;
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseYaml {
     private String hostSourcePath;
     private String containerPath;

@@ -18,9 +18,9 @@ import java.util.Map;
  * Created by sgurubelli on 8/11/17.
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class TemplateExpression {
   private String fieldName;
   private String expression;
@@ -30,8 +30,8 @@ public class TemplateExpression {
   @Default private Map<String, Object> metadata = Maps.newHashMap();
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseYaml {
     private String fieldName;
     private String expression;

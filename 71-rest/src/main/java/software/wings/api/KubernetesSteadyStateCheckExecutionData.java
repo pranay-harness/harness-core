@@ -15,10 +15,10 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class KubernetesSteadyStateCheckExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
   private String commandName;

@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 @JsonTypeName("DATA_DOG")
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = {"apiKey", "applicationKey"})
+@EqualsAndHashCode(callSuper = false)
 public class DatadogConfig extends SettingValue implements EncryptableSetting {
   public static final String validationUrl = "metrics";
 
@@ -78,8 +78,8 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class DatadogYaml extends VerificationProviderYaml {
     private String url;
     private String apiKey;

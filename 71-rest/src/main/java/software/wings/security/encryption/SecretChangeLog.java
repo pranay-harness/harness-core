@@ -17,10 +17,10 @@ import javax.validation.constraints.NotNull;
  * Created by rsingh on 11/01/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = false)
 @Entity(value = "secretChangeLogs", noClassnameStored = true)
 public class SecretChangeLog extends Base {
   @NotEmpty private String accountId;

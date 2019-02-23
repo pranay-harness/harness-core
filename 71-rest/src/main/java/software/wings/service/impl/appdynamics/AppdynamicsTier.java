@@ -16,10 +16,10 @@ import java.util.Set;
  */
 @Data
 @Builder
-@EqualsAndHashCode(exclude = {"name", "description", "type", "agentType", "externalTiers", "dependencyPath"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = {"name", "description", "type", "agentType", "externalTiers", "dependencyPath"})
 public class AppdynamicsTier {
   private long id;
   private String name;

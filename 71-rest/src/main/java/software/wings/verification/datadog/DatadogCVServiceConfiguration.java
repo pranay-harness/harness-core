@@ -14,10 +14,10 @@ import software.wings.verification.CVConfiguration;
  */
 
 @Data
-@EqualsAndHashCode(callSuper = false)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = false)
 public class DatadogCVServiceConfiguration extends CVConfiguration {
   @Attributes(required = false, title = "Datadog Service Name") private String datadogServiceName;
   @Attributes(required = true, title = "Metrics") private String metrics;

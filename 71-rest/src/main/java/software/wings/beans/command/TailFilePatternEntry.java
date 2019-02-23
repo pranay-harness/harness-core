@@ -139,8 +139,8 @@ public class TailFilePatternEntry {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends BaseYaml {
     private String filePath;
     // maps to pattern

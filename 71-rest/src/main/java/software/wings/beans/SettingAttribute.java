@@ -252,8 +252,8 @@ public class SettingAttribute extends Base {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends BaseYaml {
     private String name;
     private SettingValue.Yaml value;

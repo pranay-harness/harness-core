@@ -510,8 +510,8 @@ public class PhaseStep {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseYamlWithType {
     private String name;
     private String statusForRollback;

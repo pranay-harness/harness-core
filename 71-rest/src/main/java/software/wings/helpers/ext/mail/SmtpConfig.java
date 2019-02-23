@@ -26,8 +26,8 @@ import software.wings.yaml.setting.CollaborationProviderYaml;
  */
 @JsonTypeName("SMTP")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class SmtpConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Host", required = true) @NotEmpty private String host;
   @Attributes(title = "Port", required = true) private int port;
@@ -65,8 +65,8 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CollaborationProviderYaml {
     private String host;
     private int port;

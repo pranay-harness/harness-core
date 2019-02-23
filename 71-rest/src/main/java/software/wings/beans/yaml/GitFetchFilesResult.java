@@ -10,8 +10,8 @@ import java.util.Collections;
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class GitFetchFilesResult extends GitCommandResult {
   private GitCommitResult gitCommitResult;
   private List<GitFile> files;

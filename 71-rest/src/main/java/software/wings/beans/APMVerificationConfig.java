@@ -30,8 +30,8 @@ import java.util.stream.Collectors;
 
 @JsonTypeName("APM_VERIFICATION")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = {"headersList", "optionsList"})
+@EqualsAndHashCode(callSuper = false)
 public class APMVerificationConfig extends SettingValue implements EncryptableSetting {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(APMVerificationConfig.class);
   @Transient @SchemaIgnore private static final String MASKED_STRING = "*****";

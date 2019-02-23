@@ -34,8 +34,8 @@ import software.wings.yaml.BaseEntityYaml;
                , @Field("serviceId"), @Field("name") }))
 @HarnessExportableEntity
 @Data
-@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public abstract class ArtifactStream extends Base implements ArtifactSourceable, PersistentIterable {
   protected static final String dateFormat = "HHMMSS";
 
@@ -97,8 +97,8 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public abstract static class Yaml extends BaseEntityYaml {
     private String serverName;
     private boolean metadataOnly;

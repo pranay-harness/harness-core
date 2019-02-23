@@ -12,9 +12,9 @@ import java.util.List;
  * @author rktummala on 09/02/17
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ContainerSyncResponse {
   private List<ContainerInfo> containerInfoList;
 }

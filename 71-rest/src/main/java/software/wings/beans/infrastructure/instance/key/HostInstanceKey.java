@@ -12,10 +12,10 @@ import org.mongodb.morphia.annotations.Indexed;
  * @author rktummala on 09/05/17
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = true)
 public class HostInstanceKey extends InstanceKey {
   @Indexed private String hostName;
   @Indexed private String infraMappingId;

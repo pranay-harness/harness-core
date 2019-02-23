@@ -26,9 +26,9 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Extension
 @JsonTypeName("DYNA_TRACE")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "apiToken")
+@EqualsAndHashCode(callSuper = false)
 public class DynaTraceConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "URL", required = true) private String dynaTraceUrl;
 
@@ -52,8 +52,8 @@ public class DynaTraceConfig extends SettingValue implements EncryptableSetting 
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class DynaTraceYaml extends VerificationProviderYaml {
     private String apiToken;
     private String dynaTraceUrl;

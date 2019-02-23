@@ -12,9 +12,9 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import java.util.Set;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AppPermission {
   private PermissionType permissionType;
   private GenericEntityFilter appFilter;

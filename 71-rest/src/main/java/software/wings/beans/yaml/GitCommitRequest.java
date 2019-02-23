@@ -12,8 +12,8 @@ import java.util.List;
  */
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class GitCommitRequest extends GitCommandRequest {
   private List<GitFileChange> gitFileChanges;
   private boolean forcePush;

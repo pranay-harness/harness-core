@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@EqualsAndHashCode
 @Builder
+@EqualsAndHashCode
 public class UserSummary {
   @NotEmpty private String name;
   @Email private String email;

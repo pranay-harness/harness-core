@@ -13,8 +13,8 @@ import java.util.Set;
  * @author rktummala on 02/21/18
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class EnvFilter extends Filter {
   public interface FilterType {
     String PROD = "PROD";

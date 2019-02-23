@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class ApprovalStateExecutionData extends StateExecutionData implements ResponseData {
   public static final String USER_GROUP_NAMES = "userGroupNames";
   public static final String USER_GROUPS_DISPLAY_NAME = "Approval User Groups";

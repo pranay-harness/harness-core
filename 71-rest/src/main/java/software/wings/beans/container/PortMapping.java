@@ -17,8 +17,8 @@ public class PortMapping {
 
   @JsonIgnoreProperties(ignoreUnknown = true)
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseYaml {
     private Integer containerPort;
     private Integer hostPort;

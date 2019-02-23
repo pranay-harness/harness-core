@@ -22,8 +22,8 @@ import javax.validation.constraints.NotNull;
 @JsonTypeName("WINRM_CONNECTION_ATTRIBUTES")
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
+@EqualsAndHashCode(callSuper = false)
 public class WinRmConnectionAttributes extends SettingValue implements EncryptableSetting {
   @Attributes(required = true) @NotNull private AuthenticationScheme authenticationScheme;
   private String domain;
@@ -58,8 +58,8 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends SettingValue.Yaml {
     private AuthenticationScheme authenticationScheme;
     private String domain;

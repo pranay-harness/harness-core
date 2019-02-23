@@ -247,8 +247,8 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
     private String region;
     private String autoScalingGroupName;

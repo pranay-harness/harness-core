@@ -16,9 +16,9 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 4/13/16.
  */
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @EqualsAndHashCode(callSuper = false)
 public class BaseFile extends Base {
   @FormDataParam("name") @NaturalKey private String name;

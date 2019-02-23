@@ -8,8 +8,8 @@ import lombok.EqualsAndHashCode;
  * Created by anubhaw on 10/16/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class GitCommitResult extends GitCommandResult {
   private String commitId;
   private int commitTime;

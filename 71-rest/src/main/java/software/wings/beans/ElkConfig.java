@@ -28,9 +28,9 @@ import software.wings.yaml.setting.VerificationProviderYaml;
  */
 @JsonTypeName("ELK")
 @Data
-@EqualsAndHashCode(callSuper = false)
-@ToString(exclude = "password")
 @Builder
+@ToString(exclude = "password")
+@EqualsAndHashCode(callSuper = false)
 public class ElkConfig extends SettingValue implements EncryptableSetting {
   @Attributes(required = true, title = "Connector type")
   @DefaultValue("ELASTIC_SEARCH_SERVER")
@@ -87,8 +87,8 @@ public class ElkConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends VerificationProviderYaml {
     private String elkUrl;
     private String username;

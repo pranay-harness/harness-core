@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
  * Created by rsingh on 10/11/17.
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Threshold {
   private ThresholdType thresholdType;
   private ThresholdComparisonType comparisonType;

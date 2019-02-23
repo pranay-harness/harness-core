@@ -17,9 +17,9 @@ import java.util.List;
  * @author rktummala on 11/1/17
  */
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("CANARY")
-@NoArgsConstructor
 public class CanaryWorkflowYaml extends WorkflowYaml {
   @Builder
   public CanaryWorkflowYaml(String type, String harnessApiVersion, String description, List<Yaml> templateExpressions,

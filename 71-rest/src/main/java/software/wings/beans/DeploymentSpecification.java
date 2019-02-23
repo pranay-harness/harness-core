@@ -11,8 +11,8 @@ import software.wings.yaml.BaseEntityYaml;
  */
 public abstract class DeploymentSpecification extends Base {
   @Data
-  @EqualsAndHashCode(callSuper = false)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = false)
   public abstract static class Yaml extends BaseEntityYaml {
     public Yaml(String type, String harnessApiVersion) {
       super(type, harnessApiVersion);

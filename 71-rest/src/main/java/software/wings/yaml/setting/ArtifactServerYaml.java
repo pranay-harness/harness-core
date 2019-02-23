@@ -12,8 +12,8 @@ import software.wings.settings.UsageRestrictions;
  * @author rktummala on 11/18/17
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public abstract class ArtifactServerYaml extends SettingValue.Yaml {
   private String url;
   private String username;

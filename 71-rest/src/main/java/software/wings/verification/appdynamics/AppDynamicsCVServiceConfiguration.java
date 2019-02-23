@@ -21,10 +21,10 @@ public class AppDynamicsCVServiceConfiguration extends CVConfiguration {
    * The type Yaml.
    */
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @AllArgsConstructor
   @Builder
+  @AllArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class AppDynamicsCVConfigurationYaml extends CVConfigurationYaml {
     private String appDynamicsApplicationName;
     private String tierName;

@@ -27,9 +27,9 @@ import software.wings.yaml.setting.LoadBalancerProviderYaml;
  */
 @JsonTypeName("ELB")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "secretKey")
+@EqualsAndHashCode(callSuper = false)
 public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements EncryptableSetting {
   @Attributes(title = "Region", required = true)
   @DefaultValue("us-east-1")
@@ -69,8 +69,8 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends LoadBalancerProviderYaml {
     private String region;
     private String loadBalancerName;

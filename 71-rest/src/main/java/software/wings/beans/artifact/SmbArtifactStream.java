@@ -59,8 +59,8 @@ public class SmbArtifactStream extends ArtifactStream {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactStream.Yaml {
     private List<String> artifactPaths;
 

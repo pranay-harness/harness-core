@@ -12,9 +12,9 @@ import java.util.Map;
 
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class NewRelicMarkerExecutionData extends StateExecutionData {
   private String payload;
   private String evaluatedPayload;

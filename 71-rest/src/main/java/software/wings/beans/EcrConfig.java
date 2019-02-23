@@ -29,8 +29,8 @@ import software.wings.stencils.EnumData;
 @Deprecated
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "secretKey")
+@EqualsAndHashCode(callSuper = false)
 public class EcrConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Amazon ECR Registry URL", required = true) @NotEmpty private String ecrUrl;
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;

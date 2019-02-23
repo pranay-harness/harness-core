@@ -318,8 +318,8 @@ public class NotificationRule {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseYaml {
     private List<String> conditions = new ArrayList<>();
     private String executionScope;

@@ -23,9 +23,9 @@ import javax.validation.constraints.Min;
     options = @IndexOptions(unique = true, name = "uniqueName"), fields = { @Field("accountId")
                                                                             , @Field("name") }))
 @HarnessExportableEntity
-@EqualsAndHashCode(callSuper = false)
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class ResourceConstraint extends Base {
   public static final String NAME_KEY = "name";
 

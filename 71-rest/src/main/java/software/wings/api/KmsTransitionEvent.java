@@ -13,10 +13,10 @@ import org.mongodb.morphia.annotations.Entity;
  * Created by rsingh on 10/6/17.
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@EqualsAndHashCode(callSuper = false)
 @Entity(value = "kmsTransitionEvent", noClassnameStored = true)
 public class KmsTransitionEvent extends Queuable {
   private String entityId;

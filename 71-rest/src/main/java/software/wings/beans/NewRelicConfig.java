@@ -29,9 +29,9 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Extension
 @JsonTypeName("NEW_RELIC")
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "apiKey")
+@EqualsAndHashCode(callSuper = false)
 public class NewRelicConfig extends SettingValue implements EncryptableSetting {
   @EnumData(enumDataProvider = NewRelicUrlProvider.class)
   @Attributes(title = "URL")
@@ -76,8 +76,8 @@ public class NewRelicConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Data
-  @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends VerificationProviderYaml {
     private String apiKey;
     private String newRelicAccountId;
