@@ -8,9 +8,11 @@ import java.util.regex.Pattern;
 
 /**
  * Common constants across application.
- *
- * @author Rishi
  */
+// TODO: Do not use one centralized place for different semantics. Instead define your constants in the context they
+//       make sense. When the proper layering is in place well located constant will be acceptable everywhere it is
+//       needed.
+@Deprecated
 public interface Constants {
   String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
