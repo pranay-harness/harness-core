@@ -105,7 +105,12 @@ public class MigrationServiceImpl implements MigrationService {
                 }
                 Class<? extends Migration> migration = backgroundMigrations.get(i);
                 logger.info("[Migration] - Migrating to background version {}: {} ...", i, migration.getSimpleName());
-                injector.getInstance(migration).migrate();
+                try {
+                  injector.getInstance(migration).migrate();
+                } catch (Exception ex) {
+                  logger.error("Error while running migration {}", migration.getSimpleName(), ex);
+                  break;
+                }
 
                 final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
                 updateOperations.set(Schema.BACKGROUND_VERSION_KEY, i);

@@ -6,6 +6,7 @@ import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.AddValidUntilToWorkflowExecution;
 import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
+import migrations.all.SendInviteUrlForAllUserInvites;
 import migrations.all.SetLastLoginTimeToAllUsers;
 import migrations.all.TerraformIsTemplatizedMigration;
 import org.apache.commons.lang3.tuple.Pair;
@@ -33,6 +34,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(11, DeleteAndAddInstanceSyncJobToAllAccounts.class))
         .add(Pair.of(12, TerraformIsTemplatizedMigration.class))
         .add(Pair.of(13, AddValidUntilToWorkflowExecution.class))
+        .add(Pair.of(14, SendInviteUrlForAllUserInvites.class))
         .build();
   }
 }

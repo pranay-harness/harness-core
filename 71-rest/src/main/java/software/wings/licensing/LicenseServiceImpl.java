@@ -364,13 +364,17 @@ public class LicenseServiceImpl implements LicenseService {
   @Override
   public Account updateAccountLicense(@NotEmpty String accountId, LicenseInfo licenseInfo) {
     Account accountInDB = accountService.get(accountId);
-
     notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB);
+
+    LicenseInfo oldLicenseInfo = accountInDB.getLicenseInfo();
+    String oldAccountType = null;
+    if (oldLicenseInfo != null) {
+      oldAccountType = oldLicenseInfo.getAccountType();
+    }
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
 
-    byte[] encryptedLicenseInfo =
-        getEncryptedLicenseInfoForUpdate(accountId, accountInDB.getLicenseInfo(), licenseInfo);
+    byte[] encryptedLicenseInfo = getEncryptedLicenseInfoForUpdate(accountId, oldLicenseInfo, licenseInfo);
 
     updateOperations.set("encryptedLicenseInfo", encryptedLicenseInfo);
 
@@ -381,7 +385,7 @@ public class LicenseServiceImpl implements LicenseService {
     decryptLicenseInfo(updatedAccount, false);
     //    refreshUsersForAccountUpdate(updatedAccount);
 
-    eventPublishHelper.publishLicenseChangeEvent(accountId, accountInDB.getLicenseInfo(), licenseInfo);
+    eventPublishHelper.publishLicenseChangeEvent(accountId, oldAccountType, licenseInfo.getAccountType());
 
     return updatedAccount;
   }
