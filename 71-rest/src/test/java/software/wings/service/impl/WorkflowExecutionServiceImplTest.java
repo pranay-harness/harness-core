@@ -6,6 +6,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Puller.pullFor;
+import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
@@ -1096,7 +1097,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(ofSeconds(10), () -> {
+    pullFor(ofSeconds(10), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.PAUSED;
@@ -1181,7 +1182,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(ofSeconds(3), () -> {
+    pullFor(ofSeconds(3), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.RUNNING;
@@ -1196,7 +1197,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
-    pullFor(ofSeconds(15), () -> {
+    pullFor(ofSeconds(15), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.PAUSED && pull.getExecutionNode().getGroup() != null;
@@ -1343,7 +1344,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(ofSeconds(10), () -> {
+    pullFor(ofSeconds(10), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.PAUSED;
@@ -1436,7 +1437,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(ofSeconds(5), () -> {
+    pullFor(ofSeconds(5), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.RUNNING;
@@ -1451,7 +1452,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
-    pullFor(ofSeconds(15), () -> {
+    pullFor(ofSeconds(15), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.ABORTED;
@@ -1637,7 +1638,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   private List<GraphNode> getNodes(String executionId) {
-    Puller.pullFor(ofSeconds(10), () -> {
+    Puller.pullFor(ofSeconds(10), ofMillis(100), () -> {
       WorkflowExecution execution =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       if (execution.getExecutionNode() == null) {
