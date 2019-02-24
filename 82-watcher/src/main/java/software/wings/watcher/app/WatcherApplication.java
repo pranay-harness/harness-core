@@ -1,8 +1,8 @@
 package software.wings.watcher.app;
 
 import static com.google.common.base.Charsets.UTF_8;
-import static software.wings.utils.message.MessageConstants.NEW_WATCHER;
-import static software.wings.utils.message.MessengerType.WATCHER;
+import static io.harness.delegate.message.MessageConstants.NEW_WATCHER;
+import static io.harness.delegate.message.MessengerType.WATCHER;
 
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -14,6 +14,7 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.message.MessageService;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import org.apache.commons.io.FileUtils;
@@ -23,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.managerclient.ManagerClientModule;
-import software.wings.utils.message.MessageService;
 import software.wings.watcher.service.WatcherService;
 
 import java.io.File;

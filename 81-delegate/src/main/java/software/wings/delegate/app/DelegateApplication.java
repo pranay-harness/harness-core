@@ -1,14 +1,14 @@
 package software.wings.delegate.app;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
+import static io.harness.delegate.message.MessageConstants.NEW_DELEGATE;
+import static io.harness.delegate.message.MessageConstants.WATCHER_DATA;
+import static io.harness.delegate.message.MessageConstants.WATCHER_HEARTBEAT;
+import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
+import static io.harness.delegate.message.MessengerType.DELEGATE;
+import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
-import static software.wings.utils.message.MessageConstants.NEW_DELEGATE;
-import static software.wings.utils.message.MessageConstants.WATCHER_DATA;
-import static software.wings.utils.message.MessageConstants.WATCHER_HEARTBEAT;
-import static software.wings.utils.message.MessageConstants.WATCHER_PROCESS;
-import static software.wings.utils.message.MessengerType.DELEGATE;
-import static software.wings.utils.message.MessengerType.WATCHER;
 
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -21,6 +21,7 @@ import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.message.MessageService;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -32,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.delegate.service.DelegateService;
 import software.wings.managerclient.ManagerClientModule;
-import software.wings.utils.message.MessageService;
 import software.wings.verification.VerificationServiceClientModule;
 
 import java.io.File;

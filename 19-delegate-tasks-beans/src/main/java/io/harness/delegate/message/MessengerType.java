@@ -1,3 +1,3 @@
-package software.wings.utils.message;
+package io.harness.delegate.message;
 
 public enum MessengerType { WATCHER, DELEGATE }

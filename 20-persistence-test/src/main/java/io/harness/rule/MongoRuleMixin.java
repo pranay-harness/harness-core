@@ -37,7 +37,8 @@ public interface MongoRuleMixin {
                              .defaults(Command.MongoD)
                              .download(new DownloadConfigBuilder()
                                            .defaultsForCommand(Command.MongoD)
-                                           .downloadPath("https://storage.googleapis.com/harness-tests/")))
+                                           .downloadPath("https://storage.googleapis.com/harness-tests/")
+                                           .build()))
           .build();
 
   MongodStarter starter = MongodStarter.getInstance(runtimeConfig);

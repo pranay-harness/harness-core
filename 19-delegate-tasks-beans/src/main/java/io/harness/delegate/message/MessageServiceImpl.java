@@ -1,4 +1,4 @@
-package software.wings.utils.message;
+package io.harness.delegate.message;
 
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.releaseLock;

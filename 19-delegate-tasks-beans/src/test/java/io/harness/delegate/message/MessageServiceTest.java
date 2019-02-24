@@ -1,17 +1,17 @@
-package software.wings.utils.message;
+package io.harness.delegate.message;
 
+import static io.harness.delegate.message.MessageServiceImpl.IN;
+import static io.harness.delegate.message.MessageServiceImpl.OUT;
+import static io.harness.delegate.message.MessageServiceImpl.PRIMARY_DELIMITER;
+import static io.harness.delegate.message.MessageServiceImpl.SECONDARY_DELIMITER;
+import static io.harness.delegate.message.MessengerType.DELEGATE;
+import static io.harness.delegate.message.MessengerType.WATCHER;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.message.MessageServiceImpl.IN;
-import static software.wings.utils.message.MessageServiceImpl.OUT;
-import static software.wings.utils.message.MessageServiceImpl.PRIMARY_DELIMITER;
-import static software.wings.utils.message.MessageServiceImpl.SECONDARY_DELIMITER;
-import static software.wings.utils.message.MessengerType.DELEGATE;
-import static software.wings.utils.message.MessengerType.WATCHER;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

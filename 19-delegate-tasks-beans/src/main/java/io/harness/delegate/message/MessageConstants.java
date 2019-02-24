@@ -1,4 +1,4 @@
-package software.wings.utils.message;
+package io.harness.delegate.message;
 
 public interface MessageConstants {
   // Watcher data name

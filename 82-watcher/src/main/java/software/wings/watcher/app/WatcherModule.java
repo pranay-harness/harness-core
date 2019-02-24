@@ -4,11 +4,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.name.Names;
 
+import io.harness.delegate.message.MessageService;
+import io.harness.delegate.message.MessageServiceImpl;
+import io.harness.delegate.message.MessengerType;
 import io.harness.govern.DependencyModule;
 import io.harness.time.TimeModule;
-import software.wings.utils.message.MessageService;
-import software.wings.utils.message.MessageServiceImpl;
-import software.wings.utils.message.MessengerType;
 import software.wings.watcher.service.WatcherService;
 import software.wings.watcher.service.WatcherServiceImpl;
 
