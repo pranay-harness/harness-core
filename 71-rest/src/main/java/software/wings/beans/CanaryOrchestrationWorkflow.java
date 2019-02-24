@@ -15,6 +15,7 @@ import static software.wings.beans.EntityType.CF_AWS_CONFIG_ID;
 import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.HELM_GIT_CONFIG_ID;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.NEWRELIC_APPID;
 import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
@@ -346,6 +347,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         // Add Cloud formation variables
         addCloudFormationUserVariables(reorderVariables, entityVariables);
 
+        addHelmUserVariables(reorderVariables, entityVariables);
+
         // AppDynamic state user variables
         addAppDUserVariables(reorderVariables, entityVariables);
         // NewRelic state user variables
@@ -459,6 +462,14 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   private void addCloudFormationUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
       if (variable.obtainEntityType().equals(CF_AWS_CONFIG_ID)) {
+        reorderVariables.add(variable);
+      }
+    }
+  }
+
+  private void addHelmUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (variable.obtainEntityType().equals(HELM_GIT_CONFIG_ID)) {
         reorderVariables.add(variable);
       }
     }

@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.EntityType.CF_AWS_CONFIG_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.HELM_GIT_CONFIG_ID;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineStage.Yaml;
@@ -140,6 +141,19 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
               } else {
                 notNullCheck(
                     "Aws Cloud Provider [" + variableValue + "] associated to the Cloud Formation State does not exist",
+                    settingAttribute, USER);
+              }
+            } else if (HELM_GIT_CONFIG_ID.name().equals(entityType)) {
+              if (matchesVariablePattern(variableValue)) {
+                workflowVariables.put(variableName, variableValue);
+                return;
+              }
+              SettingAttribute settingAttribute = settingsService.fetchSettingAttributeByName(
+                  change.getAccountId(), variableValue, SettingVariableTypes.GIT);
+              if (settingAttribute != null) {
+                workflowVariables.put(variableName, settingAttribute.getUuid());
+              } else {
+                notNullCheck("Git Connector [" + variableValue + "] associated to the Helm State does not exist",
                     settingAttribute, USER);
               }
             } else {
@@ -285,6 +299,12 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
               pipelineStageVariables.add(workflowVariable);
             }
           } else if (CF_AWS_CONFIG_ID.equals(entityType)) {
+            SettingAttribute settingAttribute = settingsService.get(entryValue);
+            if (settingAttribute != null) {
+              workflowVariable.setValue(settingAttribute.getName());
+              pipelineStageVariables.add(workflowVariable);
+            }
+          } else if (HELM_GIT_CONFIG_ID.equals(entityType)) {
             SettingAttribute settingAttribute = settingsService.get(entryValue);
             if (settingAttribute != null) {
               workflowVariable.setValue(settingAttribute.getName());

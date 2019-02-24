@@ -348,8 +348,6 @@ FORM_FIELD_TO_ENTITY_TYPE:
     - name: awsConfigId
       value: CF_AWS_CONFIG_ID
 
-
-
 TASK_TYPES:
     - name: Command
       value: COMMAND
