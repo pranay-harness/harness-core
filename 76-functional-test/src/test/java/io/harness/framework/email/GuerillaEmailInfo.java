@@ -1,4 +1,4 @@
-package io.harness.framework;
+package io.harness.framework.email;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;

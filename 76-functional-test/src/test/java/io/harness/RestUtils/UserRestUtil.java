@@ -1,10 +1,11 @@
 package io.harness.RestUtils;
 
-import static io.restassured.RestAssured.given;
 import static org.junit.Assert.assertNotNull;
 
 import io.harness.beans.PageResponse;
+import io.harness.framework.Registration;
 import io.harness.framework.Setup;
+import io.harness.framework.constants.UserConstants;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
@@ -35,11 +36,11 @@ public class UserRestUtil extends AbstractFunctionalTest {
     List<String> emailList = new ArrayList<>();
     emailList.add(email);
     invite.setEmails(emailList);
-    invite.setName("Swamy Harness");
+    invite.setName(email.replace("@guerrillamailblock.com", ""));
     invite.setAppId(account.getAppId());
 
     RestResponse<List<UserInvite>> inviteListResponse =
-        given()
+        Setup.portal()
             .auth()
             .oauth2(bearerToken)
             .queryParam("accountId", account.getUuid())
@@ -50,5 +51,26 @@ public class UserRestUtil extends AbstractFunctionalTest {
     List<UserInvite> inviteList = inviteListResponse.getResource();
     assertNotNull(inviteList);
     return inviteList;
+  }
+
+  public UserInvite completeUserRegistration(Account account, UserInvite invite) {
+    Registration registration = new Registration();
+    registration.setAccountId(account.getAccountKey());
+    registration.setAgreement(true);
+    registration.setEmail(invite.getEmail());
+    registration.setName(invite.getName());
+    registration.setPassword(UserConstants.DEFAULT_PASSWORD);
+    registration.setUuid(invite.getUuid());
+
+    RestResponse<UserInvite> completed = Setup.portal()
+                                             .auth()
+                                             .oauth2(bearerToken)
+                                             .queryParam("accountId", account.getUuid())
+                                             .body(registration, ObjectMapperType.GSON)
+                                             .contentType(ContentType.JSON)
+                                             .put("/users/invites/" + invite.getUuid())
+                                             .as(new GenericType<RestResponse<UserInvite>>() {}.getType());
+
+    return completed.getResource();
   }
 }
