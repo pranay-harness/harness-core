@@ -1,6 +1,5 @@
 package io.harness.functional;
 
-import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -19,7 +18,10 @@ import org.junit.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
+import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
+import software.wings.service.intfc.SettingsService;
 
 import java.io.IOException;
 import javax.ws.rs.core.GenericType;
@@ -45,32 +47,24 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
   @Inject private DelegateExecutor delegateExecutor;
   //  @Inject OwnerManager ownerManager;
   @Inject private AccountSetupService accountSetupService;
+  @Inject private EmailHandler emailHandler;
+  @Inject private SettingsService settingsService;
 
   @Getter Account account;
 
   @Before
   public void testSetup() throws IOException {
-    //    final Seed seed = new Seed(0);
-    //    Owners owners = ownerManager.create();
-
-    //    account = accountGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     account = accountSetupService.ensureAccount();
 
     delegateExecutor.ensureDelegate(account);
 
-    String basicAuthValue =
-        "Basic " + encodeBase64String(String.format("%s:%s", "admin@harness.io", "admin").getBytes());
-
-    GenericType<RestResponse<User>> genericType = new GenericType<RestResponse<User>>() {
-
-    };
-    RestResponse<User> userRestResponse =
-        Setup.portal().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
-
-    assertThat(userRestResponse).isNotNull();
-    User user = userRestResponse.getResource();
-    assertThat(user).isNotNull();
-    bearerToken = user.getToken();
+    bearerToken = Setup.getAuthToken("admin@harness.io", "admin");
+    SettingAttribute settingAttribute = Setup.getEmailConfig(account.getUuid());
+    if (settingsService.getByName(
+            settingAttribute.getAccountId(), settingAttribute.getAppId(), settingAttribute.getName())
+        == null) {
+      settingsService.save(settingAttribute);
+    }
   }
 
   protected void resetCache() {
