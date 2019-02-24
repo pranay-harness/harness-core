@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -27,7 +28,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HelmDeployContextElement;
@@ -48,13 +48,16 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
@@ -67,6 +70,7 @@ import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandRespons
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtil;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -76,6 +80,8 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -111,7 +117,9 @@ public class HelmDeployState extends State {
   @Inject private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Inject private transient SettingsService settingsService;
   @Inject private transient SecretManager secretManager;
-  @Inject @Transient private ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private transient ArtifactCollectionUtil artifactCollectionUtil;
+  @Inject private transient TemplateExpressionProcessor templateExpressionProcessor;
+  @Inject private transient GitConfigHelperService gitConfigHelperService;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -205,7 +213,21 @@ public class HelmDeployState extends State {
     GitConfig gitConfig = null;
     if (gitFileConfig != null) {
       evaluateGitFileConfig(context);
-      gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
+      List<TemplateExpression> templateExpressions = getTemplateExpressions();
+      if (isNotEmpty(templateExpressions)) {
+        TemplateExpression configIdExpression =
+            templateExpressionProcessor.getTemplateExpression(templateExpressions, "connectorId");
+        SettingAttribute settingAttribute = templateExpressionProcessor.resolveSettingAttributeByNameOrId(
+            context, configIdExpression, SettingVariableTypes.GIT);
+        SettingValue settingValue = settingAttribute.getValue();
+        if (!(settingValue instanceof GitConfig)) {
+          throw new InvalidRequestException("Git connector not found", USER);
+        }
+        gitConfig = (GitConfig) settingValue;
+        gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
+      } else {
+        gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
+      }
       encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
     }
 

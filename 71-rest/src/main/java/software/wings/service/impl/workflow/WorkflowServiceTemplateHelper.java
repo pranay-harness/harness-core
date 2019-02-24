@@ -19,6 +19,7 @@ import static software.wings.common.Constants.ELK_INDICES_VAR_DESC;
 import static software.wings.common.Constants.ELK_SERVER_VAR_DESC;
 import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.ENV_VAR_DESC;
+import static software.wings.common.Constants.HELM_GITCONFIG_VAR_DESC;
 import static software.wings.common.Constants.SERVICE_INFRA_VAR_DESC;
 import static software.wings.common.Constants.SERVICE_VAR_DESC;
 
@@ -429,6 +430,8 @@ public class WorkflowServiceTemplateHelper {
           return ELK_INDICES_VAR_DESC + " in " + stateName;
         case CF_AWS_CONFIG_ID:
           return CF_AWSCONFIG_VAR_DESC + " in " + stateName;
+        case HELM_GIT_CONFIG_ID:
+          return HELM_GITCONFIG_VAR_DESC + " in " + stateName;
         default:
           return "";
       }
