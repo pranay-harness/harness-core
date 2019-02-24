@@ -27,6 +27,7 @@ python/**/*-checkpoint.ipynb
 python/**/*.pyc
 python/**/.pyenv
 python/splunk_intelligence/dist/
+repository/
 rest/delegate.zip
 rest/harness-delegate/
 rest/wingsui

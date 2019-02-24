@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.yaml.YamlFunctionalTestHelper;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,19 +68,24 @@ public class HelmWorkflowYamlFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
+  @Owner(emails = "anshul@harness.io", intermittent = true)
   public void testHelmWorkflow() {
     uploadYamlZipFile(ACCOUNT_ID, OLD_APP_NAME, SETUP_FOLDER_PATH + APPLICATIONS_FOLDER);
+    // TODO: we cannot have such sleeps in the test code
     sleep(ofSeconds(20));
 
     Application app = appService.getAppByName(ACCOUNT_ID, OLD_APP_NAME);
     createYamlGitConfig(ACCOUNT_ID, app.getUuid(), gitConnector.getUuid());
+    // TODO: ditto
     sleep(ofSeconds(20));
 
     yamlFunctionalTestHelper.duplicateApplication(OLD_APP_NAME, NEW_APP_NAME, REPO_NAME, GIT_REPO_PATH, CLONE_PATH);
+    // TODO: ditto
     sleep(ofSeconds(2));
 
     String webhookToken = ((GitConfig) gitConnector.getValue()).getWebhookToken();
     triggerWebhookPost(ACCOUNT_ID, webhookToken, YAML_WEBHOOK_PAYLOAD_GITHUB);
+    // TODO: ditto
     sleep(ofSeconds(20));
 
     verify(OLD_APP_NAME, NEW_APP_NAME, VERIFY_CLONE_PATH);

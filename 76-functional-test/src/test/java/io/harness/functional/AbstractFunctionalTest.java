@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Setup;
 import io.harness.rest.RestResponse;
@@ -23,7 +24,7 @@ import software.wings.beans.User;
 import java.io.IOException;
 import javax.ws.rs.core.GenericType;
 
-public abstract class AbstractFunctionalTest implements FunctionalTests {
+public abstract class AbstractFunctionalTest extends CategoryTest implements FunctionalTests {
   private static final Logger logger = LoggerFactory.getLogger(AbstractFunctionalTest.class);
 
   protected static String bearerToken;
