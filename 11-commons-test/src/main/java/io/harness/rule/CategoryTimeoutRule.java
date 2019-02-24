@@ -1,5 +1,6 @@
 package io.harness.rule;
 
+import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.IntegrationTests;
 import io.harness.category.element.UnitTests;
 import io.harness.category.speed.FastTests;
@@ -50,8 +51,9 @@ public class CategoryTimeoutRule extends Timeout {
 
     boolean unit = Arrays.stream(category.value()).anyMatch(UnitTests.class ::isAssignableFrom);
     boolean integration = Arrays.stream(category.value()).anyMatch(IntegrationTests.class ::isAssignableFrom);
+    boolean functional = Arrays.stream(category.value()).anyMatch(FunctionalTests.class ::isAssignableFrom);
 
-    if (!unit && !integration) {
+    if (!unit && !integration && !functional) {
       throw new CategoryConfigException("A test should belong to at least one type category");
     }
 
@@ -76,6 +78,14 @@ public class CategoryTimeoutRule extends Timeout {
         timeoutMS = TimeUnit.MINUTES.toMillis(5);
       } else {
         timeoutMS = TimeUnit.MINUTES.toMillis(1);
+      }
+    } else if (functional) {
+      if (fast) {
+        timeoutMS = TimeUnit.MINUTES.toMillis(1);
+      } else if (slow) {
+        timeoutMS = TimeUnit.MINUTES.toMillis(15);
+      } else {
+        timeoutMS = TimeUnit.MINUTES.toMillis(10);
       }
     }
 
