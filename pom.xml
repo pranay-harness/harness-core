@@ -1475,7 +1475,7 @@
                         <findbugsXmlOutput>true</findbugsXmlOutput>
                         <xmlOutput>true</xmlOutput>
                         <excludeFilterFile>tools/config/src/main/resources/findbugs-exclude.xml</excludeFilterFile>
-                        <jvmArgs>-Xmx4096m</jvmArgs>
+                        <maxHeap>4096</maxHeap>
                     </configuration>
                 </plugin>
                 <plugin>
