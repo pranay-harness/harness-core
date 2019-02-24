@@ -17,15 +17,14 @@ public class Puller {
 
   public interface Predicate { boolean condition(); }
 
-  public static void pullFor(Duration timeout, Predicate predicate) {
+  public static void pullFor(Duration timeout, Duration interval, Predicate predicate) {
     long start = monotonicTimestamp();
-    long interval = Math.min(100, timeout.toMillis() / 10);
     do {
       if (predicate.condition()) {
         return;
       }
       try {
-        Thread.sleep(interval);
+        Thread.sleep(interval.toMillis());
       } catch (InterruptedException e) {
         // Do nothing
       }

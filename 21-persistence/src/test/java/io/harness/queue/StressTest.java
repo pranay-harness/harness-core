@@ -1,6 +1,7 @@
 package io.harness.queue;
 
 import static io.harness.queue.Queue.Filter.ALL;
+import static java.time.Duration.ofMillis;
 import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
@@ -53,7 +54,7 @@ public class StressTest extends PersistenceTest {
 
       final long start = queue.count(ALL);
       try {
-        Puller.pullFor(Duration.ofSeconds(10), () -> {
+        Puller.pullFor(Duration.ofSeconds(10), ofMillis(100), () -> {
           final long count = queue.count(ALL);
           logger.info("Queue count: {}", count);
           return count == 0;

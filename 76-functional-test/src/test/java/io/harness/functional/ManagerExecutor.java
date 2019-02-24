@@ -1,7 +1,9 @@
 package io.harness.functional;
 
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
+import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Singleton;
@@ -87,7 +89,7 @@ public class ManagerExecutor {
 
         processExecutor.start();
 
-        Puller.pullFor(ofMinutes(2), () -> isHealthy());
+        Puller.pullFor(ofMinutes(2), ofSeconds(2), () -> isHealthy());
       } catch (RuntimeException | IOException exception) {
         failedAlready = true;
         throw exception;
@@ -111,7 +113,7 @@ public class ManagerExecutor {
       if (exception.getMessage().equals(previous.getMessage())) {
         logger.info("not healthy");
       } else {
-        logger.info("not healthy", exception);
+        logger.info(format("not healthy - %s", exception.getMessage()));
         previous = exception;
       }
       return false;

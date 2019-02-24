@@ -1,6 +1,7 @@
 package io.harness.functional;
 
 import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
@@ -73,7 +74,7 @@ public class DelegateExecutor {
 
         processExecutor.start();
 
-        Puller.pullFor(ofMinutes(2), () -> isHealthy(account.getUuid()));
+        Puller.pullFor(ofMinutes(2), ofSeconds(2), () -> isHealthy(account.getUuid()));
 
       } catch (RuntimeException exception) {
         failedAlready = true;
