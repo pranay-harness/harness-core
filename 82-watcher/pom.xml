@@ -39,12 +39,6 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>61-serialization-utils</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>

@@ -9,6 +9,9 @@ import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import io.harness.delegate.message.MessageService;
+import io.harness.delegate.message.MessageServiceImpl;
+import io.harness.delegate.message.MessengerType;
 import io.harness.govern.DependencyModule;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.shell.ShellExecutionService;
@@ -225,9 +228,6 @@ import software.wings.service.intfc.yaml.GitClient;
 import software.wings.settings.SettingValue;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
-import software.wings.utils.message.MessageService;
-import software.wings.utils.message.MessageServiceImpl;
-import software.wings.utils.message.MessengerType;
 
 import java.time.Clock;
 import java.util.Set;

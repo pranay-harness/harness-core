@@ -1,4 +1,4 @@
-package software.wings.utils.message;
+package io.harness.delegate.message;
 
 import java.util.List;
 import java.util.Map;
