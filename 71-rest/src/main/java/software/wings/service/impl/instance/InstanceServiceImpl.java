@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static software.wings.common.Constants.WEEK;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -169,7 +170,7 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   private void pruneByEntity(String fieldName, String value) {
-    Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.filter(fieldName, value);
 
     UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
@@ -180,7 +181,7 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   private void pruneByEntity(Map<String, String> inputs) {
-    Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     long timeMillis = System.currentTimeMillis();
     inputs.forEach((key, value) -> query.filter(key, value));
 
@@ -291,7 +292,23 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
-  public void updateSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
+  public void handleSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
+      String infraMappingName, long timestamp, String errorMsg) {
+    SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
+    if (syncStatus != null) {
+      if ((timestamp - syncStatus.getLastSuccessfullySyncedAt()) >= WEEK) {
+        logger.info("Deleting the instances for inframapping {} since sync has been failing for more than a week",
+            infraMappingId);
+        wingsPersistence.delete(SyncStatus.class, syncStatus.getUuid());
+        pruneByInfrastructureMapping(appId, infraMappingId);
+        return;
+      }
+    }
+
+    updateSyncFailure(appId, serviceId, envId, infraMappingId, infraMappingName, timestamp, errorMsg);
+  }
+
+  private void updateSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
       String infraMappingName, long timestamp, String errorMsg) {
     SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
     if (syncStatus == null) {

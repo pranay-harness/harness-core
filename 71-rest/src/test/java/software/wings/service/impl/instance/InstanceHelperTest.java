@@ -826,7 +826,7 @@ public class InstanceHelperTest extends WingsBaseTest {
       return null;
     })
         .when(instanceService)
-        .updateSyncFailure(anyString(), anyString(), anyString(), anyString(), anyString(), anyLong(), anyString());
+        .handleSyncFailure(anyString(), anyString(), anyString(), anyString(), anyString(), anyLong(), anyString());
     instanceHelper.manualSync(APP_ID, INFRA_MAP_ID);
     assertEquals(1, count.get());
   }
