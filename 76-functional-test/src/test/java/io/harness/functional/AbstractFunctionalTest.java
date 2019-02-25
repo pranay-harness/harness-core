@@ -6,7 +6,9 @@ import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.FunctionalTests;
+import io.harness.framework.Retry;
 import io.harness.framework.Setup;
+import io.harness.framework.matchers.SettingsAttributeMatcher;
 import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
@@ -54,17 +56,15 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
 
   @Before
   public void testSetup() throws IOException {
+    final int MAX_RETRIES = 5;
+    final int DELAY_IN_MS = 3000;
+    final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
     account = accountSetupService.ensureAccount();
 
     delegateExecutor.ensureDelegate(account);
 
     bearerToken = Setup.getAuthToken("admin@harness.io", "admin");
-    SettingAttribute settingAttribute = Setup.getEmailConfig(account.getUuid());
-    if (settingsService.getByName(
-            settingAttribute.getAccountId(), settingAttribute.getAppId(), settingAttribute.getName())
-        == null) {
-      settingsService.save(settingAttribute);
-    }
+    retry.executeWithRetry(() -> updateAndGetSettingAttribute(), new SettingsAttributeMatcher<>(), true);
   }
 
   protected void resetCache() {
@@ -75,5 +75,17 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
                                               .put("/users/reset-cache")
                                               .as(new GenericType<RestResponse<User>>() {}.getType());
     assertThat(userRestResponse).isNotNull();
+  }
+
+  private SettingAttribute updateAndGetSettingAttribute() {
+    SettingAttribute settingAttribute = Setup.getEmailConfig(account.getUuid());
+
+    if (settingsService.getByName(
+            settingAttribute.getAccountId(), settingAttribute.getAppId(), settingAttribute.getName())
+        == null) {
+      return settingsService.save(settingAttribute);
+    }
+    return settingsService.getByName(
+        settingAttribute.getAccountId(), settingAttribute.getAppId(), settingAttribute.getName());
   }
 }
