@@ -14,7 +14,6 @@ import lombok.experimental.FieldDefaults;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Request.Builder;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.utils.URIBuilder;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,9 +23,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.security.SecretManager;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.util.concurrent.ExecutionException;
 
 @Singleton
@@ -41,19 +38,14 @@ public class AzureClientImpl extends BaseOauthClient implements OauthClient {
   static final Logger logger = LoggerFactory.getLogger(AzureClientImpl.class);
 
   @Inject
-  public AzureClientImpl(MainConfiguration mainConfiguration, SecretManager secretManager)
-      throws UnsupportedEncodingException {
+  public AzureClientImpl(MainConfiguration mainConfiguration, SecretManager secretManager) {
     super(secretManager);
     AzureConfig azureConfig = mainConfiguration.getAzureConfig();
-    String clientId = new String(Base64.decodeBase64(azureConfig.getClientId().getBytes()));
-    String clientSecret = new String(Base64.decodeBase64(azureConfig.getClientSecret().getBytes()));
-    clientSecret = URLEncoder.encode(clientSecret, "UTF-8");
-    service = new ServiceBuilder(clientId)
-                  .apiSecret(clientSecret)
+    service = new ServiceBuilder(azureConfig.getClientId())
+                  .apiSecret(azureConfig.getClientSecret())
                   .scope("User.Read") // replace with desired scope
                   .callback(azureConfig.getCallbackUrl())
                   .build(new MicrosoftAzureActiveDirectory20ApiV2());
-    logger.info("Azure client settings are: {}", azureConfig.toString());
   }
 
   @Override
