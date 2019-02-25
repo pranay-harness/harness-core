@@ -2,6 +2,7 @@ package io.harness.framework;
 
 import io.harness.framework.matchers.EmailMatcher;
 import io.harness.framework.matchers.Matcher;
+import io.harness.framework.matchers.SettingsAttributeMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,10 @@ public class Retry<T> {
         TimeUnit.MILLISECONDS.sleep(this.introduceDelayInMS);
         T actual = function.get();
         if (matcher instanceof EmailMatcher) {
+          if (matcher.matches(expected, actual)) {
+            return actual;
+          }
+        } else if (matcher instanceof SettingsAttributeMatcher) {
           if (matcher.matches(expected, actual)) {
             return actual;
           }
