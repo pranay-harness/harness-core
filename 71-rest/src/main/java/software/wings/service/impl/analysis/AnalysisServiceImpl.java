@@ -338,27 +338,31 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String appId,
-      String workflowId, String workflowExecutionId, String serviceId, String query) {
+  public boolean isBaselineCreated(String stateExecutionId, AnalysisComparisonStrategy comparisonStrategy,
+      StateType stateType, String appId, String workflowId, String workflowExecutionId, String serviceId,
+      String query) {
     if (comparisonStrategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
       return true;
     }
-    return getLastSuccessfulWorkflowExecutionIdWithLogs(stateType, appId, serviceId, workflowId, query) != null;
+    return getLastSuccessfulWorkflowExecutionIdWithLogs(
+               stateExecutionId, stateType, appId, serviceId, workflowId, query)
+        != null;
   }
 
   @Override
   public String getLastSuccessfulWorkflowExecutionIdWithLogs(
-      StateType stateType, String appId, String serviceId, String workflowId, String query) {
+      String stateExecutionId, StateType stateType, String appId, String serviceId, String workflowId, String query) {
     // TODO should we limit the number of executions to search in ??
     List<String> successfulExecutions = new ArrayList<>();
     List<ContinuousVerificationExecutionMetaData> cvList =
         wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-            .filter("appId", appId)
+            .filter("applicationId", appId)
             .filter("stateType", stateType)
             .filter("workflowId", workflowId)
             .filter("executionStatus", ExecutionStatus.SUCCESS)
             .order("-workflowStartTs")
             .asList();
+    logger.info("Fetched {} CVExecutionMetadata for stateExecutionId {}", cvList.size(), stateExecutionId);
     cvList.forEach(cvMetadata -> successfulExecutions.add(cvMetadata.getWorkflowExecutionId()));
     for (String successfulExecution : successfulExecutions) {
       if (wingsPersistence.createQuery(LogDataRecord.class)
@@ -368,13 +372,18 @@ public class AnalysisServiceImpl implements AnalysisService {
               .filter("query", query)
               .count(new CountOptions().limit(1))
           > 0) {
+        logger.info("Found an execution for auto baseline. WorkflowExecutionId {}, stateExecutionId {}",
+            successfulExecution, stateExecutionId);
         return successfulExecution;
       }
     }
     if (isNotEmpty(successfulExecutions)) {
+      logger.info(
+          "We did not find any execution with data. Returning workflowExecution {} as baseline for stateExecutionId {}",
+          cvList.get(0).getWorkflowExecutionId(), stateExecutionId);
       return cvList.get(0).getWorkflowExecutionId();
     }
-    logger.warn("Could not get a successful workflow to find control nodes");
+    logger.warn("Could not get a successful workflow to find control nodes for stateExecutionId: {}", stateExecutionId);
     return null;
   }
 

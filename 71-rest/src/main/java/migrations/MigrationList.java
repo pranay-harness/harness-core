@@ -55,6 +55,7 @@ import migrations.all.MarketoLeadDataMigration;
 import migrations.all.MetricAnalysisRecordGroupNameMigration;
 import migrations.all.MetricDataRecordGroupNameMigration;
 import migrations.all.MetricMLAnalysisRecordGroupNameMigration;
+import migrations.all.MigrateCVMetadataApplicationId;
 import migrations.all.NewRelicMetricAnalysisRecordsMigration;
 import migrations.all.NewRelicMetricDataGroupNameMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
@@ -189,6 +190,7 @@ public class MigrationList {
         .add(Pair.of(224, CreateDefaultAlertNotificationRule.class))
         .add(Pair.of(225, InitServiceCounters.class))
         .add(Pair.of(226, InitInfraProvisionerCounters.class))
+        .add(Pair.of(227, MigrateCVMetadataApplicationId.class))
         .build();
   }
 }
