@@ -464,8 +464,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    assertFalse(managerAnalysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
-        StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, query));
+    assertFalse(
+        managerAnalysisService.isBaselineCreated(stateExecutionId, AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
+            StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, query));
   }
 
   @Test

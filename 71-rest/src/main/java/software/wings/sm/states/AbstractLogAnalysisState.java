@@ -150,8 +150,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
           getLogger().info("id: {}, {}", executionContext.getStateExecutionInstanceId(), responseMessage);
           baselineWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
-              analysisContext.getStateType(), analysisContext.getAppId(), analysisContext.getServiceId(),
-              analysisContext.getWorkflowId(), analysisContext.getQuery());
+              analysisContext.getStateExecutionId(), analysisContext.getStateType(), analysisContext.getAppId(),
+              analysisContext.getServiceId(), analysisContext.getWorkflowId(), analysisContext.getQuery());
         } else {
           responseMessage = "Baseline is pinned for the workflow. Analyzing against pinned baseline.";
           getLogger().info("Baseline is pinned for stateExecution: {}, baselineId: ",
