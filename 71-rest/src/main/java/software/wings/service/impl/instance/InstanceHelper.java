@@ -612,7 +612,8 @@ public class InstanceHelper {
         } else {
           errorMsg = ex.getMessage() != null ? ex.getMessage() : "Unknown error";
         }
-        instanceService.updateSyncFailure(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
+
+        instanceService.handleSyncFailure(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
             infraMapping.getName(), System.currentTimeMillis(), errorMsg);
       }
     }

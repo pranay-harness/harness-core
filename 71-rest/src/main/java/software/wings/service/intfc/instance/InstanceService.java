@@ -108,9 +108,8 @@ public interface InstanceService
    * @param timestamp failure sync timestamp
    * @param errorMsg  failure reason
    */
-  void updateSyncFailure(String appId, String serviceId, String envId, String infraMappingId, String infraMappingName,
+  void handleSyncFailure(String appId, String serviceId, String envId, String infraMappingId, String infraMappingName,
       long timestamp, String errorMsg);
-
   /**
    *
    * @param appId
