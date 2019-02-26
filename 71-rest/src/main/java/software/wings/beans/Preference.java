@@ -22,7 +22,7 @@ public abstract class Preference extends Base {
   @NotEmpty @NaturalKey private String name;
   @NotEmpty @NaturalKey private String accountId;
   @NotEmpty @NaturalKey private String userId;
-  private String preferenceType;
+  @NaturalKey private String preferenceType;
 
   public Preference(String preferenceType) {
     this.preferenceType = preferenceType;

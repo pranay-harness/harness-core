@@ -32,7 +32,8 @@ import java.util.Set;
 @Singleton
 public class WingsMongoExportImport {
   private static final int BATCH_SIZE = 1000;
-  private static final Set<String> DEFAULT_NATURAL_KEY_FIELDS = new HashSet<>(Arrays.asList("accountId", "appId"));
+  private static final Set<String> DEFAULT_NATURAL_KEY_FIELDS =
+      new HashSet<>(Arrays.asList("accountId", "appId", "name", "version"));
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -106,7 +107,7 @@ public class WingsMongoExportImport {
             collection.save(importRecord, WriteConcern.ACKNOWLEDGED);
             importedRecords++;
           } else {
-            log.info(
+            log.debug(
                 "Skipped importing of record {} in collection {} because it matches {} records using natural key query {} but only matches {} records using id query.",
                 id, collectionName, recordCountFromNaturalKey, naturalKeyQuery, recordCountFromId);
           }
@@ -163,6 +164,16 @@ public class WingsMongoExportImport {
         fieldSet.add(field.getName());
       }
     }
+
+    // Recursively inspect the super class for @NaturalKey annotations.
+    Class<?> superClazz = clazz.getSuperclass();
+    if (superClazz != null && !superClazz.isInterface()) {
+      String[] naturalKeyFieldsFromSuperClazz = getNaturalKeyFields((Class<? extends PersistentEntity>) superClazz);
+      for (String naturalKeyField : naturalKeyFieldsFromSuperClazz) {
+        fieldSet.add(naturalKeyField);
+      }
+    }
+
     String[] naturalKeyFields = new String[fieldSet.size()];
     fieldSet.toArray(naturalKeyFields);
     return naturalKeyFields;

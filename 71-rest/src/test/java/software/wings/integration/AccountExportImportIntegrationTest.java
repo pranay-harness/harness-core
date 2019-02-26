@@ -21,6 +21,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
@@ -106,6 +107,38 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
       // CVConfiguration cvConfiguration =
       //   cvConfigurationService.getConfiguration("Prod-Manager", application.getUuid(), environment.getUuid());
       // assertNotNull(cvConfiguration);
+    } finally {
+      // 5. Delete the imported account after done.
+      deleteAccount(qaHarnessAccountId);
+    }
+  }
+
+  @Test
+  public void testImportQEAccountDataFromZipFile() {
+    String qaHarnessAccountId = "eWZFoTkESDSkPfnGwAp0lQ";
+    String qaHarnessAccountName = "QEAccount";
+
+    // 1. Delete the account if it exists.
+    if (accountService.exists(qaHarnessAccountName)) {
+      deleteAccount(qaHarnessAccountId);
+    }
+    // 2. Create an empty account for the account to be imported.
+    createAccount(qaHarnessAccountId, qaHarnessAccountName);
+
+    try {
+      // 3. Actually import the Harness-QA account data from the exported Zip file.
+      String qaHarnessAccountDataZipFile = "./exportimport/account_eWZFoTkESDSkPfnGwAp0lQ.zip";
+      importAccountDataFromFile(qaHarnessAccountId, qaHarnessAccountDataZipFile);
+
+      // 4. Verify relevant data has been imported successfully.
+      Application application = appService.getAppByName(qaHarnessAccountId, "swamy-test");
+      assertNotNull(application);
+      Service service = serviceResourceService.getServiceByName(application.getUuid(), "Docker");
+      assertNotNull(service);
+      Environment environment = environmentService.getEnvironmentByName(application.getUuid(), "gcp");
+      assertNotNull(environment);
+      Workflow workflow = workflowService.readWorkflowByName(application.getAppId(), "DockerBasic");
+      assertNotNull(workflow);
     } finally {
       // 5. Delete the imported account after done.
       deleteAccount(qaHarnessAccountId);
