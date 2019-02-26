@@ -380,7 +380,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       delegateTask.setTimeout(getTimeoutMillis());
     }
 
-    String delegateTaskId = scheduleDelegateTask(context, delegateTask, scriptStateExecutionData);
+    String delegateTaskId = scheduleDelegateTask(context, delegateTask, scriptStateExecutionData, false);
     return anExecutionResponse()
         .withAsync(true)
         .withStateExecutionData(scriptStateExecutionData)

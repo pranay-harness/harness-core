@@ -353,7 +353,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     HttpStateExecutionDataBuilder executionDataBuilder =
         HttpStateExecutionData.builder().templateVariables(convertToVariableMap(getTemplateVariables()));
 
-    String delegateTaskId = scheduleDelegateTask(context, delegateTask, executionDataBuilder.build());
+    String delegateTaskId = scheduleDelegateTask(context, delegateTask, executionDataBuilder.build(), true);
 
     executionDataBuilder.httpUrl(httpTaskParameters.getUrl()).httpMethod(httpTaskParameters.getMethod());
 
