@@ -1362,13 +1362,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     task.setBroadcastCount(1);
     task.setLastBroadcastAt(clock.millis());
     task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
-    DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
+    wingsPersistence.save(task);
     logger.info("{} task: uuid: {}, accountId: {}, type: {}, correlationId: {}",
-        async ? "Queueing async" : "Executing sync", delegateTask.getUuid(), delegateTask.getAccountId(),
-        delegateTask.getTaskType(), delegateTask.getCorrelationId());
+        async ? "Queueing async" : "Executing sync", task.getUuid(), task.getAccountId(), task.getTaskType(),
+        task.getCorrelationId());
 
-    broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
-    return delegateTask;
+    broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
+    return task;
   }
 
   private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {

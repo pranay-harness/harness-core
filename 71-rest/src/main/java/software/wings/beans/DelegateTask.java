@@ -10,10 +10,17 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UuidAware;
 import io.harness.serializer.KryoUtils;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -31,13 +38,17 @@ import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
-/**
- * Created by peeyushaggarwal on 12/5/16.
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters(Converter.class)
-public class DelegateTask extends Base {
+public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+  public static final String APP_ID_KEY = "appId";
+
+  @Id @Getter @Setter private String uuid;
+  @Indexed @Getter @Setter protected String appId;
+  @Getter @Setter private long createdAt;
+  @Getter @Setter private long lastUpdatedAt;
+
   private String version;
   @NotNull private String taskType;
   private Object[] parameters;
@@ -291,9 +302,6 @@ public class DelegateTask extends Base {
       return true;
     }
     if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    if (!super.equals(o)) {
       return false;
     }
     DelegateTask that = (DelegateTask) o;
@@ -675,9 +683,6 @@ public class DelegateTask extends Base {
       delegateTask.setUuid(uuid);
       delegateTask.setInfrastructureMappingId(infrastructureMappingId);
       delegateTask.setAppId(appId);
-      delegateTask.setCreatedBy(createdBy);
-      delegateTask.setCreatedAt(createdAt);
-      delegateTask.setLastUpdatedBy(lastUpdatedBy);
       delegateTask.setLastUpdatedAt(lastUpdatedAt);
       delegateTask.setNotifyResponse(notifyResponse);
       delegateTask.setPreAssignedDelegateId(preAssignedDelegateId);
