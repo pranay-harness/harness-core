@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import io.harness.annotation.NaturalKey;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,14 +20,14 @@ import java.util.Objects;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class BaseFile extends Base {
-  @FormDataParam("name") @NaturalKey private String name;
+  @FormDataParam("name") private String name;
   private String fileUuid;
-  @NotEmpty(groups = Create.class) @NaturalKey private String fileName;
+  @NotEmpty(groups = Create.class) private String fileName;
   private String mimeType;
   private long size;
   private ChecksumType checksumType = ChecksumType.MD5;
   @FormDataParam("md5") private String checksum;
-  @NotEmpty @NaturalKey protected String accountId;
+  @NotEmpty protected String accountId;
 
   @Override
   public int hashCode() {
