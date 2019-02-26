@@ -62,10 +62,10 @@ public class EcsServiceSpecificationYamlHandler
     String serviceId = yamlHelper.getServiceId(appId, filePath);
     Validator.notNullCheck("Could not lookup service for the yaml file: " + filePath, serviceId);
 
-    EcsServiceSpecification pcfServiceSpecification =
+    EcsServiceSpecification ecsServiceSpecification =
         EcsServiceSpecification.builder().serviceSpecJson(yaml.getServiceSpecJson()).serviceId(serviceId).build();
-    pcfServiceSpecification.setAppId(appId);
-    return pcfServiceSpecification;
+    ecsServiceSpecification.setAppId(appId);
+    return ecsServiceSpecification;
   }
 
   @Override
@@ -82,5 +82,15 @@ public class EcsServiceSpecificationYamlHandler
     Validator.notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId);
 
     return serviceResourceService.getEcsServiceSpecification(appId, serviceId);
+  }
+
+  @Override
+  public void delete(ChangeContext<EcsServiceSpecification.Yaml> changeContext) {
+    EcsServiceSpecification ecsServiceSpecification =
+        get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    if (ecsServiceSpecification != null) {
+      serviceResourceService.resetToDefaultEcsServiceSpecification(
+          ecsServiceSpecification.getAppId(), ecsServiceSpecification.getServiceId());
+    }
   }
 }

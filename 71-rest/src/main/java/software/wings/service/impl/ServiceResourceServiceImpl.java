@@ -1057,7 +1057,21 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public void deleteHelmChartSpecification(String appId, String helmChartSpecificationId) {
-    wingsPersistence.delete(HelmChartSpecification.class, appId, helmChartSpecificationId);
+    deleteHelmChartSpecification(getHelmChartSpecificationById(appId, helmChartSpecificationId));
+  }
+
+  @Override
+  public void deleteHelmChartSpecification(HelmChartSpecification helmChartSpecification) {
+    if (helmChartSpecification == null) {
+      return;
+    }
+
+    String appId = helmChartSpecification.getAppId();
+    String accountId = appService.getAccountIdByAppId(helmChartSpecification.getAppId());
+    Service service = get(appId, helmChartSpecification.getServiceId());
+    wingsPersistence.delete(HelmChartSpecification.class, appId, helmChartSpecification.getUuid());
+    yamlPushService.pushYamlChangeSet(
+        accountId, service, helmChartSpecification, Type.DELETE, helmChartSpecification.isSyncFromGit());
   }
 
   @Override

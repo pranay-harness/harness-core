@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.deploymentspec;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.DeploymentSpecification;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -14,7 +13,7 @@ public abstract class DeploymentSpecificationYamlHandler<Y extends DeploymentSpe
     extends BaseYamlHandler<Y, B> {
   // We should not allow deletion of any deployment spec from the service
   @Override
-  public void delete(ChangeContext<Y> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Y> changeContext) {
     // do nothing
   }
 }

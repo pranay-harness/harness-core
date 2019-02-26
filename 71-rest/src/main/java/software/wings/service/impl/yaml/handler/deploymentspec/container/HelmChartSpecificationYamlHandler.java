@@ -87,4 +87,15 @@ public class HelmChartSpecificationYamlHandler
 
     return serviceResourceService.getHelmChartSpecification(appId, serviceId);
   }
+
+  @Override
+  public void delete(ChangeContext<Yaml> changeContext) {
+    HelmChartSpecification helmChartSpecification =
+        get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+
+    if (helmChartSpecification != null) {
+      helmChartSpecification.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+      serviceResourceService.deleteHelmChartSpecification(helmChartSpecification);
+    }
+  }
 }
