@@ -8,7 +8,6 @@ import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.time.Duration.ofSeconds;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.FileUtils;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -161,38 +160,21 @@ public class FileIo {
     return lockFile.exists();
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public static void writeWithExclusiveLockAcrossProcesses(
       String input, String filePath, StandardOpenOption standardOpenOption) throws IOException {
-    FileLock fileLock = null;
-    try {
-      ByteBuffer buffer = ByteBuffer.wrap(input.getBytes());
-      Path path = Paths.get(filePath);
-      FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.WRITE, standardOpenOption);
-
-      fileLock = fileChannel.lock(); // gets an exclusive lock
+    ByteBuffer buffer = ByteBuffer.wrap(input.getBytes(StandardCharsets.UTF_8));
+    Path path = Paths.get(filePath);
+    try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.WRITE, standardOpenOption);
+         FileLock fileLock = fileChannel.lock()) {
       fileChannel.write(buffer);
-      fileChannel.close(); // also releases lock
-    } catch (Exception e) {
-      if (fileLock != null) {
-        fileLock.close();
-      }
     }
   }
 
   public static String getFileContentsWithSharedLockAcrossProcesses(String filePath) throws IOException {
-    String content = null;
-    FileLock fileLock = null;
-    FileChannel fileChannel = null;
-
-    try {
-      StringBuilder builder = new StringBuilder(128);
-      Path path = Paths.get(filePath);
-      fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-
-      // take shared lock on file
-      fileLock = fileChannel.lock(0, Long.MAX_VALUE, true);
-
+    StringBuilder builder = new StringBuilder(128);
+    Path path = Paths.get(filePath);
+    try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
+         FileLock fileLock = fileChannel.lock(0, Long.MAX_VALUE, true)) {
       ByteBuffer buffer = ByteBuffer.allocate(128);
       int noOfBytesRead = fileChannel.read(buffer);
       while (noOfBytesRead != -1) {
@@ -203,17 +185,7 @@ public class FileIo {
         buffer.clear();
         noOfBytesRead = fileChannel.read(buffer);
       }
-
-      // also releases the lock
-      fileChannel.close();
-      fileChannel = null;
-      content = builder.toString();
-    } catch (Exception e) {
-      if (fileLock != null) {
-        fileLock.close();
-      }
+      return builder.toString();
     }
-
-    return content;
   }
 }
