@@ -75,6 +75,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform.tfvars";
   private static final String TERRAFORM_SCRIPT_FILE_EXTENSION = "tf";
   private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs";
+  private static final String REMOTE_STATE_FILE_PATH = ".terraform/terraform.tfstate";
 
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;
@@ -132,6 +133,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
     File tfVariablesFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
     File tfBackendConfigsFile = Paths.get(scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME).toFile();
+
+    ensureLocalCleanup(scriptDirectory);
 
     boolean usingRemoteState = isRemoteStateConfigured(scriptDirectory);
 
@@ -328,6 +331,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       FileUtils.deleteQuietly(tfVariablesFile);
       FileUtils.deleteQuietly(tfBackendConfigsFile);
     }
+  }
+
+  private void ensureLocalCleanup(String scriptDirectory) {
+    FileUtils.deleteQuietly(Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile());
+    FileUtils.deleteQuietly(Paths.get(scriptDirectory, REMOTE_STATE_FILE_PATH).toFile());
   }
 
   @VisibleForTesting
