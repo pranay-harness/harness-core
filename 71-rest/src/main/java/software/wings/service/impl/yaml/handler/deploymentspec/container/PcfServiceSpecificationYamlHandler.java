@@ -83,4 +83,13 @@ public class PcfServiceSpecificationYamlHandler
 
     return serviceResourceService.getPcfServiceSpecification(appId, serviceId);
   }
+
+  @Override
+  public void delete(ChangeContext<PcfServiceSpecification.Yaml> changeContext) {
+    PcfServiceSpecification pcfServiceSpecification =
+        get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+    if (pcfServiceSpecification != null) {
+      serviceResourceService.resetToDefaultPcfServiceSpecification(pcfServiceSpecification);
+    }
+  }
 }

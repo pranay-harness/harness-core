@@ -458,4 +458,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   List<String> fetchServiceNamesByUuids(String appId, List<String> serviceUuids);
 
   DeploymentType getDeploymentType(InfrastructureMapping infraMapping, Service service, String serviceId);
+
+  void deleteHelmChartSpecification(HelmChartSpecification helmChartSpecification);
 }
