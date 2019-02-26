@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import com.google.common.base.Splitter;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.HttpTaskParameters;
 import io.harness.delegate.task.protocol.TaskParameters;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.HttpEntity;
@@ -54,13 +55,14 @@ public class HttpTask extends AbstractDelegateRunnableTask {
 
   @Override
   public HttpStateExecutionResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
+    HttpTaskParameters httpTaskParameters = (HttpTaskParameters) parameters;
+    return run(httpTaskParameters.getMethod(), httpTaskParameters.getUrl(), httpTaskParameters.getBody(),
+        httpTaskParameters.getHeader(), httpTaskParameters.getSocketTimeoutMillis());
   }
 
   @Override
   public HttpStateExecutionResponse run(Object[] parameters) {
-    return run((String) parameters[0], (String) parameters[1], (String) parameters[2], (String) parameters[3],
-        (Integer) parameters[4]);
+    throw new NotImplementedException("Not implemented");
   }
 
   public HttpStateExecutionResponse run(

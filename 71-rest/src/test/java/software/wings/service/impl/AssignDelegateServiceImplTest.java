@@ -20,6 +20,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.HttpTaskParameters;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -272,7 +273,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .criteria("criteria")
                               .validated(true)
                               .build());
-    Object[] params = {"", "criteria"};
+
+    Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
 
     DelegateTask delegateTask =
         aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
@@ -288,7 +290,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .criteria("criteria")
                               .validated(true)
                               .build());
-    Object[] params = {"", "criteria-other"};
+    Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
 
     DelegateTask delegateTask =
         aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
@@ -304,7 +306,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .criteria("criteria")
                               .validated(false)
                               .build());
-    Object[] params = {"", "criteria"};
+    Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
 
     DelegateTask delegateTask =
         aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
@@ -330,7 +332,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .build());
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
-    Object[] params = {"", "criteria"};
+    Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
     DelegateTask delegateTask =
         aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
 
@@ -358,7 +360,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .build());
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
-    Object[] params = {"", "criteria"};
+    Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
     DelegateTask delegateTask =
         aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
 
@@ -385,7 +387,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .build());
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
-    Object[] params = {"", "criteria"};
+    Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
     DelegateTask delegateTask =
         aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
 
@@ -412,7 +414,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .build());
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
-    Object[] params = {"", "criteria-other"};
+    Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
     DelegateTask delegateTask =
         aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
 
@@ -423,7 +425,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldGetNullFirstAttemptDelegate() {
-    Object[] params = {"", "criteria-other"};
+    Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
     DelegateTask delegateTask =
         aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
 
@@ -450,7 +452,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .build());
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
-    Object[] params = {"", "criteria"};
+    Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
     DelegateTask delegateTask =
         aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
 

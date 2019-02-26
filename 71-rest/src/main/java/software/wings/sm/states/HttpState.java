@@ -19,6 +19,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.HttpTaskParameters;
 import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.protocol.ResponseData;
@@ -27,7 +28,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
-import io.harness.waiter.WaitNotifyEngine;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -46,6 +46,7 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SweepingOutput;
@@ -54,7 +55,6 @@ import software.wings.beans.Variable;
 import software.wings.common.Constants;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -105,10 +105,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @SchemaIgnore private int socketTimeoutMillis = 10000;
 
   @Inject private transient ActivityService activityService;
-  @Inject private transient DelegateService delegateService;
-  @Inject private transient ManagerExpressionEvaluator expressionEvaluator;
   @Inject private transient SweepingOutputService sweepingOutputService;
-  @Inject private transient WaitNotifyEngine waitNotifyEngine;
   @Inject protected transient ManagerDecryptionService managerDecryptionService;
   @Inject protected transient SecretManager secretManager;
 
@@ -240,6 +237,21 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     return socketTimeoutMillis;
   }
 
+  protected String getFinalMethod(ExecutionContext context) {
+    return method;
+  }
+
+  protected String getFinalHeader(ExecutionContext context) {
+    return header;
+  }
+
+  protected String getFinalBody(ExecutionContext context) throws UnsupportedEncodingException {
+    return body;
+  }
+
+  protected String getFinalUrl(ExecutionContext context) {
+    return url;
+  }
   /**
    * Sets socket timeout millis.
    *
@@ -300,30 +312,18 @@ public class HttpState extends State implements SweepingOutputStateMixin {
    * @return the execution response
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
-    HttpStateExecutionDataBuilder httpStateExecutionDataBuilder =
-        HttpStateExecutionData.builder().templateVariables(convertToVariableMap(getTemplateVariables()));
     String envId = obtainEnvId(context.getContextElement(ContextElementType.STANDARD));
 
-    String finalUrl = getFinalUrl(context);
-    String evaluatedUrl = trim(context.renderExpression(finalUrl, httpStateExecutionDataBuilder.build(), null));
-    logger.debug("evaluatedUrl: {}", evaluatedUrl);
-    String evaluatedBody = null;
+    String finalUrl = trim(getFinalUrl(context));
+    String finalBody = null;
     try {
-      evaluatedBody = getFinalBody(context);
+      finalBody = getFinalBody(context);
     } catch (UnsupportedEncodingException e) {
       logger.error("", e);
     }
-    if (evaluatedBody != null) {
-      evaluatedBody = trim(context.renderExpression(evaluatedBody, httpStateExecutionDataBuilder.build(), null));
-      logger.debug("evaluatedBody: {}", evaluatedBody);
-    }
+    String finalHeader = getFinalHeader(context);
+    String finalMethod = getFinalMethod(context);
 
-    String evaluatedHeader = getFinalHeader(context);
-    if (evaluatedHeader != null) {
-      evaluatedHeader = trim(context.renderExpression(evaluatedHeader, httpStateExecutionDataBuilder.build(), null));
-      logger.debug("evaluatedHeader: {}", evaluatedHeader);
-    }
-    String evaluatedMethod = getFinalMethod(context);
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
 
@@ -332,20 +332,30 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     if (stateTimeout != null && taskSocketTimeout > stateTimeout) {
       taskSocketTimeout = stateTimeout - 1000;
     }
-    String delegateTaskId = delegateService.queueTask(
-        aDelegateTask()
-            .withTaskType(getTaskType())
-            .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-            .withWaitId(activityId)
-            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-            .withParameters(
-                new Object[] {evaluatedMethod, evaluatedUrl, evaluatedBody, evaluatedHeader, taskSocketTimeout})
-            .withEnvId(envId)
-            .withInfrastructureMappingId(infrastructureMappingId)
-            .build());
+
+    final HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
+                                                      .header(finalHeader)
+                                                      .method(finalMethod)
+                                                      .body(finalBody)
+                                                      .url(finalUrl)
+                                                      .socketTimeoutMillis(taskSocketTimeout)
+                                                      .build();
+    final DelegateTask delegateTask = aDelegateTask()
+                                          .withTaskType(getTaskType())
+                                          .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                          .withWaitId(activityId)
+                                          .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+                                          .withParameters(new Object[] {httpTaskParameters})
+                                          .withEnvId(envId)
+                                          .withInfrastructureMappingId(infrastructureMappingId)
+                                          .build();
 
     HttpStateExecutionDataBuilder executionDataBuilder =
-        httpStateExecutionDataBuilder.httpUrl(evaluatedUrl).httpMethod(evaluatedMethod);
+        HttpStateExecutionData.builder().templateVariables(convertToVariableMap(getTemplateVariables()));
+
+    String delegateTaskId = scheduleDelegateTask(context, delegateTask, executionDataBuilder.build());
+
+    executionDataBuilder.httpUrl(httpTaskParameters.getUrl()).httpMethod(httpTaskParameters.getMethod());
 
     return anExecutionResponse()
         .withAsync(true)
@@ -359,22 +369,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     return (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
         ? null
         : workflowStandardParams.getEnv().getUuid();
-  }
-
-  protected String getFinalMethod(ExecutionContext context) {
-    return method;
-  }
-
-  protected String getFinalHeader(ExecutionContext context) {
-    return header;
-  }
-
-  protected String getFinalBody(ExecutionContext context) throws UnsupportedEncodingException {
-    return body;
-  }
-
-  protected String getFinalUrl(ExecutionContext context) {
-    return url;
   }
 
   protected TaskType getTaskType() {
@@ -391,11 +385,10 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     } else {
       HttpStateExecutionData executionData = (HttpStateExecutionData) context.getStateExecutionData();
       HttpStateExecutionResponse httpStateExecutionResponse = (HttpStateExecutionResponse) notifyResponseData;
-
+      executionData.setHttpUrl(httpStateExecutionResponse.getHttpUrl());
+      executionData.setHttpMethod(httpStateExecutionResponse.getHttpMethod());
       executionData.setHttpResponseCode(httpStateExecutionResponse.getHttpResponseCode());
       executionData.setHttpResponseBody(httpStateExecutionResponse.getHttpResponseBody());
-      executionData.setHttpMethod(httpStateExecutionResponse.getHttpMethod());
-      executionData.setHttpUrl(httpStateExecutionResponse.getHttpUrl());
       executionData.setStatus(httpStateExecutionResponse.getExecutionStatus());
       executionData.setErrorMsg(httpStateExecutionResponse.getErrorMessage());
       executionData.setDelegateMetaInfo(httpStateExecutionResponse.getDelegateMetaInfo());
