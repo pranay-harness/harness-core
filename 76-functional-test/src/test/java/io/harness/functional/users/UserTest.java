@@ -17,6 +17,7 @@ import io.harness.framework.email.GuerillaEmailInfo;
 import io.harness.framework.email.GuerillaIndividualEmail;
 import io.harness.framework.matchers.EmailMatcher;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Test;
@@ -54,6 +55,7 @@ public class UserTest extends AbstractFunctionalTest {
 
   @Test()
   @Category(FunctionalTests.class)
+  @Owner(emails = "swamy@harness.io", intermittent = true)
   public void verifySignupEmailDelivery() throws IOException, MessagingException {
     Account account = this.getAccount();
     GuerillaEmailInfo emailInfo = gmailUtil.refreshAndGetNewEmail();
@@ -80,6 +82,7 @@ public class UserTest extends AbstractFunctionalTest {
 
   @Test()
   @Category(FunctionalTests.class)
+  @Owner(emails = "swamy@harness.io", intermittent = true)
   public void userRegistrationCompletionTest() {
     Account account = this.getAccount();
     GuerillaEmailInfo emailInfo = gmailUtil.refreshAndGetNewEmail();
