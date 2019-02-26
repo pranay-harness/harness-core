@@ -30,6 +30,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Respons
   private Integer targetInstances;
   private TaskType currentTaskType;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
+  private String loadBalancer;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -58,7 +59,8 @@ public class K8sStateExecutionData extends StateExecutionData implements Respons
         ExecutionDataValue.builder().value(releaseNumber).displayName("Release Number").build());
     putNotNull(executionDetails, "targetInstances",
         ExecutionDataValue.builder().value(targetInstances).displayName("Target Instance Count").build());
-
+    putNotNull(executionDetails, "loadBalancer",
+        ExecutionDataValue.builder().value(loadBalancer).displayName("Load Balancer").build());
     return executionDetails;
   }
 

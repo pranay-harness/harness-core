@@ -806,6 +806,17 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
+  public Service getService(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String name, String namespace) {
+    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+                                  .services()
+                                  .inNamespace(isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace())
+                                  .withName(name)
+                                  .get()
+                            : null;
+  }
+
+  @Override
   public Service getService(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)

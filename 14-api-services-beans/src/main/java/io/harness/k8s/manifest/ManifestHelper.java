@@ -125,6 +125,17 @@ public class ManifestHelper {
         .collect(Collectors.toList());
   }
 
+  public static KubernetesResource getFirstLoadBalancerService(List<KubernetesResource> resources) {
+    List<KubernetesResource> loadBalancerServices =
+        resources.stream().filter(resource -> resource.isLoadBalancerService()).collect(Collectors.toList());
+
+    if (loadBalancerServices.size() > 0) {
+      return loadBalancerServices.get(0);
+    }
+
+    return null;
+  }
+
   public static KubernetesResource getManagedWorkload(List<KubernetesResource> resources) {
     List<KubernetesResource> result = getWorkloads(resources);
     if (!result.isEmpty()) {

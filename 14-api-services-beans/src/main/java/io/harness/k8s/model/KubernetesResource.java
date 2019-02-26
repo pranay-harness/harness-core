@@ -140,6 +140,15 @@ public class KubernetesResource {
     return false;
   }
 
+  public boolean isLoadBalancerService() {
+    if (!StringUtils.equals(Kind.Service.name(), this.getResourceId().getKind())) {
+      return false;
+    }
+
+    HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
+    return StringUtils.equals(((Service) resource).getSpec().getType(), "LoadBalancer");
+  }
+
   public KubernetesResource addColorSelectorInService(String color) {
     HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
     Service service = (Service) resource;

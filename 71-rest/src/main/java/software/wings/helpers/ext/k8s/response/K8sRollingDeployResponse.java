@@ -11,4 +11,5 @@ import java.util.List;
 public class K8sRollingDeployResponse implements K8sTaskResponse {
   Integer releaseNumber;
   List<K8sPod> k8sPodList;
+  String loadBalancer;
 }

@@ -4,13 +4,17 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
+import static io.harness.k8s.manifest.ManifestHelper.getFirstLoadBalancerService;
 import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.k8s.manifest.ManifestHelper.yaml_file_extension;
 import static io.harness.k8s.model.Release.Status.Failed;
+import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.Gray;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -20,9 +24,14 @@ import static software.wings.beans.Log.color;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
+import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KubernetesYamlException;
@@ -597,5 +606,75 @@ public class K8sTaskHelper {
       logger.warn("Failed getting Pods ", e);
       return null;
     }
+  }
+
+  public String getLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, List<KubernetesResource> resources) {
+    KubernetesResource loadBalancerResource = getFirstLoadBalancerService(resources);
+    if (loadBalancerResource == null) {
+      return null;
+    }
+
+    Service service = waitForLoadBalancerService(kubernetesConfig, loadBalancerResource.getResourceId().getName(),
+        loadBalancerResource.getResourceId().getNamespace(), 60);
+
+    if (service == null) {
+      logger.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
+      return null;
+    }
+
+    LoadBalancerIngress loadBalancerIngress = service.getStatus().getLoadBalancer().getIngress().get(0);
+    String loadBalancerHost =
+        isNotBlank(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname() : loadBalancerIngress.getIp();
+
+    boolean port80Found = false;
+    boolean port443Found = false;
+    Integer firstPort = null;
+
+    for (ServicePort servicePort : service.getSpec().getPorts()) {
+      firstPort = servicePort.getPort();
+
+      if (servicePort.getPort() == 80) {
+        port80Found = true;
+      }
+      if (servicePort.getPort() == 443) {
+        port443Found = true;
+      }
+    }
+
+    if (port443Found) {
+      return "https://" + loadBalancerHost + "/";
+    } else if (port80Found) {
+      return "http://" + loadBalancerHost + "/";
+    } else if (firstPort != null) {
+      return loadBalancerHost + ":" + firstPort;
+    } else {
+      return loadBalancerHost;
+    }
+  }
+
+  private Service waitForLoadBalancerService(
+      KubernetesConfig kubernetesConfig, String serviceName, String namespace, int timeoutInSeconds) {
+    try {
+      return timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          Service service =
+              kubernetesContainerService.getService(kubernetesConfig, Collections.emptyList(), serviceName, namespace);
+
+          LoadBalancerStatus loadBalancerStatus = service.getStatus().getLoadBalancer();
+          if (!loadBalancerStatus.getIngress().isEmpty()) {
+            return service;
+          }
+          int sleepTimeInSeconds = 5;
+          logger.info("waitForLoadBalancerService: LoadBalancer Service {} not ready. Sleeping for {} seconds",
+              serviceName, sleepTimeInSeconds);
+          sleep(ofSeconds(sleepTimeInSeconds));
+        }
+      }, timeoutInSeconds, TimeUnit.SECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.error("Timed out waiting for LoadBalancer service. Moving on.", e);
+    } catch (Exception e) {
+      logger.error("Exception while trying to get LoadBalancer service", e);
+    }
+    return null;
   }
 }
