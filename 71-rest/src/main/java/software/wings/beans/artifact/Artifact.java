@@ -56,13 +56,13 @@ public class Artifact extends Base {
 
   @NaturalKey private String artifactStreamId;
   @NaturalKey private String artifactSourceName;
-  private Map<String, String> metadata = Maps.newHashMap();
+  @NaturalKey private Map<String, String> metadata = Maps.newHashMap();
   @NotEmpty private String displayName;
-  private String revision;
+  @NaturalKey private String revision;
   private List<String> serviceIds = new ArrayList<>();
   @Transient private List<Service> services;
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
-  private Status status;
+  @NaturalKey private Status status;
   private String description;
   private String errorMessage;
   private ContentStatus contentStatus;

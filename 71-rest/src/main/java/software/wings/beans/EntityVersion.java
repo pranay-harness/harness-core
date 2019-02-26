@@ -16,7 +16,7 @@ public class EntityVersion extends Base {
   public static final Integer INITIAL_VERSION = 1;
 
   @NaturalKey private EntityType entityType;
-  @NaturalKey private String entityName;
+  private String entityName;
   private ChangeType changeType;
   @NaturalKey private String entityUuid;
   private String entityParentUuid;

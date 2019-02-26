@@ -37,8 +37,8 @@ import software.wings.beans.Base;
 import software.wings.beans.GitCommit;
 import software.wings.beans.Schema;
 import software.wings.beans.User;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.sso.LdapSettings;
+import software.wings.beans.sso.SSOType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.dl.WingsMongoPersistence;
@@ -482,17 +482,6 @@ public class AccountExportImportResource {
     }
   }
 
-  private List<ArtifactStream> getAllArtifactStreamsForAccount(String accountId, List<String> appIds) {
-    List<ArtifactStream> artifactStreams = new ArrayList<>();
-    Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class).filter("appId in", appIds);
-    Iterator<ArtifactStream> iterator = query.iterator();
-    while (iterator.hasNext()) {
-      artifactStreams.add(iterator.next());
-    }
-
-    return artifactStreams;
-  }
-
   private List<Trigger> getAllScheduledTriggersForAccount(String accountId, List<String> appIds) {
     List<Trigger> triggers = new ArrayList<>();
     Query<Trigger> query = wingsPersistence.createQuery(Trigger.class).filter("appId in", appIds);
@@ -509,7 +498,8 @@ public class AccountExportImportResource {
 
   private List<LdapSettings> getAllLdapSettingsForAccount(String accountId) {
     List<LdapSettings> ldapSettings = new ArrayList<>();
-    Query<LdapSettings> query = wingsPersistence.createQuery(LdapSettings.class).filter("accountId", accountId);
+    Query<LdapSettings> query =
+        wingsPersistence.createQuery(LdapSettings.class).filter("accountId", accountId).filter("type", SSOType.LDAP);
     Iterator<LdapSettings> iterator = query.iterator();
     while (iterator.hasNext()) {
       ldapSettings.add(iterator.next());
