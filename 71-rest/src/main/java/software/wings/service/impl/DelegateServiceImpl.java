@@ -1580,7 +1580,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       final ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
           new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
               delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtil,
-              delegateTask.getArtifactStreamId());
+              delegateTask.getArtifactStreamId(), managerDecryptionService, secretManager, delegateTask.getAccountId());
       if (delegateTask.getParameters().length == 1 && delegateTask.getParameters()[0] instanceof TaskParameters) {
         logger.info("Applying ManagerPreExecutionExpressionEvaluator for delegateTask {}", delegateTask.getUuid());
         ExpressionReflectionUtils.applyExpression(delegateTask.getParameters()[0],

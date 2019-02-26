@@ -35,6 +35,9 @@ public interface ExecutionContext {
 
   String renderExpression(String expression, Object stateExecutionData, Object addition);
 
+  String renderExpression(
+      String expression, Object stateExecutionData, Object addition, boolean adoptDelegateDecryption);
+
   List<String> renderExpressionList(List<String> expressions);
 
   List<String> renderExpressionList(List<String> expressions, String separator);
@@ -78,8 +81,6 @@ public interface ExecutionContext {
   Object evaluateExpression(String expression, Map<String, Object> context);
 
   String renderExpression(String expression, Map<String, Object> context);
-
-  Map<String, Object> prepareContext(Object stateExecutionData);
 
   SweepingOutputBuilder prepareSweepingOutputBuilder(SweepingOutput.Scope sweepingOutputScope);
 }
