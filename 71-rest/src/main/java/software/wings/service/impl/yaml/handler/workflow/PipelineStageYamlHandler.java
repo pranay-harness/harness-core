@@ -232,11 +232,6 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
   @Override
   public Yaml toYaml(PipelineStage bean, String appId) {
-    if (isEmpty(bean.getPipelineStageElements())) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "No stage elements present in the given phase stage: " + bean.getName());
-    }
-
     PipelineStageElement stageElement = bean.getPipelineStageElements().get(0);
     notNullCheck("Pipeline stage element is null", stageElement, USER);
 

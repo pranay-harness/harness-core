@@ -759,10 +759,6 @@ public class StateMachine extends Base {
    * @return true if valid.
    */
   public boolean validate() {
-    Map<String, State> statesMap = getStatesMap();
-    if (initialStateName == null || statesMap.get(initialStateName) == null) {
-      throw new WingsException(ErrorCode.INITIAL_STATE_NOT_DEFINED);
-    }
     getTransitionFlowMap();
     return true;
   }

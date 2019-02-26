@@ -30,7 +30,6 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.inject.Inject;
 
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
@@ -274,7 +273,6 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
       changeContext.setYaml(yamlObject);
 
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
-      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (WingsException ex) {
       // Do nothing
     }
