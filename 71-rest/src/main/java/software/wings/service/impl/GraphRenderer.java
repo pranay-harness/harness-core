@@ -28,12 +28,10 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.WorkflowType;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
@@ -454,10 +452,6 @@ public class GraphRenderer {
               instance.getUuid(), instance.getDisplayName(), e);
         }
       }
-    }
-    if (instance.getExecutionType() == WorkflowType.SIMPLE
-        && StateType.COMMAND.name().equals(instance.getStateType())) {
-      builder.name(((CommandStateExecutionData) instance.getStateExecutionData()).getCommandName());
     }
     if (instance.getStateParams() != null) {
       builder.properties(instance.getStateParams());

@@ -410,23 +410,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should read simple workflow.
-   */
-  @Test
-  public void shouldReadSimpleWorkflowFromFile() {
-    Workflow workflow = workflowService.readLatestSimpleWorkflow(APP_ID, envId);
-    assertThat(workflow)
-        .isNotNull()
-        .extracting("appId", "envId", "workflowType")
-        .containsExactly(APP_ID, envId, WorkflowType.SIMPLE);
-    CustomOrchestrationWorkflow orchestrationWorkflow =
-        (CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    assertThat(orchestrationWorkflow.getGraph()).isNotNull();
-    assertThat(orchestrationWorkflow.getGraph().getNodes()).isNotNull().hasSize(2);
-    assertThat(orchestrationWorkflow.getGraph().getLinks()).isNotNull().hasSize(1);
-  }
-
-  /**
    * Should create workflow.
    */
   @Test
