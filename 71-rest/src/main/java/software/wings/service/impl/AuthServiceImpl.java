@@ -1052,10 +1052,6 @@ public class AuthServiceImpl implements AuthService {
         return;
     }
 
-    if (isEmpty(allowedEnvIds)) {
-      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
-    }
-
     if (!authHandler.checkIfPipelineHasOnlyGivenEnvs(pipeline, allowedEnvIds)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }

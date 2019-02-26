@@ -1162,6 +1162,11 @@ public class AuthHandler {
                  if (ManagerExpressionEvaluator.matchesVariablePattern(stageEnvId)) {
                    return true;
                  }
+
+                 if (isEmpty(allowedEnvIds)) {
+                   return false;
+                 }
+
                  if (allowedEnvIds.contains(stageEnvId)) {
                    return true;
                  }
