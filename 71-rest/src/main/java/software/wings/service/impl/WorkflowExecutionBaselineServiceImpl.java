@@ -33,7 +33,7 @@ import java.util.Map;
  */
 public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBaselineService {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionBaselineServiceImpl.class);
-  private static final Date BASELINE_TTL = Date.from(OffsetDateTime.now().plusYears(ML_RECORDS_TTL_MONTHS).toInstant());
+  public static final Date BASELINE_TTL = Date.from(OffsetDateTime.now().plusYears(ML_RECORDS_TTL_MONTHS).toInstant());
 
   @Inject private WingsPersistence wingsPersistence;
 

@@ -57,6 +57,7 @@ import migrations.all.MetricDataRecordGroupNameMigration;
 import migrations.all.MetricMLAnalysisRecordGroupNameMigration;
 import migrations.all.MigrateCVMetadataApplicationId;
 import migrations.all.NewRelicMetricAnalysisRecordsMigration;
+import migrations.all.NewRelicMetricDataBaselineMigration;
 import migrations.all.NewRelicMetricDataGroupNameMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.OverrideDefaultLimits;
@@ -191,6 +192,7 @@ public class MigrationList {
         .add(Pair.of(225, InitServiceCounters.class))
         .add(Pair.of(226, InitInfraProvisionerCounters.class))
         .add(Pair.of(227, MigrateCVMetadataApplicationId.class))
+        .add(Pair.of(228, NewRelicMetricDataBaselineMigration.class))
         .build();
   }
 }
