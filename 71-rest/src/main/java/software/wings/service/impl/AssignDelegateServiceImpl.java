@@ -18,8 +18,8 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.persistence.ReadPref;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -235,6 +235,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     return delegates.get(new Random().nextInt(delegates.size()));
   }
 
+  private static final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions();
+
   @Override
   public void refreshWhitelist(DelegateTask task, String delegateId) {
     try {
@@ -252,8 +254,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                 wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
                     .set(DelegateConnectionResult.LAST_UPDATED_AT_KEY, clock.millis());
             DelegateConnectionResult result =
-                wingsPersistence.getDatastore(DelegateConnectionResult.class, ReadPref.NORMAL)
-                    .findAndModify(query, updateOperations);
+                wingsPersistence.findAndModify(query, updateOperations, findAndModifyOptions);
             if (result != null) {
               logger.info("Whitelist entry refreshed for task {} and delegate {}", task.getUuid(), delegateId);
             } else {

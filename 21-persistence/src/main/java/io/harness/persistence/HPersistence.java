@@ -302,6 +302,9 @@ public interface HPersistence {
         if (ExceptionUtils.cause(MongoSocketOpenException.class, exception) != null) {
           continue;
         }
+        if (ExceptionUtils.cause(MongoSocketReadException.class, exception) != null) {
+          continue;
+        }
         throw exception;
       }
     }

@@ -10,7 +10,6 @@ import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -308,7 +307,6 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       return collectionMinute;
     }
 
-    @SuppressFBWarnings({"DMI_ARGUMENTS_WRONG_ORDER"})
     @Override
     @SuppressWarnings("PMD")
     public void run() {

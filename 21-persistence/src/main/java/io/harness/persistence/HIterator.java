@@ -19,7 +19,7 @@ public class HIterator<T> implements AutoCloseable, Iterator<T> {
 
   @Override
   public boolean hasNext() {
-    return iterator.hasNext();
+    return HPersistence.retry(() -> iterator.hasNext());
   }
 
   @Override
