@@ -134,13 +134,13 @@ public class ShellExecutor {
                                             .redirectOutput(new LogOutputStream() {
                                               @Override
                                               protected void processLine(String line) {
-                                                saveExecutionLog(line.trim(), INFO);
+                                                saveExecutionLog(line, INFO);
                                               }
                                             })
                                             .redirectError(new LogOutputStream() {
                                               @Override
                                               protected void processLine(String line) {
-                                                saveExecutionLog(line.trim(), ERROR);
+                                                saveExecutionLog(line, ERROR);
                                               }
                                             });
 

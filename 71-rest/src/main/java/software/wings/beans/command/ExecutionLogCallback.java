@@ -1,11 +1,6 @@
 package software.wings.beans.command;
 
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.Log.LogColor.Red;
-import static software.wings.beans.Log.LogColor.Yellow;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.color;
-import static software.wings.beans.Log.doneColoring;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.slf4j.Logger;
@@ -46,14 +41,6 @@ public class ExecutionLogCallback implements LogCallback {
   }
 
   public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {
-    if (logLevel == LogLevel.ERROR) {
-      line = color(line, Red, Bold);
-    } else if (logLevel == LogLevel.WARN) {
-      line = color(line, Yellow, Bold);
-    }
-
-    line = doneColoring(line);
-
     if (logService != null) {
       logService.save(accountId,
           aLog()

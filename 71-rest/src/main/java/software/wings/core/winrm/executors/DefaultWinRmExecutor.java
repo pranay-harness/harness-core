@@ -8,14 +8,11 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogColor.Gray;
-import static software.wings.beans.Log.LogColor.Red;
 import static software.wings.beans.Log.LogColor.White;
-import static software.wings.beans.Log.LogColor.Yellow;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
-import static software.wings.beans.Log.doneColoring;
 import static software.wings.utils.WinRmHelperUtil.buildErrorDetailsFromWinRmClientException;
 
 import io.harness.data.encoding.EncodingUtils;
@@ -222,14 +219,6 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   }
 
   private void saveExecutionLog(String line, LogLevel level, CommandExecutionStatus commandExecutionStatus) {
-    if (level == LogLevel.ERROR) {
-      line = color(line, Red, Bold);
-    } else if (level == LogLevel.WARN) {
-      line = color(line, Yellow, Bold);
-    }
-
-    line = doneColoring(line);
-
     logService.save(config.getAccountId(),
         aLog()
             .withAppId(config.getAppId())
