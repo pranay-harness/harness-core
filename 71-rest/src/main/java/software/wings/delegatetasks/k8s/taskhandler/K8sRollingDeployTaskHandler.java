@@ -153,10 +153,12 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    K8sRollingDeployResponse rollingSetupResponse = K8sRollingDeployResponse.builder()
-                                                        .releaseNumber(release.getNumber())
-                                                        .k8sPodList(getNewPods(existingPodList))
-                                                        .build();
+    K8sRollingDeployResponse rollingSetupResponse =
+        K8sRollingDeployResponse.builder()
+            .releaseNumber(release.getNumber())
+            .k8sPodList(getNewPods(existingPodList))
+            .loadBalancer(k8sTaskHelper.getLoadBalancerEndpoint(kubernetesConfig, resources))
+            .build();
 
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
