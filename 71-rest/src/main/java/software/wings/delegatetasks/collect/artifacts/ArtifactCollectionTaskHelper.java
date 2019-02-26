@@ -2,7 +2,6 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static java.lang.String.format;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
@@ -150,7 +149,7 @@ public class ArtifactCollectionTaskHelper {
             .withAppId(appId)
             .withActivityId(activityId)
             .withLogLevel(LogLevel.INFO)
-            .withLogLine(format(line))
+            .withLogLine(line)
             .withExecutionResult(commandExecutionStatus)
             .withCommandUnitName(commandUnitName)
             .withHostName(hostName)

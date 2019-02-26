@@ -1,6 +1,7 @@
 package software.wings.delegate.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
@@ -11,6 +12,11 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Log.LogColor.Red;
+import static software.wings.beans.Log.LogColor.Yellow;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
+import static software.wings.beans.Log.doneColoring;
 import static software.wings.delegate.service.DelegateServiceImpl.getDelegateId;
 
 import com.google.inject.Inject;
@@ -25,6 +31,7 @@ import io.harness.rest.RestResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
+import software.wings.beans.Log.LogLevel;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -80,6 +87,15 @@ public class DelegateLogServiceImpl implements DelegateLogService {
       logger.info("Logging stack while saving the execution log ", new Exception(""));
     }
 
+    String line = log.getLogLine();
+    if (log.getLogLevel() == LogLevel.ERROR) {
+      line = color(line, Red, Bold);
+    } else if (log.getLogLevel() == LogLevel.WARN) {
+      line = color(line, Yellow, Bold);
+    }
+    line = doneColoring(line);
+    log.setLogLine(line);
+
     Optional.ofNullable(cache.get(accountId, s -> new ArrayList<>())).ifPresent(logs -> logs.add(log));
   }
 
@@ -108,28 +124,48 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   }
 
   private void dispatchCommandUnitLogs(String accountId, String activityId, String unitName, List<Log> commandLogs) {
-    try {
-      CommandExecutionStatus commandUnitStatus = commandLogs.stream()
-                                                     .filter(Objects::nonNull)
-                                                     .map(Log::getCommandExecutionStatus)
-                                                     .filter(asList(SUCCESS, FAILURE)::contains)
-                                                     .findFirst()
-                                                     .orElse(RUNNING);
+    List<List<Log>> batchedLogs = new ArrayList<>();
+    List<Log> batch = new ArrayList<>();
+    LogLevel batchLogLevel = LogLevel.INFO;
 
-      String logText = commandLogs.stream().map(Log::getLogLine).collect(joining("\n"));
-      Log log = commandLogs.get(0);
-      log.setLogLine(logText);
-      log.setLinesCount(commandLogs.size());
-      log.setCommandExecutionStatus(commandUnitStatus);
-      log.setCreatedAt(System.currentTimeMillis());
-      logger.info("Dispatched log status- [{}] [{}]", log.getCommandUnitName(), log.getCommandExecutionStatus());
-      RestResponse restResponse = execute(managerClient.saveCommandUnitLogs(activityId, unitName, accountId, log));
-      logger.info("{} log lines dispatched for accountId: {}",
-          restResponse.getResource() != null ? commandLogs.size() : 0, accountId);
-    } catch (Exception e) {
-      logger.error(format("Dispatch log failed. printing lost logs[%d]", commandLogs.size()), e);
-      commandLogs.forEach(log -> logger.error(log.toString()));
-      logger.error("Finished printing lost logs");
+    for (Log log : commandLogs) {
+      if (log.getLogLevel() != batchLogLevel) {
+        if (isNotEmpty(batch)) {
+          batchedLogs.add(batch);
+          batch = new ArrayList<>();
+        }
+        batchLogLevel = log.getLogLevel();
+      }
+      batch.add(log);
+    }
+    if (isNotEmpty(batch)) {
+      batchedLogs.add(batch);
+    }
+
+    for (List<Log> logBatch : batchedLogs) {
+      try {
+        CommandExecutionStatus commandUnitStatus = logBatch.stream()
+                                                       .filter(Objects::nonNull)
+                                                       .map(Log::getCommandExecutionStatus)
+                                                       .filter(asList(SUCCESS, FAILURE)::contains)
+                                                       .findFirst()
+                                                       .orElse(RUNNING);
+
+        String logText = logBatch.stream().map(Log::getLogLine).collect(joining("\n"));
+        Log log = logBatch.get(0);
+        log.setLogLine(logText);
+        log.setLinesCount(logBatch.size());
+        log.setCommandExecutionStatus(commandUnitStatus);
+        log.setCreatedAt(System.currentTimeMillis());
+        logger.info("Dispatched log status- [{}] [{}]", log.getCommandUnitName(), log.getCommandExecutionStatus());
+        RestResponse restResponse = execute(managerClient.saveCommandUnitLogs(activityId, unitName, accountId, log));
+        logger.info("{} log lines dispatched for accountId: {}",
+            restResponse.getResource() != null ? logBatch.size() : 0, accountId);
+      } catch (Exception e) {
+        logger.error(format("Dispatch log failed. printing lost logs[%d]", logBatch.size()), e);
+        logBatch.forEach(log -> logger.error(log.toString()));
+        logger.error("Finished printing lost logs");
+      }
     }
   }
 

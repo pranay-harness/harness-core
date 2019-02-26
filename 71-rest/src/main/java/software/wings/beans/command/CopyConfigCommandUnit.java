@@ -58,7 +58,7 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
 
   @Override
   public CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
-    List<ConfigFile> configFiles = null;
+    List<ConfigFile> configFiles;
     try {
       configFiles = delegateConfigService.getConfigFiles(context.getAppId(), context.getEnvId(),
           context.getServiceTemplateId(), context.getHost().getUuid(), context.getAccountId());
