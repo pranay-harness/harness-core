@@ -73,7 +73,6 @@ import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
-import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
@@ -496,9 +495,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public void createDefaultEnvironments(String appId) {
-    save(anEnvironment().withAppId(appId).withName(Constants.DEV_ENV).withEnvironmentType(NON_PROD).build());
-    save(anEnvironment().withAppId(appId).withName(Constants.QA_ENV).withEnvironmentType(NON_PROD).build());
-    save(anEnvironment().withAppId(appId).withName(Constants.PROD_ENV).withEnvironmentType(PROD).build());
+    save(anEnvironment().withAppId(appId).withName(DEV_ENV).withEnvironmentType(NON_PROD).build());
+    save(anEnvironment().withAppId(appId).withName(QA_ENV).withEnvironmentType(NON_PROD).build());
+    save(anEnvironment().withAppId(appId).withName(PROD_ENV).withEnvironmentType(PROD).build());
   }
 
   @Override

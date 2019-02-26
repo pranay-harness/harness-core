@@ -11,6 +11,10 @@ import java.util.List;
 
 public class InstancePartitionExpressionProcessor extends InstanceExpressionProcessor implements PartitionProcessor {
   /**
+   * The constant EXPRESSION_PARTITIONS_SUFFIX.
+   */
+  public static final String EXPRESSION_PARTITIONS_SUFFIX = ".partitions()";
+  /**
    * The constant DEFAULT_EXPRESSION_FOR_PARTITION.
    */
   public static final String DEFAULT_EXPRESSION_FOR_PARTITION = "${phases}";
@@ -83,8 +87,8 @@ public class InstancePartitionExpressionProcessor extends InstanceExpressionProc
       return null;
     }
     expression = getPrefixObjectName() + "." + expression;
-    if (!expression.endsWith(Constants.EXPRESSION_PARTITIONS_SUFFIX)) {
-      expression = expression + Constants.EXPRESSION_PARTITIONS_SUFFIX;
+    if (!expression.endsWith(EXPRESSION_PARTITIONS_SUFFIX)) {
+      expression = expression + EXPRESSION_PARTITIONS_SUFFIX;
     }
     return expression;
   }

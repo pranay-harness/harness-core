@@ -17,10 +17,6 @@ public interface Constants {
   String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
   /**
-   * The constant CATALOG_STENCILS.
-   */
-  String CATALOG_STENCILS = "STENCILS";
-  /**
    * The constant DEFAULT_WORKFLOW_NAME.
    */
   String DEFAULT_WORKFLOW_NAME = "MAIN";
@@ -29,33 +25,6 @@ public interface Constants {
    */
   char WILD_CHAR = '*';
 
-  /**
-   * The constant EXPRESSION_LIST_SUFFIX.
-   */
-  String EXPRESSION_LIST_SUFFIX = ".list()";
-
-  /**
-   * The constant EXPRESSION_PARTITIONS_SUFFIX.
-   */
-  String EXPRESSION_PARTITIONS_SUFFIX = ".partitions()";
-  /**
-   * The constant EXPRESSION_NAME_SUFFIX.
-   */
-  String EXPRESSION_NAME_SUFFIX = ".names()";
-
-  /**
-   * The constant STATIC_CATALOG_URL.
-   */
-  String STATIC_CATALOG_URL = "/configs/catalogs.yml";
-
-  /**
-   * The constant NOTIFICATION_TEMPLATE_PATH.
-   */
-  String NOTIFICATION_TEMPLATE_PATH = "/notificationtemplates/notification_templates.yml";
-  /**
-   * The constant SIMPLE_WORKFLOW_DEFAULT_GRAPH_URL.
-   */
-  String SIMPLE_WORKFLOW_DEFAULT_GRAPH_URL = "/configs/simple_workflow_default_graph.json";
   /**
    * The constant SERVICE_INSTANCE_IDS_PARAMS.
    */
@@ -115,32 +84,6 @@ public interface Constants {
    * The constant SUMMARY_PAYLOAD_LIMIT.
    */
   int SUMMARY_PAYLOAD_LIMIT = 1024;
-
-  /**
-   * The constant PROD_ENV.
-   */
-  String PROD_ENV = "Production";
-  /**
-   * The constant UAT_ENV.
-   */
-  String UAT_ENV = "User Acceptance";
-  /**
-   * The constant QA_ENV.
-   */
-  String QA_ENV = "Quality Assurance";
-  /**
-   * The constant DEV_ENV.
-   */
-  String DEV_ENV = "Development";
-
-  /**
-   * The constant ALL.
-   */
-  String ALL = "All";
-  /**
-   * The constant to represent all environment
-   */
-  String ALL_ENV = "__ALL_ENVIRONMENTS__";
 
   /**
    * The constant WINGS_VARIABLE_PREFIX.

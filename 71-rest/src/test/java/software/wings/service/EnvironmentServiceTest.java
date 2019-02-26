@@ -27,6 +27,9 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.common.Constants.VALUES_YAML_KEY;
+import static software.wings.service.intfc.EnvironmentService.DEV_ENV;
+import static software.wings.service.intfc.EnvironmentService.PROD_ENV;
+import static software.wings.service.intfc.EnvironmentService.QA_ENV;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -83,7 +86,6 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.stats.CloneMetadata;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.impl.EnvironmentServiceImpl;
@@ -384,7 +386,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(spyEnvService, times(3)).save(environmentArgumentCaptor.capture());
     assertThat(environmentArgumentCaptor.getAllValues())
         .extracting(Environment::getName)
-        .containsExactly(Constants.DEV_ENV, Constants.QA_ENV, Constants.PROD_ENV);
+        .containsExactly(DEV_ENV, QA_ENV, PROD_ENV);
   }
 
   @Test
