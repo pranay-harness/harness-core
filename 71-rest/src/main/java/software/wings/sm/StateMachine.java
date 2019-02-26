@@ -12,6 +12,8 @@ import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 import com.google.common.collect.Lists;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
@@ -57,15 +59,16 @@ import java.util.Set;
  */
 @Entity(value = "stateMachines", noClassnameStored = true)
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@HarnessExportableEntity
 public class StateMachine extends Base {
   private static final Logger logger = LoggerFactory.getLogger(StateMachine.class);
 
   public static final String ORIGIN_ID_KEY = "originId";
   public static final String ORIGIN_VERSION_KEY = "originVersion";
 
-  @Indexed private String originId;
+  @Indexed @NaturalKey private String originId;
 
-  private Integer originVersion;
+  @NaturalKey private Integer originVersion;
 
   private String name;
 
