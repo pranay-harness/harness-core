@@ -374,6 +374,7 @@ public class HttpStateTest extends WingsBaseTest {
                     .build())
             .withUuid(SERVICE_INSTANCE_ID)
             .build());
+
     ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
 
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);

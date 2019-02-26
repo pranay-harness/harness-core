@@ -2,6 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.delegate.beans.HttpTaskParameters;
 import software.wings.beans.DelegateTask;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class HttpValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList((String) getParameters()[1]);
+    HttpTaskParameters parameters = (HttpTaskParameters) getParameters()[0];
+    return singletonList(parameters.getUrl());
   }
 }
