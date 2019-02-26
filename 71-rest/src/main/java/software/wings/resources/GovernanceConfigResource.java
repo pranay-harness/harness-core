@@ -56,7 +56,7 @@ public class GovernanceConfigResource {
   @Path("{accountId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<GovernanceConfig> get(@PathParam("accountId") String accountId) {
     return new RestResponse<>(governanceConfigService.get(accountId));
   }
