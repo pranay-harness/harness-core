@@ -8,7 +8,6 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import io.harness.context.ContextElementType;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.common.Constants;
 
 import java.util.List;
 
@@ -18,6 +17,11 @@ import java.util.List;
  * @author Rishi
  */
 public interface ExpressionProcessor {
+  /**
+   * The constant EXPRESSION_LIST_SUFFIX.
+   */
+  String EXPRESSION_LIST_SUFFIX = ".list()";
+
   /**
    * The constant EXPRESSION_NAME_DELIMITER.
    */
@@ -96,8 +100,8 @@ public interface ExpressionProcessor {
       return null;
     }
     expression = getPrefixObjectName() + "." + expression;
-    if (!expression.endsWith(Constants.EXPRESSION_LIST_SUFFIX)) {
-      expression = expression + Constants.EXPRESSION_LIST_SUFFIX;
+    if (!expression.endsWith(EXPRESSION_LIST_SUFFIX)) {
+      expression = expression + EXPRESSION_LIST_SUFFIX;
     }
     return expression;
   }

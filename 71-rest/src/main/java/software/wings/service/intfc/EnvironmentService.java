@@ -27,6 +27,19 @@ import javax.validation.constraints.NotNull;
  */
 public interface EnvironmentService extends OwnedByApplication {
   /**
+   * The constant PROD_ENV.
+   */
+  String PROD_ENV = "Production";
+  /**
+   * The constant QA_ENV.
+   */
+  String QA_ENV = "Quality Assurance";
+  /**
+   * The constant DEV_ENV.
+   */
+  String DEV_ENV = "Development";
+
+  /**
    * List.
    *
    * @param request     the request

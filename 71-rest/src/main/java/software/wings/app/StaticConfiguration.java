@@ -10,7 +10,6 @@ import com.google.inject.Singleton;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import software.wings.beans.Graph;
-import software.wings.common.Constants;
 
 import java.io.IOException;
 import java.net.URL;
@@ -29,7 +28,7 @@ public class StaticConfiguration {
    * @return graph graph
    */
   public Graph defaultSimpleWorkflow() {
-    URL url = this.getClass().getResource(Constants.SIMPLE_WORKFLOW_DEFAULT_GRAPH_URL);
+    URL url = this.getClass().getResource("/configs/simple_workflow_default_graph.json");
     String json;
     try {
       json = Resources.toString(url, Charset.defaultCharset());

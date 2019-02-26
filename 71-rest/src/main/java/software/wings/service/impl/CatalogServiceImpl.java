@@ -17,7 +17,6 @@ import io.harness.serializer.YamlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogItem;
-import software.wings.common.Constants;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.FeatureFlagService;
 
@@ -45,7 +44,7 @@ public class CatalogServiceImpl implements CatalogService {
   @Inject
   public CatalogServiceImpl(YamlUtils yamlUtils, FeatureFlagService featureFlagService) {
     try {
-      URL url = this.getClass().getResource(Constants.STATIC_CATALOG_URL);
+      URL url = this.getClass().getResource("/configs/catalogs.yml");
       String yaml = Resources.toString(url, Charsets.UTF_8);
       catalogs = yamlUtils.read(yaml, new TypeReference<Map<String, List<CatalogItem>>>() {});
 

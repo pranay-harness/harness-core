@@ -106,7 +106,7 @@ public class NotificationMessageResolver {
   @Inject
   public NotificationMessageResolver(YamlUtils yamlUtils) {
     try {
-      URL url = this.getClass().getResource(Constants.NOTIFICATION_TEMPLATE_PATH);
+      URL url = this.getClass().getResource("/notificationtemplates/notification_templates.yml");
       String yaml = Resources.toString(url, Charsets.UTF_8);
       templateMap = yamlUtils.read(yaml, new TypeReference<Map<String, ChannelTemplate>>() {});
     } catch (Exception e) {
