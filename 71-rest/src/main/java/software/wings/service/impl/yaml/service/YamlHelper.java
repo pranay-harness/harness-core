@@ -20,6 +20,7 @@ import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -31,6 +32,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.utils.Validator;
 import software.wings.verification.CVConfiguration;
 
@@ -54,6 +56,8 @@ public class YamlHelper {
   @Inject PipelineService pipelineService;
   @Inject SettingsService settingsService;
   @Inject ApplicationManifestService applicationManifestService;
+  @Inject YamlHandlerFactory yamlHandlerFactory;
+  @Inject EntityUpdateService entityUpdateService;
 
   public SettingAttribute getCloudProvider(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.CLOUD_PROVIDER, yamlFilePath);
@@ -368,5 +372,9 @@ public class YamlHelper {
         extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
     Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
     return artifactStreamService.getArtifactStreamByName(applicationId, serviceId, artifactStreamName);
+  }
+
+  public String getYamlPathForEntity(Object entity) {
+    return entityUpdateService.getEntityRootFilePath(entity);
   }
 }

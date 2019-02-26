@@ -199,6 +199,11 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     return gitFileChanges;
   }
 
+  public <R, T> String getEntityRootFilePath(T entity) {
+    R helperEntity = obtainHelperEntity(null, entity);
+    return yamlDirectoryService.obtainEntityRootPath(helperEntity, entity);
+  }
+
   private <T> boolean isStringSettingAttributeType(T entity) {
     if (entity instanceof SettingAttribute) {
       SettingAttribute settingAttribute = (SettingAttribute) entity;
