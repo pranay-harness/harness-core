@@ -30,4 +30,6 @@ public interface EntityUpdateService {
   <T> String obtainAppIdFromEntity(T entity);
 
   <T> String obtainAccountIdFromEntity(T entity);
+
+  <R, T> String getEntityRootFilePath(T entity);
 }

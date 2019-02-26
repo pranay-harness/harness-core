@@ -2,16 +2,19 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.persistence.UuidAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Base;
+import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
 import software.wings.beans.yaml.Change.ChangeType;
+import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.Validator;
 
@@ -26,6 +29,7 @@ public class YamlPushServiceImpl implements YamlPushService {
 
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private ExecutorService executorService;
+  @Inject private YamlHelper yamlHelper;
 
   @Override
   public <T> void pushYamlChangeSet(
@@ -126,7 +130,59 @@ public class YamlPushServiceImpl implements YamlPushService {
   }
 
   private <T> void pushYamlChangeSetOnDelete(String accountId, T entity) {
-    yamlChangeSetHelper.entityYamlChangeSet(accountId, entity, ChangeType.DELETE);
+    if (parentEntityExists(accountId, entity)) {
+      yamlChangeSetHelper.entityYamlChangeSet(accountId, entity, ChangeType.DELETE);
+    }
+  }
+
+  /**
+   * When any app, service is deleted, all nested entities are deleted in background thread.
+   * So lets say, service was deleted. This change will propogate to git and remove entire service folder.
+   *
+   * Now, in background thread, when artifact stream, ApplicationManifestFiles are deleted,
+   * We dont need to generate yamlChangeSets, as they have already been deleted as a part of deletion of entire service
+   * folder. Also, as service is deleted, we wont be able to find this service in db, which will result into NPE.
+   *
+   * @param accountId
+   * @param entity
+   * @return
+   */
+  private boolean parentEntityExists(String accountId, Object entity) {
+    if (entity instanceof Application) {
+      return true;
+    }
+
+    try {
+      String yamlFilePath = yamlHelper.getYamlPathForEntity(entity);
+
+      String appName = yamlHelper.getAppName(yamlFilePath);
+      String appId = null;
+      UuidAware uuidAware = null;
+      if (isNotBlank(appName)) {
+        uuidAware = yamlHelper.getApp(accountId, yamlFilePath);
+        appId = uuidAware.getUuid();
+      } else {
+        // This is shared entity
+        return true;
+      }
+
+      String serviceName = yamlHelper.getServiceName(yamlFilePath);
+      if (isNotBlank(serviceName)) {
+        uuidAware = yamlHelper.getService(appId, yamlFilePath);
+      }
+
+      String envName = yamlHelper.getEnvironmentName(yamlFilePath);
+      if (isNotBlank(envName) && uuidAware != null) {
+        uuidAware = yamlHelper.getEnvironment(appId, yamlFilePath);
+      }
+
+      return uuidAware != null;
+    } catch (Exception e) {
+      // In case we failed to determine, just return true and try to push this delete change to GIT.
+      // This is just a safegaurd to see, git sync is not affected duw to any issue in determining
+      // parentEntityExists.
+      return true;
+    }
   }
 
   public void pushYamlChangeSet(String accountId, String appId, ChangeType changeType, boolean syncFromGit) {
@@ -145,7 +201,7 @@ public class YamlPushServiceImpl implements YamlPushService {
 
   private <R, T> void logYamlPushRequestInfo(String accountId, R helperEntity, T entity) {
     logger.info(format("%s accountId %s, entity %s, entityId %s, helperEntityId %s", YAML_PUSH_SERVICE_LOG, accountId,
-        entity.getClass().getSimpleName(), ((Base) entity).getUuid(), ((Base) helperEntity).getUuid()));
+        entity.getClass().getSimpleName(), ((UuidAware) entity).getUuid(), ((UuidAware) helperEntity).getUuid()));
   }
 
   private <T> void logYamlPushRequestInfo(String accountId, T oldEntity, T newEntity, Type type) {
@@ -159,7 +215,7 @@ public class YamlPushServiceImpl implements YamlPushService {
             .append(", entity ")
             .append(newEntity.getClass().getSimpleName())
             .append(", entityId ")
-            .append(((Base) newEntity).getUuid());
+            .append(((UuidAware) newEntity).getUuid());
         break;
 
       case UPDATE:
@@ -168,9 +224,9 @@ public class YamlPushServiceImpl implements YamlPushService {
             .append(", entity ")
             .append(oldEntity.getClass().getSimpleName())
             .append(", oldEntityId ")
-            .append(((Base) oldEntity).getUuid())
+            .append(((UuidAware) oldEntity).getUuid())
             .append(", newEntityId ")
-            .append(((Base) newEntity).getUuid());
+            .append(((UuidAware) newEntity).getUuid());
         break;
 
       case DELETE:
@@ -179,7 +235,7 @@ public class YamlPushServiceImpl implements YamlPushService {
             .append(", entity ")
             .append(oldEntity.getClass().getSimpleName())
             .append(", entityId ")
-            .append(((Base) oldEntity).getUuid());
+            .append(((UuidAware) oldEntity).getUuid());
 
         break;
 
