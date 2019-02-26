@@ -343,6 +343,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public Set<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
       ClusterLevel clusterLevel, StateType stateType, String accountId) {
     Query<LogDataRecord> recordQuery;
+
     if (compareCurrent) {
       recordQuery = wingsPersistence.createQuery(LogDataRecord.class)
                         .filter("stateType", stateType)
@@ -355,14 +356,15 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                         .filter("logCollectionMinute", logRequest.getLogCollectionMinute())
                         .field("host")
                         .hasAnyOf(logRequest.getNodes());
+
     } else {
-      // todo: Pranjal this will be removed once other verifiers have data collection job every minute
+      long timeDelta = 0;
+
       if (stateType.equals(StateType.SUMO)) {
-        long logCollectionStartMinute = 0;
         LogDataRecord logDataRecord = wingsPersistence.createQuery(LogDataRecord.class)
                                           .project("logCollectionMinute", true)
                                           .filter("stateType", stateType)
-                                          .filter("workflowExecutionId", workflowExecutionId)
+                                          .filter("stateExecutionId", logRequest.getStateExecutionId())
                                           .filter("appId", logRequest.getApplicationId())
                                           .filter("query", logRequest.getQuery())
                                           .filter("serviceId", logRequest.getServiceId())
@@ -371,27 +373,33 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                           .get();
 
         if (logDataRecord != null) {
-          logCollectionStartMinute = logDataRecord.getLogCollectionMinute();
+          timeDelta = logRequest.getLogCollectionMinute() - logDataRecord.getLogCollectionMinute();
         }
-        recordQuery =
-            wingsPersistence.createQuery(LogDataRecord.class)
-                .filter("stateType", stateType)
-                .filter("workflowExecutionId", workflowExecutionId)
-                .filter("appId", logRequest.getApplicationId())
-                .filter("query", logRequest.getQuery())
-                .filter("serviceId", logRequest.getServiceId())
-                .filter("clusterLevel", clusterLevel)
-                .filter("logCollectionMinute", logCollectionStartMinute + logRequest.getLogCollectionMinute());
-      } else {
-        recordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                          .filter("stateType", stateType)
-                          .filter("workflowExecutionId", workflowExecutionId)
-                          .filter("appId", logRequest.getApplicationId())
-                          .filter("query", logRequest.getQuery())
-                          .filter("serviceId", logRequest.getServiceId())
-                          .filter("clusterLevel", clusterLevel)
-                          .filter("logCollectionMinute", logRequest.getLogCollectionMinute());
+
+        logDataRecord = wingsPersistence.createQuery(LogDataRecord.class)
+                            .project("logCollectionMinute", true)
+                            .filter("stateType", stateType)
+                            .filter("workflowExecutionId", workflowExecutionId)
+                            .filter("appId", logRequest.getApplicationId())
+                            .filter("query", logRequest.getQuery())
+                            .filter("serviceId", logRequest.getServiceId())
+                            .filter("clusterLevel", clusterLevel)
+                            .order(Sort.ascending("logCollectionMinute"))
+                            .get();
+
+        if (logDataRecord != null) {
+          logRequest.setLogCollectionMinute(timeDelta + logDataRecord.getLogCollectionMinute());
+        }
       }
+
+      recordQuery = wingsPersistence.createQuery(LogDataRecord.class)
+                        .filter("stateType", stateType)
+                        .filter("workflowExecutionId", workflowExecutionId)
+                        .filter("appId", logRequest.getApplicationId())
+                        .filter("query", logRequest.getQuery())
+                        .filter("serviceId", logRequest.getServiceId())
+                        .filter("clusterLevel", clusterLevel)
+                        .filter("logCollectionMinute", logRequest.getLogCollectionMinute());
     }
 
     Set<LogDataRecord> rv = new HashSet<>();
@@ -400,10 +408,10 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         rv.add(records.next());
       }
     }
-    logger.info(
-        "fetched total records {},  compare current {}, stateExecutionId {}, workflowExecutionId {}, logCollectionMinute {}",
-        rv.size(), compareCurrent, logRequest.getStateExecutionId(), workflowExecutionId,
-        logRequest.getLogCollectionMinute());
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("returning " + rv.size() + " records for request: " + logRequest);
+    }
     return rv;
   }
 

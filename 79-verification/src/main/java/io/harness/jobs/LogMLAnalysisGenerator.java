@@ -103,12 +103,12 @@ public class LogMLAnalysisGenerator implements Runnable {
         controlInputUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
             + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
             + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-            + "&compareCurrent=true&stateType=" + context.getStateType();
+            + "&compareCurrent=true&stateType=" + context.getStateType() + "&timeDelta=0";
       } else {
         controlInputUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
             + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
             + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId=" + lastWorkflowExecutionId
-            + "&compareCurrent=false&stateType=" + context.getStateType();
+            + "&compareCurrent=false&stateType=" + context.getStateType() + "&timeDelta=0";
       }
 
       String logAnalysisSaveUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
@@ -192,54 +192,20 @@ public class LogMLAnalysisGenerator implements Runnable {
       }
 
       LearningEngineAnalysisTaskBuilder analysisTaskBuilder;
-      if (context.getStateType().equals(StateType.SUMO)) {
-        if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-          analysisTaskBuilder = LearningEngineAnalysisTask.builder()
-                                    .query(Lists.newArrayList(query.split(" ")))
-                                    .workflow_id(context.getWorkflowId())
-                                    .workflow_execution_id(context.getWorkflowExecutionId())
-                                    .state_execution_id(context.getStateExecutionId())
-                                    .service_id(context.getServiceId())
-                                    .sim_threshold(0.9)
-                                    .analysis_minute(logAnalysisMinute)
-                                    .analysis_start_min((int) context.getStartDataCollectionMinute())
-                                    .analysis_save_url(logAnalysisSaveUrl)
-                                    .log_analysis_get_url(logAnalysisGetUrl)
-                                    .ml_analysis_type(MLAnalysisType.LOG_ML)
-                                    .feature_name(featureName)
-                                    .stateType(context.getStateType());
-        } else {
-          analysisTaskBuilder = LearningEngineAnalysisTask.builder()
-                                    .query(Lists.newArrayList(query.split(" ")))
-                                    .workflow_id(context.getWorkflowId())
-                                    .workflow_execution_id(context.getWorkflowExecutionId())
-                                    .state_execution_id(context.getStateExecutionId())
-                                    .service_id(context.getServiceId())
-                                    .sim_threshold(0.9)
-                                    .analysis_minute(logAnalysisMinute - context.getStartDataCollectionMinute())
-                                    .analysis_start_min((int) context.getStartDataCollectionMinute())
-                                    .analysis_save_url(logAnalysisSaveUrl)
-                                    .log_analysis_get_url(logAnalysisGetUrl)
-                                    .ml_analysis_type(MLAnalysisType.LOG_ML)
-                                    .feature_name(featureName)
-                                    .stateType(context.getStateType());
-        }
-      } else {
-        analysisTaskBuilder = LearningEngineAnalysisTask.builder()
-                                  .query(Lists.newArrayList(query.split(" ")))
-                                  .workflow_id(context.getWorkflowId())
-                                  .workflow_execution_id(context.getWorkflowExecutionId())
-                                  .state_execution_id(context.getStateExecutionId())
-                                  .service_id(context.getServiceId())
-                                  .sim_threshold(0.9)
-                                  .analysis_minute(logAnalysisMinute)
-                                  .analysis_start_min((int) context.getStartDataCollectionMinute())
-                                  .analysis_save_url(logAnalysisSaveUrl)
-                                  .log_analysis_get_url(logAnalysisGetUrl)
-                                  .ml_analysis_type(MLAnalysisType.LOG_ML)
-                                  .feature_name(featureName)
-                                  .stateType(context.getStateType());
-      }
+      analysisTaskBuilder = LearningEngineAnalysisTask.builder()
+                                .query(Lists.newArrayList(query.split(" ")))
+                                .workflow_id(context.getWorkflowId())
+                                .workflow_execution_id(context.getWorkflowExecutionId())
+                                .state_execution_id(context.getStateExecutionId())
+                                .service_id(context.getServiceId())
+                                .sim_threshold(0.9)
+                                .analysis_minute(logAnalysisMinute)
+                                .analysis_start_min((int) context.getStartDataCollectionMinute())
+                                .analysis_save_url(logAnalysisSaveUrl)
+                                .log_analysis_get_url(logAnalysisGetUrl)
+                                .ml_analysis_type(MLAnalysisType.LOG_ML)
+                                .feature_name(featureName)
+                                .stateType(context.getStateType());
 
       if (!isEmpty(feedback_url)) {
         analysisTaskBuilder.feedback_url(feedback_url);

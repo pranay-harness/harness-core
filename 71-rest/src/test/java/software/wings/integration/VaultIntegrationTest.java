@@ -21,6 +21,7 @@ import io.harness.security.encryption.EncryptionType;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.Account;
 import software.wings.beans.GcpConfig;
@@ -157,6 +158,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Ignore
   public void testCreateKmsVaultConfig_shouldSucceed() {
     // 1. Create a new KMS config.
     String kmsConfigId = createKmsConfig(kmsConfig);
