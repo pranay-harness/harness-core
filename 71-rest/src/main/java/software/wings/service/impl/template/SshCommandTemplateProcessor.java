@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.template.Template.FOLDER_ID_KEY;
@@ -22,6 +23,8 @@ import static software.wings.common.TemplateConstants.TOMCAT_WAR_STOP_PATH;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import de.danielbechler.diff.ObjectDifferBuilder;
+import de.danielbechler.diff.node.DiffNode;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -30,6 +33,7 @@ import software.wings.beans.command.AbstractCommandUnit.Yaml;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.SshCommandTemplate;
@@ -163,5 +167,39 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   @Override
   public List<String> fetchTemplateProperties() {
     return asList();
+  }
+
+  @Override
+  public boolean checkTemplateDetailsChanged(BaseTemplate oldTemplate, BaseTemplate newTemplate) {
+    // check if command units changed
+    List<CommandUnit> newCommandUnits = ((SshCommandTemplate) newTemplate).getCommandUnits();
+    List<CommandUnit> oldCommandUnits = ((SshCommandTemplate) oldTemplate).getCommandUnits();
+    DiffNode commandUnitDiff = ObjectDifferBuilder.buildDefault().compare(newCommandUnits, oldCommandUnits);
+    if (isCommandUnitsSizeChanged(newCommandUnits, oldCommandUnits)
+        || isCommandUnitsOrderChanged(newCommandUnits, oldCommandUnits) || commandUnitDiff.hasChanges()) {
+      return true;
+    }
+    return false;
+  }
+
+  private boolean isCommandUnitsOrderChanged(List<CommandUnit> commandUnits, List<CommandUnit> oldCommandUnits) {
+    if (commandUnits != null && oldCommandUnits != null) {
+      if (commandUnits.size() == oldCommandUnits.size()) {
+        List<String> commandNames = commandUnits.stream().map(commandUnit -> commandUnit.getName()).collect(toList());
+        List<String> oldCommandNames =
+            oldCommandUnits.stream().map(oldCommandUnit -> oldCommandUnit.getName()).collect(toList());
+        return !commandNames.equals(oldCommandNames);
+      }
+    }
+    return false;
+  }
+
+  private boolean isCommandUnitsSizeChanged(List<CommandUnit> commandUnits, List<CommandUnit> oldCommandUnits) {
+    if (commandUnits != null && oldCommandUnits != null) {
+      if (commandUnits.size() != oldCommandUnits.size()) {
+        return true;
+      }
+    }
+    return false;
   }
 }
