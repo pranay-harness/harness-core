@@ -9,6 +9,7 @@ import static software.wings.beans.VariableType.TEXT;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import io.harness.exception.WingsException;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -37,6 +38,7 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
   }
 
   @Test
+  @Ignore
   public void shouldUpdateCustomArtifactSourceTemplate() {
     Template template = constructCustomArtifactTemplateEntity();
     Template savedTemplate = templateService.save(template);

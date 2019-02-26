@@ -32,8 +32,6 @@ import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import de.danielbechler.diff.ObjectDifferBuilder;
-import de.danielbechler.diff.node.DiffNode;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
@@ -180,14 +178,14 @@ public class TemplateServiceImpl implements TemplateService {
     template.setKeywords(trimList(Arrays.asList(generatedKeywords.toArray())));
     VersionedTemplate newVersionedTemplate = buildTemplateDetails(template, template.getUuid());
 
-    DiffNode templateDetailsDiff = ObjectDifferBuilder.buildDefault().compare(
-        oldTemplate.getTemplateObject(), newVersionedTemplate.getTemplateObject());
+    boolean templateObjectChanged = checkTemplateDetailsChanged(
+        template, oldTemplate.getTemplateObject(), newVersionedTemplate.getTemplateObject());
 
-    DiffNode variablesDiff =
-        ObjectDifferBuilder.buildDefault().compare(oldTemplate.getVariables(), newVersionedTemplate.getVariables());
+    boolean templateVariablesChanged =
+        templateHelper.variablesChanged(newVersionedTemplate.getVariables(), oldTemplate.getVariables());
 
     boolean templateDetailsChanged = false;
-    if (templateDetailsDiff.hasChanges() || variablesDiff.hasChanges()) {
+    if (templateObjectChanged || templateVariablesChanged) {
       TemplateVersion templateVersion = getTemplateVersion(
           template, template.getUuid(), template.getType(), template.getName(), TemplateVersion.ChangeType.UPDATED);
       newVersionedTemplate.setVersion(Long.valueOf(templateVersion.getVersion().intValue()));
@@ -202,6 +200,11 @@ public class TemplateServiceImpl implements TemplateService {
       executorService.submit(() -> updateLinkedEntities(savedTemplate));
     }
     return savedTemplate;
+  }
+
+  private boolean checkTemplateDetailsChanged(Template template, BaseTemplate oldTemplate, BaseTemplate newTemplate) {
+    AbstractTemplateProcessor abstractTemplateProcessor = getAbstractTemplateProcessor(template);
+    return abstractTemplateProcessor.checkTemplateDetailsChanged(oldTemplate, newTemplate);
   }
 
   private void saveVersionedTemplate(Template template, VersionedTemplate newVersionedTemplate) {

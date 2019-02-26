@@ -7,6 +7,8 @@ import static software.wings.beans.Base.LINKED_TEMPLATE_UUIDS_KEY;
 
 import com.google.inject.Inject;
 
+import de.danielbechler.diff.ObjectDifferBuilder;
+import de.danielbechler.diff.node.DiffNode;
 import io.harness.persistence.HIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.common.TemplateConstants;
@@ -107,4 +110,10 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
   }
 
   public abstract void transform(Template template, Map<String, Object> properties);
+
+  @Override
+  public boolean checkTemplateDetailsChanged(BaseTemplate oldTemplate, BaseTemplate newTemplate) {
+    DiffNode templateDetailsDiff = ObjectDifferBuilder.buildDefault().compare(newTemplate, oldTemplate);
+    return templateDetailsDiff.hasChanges();
+  }
 }

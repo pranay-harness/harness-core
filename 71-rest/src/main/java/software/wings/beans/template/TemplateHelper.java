@@ -155,6 +155,7 @@ public class TemplateHelper {
             variablesChanged = true;
           }
         }
+        oldVariablesMap.remove(variable.getName());
       } else {
         // New variable added check if any default value present
         variablesChanged = true;
