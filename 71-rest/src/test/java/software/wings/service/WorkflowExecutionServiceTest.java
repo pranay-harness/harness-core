@@ -14,7 +14,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -23,7 +22,6 @@ import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
-import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
@@ -78,11 +76,9 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.RequiredExecutionArgs;
-import software.wings.beans.ServiceInstance;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.command.Command;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
@@ -169,37 +165,6 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         workflowExecutionService.listExecutions(pageRequest, false, true, false, true);
     assertThat(pageResponse2).isNotNull().isEqualTo(pageResponse);
     verify(wingsPersistence).query(WorkflowExecution.class, pageRequest);
-  }
-
-  /**
-   * Required execution args for simple workflow start.
-   */
-  @Test
-  public void requiredExecutionArgsForSimpleWorkflowStart() {
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(WorkflowType.SIMPLE);
-
-    executionArgs.setServiceId(SERVICE_ID);
-
-    String commandName = "Start";
-    executionArgs.setCommandName(commandName);
-
-    ServiceInstance inst1 = ServiceInstance.Builder.aServiceInstance().withUuid(generateUuid()).build();
-    ServiceInstance inst2 = ServiceInstance.Builder.aServiceInstance().withUuid(generateUuid()).build();
-    executionArgs.setServiceInstances(Lists.newArrayList(inst1, inst2));
-
-    when(stateMachineExecutionSimulator.getInfrastructureRequiredEntityType(
-             APP_ID, Lists.newArrayList(inst1.getUuid(), inst2.getUuid())))
-        .thenReturn(Sets.newHashSet(EntityType.SSH_USER, EntityType.SSH_PASSWORD));
-
-    Command cmd = mock(Command.class);
-    when(cmd.isArtifactNeeded()).thenReturn(false);
-    when(serviceResourceServiceMock.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "Start"))
-        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(cmd).build());
-
-    RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
-    assertThat(required).isNotNull();
-    assertThat(required.getEntityTypes()).isNotNull().hasSize(2).contains(EntityType.SSH_USER, EntityType.SSH_PASSWORD);
   }
 
   /**
@@ -290,48 +255,6 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(INVALID_REQUEST.name());
       assertThat(exception.getParams()).containsEntry("message", "Associated state machine not found");
-    }
-  }
-
-  /**
-   * Should throw Null Service Id
-   */
-  @Test
-  public void shouldThrowNoServiceId() {
-    try {
-      ExecutionArgs executionArgs = new ExecutionArgs();
-      executionArgs.setWorkflowType(WorkflowType.SIMPLE);
-
-      String commandName = "Start";
-      executionArgs.setCommandName(commandName);
-
-      RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
-      failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.name());
-      assertThat(exception.getParams()).containsEntry("message", "serviceId is null for a simple execution");
-    }
-  }
-
-  /**
-   * Should throw Null Service Id
-   */
-  @Test
-  public void shouldThrowNoInstances() {
-    try {
-      ExecutionArgs executionArgs = new ExecutionArgs();
-      executionArgs.setWorkflowType(WorkflowType.SIMPLE);
-      String serviceId = generateUuid();
-      executionArgs.setServiceId(serviceId);
-
-      String commandName = "Start";
-      executionArgs.setCommandName(commandName);
-
-      RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
-      failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.name());
-      assertThat(exception.getParams()).containsEntry("message", "serviceInstances are empty for a simple execution");
     }
   }
 

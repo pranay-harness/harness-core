@@ -830,8 +830,6 @@ public class TriggerServiceImpl implements TriggerService {
                     trigger.getAppId(), triggerExecution.getWorkflowId(), triggerExecution.getExecutionArgs(), trigger);
                 triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.SUCCESS, "File content changed");
                 break;
-              case SIMPLE:
-                break;
               default:
                 unhandled(triggerExecution.getWorkflowType());
             }

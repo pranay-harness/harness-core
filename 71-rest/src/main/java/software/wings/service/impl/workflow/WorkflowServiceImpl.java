@@ -91,7 +91,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
-import io.harness.beans.WorkflowType;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.InvalidArgumentsException;
@@ -1238,28 +1237,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .get();
   }
 
-  /**
-   * Read latest simple workflow.
-   *
-   * @param appId the app id
-   * @return the workflow
-   */
-  @Override
-  public Workflow readLatestSimpleWorkflow(String appId, String envId) {
-    PageRequest<Workflow> req = aPageRequest()
-                                    .addFilter("appId", EQ, appId)
-                                    .addFilter("envId", EQ, envId)
-                                    .addFilter("workflowType", EQ, WorkflowType.SIMPLE)
-                                    .addFilter("name", EQ, Constants.SIMPLE_ORCHESTRATION_NAME)
-                                    .build();
-
-    PageResponse<Workflow> workflows = listWorkflows(req);
-    if (isEmpty(workflows)) {
-      return createDefaultSimpleWorkflow(appId, envId);
-    }
-    return workflows.get(0);
-  }
-
   @Override
   public void pruneByApplication(String appId) {
     // prune workflows
@@ -1270,22 +1247,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     // prune state machines
     wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).filter("appId", appId));
-  }
-
-  private Workflow createDefaultSimpleWorkflow(String appId, String envId) {
-    Workflow workflow = new Workflow();
-    workflow.setName(Constants.SIMPLE_ORCHESTRATION_NAME);
-    workflow.setDescription(Constants.SIMPLE_ORCHESTRATION_DESC);
-    workflow.setAppId(appId);
-    workflow.setEnvId(envId);
-    workflow.setWorkflowType(WorkflowType.SIMPLE);
-
-    Graph graph = staticConfiguration.defaultSimpleWorkflow();
-    CustomOrchestrationWorkflow customOrchestrationWorkflow = new CustomOrchestrationWorkflow();
-    customOrchestrationWorkflow.setGraph(graph);
-    workflow.setOrchestrationWorkflow(customOrchestrationWorkflow);
-
-    return createWorkflow(workflow);
   }
 
   /**

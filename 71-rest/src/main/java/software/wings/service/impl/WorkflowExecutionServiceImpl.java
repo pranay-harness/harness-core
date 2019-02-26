@@ -23,7 +23,6 @@ import static io.harness.beans.SearchFilter.Operator.LT_EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
-import static io.harness.beans.WorkflowType.SIMPLE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
@@ -41,7 +40,6 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
@@ -49,13 +47,11 @@ import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
-import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.WorkflowExecution.PIPELINE_EXECUTION_ID_KEY;
 import static software.wings.beans.WorkflowExecution.STATUS_KEY;
 import static software.wings.beans.WorkflowExecution.WORKFLOW_ID_KEY;
-import static software.wings.beans.WorkflowExecution.WORKFLOW_TYPE_ID_KEY;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
@@ -129,7 +125,6 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.PipelineElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
-import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.WorkflowElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.app.MainConfiguration;
@@ -142,7 +137,6 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EnvSummary;
@@ -170,7 +164,6 @@ import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
 import software.wings.beans.alert.UsageLimitExceededAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
-import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
@@ -1573,74 +1566,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         return triggerOrchestrationExecution(appId, envId, executionArgs.getOrchestrationId(), executionArgs, trigger);
       }
 
-      case SIMPLE: {
-        logger.debug("Received an simple execution request");
-        if (executionArgs.getServiceId() == null) {
-          logger.error("serviceId is null for a simple execution");
-          throw new InvalidRequestException("serviceId is null for a simple execution");
-        }
-        if (isEmpty(executionArgs.getServiceInstances())) {
-          logger.error("serviceInstances are empty for a simple execution");
-          throw new InvalidRequestException("serviceInstances are empty for a simple execution");
-        }
-        return triggerSimpleExecution(appId, envId, executionArgs, workflowExecutionUpdate);
-      }
-
       default:
         throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "workflowType");
     }
-  }
-
-  /**
-   * Trigger simple execution workflow execution.
-   *
-   * @param appId         the app id
-   * @param envId         the env id
-   * @param executionArgs the execution args
-   * @return the workflow execution
-   */
-  private WorkflowExecution triggerSimpleExecution(
-      String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
-    preDeploymentChecker.isDeploymentAllowed(appId);
-    Workflow workflow = workflowService.readLatestSimpleWorkflow(appId, envId);
-    String workflowId = workflow.getUuid();
-
-    StateMachine stateMachine = workflowService.readLatestStateMachine(appId, workflowId);
-    if (stateMachine == null) {
-      throw new WingsException("No stateMachine associated with " + workflowId);
-    }
-
-    WorkflowExecution workflowExecution = new WorkflowExecution();
-    workflowExecution.setAppId(appId);
-    workflowExecution.setEnvId(envId);
-    workflowExecution.setEnvIds(asList(envId));
-    workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
-    workflowExecution.setStateMachineId(stateMachine.getUuid());
-    workflowExecution.setTotal(executionArgs.getServiceInstances().size());
-    Service service = serviceResourceService.get(appId, executionArgs.getServiceId(), false);
-    workflowExecution.setServiceIds(asList(executionArgs.getServiceId()));
-    workflowExecution.setName(service.getName() + "/" + executionArgs.getCommandName());
-    workflowExecution.setWorkflowId(workflow.getUuid());
-    workflowExecution.setExecutionArgs(executionArgs);
-
-    WorkflowStandardParams stdParams = new WorkflowStandardParams();
-    stdParams.setAppId(appId);
-    stdParams.setEnvId(envId);
-    if (isNotEmpty(executionArgs.getArtifacts())) {
-      stdParams.setArtifactIds(executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList()));
-    }
-    stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
-
-    SimpleWorkflowParam simpleOrchestrationParams = new SimpleWorkflowParam();
-    simpleOrchestrationParams.setServiceId(executionArgs.getServiceId());
-    if (executionArgs.getServiceInstances() != null) {
-      simpleOrchestrationParams.setInstanceIds(
-          executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(toList()));
-    }
-    simpleOrchestrationParams.setExecutionStrategy(executionArgs.getExecutionStrategy());
-    simpleOrchestrationParams.setCommandName(executionArgs.getCommandName());
-    return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, null, null, null,
-        simpleOrchestrationParams);
   }
 
   private List<WorkflowExecution> getRunningWorkflowExecutions(
@@ -1752,33 +1680,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
       requiredExecutionArgs.setEntityTypes(workflow.getOrchestrationWorkflow().getRequiredEntityTypes());
-      return requiredExecutionArgs;
-
-    } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
-      logger.debug("Received an simple execution request");
-      if (executionArgs.getServiceId() == null) {
-        logger.error("serviceId is null for a simple execution");
-        throw new InvalidRequestException("serviceId is null for a simple execution");
-      }
-      if (isEmpty(executionArgs.getServiceInstances())) {
-        logger.error("serviceInstances are empty for a simple execution");
-        throw new InvalidRequestException("serviceInstances are empty for a simple execution");
-      }
-      RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
-      if (isNotBlank(executionArgs.getCommandName())) {
-        ServiceCommand command = serviceResourceService.getCommandByName(
-            appId, executionArgs.getServiceId(), envId, executionArgs.getCommandName());
-        if (command.getCommand().isArtifactNeeded()) {
-          requiredExecutionArgs.getEntityTypes().add(ARTIFACT);
-        }
-      }
-      List<String> serviceInstanceIds =
-          executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(toList());
-      Set<EntityType> infraReqEntityTypes =
-          stateMachineExecutionSimulator.getInfrastructureRequiredEntityType(appId, serviceInstanceIds);
-      if (infraReqEntityTypes != null) {
-        requiredExecutionArgs.getEntityTypes().addAll(infraReqEntityTypes);
-      }
       return requiredExecutionArgs;
     }
 
@@ -2015,10 +1916,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
     if (workflow != null && workflow.getOrchestrationWorkflow() != null) {
       List<Service> services = getResolvedServices(workflow, workflowExecution);
-      if (workflow.getWorkflowType() == WorkflowType.SIMPLE) {
-        services = asList(serviceResourceService.get(
-            workflow.getAppId(), workflowExecution.getExecutionArgs().getServiceId(), false));
-      }
       List<InfrastructureMapping> infrastructureMappings = getResolvedInfraMappings(workflow, workflowExecution);
       if (services != null) {
         services.forEach(service -> {
@@ -2570,7 +2467,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             pipelineStageExecution -> workflowExecutions.addAll(pipelineStageExecution.getWorkflowExecutions()));
         break;
 
-      case SIMPLE:
       case ORCHESTRATION:
         workflowExecutions.add(workflowExecution);
         break;
@@ -2677,8 +2573,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class)
                                .field(CREATED_AT_KEY)
                                .greaterThanOrEq(epochMilli)
-                               .field(WORKFLOW_TYPE_ID_KEY)
-                               .in(asList(ORCHESTRATION, SIMPLE, PIPELINE))
                                .field(PIPELINE_EXECUTION_ID_KEY)
                                .doesNotExist()
                                .field(APP_ID_KEY)

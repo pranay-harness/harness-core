@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
-import static io.harness.beans.WorkflowType.SIMPLE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.time.EpochUtils.PST_ZONE_ID;
 import static java.util.Comparator.comparing;
@@ -156,7 +155,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                            .filter(ExecutionStatus.negativeStatuses()::contains)
                            .count();
         for (WorkflowExecution workflowExecution : wflExecutions) {
-          if ((workflowExecution.getWorkflowType() == ORCHESTRATION || workflowExecution.getWorkflowType() == SIMPLE)
+          if ((workflowExecution.getWorkflowType() == ORCHESTRATION)
               && workflowExecution.getServiceExecutionSummaries() != null) {
             instanceCount += workflowExecution.getServiceExecutionSummaries()
                                  .stream()
