@@ -31,7 +31,6 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import de.danielbechler.util.Collections;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -199,14 +198,14 @@ public class PipelineServiceImpl implements PipelineService {
   private void ensurePipelineStageUuids(Pipeline pipeline) {
     // The UI or other agents my try to update the pipeline with new stages without uuids. This makes sure that
     // they all will have one.
-    pipeline.getPipelineStages()
-        .stream()
-        .flatMap(stage -> stage.getPipelineStageElements().stream())
-        .forEach(element -> {
-          if (element.getUuid() == null) {
-            element.setUuid(generateUuid());
-          }
-        });
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    if (pipelineStages != null) {
+      pipelineStages.stream().flatMap(stage -> stage.getPipelineStageElements().stream()).forEach(element -> {
+        if (element.getUuid() == null) {
+          element.setUuid(generateUuid());
+        }
+      });
+    }
   }
 
   @Override
@@ -754,64 +753,47 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void validatePipeline(Pipeline pipeline, List<Object> keywords) {
-    if (Collections.isEmpty(pipeline.getPipelineStages())) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "At least one pipeline stage required");
-    }
     List<Service> services = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     final List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
     Set<String> parameterizedEnvIds = new HashSet<>();
-    for (int i = 0; i < pipelineStages.size(); ++i) {
-      PipelineStage pipelineStage = pipelineStages.get(i);
-      if (isEmpty(pipelineStage.getPipelineStageElements())) {
-        throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid pipeline stage");
-      }
-      for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
-        if (!isValidPipelineStageName(stageElement.getName())) {
-          throw new WingsException(INVALID_ARGUMENT, USER)
-              .addParam("args", "Pipeline stage name can only have a-z, A-Z, 0-9, -, (, ) and _");
-        }
-        if (!ENV_STATE.name().equals(stageElement.getType())) {
-          continue;
-        }
-        if (isNullOrEmpty((String) stageElement.getProperties().get("workflowId"))) {
-          throw new WingsException(INVALID_ARGUMENT, USER)
-              .addParam("args", "Workflow can not be null for Environment state");
-        }
-        Workflow workflow =
-            workflowService.readWorkflow(pipeline.getAppId(), (String) stageElement.getProperties().get("workflowId"));
-        if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
-          throw new WingsException(INVALID_ARGUMENT, USER)
-              .addParam("args", "Workflow can not be null for Environment state");
-        }
-        keywords.add(workflow.getName());
-        keywords.add(workflow.getDescription());
-        resolveServices(services, serviceIds, stageElement.getWorkflowVariables(), workflow);
-        if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != BUILD
-            && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
-          logger.info("It should not happen. If happens printing the properties of appId {} are {}",
-              pipeline.getAppId(), String.valueOf(stageElement.getProperties()));
-          throw new WingsException(INVALID_ARGUMENT, USER)
-              .addParam("args", "Environment can not be null for non-build state");
-        }
+    if (pipelineStages != null) {
+      for (int i = 0; i < pipelineStages.size(); ++i) {
+        PipelineStage pipelineStage = pipelineStages.get(i);
+        for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
+          if (!isValidPipelineStageName(stageElement.getName())) {
+            throw new WingsException(INVALID_ARGUMENT, USER)
+                .addParam("args", "Pipeline stage name can only have a-z, A-Z, 0-9, -, (, ) and _");
+          }
+          if (!ENV_STATE.name().equals(stageElement.getType())) {
+            continue;
+          }
+          if (isNullOrEmpty((String) stageElement.getProperties().get("workflowId"))) {
+            throw new WingsException(INVALID_ARGUMENT, USER)
+                .addParam("args", "Workflow can not be null for Environment state");
+          }
+          Workflow workflow = workflowService.readWorkflow(
+              pipeline.getAppId(), (String) stageElement.getProperties().get("workflowId"));
+          if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
+            throw new WingsException(INVALID_ARGUMENT, USER)
+                .addParam("args", "Workflow can not be null for Environment state");
+          }
+          keywords.add(workflow.getName());
+          keywords.add(workflow.getDescription());
+          resolveServices(services, serviceIds, stageElement.getWorkflowVariables(), workflow);
+          if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != BUILD
+              && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
+            logger.info("It should not happen. If happens printing the properties of appId {} are {}",
+                pipeline.getAppId(), String.valueOf(stageElement.getProperties()));
+            throw new WingsException(INVALID_ARGUMENT, USER)
+                .addParam("args", "Environment can not be null for non-build state");
+          }
 
-        String envId = workflowService.obtainTemplatedEnvironmentId(workflow, stageElement.getWorkflowVariables());
-        if (envId != null && matchesVariablePattern(envId)) {
-          parameterizedEnvIds.add(envId);
+          String envId = workflowService.obtainTemplatedEnvironmentId(workflow, stageElement.getWorkflowVariables());
+          if (envId != null && matchesVariablePattern(envId)) {
+            parameterizedEnvIds.add(envId);
+          }
         }
-
-        //        if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() ==
-        //        OrchestrationWorkflowType.BUILD
-        //            && i > 0) {
-        //          throw new WingsException(INVALID_ARGUMENT)
-        //              .addParam("args",
-        //                  "A pipeline can have only one build workflow and it has to be at the beginning of the
-        //                  pipeline. "
-        //                      + "If the pipeline needs more than one artifact use multiple steps in the build
-        //                      workflow
-        //                      "
-        //                      + "to build and collect all required artifacts.");
-        //        }
       }
     }
     if (parameterizedEnvIds.size() > 1) {

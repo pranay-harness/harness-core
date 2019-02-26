@@ -46,7 +46,7 @@ public class Pipeline extends Base {
 
   @NotNull @EntityName @NaturalKey private String name;
   private String description;
-  @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
+  private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();

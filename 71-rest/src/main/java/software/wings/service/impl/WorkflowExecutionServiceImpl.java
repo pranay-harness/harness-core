@@ -929,6 +929,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (pipeline == null) {
       throw new WingsException(ErrorCode.NON_EXISTING_PIPELINE);
     }
+    if (isEmpty(pipeline.getPipelineStages())) {
+      throw new WingsException("You can not deploy an empty pipeline.", WingsException.USER);
+    }
 
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowType.PIPELINE, appId, pipelineId);
