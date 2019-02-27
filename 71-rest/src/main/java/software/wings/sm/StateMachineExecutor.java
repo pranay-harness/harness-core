@@ -689,7 +689,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
     for (NotificationRule notificationRule : notificationRules) {
-      workflowNotificationHelper.renderNotificationGroups(context, notificationRule);
+      workflowNotificationHelper.renderExpressions(context, notificationRule);
     }
 
     Map<String, String> placeholderValues = getManualInterventionPlaceholderValues(context);

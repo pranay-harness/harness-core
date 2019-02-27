@@ -1815,6 +1815,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public List<NotificationRule> updateNotificationRules(
       String appId, String workflowId, List<NotificationRule> notificationRules) {
+    notificationRules.forEach(WorkflowServiceImpl::validateNotificationRule);
+
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
@@ -1825,6 +1827,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
     return orchestrationWorkflow.getNotificationRules();
+  }
+
+  private static void validateNotificationRule(NotificationRule notificationRule) {
+    if (notificationRule.isUserGroupAsExpression() && StringUtils.isEmpty(notificationRule.getUserGroupExpression())) {
+      logger.error("[ILLEGAL_STATE]: isUserGroupAsExpression = true but userGroupExpression is empty.");
+    }
   }
 
   @Override

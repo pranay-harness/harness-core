@@ -41,6 +41,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
     ExecutionScope executionScope = Util.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
 
     List<NotificationGroup> notificationGroups = Lists.newArrayList();
+
     if (isNotEmpty(yaml.getNotificationGroups())) {
       notificationGroups =
           yaml.getNotificationGroups()
@@ -74,6 +75,9 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
         .withConditions(conditions)
         .withExecutionScope(executionScope)
         .withNotificationGroupAsExpression(yaml.isNotificationGroupAsExpression())
+        .withUserGroupAsExpression(yaml.isUserGroupAsExpression())
+        .withUserGroupExpression(yaml.getUserGroupExpression())
+        .withUserGroupIds(yaml.getUserGroupIds())
         .withNotificationGroups(notificationGroups)
         .build();
   }

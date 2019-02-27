@@ -12,6 +12,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;
@@ -24,21 +26,38 @@ import javax.validation.constraints.Size;
  * Created by rishi on 10/30/16.
  */
 public class NotificationRule {
+  private static final Logger log = LoggerFactory.getLogger(NotificationRule.class);
+
   private String uuid = generateUuid();
   private List<ExecutionStatus> conditions = new ArrayList<>();
   private ExecutionScope executionScope;
+
   @Getter @Setter private boolean notificationGroupAsExpression;
+  @Getter @Setter private boolean userGroupAsExpression;
 
   @Deprecated @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
 
   @NotNull @Setter private List<String> userGroupIds = new ArrayList<>();
 
+  @NotNull @Setter private String userGroupExpression;
+
   private boolean batchNotifications;
 
   private boolean active = true;
 
+  /**
+   * Even if this is empty, we might still have user groups to notify based on {@link #getUserGroupExpressions()}
+   * @return
+   */
   public List<String> getUserGroupIds() {
     return CollectionUtils.emptyIfNull(userGroupIds);
+  }
+
+  /**
+   * This should be used to get user groups to notify if {@link #userGroupAsExpression} is set.
+   */
+  public String getUserGroupExpression() {
+    return userGroupExpression;
   }
 
   /**
@@ -198,6 +217,8 @@ public class NotificationRule {
     private boolean batchNotifications;
     private boolean active = true;
     private boolean notificationGroupAsExpression;
+    private boolean userGroupAsExpression;
+    private String userGroupExpression;
     private List<String> userGroupIds = new ArrayList<>();
 
     private NotificationRuleBuilder() {}
@@ -298,6 +319,16 @@ public class NotificationRule {
       return this;
     }
 
+    public NotificationRuleBuilder withUserGroupAsExpression(boolean userGroupAsExpression) {
+      this.userGroupAsExpression = userGroupAsExpression;
+      return this;
+    }
+
+    public NotificationRuleBuilder withUserGroupExpression(String userGroupExpression) {
+      this.userGroupExpression = userGroupExpression;
+      return this;
+    }
+
     /**
      * Build notification rule.
      *
@@ -312,6 +343,8 @@ public class NotificationRule {
       notificationRule.setBatchNotifications(batchNotifications);
       notificationRule.setActive(active);
       notificationRule.setUserGroupIds(userGroupIds);
+      notificationRule.setUserGroupAsExpression(userGroupAsExpression);
+      notificationRule.setUserGroupExpression(userGroupExpression);
       notificationRule.setNotificationGroupAsExpression(notificationGroupAsExpression);
       return notificationRule;
     }
@@ -325,14 +358,22 @@ public class NotificationRule {
     private String executionScope;
     private List<String> notificationGroups = new ArrayList<>();
     private boolean notificationGroupAsExpression;
+    private boolean userGroupAsExpression;
+    private String userGroupExpression;
+
+    private List<String> userGroupIds = new ArrayList<>();
 
     @Builder
     public Yaml(List<String> conditions, String executionScope, List<String> notificationGroups,
-        boolean notificationGroupAsExpression) {
+        boolean notificationGroupAsExpression, boolean userGroupAsExpression, List<String> userGroupIds,
+        String userGroupExpression) {
       this.conditions = conditions;
       this.executionScope = executionScope;
       this.notificationGroups = notificationGroups;
       this.notificationGroupAsExpression = notificationGroupAsExpression;
+      this.userGroupAsExpression = userGroupAsExpression;
+      this.userGroupIds = userGroupIds;
+      this.userGroupExpression = userGroupExpression;
     }
   }
 }

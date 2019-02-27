@@ -28,6 +28,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.context.ContextElementType;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,10 +45,12 @@ import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -60,11 +63,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -81,6 +86,7 @@ public class WorkflowNotificationHelper {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Clock clock;
   @Inject private NotificationSetupService notificationSetupService;
+  @Inject private UserGroupService userGroupService;
 
   private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
   private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
@@ -192,36 +198,77 @@ public class WorkflowNotificationHelper {
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
       for (NotificationRule notificationRule : notificationRules) {
-        if (executionScope.equals(notificationRule.getExecutionScope()) && notificationRule.getConditions() != null
-            && notificationRule.getConditions().contains(status)) {
-          // Render the expression of notification group
-          if (notificationRule.isNotificationGroupAsExpression()) {
-            filteredNotificationRules.add(renderNotificationGroups(context, notificationRule));
-          } else {
-            filteredNotificationRules.add(notificationRule);
-          }
+        boolean shouldNotify = executionScope.equals(notificationRule.getExecutionScope())
+            && notificationRule.getConditions() != null && notificationRule.getConditions().contains(status);
+
+        if (shouldNotify) {
+          filteredNotificationRules.add(renderExpressions(context, notificationRule));
         }
       }
     }
     return filteredNotificationRules;
   }
 
-  public NotificationRule renderNotificationGroups(ExecutionContextImpl context, NotificationRule notificationRule) {
+  public NotificationRule renderExpressions(ExecutionContextImpl context, NotificationRule notificationRule) {
     if (notificationRule.isNotificationGroupAsExpression()) {
-      List<NotificationGroup> renderedNotificationGroups = new ArrayList<>();
-      List<NotificationGroup> notificationGroups = notificationRule.getNotificationGroups();
-      for (NotificationGroup notificationGroup : notificationGroups) {
-        for (String notificationGroupName : context.renderExpression(notificationGroup.getName()).split(",")) {
-          NotificationGroup renderedNotificationGroup = notificationSetupService.readNotificationGroupByName(
-              context.getApp().getAccountId(), notificationGroupName.trim());
-          if (renderedNotificationGroup != null) {
-            renderedNotificationGroups.add(renderedNotificationGroup);
-          }
+      renderNotificationGroups(context, notificationRule);
+    }
+
+    if (notificationRule.isUserGroupAsExpression()) {
+      renderUserGroups(context, notificationRule);
+    }
+
+    return notificationRule;
+  }
+
+  private void renderNotificationGroups(ExecutionContextImpl context, NotificationRule notificationRule) {
+    if (!notificationRule.isNotificationGroupAsExpression()) {
+      return;
+    }
+
+    List<NotificationGroup> renderedNotificationGroups = new ArrayList<>();
+    List<NotificationGroup> notificationGroups = notificationRule.getNotificationGroups();
+    for (NotificationGroup notificationGroup : notificationGroups) {
+      for (String notificationGroupName : context.renderExpression(notificationGroup.getName()).split(",")) {
+        NotificationGroup renderedNotificationGroup = notificationSetupService.readNotificationGroupByName(
+            context.getApp().getAccountId(), notificationGroupName.trim());
+        if (renderedNotificationGroup != null) {
+          renderedNotificationGroups.add(renderedNotificationGroup);
         }
       }
-      notificationRule.setNotificationGroups(renderedNotificationGroups);
     }
-    return notificationRule;
+    notificationRule.setNotificationGroups(renderedNotificationGroups);
+  }
+
+  private void renderUserGroups(ExecutionContextImpl context, NotificationRule notificationRule) {
+    if (!notificationRule.isUserGroupAsExpression()) {
+      return;
+    }
+
+    List<String> userGroupIds = new ArrayList<>();
+    String expr = notificationRule.getUserGroupExpression();
+    String renderedExpression = context.renderExpression(expr);
+
+    if (StringUtils.isEmpty(renderedExpression)) {
+      logger.error("[EMPTY_EXPRESSION] Rendered express is: {}. Original Expression: {}, Context: {}",
+          renderedExpression, expr, context.asMap());
+      return;
+    }
+
+    List<String> userGroupNames =
+        Arrays.stream(renderedExpression.split(",")).map(String::trim).collect(Collectors.toList());
+
+    for (String userGroupName : userGroupNames) {
+      UserGroup userGroup = userGroupService.getByName(context.getApp().getAccountId(), userGroupName);
+      if (null == userGroup) {
+        logger.info(
+            "[LIKELY_USER_ERROR] No user group by name: {}. This can happen if the expression resolves to a user group name that does not exist. Expression: {}, Context: {}",
+            userGroupName, expr, context.asMap());
+      } else {
+        userGroupIds.add(userGroup.getUuid());
+      }
+    }
+    notificationRule.setUserGroupIds(userGroupIds);
   }
 
   private Map<String, String> getPlaceholderValues(ExecutionContext context, Application app, Environment env,
