@@ -58,6 +58,7 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsBlueGreenRoute53Se
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsBlueGreenSetupCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsListenerUpdateBGTaskHandler;
+import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsServiceDeployCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sBlueGreenDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCanaryDeployTaskHandler;
@@ -456,6 +457,8 @@ public class DelegateModule extends DependencyModule {
         .to(EcsBlueGreenRoute53SetupCommandHandler.class);
     ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.ROUTE53_DNS_WEIGHT_UPDATE.name())
         .to(EcsBlueGreenRoute53DNSWeightHandler.class);
+    ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.SERVICE_DEPLOY.name())
+        .to(EcsServiceDeployCommandHandler.class);
     ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.SERVICE_SETUP.name()).to(EcsSetupCommandHandler.class);
 
     MapBinder<String, K8sTaskHandler> k8sCommandTaskTypeToTaskHandlerMap =

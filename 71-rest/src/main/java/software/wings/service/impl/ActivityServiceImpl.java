@@ -135,6 +135,7 @@ public class ActivityServiceImpl implements ActivityService {
         case AWS_ECS_SERVICE_SETUP_ELB:
         case AWS_ECS_SERVICE_SETUP_DAEMON:
         case AWS_ECS_SERVICE_ROLLBACK_DAEMON:
+        case AWS_ECS_SERVICE_DEPLOY:
           rv.add(CommandUnitDetails.builder()
                      .commandExecutionStatus(ExecutionStatus.translateExecutionStatus(activity.getStatus()))
                      .name(activity.getCommandUnitType().getName())
