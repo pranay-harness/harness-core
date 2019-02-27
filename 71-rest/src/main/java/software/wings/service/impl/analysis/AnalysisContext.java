@@ -44,6 +44,7 @@ public class AnalysisContext extends Base {
   private String workflowExecutionId;
   private String stateExecutionId;
   private String serviceId;
+  private String predictiveCvConfigId;
   private Map<String, String> controlNodes;
   private Map<String, String> testNodes;
   private String query;
@@ -84,8 +85,8 @@ public class AnalysisContext extends Base {
   @Builder
   private AnalysisContext(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, boolean syncFromGit, String accountId, String workflowId,
-      String workflowExecutionId, String stateExecutionId, String serviceId, Map<String, String> controlNodes,
-      Map<String, String> testNodes, String query, boolean isSSL, int appPort,
+      String workflowExecutionId, String stateExecutionId, String serviceId, String predictiveCvConfigId,
+      Map<String, String> controlNodes, Map<String, String> testNodes, String query, boolean isSSL, int appPort,
       AnalysisComparisonStrategy comparisonStrategy, int timeDuration, StateType stateType,
       String analysisServerConfigId, String correlationId, int smooth_window, int tolerance,
       String prevWorkflowExecutionId, int minimumRequestsPerMinute, int comparisonWindow, int parallelProcesses,
@@ -98,6 +99,7 @@ public class AnalysisContext extends Base {
     this.workflowExecutionId = workflowExecutionId;
     this.stateExecutionId = stateExecutionId;
     this.serviceId = serviceId;
+    this.predictiveCvConfigId = predictiveCvConfigId;
     this.controlNodes = controlNodes == null ? new HashMap<>() : controlNodes;
     this.testNodes = testNodes == null ? new HashMap<>() : testNodes;
     this.query = query;

@@ -3,6 +3,9 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
+import static software.wings.common.VerificationConstants.GLOBAL_APP_ID;
+
+import static software.wings.common.VerificationConstants.STATIC_CLOUD_WATCH_METRIC_URL;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Charsets;
@@ -23,10 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.SettingAttribute;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
@@ -186,7 +187,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(settingAttribute.getAccountId())
-                                            .appId(Base.GLOBAL_APP_ID)
+                                            .appId(GLOBAL_APP_ID)
                                             .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(CloudWatchDelegateService.class, syncTaskContext)
@@ -213,7 +214,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics;
     YamlUtils yamlUtils = new YamlUtils();
     try {
-      URL url = CloudWatchService.class.getResource(Constants.STATIC_CLOUD_WATCH_METRIC_URL);
+      URL url = CloudWatchService.class.getResource(STATIC_CLOUD_WATCH_METRIC_URL);
       String yaml = Resources.toString(url, Charsets.UTF_8);
       cloudWatchMetrics = yamlUtils.read(yaml, new TypeReference<Map<AwsNameSpace, List<CloudWatchMetric>>>() {});
     } catch (Exception e) {

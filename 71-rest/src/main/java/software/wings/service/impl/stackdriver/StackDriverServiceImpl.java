@@ -1,6 +1,8 @@
 package software.wings.service.impl.stackdriver;
 
 import static io.harness.eraro.ErrorCode.STACKDRIVER_ERROR;
+import static software.wings.common.VerificationConstants.GLOBAL_APP_ID;
+import static software.wings.common.VerificationConstants.STACK_DRIVER_METRIC;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Charsets;
@@ -14,12 +16,10 @@ import io.harness.serializer.YamlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.Base;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
@@ -71,7 +71,7 @@ public class StackDriverServiceImpl implements StackDriverService {
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(settingAttribute.getAccountId())
-                                            .appId(Base.GLOBAL_APP_ID)
+                                            .appId(GLOBAL_APP_ID)
                                             .timeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
@@ -95,7 +95,7 @@ public class StackDriverServiceImpl implements StackDriverService {
     Map<String, List<StackDriverMetric>> stackDriverMetrics;
     YamlUtils yamlUtils = new YamlUtils();
     try {
-      URL url = CloudWatchService.class.getResource(Constants.STACK_DRIVER_METRIC);
+      URL url = CloudWatchService.class.getResource(STACK_DRIVER_METRIC);
       String yaml = Resources.toString(url, Charsets.UTF_8);
       stackDriverMetrics = yamlUtils.read(yaml, new TypeReference<Map<String, List<StackDriverMetric>>>() {});
     } catch (Exception e) {

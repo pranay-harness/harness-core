@@ -54,6 +54,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
@@ -642,7 +643,13 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public boolean save24X7LogAnalysisRecords(String appId, String cvConfigId, int analysisMinute,
-      LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId) {
+      AnalysisComparisonStrategy comparisonStrategy, LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId) {
+    final LogsCVConfiguration logsCVConfiguration = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    if (isNotEmpty(logsCVConfiguration.getContextId())) {
+      AnalysisContext analysisContext = wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
+      mlAnalysisResponse.setStateExecutionId(analysisContext.getStateExecutionId());
+      mlAnalysisResponse.setStateType(analysisContext.getStateType());
+    }
     mlAnalysisResponse.compressLogAnalysisRecord();
     mlAnalysisResponse.setCvConfigId(cvConfigId);
     mlAnalysisResponse.setAppId(appId);

@@ -1,8 +1,11 @@
 package io.harness.scheduler;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.common.VerificationConstants.DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION_CRON_GROUP;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,9 +28,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
+import software.wings.delegatetasks.AbstractDelegateDataCollectionTask;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.sm.StateType;
+import software.wings.verification.log.LogsCVConfiguration;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +53,7 @@ public class VerificationServiceExecutorService {
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private LearningEngineService learningEngineService;
+  @Inject private WingsPersistence wingsPersistence;
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private VerificationManagerClientHelper verificationManagerClientHelper;
 
@@ -54,7 +63,9 @@ public class VerificationServiceExecutorService {
       do {
         try {
           verificationAnalysisTask = learningEngineService.getNextVerificationAnalysisTask(ServiceApiVersion.V1);
-          if (verificationAnalysisTask != null) {
+          schedulePredictiveDataCollectionCronJob(verificationAnalysisTask);
+          if (verificationAnalysisTask != null
+              && !PREDICTIVE.equals(verificationAnalysisTask.getComparisonStrategy())) {
             // for both Log and Metric
             scheduleDataCollectionCronJob(verificationAnalysisTask);
             logger.info("pulled analysis task {}", verificationAnalysisTask);
@@ -108,6 +119,43 @@ public class VerificationServiceExecutorService {
                               .build();
         jobScheduler.scheduleJob(job, trigger);
         logger.info("Scheduled Data Collection Cron Job with details : {}", job);
+      }
+    }
+  }
+
+  private void schedulePredictiveDataCollectionCronJob(AnalysisContext context) {
+    if (context != null && PREDICTIVE.equals(context.getComparisonStrategy())) {
+      String cvConfigUuid = context.getPredictiveCvConfigId();
+      if (isNotEmpty(cvConfigUuid)) {
+        return;
+      }
+      cvConfigUuid = generateUuid();
+      switch (context.getStateType()) {
+        case SUMO:
+          LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+          logsCVConfiguration.setAppId(context.getAppId());
+          logsCVConfiguration.setQuery(context.getQuery());
+          logsCVConfiguration.setBaselineEndMinute(context.getStartDataCollectionMinute());
+          logsCVConfiguration.setBaselineStartMinute(context.getStartDataCollectionMinute()
+              - AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES + 1);
+          logsCVConfiguration.setUuid(cvConfigUuid);
+          logsCVConfiguration.setName(cvConfigUuid);
+          logsCVConfiguration.setAccountId(context.getAccountId());
+          logsCVConfiguration.setConnectorId(context.getAnalysisServerConfigId());
+          logsCVConfiguration.setEnvId(context.getEnvId());
+          logsCVConfiguration.setServiceId(context.getServiceId());
+          logsCVConfiguration.setStateType(context.getStateType());
+          logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
+          logsCVConfiguration.setEnabled24x7(true);
+          logsCVConfiguration.setComparisonStrategy(context.getComparisonStrategy());
+          logsCVConfiguration.setContextId(context.getUuid());
+          wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(logsCVConfiguration));
+
+          context.setPredictiveCvConfigId(cvConfigUuid);
+          wingsPersistence.updateField(AnalysisContext.class, context.getUuid(), "predictiveCvConfigId", cvConfigUuid);
+          break;
+        default:
+          throw new IllegalArgumentException("Invalid state: " + context.getStateType());
       }
     }
   }

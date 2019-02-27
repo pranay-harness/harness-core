@@ -808,13 +808,6 @@ public interface Constants {
       + "setup infrastructure and setup/execute deployment workflows within NON_PROD environments";
 
   /**
-   * The constant HARNESS_KUBE_CONFIG_PATH.
-   */
-  String STATIC_CLOUD_WATCH_METRIC_URL = "/configs/cloudwatch_metrics.yml";
-
-  String STACK_DRIVER_METRIC = "/configs/stackdriver_metrics.yml";
-
-  /**
    * The cloudwatch metric url.
    */
   String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
