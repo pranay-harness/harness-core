@@ -64,7 +64,7 @@ public class AwsEcrHelperServiceManagerImpl implements AwsEcrHelperServiceManage
   private AwsResponse executeTask(String accountId, AwsEcrRequest request, String appId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_ECR_TASK)
+            .withTaskType(TaskType.AWS_ECR_TASK.name())
             .withAccountId(accountId)
             .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .withAsync(false)

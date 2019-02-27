@@ -81,7 +81,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     CloudFormationCreateStackRequest request = builder.build();
     setTimeOutOnRequest(request);
     return aDelegateTask()
-        .withTaskType(CLOUD_FORMATION_TASK)
+        .withTaskType(CLOUD_FORMATION_TASK.name())
         .withAccountId(executionContext.getApp().getAccountId())
         .withWaitId(activityId)
         .withTags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)

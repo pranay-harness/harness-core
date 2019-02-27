@@ -115,7 +115,7 @@ public class KubernetesSteadyStateCheck extends State {
           aDelegateTask()
               .withAccountId(app.getAccountId())
               .withAppId(app.getUuid())
-              .withTaskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK)
+              .withTaskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK.name())
               .withWaitId(activity.getUuid())
               .withParameters(new Object[] {kubernetesSteadyStateCheckParams})
               .withEnvId(env.getUuid())

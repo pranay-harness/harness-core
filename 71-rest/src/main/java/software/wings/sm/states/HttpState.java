@@ -341,7 +341,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                                       .socketTimeoutMillis(taskSocketTimeout)
                                                       .build();
     final DelegateTask delegateTask = aDelegateTask()
-                                          .withTaskType(getTaskType())
+                                          .withTaskType(getTaskType().name())
                                           .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
                                           .withWaitId(activityId)
                                           .withAppId(((ExecutionContextImpl) context).getApp().getAppId())

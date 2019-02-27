@@ -37,7 +37,7 @@ public class ArtifactoryCollectionTaskTest {
       ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
   private DelegateTask collectionTask =
       DelegateTask.Builder.aDelegateTask()
-          .withTaskType(TaskType.ARTIFACTORY_COLLECTION)
+          .withTaskType(TaskType.ARTIFACTORY_COLLECTION.name())
           .withAccountId(ACCOUNT_ID)
           .withAppId(APP_ID)
           .withWaitId("123456789")

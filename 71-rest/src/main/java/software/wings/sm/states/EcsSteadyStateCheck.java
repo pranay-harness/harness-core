@@ -116,7 +116,7 @@ public class EcsSteadyStateCheck extends State {
           aDelegateTask()
               .withAccountId(app.getAccountId())
               .withAppId(app.getUuid())
-              .withTaskType(TaskType.ECS_STEADY_STATE_CHECK_TASK)
+              .withTaskType(TaskType.ECS_STEADY_STATE_CHECK_TASK.name())
               .withWaitId(activity.getUuid())
               .withTags(
                   isNotEmpty(params.getAwsConfig().getTag()) ? singletonList(params.getAwsConfig().getTag()) : null)

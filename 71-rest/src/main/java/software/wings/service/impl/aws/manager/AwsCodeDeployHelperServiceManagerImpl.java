@@ -114,7 +114,7 @@ public class AwsCodeDeployHelperServiceManagerImpl implements AwsCodeDeployHelpe
   private AwsResponse executeTask(String accountId, AwsCodeDeployRequest request, String appId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_CODE_DEPLOY_TASK)
+            .withTaskType(TaskType.AWS_CODE_DEPLOY_TASK.name())
             .withAccountId(accountId)
             .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .withAsync(false)

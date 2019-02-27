@@ -120,7 +120,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                                         .build();
 
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(JIRA)
+                                    .withTaskType(JIRA.name())
                                     .withAccountId(executionContext.getApp().getAccountId())
                                     .withWaitId(activityId)
                                     .withAppId(((ExecutionContextImpl) context).getApp().getAppId())

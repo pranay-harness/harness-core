@@ -36,7 +36,7 @@ public class DelegateInvocationHandler implements InvocationHandler {
     delegateArguments[1] = method.getName();
     System.arraycopy(args, 0, delegateArguments, 2, args.length);
     Builder builder = aDelegateTask()
-                          .withTaskType(taskType)
+                          .withTaskType(taskType.name())
                           .withParameters(delegateArguments)
                           .withAccountId(syncTaskContext.getAccountId())
                           .withAppId(syncTaskContext.getAppId())

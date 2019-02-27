@@ -302,7 +302,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
       String waitId = generateUuid();
       delegateTasks.add(aDelegateTask()
-                            .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
+                            .withTaskType(TaskType.ELK_COLLECT_LOG_DATA.name())
                             .withAccountId(accountId)
                             .withAppId(context.getAppId())
                             .withWaitId(waitId)

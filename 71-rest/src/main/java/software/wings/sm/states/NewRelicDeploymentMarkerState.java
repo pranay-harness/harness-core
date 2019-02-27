@@ -129,7 +129,7 @@ public class NewRelicDeploymentMarkerState extends State {
 
     String delegateTaskId =
         delegateService.queueTask(aDelegateTask()
-                                      .withTaskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER)
+                                      .withTaskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER.name())
                                       .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
                                       .withWaitId(correlationId)
                                       .withAppId(((ExecutionContextImpl) context).getApp().getAppId())

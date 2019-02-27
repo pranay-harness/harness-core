@@ -278,7 +278,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
     String waitId = generateUuid();
     delegateTasks.add(aDelegateTask()
-                          .withTaskType(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA)
+                          .withTaskType(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA.name())
                           .withAccountId(appService.get(context.getAppId()).getAccountId())
                           .withAppId(context.getAppId())
                           .withWaitId(waitId)

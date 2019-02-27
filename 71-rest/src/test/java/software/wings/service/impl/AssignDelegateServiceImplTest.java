@@ -132,7 +132,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withAppId(APP_ID)
-                                    .withTaskType(TaskType.SCRIPT)
+                                    .withTaskType(TaskType.SCRIPT.name())
                                     .withTags(ImmutableList.of("a", "b"))
                                     .build();
     Delegate delegate = aDelegate()
@@ -151,7 +151,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withAppId(APP_ID)
-                                    .withTaskType(TaskType.SCRIPT)
+                                    .withTaskType(TaskType.SCRIPT.name())
                                     .withTags(ImmutableList.of("a", "b"))
                                     .build();
     Delegate delegate = aDelegate()
@@ -170,7 +170,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withAppId(APP_ID)
-                                    .withTaskType(TaskType.SCRIPT)
+                                    .withTaskType(TaskType.SCRIPT.name())
                                     .withTags(ImmutableList.of("a", "b"))
                                     .build();
     Delegate delegate = aDelegate()
@@ -189,7 +189,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withAppId(APP_ID)
-                                    .withTaskType(TaskType.SCRIPT)
+                                    .withTaskType(TaskType.SCRIPT.name())
                                     .withTags(null)
                                     .build();
     Delegate delegate = aDelegate()
@@ -208,7 +208,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withAppId(APP_ID)
-                                    .withTaskType(TaskType.SCRIPT)
+                                    .withTaskType(TaskType.SCRIPT.name())
                                     .withTags(ImmutableList.of("a", "b"))
                                     .build();
     Delegate delegate = aDelegate()
@@ -277,7 +277,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
 
     DelegateTask delegateTask =
-        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
+        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP.name()).withParameters(params).build();
 
     assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isTrue();
   }
@@ -293,7 +293,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
 
     DelegateTask delegateTask =
-        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
+        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP.name()).withParameters(params).build();
 
     assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isFalse();
   }
@@ -309,7 +309,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
 
     DelegateTask delegateTask =
-        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
+        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP.name()).withParameters(params).build();
 
     assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isFalse();
   }
@@ -334,7 +334,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
     DelegateTask delegateTask =
-        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
+        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP.name()).withParameters(params).build();
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
@@ -362,7 +362,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
     DelegateTask delegateTask =
-        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
+        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP.name()).withParameters(params).build();
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
@@ -389,7 +389,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
     DelegateTask delegateTask =
-        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
+        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP.name()).withParameters(params).build();
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
@@ -416,7 +416,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
     DelegateTask delegateTask =
-        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
+        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP.name()).withParameters(params).build();
 
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
@@ -427,7 +427,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void shouldGetNullFirstAttemptDelegate() {
     Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
     DelegateTask delegateTask =
-        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
+        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP.name()).withParameters(params).build();
 
     String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
 
@@ -454,7 +454,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
     DelegateTask delegateTask =
-        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
+        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP.name()).withParameters(params).build();
 
     String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
 

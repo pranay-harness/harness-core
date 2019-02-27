@@ -174,7 +174,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK)
+                                    .withTaskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
                                     .withAccountId(accountId)
                                     .withAppId(context.getAppId())
                                     .withWaitId(waitId)

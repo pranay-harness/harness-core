@@ -157,7 +157,7 @@ public class AwsAmiSwitchRoutesState extends State {
             .withTags(isNotEmpty(routesRequest.getAwsConfig().getTag())
                     ? singletonList(routesRequest.getAwsConfig().getTag())
                     : null)
-            .withTaskType(AWS_AMI_ASYNC_TASK)
+            .withTaskType(AWS_AMI_ASYNC_TASK.name())
             .withAsync(true)
             .withEnvId(infrastructureMapping.getEnvId())
             .build();

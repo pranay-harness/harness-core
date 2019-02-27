@@ -183,7 +183,7 @@ public class BambooState extends State {
 
     DelegateTask delegateTask =
         DelegateTask.Builder.aDelegateTask()
-            .withTaskType(getTaskType())
+            .withTaskType(getTaskType().name())
             .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
             .withWaitId(activityId)
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())

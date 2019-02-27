@@ -131,7 +131,7 @@ public class AwsLambdaVerification extends State {
   private ExecutionResponse executeTask(String accountId, AwsLambdaRequest request, String appId, String activityId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_LAMBDA_TASK)
+            .withTaskType(TaskType.AWS_LAMBDA_TASK.name())
             .withAccountId(accountId)
             .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .withAsync(true)

@@ -84,7 +84,7 @@ public class AwsAsgHelperServiceManagerImpl implements AwsAsgHelperServiceManage
   private AwsResponse executeTask(String accountId, AwsAsgRequest request, String appId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_ASG_TASK)
+            .withTaskType(TaskType.AWS_ASG_TASK.name())
             .withAccountId(accountId)
             .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .withAsync(false)

@@ -283,7 +283,7 @@ public class AwsAmiServiceSetup extends State {
           aDelegateTask()
               .withAccountId(app.getAccountId())
               .withAppId(app.getUuid())
-              .withTaskType(TaskType.AWS_AMI_ASYNC_TASK)
+              .withTaskType(TaskType.AWS_AMI_ASYNC_TASK.name())
               .withWaitId(activity.getUuid())
               .withTags(
                   isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)

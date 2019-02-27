@@ -130,7 +130,7 @@ public class SettingValidationService {
                                                           .settingAttribute(settingAttribute)
                                                           .build();
       DelegateTask delegateTask = aDelegateTask()
-                                      .withTaskType(TaskType.CONNECTIVITY_VALIDATION)
+                                      .withTaskType(TaskType.CONNECTIVITY_VALIDATION.name())
                                       .withAccountId(settingAttribute.getAccountId())
                                       .withAppId(settingAttribute.getAppId())
                                       .withAsync(false)

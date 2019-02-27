@@ -52,7 +52,7 @@ public class APMDataCollectionTaskTest {
                              .build();
 
     DelegateTask task = aDelegateTask()
-                            .withTaskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK)
+                            .withTaskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
                             .withAccountId(accountId)
                             .withAppId(appId)
                             .withWaitId(waitId)

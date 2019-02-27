@@ -211,7 +211,7 @@ public abstract class ContainerServiceSetup extends State {
           delegateService.queueTask(aDelegateTask()
                                         .withAccountId(app.getAccountId())
                                         .withAppId(app.getUuid())
-                                        .withTaskType(TaskType.COMMAND)
+                                        .withTaskType(TaskType.COMMAND.name())
                                         .withWaitId(activity.getUuid())
                                         .withParameters(new Object[] {command, commandExecutionContext})
                                         .withEnvId(env.getUuid())

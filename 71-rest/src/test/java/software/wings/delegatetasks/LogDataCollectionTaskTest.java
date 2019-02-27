@@ -56,7 +56,7 @@ public class LogDataCollectionTaskTest {
     dataCollectionInfo = getDataCollectionInfo(logDefinition, hosts);
 
     DelegateTask task = aDelegateTask()
-                            .withTaskType(TaskType.CUSTOM_LOG_COLLECTION_TASK)
+                            .withTaskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
                             .withAccountId(accountId)
                             .withAppId(appId)
                             .withWaitId(waitId)

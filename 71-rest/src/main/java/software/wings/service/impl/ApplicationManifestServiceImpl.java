@@ -428,7 +428,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
                                     .withAccountId(app.getAccountId())
                                     .withAppId(app.getUuid())
                                     .withAsync(false)
-                                    .withTaskType(TaskType.GIT_FETCH_FILES_TASK)
+                                    .withTaskType(TaskType.GIT_FETCH_FILES_TASK.name())
                                     .withParameters(new Object[] {fetchFilesTaskParams})
                                     .withTimeout(TimeUnit.MINUTES.toMillis(60))
                                     .build();

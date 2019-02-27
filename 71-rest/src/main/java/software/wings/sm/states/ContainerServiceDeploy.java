@@ -167,7 +167,7 @@ public abstract class ContainerServiceDeploy extends State {
           delegateService.queueTask(aDelegateTask()
                                         .withAccountId(contextData.app.getAccountId())
                                         .withAppId(contextData.appId)
-                                        .withTaskType(TaskType.COMMAND)
+                                        .withTaskType(TaskType.COMMAND.name())
                                         .withWaitId(waitId)
                                         .withTags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
                                         .withParameters(new Object[] {contextData.command, commandExecutionContext})

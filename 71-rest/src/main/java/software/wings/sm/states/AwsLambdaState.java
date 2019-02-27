@@ -300,7 +300,7 @@ public class AwsLambdaState extends State {
           app.getAccountId(), activity.getUuid());
       DelegateTask delegateTask =
           aDelegateTask()
-              .withTaskType(AWS_LAMBDA_TASK)
+              .withTaskType(AWS_LAMBDA_TASK.name())
               .withAccountId(app.getAccountId())
               .withWaitId(activity.getUuid())
               .withAppId(context.getAppId())

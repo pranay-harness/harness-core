@@ -168,7 +168,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA)
+                                    .withTaskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
                                     .withAccountId(appService.get(context.getAppId()).getAccountId())
                                     .withAppId(context.getAppId())
                                     .withWaitId(waitId)

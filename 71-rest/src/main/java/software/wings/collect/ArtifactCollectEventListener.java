@@ -108,7 +108,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
 
         return aDelegateTask()
-            .withTaskType(TaskType.JENKINS_COLLECTION)
+            .withTaskType(TaskType.JENKINS_COLLECTION.name())
             .withAccountId(accountId)
             .withAppId(jenkinsArtifactStream.getAppId())
             .withWaitId(waitId)
@@ -122,7 +122,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
 
         return aDelegateTask()
-            .withTaskType(TaskType.BAMBOO_COLLECTION)
+            .withTaskType(TaskType.BAMBOO_COLLECTION.name())
             .withAccountId(accountId)
             .withAppId(bambooArtifactStream.getAppId())
             .withWaitId(waitId)
@@ -136,7 +136,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
 
         return aDelegateTask()
-            .withTaskType(TaskType.NEXUS_COLLECTION)
+            .withTaskType(TaskType.NEXUS_COLLECTION.name())
             .withAccountId(accountId)
             .withAppId(nexusArtifactStream.getAppId())
             .withWaitId(waitId)
@@ -151,7 +151,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
 
         return aDelegateTask()
-            .withTaskType(TaskType.ARTIFACTORY_COLLECTION)
+            .withTaskType(TaskType.ARTIFACTORY_COLLECTION.name())
             .withAccountId(accountId)
             .withAppId(artifactoryArtifactStream.getAppId())
             .withWaitId(waitId)
@@ -166,7 +166,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
 
         return aDelegateTask()
-            .withTaskType(TaskType.AMAZON_S3_COLLECTION)
+            .withTaskType(TaskType.AMAZON_S3_COLLECTION.name())
             .withAccountId(accountId)
             .withTags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
             .withAppId(amazonS3ArtifactStream.getAppId())

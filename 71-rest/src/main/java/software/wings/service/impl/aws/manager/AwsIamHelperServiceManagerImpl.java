@@ -57,7 +57,7 @@ public class AwsIamHelperServiceManagerImpl implements AwsIamHelperServiceManage
   private AwsResponse getResponse(String accountId, AwsIamRequest request, String appId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_IAM_TASK)
+            .withTaskType(TaskType.AWS_IAM_TASK.name())
             .withAccountId(accountId)
             .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .withAsync(false)

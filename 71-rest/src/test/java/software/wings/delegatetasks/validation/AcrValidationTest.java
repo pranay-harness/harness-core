@@ -37,7 +37,7 @@ public class AcrValidationTest extends WingsBaseTest {
           .withUuid("id")
           .withAccountId(ACCOUNT_ID)
           .withAppId(APP_ID)
-          .withTaskType(TaskType.ACR_GET_BUILDS)
+          .withTaskType(TaskType.ACR_GET_BUILDS.name())
           .withWaitId("")
           .withParameters(new Object[] {ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
                                             .withRegistryName(registryName)

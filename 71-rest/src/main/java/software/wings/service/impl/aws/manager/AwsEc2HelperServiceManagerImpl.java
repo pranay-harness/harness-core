@@ -146,7 +146,7 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
   private AwsResponse executeTask(String accountId, AwsEc2Request request, String appId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_EC2_TASK)
+            .withTaskType(TaskType.AWS_EC2_TASK.name())
             .withAccountId(accountId)
             .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .withAsync(false)

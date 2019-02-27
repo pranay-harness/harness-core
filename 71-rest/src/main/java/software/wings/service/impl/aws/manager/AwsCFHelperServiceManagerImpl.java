@@ -68,7 +68,7 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
   private AwsResponse executeTask(String accountId, AwsCFRequest request, String appId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_CF_TASK)
+            .withTaskType(TaskType.AWS_CF_TASK.name())
             .withAccountId(accountId)
             .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .withAsync(false)

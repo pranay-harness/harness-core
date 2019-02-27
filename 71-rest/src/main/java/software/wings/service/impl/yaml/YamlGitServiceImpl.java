@@ -525,7 +525,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                       .toString());
     }
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.GIT_COMMAND)
+                                    .withTaskType(TaskType.GIT_COMMAND.name())
                                     .withAccountId(accountId)
                                     .withAppId(GLOBAL_APP_ID)
                                     .withWaitId(waitId)
@@ -674,7 +674,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       GitConfig gitConfig = getGitConfig(yamlGitConfig);
       DelegateTask delegateTask =
           aDelegateTask()
-              .withTaskType(TaskType.GIT_COMMAND)
+              .withTaskType(TaskType.GIT_COMMAND.name())
               .withAccountId(accountId)
               .withAppId(GLOBAL_APP_ID)
               .withWaitId(waitId)
