@@ -357,7 +357,7 @@ public class AwsAmiServiceDeployState extends State {
             .withWaitId(activityId)
             .withTimeout(TimeUnit.MINUTES.toMillis(autoScalingSteadyStateTimeout))
             .withParameters(new Object[] {request})
-            .withTaskType(AWS_AMI_ASYNC_TASK)
+            .withTaskType(AWS_AMI_ASYNC_TASK.name())
             .withTags(
                 isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .withAsync(true)

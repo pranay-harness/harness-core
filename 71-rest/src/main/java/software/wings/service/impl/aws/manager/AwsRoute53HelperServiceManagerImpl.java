@@ -49,7 +49,7 @@ public class AwsRoute53HelperServiceManagerImpl implements AwsRoute53HelperServi
   private AwsResponse executeTask(String accountId, AwsRoute53Request request, String appId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_ROUTE53_TASK)
+            .withTaskType(TaskType.AWS_ROUTE53_TASK.name())
             .withAccountId(accountId)
             .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .withAsync(false)

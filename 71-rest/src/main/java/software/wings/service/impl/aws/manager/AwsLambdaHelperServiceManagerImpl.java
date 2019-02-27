@@ -50,7 +50,7 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
   private AwsResponse executeTask(String accountId, AwsLambdaFunctionRequest request) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_LAMBDA_TASK)
+            .withTaskType(TaskType.AWS_LAMBDA_TASK.name())
             .withAccountId(accountId)
             .withAsync(false)
             .withTags(

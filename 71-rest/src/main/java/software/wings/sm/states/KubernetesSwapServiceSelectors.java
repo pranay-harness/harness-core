@@ -230,7 +230,7 @@ public class KubernetesSwapServiceSelectors extends State {
         aDelegateTask()
             .withAccountId(app.getAccountId())
             .withAppId(app.getUuid())
-            .withTaskType(TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK)
+            .withTaskType(TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.name())
             .withWaitId(activity.getUuid())
             .withParameters(new Object[] {kubernetesSwapServiceSelectorsParams})
             .withEnvId(env.getUuid())

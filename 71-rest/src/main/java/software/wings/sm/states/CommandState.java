@@ -410,7 +410,7 @@ public class CommandState extends State {
       DelegateTask delegateTask = aDelegateTask()
                                       .withAccountId(accountId)
                                       .withAppId(appId)
-                                      .withTaskType(TaskType.COMMAND)
+                                      .withTaskType(TaskType.COMMAND.name())
                                       .withWaitId(activityId)
                                       .withTags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
                                       .withParameters(new Object[] {command, commandExecutionContext})

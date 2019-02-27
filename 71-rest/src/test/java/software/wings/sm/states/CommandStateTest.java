@@ -323,7 +323,7 @@ public class CommandStateTest extends WingsBaseTest {
         .queueTask(aDelegateTask()
                        .withAppId(APP_ID)
                        .withAccountId(ACCOUNT_ID)
-                       .withTaskType(TaskType.COMMAND)
+                       .withTaskType(TaskType.COMMAND.name())
                        .withWaitId(ACTIVITY_ID)
                        .withTimeout(TimeUnit.MINUTES.toMillis(30))
                        .withParameters(new Object[] {COMMAND,
@@ -490,7 +490,7 @@ public class CommandStateTest extends WingsBaseTest {
         .queueTask(aDelegateTask()
                        .withAppId(APP_ID)
                        .withAccountId(ACCOUNT_ID)
-                       .withTaskType(TaskType.COMMAND)
+                       .withTaskType(TaskType.COMMAND.name())
                        .withWaitId(ACTIVITY_ID)
                        .withTimeout(TimeUnit.MINUTES.toMillis(30))
                        .withParameters(new Object[] {command,

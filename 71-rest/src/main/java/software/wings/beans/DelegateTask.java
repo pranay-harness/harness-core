@@ -496,7 +496,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
 
   public static final class Builder {
     private String version;
-    private TaskType taskType;
+    private String taskType;
     private Object[] parameters;
     private List<String> tags;
     private String accountId;
@@ -530,7 +530,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
       return this;
     }
 
-    public Builder withTaskType(TaskType taskType) {
+    public Builder withTaskType(String taskType) {
       this.taskType = taskType;
       return this;
     }
@@ -671,7 +671,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
     public DelegateTask build() {
       DelegateTask delegateTask = new DelegateTask();
       delegateTask.setVersion(version);
-      delegateTask.setTaskType(taskType != null ? taskType.name() : null);
+      delegateTask.setTaskType(taskType);
       delegateTask.setParameters(parameters);
       delegateTask.setTags(tags);
       delegateTask.setAccountId(accountId);

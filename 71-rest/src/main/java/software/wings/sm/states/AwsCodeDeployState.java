@@ -200,7 +200,7 @@ public class AwsCodeDeployState extends State {
         delegateService.queueTask(aDelegateTask()
                                       .withAccountId(app.getAccountId())
                                       .withAppId(app.getAppId())
-                                      .withTaskType(TaskType.COMMAND)
+                                      .withTaskType(TaskType.COMMAND.name())
                                       .withWaitId(activity.getUuid())
                                       .withTimeout(getTaskTimeout())
                                       .withTags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))

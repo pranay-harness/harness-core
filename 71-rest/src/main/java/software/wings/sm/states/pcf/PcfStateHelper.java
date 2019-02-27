@@ -57,7 +57,7 @@ public class PcfStateHelper {
     return aDelegateTask()
         .withAccountId(accountId)
         .withAppId(appId)
-        .withTaskType(taskType)
+        .withTaskType(taskType.name())
         .withWaitId(waitId)
         .withParameters(parameters)
         .withEnvId(envId)

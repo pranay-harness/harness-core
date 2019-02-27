@@ -179,7 +179,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.CUSTOM_LOG_COLLECTION_TASK)
+                                    .withTaskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
                                     .withAccountId(accountId)
                                     .withAppId(context.getAppId())
                                     .withWaitId(waitId)

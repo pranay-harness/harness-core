@@ -65,7 +65,7 @@ public class GitConfigHelperService {
     try {
       ResponseData notifyResponseData = delegateService.executeTask(
           aDelegateTask()
-              .withTaskType(TaskType.GIT_COMMAND)
+              .withTaskType(TaskType.GIT_COMMAND.name())
               .withAccountId(gitConfig.getAccountId())
               .withAppId(GLOBAL_APP_ID)
               .withAsync(false)

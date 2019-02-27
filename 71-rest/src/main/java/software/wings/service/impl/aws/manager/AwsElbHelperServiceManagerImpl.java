@@ -124,7 +124,7 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
   private AwsResponse executeTask(String accountId, AwsElbRequest request, String appId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_ELB_TASK)
+            .withTaskType(TaskType.AWS_ELB_TASK.name())
             .withAccountId(accountId)
             .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .withAsync(false)

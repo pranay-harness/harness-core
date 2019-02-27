@@ -147,7 +147,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
       delegateTasks.add(aDelegateTask()
-                            .withTaskType(TaskType.SPLUNK_COLLECT_LOG_DATA)
+                            .withTaskType(TaskType.SPLUNK_COLLECT_LOG_DATA.name())
                             .withAccountId(appService.get(context.getAppId()).getAccountId())
                             .withAppId(context.getAppId())
                             .withWaitId(waitId)

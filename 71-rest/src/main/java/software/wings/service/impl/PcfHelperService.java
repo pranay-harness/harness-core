@@ -49,7 +49,7 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK)
+                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
                                           .withAccountId(pcfConfig.getAccountId())
                                           .withAppId(GLOBAL_APP_ID)
                                           .withAsync(false)
@@ -84,7 +84,7 @@ public class PcfHelperService {
 
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK)
+                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
                                           .withAccountId(pcfConfig.getAccountId())
                                           .withAppId(GLOBAL_APP_ID)
                                           .withAsync(false)
@@ -149,7 +149,7 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK)
+                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
                                           .withAccountId(pcfConfig.getAccountId())
                                           .withAppId(GLOBAL_APP_ID)
                                           .withAsync(false)
@@ -184,7 +184,7 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK)
+                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
                                           .withAccountId(pcfConfig.getAccountId())
                                           .withAppId(GLOBAL_APP_ID)
                                           .withAsync(false)
@@ -225,7 +225,7 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK)
+                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
                                           .withAccountId(pcfConfig.getAccountId())
                                           .withAppId(GLOBAL_APP_ID)
                                           .withAsync(false)
@@ -260,7 +260,7 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK)
+                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
                                           .withAccountId(pcfConfig.getAccountId())
                                           .withAppId(GLOBAL_APP_ID)
                                           .withAsync(false)
@@ -296,7 +296,7 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK)
+                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
                                           .withAccountId(pcfConfig.getAccountId())
                                           .withAppId(GLOBAL_APP_ID)
                                           .withAsync(false)

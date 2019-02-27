@@ -128,7 +128,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
     String waitId = generateUuid();
     DelegateTask.Builder delegateTaskBuilder =
-        aDelegateTask().withTaskType(TaskType.BUILD_SOURCE_TASK).withAppId(GLOBAL_APP_ID).withWaitId(waitId);
+        aDelegateTask().withTaskType(TaskType.BUILD_SOURCE_TASK.name()).withAppId(GLOBAL_APP_ID).withWaitId(waitId);
 
     if (CUSTOM.name().equals(artifactStreamType)) {
       // Defaulting to the 60 secs

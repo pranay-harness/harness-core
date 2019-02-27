@@ -119,7 +119,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       setTimeOutOnRequest(request);
       delegateTask =
           aDelegateTask()
-              .withTaskType(CLOUD_FORMATION_TASK)
+              .withTaskType(CLOUD_FORMATION_TASK.name())
               .withAccountId(executionContext.getApp().getAccountId())
               .withWaitId(activityId)
               .withTags(
@@ -145,7 +145,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       setTimeOutOnRequest(request);
       delegateTask =
           aDelegateTask()
-              .withTaskType(CLOUD_FORMATION_TASK)
+              .withTaskType(CLOUD_FORMATION_TASK.name())
               .withAccountId(executionContext.getApp().getAccountId())
               .withWaitId(activityId)
               .withTags(

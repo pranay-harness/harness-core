@@ -113,7 +113,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
       EmailRequest request =
           EmailRequest.builder().emailData(emailData).encryptionDetails(encryptionDetails).smtpConfig(config).build();
       DelegateTask delegateTask = aDelegateTask()
-                                      .withTaskType(TaskType.COLLABORATION_PROVIDER_TASK)
+                                      .withTaskType(TaskType.COLLABORATION_PROVIDER_TASK.name())
                                       .withAccountId(emailData.getAccountId())
                                       .withAppId(GLOBAL_APP_ID)
                                       .withWaitId(waitId)

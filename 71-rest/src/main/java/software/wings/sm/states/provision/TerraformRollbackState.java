@@ -147,7 +147,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .build();
 
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TERRAFORM_PROVISION_TASK)
+                                    .withTaskType(TERRAFORM_PROVISION_TASK.name())
                                     .withAccountId(executionContext.getApp().getAccountId())
                                     .withWaitId(activityId)
                                     .withAppId(((ExecutionContextImpl) context).getApp().getAppId())

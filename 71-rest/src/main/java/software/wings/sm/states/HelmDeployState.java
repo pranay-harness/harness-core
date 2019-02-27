@@ -240,7 +240,7 @@ public class HelmDeployState extends State {
     delegateService.queueTask(aDelegateTask()
                                   .withAccountId(app.getAccountId())
                                   .withAppId(app.getUuid())
-                                  .withTaskType(TaskType.HELM_COMMAND_TASK)
+                                  .withTaskType(TaskType.HELM_COMMAND_TASK.name())
                                   .withWaitId(activity.getUuid())
                                   .withParameters(new Object[] {commandRequest})
                                   .withEnvId(env.getUuid())
@@ -360,7 +360,7 @@ public class HelmDeployState extends State {
             .build();
 
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.HELM_COMMAND_TASK)
+                                    .withTaskType(TaskType.HELM_COMMAND_TASK.name())
                                     .withParameters(new Object[] {helmReleaseHistoryCommandRequest})
                                     .withAccountId(accountId)
                                     .withAppId(appId)

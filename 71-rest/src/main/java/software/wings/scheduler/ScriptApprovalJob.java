@@ -121,7 +121,7 @@ public class ScriptApprovalJob implements Job {
             .build();
 
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.SHELL_SCRIPT_APPROVAL)
+                                    .withTaskType(TaskType.SHELL_SCRIPT_APPROVAL.name())
                                     .withAccountId(accountId)
                                     .withAppId(appId)
                                     .withWaitId(activityId)
