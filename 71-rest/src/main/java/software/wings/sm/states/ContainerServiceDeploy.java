@@ -165,15 +165,16 @@ public abstract class ContainerServiceDeploy extends State {
       String waitId = UUID.randomUUID().toString();
       String delegateTaskId =
           delegateService.queueTask(aDelegateTask()
-                                        .withAccountId(contextData.app.getAccountId())
-                                        .withAppId(contextData.appId)
-                                        .withTaskType(TaskType.COMMAND.name())
-                                        .withWaitId(waitId)
-                                        .withTags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-                                        .withParameters(new Object[] {contextData.command, commandExecutionContext})
-                                        .withEnvId(contextData.env.getUuid())
-                                        .withInfrastructureMappingId(contextData.infrastructureMappingId)
-                                        .withTimeout(TimeUnit.HOURS.toMillis(1))
+                                        .async(true)
+                                        .accountId(contextData.app.getAccountId())
+                                        .appId(contextData.appId)
+                                        .taskType(TaskType.COMMAND.name())
+                                        .waitId(waitId)
+                                        .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+                                        .parameters(new Object[] {contextData.command, commandExecutionContext})
+                                        .envId(contextData.env.getUuid())
+                                        .infrastructureMappingId(contextData.infrastructureMappingId)
+                                        .timeout(TimeUnit.HOURS.toMillis(1))
                                         .build());
 
       return anExecutionResponse()

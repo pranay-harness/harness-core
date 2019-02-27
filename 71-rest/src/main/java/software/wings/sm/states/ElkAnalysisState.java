@@ -302,13 +302,14 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
       String waitId = generateUuid();
       delegateTasks.add(aDelegateTask()
-                            .withTaskType(TaskType.ELK_COLLECT_LOG_DATA.name())
-                            .withAccountId(accountId)
-                            .withAppId(context.getAppId())
-                            .withWaitId(waitId)
-                            .withParameters(new Object[] {dataCollectionInfo})
-                            .withEnvId(envId)
-                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
+                            .async(true)
+                            .taskType(TaskType.ELK_COLLECT_LOG_DATA.name())
+                            .accountId(accountId)
+                            .appId(context.getAppId())
+                            .waitId(waitId)
+                            .parameters(new Object[] {dataCollectionInfo})
+                            .envId(envId)
+                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                             .build());
       waitIds[i++] = waitId;
     }

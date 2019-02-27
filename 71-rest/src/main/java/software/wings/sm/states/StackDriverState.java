@@ -168,14 +168,15 @@ public class StackDriverState extends AbstractMetricAnalysisState {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
-                                    .withAccountId(appService.get(context.getAppId()).getAccountId())
-                                    .withAppId(context.getAppId())
-                                    .withWaitId(waitId)
-                                    .withParameters(new Object[] {dataCollectionInfo})
-                                    .withEnvId(envId)
-                                    .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                                    .async(true)
+                                    .taskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
+                                    .accountId(appService.get(context.getAppId()).getAccountId())
+                                    .appId(context.getAppId())
+                                    .waitId(waitId)
+                                    .parameters(new Object[] {dataCollectionInfo})
+                                    .envId(envId)
+                                    .infrastructureMappingId(infrastructureMappingId)
+                                    .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);

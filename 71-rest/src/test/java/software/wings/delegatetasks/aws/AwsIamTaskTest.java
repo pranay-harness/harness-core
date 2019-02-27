@@ -22,7 +22,7 @@ public class AwsIamTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsIamTask task = (AwsIamTask) TaskType.AWS_IAM_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

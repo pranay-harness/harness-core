@@ -130,12 +130,12 @@ public class SettingValidationService {
                                                           .settingAttribute(settingAttribute)
                                                           .build();
       DelegateTask delegateTask = aDelegateTask()
-                                      .withTaskType(TaskType.CONNECTIVITY_VALIDATION.name())
-                                      .withAccountId(settingAttribute.getAccountId())
-                                      .withAppId(settingAttribute.getAppId())
-                                      .withAsync(false)
-                                      .withTimeout(TimeUnit.MINUTES.toMillis(2))
-                                      .withParameters(new Object[] {request})
+                                      .taskType(TaskType.CONNECTIVITY_VALIDATION.name())
+                                      .accountId(settingAttribute.getAccountId())
+                                      .appId(settingAttribute.getAppId())
+                                      .async(false)
+                                      .timeout(TimeUnit.MINUTES.toMillis(2))
+                                      .parameters(new Object[] {request})
                                       .build();
       try {
         ResponseData notifyResponseData = delegateService.executeTask(delegateTask);

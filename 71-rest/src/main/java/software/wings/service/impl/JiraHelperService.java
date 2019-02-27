@@ -78,12 +78,12 @@ public class JiraHelperService {
         secretManager.getEncryptionDetails(jiraConfig, APP_ID_KEY, WORKFLOW_EXECUTION_ID));
 
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.JIRA.name())
-                                    .withAccountId(accountId)
-                                    .withAppId(APP_ID_KEY)
-                                    .withParameters(new Object[] {jiraTaskParameters})
-                                    .withTimeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
-                                    .withAsync(false)
+                                    .taskType(TaskType.JIRA.name())
+                                    .accountId(accountId)
+                                    .appId(APP_ID_KEY)
+                                    .parameters(new Object[] {jiraTaskParameters})
+                                    .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
+                                    .async(false)
                                     .build();
 
     JiraExecutionData jiraExecutionData;
@@ -211,12 +211,12 @@ public class JiraHelperService {
         secretManager.getEncryptionDetails(jiraConfig, appId, WORKFLOW_EXECUTION_ID));
 
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.JIRA.name())
-                                    .withAccountId(accountId)
-                                    .withAppId(appId)
-                                    .withParameters(new Object[] {jiraTaskParameters})
-                                    .withTimeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
-                                    .withAsync(false)
+                                    .taskType(TaskType.JIRA.name())
+                                    .accountId(accountId)
+                                    .appId(appId)
+                                    .parameters(new Object[] {jiraTaskParameters})
+                                    .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
+                                    .async(false)
                                     .build();
 
     ResponseData responseData = delegateService.executeTask(delegateTask);

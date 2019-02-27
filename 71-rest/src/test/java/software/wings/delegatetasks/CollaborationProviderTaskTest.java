@@ -40,7 +40,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
   @InjectMocks
   private CollaborationProviderTask collaborationProviderTask =
       (CollaborationProviderTask) TaskType.COLLABORATION_PROVIDER_TASK.getDelegateRunnableTask(
-          "delid1", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+          "delid1", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Test
   public void testEmailNotification() {

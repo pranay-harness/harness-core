@@ -49,14 +49,14 @@ public class AwsRoute53HelperServiceManagerImpl implements AwsRoute53HelperServi
   private AwsResponse executeTask(String accountId, AwsRoute53Request request, String appId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_ROUTE53_TASK.name())
-            .withAccountId(accountId)
-            .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
-            .withAsync(false)
-            .withTags(
-                isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-            .withTimeout(MINUTES.toMillis(TIME_OUT_IN_MINUTES))
-            .withParameters(new Object[] {request})
+            .async(true)
+            .taskType(TaskType.AWS_ROUTE53_TASK.name())
+            .accountId(accountId)
+            .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
+            .async(false)
+            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .timeout(MINUTES.toMillis(TIME_OUT_IN_MINUTES))
+            .parameters(new Object[] {request})
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);

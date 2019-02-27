@@ -278,13 +278,14 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
     String waitId = generateUuid();
     delegateTasks.add(aDelegateTask()
-                          .withTaskType(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA.name())
-                          .withAccountId(appService.get(context.getAppId()).getAccountId())
-                          .withAppId(context.getAppId())
-                          .withWaitId(waitId)
-                          .withParameters(new Object[] {dataCollectionInfo})
-                          .withEnvId(envId)
-                          .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
+                          .async(true)
+                          .taskType(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA.name())
+                          .accountId(appService.get(context.getAppId()).getAccountId())
+                          .appId(context.getAppId())
+                          .waitId(waitId)
+                          .parameters(new Object[] {dataCollectionInfo})
+                          .envId(envId)
+                          .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                           .build());
     return waitId;
   }

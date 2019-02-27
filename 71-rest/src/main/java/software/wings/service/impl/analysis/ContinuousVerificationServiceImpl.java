@@ -1562,13 +1562,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private DelegateTask createDelegateTask(
       TaskType taskType, String accountId, String appId, String waitId, Object[] dataCollectionInfo, String envId) {
     return aDelegateTask()
-        .withTaskType(taskType.name())
-        .withAccountId(accountId)
-        .withAppId(appId)
-        .withWaitId(waitId)
-        .withParameters(dataCollectionInfo)
-        .withEnvId(envId)
-        .withTimeout(TimeUnit.MINUTES.toMillis(30))
+        .async(true)
+        .taskType(taskType.name())
+        .accountId(accountId)
+        .appId(appId)
+        .waitId(waitId)
+        .parameters(dataCollectionInfo)
+        .envId(envId)
+        .timeout(TimeUnit.MINUTES.toMillis(30))
         .build();
   }
 

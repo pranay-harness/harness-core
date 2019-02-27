@@ -24,7 +24,7 @@ public class AwsAsgTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsAsgTask task = (AwsAsgTask) TaskType.AWS_ASG_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

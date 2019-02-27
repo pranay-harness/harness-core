@@ -425,12 +425,12 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     fetchFilesTaskParams.setActivityId(generateUuid());
 
     DelegateTask delegateTask = aDelegateTask()
-                                    .withAccountId(app.getAccountId())
-                                    .withAppId(app.getUuid())
-                                    .withAsync(false)
-                                    .withTaskType(TaskType.GIT_FETCH_FILES_TASK.name())
-                                    .withParameters(new Object[] {fetchFilesTaskParams})
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(60))
+                                    .accountId(app.getAccountId())
+                                    .appId(app.getUuid())
+                                    .async(false)
+                                    .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
+                                    .parameters(new Object[] {fetchFilesTaskParams})
+                                    .timeout(TimeUnit.MINUTES.toMillis(60))
                                     .build();
 
     ResponseData notifyResponseData;

@@ -26,9 +26,7 @@ import org.mongodb.morphia.mapping.MappedField;
 import software.wings.beans.DelegateTask.Converter;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -52,23 +50,23 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private String version;
   @NotNull private String taskType;
   private Object[] parameters;
-  private List<String> tags = new ArrayList<>();
+  private List<String> tags;
   @NotEmpty private String accountId;
   private String waitId;
   private Status status = Status.QUEUED;
   private String delegateId;
   private long timeout = DEFAULT_ASYNC_CALL_TIMEOUT;
-  private boolean async = true;
+  private boolean async;
   private String envId;
   private String infrastructureMappingId;
   private Long validationStartedAt;
   private Long lastBroadcastAt;
   private int broadcastCount;
-  private Set<String> validatingDelegateIds = new HashSet<>();
-  private Set<String> validationCompleteDelegateIds = new HashSet<>();
+  private Set<String> validatingDelegateIds;
+  private Set<String> validationCompleteDelegateIds;
   private byte[] serializedNotifyResponseData;
   private String preAssignedDelegateId;
-  private Set<String> alreadyTriedDelegates = new HashSet<>();
+  private Set<String> alreadyTriedDelegates;
   private String serviceTemplateId;
   private String artifactStreamId;
   private String correlationId;
@@ -161,147 +159,147 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
       return new Builder();
     }
 
-    public Builder withVersion(String version) {
+    public Builder version(String version) {
       this.version = version;
       return this;
     }
 
-    public Builder withTaskType(String taskType) {
+    public Builder taskType(String taskType) {
       this.taskType = taskType;
       return this;
     }
 
     @SuppressFBWarnings("EI_EXPOSE_REP2")
-    public Builder withParameters(Object[] parameters) {
+    public Builder parameters(Object[] parameters) {
       this.parameters = parameters;
       return this;
     }
 
-    public Builder withTags(List<String> tags) {
+    public Builder tags(List<String> tags) {
       this.tags = tags;
       return this;
     }
 
-    public Builder withAccountId(String accountId) {
+    public Builder accountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
 
-    public Builder withWaitId(String waitId) {
+    public Builder waitId(String waitId) {
       this.waitId = waitId;
       return this;
     }
 
-    public Builder withStatus(Status status) {
+    public Builder status(Status status) {
       this.status = status;
       return this;
     }
 
-    public Builder withDelegateId(String delegateId) {
+    public Builder delegateId(String delegateId) {
       this.delegateId = delegateId;
       return this;
     }
 
-    public Builder withTimeout(long timeout) {
+    public Builder timeout(long timeout) {
       this.timeout = timeout;
       return this;
     }
 
-    public Builder withAsync(boolean async) {
+    public Builder async(boolean async) {
       this.async = async;
       return this;
     }
 
-    public Builder withEnvId(String envId) {
+    public Builder envId(String envId) {
       this.envId = envId;
       return this;
     }
 
-    public Builder withUuid(String uuid) {
+    public Builder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public Builder withInfrastructureMappingId(String infrastructureMappingId) {
+    public Builder infrastructureMappingId(String infrastructureMappingId) {
       this.infrastructureMappingId = infrastructureMappingId;
       return this;
     }
 
-    public Builder withAppId(String appId) {
+    public Builder appId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
+    public Builder createdBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public Builder withCreatedAt(long createdAt) {
+    public Builder createdAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public Builder lastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder lastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public Builder withNotifyResponse(ResponseData notifyResponse) {
+    public Builder notifyResponse(ResponseData notifyResponse) {
       this.notifyResponse = notifyResponse;
       return this;
     }
 
-    public Builder withPreAssignedDelegateId(String preAssignedDelegateId) {
+    public Builder preAssignedDelegateId(String preAssignedDelegateId) {
       this.preAssignedDelegateId = preAssignedDelegateId;
       return this;
     }
 
-    public Builder withServiceTemplateId(String serviceTemplateId) {
+    public Builder serviceTemplateId(String serviceTemplateId) {
       this.serviceTemplateId = serviceTemplateId;
       return this;
     }
 
-    public Builder withArtifactStreamId(String artifactStreamId) {
+    public Builder artifactStreamId(String artifactStreamId) {
       this.artifactStreamId = artifactStreamId;
       return this;
     }
 
-    public Builder withCorrelationId(String correlationId) {
+    public Builder correlationId(String correlationId) {
       this.correlationId = correlationId;
       return this;
     }
 
     public Builder but() {
       return aDelegateTask()
-          .withVersion(version)
-          .withTaskType(taskType)
-          .withParameters(parameters)
-          .withTags(tags)
-          .withAccountId(accountId)
-          .withWaitId(waitId)
-          .withStatus(status)
-          .withDelegateId(delegateId)
-          .withTimeout(timeout)
-          .withAsync(async)
-          .withEnvId(envId)
-          .withUuid(uuid)
-          .withInfrastructureMappingId(infrastructureMappingId)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withNotifyResponse(notifyResponse)
-          .withPreAssignedDelegateId(preAssignedDelegateId)
-          .withServiceTemplateId(serviceTemplateId)
-          .withArtifactStreamId(artifactStreamId)
-          .withCorrelationId(correlationId);
+          .version(version)
+          .taskType(taskType)
+          .parameters(parameters)
+          .tags(tags)
+          .accountId(accountId)
+          .waitId(waitId)
+          .status(status)
+          .delegateId(delegateId)
+          .timeout(timeout)
+          .async(async)
+          .envId(envId)
+          .uuid(uuid)
+          .infrastructureMappingId(infrastructureMappingId)
+          .appId(appId)
+          .createdBy(createdBy)
+          .createdAt(createdAt)
+          .lastUpdatedBy(lastUpdatedBy)
+          .lastUpdatedAt(lastUpdatedAt)
+          .notifyResponse(notifyResponse)
+          .preAssignedDelegateId(preAssignedDelegateId)
+          .serviceTemplateId(serviceTemplateId)
+          .artifactStreamId(artifactStreamId)
+          .correlationId(correlationId);
     }
 
     public DelegateTask build() {

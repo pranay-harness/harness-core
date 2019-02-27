@@ -173,16 +173,15 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
 
     DelegateTask delegateTask =
         aDelegateTask()
-            .withAccountId(infrastructureMapping.getAccountId())
-            .withAppId(infrastructureMapping.getAppId())
-            .withWaitId(activity.getUuid())
-            .withTimeout(MINUTES.toMillis(containerServiceElement.getServiceSteadyStateTimeout()))
-            .withParameters(new Object[] {request, encryptedDetails})
-            .withTags(
-                isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-            .withTaskType(ECS_COMMAND_TASK.name())
-            .withAsync(true)
-            .withEnvId(infrastructureMapping.getEnvId())
+            .accountId(infrastructureMapping.getAccountId())
+            .appId(infrastructureMapping.getAppId())
+            .waitId(activity.getUuid())
+            .timeout(MINUTES.toMillis(containerServiceElement.getServiceSteadyStateTimeout()))
+            .parameters(new Object[] {request, encryptedDetails})
+            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .taskType(ECS_COMMAND_TASK.name())
+            .async(true)
+            .envId(infrastructureMapping.getEnvId())
             .build();
 
     delegateService.queueTask(delegateTask);

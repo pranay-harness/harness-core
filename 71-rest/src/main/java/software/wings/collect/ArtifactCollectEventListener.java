@@ -108,11 +108,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
 
         return aDelegateTask()
-            .withTaskType(TaskType.JENKINS_COLLECTION.name())
-            .withAccountId(accountId)
-            .withAppId(jenkinsArtifactStream.getAppId())
-            .withWaitId(waitId)
-            .withParameters(new Object[] {jenkinsConfig, secretManager.getEncryptionDetails(jenkinsConfig, null, null),
+            .async(true)
+            .taskType(TaskType.JENKINS_COLLECTION.name())
+            .accountId(accountId)
+            .appId(jenkinsArtifactStream.getAppId())
+            .waitId(waitId)
+            .parameters(new Object[] {jenkinsConfig, secretManager.getEncryptionDetails(jenkinsConfig, null, null),
                 jenkinsArtifactStream.getJobname(), jenkinsArtifactStream.getArtifactPaths(), artifact.getMetadata()})
             .build();
       }
@@ -122,11 +123,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
 
         return aDelegateTask()
-            .withTaskType(TaskType.BAMBOO_COLLECTION.name())
-            .withAccountId(accountId)
-            .withAppId(bambooArtifactStream.getAppId())
-            .withWaitId(waitId)
-            .withParameters(new Object[] {bambooConfig, secretManager.getEncryptionDetails(bambooConfig, null, null),
+            .async(true)
+            .taskType(TaskType.BAMBOO_COLLECTION.name())
+            .accountId(accountId)
+            .appId(bambooArtifactStream.getAppId())
+            .waitId(waitId)
+            .parameters(new Object[] {bambooConfig, secretManager.getEncryptionDetails(bambooConfig, null, null),
                 bambooArtifactStream.getJobname(), bambooArtifactStream.getArtifactPaths(), artifact.getMetadata()})
             .build();
       }
@@ -136,11 +138,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
 
         return aDelegateTask()
-            .withTaskType(TaskType.NEXUS_COLLECTION.name())
-            .withAccountId(accountId)
-            .withAppId(nexusArtifactStream.getAppId())
-            .withWaitId(waitId)
-            .withParameters(new Object[] {nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, null),
+            .async(true)
+            .taskType(TaskType.NEXUS_COLLECTION.name())
+            .accountId(accountId)
+            .appId(nexusArtifactStream.getAppId())
+            .waitId(waitId)
+            .parameters(new Object[] {nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, null),
                 nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
                 nexusArtifactStream.getArtifactPaths(), artifact.getBuildNo()})
             .build();
@@ -151,11 +154,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
 
         return aDelegateTask()
-            .withTaskType(TaskType.ARTIFACTORY_COLLECTION.name())
-            .withAccountId(accountId)
-            .withAppId(artifactoryArtifactStream.getAppId())
-            .withWaitId(waitId)
-            .withParameters(
+            .async(true)
+            .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
+            .accountId(accountId)
+            .appId(artifactoryArtifactStream.getAppId())
+            .waitId(waitId)
+            .parameters(
                 new Object[] {artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, null, null),
                     artifactoryArtifactStream.getJobname(), artifact.getMetadata()})
             .build();
@@ -166,12 +170,13 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
 
         return aDelegateTask()
-            .withTaskType(TaskType.AMAZON_S3_COLLECTION.name())
-            .withAccountId(accountId)
-            .withTags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
-            .withAppId(amazonS3ArtifactStream.getAppId())
-            .withWaitId(waitId)
-            .withParameters(new Object[] {awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null),
+            .async(true)
+            .taskType(TaskType.AMAZON_S3_COLLECTION.name())
+            .accountId(accountId)
+            .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
+            .appId(amazonS3ArtifactStream.getAppId())
+            .waitId(waitId)
+            .parameters(new Object[] {awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null),
                 amazonS3ArtifactStream.getJobname(), amazonS3ArtifactStream.getArtifactPaths()})
             .build();
       }

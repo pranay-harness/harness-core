@@ -174,14 +174,15 @@ public class DatadogState extends AbstractMetricAnalysisState {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
-                                    .withAccountId(accountId)
-                                    .withAppId(context.getAppId())
-                                    .withWaitId(waitId)
-                                    .withParameters(new Object[] {dataCollectionInfo})
-                                    .withEnvId(envId)
-                                    .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(timeDurationInInteger + 120))
+                                    .async(true)
+                                    .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
+                                    .accountId(accountId)
+                                    .appId(context.getAppId())
+                                    .waitId(waitId)
+                                    .parameters(new Object[] {dataCollectionInfo})
+                                    .envId(envId)
+                                    .infrastructureMappingId(infrastructureMappingId)
+                                    .timeout(TimeUnit.MINUTES.toMillis(timeDurationInInteger + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
 

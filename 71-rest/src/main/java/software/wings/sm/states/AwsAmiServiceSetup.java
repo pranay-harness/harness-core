@@ -281,15 +281,14 @@ public class AwsAmiServiceSetup extends State {
       AwsAmiServiceSetupRequest request = requestBuilder.build();
       DelegateTask delegateTask =
           aDelegateTask()
-              .withAccountId(app.getAccountId())
-              .withAppId(app.getUuid())
-              .withTaskType(TaskType.AWS_AMI_ASYNC_TASK.name())
-              .withWaitId(activity.getUuid())
-              .withTags(
-                  isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-              .withParameters(new Object[] {request})
-              .withEnvId(env.getUuid())
-              .withAsync(true)
+              .accountId(app.getAccountId())
+              .appId(app.getUuid())
+              .taskType(TaskType.AWS_AMI_ASYNC_TASK.name())
+              .waitId(activity.getUuid())
+              .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+              .parameters(new Object[] {request})
+              .envId(env.getUuid())
+              .async(true)
               .build();
       delegateService.queueTask(delegateTask);
     } catch (Exception exception) {

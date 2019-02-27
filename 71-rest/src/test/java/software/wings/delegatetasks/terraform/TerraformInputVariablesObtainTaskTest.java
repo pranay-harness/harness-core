@@ -40,7 +40,8 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   @InjectMocks
   TerraformInputVariablesObtainTask delegateRunnableTask =
       (TerraformInputVariablesObtainTask) TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.getDelegateRunnableTask(
-          WingsTestConstants.DELEGATE_ID, Builder.aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+          WingsTestConstants.DELEGATE_ID, Builder.aDelegateTask().async(true).build(),
+          notifyResponseData -> {}, () -> true);
 
   @Before
   public void setup() {

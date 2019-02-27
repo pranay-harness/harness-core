@@ -46,12 +46,13 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
             .build();
     setTimeOutOnRequest(request);
     return aDelegateTask()
-        .withTaskType(CLOUD_FORMATION_TASK.name())
-        .withAccountId(executionContext.getApp().getAccountId())
-        .withWaitId(activityId)
-        .withTags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-        .withAppId(executionContext.getApp().getUuid())
-        .withParameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+        .async(true)
+        .taskType(CLOUD_FORMATION_TASK.name())
+        .accountId(executionContext.getApp().getAccountId())
+        .waitId(activityId)
+        .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+        .appId(executionContext.getApp().getUuid())
+        .parameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
         .build();
   }
 

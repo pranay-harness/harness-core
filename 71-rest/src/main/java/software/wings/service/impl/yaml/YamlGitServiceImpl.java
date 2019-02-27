@@ -525,11 +525,12 @@ public class YamlGitServiceImpl implements YamlGitService {
                       .toString());
     }
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.GIT_COMMAND.name())
-                                    .withAccountId(accountId)
-                                    .withAppId(GLOBAL_APP_ID)
-                                    .withWaitId(waitId)
-                                    .withParameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, gitConfig,
+                                    .async(true)
+                                    .taskType(TaskType.GIT_COMMAND.name())
+                                    .accountId(accountId)
+                                    .appId(GLOBAL_APP_ID)
+                                    .waitId(waitId)
+                                    .parameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, gitConfig,
                                         secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
                                         GitCommitRequest.builder()
                                             .gitFileChanges(gitFileChanges)
@@ -537,7 +538,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                             .yamlChangeSetIds(yamlChangeSetIds)
                                             .yamlGitConfig(yamlGitConfig)
                                             .build()})
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(20))
+                                    .timeout(TimeUnit.MINUTES.toMillis(20))
                                     .build();
 
     waitNotifyEngine.waitForAll(
@@ -674,11 +675,12 @@ public class YamlGitServiceImpl implements YamlGitService {
       GitConfig gitConfig = getGitConfig(yamlGitConfig);
       DelegateTask delegateTask =
           aDelegateTask()
-              .withTaskType(TaskType.GIT_COMMAND.name())
-              .withAccountId(accountId)
-              .withAppId(GLOBAL_APP_ID)
-              .withWaitId(waitId)
-              .withParameters(new Object[] {GitCommandType.DIFF, gitConfig,
+              .async(true)
+              .taskType(TaskType.GIT_COMMAND.name())
+              .accountId(accountId)
+              .appId(GLOBAL_APP_ID)
+              .waitId(waitId)
+              .parameters(new Object[] {GitCommandType.DIFF, gitConfig,
                   secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
                   GitDiffRequest.builder().lastProcessedCommitId(processedCommit).yamlGitConfig(yamlGitConfig).build()})
               .build();

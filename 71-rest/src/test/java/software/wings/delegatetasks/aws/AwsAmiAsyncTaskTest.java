@@ -24,7 +24,7 @@ public class AwsAmiAsyncTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsAmiAsyncTask task = (AwsAmiAsyncTask) TaskType.AWS_AMI_ASYNC_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

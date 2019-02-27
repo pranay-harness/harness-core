@@ -408,15 +408,16 @@ public class CommandState extends State {
           commandExecutionContextBuilder.withActivityId(activityId).withDeploymentType(deploymentType.name()).build();
 
       DelegateTask delegateTask = aDelegateTask()
-                                      .withAccountId(accountId)
-                                      .withAppId(appId)
-                                      .withTaskType(TaskType.COMMAND.name())
-                                      .withWaitId(activityId)
-                                      .withTags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-                                      .withParameters(new Object[] {command, commandExecutionContext})
-                                      .withEnvId(envId)
-                                      .withTimeout(TimeUnit.MINUTES.toMillis(30))
-                                      .withInfrastructureMappingId(infrastructureMappingId)
+                                      .async(true)
+                                      .accountId(accountId)
+                                      .appId(appId)
+                                      .taskType(TaskType.COMMAND.name())
+                                      .waitId(activityId)
+                                      .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+                                      .parameters(new Object[] {command, commandExecutionContext})
+                                      .envId(envId)
+                                      .timeout(TimeUnit.MINUTES.toMillis(30))
+                                      .infrastructureMappingId(infrastructureMappingId)
                                       .build();
 
       if (getTimeoutMillis() != null) {

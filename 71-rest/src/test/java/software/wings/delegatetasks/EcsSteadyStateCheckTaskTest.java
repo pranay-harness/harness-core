@@ -36,7 +36,7 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
   @InjectMocks
   private EcsSteadyStateCheckTask task =
       (EcsSteadyStateCheckTask) TaskType.ECS_STEADY_STATE_CHECK_TASK.getDelegateRunnableTask(
-          DELEGATE_ID, aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+          DELEGATE_ID, aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
   @Before
   public void setUp() throws Exception {
     on(task).set("awsHelperService", mockAwsHelperService);

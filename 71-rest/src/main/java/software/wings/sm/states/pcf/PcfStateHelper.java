@@ -55,14 +55,15 @@ public class PcfStateHelper {
   public DelegateTask getDelegateTask(String accountId, String appId, TaskType taskType, String waitId, String envId,
       String infrastructureMappingId, Object[] parameters, long timeout) {
     return aDelegateTask()
-        .withAccountId(accountId)
-        .withAppId(appId)
-        .withTaskType(taskType.name())
-        .withWaitId(waitId)
-        .withParameters(parameters)
-        .withEnvId(envId)
-        .withTimeout(TimeUnit.MINUTES.toMillis(timeout))
-        .withInfrastructureMappingId(infrastructureMappingId)
+        .async(true)
+        .accountId(accountId)
+        .appId(appId)
+        .taskType(taskType.name())
+        .waitId(waitId)
+        .parameters(parameters)
+        .envId(envId)
+        .timeout(TimeUnit.MINUTES.toMillis(timeout))
+        .infrastructureMappingId(infrastructureMappingId)
         .build();
   }
 

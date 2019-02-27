@@ -37,11 +37,12 @@ public class ArtifactoryCollectionTaskTest {
       ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
   private DelegateTask collectionTask =
       DelegateTask.Builder.aDelegateTask()
-          .withTaskType(TaskType.ARTIFACTORY_COLLECTION.name())
-          .withAccountId(ACCOUNT_ID)
-          .withAppId(APP_ID)
-          .withWaitId("123456789")
-          .withParameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
+          .async(true)
+          .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
+          .accountId(ACCOUNT_ID)
+          .appId(APP_ID)
+          .waitId("123456789")
+          .parameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
               artifactoryConfig.getPassword(), "harness-maven", "io.harness.todolist", asList("todolist"), "",
               ImmutableMap.of("buildNo", "1.1")})
           .build();

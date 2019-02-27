@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.app.DelegateStreamHandler.SPLITTER;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 
@@ -51,7 +52,8 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
         preassignedIdMatched = false;
       }
 
-      boolean delegateAlreadyTried = task.getAlreadyTriedDelegates().contains(delegateId);
+      boolean delegateAlreadyTried =
+          isNotEmpty(task.getAlreadyTriedDelegates()) && task.getAlreadyTriedDelegates().contains(delegateId);
 
       if (versionMatched && preassignedIdMatched && !delegateAlreadyTried && delegateService.filter(delegateId, task)) {
         return new BroadcastAction(JsonUtils.asJson(aDelegateTaskEvent()

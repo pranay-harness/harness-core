@@ -37,7 +37,7 @@ public class BambooTaskTest {
 
   @InjectMocks
   private BambooTask bambooTask = (BambooTask) TaskType.BAMBOO.getDelegateRunnableTask(
-      "delid1", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delid1", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   private String bambooUrl = "http://localhost:9095/";
   private String userName = "admin";

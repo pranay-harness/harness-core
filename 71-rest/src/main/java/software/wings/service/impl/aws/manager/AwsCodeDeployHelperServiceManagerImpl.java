@@ -114,14 +114,13 @@ public class AwsCodeDeployHelperServiceManagerImpl implements AwsCodeDeployHelpe
   private AwsResponse executeTask(String accountId, AwsCodeDeployRequest request, String appId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_CODE_DEPLOY_TASK.name())
-            .withAccountId(accountId)
-            .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
-            .withAsync(false)
-            .withTags(
-                isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-            .withTimeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
-            .withParameters(new Object[] {request})
+            .taskType(TaskType.AWS_CODE_DEPLOY_TASK.name())
+            .accountId(accountId)
+            .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
+            .async(false)
+            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
+            .parameters(new Object[] {request})
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);

@@ -198,15 +198,16 @@ public class AwsCodeDeployState extends State {
 
     String delegateTaskId =
         delegateService.queueTask(aDelegateTask()
-                                      .withAccountId(app.getAccountId())
-                                      .withAppId(app.getAppId())
-                                      .withTaskType(TaskType.COMMAND.name())
-                                      .withWaitId(activity.getUuid())
-                                      .withTimeout(getTaskTimeout())
-                                      .withTags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-                                      .withParameters(new Object[] {command, commandExecutionContext})
-                                      .withEnvId(envId)
-                                      .withInfrastructureMappingId(infrastructureMapping.getUuid())
+                                      .async(true)
+                                      .accountId(app.getAccountId())
+                                      .appId(app.getAppId())
+                                      .taskType(TaskType.COMMAND.name())
+                                      .waitId(activity.getUuid())
+                                      .timeout(getTaskTimeout())
+                                      .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+                                      .parameters(new Object[] {command, commandExecutionContext})
+                                      .envId(envId)
+                                      .infrastructureMappingId(infrastructureMapping.getUuid())
                                       .build());
 
     return anExecutionResponse()

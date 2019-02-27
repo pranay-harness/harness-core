@@ -65,12 +65,12 @@ public class GitConfigHelperService {
     try {
       ResponseData notifyResponseData = delegateService.executeTask(
           aDelegateTask()
-              .withTaskType(TaskType.GIT_COMMAND.name())
-              .withAccountId(gitConfig.getAccountId())
-              .withAppId(GLOBAL_APP_ID)
-              .withAsync(false)
-              .withTimeout(TimeUnit.SECONDS.toMillis(60))
-              .withParameters(new Object[] {GitCommandType.VALIDATE, gitConfig, encryptionDetails})
+              .taskType(TaskType.GIT_COMMAND.name())
+              .accountId(gitConfig.getAccountId())
+              .appId(GLOBAL_APP_ID)
+              .async(false)
+              .timeout(TimeUnit.SECONDS.toMillis(60))
+              .parameters(new Object[] {GitCommandType.VALIDATE, gitConfig, encryptionDetails})
               .build());
 
       if (notifyResponseData instanceof ErrorNotifyResponseData) {

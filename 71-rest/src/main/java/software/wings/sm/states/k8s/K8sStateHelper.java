@@ -180,13 +180,13 @@ public class K8sStateHelper {
 
     String waitId = generateUuid();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withAccountId(app.getAccountId())
-                                    .withAppId(app.getUuid())
-                                    .withTaskType(TaskType.GIT_FETCH_FILES_TASK.name())
-                                    .withWaitId(waitId)
-                                    .withAsync(true)
-                                    .withParameters(new Object[] {fetchFilesTaskParams})
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(60))
+                                    .accountId(app.getAccountId())
+                                    .appId(app.getUuid())
+                                    .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
+                                    .waitId(waitId)
+                                    .async(true)
+                                    .parameters(new Object[] {fetchFilesTaskParams})
+                                    .timeout(TimeUnit.MINUTES.toMillis(60))
                                     .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
@@ -427,17 +427,18 @@ public class K8sStateHelper {
 
     String waitId = generateUuid();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withAccountId(app.getAccountId())
-                                    .withAppId(app.getUuid())
-                                    .withTaskType(TaskType.K8S_COMMAND_TASK.name())
-                                    .withWaitId(waitId)
-                                    .withTags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sTaskParameters))
-                                    .withParameters(new Object[] {k8sTaskParameters})
-                                    .withEnvId(env.getUuid())
-                                    .withTimeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                    .withInfrastructureMappingId(infraMapping.getUuid())
-                                    .withServiceTemplateId(serviceTemplateId)
-                                    .withArtifactStreamId(artifactStreamId)
+                                    .async(true)
+                                    .accountId(app.getAccountId())
+                                    .appId(app.getUuid())
+                                    .taskType(TaskType.K8S_COMMAND_TASK.name())
+                                    .waitId(waitId)
+                                    .tags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sTaskParameters))
+                                    .parameters(new Object[] {k8sTaskParameters})
+                                    .envId(env.getUuid())
+                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                    .infrastructureMappingId(infraMapping.getUuid())
+                                    .serviceTemplateId(serviceTemplateId)
+                                    .artifactStreamId(artifactStreamId)
                                     .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
@@ -553,17 +554,17 @@ public class K8sStateHelper {
             .build();
 
     String waitId = generateUuid();
-    DelegateTask delegateTask =
-        aDelegateTask()
-            .withAccountId(containerInfrastructureMapping.getAccountId())
-            .withAppId(containerInfrastructureMapping.getAppId())
-            .withTaskType(TaskType.K8S_COMMAND_TASK.name())
-            .withWaitId(waitId)
-            .withTags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sInstanceSyncTaskParameters))
-            .withParameters(new Object[] {k8sInstanceSyncTaskParameters})
-            .withEnvId(containerInfrastructureMapping.getEnvId())
-            .withInfrastructureMappingId(containerInfrastructureMapping.getUuid())
-            .build();
+    DelegateTask delegateTask = aDelegateTask()
+                                    .async(true)
+                                    .accountId(containerInfrastructureMapping.getAccountId())
+                                    .appId(containerInfrastructureMapping.getAppId())
+                                    .taskType(TaskType.K8S_COMMAND_TASK.name())
+                                    .waitId(waitId)
+                                    .tags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sInstanceSyncTaskParameters))
+                                    .parameters(new Object[] {k8sInstanceSyncTaskParameters})
+                                    .envId(containerInfrastructureMapping.getEnvId())
+                                    .infrastructureMappingId(containerInfrastructureMapping.getUuid())
+                                    .build();
 
     try {
       K8sTaskExecutionResponse k8sTaskExecutionResponse = delegateService.executeTask(delegateTask);

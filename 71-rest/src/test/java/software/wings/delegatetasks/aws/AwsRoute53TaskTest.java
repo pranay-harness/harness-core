@@ -22,7 +22,7 @@ public class AwsRoute53TaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsRoute53Task task = (AwsRoute53Task) TaskType.AWS_ROUTE53_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

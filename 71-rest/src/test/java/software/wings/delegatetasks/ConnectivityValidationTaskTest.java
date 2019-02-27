@@ -36,7 +36,7 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
   @InjectMocks
   private ConnectivityValidationTask task =
       (ConnectivityValidationTask) CONNECTIVITY_VALIDATION.getDelegateRunnableTask(
-          "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+          "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

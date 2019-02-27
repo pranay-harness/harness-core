@@ -433,18 +433,18 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
-            .withAccountId(accountId)
-            .withAppId(appId)
-            .withParameters(new Object[] {
+            .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
+            .accountId(accountId)
+            .appId(appId)
+            .parameters(new Object[] {
                 TerraformProvisionParameters.builder()
                     .scriptPath(terraformDirectory)
                     .sourceRepo(gitConfig)
                     .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
                     .sourceRepoBranch(sourceRepoBranch)
                     .build()})
-            .withTimeout(TimeUnit.SECONDS.toMillis(30))
-            .withAsync(false)
+            .timeout(TimeUnit.SECONDS.toMillis(30))
+            .async(false)
             .build();
 
     ResponseData notifyResponseData;
@@ -497,18 +497,18 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
-            .withAccountId(accountId)
-            .withAppId(appId)
-            .withParameters(new Object[] {
+            .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
+            .accountId(accountId)
+            .appId(appId)
+            .parameters(new Object[] {
                 TerraformProvisionParameters.builder()
                     .sourceRepo(gitConfig)
                     .sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch())
                     .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))
                     .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
                     .build()})
-            .withTimeout(TimeUnit.SECONDS.toMillis(30))
-            .withAsync(false)
+            .timeout(TimeUnit.SECONDS.toMillis(30))
+            .async(false)
             .build();
     ResponseData responseData;
     try {

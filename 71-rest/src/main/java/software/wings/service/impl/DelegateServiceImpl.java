@@ -1694,12 +1694,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         logger.info("Delegate {} returned retryable error for task {}.", delegateId, taskId);
 
         Set<String> alreadyTriedDelegates = delegateTask.getAlreadyTriedDelegates();
-        alreadyTriedDelegates.add(delegateId);
-
-        List<String> remainingConnectedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask)
-                                                       .stream()
-                                                       .filter(item -> !alreadyTriedDelegates.contains(item))
-                                                       .collect(toList());
+        List<String> remainingConnectedDelegates =
+            assignDelegateService.connectedWhitelistedDelegates(delegateTask)
+                .stream()
+                .filter(item -> !delegateId.equals(item))
+                .filter(item -> isEmpty(alreadyTriedDelegates) || !alreadyTriedDelegates.contains(item))
+                .collect(toList());
 
         if (!remainingConnectedDelegates.isEmpty()) {
           logger.info("Requeueing task {}.", taskId);
