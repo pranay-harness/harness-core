@@ -20,6 +20,7 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
@@ -44,6 +45,7 @@ public class UserTest extends AbstractFunctionalTest {
 
   @Test()
   @Category(FunctionalTests.class)
+  @Ignore
   public void listUsers() {
     logger.info("Starting the list users test");
     Account account = this.getAccount();
@@ -56,6 +58,7 @@ public class UserTest extends AbstractFunctionalTest {
   @Test()
   @Category(FunctionalTests.class)
   @Owner(emails = "swamy@harness.io", intermittent = true)
+  @Ignore
   public void verifySignupEmailDelivery() throws IOException, MessagingException {
     Account account = this.getAccount();
     GuerillaEmailInfo emailInfo = gmailUtil.refreshAndGetNewEmail();
@@ -83,6 +86,7 @@ public class UserTest extends AbstractFunctionalTest {
   @Test()
   @Category(FunctionalTests.class)
   @Owner(emails = "swamy@harness.io", intermittent = true)
+  @Ignore
   public void userRegistrationCompletionTest() {
     Account account = this.getAccount();
     GuerillaEmailInfo emailInfo = gmailUtil.refreshAndGetNewEmail();

@@ -8,7 +8,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Retry;
 import io.harness.framework.Setup;
-import io.harness.framework.matchers.SettingsAttributeMatcher;
 import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
@@ -64,7 +63,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
     delegateExecutor.ensureDelegate(account);
 
     bearerToken = Setup.getAuthToken("admin@harness.io", "admin");
-    retry.executeWithRetry(() -> updateAndGetSettingAttribute(), new SettingsAttributeMatcher<>(), true);
+    //    retry.executeWithRetry(() -> updateAndGetSettingAttribute(), new SettingsAttributeMatcher<>(), true);
   }
 
   protected void resetCache() {

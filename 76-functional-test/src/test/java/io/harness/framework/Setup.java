@@ -44,16 +44,13 @@ public class Setup {
   }
 
   public static SettingAttribute getEmailConfig(String accountId) {
-    SmtpConfig smtpConfig =
-        SmtpConfig.builder()
-            .host("smtp.sendgrid.net")
-            .port(465)
-            .username("apikey")
-            .password("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".toCharArray())
-            .useSSL(true)
-            .fromAddress("automation@harness.io")
-            .accountId(accountId)
-            .build();
+    SmtpConfig smtpConfig = SmtpConfig.builder()
+                                .host("smtp.sendgrid.net")
+                                .port(465)
+                                .useSSL(true)
+                                .fromAddress("automation@harness.io")
+                                .accountId(accountId)
+                                .build();
 
     return aSettingAttribute()
         .withCategory(Category.CONNECTOR)
