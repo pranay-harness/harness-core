@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
@@ -9,11 +11,13 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
 import static software.wings.sm.states.ContainerServiceSetup.FIXED_INSTANCES;
 
@@ -21,6 +25,8 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -30,10 +36,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
+import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
@@ -62,22 +71,28 @@ import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
+import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
+import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
+import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
+import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.artifact.ArtifactCollectionUtil;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.EcsSetupContextVariableHolder.EcsSetupContextVariableHolderBuilder;
 import software.wings.utils.EcsConvention;
@@ -249,7 +264,7 @@ public class EcsStateHelper {
 
     delegateService.queueTask(delegateTask);
 
-    return ExecutionResponse.Builder.anExecutionResponse()
+    return anExecutionResponse()
         .withCorrelationIds(Arrays.asList(activityId))
         .withStateExecutionData(stateExecutionData)
         .withAsync(true)
@@ -511,5 +526,122 @@ public class EcsStateHelper {
             .withTimeout(MINUTES.toMillis(dataBag.getServiceSteadyStateTimeout()))
             .build();
     return delegateService.queueTask(task);
+  }
+
+  private void updateContainerElementAfterSuccessfulResize(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    ContainerServiceElement containerElement =
+        context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
+            .stream()
+            .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
+            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .findFirst()
+            .orElse(ContainerServiceElement.builder().build());
+    containerElement.setPrevAutoscalarsAlreadyRemoved(true);
+  }
+
+  public ExecutionResponse handleDelegateResponseForEcsDeploy(ExecutionContext context,
+      Map<String, ResponseData> response, boolean rollback, ActivityService activityService,
+      ServiceTemplateService serviceTemplateService, ContainerDeploymentManagerHelper containerDeploymentHelper) {
+    String activityId = response.keySet().iterator().next();
+    EcsCommandExecutionResponse executionResponse = (EcsCommandExecutionResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus =
+        CommandExecutionStatus.SUCCESS.equals(executionResponse.getCommandExecutionStatus()) ? SUCCESS : FAILED;
+    activityService.updateStatus(activityId, context.getAppId(), executionStatus);
+    CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
+
+    if (SUCCESS.equals(executionStatus)) {
+      EcsServiceDeployResponse deployResponse = (EcsServiceDeployResponse) executionResponse.getEcsCommandResponse();
+      List<InstanceStatusSummary> instanceStatusSummaries =
+          containerDeploymentHelper.getInstanceStatusSummaries(context, deployResponse.getContainerInfos());
+      executionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+
+      if (!rollback) {
+        updateContainerElementAfterSuccessfulResize(context);
+      }
+
+      List<InstanceElement> instanceElements =
+          instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
+      InstanceElementListParam listParam = anInstanceElementListParam().withInstanceElements(instanceElements).build();
+
+      executionData.setOldInstanceData(deployResponse.getOldInstanceData());
+      executionData.setNewInstanceData(deployResponse.getNewInstanceData());
+
+      return anExecutionResponse()
+          .withStateExecutionData(executionData)
+          .withExecutionStatus(executionStatus)
+          .addContextElement(listParam)
+          .addNotifyElement(listParam)
+          .build();
+    }
+
+    return anExecutionResponse().withStateExecutionData(executionData).withExecutionStatus(executionStatus).build();
+  }
+
+  public String createAndQueueDelegateTaskForEcsServiceDeploy(EcsDeployDataBag deployDataBag,
+      EcsServiceDeployRequest request, Activity activity, DelegateService delegateService) {
+    DelegateTask task =
+        aDelegateTask()
+            .withAccountId(deployDataBag.getApp().getAccountId())
+            .withAppId(deployDataBag.getApp().getUuid())
+            .withTaskType(TaskType.ECS_COMMAND_TASK)
+            .withWaitId(activity.getUuid())
+            .withTags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
+                    ? singletonList(deployDataBag.getAwsConfig().getTag())
+                    : null)
+            .withParameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()})
+            .withEnvId(deployDataBag.getEnv().getUuid())
+            .withInfrastructureMappingId(deployDataBag.getEcsInfrastructureMapping().getUuid())
+            .withTimeout(MINUTES.toMillis(deployDataBag.getContainerElement().getServiceSteadyStateTimeout()))
+            .build();
+    return delegateService.queueTask(task);
+  }
+
+  public EcsDeployDataBag prepareBagForEcsDeploy(ExecutionContext context,
+      ServiceResourceService serviceResourceService, InfrastructureMappingService infrastructureMappingService,
+      SettingsService settingsService, SecretManager secretManager) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Application app = workflowStandardParams.getApp();
+    Environment env = workflowStandardParams.getEnv();
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    Service svc = serviceResourceService.get(app.getUuid(), serviceId);
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+    if (!(infrastructureMapping instanceof EcsInfrastructureMapping)) {
+      throw new InvalidRequestException(
+          format("Invalid infrmapping type: [%s]", infrastructureMapping.getClass().getName()));
+    }
+    EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
+    SettingAttribute settingAttribute = settingsService.get(ecsInfrastructureMapping.getComputeProviderSettingId());
+    SettingValue settingValue = settingAttribute.getValue();
+    if (!(settingValue instanceof AwsConfig)) {
+      throw new InvalidRequestException(format("Invalid setting value type: [%s]", settingValue.getClass().getName()));
+    }
+    AwsConfig awsConfig = (AwsConfig) settingValue;
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId());
+    String region = ecsInfrastructureMapping.getRegion();
+    ContainerServiceElement containerElement =
+        context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
+            .stream()
+            .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
+            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .findFirst()
+            .orElse(ContainerServiceElement.builder().build());
+    ContainerRollbackRequestElement rollbackElement =
+        context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
+
+    return EcsDeployDataBag.builder()
+        .app(app)
+        .env(env)
+        .service(svc)
+        .region(region)
+        .awsConfig(awsConfig)
+        .rollbackElement(rollbackElement)
+        .containerElement(containerElement)
+        .encryptedDataDetails(encryptionDetails)
+        .ecsInfrastructureMapping(ecsInfrastructureMapping)
+        .build();
   }
 }

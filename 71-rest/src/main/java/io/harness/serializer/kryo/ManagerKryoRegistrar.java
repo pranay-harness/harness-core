@@ -17,9 +17,11 @@ import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGServiceSetupRequest;
+import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateResponse;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
+import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters;
@@ -100,5 +102,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sPod.class, 7145);
     kryo.register(K8sContainer.class, 7146);
     kryo.register(K8sInstanceSyncTaskParameters.class, 7147);
+    kryo.register(EcsServiceDeployRequest.class, 7148);
+    kryo.register(EcsServiceDeployResponse.class, 7149);
   }
 }
