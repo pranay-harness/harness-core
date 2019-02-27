@@ -93,6 +93,11 @@ public class ShellScriptParameters implements TaskParameters {
     if (encryptedDataDetailPassPhrase != null) {
       sshSessionConfigBuilder.withKeyPassphrase(encryptionService.getDecryptedValue(encryptedDataDetailPassPhrase));
     }
+    EncryptedDataDetail encryptedSshPassword =
+        fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_SSH_PASSWORD);
+    if (encryptedSshPassword != null) {
+      sshSessionConfigBuilder.withSshPassword(encryptionService.getDecryptedValue(encryptedSshPassword));
+    }
     return sshSessionConfigBuilder.build();
   }
 

@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.stream.Collectors.groupingBy;
 import static software.wings.beans.HostConnectionAttributes.AccessType;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
+import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,7 +37,7 @@ public class SSHKeyDataProvider implements DataProvider {
     Map<AccessType, List<SettingAttribute>> settingAttributeByType = settingAttributes.stream().collect(
         groupingBy(sa -> ((HostConnectionAttributes) sa.getValue()).getAccessType()));
 
-    return Stream.of(KEY)
+    return Stream.of(KEY, USER_PASSWORD)
         .map(settingAttributeByType::get)
         .filter(Objects::nonNull)
         .flatMap(Collection::stream)
