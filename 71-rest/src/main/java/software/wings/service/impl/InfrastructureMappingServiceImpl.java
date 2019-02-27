@@ -25,6 +25,7 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.REFERENCED_ENTITIES_TO_SHOW;
@@ -100,7 +101,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.infrastructure.Host;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -1543,7 +1543,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SyncTaskContext syncTaskContext = aContext()
                                           .withAccountId(hostConnectionSetting.getAccountId())
                                           .withAppId(validationRequest.getAppId())
-                                          .withTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                          .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
     return delegateProxyFactory.get(HostValidationService.class, syncTaskContext)
         .validateHost(validationRequest.getHostNames(), hostConnectionSetting, encryptionDetails,

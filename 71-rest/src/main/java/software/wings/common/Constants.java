@@ -468,16 +468,6 @@ public interface Constants {
   long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
 
   /**
-   * The constant DEFAULT_SYNC_CALL_TIMEOUT.
-   */
-  long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
-
-  /**
-   * The constant DEFAULT_ASYNC_CALL_TIMEOUT.
-   */
-  long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
-
-  /**
    * The constant DEFAULT_STEADY_STATE_TIMEOUT.
    */
   int DEFAULT_STEADY_STATE_TIMEOUT = 10;

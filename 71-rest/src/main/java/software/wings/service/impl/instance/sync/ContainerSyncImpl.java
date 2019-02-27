@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance.sync;
 
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.common.collect.Lists;
@@ -19,7 +20,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerMetadata;
@@ -92,7 +92,7 @@ public class ContainerSyncImpl implements ContainerSync {
                                               .withEnvId(infrastructureMapping.getEnvId())
                                               .withInfrastructureMappingId(infrastructureMapping.getUuid())
                                               .build();
-        syncTaskContext.setTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 2);
+        syncTaskContext.setTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 2);
         ContainerServiceParams containerServiceParams =
             ContainerServiceParams.builder()
                 .settingAttribute(settingAttribute)
@@ -140,7 +140,7 @@ public class ContainerSyncImpl implements ContainerSync {
                                               .withEnvId(containerInfraMapping.getEnvId())
                                               .withInfrastructureMappingId(containerInfraMapping.getUuid())
                                               .build();
-        syncTaskContext.setTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 2);
+        syncTaskContext.setTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 2);
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
                           .getContainerInfos(containerServiceParams));
@@ -170,7 +170,7 @@ public class ContainerSyncImpl implements ContainerSync {
                                           .withEnvId(containerInfraMapping.getEnvId())
                                           .withInfrastructureMappingId(containerInfraMapping.getUuid())
                                           .build();
-    syncTaskContext.setTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 2);
+    syncTaskContext.setTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 2);
 
     return delegateProxyFactory.get(ContainerService.class, syncTaskContext)
         .getControllerNames(containerServiceParams, labels);

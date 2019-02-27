@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
@@ -72,7 +73,7 @@ public class StackDriverServiceImpl implements StackDriverService {
       SyncTaskContext syncTaskContext = aContext()
                                             .withAccountId(settingAttribute.getAccountId())
                                             .withAppId(Base.GLOBAL_APP_ID)
-                                            .withTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .withTimeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,

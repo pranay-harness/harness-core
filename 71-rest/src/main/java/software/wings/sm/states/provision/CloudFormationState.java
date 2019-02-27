@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
@@ -99,7 +98,7 @@ public abstract class CloudFormationState extends State {
       CloudFormationCommandResponse commandResponse, ExecutionContext context);
 
   @Attributes(title = "Timeout (ms)")
-  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
+  @DefaultValue("" + DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT)
   @Override
   public Integer getTimeoutMillis() {
     return super.getTimeoutMillis();

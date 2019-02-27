@@ -2,6 +2,7 @@ package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
@@ -30,7 +31,6 @@ import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.common.Constants;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -209,7 +209,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       SyncTaskContext syncTaskContext = aContext()
                                             .withAccountId(settingAttribute.getAccountId())
                                             .withAppId(Base.GLOBAL_APP_ID)
-                                            .withTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       switch (stateType) {
         case NEW_RELIC:
@@ -236,7 +236,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       SyncTaskContext syncTaskContext = aContext()
                                             .withAccountId(settingAttribute.getAccountId())
                                             .withAppId(Base.GLOBAL_APP_ID)
-                                            .withTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
           .getTxnsWithData((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, applicationId, null);
@@ -286,7 +286,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       SyncTaskContext syncTaskContext = aContext()
                                             .withAccountId(settingAttribute.getAccountId())
                                             .withAppId(Base.GLOBAL_APP_ID)
-                                            .withTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
