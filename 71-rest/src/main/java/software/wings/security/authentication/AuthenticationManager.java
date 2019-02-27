@@ -208,7 +208,7 @@ public class AuthenticationManager {
       return Response.seeOther(redirectUrl).build();
     } catch (Exception e) {
       logger.warn("Failed to login via saml", e);
-      URI redirectUrl = new URI(authenticationUtil.getBaseUrl() + "#/login?errorCode=invalidsso");
+      URI redirectUrl = new URI(getBaseUrl() + "#/login?errorCode=invalidsso");
       return Response.seeOther(redirectUrl).build();
     }
   }
@@ -243,7 +243,7 @@ public class AuthenticationManager {
       return Response.seeOther(redirectUrl).build();
     } catch (Exception e) {
       logger.warn("Failed to login via oauth", e);
-      URI redirectUrl = new URI(authenticationUtil.getBaseUrl() + "#/login?errorCode=invalidsso");
+      URI redirectUrl = new URI(getBaseUrl() + "#/login?errorCode=invalidsso");
       return Response.seeOther(redirectUrl).build();
     }
   }
@@ -257,5 +257,13 @@ public class AuthenticationManager {
     } catch (URISyntaxException e) {
       throw new InvalidRequestException("Unable to generate the redirection URL", e);
     }
+  }
+
+  public String getBaseUrl() {
+    String baseUrl = configuration.getPortal().getUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
+    return baseUrl;
   }
 }
