@@ -33,6 +33,9 @@ public class EcsConventionTest {
 
     serviceNamePrefix = EcsConvention.getServiceNamePrefixFromServiceName("abc__test__service__123");
     assertEquals("abc__test__service__", serviceNamePrefix);
+
+    serviceNamePrefix = EcsConvention.getServiceNamePrefixFromServiceName("abc__test__service__test");
+    assertEquals("abc__test__service__test", serviceNamePrefix);
   }
 
   @Test

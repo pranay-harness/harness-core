@@ -21,7 +21,23 @@ public class EcsConvention {
     return trim(family) + DELIMITER + revision;
   }
 
+  /**
+   * Remove last __NUM part from service.
+   * e.g. app__service__env__1, prefix = app__service__env__
+   * app__service__env, prefix = app__service__env
+   */
   public static String getServiceNamePrefixFromServiceName(String serviceName) {
+    if (serviceName.lastIndexOf(DELIMITER) == -1) {
+      return serviceName;
+    }
+
+    try {
+      // If serviceName does not end with __NUM, return entire serviceName
+      Integer.parseInt(serviceName.substring(serviceName.lastIndexOf(DELIMITER) + DELIMITER.length()));
+    } catch (NumberFormatException e) {
+      return serviceName;
+    }
+
     return serviceName.substring(0, serviceName.lastIndexOf(DELIMITER) + DELIMITER.length());
   }
 

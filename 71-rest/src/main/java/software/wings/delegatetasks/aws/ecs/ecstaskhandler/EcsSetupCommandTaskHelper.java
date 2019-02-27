@@ -977,8 +977,8 @@ public class EcsSetupCommandTaskHelper {
     String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
     awsClusterService.getServices(region, settingAttribute, encryptedDataDetails, clusterName)
         .stream()
-        .filter(s -> s.getServiceName().startsWith(serviceNamePrefix))
-        .filter(service -> isServiceWithSamePrefix(service.getServiceName(), serviceNamePrefix))
+        .filter(service
+            -> EcsConvention.getServiceNamePrefixFromServiceName(service.getServiceName()).equals(serviceNamePrefix))
         .filter(s -> !s.getServiceName().equals(containerServiceName))
         .filter(s -> s.getDesiredCount() == 0)
         .forEach(s -> {

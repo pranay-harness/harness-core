@@ -114,7 +114,9 @@ public class AwsClusterServiceImpl implements AwsClusterService {
     List<Service> activeOldServices =
         getServices(region, cloudProviderSetting, encryptedDataDetails, clusterName)
             .stream()
-            .filter(service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
+            .filter(service
+                -> getServiceNamePrefixFromServiceName(service.getServiceName()).equals(serviceNamePrefix)
+                    && service.getDesiredCount() > 0)
             .sorted(comparingInt(service -> getRevisionFromServiceName(service.getServiceName())))
             .collect(toList());
     activeOldServices.forEach(service -> result.put(service.getServiceName(), service.getDesiredCount()));
