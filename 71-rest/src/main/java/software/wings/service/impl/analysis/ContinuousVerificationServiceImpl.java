@@ -17,6 +17,7 @@ import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.ERROR_METRIC_NAMES;
+import static software.wings.common.VerificationConstants.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 import static software.wings.common.VerificationConstants.NEW_RELIC_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.PROMETHEUS_DEEPLINK_FORMAT;
@@ -54,7 +55,6 @@ import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.Base;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -1575,11 +1575,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private VerificationNodeDataSetupResponse getVerificationNodeDataResponse(
       String accountId, APMValidateCollectorConfig apmValidateCollectorConfig) {
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(accountId)
-                                          .appId(Base.GLOBAL_APP_ID)
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .build();
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     String apmResponse =
         delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(apmValidateCollectorConfig);
     JSONObject jsonObject = new JSONObject(apmResponse);

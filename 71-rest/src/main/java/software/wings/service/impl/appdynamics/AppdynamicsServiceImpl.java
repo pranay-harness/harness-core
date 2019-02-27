@@ -2,6 +2,7 @@ package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
+import static software.wings.common.VerificationConstants.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -51,7 +51,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
-                                          .appId(Base.GLOBAL_APP_ID)
+                                          .appId(GLOBAL_APP_ID)
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
@@ -65,7 +65,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
-                                          .appId(Base.GLOBAL_APP_ID)
+                                          .appId(GLOBAL_APP_ID)
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
@@ -80,7 +80,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
-                                          .appId(Base.GLOBAL_APP_ID)
+                                          .appId(GLOBAL_APP_ID)
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
@@ -130,7 +130,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     try {
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(settingAttribute.getAccountId())
-                                            .appId(Base.GLOBAL_APP_ID)
+                                            .appId(GLOBAL_APP_ID)
                                             .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                             .build();
       AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
@@ -157,7 +157,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(settingAttribute.getAccountId())
-                                            .appId(Base.GLOBAL_APP_ID)
+                                            .appId(GLOBAL_APP_ID)
                                             .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)

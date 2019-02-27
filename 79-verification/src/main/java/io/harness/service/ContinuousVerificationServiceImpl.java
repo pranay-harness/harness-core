@@ -15,6 +15,8 @@ import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_B
 import static software.wings.common.VerificationConstants.getLogAnalysisStates;
 import static software.wings.common.VerificationConstants.getMetricAnalysisStates;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
+import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.TIMESERIES_24x7;
 import static software.wings.sm.states.AbstractMetricAnalysisState.COMPARISON_WINDOW;
 import static software.wings.sm.states.AbstractMetricAnalysisState.MIN_REQUESTS_PER_MINUTE;
@@ -31,6 +33,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.managerclient.VerificationManagerClient;
@@ -45,7 +48,10 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.LogAnalysisExecutionData;
+import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -296,6 +302,20 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               ? TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute())
               : TimeUnit.MINUTES.toMillis(maxCVCollectionMinute + 1);
           long endTime = startTime + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES - 1);
+
+          if (PREDICTIVE.equals(cvConfiguration.getComparisonStrategy())
+              && maxCVCollectionMinute >= logsCVConfiguration.getBaselineEndMinute()) {
+            AnalysisContext analysisContext =
+                wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
+            endTime = startTime + TimeUnit.MINUTES.toMillis(1);
+
+            if (maxCVCollectionMinute
+                >= logsCVConfiguration.getBaselineEndMinute() + analysisContext.getTimeDuration()) {
+              logger.info("collection for {} is done", analysisContext.getStateExecutionId());
+              return;
+            }
+          }
+
           if (endTime < TimeUnit.MINUTES.toMillis(endMinute)) {
             logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                 cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
@@ -455,14 +475,20 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           long maxLogRecordL1Minute = logAnalysisService.getLogRecordMinute(
               cvConfiguration.getAppId(), cvConfiguration.getUuid(), ClusterLevel.H1, OrderType.DESC);
 
-          if (maxLogRecordL1Minute < minLogRecordL1Minute + CRON_POLL_INTERVAL_IN_MINUTES - 1) {
+          if (!AnalysisComparisonStrategy.PREDICTIVE.equals(cvConfiguration.getComparisonStrategy())
+              && maxLogRecordL1Minute < minLogRecordL1Minute + CRON_POLL_INTERVAL_IN_MINUTES - 1) {
             logger.info(
                 "For CV config {} there is still node data clustering is pending. min l1 {} max l1 {}. Skipping L2 clustering",
                 cvConfiguration.getUuid(), minLogRecordL1Minute, maxLogRecordL1Minute);
             return;
           }
-
           maxLogRecordL1Minute = minLogRecordL1Minute + CRON_POLL_INTERVAL_IN_MINUTES - 1;
+
+          if (PREDICTIVE.equals(cvConfiguration.getComparisonStrategy())
+              && minLogRecordL1Minute >= ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute()) {
+            maxLogRecordL1Minute = minLogRecordL1Minute + 1;
+          }
+
           for (long logRecordMinute = minLogRecordL1Minute; logRecordMinute < maxLogRecordL1Minute; logRecordMinute++) {
             Set<String> hosts = logAnalysisService.getHostsForMinute(
                 cvConfiguration.getAppId(), cvConfiguration.getUuid(), logRecordMinute, ClusterLevel.L0);
@@ -541,6 +567,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), ClusterLevel.H2, OrderType.ASC);
 
           if (analysisStartMin <= 0) {
+            if (PREDICTIVE.equals(logsCVConfiguration.getComparisonStrategy())) {
+              AnalysisContext context = wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
+              analysisStartMin = logAnalysisService.getLogRecordMinute(
+                  logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), ClusterLevel.HF, OrderType.DESC);
+              if (analysisStartMin >= logsCVConfiguration.getBaselineEndMinute() + context.getTimeDuration()) {
+                logger.info(
+                    "Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
+                sendStateNotification(context, false, "", (int) analysisStartMin);
+                wingsPersistence.delete(LogsCVConfiguration.class, logsCVConfiguration.getUuid());
+              }
+            }
             logger.info(
                 "For account {} and CV config {} name {} type {} no data L2 clustering has happened yet. Skipping analysis",
                 logsCVConfiguration.getAccountId(), logsCVConfiguration.getUuid(), logsCVConfiguration.getName(),
@@ -556,8 +593,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 logsCVConfiguration.getUuid(), lastCVAnalysisMinute, analysisStartMin);
             return;
           }
-
           long analysisEndMin = analysisStartMin + CRON_POLL_INTERVAL_IN_MINUTES - 1;
+
+          if (PREDICTIVE.equals(logsCVConfiguration.getComparisonStrategy())) {
+            AnalysisContext context = wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
+            if (lastCVAnalysisMinute >= logsCVConfiguration.getBaselineEndMinute()) {
+              analysisEndMin = lastCVAnalysisMinute + 1;
+            }
+
+            if (analysisEndMin > logsCVConfiguration.getBaselineEndMinute() + context.getTimeDuration()) {
+              logger.info(
+                  "Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
+              sendStateNotification(context, false, "", (int) analysisEndMin);
+              wingsPersistence.delete(LogsCVConfiguration.class, logsCVConfiguration.getUuid());
+            }
+          }
+
           for (long l2Min = analysisStartMin, i = 0; l2Min <= analysisEndMin; l2Min++, i++) {
             Set<String> hosts = logAnalysisService.getHostsForMinute(
                 cvConfiguration.getAppId(), cvConfiguration.getUuid(), l2Min, ClusterLevel.L1);
@@ -596,7 +647,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           String logAnalysisSaveUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
               + LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL
               + "?cvConfigId=" + logsCVConfiguration.getUuid() + "&appId=" + logsCVConfiguration.getAppId()
-              + "&analysisMinute=" + analysisEndMin + "&taskId=" + taskId;
+              + "&analysisMinute=" + analysisEndMin + "&taskId=" + taskId
+              + "&comparisonStrategy=" + logsCVConfiguration.getComparisonStrategy();
 
           final String logAnalysisGetUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
               + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL + "?appId=" + logsCVConfiguration.getAppId()
@@ -627,6 +679,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           analysisTask.setUuid(taskId);
           if (isBaselineRun) {
             analysisTask.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(6).toInstant()));
+          }
+          if (logsCVConfiguration.getComparisonStrategy() == PREDICTIVE) {
+            analysisTask.setAnalysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy());
+            final String lastLogAnalysisGetUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
+                + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL
+                + "?appId=" + logsCVConfiguration.getAppId() + "&cvConfigId=" + logsCVConfiguration.getUuid()
+                + "&analysisMinute=" + analysisEndMin;
+            analysisTask.setPrevious_test_analysis_url(lastLogAnalysisGetUrl);
           }
           learningEngineService.addLearningEngineAnalysisTask(analysisTask);
 
@@ -663,6 +723,38 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     if (isNotEmpty(toBeDeleted)) {
       logger.info("deleting locks {}", toBeDeleted);
       collection.remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", toBeDeleted.toArray())));
+    }
+  }
+
+  private void sendStateNotification(AnalysisContext context, boolean error, String errorMsg, int logAnalysisMinute) {
+    if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+      final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
+
+      LogAnalysisExecutionData logAnalysisExecutionData =
+          LogAnalysisExecutionData.builder()
+              .stateExecutionInstanceId(context.getStateExecutionId())
+              .serverConfigId(context.getAnalysisServerConfigId())
+              .query(context.getQuery())
+              .timeDuration(context.getTimeDuration())
+              .canaryNewHostNames(context.getTestNodes().keySet())
+              .lastExecutionNodes(
+                  context.getControlNodes() == null ? Collections.emptySet() : context.getControlNodes().keySet())
+              .correlationId(context.getCorrelationId())
+              .analysisMinute(logAnalysisMinute)
+              .build();
+
+      logAnalysisExecutionData.setStatus(status);
+
+      if (error) {
+        logAnalysisExecutionData.setErrorMsg(errorMsg);
+      }
+
+      final LogAnalysisResponse response = aLogAnalysisResponse()
+                                               .withLogAnalysisExecutionData(logAnalysisExecutionData)
+                                               .withExecutionStatus(status)
+                                               .build();
+      logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
+      verificationManagerClientHelper.notifyManagerForLogAnalysis(context, response);
     }
   }
 }

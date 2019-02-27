@@ -15,6 +15,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.sm.StateType;
@@ -64,8 +65,10 @@ public class LearningEngineAnalysisTask extends Base {
   private String historical_analysis_url;
   private String previous_anomalies_url;
   private String cumulative_sums_url;
+  private String previous_test_analysis_url;
   @Default private String group_name = NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
   private TimeSeriesMlAnalysisType time_series_ml_analysis_type;
+  private AnalysisComparisonStrategy analysis_comparison_strategy;
   private int analysis_start_time;
   private int prediction_start_time;
   private double sim_threshold;

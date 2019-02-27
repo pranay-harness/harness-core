@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.sm.StateType;
 import software.wings.yaml.BaseEntityYaml;
@@ -38,6 +39,8 @@ public class CVConfiguration extends Base {
   @NotNull private StateType stateType;
   @NotNull private AnalysisTolerance analysisTolerance;
   private boolean enabled24x7;
+  private AnalysisComparisonStrategy comparisonStrategy;
+  private String contextId;
 
   @Transient @SchemaIgnore private String connectorName;
   @Transient @SchemaIgnore private String serviceName;

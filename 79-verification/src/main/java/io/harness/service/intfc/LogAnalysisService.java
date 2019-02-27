@@ -43,7 +43,7 @@ public interface LogAnalysisService {
   boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
 
   boolean save24X7LogAnalysisRecords(String appId, String cvConfigId, int analysisMinute,
-      LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId);
+      AnalysisComparisonStrategy comparisonStrategy, LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId);
 
   LogMLAnalysisRecord getLogAnalysisRecords(
       String appId, String stateExecutionId, String query, StateType stateType, int logCollectionMinute);

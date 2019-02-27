@@ -15,6 +15,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -148,9 +149,11 @@ public class LogVerificationResource {
   @LearningEngineAuth
   public RestResponse<Boolean> saveLogAnalysisMLRecords(@QueryParam("appId") String appId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute,
-      @QueryParam("taskId") String taskId, LogMLAnalysisRecord mlAnalysisResponse) {
+      @QueryParam("taskId") String taskId,
+      @QueryParam("comparisonStrategy") AnalysisComparisonStrategy comparisonStrategy,
+      LogMLAnalysisRecord mlAnalysisResponse) {
     return new RestResponse<>(analysisService.save24X7LogAnalysisRecords(
-        appId, cvConfigId, analysisMinute, mlAnalysisResponse, Optional.of(taskId)));
+        appId, cvConfigId, analysisMinute, comparisonStrategy, mlAnalysisResponse, Optional.of(taskId)));
   }
 
   @Produces({"application/json", "application/v1+json"})
