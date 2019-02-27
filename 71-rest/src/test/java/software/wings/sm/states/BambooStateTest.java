@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.TaskType.BAMBOO;
-import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -104,7 +103,7 @@ public class BambooStateTest {
   @Test
   public void shouldGetTimeout() {
     Integer timeoutMillis = bambooState.getTimeoutMillis();
-    assertThat(timeoutMillis).isEqualTo(Math.toIntExact(DEFAULT_ASYNC_CALL_TIMEOUT));
+    assertThat(timeoutMillis).isEqualTo(Math.toIntExact(DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT));
   }
 
   @Test

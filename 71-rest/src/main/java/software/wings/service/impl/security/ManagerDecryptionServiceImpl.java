@@ -3,8 +3,8 @@ package software.wings.service.impl.security;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
 import static java.lang.String.format;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

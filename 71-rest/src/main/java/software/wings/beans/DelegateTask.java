@@ -1,8 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -43,6 +40,10 @@ import javax.validation.constraints.NotNull;
 @Converters(Converter.class)
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static final String APP_ID_KEY = "appId";
+
+  public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
+
+  public static final long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
   @Id @Getter @Setter private String uuid;
   @Indexed @Getter @Setter protected String appId;
