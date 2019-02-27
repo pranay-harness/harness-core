@@ -133,6 +133,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
 
     k8sStateHelper.saveK8sElement(context,
         K8sElement.builder()
+            .releaseName(stateExecutionData.getReleaseName())
             .releaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber())
             .primaryServiceName(k8sBlueGreenDeployResponse.getPrimaryServiceName())
             .stageServiceName(k8sBlueGreenDeployResponse.getStageServiceName())

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -39,6 +40,7 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
@@ -82,6 +84,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   private final String workflowId = UUID.randomUUID().toString();
   private final String envId = UUID.randomUUID().toString();
   private final String appId = UUID.randomUUID().toString();
+  private final String serviceId = UUID.randomUUID().toString();
   private final String previousWorkflowExecutionId = UUID.randomUUID().toString();
 
   @Before
@@ -91,6 +94,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     when(infrastructureMapping.getDeploymentType()).thenReturn(DeploymentType.KUBERNETES.name());
     when(infraMappingService.get(anyString(), anyString())).thenReturn(infrastructureMapping);
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
+    when(serviceResourceService.get(anyString(), anyString(), anyBoolean()))
+        .thenReturn(Service.builder().uuid(serviceId).name("ServiceA").build());
   }
 
   @Test

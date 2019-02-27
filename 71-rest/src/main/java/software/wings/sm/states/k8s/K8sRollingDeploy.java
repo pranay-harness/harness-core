@@ -140,6 +140,16 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
     stateExecutionData.setNewInstanceStatusSummaries(
         k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
 
+    K8sElement k8sElement = k8sStateHelper.getK8sElement(context);
+    if (k8sElement == null) {
+      // We only want to save if its not there. In case of Canary - we already have it in context.
+      k8sStateHelper.saveK8sElement(context,
+          K8sElement.builder()
+              .releaseName(stateExecutionData.getReleaseName())
+              .releaseNumber(k8sRollingDeployResponse.getReleaseNumber())
+              .build());
+    }
+
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(stateExecutionData)

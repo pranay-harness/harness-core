@@ -30,6 +30,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.k8s.model.K8sPod;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -41,14 +42,17 @@ import software.wings.api.PcfInstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.ServiceElement;
+import software.wings.api.k8s.K8sElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.infrastructure.Host;
@@ -91,6 +95,7 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DefaultValue;
 
 import java.io.UnsupportedEncodingException;
@@ -155,6 +160,8 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject protected StateExecutionService stateExecutionService;
 
   @Transient @Inject @SchemaIgnore protected ServiceResourceService serviceResourceService;
+
+  @Transient @Inject @SchemaIgnore protected K8sStateHelper k8sStateHelper;
 
   @Inject private transient ExpressionEvaluator evaluator;
 
@@ -254,6 +261,7 @@ public abstract class AbstractAnalysisState extends State {
 
   protected Map<String, String> getLastExecutionNodes(ExecutionContext context) {
     String serviceId = getPhaseServiceId(context);
+    Service service = serviceResourceService.get(context.getAppId(), serviceId, false);
     InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
     String infraMappingId = infrastructureMapping.getUuid();
 
@@ -265,7 +273,30 @@ public abstract class AbstractAnalysisState extends State {
     Map<String, String> phaseHosts = getHostsDeployedSoFar(context, serviceId, deploymentType);
     getLogger().info("Deployed hosts so far: {}", phaseHosts);
 
-    if (containerInstanceHandler.isContainerDeployment(infrastructureMapping)) {
+    if (service.isK8sV2()) {
+      final Map<String, String> hosts = new HashMap<>();
+      K8sElement k8sElement = k8sStateHelper.getK8sElement(context);
+      if (k8sElement != null) {
+        ContainerInfrastructureMapping containerInfrastructureMapping =
+            (ContainerInfrastructureMapping) infrastructureMapping;
+        List<K8sPod> currentPods = k8sStateHelper.getPodList(
+            containerInfrastructureMapping, containerInfrastructureMapping.getNamespace(), k8sElement.getReleaseName());
+        if (currentPods != null) {
+          currentPods.forEach(pod -> {
+            if (isEmpty(hostnameTemplate)) {
+              hosts.put(pod.getName(), DEFAULT_GROUP_NAME);
+            } else {
+              hosts.put(
+                  context.renderExpression(hostnameTemplate,
+                      Lists.newArrayList(aHostElement().withHostName(pod.getName()).withIp(pod.getPodIP()).build())),
+                  DEFAULT_GROUP_NAME);
+            }
+          });
+          phaseHosts.keySet().forEach(host -> hosts.remove(host));
+        }
+      }
+      return hosts;
+    } else if (containerInstanceHandler.isContainerDeployment(infrastructureMapping)) {
       Set<ContainerMetadata> containerMetadataSet =
           containerInstanceHandler.getContainerServiceNames(context, serviceId, infraMappingId);
 
