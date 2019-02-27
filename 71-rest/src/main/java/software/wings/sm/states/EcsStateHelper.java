@@ -584,7 +584,7 @@ public class EcsStateHelper {
         aDelegateTask()
             .withAccountId(deployDataBag.getApp().getAccountId())
             .withAppId(deployDataBag.getApp().getUuid())
-            .withTaskType(TaskType.ECS_COMMAND_TASK)
+            .withTaskType(TaskType.ECS_COMMAND_TASK.name())
             .withWaitId(activity.getUuid())
             .withTags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
                     ? singletonList(deployDataBag.getAwsConfig().getTag())
