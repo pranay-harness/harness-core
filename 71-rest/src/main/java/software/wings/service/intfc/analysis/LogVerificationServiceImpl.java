@@ -1,6 +1,6 @@
 package software.wings.service.intfc.analysis;
 
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -41,8 +41,11 @@ public class LogVerificationServiceImpl implements LogVerificationService {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(settingAttribute.getAccountId())
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
 
     switch (stateType) {
       case BUG_SNAG:

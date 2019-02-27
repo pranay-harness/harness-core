@@ -184,7 +184,7 @@ public class PluginServiceImpl implements PluginService {
             .build(),
         //        anAccountPlugin()
         //            .withSettingClass(AwsConfig.class)
-        //            .withAccountId(accountId)
+        //            .accountId(accountId)
         //            .withIsEnabled(true)
         //            .withDisplayName(SettingVariableTypes.CLOUD_WATCH.getDisplayName())
         //            .type(SettingVariableTypes.CLOUD_WATCH.name())

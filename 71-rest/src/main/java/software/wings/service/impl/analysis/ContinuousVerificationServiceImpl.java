@@ -11,7 +11,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
@@ -1574,7 +1574,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private VerificationNodeDataSetupResponse getVerificationNodeDataResponse(
       String accountId, APMValidateCollectorConfig apmValidateCollectorConfig) {
-    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
     String apmResponse =
         delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(apmValidateCollectorConfig);
     JSONObject jsonObject = new JSONObject(apmResponse);

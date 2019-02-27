@@ -1,6 +1,6 @@
 package software.wings.service.impl.elk;
 
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
@@ -52,8 +52,11 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
-    SyncTaskContext elkTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext elkTaskContext = SyncTaskContext.builder()
+                                         .accountId(settingAttribute.getAccountId())
+                                         .appId(Base.GLOBAL_APP_ID)
+                                         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                         .build();
     return delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
         .getIndices(elkConfig, encryptedDataDetails, null);
   }
@@ -61,7 +64,11 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
   @Override
   public String getVersion(String accountId, ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails)
       throws IOException {
-    SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext elkTaskContext = SyncTaskContext.builder()
+                                         .accountId(accountId)
+                                         .appId(Base.GLOBAL_APP_ID)
+                                         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                         .build();
     return delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
         .getVersion(elkConfig, encryptedDataDetails);
   }
@@ -94,7 +101,11 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
             .build();
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-    SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext elkTaskContext = SyncTaskContext.builder()
+                                         .accountId(accountId)
+                                         .appId(Base.GLOBAL_APP_ID)
+                                         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                         .build();
     Object responseWithoutHost;
     try {
       responseWithoutHost =

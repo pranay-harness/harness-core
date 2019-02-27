@@ -1,6 +1,6 @@
 package software.wings.service.impl.sumo;
 
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Singleton;
@@ -33,7 +33,11 @@ public class SumoLogicAnalysisServiceImpl extends AnalysisServiceImpl implements
     }
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-    SyncTaskContext sumoTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext sumoTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
     return delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
         .getLogDataByHost(accountId, (SumoConfig) settingAttribute.getValue(), sumoLogicSetupTestNodedata.getQuery(),
             sumoLogicSetupTestNodedata.getHostNameField(),

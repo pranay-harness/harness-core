@@ -3,7 +3,6 @@ package software.wings.service.impl.artifact;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -58,11 +57,11 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
       tags = tags.stream().filter(s -> isNotEmpty(s)).distinct().collect(Collectors.toList());
     }
 
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(artifactStreamAttributes.getAccountId())
-                                          .withAppId(appId)
-                                          .withTimeout(Duration.ofSeconds(timeout).toMillis())
-                                          .withTags(tags)
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(artifactStreamAttributes.getAccountId())
+                                          .appId(appId)
+                                          .timeout(Duration.ofSeconds(timeout).toMillis())
+                                          .tags(tags)
                                           .build();
 
     Class<? extends BuildService> buildServiceClass =
@@ -94,11 +93,11 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
       tags = tags.stream().filter(s -> isNotEmpty(s)).distinct().collect(Collectors.toList());
     }
 
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(streamAttributes.getAccountId())
-                                          .withAppId(artifactStream.getAppId())
-                                          .withTimeout(Duration.ofSeconds(timeout).toMillis())
-                                          .withTags(tags)
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(streamAttributes.getAccountId())
+                                          .appId(artifactStream.getAppId())
+                                          .timeout(Duration.ofSeconds(timeout).toMillis())
+                                          .tags(tags)
                                           .build();
 
     Class<? extends BuildService> buildServiceClass =

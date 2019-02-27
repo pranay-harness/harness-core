@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -284,10 +284,13 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Override
   public BuildService getBuildService(SettingAttribute settingAttribute, String appId) {
     SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
-    if (settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())) {
-      syncTaskContext.setTimeout(120 * 1000);
-    }
+        SyncTaskContext.builder()
+            .accountId(settingAttribute.getAccountId())
+            .appId(appId)
+            .timeout(settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())
+                    ? 120 * 1000
+                    : DEFAULT_SYNC_CALL_TIMEOUT)
+            .build();
     return delegateProxyFactory.get(buildServiceMap.get(settingAttribute.getValue().getClass()), syncTaskContext);
   }
 
@@ -305,7 +308,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
     SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).withTimeout(120 * 1000).build();
+        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).appId(appId).timeout(120 * 1000).build();
     return delegateProxyFactory.get(buildServiceClass, syncTaskContext);
   }
 

@@ -9,7 +9,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
@@ -78,7 +78,11 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData encryptedData) {
-    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
     return (EncryptedData) delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .encrypt(name, value, accountId, settingType, vaultConfig, encryptedData);
   }
@@ -89,11 +93,11 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     int failedAttempts = 0;
     while (true) {
       try {
-        SyncTaskContext syncTaskContext = aContext()
-                                              .withAccountId(accountId)
-                                              .withTimeout(Duration.ofSeconds(5).toMillis())
-                                              .withAppId(Base.GLOBAL_APP_ID)
-                                              .withCorrelationId(data.getName())
+        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                              .accountId(accountId)
+                                              .timeout(Duration.ofSeconds(5).toMillis())
+                                              .appId(Base.GLOBAL_APP_ID)
+                                              .correlationId(data.getName())
                                               .build();
         return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
             .decrypt(data, vaultConfig);
@@ -162,7 +166,11 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         }
 
         VaultConfig decryptedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
-        SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                              .accountId(accountId)
+                                              .appId(Base.GLOBAL_APP_ID)
+                                              .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                              .build();
         KmsSetupAlert kmsSetupAlert =
             KmsSetupAlert.builder()
                 .kmsId(vaultConfig.getUuid())
@@ -360,15 +368,22 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public void deleteSecret(String accountId, String path, VaultConfig vaultConfig) {
-    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
     delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .deleteVaultSecret(path, vaultConfig);
   }
 
   @Override
   public List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedData encryptedData, VaultConfig vaultConfig) {
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(vaultConfig.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(vaultConfig.getAccountId())
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
     return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .getVaultSecretChangeLogs(encryptedData, vaultConfig);
   }

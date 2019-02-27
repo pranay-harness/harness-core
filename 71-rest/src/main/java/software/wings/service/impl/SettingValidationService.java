@@ -7,7 +7,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -285,7 +285,8 @@ public class SettingValidationService {
   private void validateKubernetesClusterConfig(SettingAttribute settingAttribute) {
     String namespace = "default";
 
-    SyncTaskContext syncTaskContext = aContext().withAccountId(settingAttribute.getAccountId()).build();
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .encryptionDetails(emptyList())

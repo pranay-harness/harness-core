@@ -4,7 +4,7 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -60,8 +60,11 @@ public class LdapBasedAuthHandler implements AuthHandler {
     EncryptedDataDetail passwordEncryptedDataDetail =
         secretManager.encryptedDataDetails(settings.getAccountId(), "password", encryptedPassword).get();
     try {
-      SyncTaskContext syncTaskContext =
-          aContext().withAccountId(settings.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settings.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
       LdapResponse authenticationResponse =
           delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
               .authenticate(settings, settingsEncryptedDataDetail, username, passwordEncryptedDataDetail);

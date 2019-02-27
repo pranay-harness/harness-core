@@ -2,7 +2,6 @@ package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
@@ -50,8 +49,11 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Override
   public List<NewRelicApplication> getApplications(final String settingId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(settingAttribute.getAccountId())
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
@@ -61,8 +63,11 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Override
   public Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(settingAttribute.getAccountId())
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
@@ -73,8 +78,11 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   public Set<AppdynamicsTier> getDependentTiers(String settingId, long appdynamicsAppId, AppdynamicsTier tier)
       throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(settingAttribute.getAccountId())
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
 
@@ -120,8 +128,11 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   public boolean validateConfig(
       final SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
-      SyncTaskContext syncTaskContext =
-          aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
       AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
       return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
           .validateConfig(appDynamicsConfig, encryptedDataDetails);
@@ -144,10 +155,10 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
       final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-      SyncTaskContext syncTaskContext = aContext()
-                                            .withAccountId(settingAttribute.getAccountId())
-                                            .withAppId(Base.GLOBAL_APP_ID)
-                                            .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((AppDynamicsConfig) settingAttribute.getValue(), encryptionDetails,

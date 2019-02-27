@@ -3,7 +3,6 @@ package software.wings.service.impl.newrelic;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Charsets;
@@ -84,8 +83,11 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Override
   public void validateAPMConfig(SettingAttribute settingAttribute, APMValidateCollectorConfig config) {
     try {
-      SyncTaskContext syncTaskContext =
-          aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
       delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).validateCollector(config);
     } catch (Exception e) {
       String errorMsg = e.getCause() != null ? ExceptionUtils.getMessage(e.getCause()) : ExceptionUtils.getMessage(e);
@@ -107,7 +109,11 @@ public class NewRelicServiceImpl implements NewRelicService {
               .body(fetchConfig.getBody())
               .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
               .build();
-      SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(accountId)
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
       return delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(apmValidateCollectorConfig);
     } catch (Exception e) {
       String errorMsg = e.getCause() != null ? ExceptionUtils.getMessage(e.getCause()) : ExceptionUtils.getMessage(e);
@@ -120,8 +126,11 @@ public class NewRelicServiceImpl implements NewRelicService {
       SettingAttribute settingAttribute, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails) {
     ErrorCode errorCode = null;
     try {
-      SyncTaskContext syncTaskContext =
-          aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
       switch (stateType) {
         case NEW_RELIC:
           errorCode = ErrorCode.NEWRELIC_CONFIGURATION_ERROR;
@@ -160,8 +169,11 @@ public class NewRelicServiceImpl implements NewRelicService {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-      SyncTaskContext syncTaskContext =
-          aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
       switch (stateType) {
         case NEW_RELIC:
           Cache<String, NewRelicApplications> newRelicApplicationCache = cacheHelper.getNewRelicApplicationCache();
@@ -206,10 +218,10 @@ public class NewRelicServiceImpl implements NewRelicService {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-      SyncTaskContext syncTaskContext = aContext()
-                                            .withAccountId(settingAttribute.getAccountId())
-                                            .withAppId(Base.GLOBAL_APP_ID)
-                                            .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       switch (stateType) {
         case NEW_RELIC:
@@ -233,10 +245,10 @@ public class NewRelicServiceImpl implements NewRelicService {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-      SyncTaskContext syncTaskContext = aContext()
-                                            .withAccountId(settingAttribute.getAccountId())
-                                            .withAppId(Base.GLOBAL_APP_ID)
-                                            .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
           .getTxnsWithData((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, applicationId, null);
@@ -283,10 +295,10 @@ public class NewRelicServiceImpl implements NewRelicService {
       final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-      SyncTaskContext syncTaskContext = aContext()
-                                            .withAccountId(settingAttribute.getAccountId())
-                                            .withAppId(Base.GLOBAL_APP_ID)
-                                            .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
