@@ -22,7 +22,7 @@ public class AwsCFTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsCFTask task = (AwsCFTask) TaskType.AWS_CF_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

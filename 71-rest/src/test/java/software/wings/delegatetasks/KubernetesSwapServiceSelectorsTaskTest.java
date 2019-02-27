@@ -37,7 +37,7 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
   @InjectMocks
   private KubernetesSwapServiceSelectorsTask kubernetesSwapServiceSelectorsTask =
       (KubernetesSwapServiceSelectorsTask) TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.getDelegateRunnableTask(
-          "delid1", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+          "delid1", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   private Service createService(String serviceName, Map<String, String> labelSelectors) {
     ServiceSpecBuilder spec = new ServiceSpecBuilder().withSelector(labelSelectors);

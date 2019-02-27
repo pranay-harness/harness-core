@@ -52,14 +52,15 @@ public class APMDataCollectionTaskTest {
                              .build();
 
     DelegateTask task = aDelegateTask()
-                            .withTaskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
-                            .withAccountId(accountId)
-                            .withAppId(appId)
-                            .withWaitId(waitId)
-                            .withParameters(new Object[] {dataCollectionInfo})
-                            .withEnvId(envId)
-                            .withInfrastructureMappingId(infrastructureMappingId)
-                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                            .async(true)
+                            .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
+                            .accountId(accountId)
+                            .appId(appId)
+                            .waitId(waitId)
+                            .parameters(new Object[] {dataCollectionInfo})
+                            .envId(envId)
+                            .infrastructureMappingId(infrastructureMappingId)
+                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                             .build();
     dataCollectionTask = new APMDataCollectionTask(delegateId, task, null, null);
   }

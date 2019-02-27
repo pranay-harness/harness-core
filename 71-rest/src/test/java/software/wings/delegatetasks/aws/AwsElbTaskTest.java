@@ -27,7 +27,7 @@ public class AwsElbTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsElbTask task = (AwsElbTask) TaskType.AWS_ELB_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

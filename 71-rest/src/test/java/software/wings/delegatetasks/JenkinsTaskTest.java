@@ -66,7 +66,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private JenkinsTask jenkinsTask = (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask(
-      "delid1", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delid1", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

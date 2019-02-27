@@ -89,13 +89,14 @@ public class LogzAnalysisState extends ElkAnalysisState {
 
       String waitId = generateUuid();
       delegateTasks.add(aDelegateTask()
-                            .withTaskType(TaskType.LOGZ_COLLECT_LOG_DATA.name())
-                            .withAccountId(appService.get(context.getAppId()).getAccountId())
-                            .withAppId(context.getAppId())
-                            .withWaitId(waitId)
-                            .withParameters(new Object[] {dataCollectionInfo})
-                            .withEnvId(envId)
-                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
+                            .async(true)
+                            .taskType(TaskType.LOGZ_COLLECT_LOG_DATA.name())
+                            .accountId(appService.get(context.getAppId()).getAccountId())
+                            .appId(context.getAppId())
+                            .waitId(waitId)
+                            .parameters(new Object[] {dataCollectionInfo})
+                            .envId(envId)
+                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                             .build());
       waitIds[i++] = waitId;
     }

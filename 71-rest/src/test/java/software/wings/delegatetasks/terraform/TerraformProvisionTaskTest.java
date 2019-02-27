@@ -15,7 +15,7 @@ import java.util.List;
 
 public class TerraformProvisionTaskTest extends WingsBaseTest {
   TerraformProvisionTask terraformProvisionTask = new TerraformProvisionTask(WingsTestConstants.DELEGATE_ID,
-      DelegateTask.Builder.aDelegateTask().build(), delegateTaskResponse -> {}, () -> true);
+      DelegateTask.Builder.aDelegateTask().async(true).build(), delegateTaskResponse -> {}, () -> true);
 
   @Test
   public void getTargetsArgsTest() {

@@ -352,16 +352,15 @@ public class AwsAmiServiceDeployState extends State {
                                              .build();
     DelegateTask delegateTask =
         aDelegateTask()
-            .withAccountId(accountId)
-            .withAppId(appId)
-            .withWaitId(activityId)
-            .withTimeout(TimeUnit.MINUTES.toMillis(autoScalingSteadyStateTimeout))
-            .withParameters(new Object[] {request})
-            .withTaskType(AWS_AMI_ASYNC_TASK.name())
-            .withTags(
-                isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-            .withAsync(true)
-            .withEnvId(envId)
+            .accountId(accountId)
+            .appId(appId)
+            .waitId(activityId)
+            .timeout(TimeUnit.MINUTES.toMillis(autoScalingSteadyStateTimeout))
+            .parameters(new Object[] {request})
+            .taskType(AWS_AMI_ASYNC_TASK.name())
+            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .async(true)
+            .envId(envId)
             .build();
     delegateService.queueTask(delegateTask);
   }

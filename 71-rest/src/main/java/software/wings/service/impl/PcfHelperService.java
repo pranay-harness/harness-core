@@ -49,16 +49,16 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .withAccountId(pcfConfig.getAccountId())
-                                          .withAppId(GLOBAL_APP_ID)
-                                          .withAsync(false)
-                                          .withTimeout(TimeUnit.MINUTES.toMillis(2))
-                                          .withParameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                            .pcfConfig(pcfConfig)
-                                                                            .pcfCommandType(PcfCommandType.VALIDATE)
-                                                                            .timeoutIntervalInMin(2)
-                                                                            .build(),
+                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
+                                          .accountId(pcfConfig.getAccountId())
+                                          .appId(GLOBAL_APP_ID)
+                                          .async(false)
+                                          .timeout(TimeUnit.MINUTES.toMillis(2))
+                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                                        .pcfConfig(pcfConfig)
+                                                                        .pcfCommandType(PcfCommandType.VALIDATE)
+                                                                        .timeoutIntervalInMin(2)
+                                                                        .build(),
                                               null})
                                           .build());
 
@@ -84,19 +84,19 @@ public class PcfHelperService {
 
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .withAccountId(pcfConfig.getAccountId())
-                                          .withAppId(GLOBAL_APP_ID)
-                                          .withAsync(false)
-                                          .withTimeout(TimeUnit.MINUTES.toMillis(5))
-                                          .withParameters(new Object[] {PcfInstanceSyncRequest.builder()
-                                                                            .pcfConfig(pcfConfig)
-                                                                            .pcfApplicationName(pcfApplicationName)
-                                                                            .organization(organization)
-                                                                            .space(space)
-                                                                            .pcfCommandType(PcfCommandType.APP_DETAILS)
-                                                                            .timeoutIntervalInMin(5)
-                                                                            .build(),
+                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
+                                          .accountId(pcfConfig.getAccountId())
+                                          .appId(GLOBAL_APP_ID)
+                                          .async(false)
+                                          .timeout(TimeUnit.MINUTES.toMillis(5))
+                                          .parameters(new Object[] {PcfInstanceSyncRequest.builder()
+                                                                        .pcfConfig(pcfConfig)
+                                                                        .pcfApplicationName(pcfApplicationName)
+                                                                        .organization(organization)
+                                                                        .space(space)
+                                                                        .pcfCommandType(PcfCommandType.APP_DETAILS)
+                                                                        .timeoutIntervalInMin(5)
+                                                                        .build(),
                                               encryptionDetails})
                                           .build());
 
@@ -149,17 +149,17 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .withAccountId(pcfConfig.getAccountId())
-                                          .withAppId(GLOBAL_APP_ID)
-                                          .withAsync(false)
-                                          .withTimeout(TimeUnit.MINUTES.toMillis(2))
-                                          .withParameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                            .pcfConfig(pcfConfig)
-                                                                            .pcfCommandType(PcfCommandType.DATAFETCH)
-                                                                            .actionType(ActionType.FETCH_ORG)
-                                                                            .timeoutIntervalInMin(2)
-                                                                            .build(),
+                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
+                                          .accountId(pcfConfig.getAccountId())
+                                          .appId(GLOBAL_APP_ID)
+                                          .async(false)
+                                          .timeout(TimeUnit.MINUTES.toMillis(2))
+                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                                        .pcfConfig(pcfConfig)
+                                                                        .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                                        .actionType(ActionType.FETCH_ORG)
+                                                                        .timeoutIntervalInMin(2)
+                                                                        .build(),
                                               encryptionDetails})
                                           .build());
     } catch (InterruptedException e) {
@@ -184,24 +184,24 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .withAccountId(pcfConfig.getAccountId())
-                                          .withAppId(GLOBAL_APP_ID)
-                                          .withAsync(false)
-                                          .withTimeout(TimeUnit.MINUTES.toMillis(2))
-                                          .withParameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                            .pcfConfig(pcfConfig)
-                                                                            .pcfCommandType(PcfCommandType.CREATE_ROUTE)
-                                                                            .organization(organization)
-                                                                            .space(space)
-                                                                            .host(host)
-                                                                            .domain(domain)
-                                                                            .path(path)
-                                                                            .tcpRoute(tcpRoute)
-                                                                            .useRandomPort(useRandomPort)
-                                                                            .port(port)
-                                                                            .timeoutIntervalInMin(2)
-                                                                            .build(),
+                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
+                                          .accountId(pcfConfig.getAccountId())
+                                          .appId(GLOBAL_APP_ID)
+                                          .async(false)
+                                          .timeout(TimeUnit.MINUTES.toMillis(2))
+                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                                        .pcfConfig(pcfConfig)
+                                                                        .pcfCommandType(PcfCommandType.CREATE_ROUTE)
+                                                                        .organization(organization)
+                                                                        .space(space)
+                                                                        .host(host)
+                                                                        .domain(domain)
+                                                                        .path(path)
+                                                                        .tcpRoute(tcpRoute)
+                                                                        .useRandomPort(useRandomPort)
+                                                                        .port(port)
+                                                                        .timeoutIntervalInMin(2)
+                                                                        .build(),
                                               encryptionDetails})
                                           .build());
     } catch (InterruptedException e) {
@@ -225,18 +225,18 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .withAccountId(pcfConfig.getAccountId())
-                                          .withAppId(GLOBAL_APP_ID)
-                                          .withAsync(false)
-                                          .withTimeout(TimeUnit.MINUTES.toMillis(2))
-                                          .withParameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                            .pcfConfig(pcfConfig)
-                                                                            .organization(organization)
-                                                                            .pcfCommandType(PcfCommandType.DATAFETCH)
-                                                                            .actionType(ActionType.FETCH_SPACE)
-                                                                            .timeoutIntervalInMin(2)
-                                                                            .build(),
+                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
+                                          .accountId(pcfConfig.getAccountId())
+                                          .appId(GLOBAL_APP_ID)
+                                          .async(false)
+                                          .timeout(TimeUnit.MINUTES.toMillis(2))
+                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                                        .pcfConfig(pcfConfig)
+                                                                        .organization(organization)
+                                                                        .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                                        .actionType(ActionType.FETCH_SPACE)
+                                                                        .timeoutIntervalInMin(2)
+                                                                        .build(),
                                               encryptionDetails})
                                           .build());
     } catch (InterruptedException e) {
@@ -260,19 +260,19 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .withAccountId(pcfConfig.getAccountId())
-                                          .withAppId(GLOBAL_APP_ID)
-                                          .withAsync(false)
-                                          .withTimeout(TimeUnit.MINUTES.toMillis(2))
-                                          .withParameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                            .pcfConfig(pcfConfig)
-                                                                            .organization(organization)
-                                                                            .space(space)
-                                                                            .pcfCommandType(PcfCommandType.DATAFETCH)
-                                                                            .actionType(ActionType.FETCH_ROUTE)
-                                                                            .timeoutIntervalInMin(2)
-                                                                            .build(),
+                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
+                                          .accountId(pcfConfig.getAccountId())
+                                          .appId(GLOBAL_APP_ID)
+                                          .async(false)
+                                          .timeout(TimeUnit.MINUTES.toMillis(2))
+                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                                        .pcfConfig(pcfConfig)
+                                                                        .organization(organization)
+                                                                        .space(space)
+                                                                        .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                                        .actionType(ActionType.FETCH_ROUTE)
+                                                                        .timeoutIntervalInMin(2)
+                                                                        .build(),
                                               encryptionDetails})
                                           .build());
     } catch (InterruptedException e) {
@@ -296,20 +296,20 @@ public class PcfHelperService {
     try {
       pcfCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .withAccountId(pcfConfig.getAccountId())
-                                          .withAppId(GLOBAL_APP_ID)
-                                          .withAsync(false)
-                                          .withTimeout(TimeUnit.MINUTES.toMillis(2))
-                                          .withParameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                            .pcfConfig(pcfConfig)
-                                                                            .organization(organization)
-                                                                            .space(space)
-                                                                            .actionType(ActionType.RUNNING_COUNT)
-                                                                            .pcfCommandType(PcfCommandType.DATAFETCH)
-                                                                            .applicationNamePrefix(appPrefix)
-                                                                            .timeoutIntervalInMin(2)
-                                                                            .build(),
+                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
+                                          .accountId(pcfConfig.getAccountId())
+                                          .appId(GLOBAL_APP_ID)
+                                          .async(false)
+                                          .timeout(TimeUnit.MINUTES.toMillis(2))
+                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                                        .pcfConfig(pcfConfig)
+                                                                        .organization(organization)
+                                                                        .space(space)
+                                                                        .actionType(ActionType.RUNNING_COUNT)
+                                                                        .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                                        .applicationNamePrefix(appPrefix)
+                                                                        .timeoutIntervalInMin(2)
+                                                                        .build(),
                                               encryptionDetails})
                                           .build());
     } catch (InterruptedException e) {

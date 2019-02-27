@@ -128,7 +128,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
     String waitId = generateUuid();
     DelegateTask.Builder delegateTaskBuilder =
-        aDelegateTask().withTaskType(TaskType.BUILD_SOURCE_TASK.name()).withAppId(GLOBAL_APP_ID).withWaitId(waitId);
+        aDelegateTask().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name()).appId(GLOBAL_APP_ID).waitId(waitId);
 
     if (CUSTOM.name().equals(artifactStreamType)) {
       // Defaulting to the 60 secs
@@ -155,13 +155,13 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       if (isNotEmpty(tags)) {
         // To remove if any empty tags in case saved for custom artifact stream
         tags = tags.stream().filter(s -> isNotEmpty(s)).distinct().collect(Collectors.toList());
-        delegateTaskBuilder.withTags(tags);
+        delegateTaskBuilder.tags(tags);
       }
 
-      delegateTaskBuilder.withAccountId(accountId);
-      delegateTaskBuilder.withTags(tags);
-      delegateTaskBuilder.withTimeout(timeout);
-      delegateTaskBuilder.withParameters(new Object[] {buildSourceRequest});
+      delegateTaskBuilder.accountId(accountId);
+      delegateTaskBuilder.tags(tags);
+      delegateTaskBuilder.timeout(timeout);
+      delegateTaskBuilder.parameters(new Object[] {buildSourceRequest});
 
     } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
@@ -196,10 +196,10 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
                                .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
                                .build();
 
-      delegateTaskBuilder.withAccountId(accountId);
-      delegateTaskBuilder.withParameters(new Object[] {buildSourceRequest});
-      delegateTaskBuilder.withTimeout(TimeUnit.MINUTES.toMillis(1));
-      delegateTaskBuilder.withTags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
+      delegateTaskBuilder.accountId(accountId);
+      delegateTaskBuilder.parameters(new Object[] {buildSourceRequest});
+      delegateTaskBuilder.timeout(TimeUnit.MINUTES.toMillis(1));
+      delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
     }
 
     waitNotifyEngine.waitForAll(new BuildSourceCallback(accountId, appId, artifactStream.getUuid(), permitId), waitId);

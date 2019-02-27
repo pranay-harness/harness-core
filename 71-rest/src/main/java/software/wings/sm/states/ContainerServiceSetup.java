@@ -209,15 +209,16 @@ public abstract class ContainerServiceSetup extends State {
 
       String delegateTaskId =
           delegateService.queueTask(aDelegateTask()
-                                        .withAccountId(app.getAccountId())
-                                        .withAppId(app.getUuid())
-                                        .withTaskType(TaskType.COMMAND.name())
-                                        .withWaitId(activity.getUuid())
-                                        .withParameters(new Object[] {command, commandExecutionContext})
-                                        .withEnvId(env.getUuid())
-                                        .withTags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-                                        .withInfrastructureMappingId(infrastructureMapping.getUuid())
-                                        .withTimeout(TimeUnit.HOURS.toMillis(1))
+                                        .async(true)
+                                        .accountId(app.getAccountId())
+                                        .appId(app.getUuid())
+                                        .taskType(TaskType.COMMAND.name())
+                                        .waitId(activity.getUuid())
+                                        .parameters(new Object[] {command, commandExecutionContext})
+                                        .envId(env.getUuid())
+                                        .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+                                        .infrastructureMappingId(infrastructureMapping.getUuid())
+                                        .timeout(TimeUnit.HOURS.toMillis(1))
                                         .build());
 
       return anExecutionResponse()

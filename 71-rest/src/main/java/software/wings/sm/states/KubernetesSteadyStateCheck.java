@@ -113,14 +113,15 @@ public class KubernetesSteadyStateCheck extends State {
               .build();
       DelegateTask delegateTask =
           aDelegateTask()
-              .withAccountId(app.getAccountId())
-              .withAppId(app.getUuid())
-              .withTaskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK.name())
-              .withWaitId(activity.getUuid())
-              .withParameters(new Object[] {kubernetesSteadyStateCheckParams})
-              .withEnvId(env.getUuid())
-              .withTimeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
-              .withInfrastructureMappingId(containerInfraMapping.getUuid())
+              .async(true)
+              .accountId(app.getAccountId())
+              .appId(app.getUuid())
+              .taskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK.name())
+              .waitId(activity.getUuid())
+              .parameters(new Object[] {kubernetesSteadyStateCheckParams})
+              .envId(env.getUuid())
+              .timeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
+              .infrastructureMappingId(containerInfraMapping.getUuid())
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return ExecutionResponse.Builder.anExecutionResponse()

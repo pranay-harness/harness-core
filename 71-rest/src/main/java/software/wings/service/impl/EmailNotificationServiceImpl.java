@@ -113,13 +113,13 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
       EmailRequest request =
           EmailRequest.builder().emailData(emailData).encryptionDetails(encryptionDetails).smtpConfig(config).build();
       DelegateTask delegateTask = aDelegateTask()
-                                      .withTaskType(TaskType.COLLABORATION_PROVIDER_TASK.name())
-                                      .withAccountId(emailData.getAccountId())
-                                      .withAppId(GLOBAL_APP_ID)
-                                      .withWaitId(waitId)
-                                      .withParameters(new Object[] {request})
-                                      .withTimeout(TimeUnit.MINUTES.toMillis(10))
-                                      .withAsync(true)
+                                      .taskType(TaskType.COLLABORATION_PROVIDER_TASK.name())
+                                      .accountId(emailData.getAccountId())
+                                      .appId(GLOBAL_APP_ID)
+                                      .waitId(waitId)
+                                      .parameters(new Object[] {request})
+                                      .timeout(TimeUnit.MINUTES.toMillis(10))
+                                      .async(true)
                                       .build();
       waitNotifyEngine.waitForAll(new EmailNotificationCallBack(), waitId);
       delegateService.queueTask(delegateTask);

@@ -131,15 +131,14 @@ public class AwsLambdaVerification extends State {
   private ExecutionResponse executeTask(String accountId, AwsLambdaRequest request, String appId, String activityId) {
     DelegateTask delegateTask =
         aDelegateTask()
-            .withTaskType(TaskType.AWS_LAMBDA_TASK.name())
-            .withAccountId(accountId)
-            .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
-            .withAsync(true)
-            .withTags(
-                isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-            .withTimeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
-            .withParameters(new Object[] {request})
-            .withWaitId(activityId)
+            .taskType(TaskType.AWS_LAMBDA_TASK.name())
+            .accountId(accountId)
+            .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
+            .async(true)
+            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
+            .parameters(new Object[] {request})
+            .waitId(activityId)
             .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);

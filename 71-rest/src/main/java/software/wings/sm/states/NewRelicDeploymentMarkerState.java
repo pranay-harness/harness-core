@@ -129,13 +129,14 @@ public class NewRelicDeploymentMarkerState extends State {
 
     String delegateTaskId =
         delegateService.queueTask(aDelegateTask()
-                                      .withTaskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER.name())
-                                      .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                      .withWaitId(correlationId)
-                                      .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-                                      .withParameters(new Object[] {dataCollectionInfo})
-                                      .withEnvId(envId)
-                                      .withInfrastructureMappingId(infrastructureMappingId)
+                                      .async(true)
+                                      .taskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER.name())
+                                      .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                      .waitId(correlationId)
+                                      .appId(((ExecutionContextImpl) context).getApp().getAppId())
+                                      .parameters(new Object[] {dataCollectionInfo})
+                                      .envId(envId)
+                                      .infrastructureMappingId(infrastructureMappingId)
                                       .build());
 
     // waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);

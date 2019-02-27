@@ -36,20 +36,20 @@ public class DelegateInvocationHandler implements InvocationHandler {
     delegateArguments[1] = method.getName();
     System.arraycopy(args, 0, delegateArguments, 2, args.length);
     Builder builder = aDelegateTask()
-                          .withTaskType(taskType.name())
-                          .withParameters(delegateArguments)
-                          .withAccountId(syncTaskContext.getAccountId())
-                          .withAppId(syncTaskContext.getAppId())
-                          .withEnvId(syncTaskContext.getEnvId())
-                          .withInfrastructureMappingId(syncTaskContext.getInfrastructureMappingId())
-                          .withAsync(false)
-                          .withTimeout(syncTaskContext.getTimeout())
-                          .withTags(syncTaskContext.getTags())
-                          .withCorrelationId(syncTaskContext.getCorrelationId());
+                          .taskType(taskType.name())
+                          .parameters(delegateArguments)
+                          .accountId(syncTaskContext.getAccountId())
+                          .appId(syncTaskContext.getAppId())
+                          .envId(syncTaskContext.getEnvId())
+                          .infrastructureMappingId(syncTaskContext.getInfrastructureMappingId())
+                          .async(false)
+                          .timeout(syncTaskContext.getTimeout())
+                          .tags(syncTaskContext.getTags())
+                          .correlationId(syncTaskContext.getCorrelationId());
 
     String awsConfigTag = getAwsConfigTags(args);
     if (isNotEmpty(awsConfigTag)) {
-      builder.withTags(singletonList(awsConfigTag));
+      builder.tags(singletonList(awsConfigTag));
     }
     RemoteMethodReturnValueData returnValueData = delegateService.executeTask(builder.build());
     if (returnValueData.getException() != null) {

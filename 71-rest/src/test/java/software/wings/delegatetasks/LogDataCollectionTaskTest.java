@@ -56,14 +56,15 @@ public class LogDataCollectionTaskTest {
     dataCollectionInfo = getDataCollectionInfo(logDefinition, hosts);
 
     DelegateTask task = aDelegateTask()
-                            .withTaskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
-                            .withAccountId(accountId)
-                            .withAppId(appId)
-                            .withWaitId(waitId)
-                            .withParameters(new Object[] {dataCollectionInfo})
-                            .withEnvId(envId)
-                            .withInfrastructureMappingId(infrastructureMappingId)
-                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                            .async(true)
+                            .taskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
+                            .accountId(accountId)
+                            .appId(appId)
+                            .waitId(waitId)
+                            .parameters(new Object[] {dataCollectionInfo})
+                            .envId(envId)
+                            .infrastructureMappingId(infrastructureMappingId)
+                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                             .build();
     dataCollectionTask = new LogDataCollectionTask(delegateId, task, null, null);
     MockitoAnnotations.initMocks(this);

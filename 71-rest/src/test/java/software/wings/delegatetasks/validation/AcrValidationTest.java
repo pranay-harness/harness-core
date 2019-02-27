@@ -34,15 +34,16 @@ public class AcrValidationTest extends WingsBaseTest {
 
   static DelegateTask delegateTask =
       aDelegateTask()
-          .withUuid("id")
-          .withAccountId(ACCOUNT_ID)
-          .withAppId(APP_ID)
-          .withTaskType(TaskType.ACR_GET_BUILDS.name())
-          .withWaitId("")
-          .withParameters(new Object[] {ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
-                                            .withRegistryName(registryName)
-                                            .withRepositoryName(repositoryName)
-                                            .build(),
+          .uuid("id")
+          .async(true)
+          .accountId(ACCOUNT_ID)
+          .appId(APP_ID)
+          .taskType(TaskType.ACR_GET_BUILDS.name())
+          .waitId("")
+          .parameters(new Object[] {ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
+                                        .withRegistryName(registryName)
+                                        .withRepositoryName(repositoryName)
+                                        .build(),
               asList(EncryptedDataDetail.builder().build()), AzureConfig.builder().build()})
           .build();
 

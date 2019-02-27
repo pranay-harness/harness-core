@@ -28,7 +28,7 @@ public class AwsEc2TaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsEc2Task task = (AwsEc2Task) TaskType.AWS_EC2_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

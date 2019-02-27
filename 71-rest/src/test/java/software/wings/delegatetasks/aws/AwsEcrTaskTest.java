@@ -23,7 +23,7 @@ public class AwsEcrTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsEcrTask task = (AwsEcrTask) TaskType.AWS_ECR_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

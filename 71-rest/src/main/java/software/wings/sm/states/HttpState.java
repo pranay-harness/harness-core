@@ -341,13 +341,14 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                                       .socketTimeoutMillis(taskSocketTimeout)
                                                       .build();
     final DelegateTask delegateTask = aDelegateTask()
-                                          .withTaskType(getTaskType().name())
-                                          .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                          .withWaitId(activityId)
-                                          .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-                                          .withParameters(new Object[] {httpTaskParameters})
-                                          .withEnvId(envId)
-                                          .withInfrastructureMappingId(infrastructureMappingId)
+                                          .async(true)
+                                          .taskType(getTaskType().name())
+                                          .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                          .waitId(activityId)
+                                          .appId(((ExecutionContextImpl) context).getApp().getAppId())
+                                          .parameters(new Object[] {httpTaskParameters})
+                                          .envId(envId)
+                                          .infrastructureMappingId(infrastructureMappingId)
                                           .build();
 
     HttpStateExecutionDataBuilder executionDataBuilder =

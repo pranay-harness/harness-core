@@ -183,15 +183,16 @@ public class BambooState extends State {
 
     DelegateTask delegateTask =
         DelegateTask.Builder.aDelegateTask()
-            .withTaskType(getTaskType().name())
-            .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-            .withWaitId(activityId)
-            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-            .withParameters(new Object[] {bambooConfig,
+            .async(true)
+            .taskType(getTaskType().name())
+            .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+            .waitId(activityId)
+            .appId(((ExecutionContextImpl) context).getApp().getAppId())
+            .parameters(new Object[] {bambooConfig,
                 secretManager.getEncryptionDetails(bambooConfig, context.getAppId(), context.getWorkflowExecutionId()),
                 finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
-            .withEnvId(envId)
-            .withInfrastructureMappingId(infrastructureMappingId)
+            .envId(envId)
+            .infrastructureMappingId(infrastructureMappingId)
             .build();
 
     if (getTimeoutMillis() != null) {

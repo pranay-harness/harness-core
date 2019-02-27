@@ -117,12 +117,13 @@ public class WebhookTriggerProcessor {
 
     String waitId = generateUuid();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.TRIGGER_TASK.name())
-                                    .withParameters(new Object[] {triggerDeploymentNeededRequest})
-                                    .withAccountId(accountId)
-                                    .withAppId(trigger.getAppId())
-                                    .withWaitId(waitId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(TRIGGER_TASK_TIMEOUT))
+                                    .async(true)
+                                    .taskType(TaskType.TRIGGER_TASK.name())
+                                    .parameters(new Object[] {triggerDeploymentNeededRequest})
+                                    .accountId(accountId)
+                                    .appId(trigger.getAppId())
+                                    .waitId(waitId)
+                                    .timeout(TimeUnit.MINUTES.toMillis(TRIGGER_TASK_TIMEOUT))
                                     .build();
 
     waitNotifyEngine.waitForAll(

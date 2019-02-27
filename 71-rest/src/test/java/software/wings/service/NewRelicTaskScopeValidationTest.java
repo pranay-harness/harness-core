@@ -87,11 +87,12 @@ public class NewRelicTaskScopeValidationTest {
   private void validate(boolean shouldBeValidated) {
     NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
         DelegateTask.Builder.aDelegateTask()
-            .withParameters(new Object[] {NewRelicConfig.builder()
-                                              .newRelicUrl(newRelicUrl)
-                                              .accountId(generateUuid())
-                                              .apiKey(generateUuid().toCharArray())
-                                              .build(),
+            .async(true)
+            .parameters(new Object[] {NewRelicConfig.builder()
+                                          .newRelicUrl(newRelicUrl)
+                                          .accountId(generateUuid())
+                                          .apiKey(generateUuid().toCharArray())
+                                          .build(),
                 NewRelicDataCollectionInfo.builder()
                     .encryptedDataDetails(
                         Lists.newArrayList(EncryptedDataDetail.builder().encryptionConfig(vaultConfig).build()))

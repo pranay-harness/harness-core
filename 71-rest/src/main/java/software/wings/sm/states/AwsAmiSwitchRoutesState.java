@@ -149,17 +149,17 @@ public class AwsAmiSwitchRoutesState extends State {
 
     DelegateTask delegateTask =
         aDelegateTask()
-            .withAccountId(infrastructureMapping.getAccountId())
-            .withAppId(infrastructureMapping.getAppId())
-            .withWaitId(activity.getUuid())
-            .withTimeout(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()))
-            .withParameters(new Object[] {routesRequest})
-            .withTags(isNotEmpty(routesRequest.getAwsConfig().getTag())
+            .accountId(infrastructureMapping.getAccountId())
+            .appId(infrastructureMapping.getAppId())
+            .waitId(activity.getUuid())
+            .timeout(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()))
+            .parameters(new Object[] {routesRequest})
+            .tags(isNotEmpty(routesRequest.getAwsConfig().getTag())
                     ? singletonList(routesRequest.getAwsConfig().getTag())
                     : null)
-            .withTaskType(AWS_AMI_ASYNC_TASK.name())
-            .withAsync(true)
-            .withEnvId(infrastructureMapping.getEnvId())
+            .taskType(AWS_AMI_ASYNC_TASK.name())
+            .async(true)
+            .envId(infrastructureMapping.getEnvId())
             .build();
     delegateService.queueTask(delegateTask);
 

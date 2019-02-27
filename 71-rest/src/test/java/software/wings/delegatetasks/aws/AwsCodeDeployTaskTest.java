@@ -26,7 +26,7 @@ public class AwsCodeDeployTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsCodeDeployTask task = (AwsCodeDeployTask) TaskType.AWS_CODE_DEPLOY_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

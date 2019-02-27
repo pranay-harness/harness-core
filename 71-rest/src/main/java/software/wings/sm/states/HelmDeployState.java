@@ -238,14 +238,15 @@ public class HelmDeployState extends State {
         repoName, gitConfig, encryptedDataDetails, commandFlags);
 
     delegateService.queueTask(aDelegateTask()
-                                  .withAccountId(app.getAccountId())
-                                  .withAppId(app.getUuid())
-                                  .withTaskType(TaskType.HELM_COMMAND_TASK.name())
-                                  .withWaitId(activity.getUuid())
-                                  .withParameters(new Object[] {commandRequest})
-                                  .withEnvId(env.getUuid())
-                                  .withTimeout(TimeUnit.HOURS.toMillis(1))
-                                  .withInfrastructureMappingId(containerInfraMapping.getUuid())
+                                  .async(true)
+                                  .accountId(app.getAccountId())
+                                  .appId(app.getUuid())
+                                  .taskType(TaskType.HELM_COMMAND_TASK.name())
+                                  .waitId(activity.getUuid())
+                                  .parameters(new Object[] {commandRequest})
+                                  .envId(env.getUuid())
+                                  .timeout(TimeUnit.HOURS.toMillis(1))
+                                  .infrastructureMappingId(containerInfraMapping.getUuid())
                                   .build());
     return ExecutionResponse.Builder.anExecutionResponse()
         .withCorrelationIds(singletonList(activity.getUuid()))
@@ -360,12 +361,12 @@ public class HelmDeployState extends State {
             .build();
 
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.HELM_COMMAND_TASK.name())
-                                    .withParameters(new Object[] {helmReleaseHistoryCommandRequest})
-                                    .withAccountId(accountId)
-                                    .withAppId(appId)
-                                    .withAsync(false)
-                                    .withTimeout(Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS) * 2 * 1000)
+                                    .taskType(TaskType.HELM_COMMAND_TASK.name())
+                                    .parameters(new Object[] {helmReleaseHistoryCommandRequest})
+                                    .accountId(accountId)
+                                    .appId(appId)
+                                    .async(false)
+                                    .timeout(Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS) * 2 * 1000)
                                     .build();
 
     HelmCommandExecutionResponse helmCommandExecutionResponse;

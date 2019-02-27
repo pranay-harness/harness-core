@@ -179,14 +179,15 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
-                                    .withAccountId(accountId)
-                                    .withAppId(context.getAppId())
-                                    .withWaitId(waitId)
-                                    .withParameters(new Object[] {dataCollectionInfo})
-                                    .withEnvId(envId)
-                                    .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
+                                    .async(true)
+                                    .taskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
+                                    .accountId(accountId)
+                                    .appId(context.getAppId())
+                                    .waitId(waitId)
+                                    .parameters(new Object[] {dataCollectionInfo})
+                                    .envId(envId)
+                                    .infrastructureMappingId(infrastructureMappingId)
+                                    .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), data, false), waitId);
     return delegateService.queueTask(delegateTask);

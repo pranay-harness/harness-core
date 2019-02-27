@@ -28,7 +28,7 @@ public class CloudFormationCommandTaskTest extends WingsBaseTest {
   @InjectMocks
   private CloudFormationCommandTask task =
       (CloudFormationCommandTask) TaskType.CLOUD_FORMATION_TASK.getDelegateRunnableTask(
-          "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+          "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

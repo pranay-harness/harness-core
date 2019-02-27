@@ -130,14 +130,15 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.DYNA_TRACE_METRIC_DATA_COLLECTION_TASK.name())
-                                    .withAccountId(appService.get(context.getAppId()).getAccountId())
-                                    .withAppId(context.getAppId())
-                                    .withWaitId(waitId)
-                                    .withParameters(new Object[] {dataCollectionInfo})
-                                    .withEnvId(envId)
-                                    .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
+                                    .async(true)
+                                    .taskType(TaskType.DYNA_TRACE_METRIC_DATA_COLLECTION_TASK.name())
+                                    .accountId(appService.get(context.getAppId()).getAccountId())
+                                    .appId(context.getAppId())
+                                    .waitId(waitId)
+                                    .parameters(new Object[] {dataCollectionInfo})
+                                    .envId(envId)
+                                    .infrastructureMappingId(infrastructureMappingId)
+                                    .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);

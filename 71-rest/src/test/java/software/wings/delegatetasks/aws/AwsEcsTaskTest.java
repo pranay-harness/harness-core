@@ -22,7 +22,7 @@ public class AwsEcsTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsEcsTask task = (AwsEcsTask) TaskType.AWS_ECS_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
+      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

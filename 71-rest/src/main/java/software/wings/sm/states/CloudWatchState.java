@@ -197,17 +197,18 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.CLOUD_WATCH_COLLECT_METRIC_DATA.name())
-                                    .withAccountId(appService.get(context.getAppId()).getAccountId())
-                                    .withAppId(context.getAppId())
-                                    .withWaitId(waitId)
-                                    .withTags(isNotEmpty(dataCollectionInfo.getAwsConfig().getTag())
+                                    .async(true)
+                                    .taskType(TaskType.CLOUD_WATCH_COLLECT_METRIC_DATA.name())
+                                    .accountId(appService.get(context.getAppId()).getAccountId())
+                                    .appId(context.getAppId())
+                                    .waitId(waitId)
+                                    .tags(isNotEmpty(dataCollectionInfo.getAwsConfig().getTag())
                                             ? singletonList(dataCollectionInfo.getAwsConfig().getTag())
                                             : null)
-                                    .withParameters(new Object[] {dataCollectionInfo})
-                                    .withEnvId(envId)
-                                    .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
+                                    .parameters(new Object[] {dataCollectionInfo})
+                                    .envId(envId)
+                                    .infrastructureMappingId(infrastructureMappingId)
+                                    .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);
