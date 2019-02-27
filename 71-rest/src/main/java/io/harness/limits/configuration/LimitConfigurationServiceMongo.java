@@ -78,7 +78,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
     Preconditions.checkArgument(
         AccountType.isValid(accountType), "accountType should be valid. AccountId: " + accountId);
 
-    Limit limit = defaultLimits.get(actionType, accountType);
+    Limit limit = defaultLimits.get(actionType, accountType.toUpperCase());
     if (null == limit) {
       log.error(
           "Default limit is null. Action Type: {}, Account Type: {}. Please configure the same in DefaultLimitsImpl class",

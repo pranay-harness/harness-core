@@ -736,35 +736,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertNotNull(workflowExecution);
   }
 
-  /**
-   * Trigger workflow.
-   *
-   * @param appId the app id
-   * @param env   the env
-   * @return the string
-   * @throws InterruptedException the interrupted exception
-   */
-  public String triggerTemplateWorkflow(String appId, Environment env) throws InterruptedException {
-    Workflow workflow = createExecutableWorkflow(appId, env);
-    ExecutionArgs executionArgs = new ExecutionArgs();
-
-    WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
-    WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
-        appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback, null);
-    callback.await(ofSeconds(15));
-
-    assertThat(execution).isNotNull();
-    String executionId = execution.getUuid();
-    logger.debug("Workflow executionId: {}", executionId);
-    assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, emptySet());
-    assertThat(execution)
-        .isNotNull()
-        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
-        .containsExactly(executionId, ExecutionStatus.SUCCESS);
-    return executionId;
-  }
-
   private Workflow createExecutableWorkflow(String appId, Environment env) {
     Graph graph = aGraph()
                       .addNodes(GraphNode.builder()
