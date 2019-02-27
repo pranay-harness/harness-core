@@ -52,8 +52,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AppContainer;
-import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
@@ -97,6 +95,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -606,7 +605,6 @@ public class AccountServiceImpl implements AccountService {
     if (user == null) {
       logger.info("User is null when requesting for Services info. Returning null");
     }
-
     int offset = Integer.parseInt(request.getOffset());
     if (isNotEmpty(request.getLimit()) && request.getLimit().equals(UNLIMITED_PAGE_SIZE)) {
       request.setLimit(String.valueOf(Integer.MAX_VALUE));
@@ -614,6 +612,7 @@ public class AccountServiceImpl implements AccountService {
     int limit = Integer.parseInt(request.getLimit() != null ? request.getLimit() : "0");
     limit = limit == 0 ? SIZE_PER_SERVICES_REQUEST : limit;
 
+    // fetch the list of apps, services and environments that the user has permissions to.
     Map<String, AppPermissionSummary> userAppPermissions =
         authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
 
@@ -633,49 +632,22 @@ public class AccountServiceImpl implements AccountService {
       allowedEnvs.add(envInfo.getEnvId());
     }
 
-    List<CVEnabledService> cvEnabledServices = new ArrayList<>();
-
-    List<Service> serviceList = new ArrayList<>();
-
-    PageRequest<Service> servicePageRequest =
-        PageRequestBuilder.aPageRequest().withLimit("999").withOffset("0").build();
-    servicePageRequest.addFilter("appId", Operator.IN, userAppPermissions.keySet().toArray());
-    servicePageRequest.addFilter("uuid", Operator.IN, services.toArray());
-    PageResponse<Service> servicePageResponse = wingsPersistence.query(Service.class, servicePageRequest);
-    int previousOffSet = 0;
-    while (!servicePageResponse.isEmpty()) {
-      serviceList.addAll(servicePageResponse.getResponse());
-      previousOffSet += servicePageResponse.size();
-      servicePageRequest.setOffset(String.valueOf(previousOffSet));
-      servicePageResponse = wingsPersistence.query(Service.class, servicePageRequest);
+    // Fetch and build he cvConfigs for the service/env that the user has permissions to, in parallel.
+    final List<CVEnabledService> cvEnabledServices = Collections.synchronizedList(new ArrayList<>());
+    if (serviceId != null) {
+      // in thiscase we want to get the data only for this service.
+      services = Arrays.asList(serviceId);
     }
-
-    List<Environment> envList =
-        wingsPersistence.createQuery(Environment.class).field("appId").in(userAppPermissions.keySet()).asList();
-
-    List<String> envIds = envList.stream().map(Environment::getUuid).collect(Collectors.toList());
-
-    // keep only the environments that actually exist
-    allowedEnvs.retainAll(envIds);
-
-    for (Service service : serviceList) {
-      if (serviceId != null && !serviceId.equals(service.getUuid())) {
-        continue;
-      }
-      Application app = wingsPersistence.get(Application.class, service.getAppId());
-      if (app == null) {
-        continue;
-      }
-
+    services.parallelStream().forEach(service -> {
       List<CVConfiguration> cvConfigurationList = new ArrayList<>();
       PageRequest<CVConfiguration> cvConfigurationPageRequest =
           PageRequestBuilder.aPageRequest().withLimit("999").withOffset("0").build();
-      cvConfigurationPageRequest.addFilter("serviceId", Operator.EQ, service.getUuid());
-      cvConfigurationPageRequest.addFilter("appId", Operator.EQ, service.getAppId());
+      cvConfigurationPageRequest.addFilter("serviceId", Operator.EQ, service);
+      cvConfigurationPageRequest.addFilter("appId", Operator.IN, userAppPermissions.keySet().toArray());
       cvConfigurationPageRequest.addFilter("enabled24x7", Operator.EQ, true);
       cvConfigurationPageRequest.addFilter("envId", Operator.IN, allowedEnvs.toArray());
 
-      previousOffSet = 0;
+      int previousOffSet = 0;
       PageResponse<CVConfiguration> cvConfigurationPageResponse =
           wingsPersistence.query(CVConfiguration.class, cvConfigurationPageRequest);
       while (!cvConfigurationPageResponse.isEmpty()) {
@@ -684,39 +656,43 @@ public class AccountServiceImpl implements AccountService {
         cvConfigurationPageRequest.setOffset(String.valueOf(previousOffSet));
         cvConfigurationPageResponse = wingsPersistence.query(CVConfiguration.class, cvConfigurationPageRequest);
       }
-
       if (isNotEmpty(cvConfigurationList)) {
         for (CVConfiguration cvConfiguration : cvConfigurationList) {
           cvConfigurationService.fillInServiceAndConnectorNames(cvConfiguration);
         }
+        String appId = cvConfigurationList.get(0).getAppId();
+        String appName = cvConfigurationList.get(0).getAppName();
+        String serviceName = cvConfigurationList.get(0).getServiceName();
+
         cvEnabledServices.add(CVEnabledService.builder()
-                                  .service(service)
-                                  .appName(app.getName())
-                                  .appId(app.getUuid())
+                                  .service(Service.builder().uuid(service).name(serviceName).appId(appId).build())
+                                  .appName(appName)
+                                  .appId(appId)
                                   .cvConfig(cvConfigurationList)
                                   .build());
       }
-    }
+    });
 
     // Wrap into a pageResponse and return
     int totalSize = cvEnabledServices.size();
-    if (offset < cvEnabledServices.size()) {
-      int endIndex = Math.min(cvEnabledServices.size(), offset + limit);
-      cvEnabledServices = cvEnabledServices.subList(offset, endIndex);
+    List<CVEnabledService> returnList = cvEnabledServices;
+    if (offset < returnList.size()) {
+      int endIndex = Math.min(returnList.size(), offset + limit);
+      returnList = returnList.subList(offset, endIndex);
     } else {
-      cvEnabledServices = new ArrayList<>();
+      returnList = new ArrayList<>();
     }
 
-    if (isNotEmpty(cvEnabledServices)) {
+    if (isNotEmpty(returnList)) {
       return PageResponseBuilder.aPageResponse()
-          .withResponse(cvEnabledServices)
-          .withOffset(String.valueOf(offset + cvEnabledServices.size()))
+          .withResponse(returnList)
+          .withOffset(String.valueOf(offset + returnList.size()))
           .withTotal(totalSize)
           .build();
     }
     return PageResponseBuilder.aPageResponse()
         .withResponse(new ArrayList<>())
-        .withOffset(String.valueOf(offset + cvEnabledServices.size()))
+        .withOffset(String.valueOf(offset + returnList.size()))
         .withTotal(totalSize)
         .build();
   }
