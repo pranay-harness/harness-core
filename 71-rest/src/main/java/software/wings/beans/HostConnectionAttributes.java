@@ -28,6 +28,7 @@ import javax.validation.constraints.NotNull;
 public class HostConnectionAttributes extends SettingValue implements EncryptableSetting {
   public static final String KEY_KEY = "key";
   public static final String KEY_PASSPHRASE = "passphrase";
+  public static final String KEY_SSH_PASSWORD = "sshPassword";
 
   @Attributes(title = "Connection Type", required = true) @NotNull private ConnectionType connectionType;
   @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;
