@@ -155,6 +155,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
 
     k8sStateHelper.saveK8sElement(context,
         K8sElement.builder()
+            .releaseName(stateExecutionData.getReleaseName())
             .releaseNumber(k8sCanaryDeployResponse.getReleaseNumber())
             .targetInstances(targetInstances)
             .isCanary(true)
