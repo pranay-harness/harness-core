@@ -843,10 +843,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * {@inheritDoc}
    */
   private Workflow createWorkflowInternal(Workflow workflow) {
+    if (workflow.getUuid() == null) {
+      workflow.setUuid(generateUuid());
+    }
+
     validateOrchestrationWorkflow(workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
-    String key = wingsPersistence.save(workflow);
     List<String> linkedTemplateUuids = new ArrayList<>();
     if (orchestrationWorkflow != null) {
       if (StringUtils.isNotEmpty(workflow.getServiceId())
@@ -908,7 +911,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
       stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
       linkedTemplateUuids = workflow.getOrchestrationWorkflow().getLinkedTemplateUuids();
+
+      workflow.setOrchestration(orchestrationWorkflow);
     }
+
+    String key = wingsPersistence.save(workflow);
+
     // create initial version
     entityVersionService.newEntityVersion(
         workflow.getAppId(), WORKFLOW, key, workflow.getName(), EntityVersion.ChangeType.CREATED, workflow.getNotes());
@@ -1090,6 +1098,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
       setUnset(ops, "defaultVersion", workflow.getDefaultVersion());
       linkedTemplateUuids = workflow.getOrchestrationWorkflow().getLinkedTemplateUuids();
+
+      setUnset(ops, "orchestration", workflow.getOrchestrationWorkflow());
     }
 
     wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)

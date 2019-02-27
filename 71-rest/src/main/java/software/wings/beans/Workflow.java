@@ -58,6 +58,8 @@ public class Workflow extends Base {
 
   @Transient private String notes;
 
+  @Getter @Setter private OrchestrationWorkflow orchestration;
+
   @Transient private OrchestrationWorkflow orchestrationWorkflow;
 
   @Transient private List<Service> services = new ArrayList<>();
