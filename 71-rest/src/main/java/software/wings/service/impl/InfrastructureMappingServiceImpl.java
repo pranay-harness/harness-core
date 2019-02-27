@@ -26,7 +26,6 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.REFERENCED_ENTITIES_TO_SHOW;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
@@ -623,11 +622,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(app.getAccountId())
-                                          .withAppId(app.getUuid())
-                                          .withEnvId(infraMapping.getEnvId())
-                                          .withInfrastructureMappingId(infraMapping.getUuid())
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(app.getAccountId())
+                                          .appId(app.getUuid())
+                                          .envId(infraMapping.getEnvId())
+                                          .infrastructureMappingId(infraMapping.getUuid())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
@@ -656,11 +656,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(app.getAccountId())
-                                          .withAppId(app.getUuid())
-                                          .withEnvId(infraMapping.getEnvId())
-                                          .withInfrastructureMappingId(infraMapping.getUuid())
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(app.getAccountId())
+                                          .appId(app.getUuid())
+                                          .envId(infraMapping.getEnvId())
+                                          .infrastructureMappingId(infraMapping.getUuid())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
@@ -713,11 +714,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(app.getAccountId())
-                                          .withAppId(app.getUuid())
-                                          .withEnvId(infraMapping.getEnvId())
-                                          .withInfrastructureMappingId(infraMapping.getUuid())
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(app.getAccountId())
+                                          .appId(app.getUuid())
+                                          .envId(infraMapping.getEnvId())
+                                          .infrastructureMappingId(infraMapping.getUuid())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
@@ -744,11 +746,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(app.getAccountId())
-                                          .withAppId(app.getUuid())
-                                          .withEnvId(infraMapping.getEnvId())
-                                          .withInfrastructureMappingId(infraMapping.getUuid())
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(app.getAccountId())
+                                          .appId(app.getUuid())
+                                          .envId(infraMapping.getEnvId())
+                                          .infrastructureMappingId(infraMapping.getUuid())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
@@ -1540,10 +1543,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute hostConnectionSetting = settingsService.get(validationRequest.getHostConnectionAttrs());
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) hostConnectionSetting.getValue(), null, null);
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(hostConnectionSetting.getAccountId())
-                                          .withAppId(validationRequest.getAppId())
-                                          .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(hostConnectionSetting.getAccountId())
+                                          .appId(validationRequest.getAppId())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
     return delegateProxyFactory.get(HostValidationService.class, syncTaskContext)
         .validateHost(validationRequest.getHostNames(), hostConnectionSetting, encryptionDetails,
@@ -1747,11 +1750,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(app.getAccountId())
-                                          .withAppId(app.getUuid())
-                                          .withEnvId(infrastructureMapping.getEnvId())
-                                          .withInfrastructureMappingId(infraMappingId)
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(app.getAccountId())
+                                          .appId(app.getUuid())
+                                          .envId(infrastructureMapping.getEnvId())
+                                          .infrastructureMappingId(infraMappingId)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)

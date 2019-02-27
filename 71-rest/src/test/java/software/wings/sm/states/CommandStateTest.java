@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -24,7 +23,6 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowParam;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
@@ -35,7 +33,6 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -89,7 +86,6 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -122,13 +118,11 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -294,96 +288,6 @@ public class CommandStateTest extends WingsBaseTest {
     setInternalState(commandState, "secretManager", secretManager);
   }
 
-  /**
-   * Execute.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void execute() {
-    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
-
-    ExecutionResponse executionResponse = commandState.execute(context);
-
-    when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
-    commandState.handleAsyncResponse(
-        context, ImmutableMap.of(ACTIVITY_ID, CommandExecutionResult.builder().status(SUCCESS).build()));
-
-    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
-    verify(serviceResourceService).getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START");
-    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
-
-    verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
-
-    verify(activityService).save(any(Activity.class));
-    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
-    verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
-
-    verify(delegateService)
-        .queueTask(aDelegateTask()
-                       .withAppId(APP_ID)
-                       .withAccountId(ACCOUNT_ID)
-                       .withTaskType(TaskType.COMMAND.name())
-                       .withWaitId(ACTIVITY_ID)
-                       .withTimeout(TimeUnit.MINUTES.toMillis(30))
-                       .withParameters(new Object[] {COMMAND,
-                           aCommandExecutionContext()
-                               .withAppId(APP_ID)
-                               .withBackupPath(BACKUP_PATH)
-                               .withRuntimePath(RUNTIME_PATH)
-                               .withStagingPath(STAGING_PATH)
-                               .withWindowsRuntimePath(WINDOWS_RUNTIME_PATH_TEST)
-                               .withExecutionCredential(null)
-                               .withActivityId(ACTIVITY_ID)
-                               .withEnvId(ENV_ID)
-                               .withHost(HOST)
-                               .withServiceTemplateId(TEMPLATE_ID)
-                               .withHostConnectionAttributes(
-                                   aSettingAttribute()
-                                       .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build())
-                                       .build())
-                               .withHostConnectionCredentials(Collections.emptyList())
-                               .withBastionConnectionAttributes(
-                                   aSettingAttribute()
-                                       .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build())
-                                       .build())
-                               .withBastionConnectionCredentials(Collections.emptyList())
-                               .withServiceVariables(emptyMap())
-                               .withSafeDisplayServiceVariables(emptyMap())
-                               .withDeploymentType("ECS")
-                               .withAccountId(ACCOUNT_ID)
-                               .build()})
-                       .withEnvId(ENV_ID)
-                       .withInfrastructureMappingId(INFRA_MAPPING_ID)
-                       .build());
-
-    verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
-    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
-    verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
-    verify(context, times(5)).getWorkflowExecutionId();
-    verify(context, times(1)).getWorkflowExecutionName();
-    verify(context, times(1)).getWorkflowType();
-    verify(context, times(1)).getStateExecutionInstanceId();
-    verify(context, times(1)).getStateExecutionInstanceName();
-    verify(context, times(1)).getServiceVariables();
-    verify(context, times(1)).getSafeDisplayServiceVariables();
-    verify(context, times(1)).getWorkflowId();
-    verify(context, times(2)).getAppId();
-    verify(context).getStateExecutionData();
-
-    verify(context, times(5)).renderExpression(anyString());
-
-    verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
-    verify(settingsService, times(2)).get(anyString());
-
-    verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
-    verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
-    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "Start");
-    verifyNoMoreInteractions(serviceInstanceService, serviceCommandExecutorService, activityService, settingsService,
-        workflowExecutionService, artifactStreamService);
-  }
-
   @Test
   public void shouldHandleAsyncResponseWithNoResponse() {
     ExecutionResponse executionResponse = commandState.handleAsyncResponse(context, new HashMap<>());
@@ -414,148 +318,6 @@ public class CommandStateTest extends WingsBaseTest {
     verify(activityService, times(2)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
   }
 
-  /**
-   * Execute with artifact.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void executeWithArtifact() throws Exception {
-    Artifact artifact = anArtifact()
-                            .withUuid(ARTIFACT_ID)
-                            .withAppId(APP_ID)
-                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                            .withServiceIds(asList(SERVICE_ID))
-                            .build();
-
-    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().withMetadataOnly(false).build();
-    Command command =
-        aCommand()
-            .addCommandUnits(
-                ScpCommandUnit.Builder.aScpCommandUnit().withFileCategory(ScpFileCategory.ARTIFACTS).build())
-            .build();
-
-    WorkflowStandardParams workflowStandardParams =
-        aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
-    on(workflowStandardParams).set("artifacts", asList(artifact));
-    on(workflowStandardParams).set("appService", appService);
-    when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
-
-    when(context.getArtifactForService(SERVICE_ID)).thenReturn(artifact);
-
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
-    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
-        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
-
-    when(settingsService.get(SETTING_ID))
-        .thenReturn(aSettingAttribute()
-                        .withValue(JenkinsConfig.builder()
-                                       .jenkinsUrl(JENKINS_URL)
-                                       .username(USER_NAME)
-                                       .password(PASSWORD)
-                                       .accountId(ACCOUNT_ID)
-                                       .build())
-                        .build());
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
-    when(artifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
-    when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
-    when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
-    when(serviceCommandExecutorService.execute(command,
-             aCommandExecutionContext()
-                 .withAppId(APP_ID)
-                 .withBackupPath(BACKUP_PATH)
-                 .withRuntimePath(RUNTIME_PATH)
-                 .withStagingPath(STAGING_PATH)
-                 .withExecutionCredential(null)
-                 .withActivityId(ACTIVITY_ID)
-                 .withArtifactStreamAttributes(artifactStreamAttributes)
-                 .withArtifactServerEncryptedDataDetails(new ArrayList<>())
-                 .build()))
-        .thenReturn(SUCCESS);
-
-    ExecutionResponse executionResponse = commandState.execute(context);
-    when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
-    commandState.handleAsyncResponse(
-        context, ImmutableMap.of(ACTIVITY_ID, CommandExecutionResult.builder().status(SUCCESS).build()));
-
-    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
-    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
-
-    verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
-    verify(activityService).save(any(Activity.class));
-    verify(serviceResourceService).getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START");
-    verify(serviceResourceService).getDeploymentType(any(), any(), any());
-
-    verify(delegateService)
-        .queueTask(aDelegateTask()
-                       .withAppId(APP_ID)
-                       .withAccountId(ACCOUNT_ID)
-                       .withTaskType(TaskType.COMMAND.name())
-                       .withWaitId(ACTIVITY_ID)
-                       .withTimeout(TimeUnit.MINUTES.toMillis(30))
-                       .withParameters(new Object[] {command,
-                           aCommandExecutionContext()
-                               .withAppId(APP_ID)
-                               .withBackupPath(BACKUP_PATH)
-                               .withRuntimePath(RUNTIME_PATH)
-                               .withStagingPath(STAGING_PATH)
-                               .withWindowsRuntimePath(WINDOWS_RUNTIME_PATH_TEST)
-                               .withExecutionCredential(null)
-                               .withActivityId(ACTIVITY_ID)
-                               .withEnvId(ENV_ID)
-                               .withArtifactFiles(artifact.getArtifactFiles())
-                               .withMetadata(artifact.getMetadata())
-                               .withHost(HOST)
-                               .withServiceTemplateId(TEMPLATE_ID)
-                               .withServiceVariables(emptyMap())
-                               .withHostConnectionAttributes(
-                                   aSettingAttribute()
-                                       .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build())
-                                       .build())
-                               .withHostConnectionCredentials(Collections.emptyList())
-                               .withBastionConnectionAttributes(
-                                   aSettingAttribute()
-                                       .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build())
-                                       .build())
-                               .withBastionConnectionCredentials(Collections.emptyList())
-                               .withSafeDisplayServiceVariables(emptyMap())
-                               .withDeploymentType("ECS")
-                               .withAccountId(ACCOUNT_ID)
-                               .withArtifactStreamAttributes(artifactStreamAttributes)
-                               .withArtifactServerEncryptedDataDetails(new ArrayList<>())
-                               .build()})
-                       .withEnvId(ENV_ID)
-                       .withInfrastructureMappingId(INFRA_MAPPING_ID)
-                       .build());
-
-    verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
-    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
-    verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
-    verify(context, times(7)).getWorkflowExecutionId();
-    verify(context, times(1)).getWorkflowType();
-    verify(context, times(5)).renderExpression(anyString());
-    verify(context, times(1)).getWorkflowExecutionName();
-    verify(context, times(2)).getStateExecutionInstanceId();
-    verify(context, times(1)).getStateExecutionInstanceName();
-    verify(context, times(1)).getServiceVariables();
-    verify(context, times(1)).getSafeDisplayServiceVariables();
-    verify(context, times(1)).getWorkflowId();
-    verify(context, times(4)).getAppId();
-    verify(context).getStateExecutionData();
-
-    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
-    verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
-    verify(settingsService, times(3)).get(anyString());
-
-    verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
-
-    verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
-    verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
-    verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
-    verifyNoMoreInteractions(serviceResourceService, serviceInstanceService, activityService,
-        serviceCommandExecutorService, settingsService, workflowExecutionService, artifactStreamService);
-  }
   /**
    * Execute with artifact.
    *

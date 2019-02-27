@@ -135,7 +135,7 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
     assertEquals("Name should be same", cvServiceConfiguration.getName(), yaml.getName());
     assertEquals("AccountId should be same", cvServiceConfiguration.getAccountId(), yaml.getAccountId());
     assertEquals("serviceId should be same", serviceName, yaml.getServiceName());
-    assertEquals("EnvId should be same", envName, yaml.getEnvName());
+    assertEquals("envId should be same", envName, yaml.getEnvName());
     assertEquals("TierId should be same", tierName, yaml.getTierName());
     assertEquals("AppD applicationID should be same", appName, yaml.getAppDynamicsApplicationName());
   }

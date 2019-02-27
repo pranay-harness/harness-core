@@ -8,7 +8,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
@@ -65,7 +65,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (kmsConfig == null || value == null) {
       return encryptLocal(value);
     }
-    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
     return (EncryptedData) delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .encrypt(accountId, value, kmsConfig);
   }
@@ -80,11 +84,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     int failedAttempts = 0;
     while (true) {
       try {
-        SyncTaskContext syncTaskContext = aContext()
-                                              .withAccountId(accountId)
-                                              .withTimeout(Duration.ofSeconds(5).toMillis())
-                                              .withAppId(Base.GLOBAL_APP_ID)
-                                              .withCorrelationId(data.getName())
+        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                              .accountId(accountId)
+                                              .timeout(Duration.ofSeconds(5).toMillis())
+                                              .appId(Base.GLOBAL_APP_ID)
+                                              .correlationId(data.getName())
                                               .build();
         return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
             .decrypt(data, kmsConfig);

@@ -1,7 +1,7 @@
 package software.wings.service.impl.prometheus;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.sm.states.AbstractAnalysisState.END_TIME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.HOST_NAME_PLACE_HOLDER;
@@ -115,8 +115,11 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
       url = url.replace(END_TIME_PLACE_HOLDER, String.valueOf(setupTestNodeData.getToTime()));
       url = updateUrlByHostName(url, hostName);
 
-      SyncTaskContext taskContext =
-          aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+      SyncTaskContext taskContext = SyncTaskContext.builder()
+                                        .accountId(settingAttribute.getAccountId())
+                                        .appId(Base.GLOBAL_APP_ID)
+                                        .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                        .build();
       try {
         PrometheusMetricDataResponse response =
             delegateProxyFactory.get(PrometheusDelegateService.class, taskContext)

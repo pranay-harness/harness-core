@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -52,7 +52,10 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
 
   List<String> listClusterNames(
       SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
-    SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(computeProviderSetting.getAccountId())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
     return delegateProxyFactory.get(ContainerService.class, syncTaskContext)
         .listClusters(ContainerServiceParams.builder()
                           .encryptionDetails(encryptedDataDetails)

@@ -1,7 +1,6 @@
 package software.wings.service.impl.stackdriver;
 
 import static io.harness.eraro.ErrorCode.STACKDRIVER_ERROR;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Charsets;
@@ -70,10 +69,10 @@ public class StackDriverServiceImpl implements StackDriverService {
       final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-      SyncTaskContext syncTaskContext = aContext()
-                                            .withAccountId(settingAttribute.getAccountId())
-                                            .withAppId(Base.GLOBAL_APP_ID)
-                                            .withTimeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,

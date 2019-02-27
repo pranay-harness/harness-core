@@ -13,7 +13,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.VerificationConstants.DEMO_APPLICAITON_ID;
 import static software.wings.common.VerificationConstants.DEMO_FAILURE_LOG_STATE_EXECUTION_ID;
 import static software.wings.common.VerificationConstants.DEMO_SUCCESS_LOG_STATE_EXECUTION_ID;
@@ -625,32 +624,41 @@ public class AnalysisServiceImpl implements AnalysisService {
       switch (stateType) {
         case SPLUNKV2:
           errorCode = ErrorCode.SPLUNK_CONFIGURATION_ERROR;
-          SyncTaskContext splunkTaskContext =
-              aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+          SyncTaskContext splunkTaskContext = SyncTaskContext.builder()
+                                                  .accountId(settingAttribute.getAccountId())
+                                                  .appId(Base.GLOBAL_APP_ID)
+                                                  .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                                  .build();
           delegateProxyFactory.get(SplunkDelegateService.class, splunkTaskContext)
               .validateConfig((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails);
           break;
         case ELK:
           errorCode = ErrorCode.ELK_CONFIGURATION_ERROR;
-          SyncTaskContext elkTaskContext = aContext()
-                                               .withAccountId(settingAttribute.getAccountId())
-                                               .withAppId(Base.GLOBAL_APP_ID)
-                                               .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
+          SyncTaskContext elkTaskContext = SyncTaskContext.builder()
+                                               .accountId(settingAttribute.getAccountId())
+                                               .appId(Base.GLOBAL_APP_ID)
+                                               .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
                                                .build();
           delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
               .validateConfig((ElkConfig) settingAttribute.getValue(), encryptedDataDetails);
           break;
         case LOGZ:
           errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
-          SyncTaskContext logzTaskContext =
-              aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+          SyncTaskContext logzTaskContext = SyncTaskContext.builder()
+                                                .accountId(settingAttribute.getAccountId())
+                                                .appId(Base.GLOBAL_APP_ID)
+                                                .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                                .build();
           delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
               .validateConfig((LogzConfig) settingAttribute.getValue(), encryptedDataDetails);
           break;
         case SUMO:
           errorCode = ErrorCode.SUMO_CONFIGURATION_ERROR;
-          SyncTaskContext sumoTaskContext =
-              aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+          SyncTaskContext sumoTaskContext = SyncTaskContext.builder()
+                                                .accountId(settingAttribute.getAccountId())
+                                                .appId(Base.GLOBAL_APP_ID)
+                                                .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                                .build();
           delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
               .validateConfig((SumoConfig) settingAttribute.getValue(), encryptedDataDetails);
           break;
@@ -677,18 +685,29 @@ public class AnalysisServiceImpl implements AnalysisService {
       switch (stateType) {
         case ELK:
           errorCode = ErrorCode.ELK_CONFIGURATION_ERROR;
-          SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+          SyncTaskContext elkTaskContext = SyncTaskContext.builder()
+                                               .accountId(accountId)
+                                               .appId(Base.GLOBAL_APP_ID)
+                                               .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                               .build();
           return delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
               .getLogSample((ElkConfig) settingAttribute.getValue(), index, true, encryptedDataDetails);
         case LOGZ:
           errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
-          SyncTaskContext logzTaskContext =
-              aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+          SyncTaskContext logzTaskContext = SyncTaskContext.builder()
+                                                .accountId(settingAttribute.getAccountId())
+                                                .appId(Base.GLOBAL_APP_ID)
+                                                .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                                .build();
           return delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
               .getLogSample((LogzConfig) settingAttribute.getValue(), encryptedDataDetails);
         case SUMO:
           errorCode = ErrorCode.SUMO_CONFIGURATION_ERROR;
-          SyncTaskContext sumoTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+          SyncTaskContext sumoTaskContext = SyncTaskContext.builder()
+                                                .accountId(accountId)
+                                                .appId(Base.GLOBAL_APP_ID)
+                                                .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                                .build();
           return delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
               .getLogSample((SumoConfig) settingAttribute.getValue(), index, encryptedDataDetails, duration);
         default:
@@ -728,7 +747,11 @@ public class AnalysisServiceImpl implements AnalysisService {
       switch (stateType) {
         case ELK:
           errorCode = ErrorCode.ELK_CONFIGURATION_ERROR;
-          SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+          SyncTaskContext elkTaskContext = SyncTaskContext.builder()
+                                               .accountId(accountId)
+                                               .appId(Base.GLOBAL_APP_ID)
+                                               .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                               .build();
           searchResponse =
               delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
                   .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequest,
@@ -736,8 +759,11 @@ public class AnalysisServiceImpl implements AnalysisService {
           break;
         case LOGZ:
           errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
-          SyncTaskContext logzTaskContext =
-              aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+          SyncTaskContext logzTaskContext = SyncTaskContext.builder()
+                                                .accountId(settingAttribute.getAccountId())
+                                                .appId(Base.GLOBAL_APP_ID)
+                                                .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                                .build();
           searchResponse = delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
                                .search((LogzConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequest,
                                    createApiCallLog(accountId, Base.GLOBAL_APP_ID, null));

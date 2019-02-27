@@ -10,7 +10,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.utils.Misc.replaceDotWithUnicode;
@@ -392,13 +391,13 @@ public abstract class AbstractAnalysisState extends State {
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId());
     String accountId = this.appService.get(context.getAppId()).getAccountId();
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(accountId)
-                                          .withAppId(context.getAppId())
-                                          .withEnvId(containerInfrastructureMapping.getEnvId())
-                                          .withInfrastructureMappingId(containerInfrastructureMapping.getUuid())
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(context.getAppId())
+                                          .envId(containerInfrastructureMapping.getEnvId())
+                                          .infrastructureMappingId(containerInfrastructureMapping.getUuid())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
                                           .build();
-    syncTaskContext.setTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 2);
     List<software.wings.cloudprovider.ContainerInfo> containerInfos =
         delegateProxyFactory.get(ContainerService.class, syncTaskContext)
             .fetchContainerInfos(ContainerServiceParams.builder()

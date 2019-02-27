@@ -125,7 +125,7 @@ public class NewRelicCVConfigurationYamlHandlerTest {
     assertEquals("Name should be same", cvServiceConfiguration.getName(), yaml.getName());
     assertEquals("AccountId should be same", cvServiceConfiguration.getAccountId(), yaml.getAccountId());
     assertEquals("ServiceName should be same", serviceName, yaml.getServiceName());
-    assertEquals("EnvId should be same", envName, yaml.getEnvName());
+    assertEquals("envId should be same", envName, yaml.getEnvName());
     assertEquals("NewRelic applicationID should be same", appName, yaml.getNewRelicApplicationName());
   }
 

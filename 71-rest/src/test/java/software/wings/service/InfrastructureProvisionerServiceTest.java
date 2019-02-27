@@ -120,8 +120,8 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //    Workflow workflow = workflowGenerator.ensureWorkflow(seed, null,
   //        aWorkflow()
   //            .name("basic")
-  //            .withAppId(infrastructureMapping.getAppId())
-  //            .withEnvId(infrastructureMapping.getEnvId())
+  //            .appId(infrastructureMapping.getAppId())
+  //            .envId(infrastructureMapping.getEnvId())
   //            .withWorkflowType(WorkflowType.ORCHESTRATION)
   //            .serviceId(infrastructureMapping.getServiceId())
   //            .infraMappingId(infrastructureMapping.getUuid())

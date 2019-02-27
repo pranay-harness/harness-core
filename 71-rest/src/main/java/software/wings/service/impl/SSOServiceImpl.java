@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -210,7 +210,11 @@ public class SSOServiceImpl implements SSOService {
     ldapSettings.encryptFields(secretManager);
     EncryptedDataDetail encryptedDataDetail = ldapSettings.getEncryptedDataDetails(secretManager);
     try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(accountId)
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
       return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
           .validateLdapConnectionSettings(ldapSettings, encryptedDataDetail);
     } finally {
@@ -227,7 +231,11 @@ public class SSOServiceImpl implements SSOService {
     ldapSettings.encryptFields(secretManager);
     EncryptedDataDetail encryptedDataDetail = ldapSettings.getEncryptedDataDetails(secretManager);
     try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(accountId)
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
       return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
           .validateLdapUserSettings(ldapSettings, encryptedDataDetail);
     } finally {
@@ -244,7 +252,11 @@ public class SSOServiceImpl implements SSOService {
     ldapSettings.encryptFields(secretManager);
     EncryptedDataDetail encryptedDataDetail = ldapSettings.getEncryptedDataDetails(secretManager);
     try {
-      SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(accountId)
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
       return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
           .validateLdapGroupSettings(ldapSettings, encryptedDataDetail);
     } finally {
@@ -264,8 +276,11 @@ public class SSOServiceImpl implements SSOService {
             .encryptedDataDetails(ldapSettings.getAccountId(), LdapConstants.USER_PASSWORD_KEY, encryptedPassword)
             .get();
     try {
-      SyncTaskContext syncTaskContext =
-          aContext().withAccountId(ldapSettings.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(ldapSettings.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
       return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
           .authenticate(ldapSettings, settingsEncryptedDataDetail, identifier, passwordEncryptedDataDetail);
     } finally {
@@ -280,8 +295,11 @@ public class SSOServiceImpl implements SSOService {
       throw new InvalidRequestException("Invalid Ldap Settings ID.");
     }
     EncryptedDataDetail encryptedDataDetail = ldapSettings.getEncryptedDataDetails(secretManager);
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(ldapSettings.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(ldapSettings.getAccountId())
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
     return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
         .searchGroupsByName(ldapSettings, encryptedDataDetail, nameQuery);
   }

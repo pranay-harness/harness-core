@@ -290,7 +290,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //
   //    NotificationGroup notificationGroup = createAndAssertNotificationGroup(appId);
   //    NotificationRule notificationRule =
-  //    aNotificationRule().withAppId(appId).addNotificationGroup(notificationGroup).build(); NotificationRule created =
+  //    aNotificationRule().appId(appId).addNotificationGroup(notificationGroup).build(); NotificationRule created =
   //    notificationSetupService.createNotificationRule(notificationRule);
   //    assertThat(created).isNotNull().isEqualToComparingOnlyGivenFields(notificationRule, "appId",
   //    "notificationGroups").hasFieldOrPropertyWithValue("active", true); return created;

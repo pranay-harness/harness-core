@@ -1,7 +1,6 @@
 package software.wings.service.impl.dynatrace;
 
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.inject.Inject;
@@ -43,10 +42,10 @@ public class DynaTraceServiceImpl implements DynaTraceService {
       final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-      SyncTaskContext syncTaskContext = aContext()
-                                            .withAccountId(settingAttribute.getAccountId())
-                                            .withAppId(Base.GLOBAL_APP_ID)
-                                            .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       List<DynaTraceMetricDataResponse> response =
           delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext)

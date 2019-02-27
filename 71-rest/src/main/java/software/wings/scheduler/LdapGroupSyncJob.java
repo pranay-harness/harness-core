@@ -2,7 +2,7 @@ package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import com.google.common.collect.Lists;
@@ -206,8 +206,11 @@ public class LdapGroupSyncJob implements Job {
 
   private LdapGroupResponse fetchGroupDetails(
       LdapSettings ldapSettings, EncryptedDataDetail encryptedDataDetail, UserGroup userGroup) {
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(ldapSettings.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(ldapSettings.getAccountId())
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
 
     LdapGroupResponse groupResponse = delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
                                           .fetchGroupByDn(ldapSettings, encryptedDataDetail, userGroup.getSsoGroupId());

@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
@@ -185,10 +184,10 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-      SyncTaskContext syncTaskContext = aContext()
-                                            .withAccountId(settingAttribute.getAccountId())
-                                            .withAppId(Base.GLOBAL_APP_ID)
-                                            .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(Base.GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(CloudWatchDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((AwsConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,

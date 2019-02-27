@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
 import static java.lang.String.format;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -68,10 +67,10 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
       object.setDecrypted(true);
       return;
     }
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(object.getAccountId())
-                                          .withAppId(Base.GLOBAL_APP_ID)
-                                          .withTimeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(object.getAccountId())
+                                          .appId(Base.GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                           .build();
     try {
       EncryptableSetting decrypted =
