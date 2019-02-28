@@ -169,6 +169,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       final LogAnalysisExecutionData executionData =
           LogAnalysisExecutionData.builder()
+              .appId(analysisContext.getAppId())
               .stateExecutionInstanceId(analysisContext.getStateExecutionId())
               .serverConfigId(getAnalysisServerConfigId())
               .query(getRenderedQuery())
