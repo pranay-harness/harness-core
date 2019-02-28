@@ -24,6 +24,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
+@Deprecated
 @Singleton
 public class EcsServiceDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private Injector injector;
