@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -20,10 +21,12 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
 import static software.wings.sm.states.ContainerServiceSetup.FIXED_INSTANCES;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
@@ -228,6 +231,10 @@ public class EcsStateHelper {
 
   public ActivityBuilder getActivityBuilder(String appName, String appId, String commandName, Type type,
       ExecutionContext executionContext, String commandType, CommandUnitType commandUnitType, Environment environment) {
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
+
     return Activity.builder()
         .applicationName(appName)
         .appId(appId)
@@ -245,7 +252,11 @@ public class EcsStateHelper {
         .commandUnitType(commandUnitType)
         .environmentId(environment.getUuid())
         .environmentName(environment.getName())
-        .environmentType(environment.getEnvironmentType());
+        .environmentType(environment.getEnvironmentType())
+        .triggeredBy(TriggeredBy.builder()
+                         .email(workflowStandardParams.getCurrentUser().getEmail())
+                         .name(workflowStandardParams.getCurrentUser().getName())
+                         .build());
   }
 
   public ExecutionResponse queueDelegateTaskForEcsListenerUpdate(Application app, AwsConfig awsConfig,

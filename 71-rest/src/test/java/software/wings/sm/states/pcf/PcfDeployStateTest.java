@@ -38,6 +38,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
@@ -131,6 +132,9 @@ public class PcfDeployStateTest extends WingsBaseTest {
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(pcfDeployState, "secretManager", secretManager);
     setInternalState(pcfDeployState, "pcfStateHelper", new PcfStateHelper());
+
+    EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
+    workflowStandardParams.setCurrentUser(currentUser);
 
     context = new ExecutionContextImpl(stateExecutionInstance);
 

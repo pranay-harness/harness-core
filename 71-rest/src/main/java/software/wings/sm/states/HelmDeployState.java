@@ -15,11 +15,13 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
 import static software.wings.sm.StateType.HELM_DEPLOY;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
@@ -463,6 +465,9 @@ public class HelmDeployState extends State {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
 
     ActivityBuilder activityBuilder = Activity.builder()
                                           .applicationName(app.getName())
@@ -478,7 +483,11 @@ public class HelmDeployState extends State {
                                           .workflowId(executionContext.getWorkflowId())
                                           .commandUnits(Collections.emptyList())
                                           .status(ExecutionStatus.RUNNING)
-                                          .commandUnitType(CommandUnitType.HELM);
+                                          .commandUnitType(CommandUnitType.HELM)
+                                          .triggeredBy(TriggeredBy.builder()
+                                                           .email(workflowStandardParams.getCurrentUser().getEmail())
+                                                           .name(workflowStandardParams.getCurrentUser().getName())
+                                                           .build());
 
     if (executionContext.getOrchestrationWorkflowType() != null
         && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {

@@ -45,6 +45,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.expression.VariableResolverTracker;
 import org.junit.Before;
@@ -181,6 +182,9 @@ public class PcfSetupStateTest extends WingsBaseTest {
             .build();
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "Setup Service Cluster"))
         .thenReturn(serviceCommand);
+
+    EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
+    workflowStandardParams.setCurrentUser(currentUser);
 
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);

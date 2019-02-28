@@ -43,6 +43,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.Lists;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
@@ -184,6 +185,9 @@ public class HelmDeployStateTest extends WingsBaseTest {
   public void setup() throws InterruptedException {
     context = new ExecutionContextImpl(stateExecutionInstance);
     helmDeployState.setHelmReleaseNamePrefix(HELM_RELEASE_NAME_PREFIX);
+
+    EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
+    workflowStandardParams.setCurrentUser(currentUser);
 
     when(appService.get(APP_ID)).thenReturn(app);
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);

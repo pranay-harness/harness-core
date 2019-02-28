@@ -160,6 +160,10 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
         break;
     }
     downloadArtifactCommandUnit.setScriptType(ScriptType.POWERSHELL);
+    executeDownloadCommandUnit(context);
+  }
+
+  private void executeDownloadCommandUnit(ShellCommandExecutionContext context) {
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
     when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
         .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
@@ -187,14 +191,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
         break;
     }
     downloadArtifactCommandUnit.setScriptType(ScriptType.BASH);
-    downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
-    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
-        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
-    when(awsHelperService.getBucketRegion(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString()))
-        .thenReturn("us-west-1");
-    when(executor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
-    CommandExecutionStatus status = downloadArtifactCommandUnit.executeInternal(context);
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
+    executeDownloadCommandUnit(context);
   }
 
   @Test

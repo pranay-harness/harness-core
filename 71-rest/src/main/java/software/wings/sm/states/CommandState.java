@@ -39,14 +39,12 @@ import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EntityType;
-import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -77,6 +75,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -116,6 +115,7 @@ public class CommandState extends State {
   public static final String STAGING_PATH = "STAGING_PATH";
 
   @Inject @Transient @SchemaIgnore private transient ExecutorService executorService;
+  @Inject @Transient private transient ActivityHelperService activityHelperService;
   @Inject @Transient private transient ActivityService activityService;
   @Inject @Transient private transient AppService appService;
   @Inject @Transient private transient ArtifactService artifactService;
@@ -192,7 +192,6 @@ public class CommandState extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String envId = workflowStandardParams.getEnvId();
-    Environment environment = environmentService.get(appId, envId, false);
 
     InstanceElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
 
@@ -271,30 +270,8 @@ public class CommandState extends State {
 
       DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
 
-      ActivityBuilder activityBuilder =
-          Activity.builder()
-              .applicationName(application.getName())
-              .environmentId(environment.getUuid())
-              .environmentName(environment.getName())
-              .environmentType(environment.getEnvironmentType())
-              .serviceTemplateId(serviceTemplateId)
-              .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
-              .serviceId(service.getUuid())
-              .serviceName(service.getName())
-              .commandName(command.getName())
-              .type(Type.Command)
-              .serviceInstanceId(serviceInstance.getUuid())
-              .workflowExecutionId(context.getWorkflowExecutionId())
-              .workflowType(context.getWorkflowType())
-              .workflowId(context.getWorkflowId())
-              .workflowExecutionName(context.getWorkflowExecutionName())
-              .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-              .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-              .commandType(command.getCommandUnitType().name())
-              .hostName(host.getHostName())
-              .publicDns(host.getPublicDns())
-              .commandUnits(getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId))
-              .status(ExecutionStatus.RUNNING);
+      List<CommandUnit> flattenCommandUnits =
+          getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId);
 
       String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH);
       String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH);
@@ -346,8 +323,8 @@ public class CommandState extends State {
         logger.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
             context.getStateExecutionInstanceId());
         commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
-        ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
         // Observed NPE in alerts
+        ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
         if (artifactStream == null) {
           throw new WingsException(format("Unable to find artifact stream for service %s, artifact %s",
                                        service.getName(), artifact.getArtifactSourceName()),
@@ -380,19 +357,15 @@ public class CommandState extends State {
         artifactStreamAttributes.setArtifactType(service.getArtifactType());
         commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
 
-        activityBuilder.artifactStreamId(artifactStream.getUuid())
-            .artifactStreamName(artifactStream.getSourceName())
-            .artifactName(artifact.getDisplayName())
-            .artifactId(artifact.getUuid());
         commandExecutionContextBuilder.withArtifactFiles(artifact.getArtifactFiles());
         executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
       } else if (command.isArtifactNeeded()) {
         throw new WingsException(
             format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
       }
-      Activity act = activityBuilder.build();
-      act.setAppId(application.getUuid());
-      Activity activity = activityService.save(act);
+
+      Activity activity = activityHelperService.createAndSaveActivity(
+          context, Type.Command, command.getName(), command.getCommandUnitType().name(), flattenCommandUnits, artifact);
       activityId = activity.getUuid();
 
       executionDataBuilder.withActivityId(activityId);
@@ -549,7 +522,7 @@ public class CommandState extends State {
 
   private void handleCommandException(ExecutionContext context, String activityId, String appId) {
     if (activityId != null) {
-      activityService.updateStatus(activityId, appId, ExecutionStatus.FAILED);
+      activityHelperService.updateStatus(activityId, appId, ExecutionStatus.FAILED);
     }
   }
 
@@ -581,7 +554,7 @@ public class CommandState extends State {
       handleCommandException(context, activityId, appId);
     }
 
-    activityService.updateStatus(activityId, appId,
+    activityHelperService.updateStatus(activityId, appId,
         commandExecutionResult.getStatus().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
 
     ExecutionStatus executionStatus =

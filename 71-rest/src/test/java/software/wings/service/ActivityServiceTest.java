@@ -37,6 +37,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -102,6 +103,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .workflowId(WORKFLOW_ID)
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
                             .commandUnits(Collections.emptyList())
+                            .triggeredBy(TriggeredBy.builder().name("test").email("email@test.com").build())
                             .build();
     activity.setAppId(APP_ID);
     wingsPersistence.save(activity);
@@ -139,6 +141,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .workflowId(WORKFLOW_ID)
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
                             .commandUnits(Collections.emptyList())
+                            .triggeredBy(TriggeredBy.builder().name("test").email("email@test.com").build())
                             .build();
     activity.setAppId(APP_ID);
     wingsPersistence.save(activity);
@@ -175,6 +178,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
                             .commandUnits(Collections.emptyList())
                             .commandUnits(Collections.emptyList())
+                            .triggeredBy(TriggeredBy.builder().name("test").email("email@test.com").build())
                             .build();
     activity.setAppId(APP_ID);
     activityService.save(activity);
@@ -225,6 +229,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .commandName(COMMAND_NAME)
                             .commandType(CommandUnitType.COMMAND.name())
                             .commandUnits(commandUnitList)
+                            .triggeredBy(TriggeredBy.builder().name("test").email("email@test.com").build())
                             .build();
     activity.setAppId(APP_ID);
 
@@ -265,6 +270,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .workflowId(WORKFLOW_ID)
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
                             .commandUnits(Collections.emptyList())
+                            .triggeredBy(TriggeredBy.builder().name("test").email("email@test.com").build())
                             .build();
     activity.setAppId(APP_ID);
     wingsPersistence.save(activity);
@@ -301,6 +307,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .workflowId(WORKFLOW_ID)
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
                             .commandUnits(Collections.emptyList())
+                            .triggeredBy(TriggeredBy.builder().name("test").email("email@test.com").build())
                             .build();
     activity.setAppId(APP_ID);
     activity.setEnvironmentType(PROD);
@@ -338,6 +345,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .workflowId(WORKFLOW_ID)
                             .commandUnits(Collections.emptyList())
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
+                            .triggeredBy(TriggeredBy.builder().name("test").email("email@test.com").build())
                             .build();
     activity.setAppId(APP_ID);
     activity.setUuid(ACTIVITY_ID);

@@ -14,6 +14,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.event.model.EventConstants.ENVIRONMENT_ID;
 import static io.harness.event.model.EventConstants.ENVIRONMENT_NAME;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -31,11 +32,13 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.states.ApprovalState.ApprovalStateType.USER_GROUP;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
@@ -197,6 +200,9 @@ public class ApprovalState extends State {
   private String createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
 
     ActivityBuilder activityBuilder =
         Activity.builder()
@@ -212,7 +218,11 @@ public class ApprovalState extends State {
             .workflowId(executionContext.getWorkflowId())
             .commandUnits(
                 asList(Builder.aCommand().withName(SCRIPT_APPROVAL_COMMAND).withCommandType(CommandType.OTHER).build()))
-            .status(RUNNING);
+            .status(RUNNING)
+            .triggeredBy(TriggeredBy.builder()
+                             .email(workflowStandardParams.getCurrentUser().getEmail())
+                             .name(workflowStandardParams.getCurrentUser().getName())
+                             .build());
 
     if (executionContext.getOrchestrationWorkflowType() != null
         && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {

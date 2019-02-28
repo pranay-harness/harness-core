@@ -1,14 +1,11 @@
 package software.wings.sm.states;
 
-import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -41,20 +38,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.HttpStateExecutionData.HttpStateExecutionDataBuilder;
-import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
-import software.wings.beans.Activity;
-import software.wings.beans.Activity.ActivityBuilder;
-import software.wings.beans.Application;
+import software.wings.beans.Activity.Type;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.Environment;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SweepingOutput;
 import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
 import software.wings.common.Constants;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.service.intfc.ActivityService;
+import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -104,7 +97,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
   @SchemaIgnore private int socketTimeoutMillis = 10000;
 
-  @Inject private transient ActivityService activityService;
+  @Inject private transient ActivityHelperService activityHelperService;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject protected transient ManagerDecryptionService managerDecryptionService;
   @Inject protected transient SecretManager secretManager;
@@ -476,44 +469,9 @@ public class HttpState extends State implements SweepingOutputStateMixin {
    * @return the string
    */
   protected String createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
-    InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
-
-    ActivityBuilder activityBuilder = Activity.builder()
-                                          .applicationName(app.getName())
-                                          .commandName(getName())
-                                          .type(Activity.Type.Verification)
-                                          .workflowType(executionContext.getWorkflowType())
-                                          .workflowExecutionName(executionContext.getWorkflowExecutionName())
-                                          .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-                                          .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-                                          .commandType(getStateType())
-                                          .workflowExecutionId(executionContext.getWorkflowExecutionId())
-                                          .workflowId(executionContext.getWorkflowId())
-                                          .commandUnits(Collections.emptyList())
-                                          .status(ExecutionStatus.RUNNING);
-
-    if (executionContext.getOrchestrationWorkflowType() != null
-        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
-      activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
-    } else {
-      activityBuilder.environmentId(env.getUuid())
-          .environmentName(env.getName())
-          .environmentType(env.getEnvironmentType());
-    }
-    if (instanceElement != null && instanceElement.getServiceTemplateElement() != null) {
-      activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
-          .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
-          .serviceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
-          .serviceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
-          .serviceInstanceId(instanceElement.getUuid())
-          .hostName(instanceElement.getHost().getHostName());
-    }
-
-    Activity activity = activityBuilder.build();
-    activity.setAppId(app.getUuid());
-    return activityService.save(activity).getUuid();
+    return activityHelperService
+        .createAndSaveActivity(executionContext, Type.Verification, getName(), getStateType(), Collections.emptyList())
+        .getUuid();
   }
 
   /**
@@ -524,7 +482,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
    * @param status     the status
    */
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
-    activityService.updateStatus(activityId, appId, status);
+    activityHelperService.updateStatus(activityId, appId, status);
   }
 
   protected String urlEncodeString(String queryString) {

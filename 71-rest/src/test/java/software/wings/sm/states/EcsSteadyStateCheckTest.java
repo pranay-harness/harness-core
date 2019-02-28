@@ -13,6 +13,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
@@ -32,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.regions.Regions;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.junit.Test;
@@ -80,6 +82,9 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     PhaseElement mockPhaseElement = mock(PhaseElement.class);
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
+    EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
+    mockParams.setCurrentUser(currentUser);
+    when(mockParams.getCurrentUser()).thenReturn(currentUser);
     doReturn(mockPhaseElement).when(mockContext).getContextElement(any(), anyString());
     doReturn(mockParams).when(mockContext).getContextElement(eq(STANDARD));
     doReturn(null).when(mockContext).getContextElement(eq(INSTANCE));

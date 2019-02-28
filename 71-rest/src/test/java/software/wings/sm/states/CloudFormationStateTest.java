@@ -50,7 +50,10 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
+import io.harness.context.ContextElementType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -141,6 +144,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private AccountService accountService;
   @Inject @InjectMocks private TemplateExpressionProcessor templateExpressionProcessor;
+  @Mock private ExecutionContextImpl executionContext;
 
   @InjectMocks
   private CloudFormationCreateStackState cloudFormationCreateStackState = new CloudFormationCreateStackState("name");
@@ -250,12 +254,16 @@ public class CloudFormationStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("infrastructureMappingService", infrastructureMappingService);
     on(workflowStandardParams).set("serviceResourceService", serviceResourceService);
 
+    workflowStandardParams.setCurrentUser(EmbeddedUser.builder().name("test").email("test@harness.io").build());
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+
     when(artifactService.get(any(), any())).thenReturn(artifact);
     when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(anAwsInfrastructureMapping().build());
 
-    Activity activity = Activity.builder().build();
+    Activity activity =
+        Activity.builder().triggeredBy(TriggeredBy.builder().name("test").email("test@harness.io").build()).build();
     activity.setUuid(ACTIVITY_ID);
     when(activityService.save(any(Activity.class))).thenReturn(activity);
 

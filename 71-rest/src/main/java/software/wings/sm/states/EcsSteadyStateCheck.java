@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -11,11 +12,13 @@ import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_STEADY_STATE_CHECK;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.ExceptionUtils;
@@ -189,6 +192,10 @@ public class EcsSteadyStateCheck extends State {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
+
     ActivityBuilder activityBuilder = Activity.builder()
                                           .applicationName(app.getName())
                                           .appId(app.getUuid())
@@ -203,7 +210,12 @@ public class EcsSteadyStateCheck extends State {
                                           .workflowId(executionContext.getWorkflowId())
                                           .commandUnits(Collections.emptyList())
                                           .status(ExecutionStatus.RUNNING)
-                                          .commandUnitType(CommandUnitType.ECS_STEADY_STATE_CHECK);
+                                          .commandUnitType(CommandUnitType.ECS_STEADY_STATE_CHECK)
+                                          .triggeredBy(TriggeredBy.builder()
+                                                           .email(workflowStandardParams.getCurrentUser().getEmail())
+                                                           .name(workflowStandardParams.getCurrentUser().getName())
+                                                           .build());
+
     if (executionContext.getOrchestrationWorkflowType() != null
         && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
