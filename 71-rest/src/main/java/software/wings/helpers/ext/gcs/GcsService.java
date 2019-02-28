@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.gcs;
 
 import software.wings.beans.GcpConfig;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 
@@ -45,17 +46,7 @@ public interface GcsService {
    * @return
    */
   List<BuildDetails> getArtifactsBuildDetails(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      String bucketName, String artifactPath, boolean isExpression, boolean versioningEnabledForBucket);
-
-  /**
-   * Get the artifact related information
-   *
-   * @param gcpConfig     GCS cloud provider config
-   * @param bucketName bucket name
-   * @return
-   */
-  List<BuildDetails> getArtifactsBuildDetails(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      String bucketName, List<String> artifactPaths, boolean isExpression);
+      String bucketName, String artifactPath, boolean isExpression, boolean versioningEnabledForBucket, int limit);
 
   /**
    * Gets the artifact related information
@@ -67,4 +58,14 @@ public interface GcsService {
    */
   BuildDetails getArtifactBuildDetails(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, String objName, boolean versioningEnabledForBucket);
+
+  /**
+   * Get the artifact related information
+   *
+   * @param gcpConfig     GCS cloud provider config
+   * @param artifactStreamAttributes ArtifactStreamAttributes
+   * @return
+   */
+  List<BuildDetails> getArtifactsBuildDetails(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactStreamAttributes artifactStreamAttributes, List<String> artifactPaths, boolean isExpression, int limit);
 }

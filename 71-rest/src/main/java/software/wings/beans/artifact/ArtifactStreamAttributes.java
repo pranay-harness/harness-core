@@ -350,6 +350,7 @@ public class ArtifactStreamAttributes {
     private String customScriptTimeout;
     private String accountId;
     private String customArtifactStreamScript;
+    private String lastCollectedAt;
     private String artifactRoot;
     private String buildNoPath;
     private Map<String, String> artifactAttributes;

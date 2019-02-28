@@ -182,6 +182,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
     ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
+    if (GCS.name().equals(artifactStreamType)) {
+      limit = (limit != -1) ? limit : 100;
+    }
 
     return getBuildDetails(appId, limit, settingAttribute, settingValue, encryptedDataDetails, artifactStreamType,
         artifactStreamAttributes);
@@ -190,12 +193,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   protected List<BuildDetails> getBuildDetails(String appId, int limit, SettingAttribute settingAttribute,
       SettingValue settingValue, List<EncryptedDataDetail> encryptedDataDetails, String artifactStreamType,
       ArtifactStreamAttributes artifactStreamAttributes) {
-    if (limit != -1 && ARTIFACTORY.name().equals(artifactStreamType)) {
-      // TODO: The limit supported only for Artifactory for now
-      return getBuildService(settingAttribute, appId)
+    if (limit != -1 && (ARTIFACTORY.name().equals(artifactStreamType) || GCS.name().equals(artifactStreamType))) {
+      return getBuildService(settingAttribute, appId, artifactStreamType)
           .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails, limit);
-    } else if (AMAZON_S3.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)
-        || GCS.name().equals(artifactStreamType)) {
+    } else if (AMAZON_S3.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)) {
       return getBuildService(settingAttribute, appId, artifactStreamType)
           .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
     } else {

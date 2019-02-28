@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -52,7 +53,8 @@ public class GcsBuildServiceTest extends WingsBaseTest {
   public void shouldGetBuilds() {
     List<BuildDetails> buildDetails = Lists.newArrayList(
         Builder.aBuildDetails().withNumber("10").withRevision("10").withArtifactPath("artifact1").build());
-    when(gcsService.getArtifactsBuildDetails(any(), any(), any(), any(), anyBoolean())).thenReturn(buildDetails);
+    when(gcsService.getArtifactsBuildDetails(any(), any(), any(), any(), anyBoolean(), eq(100)))
+        .thenReturn(buildDetails);
     List<BuildDetails> builds =
         gcsBuildService.getBuilds(APP_ID, gcsArtifactStream.fetchArtifactStreamAttributes(), gcpConfig, null);
     assertThat(builds).hasSize(1).extracting(BuildDetails::getNumber).containsExactly("10");
