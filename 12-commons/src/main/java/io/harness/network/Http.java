@@ -6,17 +6,13 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import com.google.common.base.Splitter;
 
-import okhttp3.Authenticator;
 import okhttp3.ConnectionPool;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.Route;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.http.HttpHost;
-import org.apache.http.client.fluent.Content;
-import org.apache.http.client.fluent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,10 +104,6 @@ public class Http {
     return connection;
   }
 
-  private static boolean isProxyConfigured() {
-    return isNotEmpty(getProxyHostName());
-  }
-
   public static SSLContext getSslContext() {
     try {
       sc = SSLContext.getInstance("SSL");
@@ -138,7 +130,7 @@ public class Http {
     }
   }
 
-  public static TrustManager[] getTrustManagers() {
+  private static TrustManager[] getTrustManagers() {
     return new TrustManager[] {new SslTrustManager()};
   }
 
@@ -149,11 +141,12 @@ public class Http {
   public static synchronized OkHttpClient getUnsafeOkHttpClient(
       String url, long connectTimeOutSeconds, long readTimeOutSeconds) {
     try {
-      OkHttpClient.Builder builder = getOkHttpClientBuilder()
-                                         .sslSocketFactory(Http.getSslContext().getSocketFactory())
-                                         .hostnameVerifier((s, sslSession) -> true)
-                                         .connectTimeout(connectTimeOutSeconds, TimeUnit.SECONDS)
-                                         .readTimeout(readTimeOutSeconds, TimeUnit.SECONDS);
+      OkHttpClient.Builder builder =
+          getOkHttpClientBuilder()
+              .sslSocketFactory(getSslContext().getSocketFactory(), (X509TrustManager) getTrustManagers()[0])
+              .hostnameVerifier((s, sslSession) -> true)
+              .connectTimeout(connectTimeOutSeconds, TimeUnit.SECONDS)
+              .readTimeout(readTimeOutSeconds, TimeUnit.SECONDS);
 
       Proxy proxy = checkAndGetNonProxyIfApplicable(url);
       if (proxy != null) {
@@ -309,42 +302,29 @@ public class Http {
     if (isNotEmpty(user)) {
       logger.info("###Using proxy Auth");
       String password = getProxyPassword();
-      builder.proxyAuthenticator(new Authenticator() {
-        public Request authenticate(Route route, Response response) throws IOException {
-          String credential = Credentials.basic(user, password);
-          return response.request().newBuilder().header("Proxy-Authorization", credential).build();
-        }
+      builder.proxyAuthenticator((route, response) -> {
+        String credential = Credentials.basic(user, password);
+        return response.request().newBuilder().header("Proxy-Authorization", credential).build();
       });
     }
 
     return builder;
   }
 
-  public static String getProxyUserName() {
-    String user = null;
-    if ("http".equals(getProxyScheme().toLowerCase())) {
-      user = System.getProperty("http.proxyUser");
-    } else {
-      user = System.getProperty("https.proxyUser");
-    }
-    if (isNotEmpty(user)) {
-      return user;
-    }
+  private static String getProxyPrefix() {
+    return "http" + ("http".equalsIgnoreCase(getProxyScheme()) ? "" : "s") + ".";
+  }
 
-    return user;
+  public static String getProxyUserName() {
+    return System.getProperty(getProxyPrefix() + "proxyUser");
   }
 
   // Need to add url encoding here
   public static String getProxyPassword() {
-    String password = null;
     if (isNotEmpty(getProxyUserName())) {
-      if ("http".equals(getProxyScheme().toLowerCase())) {
-        password = System.getProperty("http.proxyPassword");
-      } else {
-        password = System.getProperty("https.proxyPassword");
-      }
+      return System.getProperty(getProxyPrefix() + "proxyPassword");
     }
-    return password;
+    return null;
   }
 
   public static String getProxyScheme() {
@@ -358,56 +338,28 @@ public class Http {
 
   // Need to add url encoding here
   public static String getProxyHostName() {
-    String proxyHost = null;
-    if ("http".equalsIgnoreCase(getProxyScheme())) {
-      proxyHost = System.getProperty("http.proxyHost");
-    } else { // https by default
-      proxyHost = System.getProperty("https.proxyHost");
-    }
-
-    return proxyHost;
+    return System.getProperty(getProxyPrefix() + "proxyHost");
   }
 
   // Need to add url encoding here
   public static String getProxyPort() {
-    String proxyPort = null;
-    if ("http".equalsIgnoreCase(getProxyScheme())) {
-      proxyPort = System.getProperty("http.proxyPort");
-    } else { // https by default
-      proxyPort = System.getProperty("https.proxyPort");
-    }
-
-    return proxyPort;
+    return System.getProperty(getProxyPrefix() + "proxyPort");
   }
 
-  public static String getResponseStringFromUrl(
-      String url, HttpHost httpProxyHost, int socketTimeout, int connectTimeout) throws IOException {
-    return getResponseContentFromUrl(url, httpProxyHost, socketTimeout, connectTimeout).asString();
+  public static String getResponseStringFromUrl(String url, int connectTimeoutSeconds, int readTimeoutSeconds)
+      throws IOException {
+    return getResponseFromUrl(url, connectTimeoutSeconds, readTimeoutSeconds).body().string();
   }
 
-  public static InputStream getResponseStreamFromUrl(
-      String url, HttpHost httpProxyHost, int socketTimeout, int connectTimeout) throws IOException {
-    return getResponseContentFromUrl(url, httpProxyHost, socketTimeout, connectTimeout).asStream();
+  public static InputStream getResponseStreamFromUrl(String url, int connectTimeoutSeconds, int readTimeoutSeconds)
+      throws IOException {
+    return getResponseFromUrl(url, connectTimeoutSeconds, readTimeoutSeconds).body().byteStream();
   }
 
-  private static Content getResponseContentFromUrl(
-      String url, HttpHost httpProxyHost, int socketTimeout, int connectTimeout) throws IOException {
-    Executor executor = Executor.newInstance();
-    org.apache.http.client.fluent.Request request =
-        org.apache.http.client.fluent.Request.Get(url).connectTimeout(connectTimeout).socketTimeout(socketTimeout);
-
-    if (httpProxyHost != null) {
-      if (!Http.shouldUseNonProxy(url)) {
-        logger.info("using proxy");
-        request.viaProxy(httpProxyHost);
-        // Add Auth if proxy auth is defined using System vars
-        if (isNotEmpty(getProxyUserName())) {
-          executor.auth(httpProxyHost, Http.getProxyUserName(), Http.getProxyPassword());
-        }
-      }
-    }
-
-    org.apache.http.client.fluent.Response response = executor.execute(request);
-    return response.returnContent();
+  private static Response getResponseFromUrl(String url, int connectTimeoutSeconds, int readTimeoutSeconds)
+      throws IOException {
+    return getUnsafeOkHttpClient(url, connectTimeoutSeconds, readTimeoutSeconds)
+        .newCall(new Request.Builder().url(url).build())
+        .execute();
   }
 }

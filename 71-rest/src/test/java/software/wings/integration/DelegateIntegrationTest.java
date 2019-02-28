@@ -5,11 +5,8 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import org.apache.http.client.fluent.Executor;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import io.harness.network.Http;
+import org.apache.commons.io.FileUtils;
 import org.awaitility.Duration;
 import org.hamcrest.CoreMatchers;
 import org.json.JSONException;
@@ -22,210 +19,190 @@ import software.wings.beans.Delegate;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
+import java.io.InputStream;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 /**
  * Created by anubhaw on 6/21/17.
  */
 public class DelegateIntegrationTest extends BaseIntegrationTest {
-  private Executor httpRequestExecutor;
-
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    initializeRequestExecutor();
   }
 
-  private void initializeRequestExecutor() {
-    try {
-      TrustManager[] trustAllCerts =
-          new TrustManager[] {new X509TrustManager(){public X509Certificate[] getAcceptedIssuers(){return null;
+  @Test
+  @Ignore
+  public void shouldDownloadDelegateZipWithWatcher()
+      throws IOException, JSONException, TimeoutException, InterruptedException {
+    String url = "https://localhost:9090/api/delegates/downloadUrl?accountId=" + accountId;
+    String responseString = Http.getUnsafeOkHttpClient(url)
+                                .newCall(new okhttp3.Request.Builder()
+                                             .addHeader("Authorization", "Bearer " + userToken)
+                                             .addHeader("accept", "application/json")
+                                             .build())
+                                .execute()
+                                .body()
+                                .string();
+    JSONObject jsonResponseObject = new JSONObject(responseString);
+
+    String zipDownloadUrl = jsonResponseObject.getJSONObject("resource").getString("downloadUrl");
+    assertThat(zipDownloadUrl).isNotEmpty();
+
+    assertThat(new ProcessExecutor()
+                   .command("rm", "-rf", "harness-delegate", "delegate.tar.gz")
+                   .readOutput(true)
+                   .execute()
+                   .getExitValue())
+        .isEqualTo(0);
+
+    try (InputStream stream = Http.getResponseStreamFromUrl(zipDownloadUrl, 600, 600)) {
+      FileUtils.copyInputStreamToFile(stream, new File("delegate.tar.gz"));
     }
 
-    public void checkClientTrusted(X509Certificate[] certs, String authType) {}
+    assertThat(
+        new ProcessExecutor().command("tar", "-xzf", "delegate.tar.gz").readOutput(true).execute().getExitValue())
+        .isEqualTo(0);
 
-    public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+    List<String> scripts = new ProcessExecutor()
+                               .command("ls", "harness-delegate")
+                               .readOutput(true)
+                               .execute()
+                               .getOutput()
+                               .getLines()
+                               .stream()
+                               .map(String::trim)
+                               .collect(toList());
+    assertThat(scripts).hasSize(5).containsOnly("README.txt", "start.sh", "stop.sh", "delegate.sh", "proxy.config");
   }
-};
 
-SSLContext sc = SSLContext.getInstance("SSL");
-sc.init(null, trustAllCerts, new SecureRandom());
-CloseableHttpClient httpClient =
-    HttpClients.custom().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).setSslcontext(sc).build();
-httpRequestExecutor = Executor.newInstance(httpClient);
-}
-catch (Exception e) {
-  logger.error("", e);
-}
-}
+  @Test
+  @Ignore
+  public void shouldRunDelegate() throws IOException, JSONException, TimeoutException, InterruptedException {
+    String url = "https://localhost:9090/api/delegates/downloadUrl?accountId=" + accountId;
+    String responseString = Http.getUnsafeOkHttpClient(url)
+                                .newCall(new okhttp3.Request.Builder()
+                                             .addHeader("Authorization", "Bearer " + userToken)
+                                             .addHeader("accept", "application/json")
+                                             .build())
+                                .execute()
+                                .body()
+                                .string();
 
-@Test
-@Ignore
-public void shouldDownloadDelegateZipWithWatcher()
-    throws IOException, JSONException, TimeoutException, InterruptedException {
-  String responseString =
-      httpRequestExecutor
-          .execute(Request.Get("https://localhost:9090/api/delegates/downloadUrl?accountId=" + accountId)
-                       .addHeader("Authorization", "Bearer " + userToken)
-                       .addHeader("accept", "application/json"))
-          .returnContent()
-          .asString();
-  JSONObject jsonResponseObject = new JSONObject(responseString);
+    new ProcessExecutor().command("rm", "-rf", "harness-delegate", "delegate.tar.gz").readOutput(true).execute();
+    String zipDownloadUrl = new JSONObject(responseString).getJSONObject("resource").getString("downloadUrl");
+    try (InputStream stream = Http.getResponseStreamFromUrl(zipDownloadUrl, 600, 600)) {
+      FileUtils.copyInputStreamToFile(stream, new File("delegate.tar.gz"));
+    }
+    new ProcessExecutor()
+        .command("/bin/sh", "-c",
+            "tar -xzf delegate.tar.gz && cd harness-delegate && sed -i'' 's/doUpgrade: true/doUpgrade: false/' start.sh")
+        .readOutput(true)
+        .execute()
+        .getOutput()
+        .getLines()
+        .forEach(logger::info);
 
-  String zipDownloadUrl = jsonResponseObject.getJSONObject("resource").getString("downloadUrl");
-  assertThat(zipDownloadUrl).isNotEmpty();
+    assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
+        .hasSize(0); // no delegate registered
 
-  assertThat(new ProcessExecutor()
-                 .command("rm", "-rf", "harness-delegate", "delegate.tar.gz")
-                 .readOutput(true)
-                 .execute()
-                 .getExitValue())
-      .isEqualTo(0);
+    int commandStatus = new ProcessExecutor()
+                            .command("/bin/sh", "-c", "cd harness-delegate && ./start.sh")
+                            .readOutput(true)
+                            .execute()
+                            .getExitValue();
+    assertThat(commandStatus).isEqualTo(0);
 
-  httpRequestExecutor.execute(Request.Get(zipDownloadUrl)).saveContent(new File("delegate.tar.gz"));
-  assertThat(new ProcessExecutor().command("tar", "-xzf", "delegate.tar.gz").readOutput(true).execute().getExitValue())
-      .isEqualTo(0);
+    waitForDelegateToRegisterWithTimeout();
 
-  List<String> scripts = new ProcessExecutor()
-                             .command("ls", "harness-delegate")
-                             .readOutput(true)
-                             .execute()
-                             .getOutput()
-                             .getLines()
-                             .stream()
-                             .map(String::trim)
-                             .collect(toList());
-  assertThat(scripts).hasSize(5).containsOnly("README.txt", "start.sh", "stop.sh", "delegate.sh", "proxy.config");
-}
+    // shutdown running delegate
+    new ProcessExecutor()
+        .command("/bin/sh", "-c", "cd harness-delegate && ./stop.sh")
+        .readOutput(true)
+        .execute()
+        .getOutput()
+        .getLines()
+        .forEach(logger::info);
+    waitForDelegateToDeregisterWithTimeout();
+    assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
+        .hasSize(0); // no delegate registered
 
-@Test
-@Ignore
-public void shouldRunDelegate() throws IOException, JSONException, TimeoutException, InterruptedException {
-  String responseString =
-      httpRequestExecutor
-          .execute(Request.Get("https://localhost:9090/api/delegates/downloadUrl?accountId=" + accountId)
-                       .addHeader("Authorization", "Bearer " + userToken)
-                       .addHeader("accept", "application/json"))
-          .returnContent()
-          .asString();
+    /* Delegate upgrade.
+      1. Clean delegate collection
+      2. Download hardcoded test jar with version 1.0.553
+      3. Enable auto upgrade
+      4. Delete delegate.jar and config-delegate.yml
+      4. Let delegate register and upgrade to a different version
+     */
 
-  new ProcessExecutor().command("rm", "-rf", "harness-delegate", "delegate.tar.gz").readOutput(true).execute();
-  String zipDownloadUrl = new JSONObject(responseString).getJSONObject("resource").getString("downloadUrl");
-  httpRequestExecutor.execute(Request.Get(zipDownloadUrl)).saveContent(new File("delegate.tar.gz"));
-  new ProcessExecutor()
-      .command("/bin/sh", "-c",
-          "tar -xzf delegate.tar.gz && cd harness-delegate && sed -i'' 's/doUpgrade: true/doUpgrade: false/' start.sh")
-      .readOutput(true)
-      .execute()
-      .getOutput()
-      .getLines()
-      .forEach(logger::info);
+    deleteAllDocuments(asList(Delegate.class));
 
-  assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
-      .hasSize(0); // no delegate registered
+    new ProcessExecutor()
+        .command("/bin/sh", "-c",
+            "cd harness-delegate && rm delegate.jar config-delegate.yml && sed -i'' 's|REMOTE_DELEGATE_URL=.*|REMOTE_DELEGATE_URL=https://ci.harness.io/storage/wingsdelegates/latest/delegate.jar|' start.sh && sed -i'' 's|doUpgrade: false|doUpgrade: true|' start.sh")
+        .readOutput(true)
+        .execute()
+        .getOutput()
+        .getLines()
+        .forEach(logger::info);
 
-  int commandStatus = new ProcessExecutor()
-                          .command("/bin/sh", "-c", "cd harness-delegate && ./start.sh")
-                          .readOutput(true)
-                          .execute()
-                          .getExitValue();
-  assertThat(commandStatus).isEqualTo(0);
+    commandStatus = new ProcessExecutor()
+                        .command("/bin/sh", "-c", "cd harness-delegate && ./start.sh")
+                        .readOutput(true)
+                        .execute()
+                        .getExitValue();
+    assertThat(commandStatus).isEqualTo(0);
 
-  waitForDelegateToRegisterWithTimeout();
+    waitForDelegateUpgradeWithTimeout();
 
-  // shutdown running delegate
-  new ProcessExecutor()
-      .command("/bin/sh", "-c", "cd harness-delegate && ./stop.sh")
-      .readOutput(true)
-      .execute()
-      .getOutput()
-      .getLines()
-      .forEach(logger::info);
-  waitForDelegateToDeregisterWithTimeout();
-  assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
-      .hasSize(0); // no delegate registered
+    new ProcessExecutor()
+        .command("/bin/sh", "-c", "cd harness-delegate && ./stop.sh")
+        .readOutput(true)
+        .execute()
+        .getOutput()
+        .getLines()
+        .forEach(logger::info);
+    waitForDelegateToDeregisterWithTimeout();
+    assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
+        .hasSize(0); // no delegate registered
+  }
 
-  /* Delegate upgrade.
-    1. Clean delegate collection
-    2. Download hardcoded test jar with version 1.0.553
-    3. Enable auto upgrade
-    4. Delete delegate.jar and config-delegate.yml
-    4. Let delegate register and upgrade to a different version
-   */
+  private void waitForDelegateUpgradeWithTimeout() {
+    String testBaseVersion = "1.0.555";
+    Set<String> registeredDelegateVersions = new LinkedHashSet<>();
 
-  deleteAllDocuments(asList(Delegate.class));
+    await().with().pollInterval(Duration.ONE_SECOND).timeout(5, TimeUnit.MINUTES).until(() -> {
+      List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).asList();
+      logger.info("Delegate found " + delegates.size());
+      delegates.forEach(delegate -> {
+        logger.info("Delegate version " + delegate.getVersion());
+        registeredDelegateVersions.add(delegate.getVersion());
+      });
+      return registeredDelegateVersions.size() == 2;
+    }, CoreMatchers.is(true));
 
-  new ProcessExecutor()
-      .command("/bin/sh", "-c",
-          "cd harness-delegate && rm delegate.jar config-delegate.yml && sed -i'' 's|REMOTE_DELEGATE_URL=.*|REMOTE_DELEGATE_URL=https://ci.harness.io/storage/wingsdelegates/latest/delegate.jar|' start.sh && sed -i'' 's|doUpgrade: false|doUpgrade: true|' start.sh")
-      .readOutput(true)
-      .execute()
-      .getOutput()
-      .getLines()
-      .forEach(logger::info);
+    assertThat(registeredDelegateVersions).hasSize(2); // TODO: make it more robust
+  }
 
-  commandStatus = new ProcessExecutor()
-                      .command("/bin/sh", "-c", "cd harness-delegate && ./start.sh")
-                      .readOutput(true)
-                      .execute()
-                      .getExitValue();
-  assertThat(commandStatus).isEqualTo(0);
+  private void waitForDelegateToDeregisterWithTimeout() {
+    await().with().pollInterval(Duration.ONE_SECOND).timeout(1, TimeUnit.MINUTES).until(() -> {
+      List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).asList();
+      boolean isDelegateDisConnected = delegates.stream().noneMatch(Delegate::isConnected);
+      logger.info("isDelegateDisconnected = {}", isDelegateDisConnected);
+      return isDelegateDisConnected;
+    }, CoreMatchers.is(true));
+  }
 
-  waitForDelegateUpgradeWithTimeout();
-
-  new ProcessExecutor()
-      .command("/bin/sh", "-c", "cd harness-delegate && ./stop.sh")
-      .readOutput(true)
-      .execute()
-      .getOutput()
-      .getLines()
-      .forEach(logger::info);
-  waitForDelegateToDeregisterWithTimeout();
-  assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
-      .hasSize(0); // no delegate registered
-}
-
-private void waitForDelegateUpgradeWithTimeout() {
-  String testBaseVersion = "1.0.555";
-  Set<String> registeredDelegateVersions = new LinkedHashSet<>();
-
-  await().with().pollInterval(Duration.ONE_SECOND).timeout(5, TimeUnit.MINUTES).until(() -> {
-    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).asList();
-    logger.info("Delegate found " + delegates.size());
-    delegates.forEach(delegate -> {
-      logger.info("Delegate version " + delegate.getVersion());
-      registeredDelegateVersions.add(delegate.getVersion());
-    });
-    return registeredDelegateVersions.size() == 2;
-  }, CoreMatchers.is(true));
-
-  assertThat(registeredDelegateVersions).hasSize(2); // TODO: make it more robust
-}
-
-private void waitForDelegateToDeregisterWithTimeout() {
-  await().with().pollInterval(Duration.ONE_SECOND).timeout(1, TimeUnit.MINUTES).until(() -> {
-    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).asList();
-    boolean isDelegateDisConnected = delegates.stream().noneMatch(Delegate::isConnected);
-    logger.info("isDelegateDisconnected = {}", isDelegateDisConnected);
-    return isDelegateDisConnected;
-  }, CoreMatchers.is(true));
-}
-
-private void waitForDelegateToRegisterWithTimeout() {
-  await().with().pollInterval(Duration.ONE_SECOND).timeout(5, TimeUnit.MINUTES).until(() -> {
-    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).asList();
-    boolean connected = delegates.stream().anyMatch(Delegate::isConnected);
-    logger.info("isDelegateConnected = {}", connected);
-    return connected;
-  }, CoreMatchers.is(true));
-}
+  private void waitForDelegateToRegisterWithTimeout() {
+    await().with().pollInterval(Duration.ONE_SECOND).timeout(5, TimeUnit.MINUTES).until(() -> {
+      List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).asList();
+      boolean connected = delegates.stream().anyMatch(Delegate::isConnected);
+      logger.info("isDelegateConnected = {}", connected);
+      return connected;
+    }, CoreMatchers.is(true));
+  }
 }

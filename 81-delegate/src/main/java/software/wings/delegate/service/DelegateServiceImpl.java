@@ -1022,16 +1022,12 @@ public class DelegateServiceImpl implements DelegateService {
   private String findExpectedWatcherVersion() {
     try {
       // TODO - if multiVersion, get versions from manager endpoint
-      String watcherMetadata = getResponseFromUrl(delegateConfiguration.getWatcherCheckLocation());
+      String watcherMetadata = Http.getResponseStringFromUrl(delegateConfiguration.getWatcherCheckLocation(), 10, 10);
       return substringBefore(watcherMetadata, " ").trim();
     } catch (IOException e) {
       logger.warn("Unable to fetch watcher version information", e);
       return null;
     }
-  }
-
-  private String getResponseFromUrl(String url) throws IOException {
-    return Http.getResponseStringFromUrl(url, httpProxyHost, 10000, 10000);
   }
 
   private boolean doRestartDelegate() {

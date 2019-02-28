@@ -60,15 +60,6 @@ fi
 echo "Enter a comma separated list of suffixes for which proxy is not required. Do not use leading wildcards. (.company.com,specifichost) (optional):"
 read no_proxy
 
-echo "Ignore certificate errors? (not recommended) (y/N):"
-read -n1 ans
-
-if [[ $ans == "y" || $ans == "Y" ]]; then
-  ignore_cert_err="true"
-else
-  ignore_cert_err="false"
-fi
-
 echo
 echo PROXY_HOST=$host > proxy.config
 echo PROXY_PORT=$port >> proxy.config
@@ -76,7 +67,6 @@ echo PROXY_SCHEME=$scheme >> proxy.config
 echo PROXY_USER=$user >> proxy.config
 echo PROXY_PASSWORD_ENC=$password_enc >> proxy.config
 echo NO_PROXY=$no_proxy >> proxy.config
-echo IGNORE_CERTIFICATE_ERRORS=$ignore_cert_err >> proxy.config
 
 echo
 echo "Proxy configured - proxy.config generated:"
