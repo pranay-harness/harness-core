@@ -63,12 +63,13 @@ public class Pipeline extends Base {
   private transient boolean hasBuildWorkflow;
   private transient List<String> infraMappingIds = new ArrayList<>();
   @SchemaIgnore @Indexed private List<String> keywords;
+  @Indexed private String accountId;
 
   @Builder
   public Pipeline(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, String name, String description, List<PipelineStage> pipelineStages,
       Map<String, Long> stateEtaMap, List<Service> services, List<WorkflowExecution> workflowExecutions,
-      List<FailureStrategy> failureStrategies) {
+      List<FailureStrategy> failureStrategies, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -77,11 +78,13 @@ public class Pipeline extends Base {
     this.services = services;
     this.workflowExecutions = workflowExecutions;
     this.failureStrategies = (failureStrategies == null) ? new ArrayList<>() : failureStrategies;
+    this.accountId = accountId;
   }
 
   public Pipeline cloneInternal() {
     return Pipeline.builder()
         .appId(appId)
+        .accountId(accountId)
         .name(name)
         .description(description)
         .pipelineStages(pipelineStages)

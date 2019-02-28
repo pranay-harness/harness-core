@@ -76,6 +76,7 @@ public class Workflow extends Base {
   @Indexed private List<String> linkedTemplateUuids = new ArrayList<>();
 
   @Getter @Setter private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
+  @Indexed private String accountId;
 
   public List<String> getLinkedTemplateUuids() {
     return linkedTemplateUuids;
@@ -224,6 +225,14 @@ public class Workflow extends Base {
     this.templateExpressions = templateExpressions;
   }
 
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
   public boolean checkEnvironmentTemplatized() {
     if (templateExpressions == null) {
       return false;
@@ -239,6 +248,7 @@ public class Workflow extends Base {
   public Workflow cloneInternal() {
     return aWorkflow()
         .withAppId(getAppId())
+        .withAccountId(getAccountId())
         .withEnvId(getEnvId())
         .withWorkflowType(getWorkflowType())
         .withName(getName())
@@ -279,6 +289,7 @@ public class Workflow extends Base {
     private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
     private String uuid;
     private String appId;
+    private String accountId;
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
@@ -344,6 +355,11 @@ public class Workflow extends Base {
 
     public WorkflowBuilder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    public WorkflowBuilder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -415,6 +431,7 @@ public class Workflow extends Base {
       workflow.setWorkflowExecutions(workflowExecutions);
       workflow.setUuid(uuid);
       workflow.setAppId(appId);
+      workflow.setAccountId(accountId);
       workflow.setCreatedBy(createdBy);
       workflow.setCreatedAt(createdAt);
       workflow.setLastUpdatedBy(lastUpdatedBy);
