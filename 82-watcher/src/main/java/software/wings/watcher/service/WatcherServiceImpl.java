@@ -333,7 +333,7 @@ public class WatcherServiceImpl implements WatcherService {
       if (isEmpty(runningDelegates)) {
         if (!multiVersion) {
           if (working.compareAndSet(false, true)) {
-            startDelegateProcess(".", emptyList(), "DelegateStartScript", getProcessId());
+            startDelegateProcess(null, ".", emptyList(), "DelegateStartScript", getProcessId());
           }
         }
       } else {
@@ -360,9 +360,7 @@ public class WatcherServiceImpl implements WatcherService {
               continue;
             }
             if (delegateData.isEmpty()) {
-              if (clock.millis() - startTime > WATCHER_STARTUP_GRACE) {
-                obsolete.add(delegateProcess);
-              }
+              obsolete.add(delegateProcess);
             } else if (delegateData.containsKey(DELEGATE_SELF_DESTRUCT)
                 && (Boolean) delegateData.get(DELEGATE_SELF_DESTRUCT)) {
               selfDestruct();
@@ -482,7 +480,7 @@ public class WatcherServiceImpl implements WatcherService {
           } else if (working.compareAndSet(false, true)) {
             logger.warn(
                 "Delegate processes {} need restart. Starting new process and draining old", drainingRestartNeededList);
-            startDelegateProcess(".", drainingRestartNeededList, "DelegateRestartScript", getProcessId());
+            startDelegateProcess(null, ".", drainingRestartNeededList, "DelegateRestartScript", getProcessId());
           }
         }
         if (!multiVersion && isNotEmpty(upgradeNeededList)) {
@@ -490,7 +488,7 @@ public class WatcherServiceImpl implements WatcherService {
             logger.info("Delegate processes {} ready for upgrade. Sending confirmation", upgradeNeededList);
             upgradeNeededList.forEach(
                 delegateProcess -> messageService.writeMessageToChannel(DELEGATE, delegateProcess, UPGRADING_DELEGATE));
-            startDelegateProcess(".", upgradeNeededList, "DelegateUpgradeScript", getProcessId());
+            startDelegateProcess(null, ".", upgradeNeededList, "DelegateUpgradeScript", getProcessId());
           }
         }
       }
@@ -509,7 +507,7 @@ public class WatcherServiceImpl implements WatcherService {
             try {
               downloadRunScripts(version);
               downloadDelegateJar(version);
-              startDelegateProcess(version, emptyList(), "DelegateStartScriptVersioned", getProcessId());
+              startDelegateProcess(version, version, emptyList(), "DelegateStartScriptVersioned", getProcessId());
               break;
             } catch (Exception e) {
               logger.error(format("Error downloading or starting delegate version %s", version), e);
@@ -647,8 +645,8 @@ public class WatcherServiceImpl implements WatcherService {
     messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_STOP_ACQUIRING);
   }
 
-  private void startDelegateProcess(
-      String versionFolder, List<String> oldDelegateProcesses, String scriptName, String watcherProcess) {
+  private void startDelegateProcess(String version, String versionFolder, List<String> oldDelegateProcesses,
+      String scriptName, String watcherProcess) {
     if (!new File(versionFolder + "/delegate.sh").exists()) {
       working.set(false);
       return;
@@ -673,6 +671,9 @@ public class WatcherServiceImpl implements WatcherService {
             logger.info("Got process ID from new delegate: {}", newDelegateProcess);
             Map<String, Object> delegateData = new HashMap<>();
             delegateData.put(DELEGATE_IS_NEW, true);
+            if (version != null) {
+              delegateData.put(DELEGATE_VERSION, version);
+            }
             delegateData.put(DELEGATE_HEARTBEAT, clock.millis());
             messageService.putAllData(DELEGATE_DASH + newDelegateProcess, delegateData);
             synchronized (runningDelegates) {
