@@ -5,7 +5,7 @@ import static io.harness.SeedData.seedNames;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.generator.AccountGenerator.Accounts.GENERIC_TEST;
+import static io.harness.generator.AccountGenerator.Accounts;
 import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.util.Arrays.asList;
@@ -193,26 +193,31 @@ public class DataGenService {
     templateGalleryService.copyHarnessTemplates();
 
     final Seed seed = new Seed(0);
-    Owners owners = ownerManager.create();
 
-    Account account = accountGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
+    accountGenerator.ensurePredefined(seed, ownerManager.create(), Accounts.HARNESS_TEST);
 
+    Account account = accountGenerator.ensurePredefined(seed, ownerManager.create(), Accounts.GENERIC_TEST);
     createGlobalSettings(account);
+    createApps(account);
+    createTestApplication(account);
+    sampleDataProviderService.createK8sV2SampleApp(account);
 
+    loadAppStackCatalogs();
+  }
+
+  private void createApps(Account account) {
     List<Application> apps = createApplications(account.getUuid());
 
-    for (Application application : apps) {
-      addServices(application.getAppId());
+    try {
+      for (Application application : apps) {
+        addServices(application.getAppId());
+      }
+    } catch (Exception ex) {
+      logger.error(ex.getMessage());
     }
 
     featureFlagService.initializeFeatureFlags();
     learningEngineService.initializeServiceSecretKeys();
-
-    createTestApplication(account);
-
-    sampleDataProviderService.createK8sV2SampleApp(account);
-
-    loadAppStackCatalogs();
   }
 
   protected void dropDBAndEnsureIndexes() {

@@ -6,12 +6,10 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Account.ACCOUNT_NAME_KEY;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.common.Constants.ACCOUNT_ID_KEY;
-import static software.wings.common.Constants.HARNESS_NAME;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -50,6 +48,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.concurrent.TimeUnit;
 
@@ -80,6 +79,11 @@ public class AccountGenerator {
   private static final String defaultEmail = "default@harness.io";
   private static final SecretName defaultPassword = new SecretName("user_default_password");
 
+  private static final String testUserUuid = "12345-123456789012-123";
+  private static final String testUserName = "testadmin";
+  private static final String testEmail = "testadmin@harness.io";
+  private static final SecretName testPassword = new SecretName("user_default_password");
+
   @Inject AccountService accountService;
   @Inject AuthHandler authHandler;
   @Inject HarnessUserGroupService harnessUserGroupService;
@@ -91,18 +95,19 @@ public class AccountGenerator {
   @Inject private LimitConfigurationService limitConfigurationService;
 
   public static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+  public static final String TEST_ACCOUNT_ID = "1234567890123456789012";
 
   @Setter Account account;
   private static final Logger logger = LoggerFactory.getLogger(AccountGenerator.class);
 
-  public enum Accounts {
-    GENERIC_TEST,
-  }
+  public enum Accounts { GENERIC_TEST, HARNESS_TEST }
 
   public Account ensurePredefined(Randomizer.Seed seed, Owners owners, Accounts predefined) {
     switch (predefined) {
       case GENERIC_TEST:
         return ensureGenericTest();
+      case HARNESS_TEST:
+        return ensureHarnessTest();
       default:
         unhandled(predefined);
     }
@@ -131,6 +136,70 @@ public class AccountGenerator {
                                             .build())
                        .build();
     }
+
+    this.setLicenseInfo(accountObj);
+
+    try {
+      this.account = accountService.save(accountObj);
+      this.setAccountKey("harness_account_secret", this.account);
+
+      this.account = accountService.get(accountId);
+      this.setLimitConfiguration(accountId);
+      ensureDefaultUsers(account);
+    } catch (WingsException we) {
+      // TODO: fix this Hack here.
+    }
+
+    return this.account;
+  }
+
+  /*
+   * This function has to be cleaned up to provide only the
+   * necessary entities. This gonna evolve over the time and hence
+   * we are not reusing `ensureGenericTest`.
+   */
+  public Account ensureHarnessTest() {
+    Account account = this.getOrCreateAccount(TEST_ACCOUNT_ID, "Harness Test", "Harness");
+
+    try {
+      this.setLicenseInfo(account);
+
+      account = accountService.save(account);
+
+      this.setAccountKey("harness_account_secret", account);
+      this.setLimitConfiguration(account.getUuid());
+
+      ensureTestUser(account);
+    } catch (WingsException wEx) {
+      logger.error(wEx.getMessage());
+    }
+
+    return account;
+  }
+
+  private Account getOrCreateAccount(String accountId, String accountName, String companyName) {
+    Account account = anAccount().withAccountName(accountName).withCompanyName(companyName).build();
+
+    account = exists(account);
+
+    if (account == null) {
+      logger.info("Account does not exist with accountName = {}", accountName);
+      account = Account.Builder.anAccount()
+                    .withUuid(accountId)
+                    .withAccountName(accountName)
+                    .withCompanyName(companyName)
+                    .withLicenseInfo(LicenseInfo.builder()
+                                         .accountType(AccountType.PAID)
+                                         .accountStatus(AccountStatus.ACTIVE)
+                                         .expiryTime(-1)
+                                         .build())
+                    .build();
+    }
+
+    return account;
+  }
+
+  private void setLicenseInfo(Account account) {
     final Seed seed = new Seed(0);
     licenseGenerator.ensurePredefined(seed, Licenses.TRIAL);
 
@@ -138,38 +207,31 @@ public class AccountGenerator {
     licenseInfo.setAccountType(AccountType.PAID);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setLicenseUnits(Constants.DEFAULT_PAID_LICENSE_UNITS);
-    accountObj.setLicenseInfo(licenseInfo);
+    account.setLicenseInfo(licenseInfo);
+  }
 
-    try {
-      accountService.save(accountObj);
-      // Update account key to make it work with delegate
-      UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
-      accountUpdateOperations.set("accountKey", scmSecret.decryptToString(new SecretName("harness_account_secret")));
-      wingsPersistence.update(wingsPersistence.createQuery(Account.class), accountUpdateOperations);
+  private void setAccountKey(String secretName, Account account) {
+    // Update account key to make it work with delegate
+    UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    accountUpdateOperations.set("accountKey", scmSecret.decryptToString(new SecretName(secretName)));
+    wingsPersistence.update(
+        wingsPersistence.createQuery(Account.class).filter(ACCOUNT_NAME_KEY, account.getAccountName()),
+        accountUpdateOperations);
+  }
 
-      this.account = accountService.get(accountId);
-      limitConfigurationService.configure(accountId, ActionType.CREATE_PIPELINE, new StaticLimit(1000));
-      limitConfigurationService.configure(accountId, ActionType.CREATE_USER, new StaticLimit(1000));
-      limitConfigurationService.configure(accountId, ActionType.CREATE_APPLICATION, new StaticLimit(1000));
-      limitConfigurationService.configure(accountId, ActionType.DEPLOY, new RateLimit(1000, 1, TimeUnit.HOURS));
-      ensureDefaultUsers(account);
-    }
-
-    catch (WingsException we) {
-      // TODO: fix this Hack here.
-    }
-
-    return this.account;
+  private void setLimitConfiguration(String accountId) {
+    limitConfigurationService.configure(accountId, ActionType.CREATE_PIPELINE, new StaticLimit(1000));
+    limitConfigurationService.configure(accountId, ActionType.CREATE_USER, new StaticLimit(1000));
+    limitConfigurationService.configure(accountId, ActionType.CREATE_APPLICATION, new StaticLimit(1000));
+    limitConfigurationService.configure(accountId, ActionType.DEPLOY, new RateLimit(1000, 1, TimeUnit.HOURS));
   }
 
   public Account ensureDefaultUsers(Account account) {
-    UpdateOperations<User> userUpdateOperations = wingsPersistence.createUpdateOperations(User.class);
-    userUpdateOperations.set("accounts", Lists.newArrayList(account));
-    wingsPersistence.update(wingsPersistence.createQuery(User.class), userUpdateOperations);
-
     UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
     roleUpdateOperations.set("accountId", ACCOUNT_ID);
-    wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
+    wingsPersistence.update(
+        wingsPersistence.createQuery(Role.class).filter(OwnedByAccount.ACCOUNT_ID, account.getUuid()),
+        roleUpdateOperations);
 
     User adminUser =
         ensureUser(adminUserUuid, adminUserName, adminUserEmail, scmSecret.decryptToCharArray(adminPassword), account);
@@ -186,6 +248,14 @@ public class AccountGenerator {
     addUserToUserGroup(readOnlyUser, readOnlyUserGroup);
 
     addUserToHarnessUserGroup(adminUser);
+
+    return account;
+  }
+
+  public Account ensureTestUser(Account account) {
+    User testUser =
+        ensureUser(testUserUuid, testUserName, testEmail, scmSecret.decryptToCharArray(defaultPassword), account);
+    addUserToUserGroup(testUser, account.getUuid(), Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
 
     return account;
   }
@@ -227,9 +297,10 @@ public class AccountGenerator {
                                            .addFilter("roleType", EQ, RoleType.ACCOUNT_ADMIN)
                                            .build())
                                    .getResponse())
-                    .withAccountName(HARNESS_NAME)
-                    .withCompanyName(HARNESS_NAME)
+                    .withAccountName(account.getAccountName())
+                    .withCompanyName(account.getCompanyName())
                     .build();
+
     User newUser = userService.registerNewUser(user, account);
     wingsPersistence.updateFields(User.class, newUser.getUuid(), ImmutableMap.of("emailVerified", true));
 
