@@ -156,17 +156,19 @@ public class StateMachineExecutor implements StateInspectionListener {
    * Execute.
    *
    * @param appId         the app id
-   * @param smId          the sm id
    * @param executionUuid the execution uuid
    * @param executionName the execution name
    * @param contextParams the context params
    * @param callback      the callback
    * @return the state execution instance
    */
-  public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName,
+  public StateExecutionInstance execute(String appId, String executionUuid, String executionName,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
-    return execute(wingsPersistence.getWithAppId(StateMachine.class, appId, smId, CRITICAL), executionUuid,
-        executionName, contextParams, callback, null);
+    final WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, executionUuid);
+
+    return execute(
+        wingsPersistence.getWithAppId(StateMachine.class, appId, workflowExecution.getStateMachineId(), CRITICAL),
+        executionUuid, executionName, contextParams, callback, null);
   }
 
   /**
@@ -181,11 +183,13 @@ public class StateMachineExecutor implements StateInspectionListener {
    * @param executionEventAdvisor      the executionEventAdvisor
    * @return the state execution instance
    */
-  public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName,
+  public StateExecutionInstance execute(String appId, String executionUuid, String executionName,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback,
       ExecutionEventAdvisor executionEventAdvisor) {
-    return execute(wingsPersistence.getWithAppId(StateMachine.class, appId, smId, CRITICAL), executionUuid,
-        executionName, contextParams, callback, executionEventAdvisor);
+    final WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, executionUuid);
+    return execute(
+        wingsPersistence.getWithAppId(StateMachine.class, appId, workflowExecution.getStateMachineId(), CRITICAL),
+        executionUuid, executionName, contextParams, callback, executionEventAdvisor);
   }
 
   /**
