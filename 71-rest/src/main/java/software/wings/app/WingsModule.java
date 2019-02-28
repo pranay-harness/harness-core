@@ -26,8 +26,6 @@ import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
-import ro.fortsoft.pf4j.DefaultPluginManager;
-import ro.fortsoft.pf4j.PluginManager;
 import software.wings.DataStorageMode;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
@@ -443,7 +441,6 @@ public class WingsModule extends DependencyModule {
     bind(WorkflowExecutionService.class).to(WorkflowExecutionServiceImpl.class);
     bind(SweepingOutputService.class).to(SweepingOutputServiceImpl.class);
     bind(StateExecutionService.class).to(StateExecutionServiceImpl.class);
-    bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
     bind(ConfigService.class).to(ConfigServiceImpl.class);
     bind(AppContainerService.class).to(AppContainerServiceImpl.class);
     bind(CatalogService.class).to(CatalogServiceImpl.class);

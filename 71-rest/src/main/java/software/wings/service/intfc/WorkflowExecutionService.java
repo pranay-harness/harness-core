@@ -39,9 +39,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 public interface WorkflowExecutionService extends StateStatusUpdate {
-  void trigger(
-      @NotNull String appId, @NotNull String stateMachineId, @NotNull String executionUuid, String executionName);
-
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph);
 
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph,

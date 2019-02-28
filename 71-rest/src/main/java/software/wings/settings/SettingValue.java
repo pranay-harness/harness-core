@@ -8,7 +8,6 @@ import io.harness.encryption.EncryptionReflectUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import ro.fortsoft.pf4j.ExtensionPoint;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.lang.reflect.Field;
@@ -18,7 +17,7 @@ import java.util.List;
  * Created by anubhaw on 5/16/16.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
-public abstract class SettingValue implements ExtensionPoint {
+public abstract class SettingValue {
   private String type;
 
   private transient boolean decrypted;

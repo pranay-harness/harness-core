@@ -187,7 +187,6 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ro.fortsoft.pf4j.PluginManager;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
@@ -255,7 +254,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StateType;
-import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
@@ -308,7 +306,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
         return (List<Stencil>) invocationOnMock.getArguments()[0];
       });
 
-  @Mock private PluginManager pluginManager;
   @Mock private UpdateOperations<Workflow> updateOperations;
   @Mock private LimitCheckerFactory limitCheckerFactory;
 
@@ -328,7 +325,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
     Mockito.doNothing().when(yamlPushService).pushYamlChangeSet(anyString(), any(), any(), any(), anyBoolean());
-    when(pluginManager.getExtensions(StateTypeDescriptor.class)).thenReturn(newArrayList());
 
     when(appService.get(APP_ID)).thenReturn(application);
     when(accountService.get(anyString())).thenReturn(account);
