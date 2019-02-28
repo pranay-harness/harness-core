@@ -23,11 +23,15 @@ import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.AWSKMSException;
 import com.amazonaws.services.kms.model.DecryptRequest;
+import com.amazonaws.services.kms.model.DependencyTimeoutException;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
+import com.amazonaws.services.kms.model.KMSInternalException;
+import com.amazonaws.services.kms.model.KeyUnavailableException;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedRecord;
@@ -72,7 +76,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     Throwable t = e.getCause() == null ? e : e.getCause();
 
     if (t instanceof AWSKMSException) {
-      return true;
+      if (t instanceof KMSInternalException || t instanceof DependencyTimeoutException
+          || t instanceof KeyUnavailableException) {
+        return true;
+      }
+      return false;
     } else {
       // Else if not IllegalArgumentException, it should retry.
       return !(t instanceof IllegalArgumentException);
@@ -87,17 +95,17 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         return timeLimiter.callWithTimeout(
             () -> encryptInternal(accountId, value, kmsConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
-        String reason = e.getMessage();
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
             logger.warn(format("Encryption failed. trial num: %d", retry), e);
             sleep(ofMillis(1000));
           } else {
-            reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
+            String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
+            throw new DelegateRetryableException(new KmsOperationException(reason, e, USER));
           }
+        } else {
+          throw new KmsOperationException(e.getMessage(), e, USER);
         }
-
-        throw new KmsOperationException(reason, e, USER);
       }
     }
 
@@ -116,16 +124,18 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       try {
         return timeLimiter.callWithTimeout(() -> decryptInternal(data, kmsConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
-        String reason = e.getMessage();
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
             logger.warn(format("Decryption failed. trial num: %d", retry), e);
             sleep(ofMillis(1000));
           } else {
-            reason = format("Decryption failed for encryptedData %s after %d retries", data.getName(), NUM_OF_RETRIES);
+            String reason =
+                format("Decryption failed for encryptedData %s after %d retries", data.getName(), NUM_OF_RETRIES);
+            throw new DelegateRetryableException(new KmsOperationException(reason, e, USER));
           }
+        } else {
+          throw new KmsOperationException(e.getMessage(), e, USER);
         }
-        throw new KmsOperationException(reason, e, USER);
       }
     }
     throw new IllegalStateException("Decryption failed. This state should never have been reached");
