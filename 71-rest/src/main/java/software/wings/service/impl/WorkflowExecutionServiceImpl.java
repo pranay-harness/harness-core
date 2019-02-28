@@ -209,7 +209,6 @@ import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
-import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
@@ -281,29 +280,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private PreDeploymentChecker preDeploymentChecker;
   @Inject private AlertService alertService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void trigger(String appId, String stateMachineId, String executionUuid, String executionName) {
-    trigger(appId, stateMachineId, executionUuid, executionName, null);
-  }
-
-  /**
-   * Trigger.
-   *
-   * @param appId          the app id
-   * @param stateMachineId the state machine id
-   * @param executionUuid  the execution uuid
-   * @param executionName  the execution name
-   * @param callback       the callback
-   */
-  void trigger(String appId, String stateMachineId, String executionUuid, String executionName,
-      StateMachineExecutionCallback callback) {
-    preDeploymentChecker.isDeploymentAllowed(appId);
-    stateMachineExecutor.execute(appId, stateMachineId, executionUuid, executionName, null, callback);
-  }
 
   /**
    * {@inheritDoc}

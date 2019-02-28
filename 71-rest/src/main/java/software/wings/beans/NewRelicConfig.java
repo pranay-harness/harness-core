@@ -12,7 +12,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import ro.fortsoft.pf4j.Extension;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
 import software.wings.service.impl.newrelic.NewRelicUrlProvider;
@@ -26,7 +25,6 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 /**
  * Created by raghu on 8/28/17.
  */
-@Extension
 @JsonTypeName("NEW_RELIC")
 @Data
 @Builder

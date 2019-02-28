@@ -115,7 +115,6 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
@@ -257,7 +256,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StencilPostProcessor stencilPostProcessor;
-  @Inject private PluginManager pluginManager;
   @Inject private StaticConfiguration staticConfiguration;
 
   @Inject private AccountService accountService;
@@ -435,9 +433,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<StateTypeDescriptor> stencils = Arrays.asList(values());
-
-    List<StateTypeDescriptor> plugins = pluginManager.getExtensions(StateTypeDescriptor.class);
-    stencils.addAll(plugins);
 
     Map<String, StateTypeDescriptor> mapByType = new HashMap<>();
     Map<StateTypeScope, List<StateTypeDescriptor>> mapByScope = new HashMap<>();

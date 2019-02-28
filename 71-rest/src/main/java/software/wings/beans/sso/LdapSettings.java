@@ -11,7 +11,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotBlank;
-import ro.fortsoft.pf4j.Extension;
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -27,7 +26,6 @@ import javax.validation.constraints.NotNull;
  *
  * @author Swapnil
  */
-@Extension
 @Data
 @EqualsAndHashCode(callSuper = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)

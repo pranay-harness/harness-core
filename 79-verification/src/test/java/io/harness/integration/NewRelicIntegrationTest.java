@@ -132,6 +132,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void getNewRelicApplications() throws Exception {
     WebTarget target =
         client.target(API_BASE + "/newrelic/applications?settingId=" + newRelicConfigId + "&accountId=" + accountId);
@@ -148,7 +149,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Repeat(successes = 1, times = 5)
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void getAllTxnNames() throws Exception {
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, newRelicConfigId);
     NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();

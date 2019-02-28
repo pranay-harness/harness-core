@@ -12,7 +12,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import ro.fortsoft.pf4j.Extension;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
@@ -23,7 +22,6 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 /**
  * Created by anubhaw on 8/4/16.
  */
-@Extension
 @JsonTypeName("APP_DYNAMICS")
 @Data
 @Builder

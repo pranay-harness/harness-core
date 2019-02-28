@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-import ro.fortsoft.pf4j.Extension;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
@@ -18,7 +17,6 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 /**
  * Created by rsingh on 3/15/18.
  */
-@Extension
 @Data
 @JsonTypeName("PROMETHEUS")
 @Builder

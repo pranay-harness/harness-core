@@ -62,7 +62,6 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CharsetResponseFilter;
 import software.wings.app.WingsApplication;
@@ -190,8 +189,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     environment.healthChecks().register("Verification Service", new VerificationServiceHealthCheck());
 
-    startPlugins(injector);
-
     registerCronJobs(injector);
 
     initializeServiceTaskPoll(injector);
@@ -244,12 +241,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
   private void registerCharsetResponseFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
-  }
-
-  private void startPlugins(Injector injector) {
-    PluginManager pluginManager = injector.getInstance(PluginManager.class);
-    pluginManager.loadPlugins();
-    pluginManager.startPlugins();
   }
 
   private void registerCronJobs(Injector injector) {

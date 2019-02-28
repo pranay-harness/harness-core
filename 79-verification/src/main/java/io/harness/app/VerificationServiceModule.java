@@ -20,8 +20,6 @@ import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.harness.version.VersionInfoManager;
 import org.apache.commons.io.IOUtils;
-import ro.fortsoft.pf4j.DefaultPluginManager;
-import ro.fortsoft.pf4j.PluginManager;
 import software.wings.DataStorageMode;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -62,7 +60,6 @@ public class VerificationServiceModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(VerificationServiceConfiguration.class).toInstance(configuration);
-    bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(LearningEngineService.class).to(LearningEngineAnalysisServiceImpl.class);

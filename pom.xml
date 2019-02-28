@@ -965,16 +965,6 @@
                 <version>1.9</version>
             </dependency>
             <dependency>
-                <groupId>ro.fortsoft.pf4j</groupId>
-                <artifactId>pf4j</artifactId>
-                <version>1.0.0</version>
-            </dependency>
-            <dependency>
-                <groupId>ro.fortsoft.pf4j</groupId>
-                <artifactId>pf4j-update</artifactId>
-                <version>0.2.0</version>
-            </dependency>
-            <dependency>
                 <groupId>ru.vyarus</groupId>
                 <artifactId>guice-validator</artifactId>
                 <version>1.2.0</version>

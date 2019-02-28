@@ -523,14 +523,6 @@
             <artifactId>zt-exec</artifactId>
         </dependency>
         <dependency>
-            <groupId>ro.fortsoft.pf4j</groupId>
-            <artifactId>pf4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ro.fortsoft.pf4j</groupId>
-            <artifactId>pf4j-update</artifactId>
-        </dependency>
-        <dependency>
             <groupId>ru.vyarus</groupId>
             <artifactId>guice-validator</artifactId>
         </dependency>
