@@ -35,6 +35,7 @@ import software.wings.beans.Application;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.FeatureName;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -51,6 +52,7 @@ import software.wings.expression.SweepingOutputFunctor;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode;
 import software.wings.service.intfc.ServiceVariableService;
@@ -96,6 +98,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient SettingsService settingsService;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private transient VariableProcessor variableProcessor;
+  @Inject private transient FeatureFlagService featureFlagService;
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
@@ -511,10 +514,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     private ServiceVariable serviceVariable;
     private ExecutionContextImpl executionContext;
     private boolean adoptDelegateDecryption;
+    private FeatureFlagService featureFlagService;
 
     @Override
     public Object bind() {
-      if (adoptDelegateDecryption) {
+      if (adoptDelegateDecryption
+          && featureFlagService.isEnabled(FeatureName.THREE_PHASE_SECRET_DECRYPTION, executionContext.getAccountId())) {
         return "${secretManager.obtain(\"" + serviceVariable.getSecretTextName() + "\")}";
       }
       executionContext.managerDecryptionService.decrypt(serviceVariable,
@@ -542,6 +547,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                 .serviceVariable(serviceVariable)
                 .adoptDelegateDecryption(adoptDelegateDecryption)
                 .executionContext(this)
+                .featureFlagService(featureFlagService)
                 .build());
       }
     }
