@@ -21,6 +21,7 @@ import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -612,7 +613,29 @@ public class AnalysisServiceImpl implements AnalysisService {
     analysisSummary.setRiskLevel(riskLevel);
     analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
     analysisSummary.setStateType(stateType);
+    populateProgress(analysisSummary, analysisRecord);
     return analysisSummary;
+  }
+
+  private void populateProgress(LogMLAnalysisSummary analysisSummary, LogMLAnalysisRecord analysisRecord) {
+    Preconditions.checkNotNull(analysisSummary);
+    Preconditions.checkNotNull(analysisRecord);
+    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class)
+                                          .filter("appId", analysisRecord.getAppId())
+                                          .filter("stateExecutionId", analysisRecord.getStateExecutionId())
+                                          .get();
+    if (analysisContext == null) {
+      return;
+    }
+    int numOfAnalysis = (int) wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                            .filter("appId", analysisRecord.getAppId())
+                            .filter("stateExecutionId", analysisRecord.getStateExecutionId())
+                            .count();
+    if (numOfAnalysis > 0) {
+      numOfAnalysis -= 1;
+    }
+    int duration = analysisContext.getTimeDuration();
+    analysisSummary.setProgress((numOfAnalysis * 100) / duration);
   }
 
   @Override

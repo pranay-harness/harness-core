@@ -72,6 +72,8 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
 
   private TimeSeriesMlAnalysisType mlAnalysisType;
 
+  @Transient private int progress;
+
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

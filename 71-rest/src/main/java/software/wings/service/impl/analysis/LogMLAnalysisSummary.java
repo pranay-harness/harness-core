@@ -29,6 +29,7 @@ public class LogMLAnalysisSummary {
   private List<LogMLClusterSummary> ignoreClusters;
   private StateType stateType;
   private int analysisMinute;
+  private int progress;
 
   public boolean isEmptyResult() {
     return isEmpty(testClusters) && isEmpty(unknownClusters);

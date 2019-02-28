@@ -476,8 +476,38 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         }
       }
     });
+
+    populateProgress(analysisRecords);
     Collections.sort(analysisRecords);
     return analysisRecords;
+  }
+
+  private void populateProgress(List<NewRelicMetricAnalysisRecord> analysisRecords) {
+    if (isEmpty(analysisRecords)) {
+      return;
+    }
+
+    analysisRecords.forEach(analysisRecord -> {
+      AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class)
+                                            .filter("appId", analysisRecord.getAppId())
+                                            .filter("stateExecutionId", analysisRecord.getStateExecutionId())
+                                            .get();
+      if (analysisContext == null) {
+        return;
+      }
+      int numOfAnalysis = (int) Math.max(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
+                                             .filter("appId", analysisRecord.getAppId())
+                                             .filter("stateExecutionId", analysisRecord.getStateExecutionId())
+                                             .filter("groupName", analysisRecord.getGroupName())
+                                             .count(),
+          wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+              .filter("appId", analysisRecord.getAppId())
+              .filter("stateExecutionId", analysisRecord.getStateExecutionId())
+              .filter("groupName", analysisRecord.getGroupName())
+              .count());
+      int duration = analysisContext.getTimeDuration();
+      analysisRecord.setProgress((numOfAnalysis * 100) / duration);
+    });
   }
 
   @Override
