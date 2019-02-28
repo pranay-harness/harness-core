@@ -71,7 +71,7 @@ public class Notifier implements Runnable {
   }
 
   public void executeUnderLock() {
-    logger.info("Execute Notifier response processing");
+    logger.debug("Execute Notifier response processing");
     final List<NotifyResponse> notifyResponses = persistence.createQuery(NotifyResponse.class, excludeAuthority)
                                                      .project(NotifyResponse.ID_KEY, true)
                                                      .project(NotifyResponse.CREATED_AT_KEY, true)
