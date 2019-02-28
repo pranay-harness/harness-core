@@ -108,9 +108,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/**
- * Created by peeyushaggarwal on 5/31/16.
- */
 public class CommandState extends State {
   private static final Logger logger = LoggerFactory.getLogger(CommandState.class);
 
@@ -317,6 +314,7 @@ public class CommandState extends State {
               .withServiceVariables(serviceVariables)
               .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
               .withHost(host)
+              .withCloudProviderSetting(settingsService.get(infrastructureMapping.getComputeProviderSettingId()))
               .withServiceTemplateId(serviceTemplateId)
               .withAppContainer(service.getAppContainer())
               .withAccountId(accountId)
