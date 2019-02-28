@@ -16,12 +16,12 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.rest.RestResponse;
+import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.Account;
 import software.wings.beans.GcpConfig;
@@ -118,9 +118,9 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     kmsConfig = KmsConfig.builder()
                     .accountId(accountId)
                     .name("TestAwsKMS")
-                    .accessKey("AKIAJRYQHJZ4S6P3RPRQ")
-                    .kmsArn("arn:aws:kms:us-east-1:448640225317:key/60b9e9c5-3a1b-43fb-b345-e79ded0d94c3")
-                    .secretKey("Gw0XEQ9v6GAdnx4T0EX5HaoYFSHiqQ85h0XYow+i")
+                    .accessKey("AKIAJXKK6OAOHQ5MO34Q")
+                    .kmsArn("arn:aws:kms:us-east-1:448640225317:key/4feb7890-a727-4f88-af43-378b5a88e77c")
+                    .secretKey(scmSecret.decryptToString(new SecretName("kms_qa_secret_key")))
                     .region("us-east-1")
                     .isDefault(true)
                     .build();
@@ -158,7 +158,6 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testCreateKmsVaultConfig_shouldSucceed() {
     // 1. Create a new KMS config.
     String kmsConfigId = createKmsConfig(kmsConfig);
@@ -264,26 +263,6 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       // Delete both vault configs.
       deleteVaultConfig(vaultConfigId);
       deleteVaultConfig(vaultConfig2Id);
-    }
-  }
-
-  @Test
-  public void test_unsetOnlyDefaultVault_shouldFail() {
-    // Create the first default vault config
-    String vaultConfigId = createVaultConfig(vaultConfig);
-    VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
-    assertNotNull(savedVaultConfig);
-
-    try {
-      savedVaultConfig.setDefault(false);
-      savedVaultConfig.setAuthToken(vaultToken);
-      updateVaultConfig(savedVaultConfig);
-      fail("Unset the only default vault config manager will fail!");
-    } catch (Exception e) {
-      // Exception is expected.
-    } finally {
-      // Clean up.
-      deleteVaultConfig(vaultConfigId);
     }
   }
 

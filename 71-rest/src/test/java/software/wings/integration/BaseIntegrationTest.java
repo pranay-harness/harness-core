@@ -34,6 +34,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.persistence.ReadPref;
 import io.harness.rest.RestResponse;
+import io.harness.scm.ScmSecret;
 import io.harness.serializer.JsonSubtypeResolver;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -115,6 +116,8 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   @Inject protected KmsService kmsService;
   @Inject protected SecretManager secretManager;
   @Inject protected SecretManagementDelegateService delegateService;
+  @Inject protected ScmSecret scmSecret;
+
   @Mock private DelegateProxyFactory delegateProxyFactory;
 
   protected String accountId = "INVALID_ID";
