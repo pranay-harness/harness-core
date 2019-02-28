@@ -33,10 +33,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
-import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.exception.InvalidRequestException;
@@ -96,6 +94,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -616,7 +615,7 @@ public class AccountServiceImpl implements AccountService {
     Map<String, AppPermissionSummary> userAppPermissions =
         authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
 
-    List<String> services = new ArrayList<>();
+    final List<String> services = new ArrayList<>();
     Set<EnvInfo> envInfoSet = new HashSet<>();
     for (AppPermissionSummary summary : userAppPermissions.values()) {
       if (isNotEmpty(summary.getServicePermissions())) {
@@ -636,41 +635,39 @@ public class AccountServiceImpl implements AccountService {
     final List<CVEnabledService> cvEnabledServices = Collections.synchronizedList(new ArrayList<>());
     if (serviceId != null) {
       // in thiscase we want to get the data only for this service.
-      services = Arrays.asList(serviceId);
+      services.clear();
+      services.add(serviceId);
     }
-    services.parallelStream().forEach(service -> {
-      List<CVConfiguration> cvConfigurationList = new ArrayList<>();
-      PageRequest<CVConfiguration> cvConfigurationPageRequest =
-          PageRequestBuilder.aPageRequest().withLimit("999").withOffset("0").build();
-      cvConfigurationPageRequest.addFilter("serviceId", Operator.EQ, service);
-      cvConfigurationPageRequest.addFilter("appId", Operator.IN, userAppPermissions.keySet().toArray());
-      cvConfigurationPageRequest.addFilter("enabled24x7", Operator.EQ, true);
-      cvConfigurationPageRequest.addFilter("envId", Operator.IN, allowedEnvs.toArray());
-
-      int previousOffSet = 0;
-      PageResponse<CVConfiguration> cvConfigurationPageResponse =
-          wingsPersistence.query(CVConfiguration.class, cvConfigurationPageRequest);
-      while (!cvConfigurationPageResponse.isEmpty()) {
-        cvConfigurationList.addAll(cvConfigurationPageResponse.getResponse());
-        previousOffSet += cvConfigurationPageResponse.size();
-        cvConfigurationPageRequest.setOffset(String.valueOf(previousOffSet));
-        cvConfigurationPageResponse = wingsPersistence.query(CVConfiguration.class, cvConfigurationPageRequest);
-      }
-      if (isNotEmpty(cvConfigurationList)) {
-        for (CVConfiguration cvConfiguration : cvConfigurationList) {
-          cvConfigurationService.fillInServiceAndConnectorNames(cvConfiguration);
+    List<CVConfiguration> cvConfigurationList =
+        wingsPersistence.createQuery(CVConfiguration.class).field("appId").in(userAppPermissions.keySet()).asList();
+    if (cvConfigurationList == null) {
+      return null;
+    }
+    Map<String, List<CVConfiguration>> serviceCvConfigMap = new HashMap<>();
+    cvConfigurationList.forEach(cvConfiguration -> {
+      String serviceIdOfConfig = cvConfiguration.getServiceId();
+      if (services.contains(serviceIdOfConfig) && allowedEnvs.contains(cvConfiguration.getEnvId())) {
+        cvConfigurationService.fillInServiceAndConnectorNames(cvConfiguration);
+        List<CVConfiguration> configList = new ArrayList<>();
+        if (serviceCvConfigMap.containsKey(serviceIdOfConfig)) {
+          configList = serviceCvConfigMap.get(serviceIdOfConfig);
         }
-        String appId = cvConfigurationList.get(0).getAppId();
-        String appName = cvConfigurationList.get(0).getAppName();
-        String serviceName = cvConfigurationList.get(0).getServiceName();
-
-        cvEnabledServices.add(CVEnabledService.builder()
-                                  .service(Service.builder().uuid(service).name(serviceName).appId(appId).build())
-                                  .appName(appName)
-                                  .appId(appId)
-                                  .cvConfig(cvConfigurationList)
-                                  .build());
+        configList.add(cvConfiguration);
+        serviceCvConfigMap.put(serviceIdOfConfig, configList);
       }
+    });
+
+    serviceCvConfigMap.forEach((configServiceId, cvConfigList) -> {
+      String appId = cvConfigList.get(0).getAppId();
+      String appName = cvConfigList.get(0).getAppName();
+      String serviceName = cvConfigList.get(0).getServiceName();
+
+      cvEnabledServices.add(CVEnabledService.builder()
+                                .service(Service.builder().uuid(configServiceId).name(serviceName).appId(appId).build())
+                                .appName(appName)
+                                .appId(appId)
+                                .cvConfig(cvConfigList)
+                                .build());
     });
 
     // Wrap into a pageResponse and return
