@@ -4,11 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
-import static java.util.stream.Collectors.toList;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.KEY;
+import static software.wings.common.Constants.LAST_UPDATED_AT;
 import static software.wings.common.Constants.URL;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -28,22 +28,30 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Singleton
 public class GcsServiceImpl implements GcsService {
   private static final Logger logger = LoggerFactory.getLogger(software.wings.helpers.ext.gcs.GcsServiceImpl.class);
   private GcpHelperService gcpHelperService;
-  private static int MAX_GCS_ARTIFACT_PATHS_LIMIT = 1000;
-  private static int MAX_GCS_BUILD_DETAILS_LIMIT = 1000;
+  private static int MAX_GCS_ARTIFACT_PATH_LIMIT = 1000;
+  private static int MAX_GCS_BUILD_DETAILS_LIMIT = 100;
+  private final SimpleDateFormat GCS_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+  private PriorityQueue<GCSPair> gcsBuildDetailsQueue = new PriorityQueue<>(MAX_GCS_BUILD_DETAILS_LIMIT,
+      (a, b) -> (int) (Long.parseLong(b.getUpdatedTime()) - Long.parseLong(a.getUpdatedTime())));
 
   @Inject
   public GcsServiceImpl(GcpHelperService gcpHelperService) {
@@ -54,10 +62,13 @@ public class GcsServiceImpl implements GcsService {
   @Override
   public List<String> getArtifactPaths(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
-    List<String> objectNameList = Lists.newArrayList();
+    List<GCSPair> gcsObjects = Lists.newArrayList();
     Objects listOfObjects;
     String nextPageToken = "";
     long maxResults = 1000;
+    int curCount = 0;
+    int maxToRetrive = 10000;
+
     try {
       Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
       Storage.Objects.List listObjects = gcsStorageService.objects().list(bucketName);
@@ -69,7 +80,7 @@ public class GcsServiceImpl implements GcsService {
         if (listOfObjects != null && listOfObjects.getItems() != null && listOfObjects.getItems().size() > 0) {
           items = listOfObjects.getItems();
           for (StorageObject storageObject : items) {
-            objectNameList.add(storageObject.getName());
+            gcsObjects.add(new GCSPair(storageObject.getName(), storageObject.getUpdated().toString()));
           }
         }
 
@@ -79,31 +90,32 @@ public class GcsServiceImpl implements GcsService {
             listObjects.setPageToken(nextPageToken);
           }
         }
-
-        // Get only artifact paths till set limit
-        if (objectNameList.size() >= MAX_GCS_ARTIFACT_PATHS_LIMIT) {
-          break;
-        }
-
-      } while (nextPageToken != null);
+        curCount += maxResults;
+      } while (nextPageToken != null && curCount < maxToRetrive);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
           .addParam("message", "Could not get artifact paths from Google Cloud Storage for bucket :" + bucketName);
     }
 
-    return objectNameList;
+    // Sort artifact paths by updated time in reverse order
+    gcsObjects.sort((o1, o2) -> o2.updatedTime.compareTo(o1.updatedTime));
+    return gcsObjects.stream()
+        .map(GCSPair::getObjectName)
+        .limit(MAX_GCS_ARTIFACT_PATH_LIMIT)
+        .collect(Collectors.toList());
   }
 
   @Override
   public List<BuildDetails> getArtifactsBuildDetails(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      String bucketName, List<String> artifactPaths, boolean isExpression) {
+      ArtifactStreamAttributes artifactStreamAttributes, List<String> artifactPaths, boolean isExpression, int limit) {
+    String bucketName = artifactStreamAttributes.getJobName();
     try {
       boolean versioningEnabledForBucket = isVersioningEnabledForBucket(gcpConfig, encryptionDetails, bucketName);
       List<BuildDetails> buildDetailsList = Lists.newArrayList();
 
       for (String artifactPath : artifactPaths) {
         List<BuildDetails> buildDetailsListForArtifactPath = getArtifactsBuildDetails(
-            gcpConfig, encryptionDetails, bucketName, artifactPath, isExpression, versioningEnabledForBucket);
+            gcpConfig, encryptionDetails, bucketName, artifactPath, isExpression, versioningEnabledForBucket, limit);
         buildDetailsList.addAll(buildDetailsListForArtifactPath);
       }
       return buildDetailsList;
@@ -117,10 +129,11 @@ public class GcsServiceImpl implements GcsService {
 
   @Override
   public List<BuildDetails> getArtifactsBuildDetails(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      String bucketName, String artifactPath, boolean isExpression, boolean versioningEnabledForBucket) {
+      String bucketName, String artifactPath, boolean isExpression, boolean versioningEnabledForBucket, int limit) {
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     String nextPageToken = "";
     long maxResults = 1000;
+    gcsBuildDetailsQueue.clear();
 
     if (isExpression) {
       try {
@@ -134,12 +147,7 @@ public class GcsServiceImpl implements GcsService {
 
           // Get objects for the bucket
           if (listOfObjects != null && isNotEmpty(listOfObjects.getItems())) {
-            List<String> objectKeyList = getObjectSummaries(pattern, listOfObjects.getItems());
-            for (String obj : objectKeyList) {
-              BuildDetails artifactMetadata =
-                  getArtifactBuildDetails(gcpConfig, encryptionDetails, bucketName, obj, versioningEnabledForBucket);
-              buildDetailsList.add(artifactMetadata);
-            }
+            fillObjectSummaries(pattern, listOfObjects.getItems());
           }
 
           // Set page token to get next set of objects
@@ -150,10 +158,21 @@ public class GcsServiceImpl implements GcsService {
             }
           }
         } while (nextPageToken != null);
-
       } catch (Exception e) {
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
             .addParam("message", "Could not get Build details from Google Cloud Storage for bucket :" + bucketName);
+      }
+
+      // Get build details for recent objects
+      int curCount = 0;
+      while (!gcsBuildDetailsQueue.isEmpty() && curCount <= MAX_GCS_BUILD_DETAILS_LIMIT) {
+        GCSPair pair = gcsBuildDetailsQueue.poll();
+        if (pair != null) {
+          BuildDetails artifactMetadata = getArtifactBuildDetails(
+              gcpConfig, encryptionDetails, bucketName, pair.getObjectName(), versioningEnabledForBucket);
+          buildDetailsList.add(artifactMetadata);
+        }
+        curCount++;
       }
     } else {
       BuildDetails artifactMetadata =
@@ -161,15 +180,21 @@ public class GcsServiceImpl implements GcsService {
       buildDetailsList.add(artifactMetadata);
     }
 
+    buildDetailsList = buildDetailsList.stream().limit(MAX_GCS_BUILD_DETAILS_LIMIT).collect(Collectors.toList());
     return buildDetailsList;
   }
 
-  private List<String> getObjectSummaries(Pattern pattern, List<StorageObject> storageObjectList) {
-    return storageObjectList.stream()
-        .filter(
-            storageObject -> !storageObject.getName().endsWith("/") && pattern.matcher(storageObject.getName()).find())
-        .map(StorageObject::getName)
-        .collect(toList());
+  private void fillObjectSummaries(Pattern pattern, List<StorageObject> storageObjectList) {
+    List<StorageObject> newObjects = Lists.newArrayList();
+    try {
+      for (StorageObject so : storageObjectList) {
+        newObjects.add(so);
+        gcsBuildDetailsQueue.add(
+            new GCSPair(so.getName(), Long.toString(GCS_DATE_FORMAT.parse(so.getUpdated().toString()).getTime())));
+      }
+    } catch (Exception e) {
+      logger.error("Exception occurred while parsing GCS objects", USER);
+    }
   }
 
   @Override
@@ -177,10 +202,13 @@ public class GcsServiceImpl implements GcsService {
       String bucketName, String objName, boolean versioningEnabledForBucket) {
     try {
       String versionId;
+      Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
+      Storage.Objects.Get request = gcsStorageService.objects().get(bucketName, objName);
+      String lastUpdatedAt = request.execute().getUpdated().toString();
+
       if (versioningEnabledForBucket) {
-        Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
-        Storage.Objects.Get request = gcsStorageService.objects().get(bucketName, objName);
         versionId = objName + ":" + request.execute().getGeneration().toString();
+
       } else {
         versionId = objName;
       }
@@ -191,6 +219,7 @@ public class GcsServiceImpl implements GcsService {
       map.put(BUCKET_NAME, bucketName);
       map.put(ARTIFACT_PATH, objName);
       map.put(KEY, objName);
+      map.put(LAST_UPDATED_AT, lastUpdatedAt);
 
       return aBuildDetails()
           .withNumber(versionId)

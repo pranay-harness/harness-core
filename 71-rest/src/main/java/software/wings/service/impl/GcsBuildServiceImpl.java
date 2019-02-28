@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static software.wings.utils.Validator.equalCheck;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -8,6 +10,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -32,9 +35,17 @@ public class GcsBuildServiceImpl implements GcsBuildService {
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.GCS.name());
+    return getBuilds(appId, artifactStreamAttributes, gcpConfig, encryptionDetails, 100);
+  }
+
+  @Override
+  public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     String artifactName = artifactStreamAttributes.getArtifactName();
-    return gcsService.getArtifactsBuildDetails(gcpConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
-        Lists.newArrayList(artifactName), artifactName.contains("*"));
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.GCS.name());
+    return gcsService.getArtifactsBuildDetails(gcpConfig, encryptionDetails, artifactStreamAttributes,
+        Lists.newArrayList(artifactName), artifactName.contains("*"), limit);
   }
 
   @Override

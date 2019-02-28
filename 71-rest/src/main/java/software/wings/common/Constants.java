@@ -510,6 +510,10 @@ public interface Constants {
    */
   String ARTIFACT_PATH = "artifactPath";
   /**
+   * The constant LAST_UPDATED_AT.
+   */
+  String LAST_UPDATED_AT = "lastUpdatedAt";
+  /**
    * The constant PATH.
    */
   String PATH = "path";

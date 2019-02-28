@@ -21,4 +21,8 @@ public interface GcsBuildService extends BuildService<GcpConfig> {
   @DelegateTaskType(TaskType.GCS_GET_BUILDS)
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, GcpConfig config,
       List<EncryptedDataDetail> encryptionDetails);
+
+  @DelegateTaskType(TaskType.GCS_GET_BUILDS)
+  List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, GcpConfig config,
+      List<EncryptedDataDetail> encryptionDetails, int limit);
 }
