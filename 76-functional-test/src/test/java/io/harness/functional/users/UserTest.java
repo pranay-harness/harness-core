@@ -35,8 +35,8 @@ import javax.mail.MessagingException;
 
 public class UserTest extends AbstractFunctionalTest {
   private static final Logger logger = LoggerFactory.getLogger(UserTest.class);
-  final int MAX_RETRIES = 5;
-  final int DELAY_IN_MS = 3000;
+  final int MAX_RETRIES = 20;
+  final int DELAY_IN_MS = 6000;
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
   final String EXPECTED_SUBJECT = "You are invited to join Harness at Harness platform";
   UserRestUtil urUtil = new UserRestUtil();
@@ -45,7 +45,7 @@ public class UserTest extends AbstractFunctionalTest {
 
   @Test()
   @Category(FunctionalTests.class)
-  @Ignore
+  @Owner(emails = "swamy@harness.io")
   public void listUsers() {
     logger.info("Starting the list users test");
     Account account = this.getAccount();
@@ -57,16 +57,18 @@ public class UserTest extends AbstractFunctionalTest {
 
   @Test()
   @Category(FunctionalTests.class)
-  @Owner(emails = "swamy@harness.io", intermittent = true)
-  @Ignore
-  public void verifySignupEmailDelivery() throws IOException, MessagingException {
+  @Owner(emails = "swamy@harness.io")
+  @Ignore("Ignoring User Invite test until Rishi confirms whether we should use guerilla email or not")
+  public void verifyUserInvite() throws IOException, MessagingException {
     Account account = this.getAccount();
     GuerillaEmailInfo emailInfo = gmailUtil.refreshAndGetNewEmail();
     logger.info(emailInfo.getEmailAddr());
+    logger.info(emailInfo.getSidToken());
     List<UserInvite> userInvitationList = urUtil.inviteUser(account, emailInfo.getEmailAddr());
     assertNotNull(userInvitationList);
     assertTrue(userInvitationList.size() == 1);
-    UserInvite userInvite = userInvitationList.get(0);
+    // Verify if email is sent, received and has signup link
+    // Email check will run every 6 seconds upto 2 mins to see if email is delivered.
     GuerillaEmailDetails gmailDetails = (GuerillaEmailDetails) retry.executeWithRetry(
         () -> gmailUtil.getAllEmailList(emailInfo.getSidToken()), new EmailMatcher<>(), EXPECTED_SUBJECT);
     final EmailMetaData[] emailToBeFetched = {null};
@@ -81,19 +83,7 @@ public class UserTest extends AbstractFunctionalTest {
     assertTrue(StringUtils.isNotBlank(inviteUrl));
     logger.info("Successfully completed signup email delivery test");
     assertTrue(gmailUtil.forgetEmailId(emailInfo.getSidToken()));
-  }
-
-  @Test()
-  @Category(FunctionalTests.class)
-  @Owner(emails = "swamy@harness.io", intermittent = true)
-  @Ignore
-  public void userRegistrationCompletionTest() {
-    Account account = this.getAccount();
-    GuerillaEmailInfo emailInfo = gmailUtil.refreshAndGetNewEmail();
-    logger.info(emailInfo.getEmailAddr());
-    List<UserInvite> userInvitationList = urUtil.inviteUser(account, emailInfo.getEmailAddr());
-    assertNotNull(userInvitationList);
-    assertTrue(userInvitationList.size() == 1);
+    // Complete registration using the API
     UserInvite incomplete = userInvitationList.get(0);
     UserInvite completed = urUtil.completeUserRegistration(account, incomplete);
     assertNotNull(completed);
@@ -104,11 +94,11 @@ public class UserTest extends AbstractFunctionalTest {
     assertTrue(incomplete.getEmail().equals(completed.getEmail()));
     assertTrue(incomplete.getName().equals(completed.getName()));
     assertTrue(incomplete.getAccountId().equals(completed.getAccountId()));
+    // Verify if the signed-up user can login
     String bearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.DEFAULT_PASSWORD);
     assertNotNull("Bearer Token not successfully provided", bearerToken);
     int statusCode = Setup.signOut(completed.getUuid(), bearerToken);
     assertTrue(statusCode == HttpStatus.SC_OK);
     logger.info("Successfully completed user registration email");
-    assertTrue(gmailUtil.forgetEmailId(emailInfo.getSidToken()));
   }
 }
