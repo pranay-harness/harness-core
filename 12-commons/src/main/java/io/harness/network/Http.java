@@ -11,6 +11,7 @@ import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.http.HttpHost;
 import org.slf4j.Logger;
@@ -240,6 +241,23 @@ public class Http {
     try {
       URI uri = getNormalizedURI(url);
       return uri.getHost();
+    } catch (Exception e) {
+      logger.warn("Bad URI syntax", e);
+      return null;
+    }
+  }
+
+  public static String getBaseUrl(String url) {
+    try {
+      URI uri = getNormalizedURI(url);
+      String scheme = uri.getScheme();
+      String hostName = uri.getHost();
+      int port = uri.getPort();
+      if (port <= 0 || (StringUtils.equals("https", scheme) && port == 443)
+          || (StringUtils.equals("http", scheme) && port == 80)) {
+        return scheme + "://" + hostName + "/";
+      }
+      return scheme + "://" + hostName + ":" + port + "/";
     } catch (Exception e) {
       logger.warn("Bad URI syntax", e);
       return null;
