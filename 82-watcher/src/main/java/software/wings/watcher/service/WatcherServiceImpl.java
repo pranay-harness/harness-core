@@ -558,7 +558,8 @@ public class WatcherServiceImpl implements WatcherService {
         DelegateConfiguration config = restResponse.getResource();
         return config.getDelegateVersions();
       } else {
-        String delegateMetadata = getResponseFromUrl(watcherConfiguration.getDelegateCheckLocation());
+        String delegateMetadata =
+            Http.getResponseStringFromUrl(watcherConfiguration.getDelegateCheckLocation(), 10, 10);
         return singletonList(substringBefore(delegateMetadata, " ").trim());
       }
     } catch (UncheckedTimeoutException e) {
@@ -635,7 +636,7 @@ public class WatcherServiceImpl implements WatcherService {
       logger.info("Replacing delegate jar version {}", version);
       FileUtils.forceDelete(destination);
     }
-    try (InputStream stream = Http.getResponseStreamFromUrl(downloadUrl, httpProxyHost, 600000, 600000)) {
+    try (InputStream stream = Http.getResponseStreamFromUrl(downloadUrl, 600, 600)) {
       FileUtils.copyInputStreamToFile(stream, destination);
     }
     logger.info("Finished downloading delegate jar version {}", version);
@@ -781,7 +782,7 @@ public class WatcherServiceImpl implements WatcherService {
     }
     try {
       // TODO - if multiVersion use manager endpoint
-      String watcherMetadata = getResponseFromUrl(watcherConfiguration.getUpgradeCheckLocation());
+      String watcherMetadata = Http.getResponseStringFromUrl(watcherConfiguration.getUpgradeCheckLocation(), 10, 10);
       String latestVersion = substringBefore(watcherMetadata, " ").trim();
       boolean upgrade = !StringUtils.equals(getVersion(), latestVersion);
       if (upgrade) {
@@ -804,7 +805,7 @@ public class WatcherServiceImpl implements WatcherService {
       String env = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 8);
       String watcherCommandsUrl =
           watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/')) + "/commands/" + env;
-      String watcherCommands = getResponseFromUrl(watcherCommandsUrl);
+      String watcherCommands = Http.getResponseStringFromUrl(watcherCommandsUrl, 10, 10);
       if (isNotBlank(watcherCommands)) {
         BufferedReader reader = new BufferedReader(new StringReader(watcherCommands));
         String line;
@@ -846,10 +847,6 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (IOException ex) {
       logger.error("Couldn't read config-watcher.yml", ex);
     }
-  }
-
-  private String getResponseFromUrl(String url) throws IOException {
-    return Http.getResponseStringFromUrl(url, httpProxyHost, 10000, 10000);
   }
 
   private void upgradeWatcher(String version, String newVersion) {

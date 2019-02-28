@@ -98,18 +98,19 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.network.Http;
 import io.harness.persistence.ReadPref;
 import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
+import okhttp3.Request.Builder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atteo.evo.inflector.English;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -201,7 +202,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
-  private static final int DELEGATE_METADATA_HTTP_CALL_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
   private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
   public static final String ECS = "ECS";
   public static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
@@ -595,13 +595,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
     try {
       logger.info("Fetching delegate metadata from storage: {}", delegateMetadataUrl);
-      String result = Request.Get(delegateMetadataUrl)
-                          .connectTimeout(DELEGATE_METADATA_HTTP_CALL_TIMEOUT)
-                          .socketTimeout(DELEGATE_METADATA_HTTP_CALL_TIMEOUT)
-                          .execute()
-                          .returnContent()
-                          .asString()
-                          .trim();
+      String result = Http.getResponseStringFromUrl(delegateMetadataUrl, 10, 10).trim();
       logger.info("Received from storage: {}", result);
       return result;
     } catch (IOException e) {
@@ -648,16 +642,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
 
       if (versionChanged) {
-        jarFileExists = Request.Head(delegateJarDownloadUrl)
-                            .connectTimeout(10000)
-                            .socketTimeout(10000)
-                            .execute()
-                            .handleResponse(response -> {
-                              int statusCode = response.getStatusLine().getStatusCode();
-                              logger.info("HEAD on downloadUrl got statusCode {}", statusCode);
-                              return statusCode == 200;
-                            });
-
+        int responseCode = Http.getUnsafeOkHttpClient(delegateJarDownloadUrl, 10, 10)
+                               .newCall(new Builder().url(delegateJarDownloadUrl).head().build())
+                               .execute()
+                               .code();
+        logger.info("HEAD on downloadUrl got statusCode {}", responseCode);
+        jarFileExists = responseCode == 200;
         logger.info("jarFileExists [{}]", jarFileExists);
       }
     } catch (IOException | ExecutionException e) {

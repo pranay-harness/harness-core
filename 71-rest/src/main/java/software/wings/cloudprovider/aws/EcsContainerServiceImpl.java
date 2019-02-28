@@ -11,7 +11,6 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -61,7 +60,6 @@ import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -77,7 +75,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1142,10 +1139,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
               executionLogCallback.saveExecutionLog("Fetching container meta data from " + uri, LogLevel.INFO);
             }
             logger.info("requesting data from {}", uri);
-            TaskMetadata taskMetadata = Request.Get(uri).execute().handleResponse(response
-                -> JsonUtils.asObject(CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
-                    TaskMetadata.class));
-
+            TaskMetadata taskMetadata =
+                JsonUtils.asObject(Http.getResponseStringFromUrl(uri, 30, 30), TaskMetadata.class);
             Optional<TaskMetadata.Task> optionalTask =
                 taskMetadata.getTasks().stream().filter(task -> taskArns.contains(task.getArn())).findFirst();
 
