@@ -55,6 +55,7 @@ public class Environment extends Base {
   @Transient private List<ConfigFile> configFiles;
   @Transient private Setup setup;
   @SchemaIgnore @Indexed private List<String> keywords;
+  @Indexed private String accountId;
 
   /**
    * Gets name.
@@ -200,6 +201,7 @@ public class Environment extends Base {
     return anEnvironment()
         .withName(getName())
         .withAppId(getAppId())
+        .withAccountId(getAccountId())
         .withDescription(getDescription())
         .withConfigMapYaml(getConfigMapYaml())
         .withConfigMapYamlByServiceTemplateId(getConfigMapYamlByServiceTemplateId())
@@ -249,6 +251,7 @@ public class Environment extends Base {
     private List<ConfigFile> configFiles;
     private String uuid;
     private String appId;
+    private String accountId;
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
@@ -352,6 +355,17 @@ public class Environment extends Base {
     }
 
     /**
+     * With account id builder.
+     *
+     * @param accountId the account id
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    /**
      * With created by builder.
      *
      * @param createdBy the created by
@@ -412,6 +426,7 @@ public class Environment extends Base {
           .withConfigFiles(configFiles)
           .withUuid(uuid)
           .withAppId(appId)
+          .withAccountId(accountId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -435,6 +450,7 @@ public class Environment extends Base {
       environment.setConfigFiles(configFiles);
       environment.setUuid(uuid);
       environment.setAppId(appId);
+      environment.setAccountId(accountId);
       environment.setCreatedBy(createdBy);
       environment.setCreatedAt(createdAt);
       environment.setLastUpdatedBy(lastUpdatedBy);

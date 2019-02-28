@@ -714,7 +714,7 @@ public class PipelineServiceImpl implements PipelineService {
   public Pipeline save(Pipeline pipeline) {
     ensurePipelineStageUuids(pipeline);
     String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
-
+    pipeline.setAccountId(accountId);
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new Action(accountId, ActionType.CREATE_PIPELINE));
 

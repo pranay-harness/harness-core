@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Indexed;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.List;
@@ -32,16 +33,19 @@ public abstract class InfrastructureProvisioner extends Base {
   @NotEmpty @NaturalKey private String infrastructureProvisionerType;
   private List<NameValuePair> variables;
   @Valid List<InfrastructureMappingBlueprint> mappingBlueprints;
+  @Indexed private String accountId;
 
   public InfrastructureProvisioner(String name, String description, String infrastructureProvisionerType,
-      List<NameValuePair> variables, List<InfrastructureMappingBlueprint> mappingBlueprints, String uuid, String appId,
-      EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath) {
+      List<NameValuePair> variables, List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId,
+      String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
+      String entityYamlPath) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
     this.infrastructureProvisionerType = infrastructureProvisionerType;
     this.variables = variables;
     this.mappingBlueprints = mappingBlueprints;
+    this.accountId = accountId;
   }
   public abstract String variableKey();
 

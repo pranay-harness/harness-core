@@ -41,11 +41,11 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
   @Builder
   private TerraformInfrastructureProvisioner(String uuid, String appId, String name, String sourceRepoSettingId,
       String sourceRepoBranch, String path, List<NameValuePair> variables,
-      List<InfrastructureMappingBlueprint> mappingBlueprints, String description, EmbeddedUser createdBy,
-      long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
+      List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId, String description,
+      EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
       List<NameValuePair> backendConfigs) {
-    super(name, description, TERRAFORM.name(), variables, mappingBlueprints, uuid, appId, createdBy, createdAt,
-        lastUpdatedBy, lastUpdatedAt, entityYamlPath);
+    super(name, description, TERRAFORM.name(), variables, mappingBlueprints, accountId, uuid, appId, createdBy,
+        createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     setSourceRepoSettingId(sourceRepoSettingId);
     setSourceRepoBranch(sourceRepoBranch);
     setPath(path);

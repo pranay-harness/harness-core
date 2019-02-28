@@ -71,6 +71,7 @@ public class Service extends Base {
   @SchemaIgnore @Indexed private List<String> keywords;
 
   private boolean isK8sV2;
+  @Indexed private String accountId;
 
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
@@ -78,7 +79,7 @@ public class Service extends Base {
       ArtifactType artifactType, DeploymentType deploymentType, String configMapYaml, String helmValueYaml,
       long version, AppContainer appContainer, List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables,
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
-      Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2) {
+      Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -97,11 +98,13 @@ public class Service extends Base {
     this.setup = setup;
     this.keywords = keywords;
     this.isK8sV2 = isK8sV2;
+    this.accountId = accountId;
   }
 
   public Service cloneInternal() {
     return Service.builder()
         .appId(getAppId())
+        .accountId(getAccountId())
         .name(name)
         .description(description)
         .artifactType(artifactType)

@@ -2,6 +2,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddOrchestrationToWorkflows;
 import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.AddValidUntilToWorkflowExecution;
@@ -37,6 +38,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(13, AddValidUntilToWorkflowExecution.class))
         .add(Pair.of(14, SendInviteUrlForAllUserInvites.class))
         .add(Pair.of(15, AddOrchestrationToWorkflows.class))
+        .add(Pair.of(16, AddAccountIdToAppEntities.class))
         .build();
   }
 }
