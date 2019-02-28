@@ -59,6 +59,16 @@ public class HttpTest {
   }
 
   @Test
+  public void testGetBaseUrl() {
+    assertEquals("http://localhost.com/", Http.getBaseUrl("http://localhost.com/temp"));
+    assertEquals("http://localhost.com/", Http.getBaseUrl("http://localhost.com/"));
+    assertEquals("https://localhost.com/", Http.getBaseUrl("https://localhost.com/temp"));
+    assertEquals("http://localhost.com:5000/", Http.getBaseUrl("http://localhost.com:5000/temp"));
+    assertEquals("http://localhost.com:8080/", Http.getBaseUrl("localhost.com:8080/temp"));
+    assertEquals("https://localhost.com:8443/", Http.getBaseUrl("https://localhost.com:8443"));
+  }
+
+  @Test
   public void testJoinHostPort() {
     assertEquals("localhost:443", Http.joinHostPort("localhost", "443"));
     assertEquals("127.0.0.1:443", Http.joinHostPort("127.0.0.1", "443"));

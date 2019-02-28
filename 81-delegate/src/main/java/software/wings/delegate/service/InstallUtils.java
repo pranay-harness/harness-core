@@ -1,7 +1,7 @@
 package software.wings.delegate.service;
 
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
-import static io.harness.network.Http.getDomain;
+import static io.harness.network.Http.getBaseUrl;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -67,7 +67,7 @@ public class InstallUtils {
 
       createDirectoryIfDoesNotExist(kubectlDirectory);
 
-      String downloadUrl = getKubectlDownloadUrl(getManagerDomain(configuration.getManagerUrl()), version);
+      String downloadUrl = getKubectlDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), version);
 
       logger.info("download Url is {}", downloadUrl);
 
@@ -122,9 +122,9 @@ public class InstallUtils {
     }
   }
 
-  private static String getKubectlDownloadUrl(String managerDomain, String version) {
-    return "https://" + managerDomain + "/storage/harness-download/kubernetes-release/release/" + version + "/bin/"
-        + getOsPath() + "/amd64/kubectl";
+  private static String getKubectlDownloadUrl(String managerBaseUrl, String version) {
+    return managerBaseUrl + "storage/harness-download/kubernetes-release/release/" + version + "/bin/" + getOsPath()
+        + "/amd64/kubectl";
   }
 
   static void installGoTemplateTool(DelegateConfiguration configuration) {
@@ -148,7 +148,7 @@ public class InstallUtils {
       createDirectoryIfDoesNotExist(goTemplateClientDirectory);
 
       String downloadUrl =
-          getGoTemplateDownloadUrl(getManagerDomain(configuration.getManagerUrl()), goTemplateClientVersion);
+          getGoTemplateDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), goTemplateClientVersion);
 
       logger.info("download Url is {}", downloadUrl);
 
@@ -204,17 +204,17 @@ public class InstallUtils {
     }
   }
 
-  private static String getGoTemplateDownloadUrl(String managerDomain, String version) {
-    return "https://" + managerDomain + "/storage/harness-download/snapshot-go-template/release/" + version + "/bin/"
-        + getOsPath() + "/amd64/go-template";
+  private static String getGoTemplateDownloadUrl(String managerBaseUrl, String version) {
+    return managerBaseUrl + "storage/harness-download/snapshot-go-template/release/" + version + "/bin/" + getOsPath()
+        + "/amd64/go-template";
   }
 
-  private static String getManagerDomain(String managerUrl) {
-    String managerDomain = getDomain(managerUrl);
-    if (managerDomain.contains("localhost") || managerDomain.contains("127.0.0.1")) {
-      managerDomain = "app.harness.io";
+  private static String getManagerBaseUrl(String managerUrl) {
+    if (managerUrl.contains("localhost") || managerUrl.contains("127.0.0.1")) {
+      return "https://app.harness.io/";
     }
-    return managerDomain;
+
+    return getBaseUrl(managerUrl);
   }
 
   private static String getOsPath() {
