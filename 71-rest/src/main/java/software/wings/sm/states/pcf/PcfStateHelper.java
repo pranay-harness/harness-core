@@ -1,10 +1,14 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
+import io.harness.context.ContextElementType;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -26,6 +30,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -82,6 +87,10 @@ public class PcfStateHelper {
 
   public ActivityBuilder getActivityBuilder(String appName, String appId, String commandName, Type type,
       ExecutionContext executionContext, String commandType, CommandUnitType commandUnitType, Environment environment) {
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
+
     return Activity.builder()
         .applicationName(appName)
         .appId(appId)
@@ -99,7 +108,11 @@ public class PcfStateHelper {
         .commandUnitType(commandUnitType)
         .environmentId(environment.getUuid())
         .environmentName(environment.getName())
-        .environmentType(environment.getEnvironmentType());
+        .environmentType(environment.getEnvironmentType())
+        .triggeredBy(TriggeredBy.builder()
+                         .email(workflowStandardParams.getCurrentUser().getEmail())
+                         .name(workflowStandardParams.getCurrentUser().getName())
+                         .build());
   }
 
   public ExecutionResponse queueDelegateTaskForRouteUpdate(Application app, PcfConfig pcfConfig,

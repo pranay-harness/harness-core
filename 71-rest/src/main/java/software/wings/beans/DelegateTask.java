@@ -26,8 +26,10 @@ import org.mongodb.morphia.mapping.MappedField;
 import software.wings.beans.DelegateTask.Converter;
 
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
@@ -96,6 +98,45 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   public void setNotifyResponse(ResponseData notifyResponse) {
     this.notifyResponse = notifyResponse;
     setSerializedNotifyResponseData(notifyResponse != null ? KryoUtils.asBytes(notifyResponse) : null);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    DelegateTask that = (DelegateTask) o;
+    return timeout == that.timeout && async == that.async && Objects.equals(version, that.version)
+        && Objects.equals(taskType, that.taskType) && Arrays.equals(parameters, that.parameters)
+        && Objects.equals(tags, that.tags) && Objects.equals(accountId, that.accountId)
+        && Objects.equals(waitId, that.waitId) && status == that.status && Objects.equals(delegateId, that.delegateId)
+        && Objects.equals(envId, that.envId) && Objects.equals(infrastructureMappingId, that.infrastructureMappingId)
+        && Objects.equals(delegateRunnableTask, that.delegateRunnableTask)
+        && Objects.equals(notifyResponse, that.notifyResponse)
+        && Arrays.equals(serializedNotifyResponseData, that.serializedNotifyResponseData)
+        && Objects.equals(preAssignedDelegateId, that.preAssignedDelegateId)
+        && Objects.equals(serviceTemplateId, that.serviceTemplateId)
+        && Objects.equals(artifactStreamId, that.artifactStreamId);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), version, taskType, parameters, tags, accountId, waitId, status, delegateId,
+        timeout, async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse,
+        serializedNotifyResponseData, preAssignedDelegateId, serviceTemplateId, artifactStreamId);
+  }
+
+  @Override
+  public String toString() {
+    return "DelegateTask{"
+        + "version='" + version + '\'' + ", taskType=" + taskType + ", parameters=" + Arrays.toString(parameters)
+        + ", tag='" + tags + '\'' + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + '\''
+        + ", status=" + status + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async
+        + ", envId='" + envId + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
+        + ", delegateRunnableTask=" + delegateRunnableTask + ", notifyResponse=" + notifyResponse + '}';
   }
 
   @Value

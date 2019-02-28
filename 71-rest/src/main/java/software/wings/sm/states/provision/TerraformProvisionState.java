@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
@@ -15,6 +16,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -23,6 +25,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
@@ -76,6 +79,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Validator;
 
 import java.io.IOException;
@@ -531,6 +535,9 @@ public abstract class TerraformProvisionState extends State {
   private String createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
 
     ActivityBuilder activityBuilder =
         Activity.builder()
@@ -546,7 +553,11 @@ public abstract class TerraformProvisionState extends State {
             .workflowId(executionContext.getWorkflowId())
             .commandUnits(
                 asList(Builder.aCommand().withName(commandUnit().name()).withCommandType(CommandType.OTHER).build()))
-            .status(ExecutionStatus.RUNNING);
+            .status(ExecutionStatus.RUNNING)
+            .triggeredBy(TriggeredBy.builder()
+                             .email(workflowStandardParams.getCurrentUser().getEmail())
+                             .name(workflowStandardParams.getCurrentUser().getName())
+                             .build());
 
     if (executionContext.getOrchestrationWorkflowType() != null
         && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {

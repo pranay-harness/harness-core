@@ -1,17 +1,14 @@
 package software.wings.sm.states;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -37,33 +34,30 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ScriptStateExecutionData;
-import software.wings.beans.Activity;
-import software.wings.beans.Activity.ActivityBuilder;
-import software.wings.beans.Application;
+import software.wings.beans.Activity.Type;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.Environment;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SweepingOutput;
 import software.wings.beans.TaskType;
 import software.wings.beans.WinRmConnectionAttributes;
-import software.wings.beans.command.Command;
+import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
-import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
@@ -87,7 +81,7 @@ import java.util.stream.Collectors;
 
 public class ShellScriptState extends State implements SweepingOutputStateMixin {
   private static final Logger logger = LoggerFactory.getLogger(ShellScriptState.class);
-  @Inject @Transient private transient ActivityService activityService;
+  @Inject @Transient private transient ActivityHelperService activityHelperService;
   @Inject @Transient private transient DelegateService delegateService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient SecretManager secretManager;
@@ -223,7 +217,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   }
 
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
-    activityService.updateStatus(activityId, appId, status);
+    activityHelperService.updateStatus(activityId, appId, status);
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
@@ -402,48 +396,11 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   }
 
   private String createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
-
-    ActivityBuilder activityBuilder = Activity.builder()
-                                          .applicationName(app.getName())
-                                          .commandName(getName())
-                                          .type(Activity.Type.Verification)
-                                          .workflowType(executionContext.getWorkflowType())
-                                          .workflowExecutionName(executionContext.getWorkflowExecutionName())
-                                          .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-                                          .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-                                          .commandType(getStateType())
-                                          .workflowExecutionId(executionContext.getWorkflowExecutionId())
-                                          .workflowId(executionContext.getWorkflowId())
-                                          .commandUnits(asList(Command.Builder.aCommand()
-                                                                   .withName(ShellScriptParameters.CommandUnit)
-                                                                   .withCommandType(CommandType.OTHER)
-                                                                   .build()))
-                                          .status(ExecutionStatus.RUNNING);
-
-    if (executionContext.getOrchestrationWorkflowType() != null
-        && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
-      activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
-    } else {
-      activityBuilder.environmentId(env.getUuid())
-          .environmentName(env.getName())
-          .environmentType(env.getEnvironmentType());
-    }
-
-    InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
-    if (instanceElement != null && instanceElement.getServiceTemplateElement() != null) {
-      activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
-          .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
-          .serviceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
-          .serviceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
-          .serviceInstanceId(instanceElement.getUuid())
-          .hostName(instanceElement.getHost().getHostName());
-    }
-
-    Activity activity = activityBuilder.build();
-    activity.setAppId(app.getUuid());
-    return activityService.save(activity).getUuid();
+    List<CommandUnit> commandUnits = asList(
+        Builder.aCommand().withName(ShellScriptParameters.CommandUnit).withCommandType(CommandType.OTHER).build());
+    return activityHelperService
+        .createAndSaveActivity(executionContext, Type.Verification, getName(), getStateType(), commandUnits)
+        .getUuid();
   }
 
   @Override

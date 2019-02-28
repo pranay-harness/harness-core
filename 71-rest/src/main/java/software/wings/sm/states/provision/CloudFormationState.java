@@ -3,10 +3,12 @@ package software.wings.sm.states.provision;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -14,6 +16,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
@@ -243,6 +246,9 @@ public abstract class CloudFormationState extends State {
   private String createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
 
     ActivityBuilder activityBuilder =
         Activity.builder()
@@ -258,7 +264,11 @@ public abstract class CloudFormationState extends State {
             .workflowId(executionContext.getWorkflowId())
             .commandUnits(Collections.singletonList(
                 Builder.aCommand().withName(commandUnit()).withCommandType(CommandType.OTHER).build()))
-            .status(ExecutionStatus.RUNNING);
+            .status(ExecutionStatus.RUNNING)
+            .triggeredBy(TriggeredBy.builder()
+                             .email(workflowStandardParams.getCurrentUser().getEmail())
+                             .name(workflowStandardParams.getCurrentUser().getName())
+                             .build());
 
     if (executionContext.getOrchestrationWorkflowType() != null
         && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {

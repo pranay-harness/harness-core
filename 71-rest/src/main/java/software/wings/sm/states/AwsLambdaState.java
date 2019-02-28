@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -12,12 +13,14 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_LAMBDA_TASK;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
@@ -208,6 +211,9 @@ public class AwsLambdaState extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
+
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
 
@@ -242,7 +248,11 @@ public class AwsLambdaState extends State {
                                           .stateExecutionInstanceName(context.getStateExecutionInstanceName())
                                           .commandUnits(commandUnitList)
                                           .commandType(command.getCommandUnitType().name())
-                                          .status(ExecutionStatus.RUNNING);
+                                          .status(ExecutionStatus.RUNNING)
+                                          .triggeredBy(TriggeredBy.builder()
+                                                           .email(workflowStandardParams.getCurrentUser().getEmail())
+                                                           .name(workflowStandardParams.getCurrentUser().getName())
+                                                           .build());
 
     Artifact artifact =
         getArtifact(app.getUuid(), serviceId, context.getWorkflowExecutionId(), (DeploymentExecutionContext) context);

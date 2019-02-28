@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -17,6 +18,7 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -24,6 +26,7 @@ import com.google.inject.name.Named;
 import com.amazonaws.services.ec2.model.Instance;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
@@ -169,6 +172,9 @@ public class AwsAmiServiceDeployState extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
+
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
     Service service = serviceResourceService.get(app.getUuid(), serviceId);
@@ -206,7 +212,11 @@ public class AwsAmiServiceDeployState extends State {
                                           .artifactName(artifact.getDisplayName())
                                           .artifactId(artifact.getUuid())
                                           .artifactId(artifact.getUuid())
-                                          .artifactName(artifact.getDisplayName());
+                                          .artifactName(artifact.getDisplayName())
+                                          .triggeredBy(TriggeredBy.builder()
+                                                           .email(workflowStandardParams.getCurrentUser().getEmail())
+                                                           .name(workflowStandardParams.getCurrentUser().getName())
+                                                           .build());
 
     Activity build = activityBuilder.build();
     build.setAppId(app.getUuid());

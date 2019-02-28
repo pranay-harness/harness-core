@@ -25,12 +25,15 @@ import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
@@ -52,6 +55,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Map;
 
@@ -72,6 +76,12 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build();
     doReturn(app).when(mockContext).getApp();
     Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
+
+    EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
+    WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
+    workflowStandardParams.setCurrentUser(currentUser);
+    Mockito.when(mockContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+
     doReturn(env).when(mockContext).getEnv();
     Activity activity = Activity.builder().build();
     activity.setUuid(ACTIVITY_ID);

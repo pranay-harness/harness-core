@@ -16,7 +16,9 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,6 +37,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -70,6 +73,10 @@ public class BambooStateTest {
                         .build());
     when(executionContext.renderExpression(anyString()))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
+
+    WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
+    workflowStandardParams.setCurrentUser(EmbeddedUser.builder().name("test").email("test@harness.io").build());
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
   }
 
   @Test

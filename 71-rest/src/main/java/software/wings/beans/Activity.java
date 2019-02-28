@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -75,6 +76,7 @@ public class Activity extends Base {
   private String artifactId;
   private String artifactName;
   private ExecutionStatus status = ExecutionStatus.RUNNING;
+  private TriggeredBy triggeredBy;
 
   @SchemaIgnore
   @JsonIgnore
@@ -108,7 +110,7 @@ public class Activity extends Base {
       String workflowExecutionId, String workflowId, String workflowExecutionName, WorkflowType workflowType,
       String stateExecutionInstanceId, String stateExecutionInstanceName, Long version, CommandUnitType commandUnitType,
       boolean logPurged, String artifactStreamId, String artifactStreamName, boolean isPipeline, String artifactId,
-      String artifactName, ExecutionStatus status) {
+      String artifactName, ExecutionStatus status, TriggeredBy triggeredBy) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.type = type;
     this.applicationName = applicationName;
@@ -141,5 +143,6 @@ public class Activity extends Base {
     this.artifactId = artifactId;
     this.artifactName = artifactName;
     this.status = status == null ? ExecutionStatus.RUNNING : status;
+    this.triggeredBy = triggeredBy;
   }
 }
