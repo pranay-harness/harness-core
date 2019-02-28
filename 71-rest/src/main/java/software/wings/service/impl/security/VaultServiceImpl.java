@@ -208,12 +208,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     boolean shouldVerify = true;
     if (!isEmpty(vaultConfig.getUuid())) {
       savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
-      if (savedVaultConfig.isDefault() && !vaultConfig.isDefault()) {
-        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
-            .addParam("reason",
-                "Can't set default vault secret manager to non-default explicitly. "
-                    + "Please choose another secret manager instance as default instead.");
-      }
       shouldVerify = !savedVaultConfig.getVaultUrl().equals(vaultConfig.getVaultUrl())
           || !Constants.SECRET_MASK.equals(vaultConfig.getAuthToken());
     }
