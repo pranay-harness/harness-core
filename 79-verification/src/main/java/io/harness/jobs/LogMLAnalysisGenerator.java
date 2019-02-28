@@ -127,7 +127,7 @@ public class LogMLAnalysisGenerator implements Runnable {
 
       String feedback_url = "";
 
-      if (logAnalysisMinute == 0) {
+      if (logAnalysisMinute == 0 || logAnalysisMinute == context.getStartDataCollectionMinute()) {
         feedback_url = "/verification/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_USER_FEEDBACK
             + "?accountId=" + accountId + "&appId=" + context.getAppId() + "&serviceId=" + serviceId
             + "&workflowId=" + workflowId + "&workflowExecutionId=" + context.getWorkflowExecutionId();
