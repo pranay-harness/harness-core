@@ -8,9 +8,11 @@ import io.harness.CategoryTest;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Retry;
 import io.harness.framework.Setup;
+import io.harness.framework.matchers.SettingsAttributeMatcher;
 import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
+import io.harness.scm.ScmSecret;
 import io.restassured.RestAssured;
 import lombok.Getter;
 import org.junit.Before;
@@ -21,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
-import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
 import software.wings.service.intfc.SettingsService;
 
 import java.io.IOException;
@@ -48,7 +49,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
   @Inject private DelegateExecutor delegateExecutor;
   //  @Inject OwnerManager ownerManager;
   @Inject private AccountSetupService accountSetupService;
-  @Inject private EmailHandler emailHandler;
+  @Inject private ScmSecret scmSecret;
   @Inject private SettingsService settingsService;
 
   @Getter Account account;
@@ -63,7 +64,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
     delegateExecutor.ensureDelegate(account);
 
     bearerToken = Setup.getAuthToken("admin@harness.io", "admin");
-    //    retry.executeWithRetry(() -> updateAndGetSettingAttribute(), new SettingsAttributeMatcher<>(), true);
+    retry.executeWithRetry(() -> updateAndGetSettingAttribute(), new SettingsAttributeMatcher<>(), true);
   }
 
   protected void resetCache() {
@@ -77,7 +78,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
   }
 
   private SettingAttribute updateAndGetSettingAttribute() {
-    SettingAttribute settingAttribute = Setup.getEmailConfig(account.getUuid());
+    SettingAttribute settingAttribute = Setup.getEmailConfig(scmSecret, account.getUuid());
 
     if (settingsService.getByName(
             settingAttribute.getAccountId(), settingAttribute.getAppId(), settingAttribute.getName())

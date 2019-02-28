@@ -37,10 +37,11 @@ public class Retry<T> {
   private T retry(Supplier<T> function, Matcher<T> matcher, T expected) throws RuntimeException {
     logger.info("Execution will be retried : " + maxRetries + " times.");
     retryCounter = 0;
+    T actual = null;
     while (retryCounter < maxRetries) {
       try {
         TimeUnit.MILLISECONDS.sleep(this.introduceDelayInMS);
-        T actual = function.get();
+        actual = function.get();
         if (matcher instanceof EmailMatcher) {
           if (matcher.matches(expected, actual)) {
             return actual;
@@ -51,13 +52,13 @@ public class Retry<T> {
           }
         }
       } catch (Exception ex) {
-        retryCounter++;
         logger.info("Execution failed on retry " + retryCounter + " of " + maxRetries + " error: " + ex);
         if (retryCounter >= maxRetries) {
           logger.warn("Max retries exceeded.");
           break;
         }
       }
+      retryCounter++;
     }
     throw new RuntimeException("Command failed on all of " + maxRetries + " retries");
   }

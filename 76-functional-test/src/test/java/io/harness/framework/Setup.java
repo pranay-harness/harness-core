@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.rest.RestResponse;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import io.restassured.specification.RequestSpecification;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -43,12 +45,15 @@ public class Setup {
         .getStatusCode();
   }
 
-  public static SettingAttribute getEmailConfig(String accountId) {
+  public static SettingAttribute getEmailConfig(ScmSecret scmSecret, String accountId) {
+    String secret = scmSecret.decryptToString(new SecretName("smtp_paid_sendgrid_config_password"));
     SmtpConfig smtpConfig = SmtpConfig.builder()
                                 .host("smtp.sendgrid.net")
                                 .port(465)
                                 .useSSL(true)
                                 .fromAddress("automation@harness.io")
+                                .username("apikey")
+                                .password(secret.toCharArray())
                                 .accountId(accountId)
                                 .build();
 
