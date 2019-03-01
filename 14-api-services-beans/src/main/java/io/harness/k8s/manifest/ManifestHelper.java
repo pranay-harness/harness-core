@@ -31,7 +31,7 @@ public class ManifestHelper {
   public static final String primaryServiceNameExpression = "${k8s.primaryServiceName}";
   public static final String stageServiceNameExpression = "${k8s.stageServiceName}";
 
-  private static KubernetesResource getKubernetesResourceFromSpec(String spec) {
+  public static KubernetesResource getKubernetesResourceFromSpec(String spec) {
     Map map = null;
 
     try {
@@ -144,6 +144,10 @@ public class ManifestHelper {
     return null;
   }
 
+  public static List<KubernetesResource> getServices(List<KubernetesResource> resources) {
+    return resources.stream().filter(resource -> resource.isService()).collect(Collectors.toList());
+  }
+
   public static KubernetesResource getPrimaryService(List<KubernetesResource> resources) {
     List<KubernetesResource> filteredResources =
         resources.stream().filter(KubernetesResource::isPrimaryService).collect(Collectors.toList());
@@ -153,8 +157,7 @@ public class ManifestHelper {
             "More than one service is marked Primary. Please specify only one with annotation "
             + HarnessAnnotations.primaryService);
       }
-      throw new KubernetesYamlException("No primary service is found in manifests. Please specify one with annotation "
-          + HarnessAnnotations.primaryService);
+      return null;
     }
     return filteredResources.get(0);
   }
@@ -168,8 +171,7 @@ public class ManifestHelper {
             "More than one service is marked Stage. Please specify only one with annotation "
             + HarnessAnnotations.stageService);
       }
-      throw new KubernetesYamlException("No stage service is found in manifests. Please specify one with annotation "
-          + HarnessAnnotations.stageService);
+      return null;
     }
     return filteredResources.get(0);
   }
