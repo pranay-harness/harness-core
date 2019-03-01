@@ -42,7 +42,7 @@ public class HarnessSampleAppResource {
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<SampleAppStatus> getHealth(
       @QueryParam("accountId") String accountId, @QueryParam("deploymentType") String deploymentType) {
-    return new RestResponse<>(sampleAppService.getSampleAppsHealth(accountId, deploymentType));
+    return new RestResponse<>(sampleAppService.getSampleAppHealth(accountId, deploymentType));
   }
 
   @POST
