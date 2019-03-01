@@ -1463,6 +1463,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private DelegateTask createDataCollectionDelegateTask(
       LogsCVConfiguration config, String waitId, long startTime, long endTime) {
+    String stateExecutionId = CV_24x7_STATE_EXECUTION + "-" + config.getUuid();
+    if (config.isWorkflowConfig()) {
+      stateExecutionId = wingsPersistence.get(AnalysisContext.class, config.getContextId()).getStateExecutionId();
+    }
     switch (config.getStateType()) {
       case SUMO:
         SumoConfig sumoConfig = (SumoConfig) settingsService.get(config.getConnectorId()).getValue();
@@ -1471,7 +1475,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .sumoConfig(sumoConfig)
                 .accountId(sumoConfig.getAccountId())
                 .applicationId(config.getAppId())
-                .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+                .stateExecutionId(stateExecutionId)
                 .cvConfigId(config.getUuid())
                 .serviceId(config.getServiceId())
                 .query(config.getQuery())

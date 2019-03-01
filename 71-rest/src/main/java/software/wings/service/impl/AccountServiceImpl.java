@@ -117,7 +117,8 @@ public class AccountServiceImpl implements AccountService {
   private static final String UNLIMITED_PAGE_SIZE = "UNLIMITED";
   private static final String ILLEGAL_ACCOUNT_NAME_CHARACTERS = "[~!@#$%^*\\[\\]{}<>'\"/:;\\\\]";
   private static final int MAX_ACCOUNT_NAME_LENGTH = 50;
-
+  @Inject protected AuthService authService;
+  @Inject protected CacheHelper cacheHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
   // DO NOT DELETE THIS, PRUNE logic needs it
@@ -136,9 +137,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private GenericDbCache dbCache;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject protected AuthService authService;
   @Inject private CVConfigurationService cvConfigurationService;
-  @Inject protected CacheHelper cacheHelper;
   @Inject private SampleDataProviderService sampleDataProviderService;
   @Inject private AlertNotificationRuleService notificationRuleService;
 
@@ -638,8 +637,12 @@ public class AccountServiceImpl implements AccountService {
       services.clear();
       services.add(serviceId);
     }
-    List<CVConfiguration> cvConfigurationList =
-        wingsPersistence.createQuery(CVConfiguration.class).field("appId").in(userAppPermissions.keySet()).asList();
+
+    List<CVConfiguration> cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class)
+                                                    .field("appId")
+                                                    .in(userAppPermissions.keySet())
+                                                    .filter("isWorkflowConfig", false)
+                                                    .asList();
     if (cvConfigurationList == null) {
       return null;
     }
