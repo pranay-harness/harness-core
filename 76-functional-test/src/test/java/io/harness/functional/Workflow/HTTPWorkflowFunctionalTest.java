@@ -67,7 +67,7 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   @Ignore
   // TODO: Ignoring temporarily to find the main issue
-  public void shouldCreateHTTPStepinWorkflow() {
+  public void shouldCreateHTTPStepinWorkflow() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
     Workflow workflow =

@@ -35,4 +35,11 @@ COPY dockerization/build/jenkins-slave /usr/local/bin/jenkins-slave
 
 USER root
 ENV PATH ${PATH}:/opt/gsutil
+
+RUN curl -O https://releases.hashicorp.com/terraform/0.11.11/terraform_0.11.11_linux_amd64.zip \
+    && yum install -y unzip \
+    && unzip terraform_0.11.11_linux_amd64.zip \
+    && chmod 755 terraform \
+    && mv terraform /usr/local/bin
+
 ENTRYPOINT ["jenkins-slave"]

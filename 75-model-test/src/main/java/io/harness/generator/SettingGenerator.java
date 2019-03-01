@@ -4,7 +4,8 @@ import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROV
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
-import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_TEST_GIT_REPO;
+import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_CITY_GIT_REPO;
+import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_MAIN_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -77,7 +78,8 @@ public class SettingGenerator {
     DEV_TEST_CONNECTOR,
     HARNESS_JENKINS_CONNECTOR,
     GITHUB_TEST_CONNECTOR,
-    TERRAFORM_TEST_GIT_REPO,
+    TERRAFORM_CITY_GIT_REPO,
+    TERRAFORM_MAIN_GIT_REPO,
     HARNESS_BAMBOO_CONNECTOR,
     HARNESS_NEXUS_CONNECTOR,
     HARNESS_NEXU3_CONNECTOR,
@@ -106,8 +108,8 @@ public class SettingGenerator {
         return ensureHarnessJenkins(seed, owners);
       case GITHUB_TEST_CONNECTOR:
         return ensureGithubTest(seed, owners);
-      case TERRAFORM_TEST_GIT_REPO:
-        return ensureTerraformTestGitRepo(seed, owners);
+      case TERRAFORM_CITY_GIT_REPO:
+        return ensureTerraformCityGitRepo(seed, owners);
       case HARNESS_BAMBOO_CONNECTOR:
         return ensureHarnessBamboo(seed, owners);
       case HARNESS_NEXUS_CONNECTOR:
@@ -128,10 +130,34 @@ public class SettingGenerator {
         return ensurePhysicalDataCenter(seed, owners);
       case WINRM_TEST_CONNECTOR:
         return ensureWinRmTestConnector(seed, owners);
+      case TERRAFORM_MAIN_GIT_REPO:
+        return ensureTerraformMainGitRepo(seed, owners);
       default:
         unhandled(predefined);
     }
     return null;
+  }
+
+  private SettingAttribute ensureTerraformMainGitRepo(Seed seed, Owners owners) {
+    SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(CONNECTOR)
+            .withName(TERRAFORM_MAIN_GIT_REPO.name())
+            .withAppId(githubKey.getAppId())
+            .withEnvId(githubKey.getEnvId())
+            .withAccountId(githubKey.getAccountId())
+            .withValue(GitConfig.builder()
+                           .repoUrl("https://github.com/wings-software/terraform.git")
+                           .username("test-harness")
+                           .password(scmSecret.decryptToCharArray(new SecretName("terraform_password")))
+                           .branch("master")
+                           .accountId(githubKey.getAccountId())
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+    return ensureSettingAttribute(seed, settingAttribute);
   }
 
   public SettingAttribute ensureAzureTestCloudProvider(Randomizer.Seed seed, Owners owners) {
@@ -254,13 +280,13 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute);
   }
 
-  private SettingAttribute ensureTerraformTestGitRepo(Randomizer.Seed seed, Owners owners) {
+  private SettingAttribute ensureTerraformCityGitRepo(Randomizer.Seed seed, Owners owners) {
     SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
 
     SettingAttribute settingAttribute =
         aSettingAttribute()
             .withCategory(CONNECTOR)
-            .withName(TERRAFORM_TEST_GIT_REPO.name())
+            .withName(TERRAFORM_CITY_GIT_REPO.name())
             .withAppId(githubKey.getAppId())
             .withEnvId(githubKey.getEnvId())
             .withAccountId(githubKey.getAccountId())

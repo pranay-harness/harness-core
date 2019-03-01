@@ -18,7 +18,7 @@ public class SecretGenerator {
   @Inject SecretManager secretManager;
 
   String ensureStored(String accountId, SecretName name) {
-    final EncryptedData encryptedData = secretManager.getSecretByName(accountId, name.getValue(), true);
+    final EncryptedData encryptedData = secretManager.getSecretByName(accountId, name.getValue(), false);
     if (encryptedData != null) {
       return encryptedData.getUuid();
     }

@@ -74,7 +74,7 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Category(FunctionalTests.class)
   @Ignore
-  public void shouldBlockDeploymentsWhenFreezeIsEnabled() {
+  public void shouldBlockDeploymentsWhenFreezeIsEnabled() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
     Workflow workflow =

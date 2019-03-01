@@ -59,7 +59,7 @@ public class InfrastructureProvisionerGenerator {
     final Service warehouse = serviceGenerator.ensureGenericTest(seed, owners, "Warehouse");
 
     final SettingAttribute gitSourceSettingAttribute =
-        settingGenerator.ensurePredefined(seed, owners, Settings.TERRAFORM_TEST_GIT_REPO);
+        settingGenerator.ensurePredefined(seed, owners, Settings.TERRAFORM_CITY_GIT_REPO);
 
     final TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
         TerraformInfrastructureProvisioner.builder()
@@ -180,7 +180,7 @@ public class InfrastructureProvisionerGenerator {
           builder.sourceRepoSettingId(terraformInfrastructureProvisioner.getSourceRepoSettingId());
         } else {
           final SettingAttribute settingAttribute =
-              settingGenerator.ensurePredefined(seed, owners, Settings.TERRAFORM_TEST_GIT_REPO);
+              settingGenerator.ensurePredefined(seed, owners, Settings.TERRAFORM_CITY_GIT_REPO);
           builder.sourceRepoSettingId(settingAttribute.getUuid());
         }
 
