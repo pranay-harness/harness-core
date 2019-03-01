@@ -1,6 +1,5 @@
 package software.wings.scheduler;
 
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
@@ -11,6 +10,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
+
+import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -18,10 +20,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateConnection;
 import software.wings.beans.alert.AlertType;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -30,34 +32,31 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.utils.EmailHelperUtil;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class AlertCheckJobTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
-  @Mock private WingsPersistence wingsPersistence;
   @Mock private AlertService alertService;
-  @Mock private BackgroundJobScheduler jobScheduler;
-  @Mock private ExecutorService executorService;
-  @Mock DelegateService delegateService;
-  @Mock EmailHelperUtil emailHelperUtil;
-  @Mock MainConfiguration mainConfiguration;
-  @Spy @InjectMocks AlertCheckJob alertCheckJob;
+  @Mock private DelegateService delegateService;
+  @Mock private EmailHelperUtil emailHelperUtil;
+  @Mock private MainConfiguration mainConfiguration;
+  @InjectMocks @Inject AlertCheckJob alertCheckJob;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
     when(mainConfiguration.getSmtpConfig()).thenReturn(mock(SmtpConfig.class));
     when(emailHelperUtil.isSmtpConfigValid(any(SmtpConfig.class))).thenReturn(true);
+    wingsPersistence.save(aManagerConfiguration().withPrimaryVersion("*").build());
   }
 
   /**
    * All delegates are active
-   * @throws Exception
    */
   @Test
-  public void testExecuteInternal_noAlert() throws Exception {
-    doReturn(asList(getDelegate("host1", 2))).when(alertCheckJob).getDelegatesForAccount(ACCOUNT_ID);
+  public void testExecuteInternal_noAlert() {
+    saveDelegate("host1", 2);
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
     alertCheckJob.executeInternal(ACCOUNT_ID);
     verify(alertService, times(1)).closeAlert(any(), any(), any(), any());
@@ -65,13 +64,11 @@ public class AlertCheckJobTest extends WingsBaseTest {
 
   /**
    * All delegates are down
-   * @throws Exception
    */
   @Test
-  public void testExecuteInternal_noDelegateAlert() throws Exception {
-    doReturn(asList(getDelegate("host1", 12), getDelegate("host2", 10)))
-        .when(alertCheckJob)
-        .getDelegatesForAccount(ACCOUNT_ID);
+  public void testExecuteInternal_noDelegateAlert() {
+    saveDelegate("host1", 12);
+    saveDelegate("host2", 10);
     doReturn(null).when(alertService).openAlert(any(), any(), any(), any());
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
     doNothing().when(delegateService).sendAlertNotificationsForNoActiveDelegates(any());
@@ -87,13 +84,11 @@ public class AlertCheckJobTest extends WingsBaseTest {
 
   /**
    * Some of the delegates are down
-   * @throws Exception
    */
   @Test
-  public void testExecuteInternal_delegatesDownAlert() throws Exception {
-    doReturn(asList(getDelegate("host1", 2), getDelegate("host2", 10)))
-        .when(alertCheckJob)
-        .getDelegatesForAccount(ACCOUNT_ID);
+  public void testExecuteInternal_delegatesDownAlert() {
+    saveDelegate("host1", 2);
+    saveDelegate("host2", 10);
 
     doNothing().when(delegateService).sendAlertNotificationsForDownDelegates(any(), any());
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
@@ -111,16 +106,23 @@ public class AlertCheckJobTest extends WingsBaseTest {
     assertEquals("host2", delegate.getHostName());
   }
 
-  private Delegate getDelegate(String host, int timeAfterLastHB) {
+  private void saveDelegate(String host, int timeAfterLastHB) {
     Delegate delegate = new Delegate();
     delegate.setHostName(host);
-    delegate.setLastHeartBeat(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(timeAfterLastHB));
+    long lastHeartbeat = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(timeAfterLastHB);
+    delegate.setLastHeartBeat(lastHeartbeat);
     delegate.setAccountId(ACCOUNT_ID);
-    return delegate;
+    wingsPersistence.save(delegate);
+    DelegateConnection connection = DelegateConnection.builder()
+                                        .accountId(ACCOUNT_ID)
+                                        .delegateId(delegate.getUuid())
+                                        .lastHeartbeat(lastHeartbeat)
+                                        .build();
+    wingsPersistence.save(connection);
   }
 
   @Test
-  public void testSMTPAlert() throws Exception {
+  public void testSMTPAlert() {
     when(mainConfiguration.getSmtpConfig()).thenReturn(null);
     when(emailHelperUtil.isSmtpConfigValid(any(SmtpConfig.class))).thenReturn(false);
 

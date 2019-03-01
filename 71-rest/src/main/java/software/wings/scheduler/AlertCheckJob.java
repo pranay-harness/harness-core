@@ -1,9 +1,13 @@
 package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
+import static software.wings.service.intfc.ownership.OwnedByAccount.ACCOUNT_ID;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -11,6 +15,8 @@ import com.google.inject.name.Named;
 
 import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.Query;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -22,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateConnection;
+import software.wings.beans.ManagerConfiguration;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.InvalidSMTPConfigAlert;
@@ -31,8 +39,10 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.EmailHelperUtil;
 
+import java.time.Clock;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -55,6 +65,7 @@ public class AlertCheckJob implements Job {
   @Inject private EmailHelperUtil emailHelperUtil;
   @Inject private MainConfiguration mainConfiguration;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject private Clock clock;
 
   @Inject private ExecutorService executorService;
 
@@ -144,14 +155,31 @@ public class AlertCheckJob implements Job {
    * raise a dashboard alert
    */
   private void checkIfAnyDelegatesAreDown(String accountId, List<Delegate> delegates) {
+    Query<DelegateConnection> query =
+        wingsPersistence.createQuery(DelegateConnection.class).filter(ACCOUNT_ID, accountId);
+    String primaryVersion = wingsPersistence.createQuery(ManagerConfiguration.class).get().getPrimaryVersion();
+    if (isNotEmpty(primaryVersion) && !StringUtils.equals(primaryVersion, MATCH_ALL_VERSION)) {
+      query.filter("version", primaryVersion);
+    }
+    Map<String, DelegateConnection> primaryConnections =
+        query.project("delegateId", true)
+            .project("lastHeartbeat", true)
+            .asList()
+            .stream()
+            .collect(toMap(DelegateConnection::getDelegateId, connection -> connection));
+
     List<Delegate> delegatesDown =
         delegates.stream()
-            .filter(delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() > MAX_HB_TIMEOUT)
+            .filter(delegate -> primaryConnections.containsKey(delegate.getUuid()))
+            .filter(delegate
+                -> clock.millis() - primaryConnections.get(delegate.getUuid()).getLastHeartbeat() > MAX_HB_TIMEOUT)
             .collect(toList());
 
     List<Delegate> delegatesUp =
         delegates.stream()
-            .filter(delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() <= MAX_HB_TIMEOUT)
+            .filter(delegate -> primaryConnections.containsKey(delegate.getUuid()))
+            .filter(delegate
+                -> clock.millis() - primaryConnections.get(delegate.getUuid()).getLastHeartbeat() <= MAX_HB_TIMEOUT)
             .collect(toList());
 
     if (CollectionUtils.isNotEmpty(delegatesDown)) {
