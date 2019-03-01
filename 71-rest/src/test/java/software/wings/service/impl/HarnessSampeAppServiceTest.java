@@ -9,6 +9,7 @@ import static io.harness.seeddata.SampleDataProviderConstants.K8S_CLOUD_PROVIDER
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_PIPELINE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_PROD_ENVIRONMENT;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_QA_ENVIRONMENT;
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_ROLLING_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -63,29 +64,19 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   @Mock private SettingsService mockSettingsService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
 
-  @Test
-  public void ensureSampleAppHealthIsBad() {
-    // Create a sample app
-    Application sampleApp = createHarnessSampleApp();
-    assertThat(sampleApp).isNotNull();
-
-    // Get app status
-    SampleAppStatus sampleAppStatus =
-        harnessSampleAppService.getSampleAppsHealth(sampleApp.getAccountId(), DeploymentType.KUBERNETES.name());
-    assertThat(sampleAppStatus).isNotNull();
-    assertThat(sampleAppStatus.getDeploymentType().equals(DeploymentType.KUBERNETES.name()));
-
+  private void assertSampleAppHealthIsBad(Application sampleApp) {
+    boolean isV2 = false;
     // Update entities to check health
     SettingAttribute k8sCloudProvider = settingsService.getSettingAttributeByName(
         WingsTestConstants.ACCOUNT_ID, SampleDataProviderConstants.K8S_CLOUD_PROVIDER_NAME);
     assertThat(k8sCloudProvider).isNotNull();
-    k8sCloudProvider.setName("Test K8s Cloud Provider");
     settingsService.update(k8sCloudProvider);
 
     Service k8sService = serviceResourceService.getServiceByName(sampleApp.getAppId(), K8S_SERVICE_NAME);
     assertThat(k8sService).isNotNull();
     k8sService.setName("Test K8s Service");
     serviceResourceService.update(k8sService);
+    isV2 = k8sService.isK8sV2();
 
     Environment qaEnv = environmentService.getEnvironmentByName(sampleApp.getAppId(), K8S_QA_ENVIRONMENT);
     assertThat(qaEnv).isNotNull();
@@ -109,10 +100,17 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
     k8sInfraMappingProd.setName("Test K8s Service Infra Prod");
     when(mockInfrastructureMappingService.update(k8sInfraMappingProd)).thenReturn(k8sInfraMappingProd);
 
-    Workflow basicWf = workflowService.readWorkflowByName(sampleApp.getAppId(), K8S_BASIC_WORKFLOW_NAME);
-    assertThat(basicWf).isNotNull();
-    basicWf.setName("Test Basic Workflow");
-    workflowService.updateWorkflow(basicWf);
+    if (isV2) {
+      Workflow rollingWf = workflowService.readWorkflowByName(sampleApp.getAppId(), K8S_ROLLING_WORKFLOW_NAME);
+      assertThat(rollingWf).isNotNull();
+      rollingWf.setName("Test Rolling Workflow");
+      workflowService.updateWorkflow(rollingWf);
+    } else {
+      Workflow basicWf = workflowService.readWorkflowByName(sampleApp.getAppId(), K8S_BASIC_WORKFLOW_NAME);
+      assertThat(basicWf).isNotNull();
+      basicWf.setName("Test Basic Workflow");
+      workflowService.updateWorkflow(basicWf);
+    }
 
     Workflow canaryWf = workflowService.readWorkflowByName(sampleApp.getAppId(), K8S_CANARY_WORKFLOW_NAME);
     assertThat(canaryWf).isNotNull();
@@ -125,7 +123,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
     pipelineService.update(k8sPipeline);
 
     SampleAppStatus updatedStatus =
-        harnessSampleAppService.getSampleAppsHealth(sampleApp.getAccountId(), DeploymentType.KUBERNETES.name());
+        harnessSampleAppService.getSampleAppHealth(sampleApp.getAccountId(), DeploymentType.KUBERNETES.name());
     assertThat(updatedStatus).isNotNull();
     assertThat(updatedStatus.getDeploymentType().equals(DeploymentType.KUBERNETES.name()));
 
@@ -139,24 +137,51 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
         assertThat(health).isEqualTo(Health.GOOD.name());
       }
 
-      if (type.equals(Category.CLOUD_PROVIDER.name()) || type.equals(EntityType.SERVICE.name())
-          || type.equals(EntityType.ARTIFACT_STREAM.name()) || type.equals(EntityType.ENVIRONMENT.name())
-          || type.equals(EntityType.SERVICE_TEMPLATE.name()) || type.equals(EntityType.INFRASTRUCTURE_MAPPING.name())
-          || type.equals(EntityType.WORKFLOW.name()) || type.equals(EntityType.PIPELINE.name())) {
+      if (type.equals(EntityType.SERVICE.name()) || type.equals(EntityType.ARTIFACT_STREAM.name())
+          || type.equals(EntityType.ENVIRONMENT.name()) || type.equals(EntityType.SERVICE_TEMPLATE.name())
+          || type.equals(EntityType.INFRASTRUCTURE_MAPPING.name()) || type.equals(EntityType.WORKFLOW.name())
+          || type.equals(EntityType.PIPELINE.name())) {
         assertThat(health).isEqualTo(Health.BAD.name());
       }
     }
   }
 
   @Test
-  public void ensureSampleAppHealthIsGood() {
-    // Create a sample app
-    Application sampleApp = createHarnessSampleApp();
-    assertThat(sampleApp).isNotNull();
+  public void ensureSampleAppHealthIsBad() {
+    // Create a sample app v1
+    Application sampleAppV1 = createHarnessSampleApp();
+    assertThat(sampleAppV1).isNotNull();
 
     // Get app status
+    SampleAppStatus sampleAppV1Status =
+        harnessSampleAppService.getSampleAppHealth(sampleAppV1.getAccountId(), DeploymentType.KUBERNETES.name());
+    assertThat(sampleAppV1Status).isNotNull();
+    assertThat(sampleAppV1Status.getDeploymentType().equals(DeploymentType.KUBERNETES.name()));
+
+    assertSampleAppHealthIsBad(sampleAppV1);
+
+    Application existingApp = appService.getAppByName(sampleAppV1.getAccountId(), HARNESS_SAMPLE_APP);
+    if (existingApp != null) {
+      appService.delete(existingApp.getAppId());
+    }
+
+    // Create a sample app v2
+    Application sampleAppV2 = createHarnessSampleAppV2();
+    assertThat(sampleAppV2).isNotNull();
+
+    // Get app status
+    SampleAppStatus sampleAppV2Status =
+        harnessSampleAppService.getSampleAppHealth(sampleAppV1.getAccountId(), DeploymentType.KUBERNETES.name());
+    assertThat(sampleAppV2Status).isNotNull();
+    assertThat(sampleAppV2Status.getDeploymentType().equals(DeploymentType.KUBERNETES.name()));
+
+    assertSampleAppHealthIsBad(sampleAppV2);
+  }
+
+  private void assertSampleAppIsGood(Application sampleApp) {
+    // Get app status
     SampleAppStatus sampleAppStatus =
-        harnessSampleAppService.getSampleAppsHealth(sampleApp.getAccountId(), DeploymentType.KUBERNETES.name());
+        harnessSampleAppService.getSampleAppHealth(sampleApp.getAccountId(), DeploymentType.KUBERNETES.name());
     assertThat(sampleAppStatus).isNotNull();
     assertThat(sampleAppStatus.getDeploymentType().equals(DeploymentType.KUBERNETES.name()));
 
@@ -189,12 +214,24 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
         assertThat(name).isEqualTo(K8S_SERVICE_INFRA_NAME);
       }
       if (type.equals(EntityType.WORKFLOW.name())) {
-        assertThat(name).isIn(K8S_BASIC_WORKFLOW_NAME, K8S_CANARY_WORKFLOW_NAME);
+        assertThat(name).isIn(K8S_BASIC_WORKFLOW_NAME, K8S_CANARY_WORKFLOW_NAME, K8S_ROLLING_WORKFLOW_NAME);
       }
       if (type.equals(EntityType.PIPELINE.name())) {
         assertThat(name).isEqualTo(K8S_PIPELINE_NAME);
       }
     }
+  }
+
+  @Test
+  public void ensureSampleAppHealthIsGood() {
+    // Create a sample app v1
+    Application sampleAppV1 = createHarnessSampleApp();
+    assertThat(sampleAppV1).isNotNull();
+    assertSampleAppIsGood(sampleAppV1);
+
+    Application sampleAppV2 = createHarnessSampleAppV2();
+    assertThat(sampleAppV2).isNotNull();
+    assertSampleAppIsGood(sampleAppV2);
   }
 
   @Test
@@ -208,7 +245,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
 
     // Get app health
     SampleAppStatus sampleAppStatus =
-        harnessSampleAppService.getSampleAppsHealth(sampleApp.getAccountId(), DeploymentType.KUBERNETES.name());
+        harnessSampleAppService.getSampleAppHealth(sampleApp.getAccountId(), DeploymentType.KUBERNETES.name());
     assertThat(sampleAppStatus).isNotNull();
     assertThat(sampleAppStatus.getDeploymentType().equals(DeploymentType.KUBERNETES.name()));
     assertThat(sampleAppStatus.getHealth()).isEqualTo(Health.BAD);
@@ -221,9 +258,12 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
 
     // Get app health again
     SampleAppStatus restoredAppStatus =
-        harnessSampleAppService.getSampleAppsHealth(restoredApp.getAccountId(), DeploymentType.KUBERNETES.name());
+        harnessSampleAppService.getSampleAppHealth(restoredApp.getAccountId(), DeploymentType.KUBERNETES.name());
     assertThat(restoredAppStatus.getDeploymentType().equals(DeploymentType.KUBERNETES.name()));
     assertThat(restoredAppStatus.getHealth()).isEqualTo(Health.GOOD);
+
+    // Restored app is always v2
+    assertThat(restoredApp.getServices().stream().allMatch(service -> service.isK8sV2() == true));
   }
 
   private Application createHarnessSampleApp() {
@@ -232,6 +272,17 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
     assertThat(savedAccount).isNotNull();
 
     sampleDataProviderService.createHarnessSampleApp(savedAccount);
+    Application app = appService.getAppByName(savedAccount.getUuid(), SampleDataProviderConstants.HARNESS_SAMPLE_APP);
+    assertThat(app).isNotNull();
+    return app;
+  }
+
+  private Application createHarnessSampleAppV2() {
+    Account savedAccount = wingsPersistence.saveAndGet(Account.class,
+        anAccount().withAccountName(WingsTestConstants.ACCOUNT_NAME).withUuid(WingsTestConstants.ACCOUNT_ID).build());
+    assertThat(savedAccount).isNotNull();
+
+    sampleDataProviderService.createK8sV2SampleApp(savedAccount);
     Application app = appService.getAppByName(savedAccount.getUuid(), SampleDataProviderConstants.HARNESS_SAMPLE_APP);
     assertThat(app).isNotNull();
     return app;

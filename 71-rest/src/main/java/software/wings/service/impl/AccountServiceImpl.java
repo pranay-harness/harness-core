@@ -226,7 +226,7 @@ public class AccountServiceImpl implements AccountService {
     executorService.submit(
         () -> templateGalleryService.copyHarnessTemplatesToAccountV2(account.getUuid(), account.getAccountName()));
 
-    sampleDataProviderService.createHarnessSampleApp(account);
+    sampleDataProviderService.createK8sV2SampleApp(account);
   }
 
   List<Role> createDefaultRoles(Account account) {

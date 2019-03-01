@@ -4,12 +4,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.seeddata.SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_DOCKER_HUB_CONNECTOR;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP;
-import static io.harness.seeddata.SampleDataProviderConstants.K8S_BASIC_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_CANARY_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_CLOUD_PROVIDER_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_PIPELINE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_PROD_ENVIRONMENT;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_QA_ENVIRONMENT;
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_ROLLING_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_NAME;
 
@@ -68,7 +68,7 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
   @Inject private AuthService authService;
 
   @Override
-  public SampleAppStatus getSampleAppsHealth(String accountId, String deploymentType) {
+  public SampleAppStatus getSampleAppHealth(String accountId, String deploymentType) {
     if (isEmpty(deploymentType)) {
       throw new WingsException("Please specify deployment type for sample app.", WingsException.USER);
     }
@@ -94,7 +94,8 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
     // Create a new k8s sample app
     Account account = accountService.get(accountId);
     if (account != null) {
-      sampleDataProviderService.createHarnessSampleApp(account);
+      // sampleDataProviderService.createHarnessSampleApp(account);
+      sampleDataProviderService.createK8sV2SampleApp(account);
       authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
     } else {
       throw new WingsException(
@@ -141,6 +142,19 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
     }
     String appId = existingApp.getAppId();
 
+    // Verify service
+    boolean isV2 = false;
+    Service existingService = serviceResourceService.getServiceByName(appId, K8S_SERVICE_NAME);
+    if (existingService != null) {
+      isV2 = existingService.isK8sV2();
+      if (!isV2) {
+        // App is v1, set health as BAD
+        sampleAppStatus.setStatusList(entityStatusList);
+        sampleAppStatus.setHealth(Health.BAD);
+        return sampleAppStatus;
+      }
+    }
+
     // Verify K8s Cloud provider
     SettingAttribute existingKubeCluster = settingsService.fetchSettingAttributeByName(
         accountId, K8S_CLOUD_PROVIDER_NAME, SettingVariableTypes.KUBERNETES_CLUSTER);
@@ -178,7 +192,6 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
     }
 
     // Verify service
-    Service existingService = serviceResourceService.getServiceByName(appId, K8S_SERVICE_NAME);
     if (existingService != null) {
       entityStatusList.add(SampleAppEntityStatus.builder()
                                .entityName(K8S_SERVICE_NAME)
@@ -322,23 +335,6 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
       }
     }
 
-    // Verify basic workflow
-    Workflow existingBasicWorkflow = workflowService.readWorkflowByName(appId, K8S_BASIC_WORKFLOW_NAME);
-    if (existingBasicWorkflow != null) {
-      entityStatusList.add(SampleAppEntityStatus.builder()
-                               .entityName(K8S_BASIC_WORKFLOW_NAME)
-                               .entityType(EntityType.WORKFLOW.name())
-                               .health(Health.GOOD)
-                               .build());
-    } else {
-      entityStatusList.add(SampleAppEntityStatus.builder()
-                               .entityName(K8S_BASIC_WORKFLOW_NAME)
-                               .entityType(EntityType.WORKFLOW.name())
-                               .health(Health.BAD)
-                               .build());
-      health = Health.BAD;
-    }
-
     // Verify canary workflow
     Workflow existingCanaryWorkflow = workflowService.readWorkflowByName(appId, K8S_CANARY_WORKFLOW_NAME);
     if (existingCanaryWorkflow != null) {
@@ -350,6 +346,23 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
     } else {
       entityStatusList.add(SampleAppEntityStatus.builder()
                                .entityName(K8S_CANARY_WORKFLOW_NAME)
+                               .entityType(EntityType.WORKFLOW.name())
+                               .health(Health.BAD)
+                               .build());
+      health = Health.BAD;
+    }
+
+    // Verify rolling workflow
+    Workflow existingRollingWorkflow = workflowService.readWorkflowByName(appId, K8S_ROLLING_WORKFLOW_NAME);
+    if (existingRollingWorkflow != null) {
+      entityStatusList.add(SampleAppEntityStatus.builder()
+                               .entityName(K8S_ROLLING_WORKFLOW_NAME)
+                               .entityType(EntityType.WORKFLOW.name())
+                               .health(Health.GOOD)
+                               .build());
+    } else {
+      entityStatusList.add(SampleAppEntityStatus.builder()
+                               .entityName(K8S_ROLLING_WORKFLOW_NAME)
                                .entityType(EntityType.WORKFLOW.name())
                                .health(Health.BAD)
                                .build());

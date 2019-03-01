@@ -1,5 +1,6 @@
 package io.harness.seeddata;
 
+import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_DEFAULT_NAMESPACE;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_PROD_NAMESPACE;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_QA_NAMESPACE;
@@ -101,7 +102,7 @@ public class SampleDataProviderService {
       // Create Docker connector
       SettingAttribute dockerConnector = connectorGenerator.createDockerConnector(account.getUuid());
 
-      createK8sV2SampleApp(account, kubernetesClusterConfig, dockerConnector, "k8s-v2");
+      createK8sV2SampleApp(account, kubernetesClusterConfig, dockerConnector, HARNESS_SAMPLE_APP);
 
     } catch (Exception ex) {
       logger.error("Failed to create Sample Application for the account [" + account.getUuid()
