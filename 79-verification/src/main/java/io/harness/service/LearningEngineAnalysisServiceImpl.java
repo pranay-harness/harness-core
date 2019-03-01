@@ -2,7 +2,6 @@ package io.harness.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static software.wings.common.VerificationConstants.DATA_ANALYSIS_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.VERIFICATION_TASK_TIMEOUT;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 import static software.wings.utils.Misc.generateSecretKey;
@@ -120,11 +119,6 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
           learningEngineAnalysisTask.getExecutionStatus(), analysisTask.getAnalysis_minute(),
           learningEngineAnalysisTask);
     }
-    List<LearningEngineAnalysisTask> totalQueuedAnalysisTask =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-            .filter("executionStatus", ExecutionStatus.QUEUED)
-            .asList();
-    metricRegistry.recordGaugeValue(DATA_ANALYSIS_TASKS_PER_MINUTE, null, totalQueuedAnalysisTask.size());
     return isTaskCreated;
   }
 

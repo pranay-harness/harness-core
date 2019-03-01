@@ -69,6 +69,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by rsingh on 10/9/18.
@@ -93,6 +94,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public boolean triggerAPMDataCollection(String accountId) {
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
     long endMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TIME_DELAY_QUERY_MINS;
+    AtomicLong totalDataCollectionTasks = new AtomicLong(0);
     cvConfigurations.stream()
         .filter(cvConfiguration
             -> cvConfiguration.isEnabled24x7() && getMetricAnalysisStates().contains(cvConfiguration.getStateType()))
@@ -109,11 +111,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
             verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
                 cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
-
-            metricRegistry.recordGaugeInc(DATA_COLLECTION_TASKS_PER_MINUTE,
-                new String[] {accountId, cvConfiguration.getStateType().toString(),
-                    String.valueOf(cvConfiguration.isEnabled24x7())});
+            totalDataCollectionTasks.getAndIncrement();
           }
+          metricRegistry.recordGaugeValue(DATA_COLLECTION_TASKS_PER_MINUTE, null, totalDataCollectionTasks.get());
         });
     return true;
   }
