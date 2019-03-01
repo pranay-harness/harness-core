@@ -18,6 +18,7 @@ import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
+import org.joda.time.DateTimeUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -31,6 +32,7 @@ import software.wings.service.intfc.UserService;
 
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.Date;
 
 public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Mock UserService userService;
@@ -42,7 +44,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
-  public void shouldTwoFactorAuthenticationUsingTOTP() {
+  public void shouldTwoFactorAuthenticationUsingTOTP() throws InterruptedException {
     try {
       TwoFactorAuthHandler handler =
           twoFactorAuthenticationManager.getTwoFactorAuthHandler(TwoFactorAuthenticationMechanism.TOTP);
@@ -51,15 +53,26 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
       String totpSecretKey = TimeBasedOneTimePasswordUtil.generateBase32Secret();
       user.setTotpSecretKey(totpSecretKey);
       doReturn(TwoFactorAuthenticationMechanism.TOTP).when(user).getTwoFactorAuthenticationMechanism();
-      String code = TimeBasedOneTimePasswordUtil.generateCurrentNumberString(totpSecretKey);
+      String encryptedCode = null;
 
-      User authenticatedUser = spy(new User());
-      authenticatedUser.setToken("ValidToken");
+      for (int t = 1; t < 60; t++) {
+        DateTimeUtils.setCurrentMillisOffset(t * 1000);
+        int i = -5000;
+        while (i < 6000) {
+          long currentTime = DateTimeUtils.currentTimeMillis();
+          long timeWithLag = currentTime + i;
+          log().info("Running test with time lag: [{}],currentTime=[{}],timeWithLag=[{}]", i, new Date(currentTime),
+              new Date(timeWithLag));
+          String code = TimeBasedOneTimePasswordUtil.generateNumberString(totpSecretKey, timeWithLag, 30);
+          User authenticatedUser = spy(new User());
+          authenticatedUser.setToken("ValidToken");
 
-      when(authService.generateBearerTokenForUser(user)).thenReturn(authenticatedUser);
-      String encryptedCode = encodeBase64("testJWTToken:" + code);
-      assertThat(twoFactorAuthenticationManager.authenticate(encryptedCode)).isEqualTo(authenticatedUser);
-
+          when(authService.generateBearerTokenForUser(user)).thenReturn(authenticatedUser);
+          encryptedCode = encodeBase64("testJWTToken:" + code);
+          assertThat(twoFactorAuthenticationManager.authenticate(encryptedCode)).isEqualTo(authenticatedUser);
+          i = i + 1000;
+        }
+      }
       try {
         when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(null);
         twoFactorAuthenticationManager.authenticate(encryptedCode);
@@ -81,15 +94,39 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
       try {
         when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
         user.setTotpSecretKey(totpSecretKey);
-        encryptedCode = encodeBase64("testJWTToken:invalid_code");
+        encryptedCode = encodeBase64("testJWTToken:1234");
         twoFactorAuthenticationManager.authenticate(encryptedCode);
         failBecauseExceptionWasNotThrown(WingsException.class);
       } catch (WingsException e) {
         assertThat(e).hasMessage(ErrorCode.INVALID_TOTP_TOKEN.name());
       }
 
+      try {
+        when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
+        String code =
+            TimeBasedOneTimePasswordUtil.generateNumberString(totpSecretKey, System.currentTimeMillis() - 100000, 30);
+        user.setTotpSecretKey(totpSecretKey);
+        encryptedCode = encodeBase64("testJWTToken:" + code);
+        twoFactorAuthenticationManager.authenticate(encryptedCode);
+        failBecauseExceptionWasNotThrown(WingsException.class);
+      } catch (WingsException e) {
+        assertThat(e).hasMessage(ErrorCode.INVALID_TOTP_TOKEN.name());
+      }
+
+      try {
+        when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
+        user.setTotpSecretKey(totpSecretKey);
+        encryptedCode = encodeBase64("testJWTToken:faketoken");
+        twoFactorAuthenticationManager.authenticate(encryptedCode);
+        failBecauseExceptionWasNotThrown(WingsException.class);
+      } catch (WingsException e) {
+        assertThat(e).hasMessage(ErrorCode.UNKNOWN_ERROR.name());
+      }
+
     } catch (GeneralSecurityException e) {
       fail(e.getMessage());
+    } finally {
+      DateTimeUtils.setCurrentMillisOffset(0);
     }
   }
 

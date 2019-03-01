@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import org.joda.time.DateTimeUtils;
 import software.wings.beans.User;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
@@ -36,14 +37,20 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
       if (isBlank(totpSecret)) {
         throw new WingsException(ErrorCode.INVALID_TWO_FACTOR_AUTHENTICATION_CONFIGURATION);
       }
-      String currentSecret = TimeBasedOneTimePasswordUtil.generateCurrentNumberString(totpSecret);
 
-      if (!currentSecret.equals(passcode)) {
+      final int code = Integer.parseInt(passcode);
+      final long currentTime = DateTimeUtils.currentTimeMillis();
+      if (!TimeBasedOneTimePasswordUtil.validateCurrentNumber(
+              totpSecret, code, 0, currentTime, TimeBasedOneTimePasswordUtil.DEFAULT_TIME_STEP_SECONDS)
+          && !TimeBasedOneTimePasswordUtil.validateCurrentNumber(
+                 totpSecret, code, 0, currentTime - 10000, TimeBasedOneTimePasswordUtil.DEFAULT_TIME_STEP_SECONDS)
+          && !TimeBasedOneTimePasswordUtil.validateCurrentNumber(
+                 totpSecret, code, 0, currentTime + 10000, TimeBasedOneTimePasswordUtil.DEFAULT_TIME_STEP_SECONDS)) {
         throw new WingsException(ErrorCode.INVALID_TOTP_TOKEN, USER);
       }
       return user;
 
-    } catch (GeneralSecurityException e) {
+    } catch (GeneralSecurityException | NumberFormatException e) {
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
     }
   }
