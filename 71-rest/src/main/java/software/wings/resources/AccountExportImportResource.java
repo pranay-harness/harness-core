@@ -58,6 +58,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.UserService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.yaml.gitSync.YamlChangeSet;
@@ -117,6 +118,7 @@ public class AccountExportImportResource {
   private WingsMongoExportImport mongoExportImport;
   private PersistentScheduler scheduler;
   private AppService appService;
+  private UserService userService;
   private UsageRestrictionsService usageRestrictionsService;
   private AccountPermissionUtils accountPermissionUtils;
 
@@ -138,12 +140,13 @@ public class AccountExportImportResource {
 
   @Inject
   public AccountExportImportResource(WingsMongoPersistence wingsPersistence, WingsMongoExportImport mongoExportImport,
-      AppService appService, UsageRestrictionsService usageRestrictionsService,
+      AppService appService, UsageRestrictionsService usageRestrictionsService, UserService userService,
       AccountPermissionUtils accountPermissionUtils, @Named("BackgroundJobScheduler") PersistentScheduler scheduler) {
     this.wingsPersistence = wingsPersistence;
     this.mongoExportImport = mongoExportImport;
     this.scheduler = scheduler;
     this.appService = appService;
+    this.userService = userService;
     this.usageRestrictionsService = usageRestrictionsService;
     this.accountPermissionUtils = accountPermissionUtils;
 
@@ -280,6 +283,8 @@ public class AccountExportImportResource {
     JsonArray jsonArray = convertStringListToJsonArray(records);
     String jsonString = gson.toJson(jsonArray);
     zipOutputStream.write(jsonString.getBytes(Charset.defaultCharset()));
+    // Flush when each collection finished exporting into the stream to reduce memory footprint.
+    zipOutputStream.flush();
   }
 
   private DBObject getGitCommitExportFilter(DBObject accountIdFilter) {
@@ -342,6 +347,7 @@ public class AccountExportImportResource {
   public RestResponse<ImportStatusReport> importAccountData(@QueryParam("accountId") final String accountId,
       @QueryParam("mode") @DefaultValue("UPSERT") ImportMode importMode,
       @QueryParam("disableSchemaCheck") boolean disableSchemaCheck,
+      @QueryParam("disableNaturalKeyCheck") @DefaultValue("true") boolean disableNaturalKeyCheck,
       @FormDataParam("file") final InputStream uploadInputStream) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!usageRestrictionsService.isAccountAdmin(accountId)) {
@@ -369,45 +375,71 @@ public class AccountExportImportResource {
     String accountCollectionName = getCollectionName(Account.class);
     JsonArray accounts = getJsonArray(zipEntryDataMap, accountCollectionName);
     if (accounts != null) {
+      String[] naturalKeyFields = null;
+      if (!disableNaturalKeyCheck) {
+        naturalKeyFields = new String[] {"accountName"};
+      }
       importStatuses.add(mongoExportImport.importRecords(
-          accountCollectionName, convertJsonArrayToStringList(accounts), importMode, new String[] {"accountName"}));
+          accountCollectionName, convertJsonArrayToStringList(accounts), importMode, naturalKeyFields));
     }
 
     // 3. Import users
     String userCollectionName = getCollectionName(User.class);
     JsonArray users = getJsonArray(zipEntryDataMap, userCollectionName);
+    // Find potential user email clashes and find the mapping of imported user id to existing user id.
+    Map<String, String> clashedUserIdMapping = findClashedUserIdMapping(accountId, users);
     if (users != null) {
+      String[] naturalKeyFields = null;
+      if (!disableNaturalKeyCheck) {
+        naturalKeyFields = getNaturalKeyFields(User.class);
+      }
       importStatuses.add(mongoExportImport.importRecords(
-          userCollectionName, convertJsonArrayToStringList(users), importMode, getNaturalKeyFields(User.class)));
+          userCollectionName, convertJsonArrayToStringList(users), importMode, naturalKeyFields));
     }
 
     // 4. Import applications
     String applicationsCollectionName = getCollectionName(Application.class);
-    JsonArray applications = getJsonArray(zipEntryDataMap, applicationsCollectionName);
+    JsonArray applications = getJsonArray(zipEntryDataMap, applicationsCollectionName, clashedUserIdMapping);
     if (applications != null) {
-      importStatuses.add(mongoExportImport.importRecords(applicationsCollectionName,
-          convertJsonArrayToStringList(applications), importMode, getNaturalKeyFields(Application.class)));
+      String[] naturalKeyFields = null;
+      if (!disableNaturalKeyCheck) {
+        naturalKeyFields = getNaturalKeyFields(Application.class);
+      }
+      importStatuses.add(mongoExportImport.importRecords(
+          applicationsCollectionName, convertJsonArrayToStringList(applications), importMode, naturalKeyFields));
     }
 
     // 5. Import all "encryptedRecords", "configs.file" and "configs.chunks" content
     String encryptedDataCollectionName = getCollectionName(EncryptedData.class);
-    JsonArray encryptedData = getJsonArray(zipEntryDataMap, encryptedDataCollectionName);
+    JsonArray encryptedData = getJsonArray(zipEntryDataMap, encryptedDataCollectionName, clashedUserIdMapping);
     if (encryptedData != null) {
-      importStatuses.add(mongoExportImport.importRecords(encryptedDataCollectionName,
-          convertJsonArrayToStringList(encryptedData), importMode, getNaturalKeyFields(EncryptedData.class)));
+      String[] naturalKeyFields = null;
+      if (!disableNaturalKeyCheck) {
+        naturalKeyFields = getNaturalKeyFields(EncryptedData.class);
+      }
+      importStatuses.add(mongoExportImport.importRecords(
+          encryptedDataCollectionName, convertJsonArrayToStringList(encryptedData), importMode, naturalKeyFields));
     }
     JsonArray configFiles = getJsonArray(zipEntryDataMap, COLLECTION_CONFIG_FILES);
     if (configFiles != null) {
+      String[] naturalKeyFields = null;
+      if (!disableNaturalKeyCheck) {
+        naturalKeyFields = new String[] {"_id"};
+      }
       ImportStatus importStatus = mongoExportImport.importRecords(
-          COLLECTION_CONFIG_FILES, convertJsonArrayToStringList(configFiles), importMode, new String[] {"_id"});
+          COLLECTION_CONFIG_FILES, convertJsonArrayToStringList(configFiles), importMode, naturalKeyFields);
       if (importStatus != null) {
         importStatuses.add(importStatus);
       }
     }
     JsonArray configChunks = getJsonArray(zipEntryDataMap, COLLECTION_CONFIG_CHUNKS);
     if (configChunks != null) {
-      ImportStatus importStatus = mongoExportImport.importRecords(COLLECTION_CONFIG_CHUNKS,
-          convertJsonArrayToStringList(configChunks), importMode, new String[] {"files_id", "n"});
+      String[] naturalKeyFields = null;
+      if (!disableNaturalKeyCheck) {
+        naturalKeyFields = new String[] {"files_id", "n"};
+      }
+      ImportStatus importStatus = mongoExportImport.importRecords(
+          COLLECTION_CONFIG_CHUNKS, convertJsonArrayToStringList(configChunks), importMode, naturalKeyFields);
       if (importStatus != null) {
         importStatuses.add(importStatus);
       }
@@ -416,12 +448,16 @@ public class AccountExportImportResource {
     // 6. Import all other entity types.
     for (Entry<String, Class<? extends Base>> entry : genericExportableEntityTypes.entrySet()) {
       String collectionName = getCollectionName(entry.getValue());
-      JsonArray jsonArray = getJsonArray(zipEntryDataMap, collectionName);
+      JsonArray jsonArray = getJsonArray(zipEntryDataMap, collectionName, clashedUserIdMapping);
       if (jsonArray == null) {
         log.info("No data found for collection '{}' to import.", collectionName);
       } else {
+        String[] naturalKeyFields = null;
+        if (!disableNaturalKeyCheck) {
+          naturalKeyFields = getNaturalKeyFields(entry.getValue());
+        }
         ImportStatus importStatus = mongoExportImport.importRecords(
-            collectionName, convertJsonArrayToStringList(jsonArray), importMode, getNaturalKeyFields(entry.getValue()));
+            collectionName, convertJsonArrayToStringList(jsonArray), importMode, naturalKeyFields);
         if (importStatus != null) {
           importStatuses.add(importStatus);
         }
@@ -482,6 +518,57 @@ public class AccountExportImportResource {
     }
   }
 
+  Map<String, String> findClashedUserIdMapping(String accountId, JsonArray users) {
+    // The users to be imported might have the same email with existing user in the cluster it's being imported into.
+    // This method will build the mapping between these clashed user ids. Upon occurrence of user clash with the same
+    // email:
+    // 1. The user with email clash won't be imported.
+    // 2. The existing user with the same email need to be added to the account to be exported.
+    Map<String, String> userIdMapping = new HashMap<>();
+    if (users != null && users.size() > 0) {
+      Account account = wingsPersistence.get(Account.class, accountId);
+      for (JsonElement user : users) {
+        JsonObject userObject = user.getAsJsonObject();
+        String userId = userObject.get("_id").getAsString();
+        final String email = userObject.get("email").getAsString();
+        if (isEmpty(email)) {
+          String userName = userObject.get("name").getAsString();
+          // Ignore as this user doesn't have an email attribute
+          log.info("User '{}' with id {} doesn't have an email attribute, it will be skipped from being imported.",
+              userName, userId);
+          continue;
+        }
+        User existingUser = userService.getUserByEmail(email);
+        if (existingUser != null && !existingUser.getUuid().equals(userId)) {
+          userIdMapping.put(userId, existingUser.getUuid());
+          log.info(
+              "User '{}' with email '{}' clashes with one existing user '{}'.", userId, email, existingUser.getUuid());
+          // Adding the new import account into the account list of the existing user.
+          existingUser.getAccounts().add(account);
+          wingsPersistence.save(existingUser);
+        }
+      }
+      if (userIdMapping.size() > 0) {
+        log.info(
+            "{} users have email clashes with existing users and all of the references to it in the imported records need to be replaced.",
+            userIdMapping.size());
+      }
+    }
+    return userIdMapping;
+  }
+
+  String replaceClashedUserIds(String collectionJson, Map<String, String> clashedUserIdMapping) {
+    // 3. All references to the old user id in all records to be imported need to be replaced with the new user id
+    // Typical reference to user ids are in 'createdBy/uuid', 'lastUpdatedBy/uuid' and user group membership.
+    String result = collectionJson;
+    if (isNotEmpty(clashedUserIdMapping)) {
+      for (Entry<String, String> idMappingEntry : clashedUserIdMapping.entrySet()) {
+        result = result.replaceAll("\"" + idMappingEntry.getKey() + "\"", "\"" + idMappingEntry.getValue() + "\"");
+      }
+    }
+    return result;
+  }
+
   private List<Trigger> getAllScheduledTriggersForAccount(String accountId, List<String> appIds) {
     List<Trigger> triggers = new ArrayList<>();
     Query<Trigger> query = wingsPersistence.createQuery(Trigger.class).filter("appId in", appIds);
@@ -528,9 +615,16 @@ public class AccountExportImportResource {
   }
 
   private JsonArray getJsonArray(Map<String, String> zipDataMap, String collectionName) {
+    return getJsonArray(zipDataMap, collectionName, null);
+  }
+
+  private JsonArray getJsonArray(
+      Map<String, String> zipDataMap, String collectionName, Map<String, String> clashedUserIdMapping) {
     String zipEntryName = collectionName + JSON_FILE_SUFFIX;
     String json = zipDataMap.get(zipEntryName);
     if (isNotEmpty(json)) {
+      // Replace clashed user id with the new user id in the current system.
+      json = replaceClashedUserIds(json, clashedUserIdMapping);
       return (JsonArray) jsonParser.parse(json);
     } else {
       return null;

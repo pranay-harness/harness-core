@@ -10,6 +10,7 @@ import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.DBCollectionFindOptions;
 import io.harness.annotation.NaturalKey;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
@@ -68,6 +69,7 @@ public class WingsMongoExportImport {
     DBCollection collection = wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE, ReadPref.NORMAL)
                                   .getDB()
                                   .getCollection(collectionName);
+    boolean disableNaturalKeyCheck = EmptyPredicate.isEmpty(naturalKeyFields);
 
     int totalRecords = records.size();
     int importedRecords = 0;
@@ -81,21 +83,24 @@ public class WingsMongoExportImport {
       idClashCount += recordCountFromId;
 
       long recordCountFromNaturalKey = 0;
-      DBObject naturalKeyQuery = getNaturalKeyQueryFromKeyFields(naturalKeyFields, importRecord);
-      recordCountFromNaturalKey = collection.getCount(naturalKeyQuery);
-      if (recordCountFromNaturalKey > 1) {
-        // This usually means this entity has no naturaly key. E.g 'secretChangeLogs' collection
-        log.debug("Record {} in collection {} matched {} records using natural key query {}.", id, collectionName,
-            recordCountFromNaturalKey, naturalKeyQuery);
-        recordCountFromNaturalKey = 1;
+      DBObject naturalKeyQuery = null;
+      if (!disableNaturalKeyCheck) {
+        naturalKeyQuery = getNaturalKeyQueryFromKeyFields(naturalKeyFields, importRecord);
+        recordCountFromNaturalKey = collection.getCount(naturalKeyQuery);
+        if (recordCountFromNaturalKey > 1) {
+          // This usually means this entity has no naturaly key. E.g 'secretChangeLogs' collection
+          log.debug("Record {} in collection {} matched {} records using natural key query {}.", id, collectionName,
+              recordCountFromNaturalKey, naturalKeyQuery);
+          recordCountFromNaturalKey = 1;
+        }
+        naturalKeyClashCount += recordCountFromNaturalKey;
       }
-      naturalKeyClashCount += recordCountFromNaturalKey;
 
       switch (mode) {
         case DRY_RUN:
           break;
         case INSERT:
-          if (recordCountFromId == 0 && recordCountFromNaturalKey == 0) {
+          if (recordCountFromId == 0 && (disableNaturalKeyCheck || recordCountFromNaturalKey == 0)) {
             // Totally new record, it can be inserted directly.
             collection.insert(importRecord, WriteConcern.ACKNOWLEDGED);
             importedRecords++;
@@ -103,7 +108,7 @@ public class WingsMongoExportImport {
           break;
         case UPSERT:
           // We should not UPSERT record if same ID record exists, but with different natural key.
-          if (recordCountFromId == recordCountFromNaturalKey) {
+          if (disableNaturalKeyCheck || recordCountFromId == recordCountFromNaturalKey) {
             collection.save(importRecord, WriteConcern.ACKNOWLEDGED);
             importedRecords++;
           } else {
@@ -117,9 +122,11 @@ public class WingsMongoExportImport {
       }
     }
 
-    if (importedRecords + idClashCount + naturalKeyClashCount > 0) {
-      log.info("{} '{}' records have the same ID as existing records.", idClashCount, collectionName);
+    if (naturalKeyClashCount > 0) {
       log.info("{} '{}' records have the same natural key as existing records.", naturalKeyClashCount, collectionName);
+    }
+    if (importedRecords + idClashCount > 0) {
+      log.info("{} '{}' records have the same ID as existing records.", idClashCount, collectionName);
       log.info("{} out of {} '{}' records have been imported successfully in {} mode.", importedRecords, totalRecords,
           collectionName, mode);
     }
