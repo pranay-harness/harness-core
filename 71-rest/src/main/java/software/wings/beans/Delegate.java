@@ -46,11 +46,12 @@ public class Delegate extends Base {
   @NaturalKey private String delegateProfileId;
   private long lastHeartBeat;
   @NaturalKey private String version;
-  @Transient private String sequenceNum;
+  private transient String sequenceNum;
   private String delegateType;
-  @Transient private String delegateRandomToken;
-  @Transient private boolean keepAlivePacket;
+  private transient String delegateRandomToken;
+  private transient boolean keepAlivePacket;
   private String verificationServiceSecret;
+  private transient boolean polllingModeEnabled;
 
   @Deprecated private List<String> supportedTaskTypes;
 
@@ -83,6 +84,7 @@ public class Delegate extends Base {
     private String delegateType;
     private String delegateRandomToken;
     private boolean keepAlivePacket;
+    private boolean polllingModeEnabled;
 
     private List<DelegateScope> includeScopes;
     private List<DelegateScope> excludeScopes;
@@ -226,6 +228,11 @@ public class Delegate extends Base {
       return this;
     }
 
+    public Builder withPolllingModeEnabled(boolean polllingModeEnabled) {
+      this.polllingModeEnabled = polllingModeEnabled;
+      return this;
+    }
+
     public Builder but() {
       return aDelegate()
           .withAccountId(accountId)
@@ -252,7 +259,8 @@ public class Delegate extends Base {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withKeepAlivePacket(keepAlivePacket);
+          .withKeepAlivePacket(keepAlivePacket)
+          .withPolllingModeEnabled(polllingModeEnabled);
     }
 
     public Delegate build() {
@@ -282,6 +290,7 @@ public class Delegate extends Base {
       delegate.setLastUpdatedAt(lastUpdatedAt);
       delegate.setDelegateRandomToken(delegateRandomToken);
       delegate.setKeepAlivePacket(keepAlivePacket);
+      delegate.setPolllingModeEnabled(polllingModeEnabled);
       return delegate;
     }
   }

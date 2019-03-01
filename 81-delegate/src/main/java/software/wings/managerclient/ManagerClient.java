@@ -121,6 +121,6 @@ public interface ManagerClient {
   Call<List<DelegateTaskEvent>> pollTaskEvents(
       @Path("delegateId") String delegateId, @Query("accountId") String accountId);
 
-  @GET("delegates/{delegateId}/heartbeat")
-  Call<Delegate> delegateHeartbeat(@Path("delegateId") String delegateId, @Query("accountId") String accountId);
+  @POST("delegates/heartbeat-with-polling")
+  Call<RestResponse<Delegate>> delegateHeartbeat(@Query("accountId") String accountId, @Body Delegate delegate);
 }
