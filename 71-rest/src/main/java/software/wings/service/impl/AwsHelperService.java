@@ -14,7 +14,7 @@ import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.startsWith;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -161,12 +161,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
@@ -181,7 +175,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -1575,19 +1568,24 @@ public class AwsHelperService {
   }
 
   public static boolean isInAwsRegion(String region) {
-    try {
-      HttpEntity entity =
-          HttpClients.custom()
-              .setDefaultRequestConfig(RequestConfig.custom().setConnectTimeout(2000).setSocketTimeout(2000).build())
-              .build()
-              .execute(new HttpGet(AWS_AVAILABILITY_ZONE_CHECK))
-              .getEntity();
-      String availabilityZone =
-          entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "none";
-      return startsWith(availabilityZone, region);
-    } catch (IOException e) {
-      return false;
+    // Regions.getCurrentRegion() internally call Ec2Metadata api.
+    // It also does exception handling and returns null in that case.
+    // This will work except when delegate is run as fargate task.
+    com.amazonaws.regions.Region regionForContainer = Regions.getCurrentRegion();
+
+    if (regionForContainer != null) {
+      return regionForContainer.getName().equals(region);
     }
+
+    // When delegate is running as fargate task, rely on ENV variable: AWS_REGION
+    String currentRegion = System.getenv("AWS_REGION");
+    logger.info("ECS Current Region Value from ENV var {AWS_REGION}: " + currentRegion);
+    if (isNotBlank(currentRegion)) {
+      return currentRegion.equals(region);
+    }
+
+    logger.info("Failed in ECS validation, failed to fetch current region");
+    return false;
   }
 
   public List<Filter> getAwsFiltersForRunningState() {
