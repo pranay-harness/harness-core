@@ -2,6 +2,7 @@ package io.harness.security;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
@@ -82,7 +83,8 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
   }
 
   private boolean isCustomApiRequest(ContainerRequestContext requestContext) {
-    return customApi() && requestContext.getHeaderString(HttpHeaders.AUTHORIZATION).startsWith("Bearer");
+    return customApi() && isNotEmpty(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION))
+        && isNotEmpty(extractToken(requestContext, "Bearer"));
   }
 
   private boolean customApi() {
