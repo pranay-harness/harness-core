@@ -237,13 +237,13 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   @ValidationGroups(Create.class)
   public Environment save(Environment environment) {
-    String accountId = appService.getAccountIdByAppId(environment.getAppId());
-    environment.setAccountId(accountId);
     environment.setKeywords(trimList(environment.generateKeywords()));
     Environment savedEnvironment = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Environment.class, environment), "name", environment.getName());
     serviceTemplateService.createDefaultTemplatesByEnv(savedEnvironment);
     sendNotifaction(savedEnvironment, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
+
+    String accountId = appService.getAccountIdByAppId(savedEnvironment.getAppId());
     yamlPushService.pushYamlChangeSet(
         accountId, null, savedEnvironment, Type.CREATE, environment.isSyncFromGit(), false);
 

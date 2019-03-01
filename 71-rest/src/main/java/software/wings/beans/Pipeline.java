@@ -7,6 +7,7 @@ package software.wings.beans;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static java.util.Arrays.asList;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.annotation.NaturalKey;
@@ -39,6 +40,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)
 public class Pipeline extends Base {
   public static final String NAME_KEY = "name";
@@ -63,13 +65,12 @@ public class Pipeline extends Base {
   private transient boolean hasBuildWorkflow;
   private transient List<String> infraMappingIds = new ArrayList<>();
   @SchemaIgnore @Indexed private List<String> keywords;
-  @Indexed private String accountId;
 
   @Builder
   public Pipeline(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, String name, String description, List<PipelineStage> pipelineStages,
       Map<String, Long> stateEtaMap, List<Service> services, List<WorkflowExecution> workflowExecutions,
-      List<FailureStrategy> failureStrategies, String accountId) {
+      List<FailureStrategy> failureStrategies) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -78,13 +79,11 @@ public class Pipeline extends Base {
     this.services = services;
     this.workflowExecutions = workflowExecutions;
     this.failureStrategies = (failureStrategies == null) ? new ArrayList<>() : failureStrategies;
-    this.accountId = accountId;
   }
 
   public Pipeline cloneInternal() {
     return Pipeline.builder()
         .appId(appId)
-        .accountId(accountId)
         .name(name)
         .description(description)
         .pipelineStages(pipelineStages)

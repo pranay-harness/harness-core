@@ -827,7 +827,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @ValidationGroups(Create.class)
   public Workflow createWorkflow(Workflow workflow) {
     String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-    workflow.setAccountId(accountId);
 
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new Action(accountId, ActionType.CREATE_WORKFLOW));
