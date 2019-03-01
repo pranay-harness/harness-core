@@ -1794,8 +1794,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                                          .build())
                                                               .collect(toMap(StateExecutionElement::getName, x -> x));
 
-    final StateMachine stateMachine = wingsPersistence.getWithAppId(
-        StateMachine.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getStateMachineId());
+    final StateMachine stateMachine = stateExecutionService.obtainStateMachine(stateExecutionInstance);
 
     int subStates =
         stateMachine.getChildStateMachines().get(stateExecutionInstance.getChildStateMachineId()).getStates().size()

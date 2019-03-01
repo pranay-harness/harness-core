@@ -27,7 +27,6 @@ import static io.harness.eraro.ErrorCode.STATE_NOT_FOR_TYPE;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.ReadPref.CRITICAL;
-import static io.harness.persistence.ReadPref.NORMAL;
 import static io.harness.threading.Morpheus.quietSleep;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -101,6 +100,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
@@ -145,6 +145,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private Injector injector;
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private NotificationService notificationService;
+  @Inject private StateExecutionService stateExecutionService;
   @Inject private StateInspectionService stateInspectionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private WingsPersistence wingsPersistence;
@@ -278,7 +279,6 @@ public class StateMachineExecutor implements StateInspectionListener {
     notNullCheck("stateName", stateExecutionInstance.getStateName());
 
     stateExecutionInstance.setAppId(stateMachine.getAppId());
-    stateExecutionInstance.setStateMachineId(stateMachine.getUuid());
     State state =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     stateExecutionInstance.setRollback(state.isRollback());
@@ -348,8 +348,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       return false;
     }
     StateExecutionInstance stateExecutionInstance = pageResponse.get(0);
-    StateMachine stateMachine =
-        wingsPersistence.get(StateMachine.class, stateExecutionInstance.getStateMachineId(), CRITICAL);
+    StateMachine stateMachine = stateExecutionService.obtainStateMachine(stateExecutionInstance);
     logger.info("Starting execution of StateMachine {} with initialState {}", stateMachine.getName(),
         stateMachine.getInitialStateName());
     startExecution(stateMachine, stateExecutionInstance);
@@ -366,8 +365,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   void startExecution(String appId, String executionUuid, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
-    StateMachine sm =
-        wingsPersistence.getWithAppId(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), CRITICAL);
+    StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
     startExecution(sm, stateExecutionInstance);
   }
 
@@ -452,8 +450,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
-    StateMachine sm =
-        wingsPersistence.getWithAppId(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), CRITICAL);
+    StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
     startStateExecution(context, stateExecutionInstance);
@@ -1183,8 +1180,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       Map<String, ResponseData> response, boolean asyncError) {
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
-    StateMachine sm =
-        wingsPersistence.getWithAppId(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), CRITICAL);
+    StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     injector.injectMembers(currentState);
@@ -1225,8 +1221,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
         updateStatus(stateExecutionInstance, FAILED, Lists.newArrayList(WAITING), null);
 
-        StateMachine sm = wingsPersistence.getWithAppId(StateMachine.class, workflowExecutionInterrupt.getAppId(),
-            stateExecutionInstance.getStateMachineId(), CRITICAL);
+        StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
 
         State currentState =
             sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
@@ -1293,8 +1288,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           stateExecutionInstanceId);
       return null;
     }
-    StateMachine sm =
-        wingsPersistence.getWithAppId(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), NORMAL);
+    StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
 
     return new ExecutionContextImpl(stateExecutionInstance, sm, injector);
   }
@@ -1311,8 +1305,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             .asList();
 
     for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
-      StateMachine sm = wingsPersistence.getWithAppId(StateMachine.class, workflowExecutionInterrupt.getAppId(),
-          stateExecutionInstance.getStateMachineId(), CRITICAL);
+      StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
       injector.injectMembers(context);
       updateStateExecutionData(stateExecutionInstance, null, FAILED, null, asList(WAITING), null, null, null);
@@ -1341,8 +1334,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
 
     for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
-      StateMachine sm = wingsPersistence.getWithAppId(StateMachine.class, workflowExecutionInterrupt.getAppId(),
-          stateExecutionInstance.getStateMachineId(), CRITICAL);
+      StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
       injector.injectMembers(context);
       discontinueMarkedInstance(context, stateExecutionInstance, ABORTED);
@@ -1354,8 +1346,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     clearStateExecutionData(stateExecutionInstance, stateParams);
     stateExecutionInstance = getStateExecutionInstance(
         stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
-    StateMachine sm = wingsPersistence.getWithAppId(
-        StateMachine.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getStateMachineId(), CRITICAL);
+    StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
 
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());

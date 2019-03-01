@@ -15,12 +15,14 @@ import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.SelectNodeStepExecutionSummary;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
 
@@ -180,5 +182,14 @@ public class StateExecutionServiceImpl implements StateExecutionService {
             .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
             .get();
     return stateExecutionInstance.getStateExecutionData();
+  }
+
+  @Override
+  public StateMachine obtainStateMachine(StateExecutionInstance stateExecutionInstance) {
+    final WorkflowExecution workflowExecution = wingsPersistence.getWithAppId(
+        WorkflowExecution.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid());
+
+    return wingsPersistence.getWithAppId(
+        StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
   }
 }
