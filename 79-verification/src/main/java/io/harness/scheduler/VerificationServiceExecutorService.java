@@ -2,6 +2,7 @@ package io.harness.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static software.wings.common.VerificationConstants.CV_CONFIGURATION_VALID_LIMIT_IN_DAYS;
 import static software.wings.common.VerificationConstants.DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION_CRON_GROUP;
@@ -35,6 +36,7 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.sm.StateType;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
@@ -148,11 +150,16 @@ public class VerificationServiceExecutorService {
           logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
           logsCVConfiguration.setEnabled24x7(true);
           logsCVConfiguration.setComparisonStrategy(context.getComparisonStrategy());
+          logsCVConfiguration.setWorkflowConfig(true);
           logsCVConfiguration.setContextId(context.getUuid());
+          logsCVConfiguration.setValidUntil(
+              Date.from(OffsetDateTime.now().plusDays(CV_CONFIGURATION_VALID_LIMIT_IN_DAYS).toInstant()));
           wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(logsCVConfiguration));
 
           context.setPredictiveCvConfigId(cvConfigUuid);
           wingsPersistence.updateField(AnalysisContext.class, context.getUuid(), "predictiveCvConfigId", cvConfigUuid);
+          logger.info("Created Configuration for Type {}, cvConfigId {}, stateExecutionId {}",
+              logsCVConfiguration.getStateType(), logsCVConfiguration.getUuid(), context.getStateExecutionId());
           break;
         default:
           throw new IllegalArgumentException("Invalid state: " + context.getStateType());

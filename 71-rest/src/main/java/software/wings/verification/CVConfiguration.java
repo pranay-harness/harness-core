@@ -1,12 +1,15 @@
 package software.wings.verification;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.annotation.NaturalKey;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
@@ -15,6 +18,7 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.sm.StateType;
 import software.wings.yaml.BaseEntityYaml;
 
+import java.util.Date;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -41,11 +45,14 @@ public class CVConfiguration extends Base {
   private boolean enabled24x7;
   private AnalysisComparisonStrategy comparisonStrategy;
   private String contextId;
+  private boolean isWorkflowConfig;
 
   @Transient @SchemaIgnore private String connectorName;
   @Transient @SchemaIgnore private String serviceName;
   @Transient @SchemaIgnore private String envName;
   @Transient @SchemaIgnore private String appName;
+
+  @Default @SchemaIgnore @JsonIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
 
   @Data
   @NoArgsConstructor

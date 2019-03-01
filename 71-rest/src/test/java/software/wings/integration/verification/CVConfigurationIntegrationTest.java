@@ -1,10 +1,12 @@
 package software.wings.integration.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.sm.StateType.APP_DYNAMICS;
@@ -22,9 +24,12 @@ import com.google.inject.Inject;
 
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
+import io.harness.rule.RepeatRule.Repeat;
 import io.harness.serializer.JsonUtils;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -48,8 +53,10 @@ import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +75,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Inject @InjectMocks private AppService appService;
 
   @Mock private LimitCheckerFactory limitCheckerFactory;
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private NewRelicCVServiceConfiguration newRelicCVServiceConfiguration;
   private AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
@@ -727,6 +736,51 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(delete_url);
     response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
     assertEquals(false, response.getResource());
+  }
+
+  @Test
+  @Repeat(times = 5, successes = 1)
+  public <T extends CVConfiguration> void testLogsConfigurationValidUntil() throws InterruptedException {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SUMO;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+    RestResponse<LogsCVConfiguration> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
+    LogsCVConfiguration fetchedObject = getRequestResponse.getResource();
+
+    LogsCVConfiguration responseConfig = fetchedObject;
+    assertEquals(savedObjectUuid, fetchedObject.getUuid());
+    assertEquals(accountId, fetchedObject.getAccountId());
+    assertEquals(appId, fetchedObject.getAppId());
+    assertEquals(envId, fetchedObject.getEnvId());
+    assertEquals(serviceId, fetchedObject.getServiceId());
+    assertEquals(SUMO, fetchedObject.getStateType());
+    assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
+    assertEquals("someSettingAttributeName", responseConfig.getConnectorName());
+    assertEquals("someServiceName", responseConfig.getServiceName());
+
+    wingsPersistence.updateField(LogsCVConfiguration.class, savedObjectUuid, "validUntil",
+        Date.from(OffsetDateTime.now().plusSeconds(1).toInstant()));
+    Date validUntil = Date.from(OffsetDateTime.now().plusSeconds(1).toInstant());
+
+    List<CVConfiguration> cvConfigurationList =
+        wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).asList();
+
+    cvConfigurationList.forEach(configRecords -> {
+      if (configRecords.getValidUntil() != null) {
+        assertTrue(validUntil.getTime() > configRecords.getValidUntil().getTime());
+      }
+    });
   }
 
   @Test
