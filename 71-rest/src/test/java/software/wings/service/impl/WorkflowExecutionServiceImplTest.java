@@ -553,8 +553,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .isNotNull()
         .extracting(
             "releaseNo", "displayName", "lastGoodDeploymentUuid", "lastGoodDeploymentDisplayName", "lastGoodReleaseNo")
-        .containsExactly(workflowExecution2.getReleaseNo(), workflowExecution2.getDisplayName(),
-            workflowExecution.getUuid(), workflowExecution.getDisplayName(), workflowExecution.getReleaseNo());
+        .containsExactly(workflowExecution2.getReleaseNo(), workflowExecution2.displayName(),
+            workflowExecution.getUuid(), workflowExecution.displayName(), workflowExecution.getReleaseNo());
   }
 
   private WorkflowElement getWorkflowElement(String appId, WorkflowExecution workflowExecution) {
@@ -649,7 +649,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, emptySet());
     assertThat(execution)
         .isNotNull()
-        .hasFieldOrProperty("displayName")
         .hasFieldOrProperty("releaseNo")
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
         .containsExactly(executionId, ExecutionStatus.SUCCESS);

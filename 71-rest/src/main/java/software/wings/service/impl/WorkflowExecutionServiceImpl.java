@@ -1155,7 +1155,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setStatus(QUEUED);
 
     EntityVersion entityVersion = entityVersionService.newEntityVersion(workflowExecution.getAppId(), DEPLOYMENT,
-        workflowExecution.getWorkflowId(), workflowExecution.getDisplayName(), ChangeType.CREATED);
+        workflowExecution.getWorkflowId(), workflowExecution.displayName(), ChangeType.CREATED);
 
     workflowExecution.setReleaseNo(String.valueOf(entityVersion.getVersion()));
     workflowExecution = wingsPersistence.saveAndGet(WorkflowExecution.class, workflowExecution);
@@ -1221,7 +1221,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private void savePipelineSweepingOutPut(
       WorkflowExecution workflowExecution, Pipeline pipeline, WorkflowExecution savedWorkflowExecution) {
     PipelineElement pipelineElement = PipelineElement.builder()
-                                          .displayName(workflowExecution.getDisplayName())
+                                          .displayName(workflowExecution.displayName())
                                           .name(pipeline.getName())
                                           .description(pipeline.getDescription())
                                           .startTs(savedWorkflowExecution.getStartTs())
@@ -1246,14 +1246,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                        .uuid(workflowExecution.getUuid())
                                        .name(workflowExecution.getName())
                                        .url(workflowUrl)
-                                       .displayName(workflowExecution.getDisplayName())
+                                       .displayName(workflowExecution.displayName())
                                        .releaseNo(workflowExecution.getReleaseNo())
                                        .build());
     } else {
       stdParams.getWorkflowElement().setName(workflowExecution.getName());
       stdParams.getWorkflowElement().setUuid(workflowExecution.getUuid());
       stdParams.getWorkflowElement().setUrl(workflowUrl);
-      stdParams.getWorkflowElement().setDisplayName(workflowExecution.getDisplayName());
+      stdParams.getWorkflowElement().setDisplayName(workflowExecution.displayName());
       stdParams.getWorkflowElement().setReleaseNo(workflowExecution.getReleaseNo());
     }
     stdParams.getWorkflowElement().setPipelineDeploymentUuid(workflowExecution.getWorkflowType() == PIPELINE
@@ -1417,7 +1417,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution workflowExecutionLast =
         fetchLastSuccessDeployment(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
     if (workflowExecutionLast != null) {
-      workflowElement.setLastGoodDeploymentDisplayName(workflowExecutionLast.getDisplayName());
+      workflowElement.setLastGoodDeploymentDisplayName(workflowExecutionLast.displayName());
       workflowElement.setLastGoodDeploymentUuid(workflowExecutionLast.getUuid());
       workflowElement.setLastGoodReleaseNo(workflowExecutionLast.getReleaseNo());
     }
@@ -2632,8 +2632,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         aPageRequest()
             .addFieldsIncluded(WorkflowExecution.APP_ID_KEY, WorkflowExecution.STATUS_KEY,
                 WorkflowExecution.WORKFLOW_ID_KEY, WorkflowExecution.CREATED_AT_KEY, WorkflowExecution.ID_KEY,
-                WorkflowExecution.START_TS_KEY, WorkflowExecution.END_TS_KEY, WorkflowExecution.DISPLAY_NAME_KEY,
-                WorkflowExecution.NAME_KEY)
+                WorkflowExecution.START_TS_KEY, WorkflowExecution.END_TS_KEY, WorkflowExecution.NAME_KEY)
             .addFilter(WorkflowExecution.APP_ID_KEY, EQ, appId)
             .addFilter(WorkflowExecution.STATUS_KEY, IN, ExecutionStatus.activeStatuses().toArray())
             .addFilter(WorkflowExecution.CREATED_AT_KEY, LT_EQ, workflowExecution.getCreatedAt())
