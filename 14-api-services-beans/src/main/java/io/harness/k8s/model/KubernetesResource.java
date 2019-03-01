@@ -120,6 +120,10 @@ public class KubernetesResource {
     return deployment.getSpec().getReplicas();
   }
 
+  public boolean isService() {
+    return StringUtils.equals(Kind.Service.name(), this.getResourceId().getKind());
+  }
+
   public boolean isPrimaryService() {
     if (StringUtils.equals(Kind.Service.name(), this.getResourceId().getKind())) {
       String isPrimary = (String) this.getField("metadata.annotations." + encodeDot(HarnessAnnotations.primaryService));

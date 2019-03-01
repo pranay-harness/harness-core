@@ -3,8 +3,10 @@ package software.wings.delegatetasks.k8s.taskhandler;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.k8s.manifest.ManifestHelper.getKubernetesResourceFromSpec;
 import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getPrimaryService;
+import static io.harness.k8s.manifest.ManifestHelper.getServices;
 import static io.harness.k8s.manifest.ManifestHelper.getStageService;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
@@ -32,6 +34,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
@@ -232,6 +235,34 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
       primaryService = getPrimaryService(resources);
       stageService = getStageService(resources);
+
+      if (primaryService == null) {
+        List<KubernetesResource> services = getServices(resources);
+        if (services.size() == 1) {
+          primaryService = services.get(0);
+          executionLogCallback.saveExecutionLog(
+              "Primary Service is " + color(primaryService.getResourceId().getName(), White, Bold));
+        } else if (services.size() == 0) {
+          throw new KubernetesYamlException(
+              "No service is found in manifests. Service is required for BlueGreen deployments."
+              + " Add at least one service manifest. Two services [i.e. primary and stage] can be specified with annotations "
+              + HarnessAnnotations.primaryService + " and " + HarnessAnnotations.stageService);
+        } else {
+          throw new KubernetesYamlException(
+              "Could not locate a Primary Service in Manifests. Primary and Stage services should be annotated with "
+              + HarnessAnnotations.primaryService + " and " + HarnessAnnotations.stageService);
+        }
+      }
+
+      if (stageService == null) {
+        // create a clone
+        stageService = getKubernetesResourceFromSpec(primaryService.getSpec());
+        stageService.appendSuffixInName("-stage");
+        resources.add(stageService);
+        executionLogCallback.saveExecutionLog(
+            String.format("Created Stage service [%s] using Spec from Primary Service [%s]",
+                stageService.getResourceId().getName(), primaryService.getResourceId().getName()));
+      }
 
       Service primaryServiceInCluster;
       Service stageServiceInCluster;
