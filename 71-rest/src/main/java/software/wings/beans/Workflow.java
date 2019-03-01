@@ -41,6 +41,7 @@ import javax.validation.constraints.NotNull;
 public class Workflow extends Base {
   public static final String NAME_KEY = "name";
   public static final String KEYWORDS_KEY = "keywords";
+  public static final String ORCHESTRATION_KEY = "orchestration";
 
   @NotNull @EntityName @NaturalKey private String name;
 

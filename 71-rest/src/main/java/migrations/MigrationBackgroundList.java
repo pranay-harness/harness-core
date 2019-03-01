@@ -36,7 +36,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(12, TerraformIsTemplatizedMigration.class))
         .add(Pair.of(13, AddValidUntilToWorkflowExecution.class))
         .add(Pair.of(14, SendInviteUrlForAllUserInvites.class))
-        .add(Pair.of(15, AddOrchestrationToWorkflows.class))
+        .add(Pair.of(15, BaseMigration.class))
+        .add(Pair.of(16, AddOrchestrationToWorkflows.class))
         .build();
   }
 }

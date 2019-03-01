@@ -19,16 +19,23 @@ public class AddOrchestrationToWorkflows implements Migration {
   @Inject private WorkflowService workflowService;
 
   @Override
+  @SuppressWarnings("PMD")
   public void migrate() {
     try (HIterator<Workflow> workflowIterator =
              new HIterator<>(wingsPersistence.createQuery(Workflow.class, excludeAuthority)
+                                 .field(Workflow.ORCHESTRATION_KEY)
+                                 .doesNotExist()
                                  .project(Workflow.ID_KEY, true)
                                  .project(Workflow.APP_ID_KEY, true)
                                  .fetch())) {
       while (workflowIterator.hasNext()) {
         Workflow workflow = workflowIterator.next();
-        Workflow readWorkflow = workflowService.readWorkflow(workflow.getAppId(), workflow.getUuid());
-        workflowService.updateWorkflow(readWorkflow);
+        try {
+          Workflow readWorkflow = workflowService.readWorkflow(workflow.getAppId(), workflow.getUuid());
+          workflowService.updateWorkflow(readWorkflow);
+        } catch (Throwable exception) {
+          logger.error(String.format("Exception while migrating orchestration for %s", workflow.getUuid()), exception);
+        }
       }
     }
   }
