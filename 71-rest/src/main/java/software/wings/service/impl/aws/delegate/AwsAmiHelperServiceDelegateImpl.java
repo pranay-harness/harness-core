@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -357,6 +358,16 @@ public class AwsAmiHelperServiceDelegateImpl
             awsElbHelperServiceDelegate.waitForAsgInstancesToRegisterWithClassicLB(awsConfig, encryptionDetails, region,
                 classicLB, newAutoScalingGroupName, autoScalingSteadyStateTimeout, executionLogCallback);
           });
+        }
+      } else {
+        if (newAsgFinalDesiredCount <= 0) {
+          // Delete new Asg and LC
+          executionLogCallback.saveExecutionLog(
+              format("Asg: [%s] being deleted after shutting down to 0 instances", newAutoScalingGroupName));
+          awsAsgHelperServiceDelegate.deleteAutoScalingGroups(awsConfig, encryptionDetails, region,
+              singletonList(awsAsgHelperServiceDelegate.getAutoScalingGroup(
+                  awsConfig, encryptionDetails, region, newAutoScalingGroupName)),
+              executionLogCallback);
         }
       }
     }

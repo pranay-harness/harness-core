@@ -277,7 +277,6 @@ public class AwsAmiServiceDeployState extends State {
     List<String> classicLbs = newArrayList();
     List<String> targetGroupArns = newArrayList();
     if (blueGreen) {
-      // TODO: fix me
       classicLbs = infrastructureMapping.getStageClassicLoadBalancers();
       targetGroupArns = infrastructureMapping.getStageTargetGroupArns();
     } else {
