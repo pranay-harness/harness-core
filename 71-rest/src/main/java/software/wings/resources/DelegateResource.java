@@ -535,13 +535,19 @@ public class DelegateResource {
   }
 
   @DelegateAuth
-  @GET
-  @Path("{delegateId}/heartbeat")
+  @POST
+  @Path("heartbeat-with-polling")
   @Timed
   @ExceptionMetered
-  public Delegate updateDelegateHB(
-      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    return delegateService.updateHeartbeat(accountId, delegateId);
+  public RestResponse<Delegate> updateDelegateHB(
+      @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
+    // delegate.isPolllingModeEnabled() will be true here.
+    if ("ECS".equals(delegate.getDelegateType())) {
+      Delegate registeredDelegate = delegateService.handleEcsDelegateRequest(delegate);
+      return new RestResponse<>(registeredDelegate);
+    } else {
+      return new RestResponse<>(delegateService.updateHeartbeatForDelegateWithPollingEnabled(delegate));
+    }
   }
 
   @DelegateAuth

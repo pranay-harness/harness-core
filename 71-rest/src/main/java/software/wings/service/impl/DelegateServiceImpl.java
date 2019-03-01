@@ -420,7 +420,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return updateAllDelegatesIfECSType(delegate, updateOperations, "ALL");
     } else {
       logger.info("Updating delegate : {}", delegate.getUuid());
-      return updateDelegate(delegate, updateOperations);
+      if (!isDelegateWithPollingEnabled(delegate)) {
+        // This updates delegates, as well as delegateConnection and taksBeingExecuted on delegate
+        return updateDelegate(delegate, updateOperations);
+      } else {
+        // only update lastHeartbeatAt
+        return updateHeartbeatForDelegateWithPollingEnabled(delegate);
+      }
     }
   }
 
@@ -446,19 +452,21 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public Delegate updateHeartbeat(String accountId, String delegateId) {
-    wingsPersistence.update(
-        wingsPersistence.createQuery(Delegate.class).filter(ACCOUNT_ID, accountId).filter(ID_KEY, delegateId),
+  public Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate) {
+    wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
+                                .filter(ACCOUNT_ID, delegate.getAccountId())
+                                .filter(ID_KEY, delegate.getUuid()),
         wingsPersistence.createUpdateOperations(Delegate.class)
             .set("lastHeartBeat", System.currentTimeMillis())
             .set("connected", true));
 
-    Delegate delegate = get(accountId, delegateId, false);
+    Delegate existingDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);
 
-    if (licenseService.isAccountDeleted(accountId)) {
-      delegate.setStatus(Status.DELETED);
+    if (licenseService.isAccountDeleted(existingDelegate.getAccountId())) {
+      existingDelegate.setStatus(Status.DELETED);
     }
-    return delegate;
+
+    return existingDelegate;
   }
 
   @Override
@@ -1027,10 +1035,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     delegate.setAppId(GLOBAL_APP_ID);
     Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
     logger.info("Delegate saved: {}", savedDelegate);
-    eventEmitter.send(Channel.DELEGATES,
-        anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
-    assignDelegateService.clearConnectionResults(delegate.getAccountId());
-    eventPublishHelper.publishInstalledDelegateEvent(delegate.getAccountId(), delegate.getUuid());
+
+    // When polling is enabled for delegate, do not perform these event publishing
+    if (!isDelegateWithPollingEnabled(delegate)) {
+      eventEmitter.send(Channel.DELEGATES,
+          anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
+      assignDelegateService.clearConnectionResults(delegate.getAccountId());
+      eventPublishHelper.publishInstalledDelegateEvent(delegate.getAccountId(), delegate.getUuid());
+    }
+
+    updateWithTokenAndSeqNumIfEcsDelegate(delegate, savedDelegate);
     return savedDelegate;
   }
 
@@ -1124,13 +1138,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
     }
 
-    // Broadcast Message containing, DelegateId and SeqNum (if applicable)
-    StringBuilder message = new StringBuilder(128).append("[X]").append(delegate.getUuid());
-    updateBroadcastMessageIfEcsDelegate(message, delegate, registeredDelegate);
-    broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(message.toString());
+    // Not needed to be done when polling is enabled for delegate
+    if (!isDelegateWithPollingEnabled(delegate)) {
+      // Broadcast Message containing, DelegateId and SeqNum (if applicable)
+      StringBuilder message = new StringBuilder(128).append("[X]").append(delegate.getUuid());
+      updateBroadcastMessageIfEcsDelegate(message, delegate, registeredDelegate);
+      broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(message.toString());
 
-    alertService.activeDelegateUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
-    registeredDelegate.setVerificationServiceSecret(learningEngineService.getServiceSecretKey(LEARNING_ENGINE));
+      alertService.activeDelegateUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
+      registeredDelegate.setVerificationServiceSecret(learningEngineService.getServiceSecretKey(LEARNING_ENGINE));
+    }
     return registeredDelegate;
   }
 
@@ -1139,9 +1156,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (ECS.equals(delegate.getDelegateType())) {
       logger.info(delegate.toString());
       logger.info(delegate.getHostName());
-      String hostName =
-          registeredDelegate.getHostName().substring(0, registeredDelegate.getHostName().lastIndexOf('_'));
-      String seqNum = registeredDelegate.getHostName().substring(registeredDelegate.getHostName().lastIndexOf('_') + 1);
+      String hostName = getDelegateHostNameByRemovingSeqNum(registeredDelegate);
+      String seqNum = getDelegateSeqNumFromHostName(registeredDelegate);
       DelegateSequenceConfig sequenceConfig =
           getDelegateSequenceConfig(delegate.getAccountId(), hostName, Integer.parseInt(seqNum));
       registeredDelegate.setDelegateRandomToken(sequenceConfig.getDelegateToken());
@@ -1951,12 +1967,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   /**
    * Delegate keepAlive and Registration requests will be handled here
    */
-  @VisibleForTesting
-  Delegate handleEcsDelegateRequest(Delegate delegate) {
+  public Delegate handleEcsDelegateRequest(Delegate delegate) {
     if (delegate.isKeepAlivePacket()) {
       return handleEcsDelegateKeepAlivePacket(delegate);
     }
-    return handleEcsDelegateRegistration(delegate);
+    Delegate registeredDelegate = handleEcsDelegateRegistration(delegate);
+    updateExistingDelegateWithSequenceConfigData(registeredDelegate);
+    return registeredDelegate;
   }
 
   /**
@@ -2407,6 +2424,37 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     return true;
+  }
+
+  private boolean isDelegateWithPollingEnabled(Delegate delegate) {
+    return delegate.isPolllingModeEnabled();
+  }
+
+  private void updateWithTokenAndSeqNumIfEcsDelegate(Delegate delegate, Delegate savedDelegate) {
+    if (ECS.equals(delegate.getDelegateType())) {
+      savedDelegate.setDelegateRandomToken(delegate.getDelegateRandomToken());
+      savedDelegate.setSequenceNum(delegate.getSequenceNum());
+    }
+  }
+
+  @VisibleForTesting
+  void updateExistingDelegateWithSequenceConfigData(Delegate delegate) {
+    String hostName = getDelegateHostNameByRemovingSeqNum(delegate);
+    String seqNum = getDelegateSeqNumFromHostName(delegate);
+    DelegateSequenceConfig config =
+        getDelegateSequenceConfig(delegate.getAccountId(), hostName, Integer.parseInt(seqNum));
+    delegate.setDelegateRandomToken(config.getDelegateToken());
+    delegate.setSequenceNum(new StringBuilder(64).append(config.getSequenceNum()).toString());
+  }
+
+  @VisibleForTesting
+  String getDelegateHostNameByRemovingSeqNum(Delegate delegate) {
+    return delegate.getHostName().substring(0, delegate.getHostName().lastIndexOf('_'));
+  }
+
+  @VisibleForTesting
+  String getDelegateSeqNumFromHostName(Delegate delegate) {
+    return delegate.getHostName().substring(delegate.getHostName().lastIndexOf('_') + 1);
   }
   //------ END: ECS Delegate Specific Methods
 }

@@ -69,8 +69,10 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   @Test
   public void testHandleEcsDelegateRequest_EcsDelegateRegistration() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
-    doReturn(null).when(delegateService).handleEcsDelegateRegistration(any());
-
+    doReturn(aDelegate().withHostName("delegate_1").build()).when(delegateService).handleEcsDelegateRegistration(any());
+    doReturn(aDelegateSequenceBuilder().withHostName("delegate").withSequenceNum(1).withDelegateToken("token").build())
+        .when(delegateService)
+        .getDelegateSequenceConfig(anyString(), anyString(), anyInt());
     delegateService.handleEcsDelegateRequest(aDelegate().withKeepAlivePacket(false).build());
 
     verify(delegateService, times(0)).handleEcsDelegateKeepAlivePacket(any());
@@ -523,5 +525,44 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
                                             .withLastUpdatedAt(System.currentTimeMillis())
                                             .build());
     return existingDelegateSequenceConfigs;
+  }
+
+  @Test
+  public void testGetDelegateHostNameByRemovingSeqNum() throws Exception {
+    delegateService = spy(DelegateServiceImpl.class);
+    assertEquals("hostname_harness__delegate",
+        delegateService.getDelegateHostNameByRemovingSeqNum(
+            aDelegate().withHostName("hostname_harness__delegate_1").build()));
+  }
+
+  @Test
+  public void testGetDelegateSeqNumFromHostName() throws Exception {
+    delegateService = spy(DelegateServiceImpl.class);
+    assertEquals("1",
+        delegateService.getDelegateSeqNumFromHostName(
+            aDelegate().withHostName("hostname_harness__delegate_1").build()));
+  }
+
+  @Test
+  public void testUpdateExistingDelegateWithSequenceConfigData() throws Exception {
+    delegateService = spy(DelegateServiceImpl.class);
+    doReturn(aDelegateSequenceBuilder()
+                 .withSequenceNum(1)
+                 .withHostName("hostname_harness__delegate")
+                 .withDelegateToken("token")
+                 .build())
+        .when(delegateService)
+        .getDelegateSequenceConfig(anyString(), anyString(), anyInt());
+
+    Delegate delegate = aDelegate().withHostName("hostname_harness__delegate_1").build();
+    delegateService.updateExistingDelegateWithSequenceConfigData(delegate);
+    assertEquals("1", delegate.getSequenceNum());
+    assertEquals("token", delegate.getDelegateRandomToken());
+
+    ArgumentCaptor<Integer> captorSeqNum = ArgumentCaptor.forClass(Integer.class);
+    ArgumentCaptor<String> captorHostName = ArgumentCaptor.forClass(String.class);
+    verify(delegateService).getDelegateSequenceConfig(anyString(), captorHostName.capture(), captorSeqNum.capture());
+    assertEquals("hostname_harness__delegate", captorHostName.getValue());
+    assertEquals(1, captorSeqNum.getValue().intValue());
   }
 }
