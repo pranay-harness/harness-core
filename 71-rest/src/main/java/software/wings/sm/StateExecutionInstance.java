@@ -78,7 +78,6 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
   @Indexed private long createdAt;
   private long lastUpdatedAt;
 
-  private String stateMachineId;
   private String childStateMachineId;
   private String displayName;
   private String stateName;
@@ -147,7 +146,6 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
    * The type Builder.
    */
   public static final class Builder {
-    private String stateMachineId;
     private String childStateMachineId;
     private String displayName;
     private String stateName;
@@ -186,11 +184,6 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
 
     public Builder withChildStateMachineId(String childStateMachineId) {
       this.childStateMachineId = childStateMachineId;
-      return this;
-    }
-
-    public Builder withStateMachineId(String stateMachineId) {
-      this.stateMachineId = stateMachineId;
       return this;
     }
 
@@ -351,7 +344,6 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
 
     public Builder but() {
       return aStateExecutionInstance()
-          .withStateMachineId(stateMachineId)
           .withStateName(stateName)
           .withDisplayName(displayName)
           .withStateType(stateType)
@@ -382,7 +374,6 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
 
     public StateExecutionInstance build() {
       StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-      stateExecutionInstance.setStateMachineId(stateMachineId);
       stateExecutionInstance.setChildStateMachineId(childStateMachineId);
       stateExecutionInstance.setDisplayName(displayName);
       stateExecutionInstance.setStateName(stateName);

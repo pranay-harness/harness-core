@@ -60,6 +60,7 @@ import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.StateExecutionService;
 
 import java.util.List;
 import java.util.Map;
@@ -72,13 +73,13 @@ import java.util.Map;
 public class ExecutionInterruptManager {
   private static final Logger logger = LoggerFactory.getLogger(ExecutionInterruptManager.class);
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private AlertService alertService;
+  @Inject private Injector injector;
+  @Inject private StateExecutionService stateExecutionService;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-
-  @Inject private Injector injector;
+  @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
-  @Inject private AlertService alertService;
 
   Map<ExecutionInterruptType, List<ExecutionStatus>> acceptableIndividualStatusList =
       ImmutableMap.<ExecutionInterruptType, List<ExecutionStatus>>builder()
@@ -252,9 +253,9 @@ public class ExecutionInterruptManager {
         logger.error("No StateExecutionInstance found for sendNotification");
         return;
       }
-      StateMachine sm = wingsPersistence.getWithAppId(
-          StateMachine.class, executionInterrupt.getAppId(), pageResponse.get(0).getStateMachineId());
-      ExecutionContextImpl context = new ExecutionContextImpl(pageResponse.get(0), sm, injector);
+      final StateExecutionInstance stateExecutionInstance = pageResponse.get(0);
+      StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
+      ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
       injector.injectMembers(context);
 
       workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);

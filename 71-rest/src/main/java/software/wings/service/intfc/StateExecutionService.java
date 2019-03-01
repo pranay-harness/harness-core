@@ -6,6 +6,7 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.ServiceInstance;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateMachine;
 
 import java.util.List;
 import java.util.Map;
@@ -25,4 +26,6 @@ public interface StateExecutionService {
   List<ServiceInstance> getHostExclusionList(StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement);
 
   StateExecutionData phaseStateExecutionData(String appId, String executionUuid, String phaseName);
+
+  StateMachine obtainStateMachine(StateExecutionInstance stateExecutionInstance);
 }

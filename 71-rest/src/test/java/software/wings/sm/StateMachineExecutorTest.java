@@ -43,6 +43,7 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
@@ -310,7 +311,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     logger.info("Going to trigger state machine");
-    String executionUuid = generateUuid();
+    String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(sm, executionUuid, executionUuid, null, callback, null);
@@ -372,7 +373,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     logger.info("Going to trigger state machine");
-    String executionUuid = generateUuid();
+    String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(sm, executionUuid, executionUuid, null, callback, null);
@@ -389,6 +390,17 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat((long) StaticMap.getValue(stateAB.getName()) < (long) StaticMap.getValue(stateC.getName()))
         .as("StateAB executed before StateC")
         .isEqualTo(true);
+  }
+
+  private String createWorkflowExecution(StateMachine sm) {
+    String executionUuid = generateUuid();
+
+    WorkflowExecution workflowExecution = new WorkflowExecution();
+    workflowExecution.setUuid(executionUuid);
+    workflowExecution.setAppId(sm.getAppId());
+    workflowExecution.setStateMachineId(sm.getUuid());
+    wingsPersistence.save(workflowExecution);
+    return executionUuid;
   }
 
   /**
@@ -433,7 +445,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     logger.info("Going to trigger state machine");
-    String executionUuid = generateUuid();
+    String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.MARK_SUCCESS);
@@ -495,7 +507,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     logger.info("Going to trigger state machine");
-    String executionUuid = generateUuid();
+    String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.MARK_FAILED);
@@ -557,7 +569,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     logger.info("Going to trigger state machine");
-    String executionUuid = generateUuid();
+    String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.ABORT);
@@ -642,7 +654,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     logger.info("Going to trigger state machine");
-    String executionUuid = generateUuid();
+    String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(sm, executionUuid, executionUuid, null, callback, null);
@@ -752,7 +764,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     logger.info("Going to trigger state machine");
-    String executionUuid = generateUuid();
+    String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(sm, executionUuid, executionUuid, null, callback, null);
@@ -811,7 +823,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     String smId = sm.getUuid();
     logger.info("Going to trigger state machine");
-    String executionUuid = generateUuid();
+    String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(sm, executionUuid, executionUuid, null, callback, null);
