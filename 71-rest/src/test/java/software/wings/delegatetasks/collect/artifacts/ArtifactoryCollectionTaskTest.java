@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -45,6 +46,7 @@ public class ArtifactoryCollectionTaskTest {
           .parameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
               artifactoryConfig.getPassword(), "harness-maven", "io.harness.todolist", asList("todolist"), "",
               ImmutableMap.of("buildNo", "1.1")})
+          .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
           .build();
 
   @InjectMocks

@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
@@ -37,8 +38,8 @@ public class TriggerTaskTest extends WingsBaseTest {
   @Mock private GitService gitService;
 
   @InjectMocks
-  private TriggerTask triggerTask = (TriggerTask) TaskType.TRIGGER_TASK.getDelegateRunnableTask(
-      "delegateId", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
+  private TriggerTask triggerTask = (TriggerTask) TaskType.TRIGGER_TASK.getDelegateRunnableTask("delegateId",
+      aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {}

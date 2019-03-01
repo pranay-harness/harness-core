@@ -5,6 +5,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
@@ -39,8 +40,9 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private CollaborationProviderTask collaborationProviderTask =
-      (CollaborationProviderTask) TaskType.COLLABORATION_PROVIDER_TASK.getDelegateRunnableTask(
-          "delid1", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
+      (CollaborationProviderTask) TaskType.COLLABORATION_PROVIDER_TASK.getDelegateRunnableTask("delid1",
+          aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+          notifyResponseData -> {}, () -> true);
 
   @Test
   public void testEmailNotification() {

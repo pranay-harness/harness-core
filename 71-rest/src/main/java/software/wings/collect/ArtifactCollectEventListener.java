@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Event.Builder.anEvent;
 
 import com.google.inject.Inject;
@@ -115,6 +116,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .waitId(waitId)
             .parameters(new Object[] {jenkinsConfig, secretManager.getEncryptionDetails(jenkinsConfig, null, null),
                 jenkinsArtifactStream.getJobname(), jenkinsArtifactStream.getArtifactPaths(), artifact.getMetadata()})
+            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
       }
       case BAMBOO: {
@@ -130,6 +132,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .waitId(waitId)
             .parameters(new Object[] {bambooConfig, secretManager.getEncryptionDetails(bambooConfig, null, null),
                 bambooArtifactStream.getJobname(), bambooArtifactStream.getArtifactPaths(), artifact.getMetadata()})
+            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
       }
       case NEXUS: {
@@ -146,6 +149,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .parameters(new Object[] {nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, null),
                 nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
                 nexusArtifactStream.getArtifactPaths(), artifact.getBuildNo()})
+            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
       }
       case ARTIFACTORY: {
@@ -162,6 +166,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .parameters(
                 new Object[] {artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, null, null),
                     artifactoryArtifactStream.getJobname(), artifact.getMetadata()})
+            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
       }
       case AMAZON_S3: {
@@ -178,6 +183,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .waitId(waitId)
             .parameters(new Object[] {awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null),
                 amazonS3ArtifactStream.getJobname(), amazonS3ArtifactStream.getArtifactPaths()})
+            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
       }
 

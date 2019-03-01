@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.terraform;
 
 import static org.junit.Assert.assertEquals;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -15,7 +16,8 @@ import java.util.List;
 
 public class TerraformProvisionTaskTest extends WingsBaseTest {
   TerraformProvisionTask terraformProvisionTask = new TerraformProvisionTask(WingsTestConstants.DELEGATE_ID,
-      DelegateTask.Builder.aDelegateTask().async(true).build(), delegateTaskResponse -> {}, () -> true);
+      DelegateTask.Builder.aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+      delegateTaskResponse -> {}, () -> true);
 
   @Test
   public void getTargetsArgsTest() {

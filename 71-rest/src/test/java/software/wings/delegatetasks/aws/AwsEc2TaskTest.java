@@ -6,6 +6,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,8 +28,8 @@ public class AwsEc2TaskTest extends WingsBaseTest {
   @Mock private AwsEc2HelperServiceDelegate mockEc2ServiceDelegate;
 
   @InjectMocks
-  private AwsEc2Task task = (AwsEc2Task) TaskType.AWS_EC2_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
+  private AwsEc2Task task = (AwsEc2Task) TaskType.AWS_EC2_TASK.getDelegateRunnableTask("delegateid",
+      aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

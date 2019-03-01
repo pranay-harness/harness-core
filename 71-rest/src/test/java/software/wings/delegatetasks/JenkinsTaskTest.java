@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
 
@@ -65,8 +66,8 @@ public class JenkinsTaskTest extends WingsBaseTest {
   private Map<String, String> assertions = new HashMap<>();
 
   @InjectMocks
-  private JenkinsTask jenkinsTask = (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask(
-      "delid1", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
+  private JenkinsTask jenkinsTask = (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask("delid1",
+      aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

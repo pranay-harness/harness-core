@@ -3,6 +3,7 @@ package software.wings.sm.states.collaboration;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.TaskType.JIRA;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -126,6 +127,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                                     .waitId(activityId)
                                     .appId(((ExecutionContextImpl) context).getApp().getAppId())
                                     .parameters(new Object[] {parameters})
+                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
     delegateTask.setTimeout(JIRA_TASK_TIMEOUT_MILLIS);

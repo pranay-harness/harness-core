@@ -9,6 +9,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_LAMBDA_TASK;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
@@ -318,6 +319,7 @@ public class AwsLambdaState extends State {
               .tags(isNotEmpty(wfRequest.getAwsConfig().getTag()) ? singletonList(wfRequest.getAwsConfig().getTag())
                                                                   : null)
               .parameters(new Object[] {wfRequest})
+              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return anExecutionResponse()

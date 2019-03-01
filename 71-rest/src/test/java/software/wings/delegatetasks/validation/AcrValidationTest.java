@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
@@ -45,6 +46,7 @@ public class AcrValidationTest extends WingsBaseTest {
                                         .withRepositoryName(repositoryName)
                                         .build(),
               asList(EncryptedDataDetail.builder().build()), AzureConfig.builder().build()})
+          .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
           .build();
 
   @Before
