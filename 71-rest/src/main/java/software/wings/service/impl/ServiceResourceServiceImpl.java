@@ -865,15 +865,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public void pruneByApplication(String appId) {
-    String accountId = appService.getAccountIdByAppId(appId);
-
-    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
-        new Action(accountId, ActionType.CREATE_SERVICE));
-
-    findServicesByApp(appId).forEach(service -> LimitEnforcementUtils.withCounterDecrement(checker, () -> {
+    findServicesByApp(appId).forEach(service -> {
       wingsPersistence.delete(Service.class, service.getUuid());
       pruneDescendingEntities(appId, service.getUuid());
-    }));
+    });
   }
 
   @Override
