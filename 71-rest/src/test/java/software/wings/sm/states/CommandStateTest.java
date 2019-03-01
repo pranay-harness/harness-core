@@ -310,6 +310,7 @@ public class CommandStateTest extends WingsBaseTest {
    *
    * @throws Exception the exception
    */
+  @Owner(emails = "rathnakara.malatesha@harness.io")
   @Test
   public void execute() {
     when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
@@ -427,6 +428,7 @@ public class CommandStateTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = "rathnakara.malatesha@harness.io")
   public void executeWithArtifact() throws Exception {
     Artifact artifact = anArtifact()
                             .withUuid(ARTIFACT_ID)
