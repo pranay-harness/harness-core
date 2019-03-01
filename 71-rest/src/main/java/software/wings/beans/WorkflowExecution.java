@@ -56,7 +56,6 @@ import java.util.Map;
 public class WorkflowExecution extends Base {
   public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";
   public static final String DEPLOYMENT_TRIGGERED_ID_KEY = "deploymentTriggerId";
-  public static final String DISPLAY_NAME_KEY = "displayName";
   public static final String END_TS_KEY = "endTs";
   public static final String INFRA_MAPPING_IDS_KEY = "infraMappingIds";
   public static final String NAME_KEY = "name";
@@ -96,7 +95,6 @@ public class WorkflowExecution extends Base {
   private ErrorStrategy errorStrategy;
 
   private String name;
-  private String displayName;
   private String releaseNo;
   private int total;
   private CountsByStatuses breakdown;
@@ -162,17 +160,6 @@ public class WorkflowExecution extends Base {
    */
   public void setName(String name) {
     this.name = name;
-  }
-
-  public String getDisplayName() {
-    if (displayName == null) {
-      return prepareDisplayName();
-    }
-    return displayName;
-  }
-
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
   }
 
   public List<EnvSummary> getEnvironments() {
@@ -604,7 +591,8 @@ public class WorkflowExecution extends Base {
     this.infraMappingIds = infraMappingIds;
   }
 
-  public String prepareDisplayName() {
+  // TODO: this is silly, we should get rid of it
+  public String displayName() {
     String dateSuffix = "";
     if (getCreatedAt() != 0) {
       dateSuffix = " - "
@@ -613,11 +601,6 @@ public class WorkflowExecution extends Base {
                 .format(DateTimeFormatter.ofPattern(Constants.WORKFLOW_NAME_DATE_FORMAT));
     }
     return name + dateSuffix;
-  }
-
-  public void onSave() {
-    super.onSave();
-    displayName = prepareDisplayName();
   }
 
   public static final class WorkflowExecutionBuilder {
