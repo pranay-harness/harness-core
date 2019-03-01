@@ -6,6 +6,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.common.collect.Lists;
 
@@ -97,6 +98,7 @@ public class NewRelicTaskScopeValidationTest {
                     .encryptedDataDetails(
                         Lists.newArrayList(EncryptedDataDetail.builder().encryptionConfig(vaultConfig).build()))
                     .build()})
+            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build(),
         null);
     List<DelegateConnectionResult> validate = newRelicValidation.validate();

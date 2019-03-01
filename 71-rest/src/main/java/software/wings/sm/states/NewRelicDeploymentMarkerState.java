@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
 
@@ -137,6 +138,7 @@ public class NewRelicDeploymentMarkerState extends State {
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .envId(envId)
                                       .infrastructureMappingId(infrastructureMappingId)
+                                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                       .build());
 
     // waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);

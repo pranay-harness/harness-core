@@ -297,6 +297,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         .parameters(new Object[] {jenkinsTaskParams})
         .envId(envId)
         .infrastructureMappingId(infrastructureMappingId)
+        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
         .build();
   }
 

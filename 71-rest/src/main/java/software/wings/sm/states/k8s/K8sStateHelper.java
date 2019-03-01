@@ -564,6 +564,7 @@ public class K8sStateHelper {
                                     .parameters(new Object[] {k8sInstanceSyncTaskParameters})
                                     .envId(containerInfrastructureMapping.getEnvId())
                                     .infrastructureMappingId(containerInfrastructureMapping.getUuid())
+                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
     try {

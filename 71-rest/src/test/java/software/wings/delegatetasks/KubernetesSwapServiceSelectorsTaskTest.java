@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -37,7 +38,8 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
   @InjectMocks
   private KubernetesSwapServiceSelectorsTask kubernetesSwapServiceSelectorsTask =
       (KubernetesSwapServiceSelectorsTask) TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.getDelegateRunnableTask(
-          "delid1", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
+          "delid1", aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+          notifyResponseData -> {}, () -> true);
 
   private Service createService(String serviceName, Map<String, String> labelSelectors) {
     ServiceSpecBuilder spec = new ServiceSpecBuilder().withSelector(labelSelectors);

@@ -11,6 +11,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
@@ -35,8 +36,9 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private EcsSteadyStateCheckTask task =
-      (EcsSteadyStateCheckTask) TaskType.ECS_STEADY_STATE_CHECK_TASK.getDelegateRunnableTask(
-          DELEGATE_ID, aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
+      (EcsSteadyStateCheckTask) TaskType.ECS_STEADY_STATE_CHECK_TASK.getDelegateRunnableTask(DELEGATE_ID,
+          aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+          notifyResponseData -> {}, () -> true);
   @Before
   public void setUp() throws Exception {
     on(task).set("awsHelperService", mockAwsHelperService);

@@ -4,6 +4,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -23,8 +24,8 @@ public class AwsAmiAsyncTaskTest extends WingsBaseTest {
   @Mock private AwsAmiHelperServiceDelegate mockAwsAmiHelperServiceDelegate;
 
   @InjectMocks
-  private AwsAmiAsyncTask task = (AwsAmiAsyncTask) TaskType.AWS_AMI_ASYNC_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
+  private AwsAmiAsyncTask task = (AwsAmiAsyncTask) TaskType.AWS_AMI_ASYNC_TASK.getDelegateRunnableTask("delegateid",
+      aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

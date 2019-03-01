@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 
 import software.wings.api.cloudformation.CloudFormationElement;
@@ -53,6 +54,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
         .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
         .appId(executionContext.getApp().getUuid())
         .parameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
         .build();
   }
 

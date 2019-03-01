@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -91,6 +92,7 @@ public class AwsAsgHelperServiceManagerImpl implements AwsAsgHelperServiceManage
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
             .parameters(new Object[] {request})
+            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);

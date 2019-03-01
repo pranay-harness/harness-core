@@ -15,6 +15,7 @@ import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.GitCommit.STATUS_KEY;
 import static software.wings.beans.GitCommit.YAML_GIT_CONFIG_IDS_KEY;
 import static software.wings.beans.GitCommit.YAML_GIT_CONFIG_ID_KEY;
@@ -683,6 +684,7 @@ public class YamlGitServiceImpl implements YamlGitService {
               .parameters(new Object[] {GitCommandType.DIFF, gitConfig,
                   secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
                   GitDiffRequest.builder().lastProcessedCommitId(processedCommit).yamlGitConfig(yamlGitConfig).build()})
+              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
               .build();
 
       waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, GitCommandType.DIFF), waitId);

@@ -188,7 +188,6 @@ public class StateExecutionServiceImpl implements StateExecutionService {
   public StateMachine obtainStateMachine(StateExecutionInstance stateExecutionInstance) {
     final WorkflowExecution workflowExecution = wingsPersistence.getWithAppId(
         WorkflowExecution.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid());
-
     return wingsPersistence.getWithAppId(
         StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
   }

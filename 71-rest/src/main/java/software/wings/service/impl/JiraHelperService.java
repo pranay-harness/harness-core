@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.delegatetasks.jira.JiraAction.CREATE_WEBHOOK;
 import static software.wings.delegatetasks.jira.JiraAction.DELETE_WEBHOOK;
 
@@ -84,6 +85,7 @@ public class JiraHelperService {
                                     .parameters(new Object[] {jiraTaskParameters})
                                     .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
                                     .async(false)
+                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
     JiraExecutionData jiraExecutionData;

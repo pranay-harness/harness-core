@@ -6,6 +6,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +27,8 @@ public class AwsCodeDeployTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private AwsCodeDeployTask task = (AwsCodeDeployTask) TaskType.AWS_CODE_DEPLOY_TASK.getDelegateRunnableTask(
-      "delegateid", aDelegateTask().async(true).build(), notifyResponseData -> {}, () -> true);
+      "delegateid", aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+      notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,7 +41,8 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   @InjectMocks
   TerraformInputVariablesObtainTask delegateRunnableTask =
       (TerraformInputVariablesObtainTask) TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.getDelegateRunnableTask(
-          WingsTestConstants.DELEGATE_ID, Builder.aDelegateTask().async(true).build(),
+          WingsTestConstants.DELEGATE_ID,
+          Builder.aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
           notifyResponseData -> {}, () -> true);
 
   @Before

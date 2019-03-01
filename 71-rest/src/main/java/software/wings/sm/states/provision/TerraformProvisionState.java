@@ -12,6 +12,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
@@ -459,6 +460,7 @@ public abstract class TerraformProvisionState extends State {
                                     .waitId(activityId)
                                     .appId(((ExecutionContextImpl) context).getApp().getAppId())
                                     .parameters(new Object[] {parameters})
+                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
     if (getTimeoutMillis() != null) {

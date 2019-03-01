@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -342,6 +343,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                           .parameters(new Object[] {httpTaskParameters})
                                           .envId(envId)
                                           .infrastructureMappingId(infrastructureMappingId)
+                                          .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                           .build();
 
     HttpStateExecutionDataBuilder executionDataBuilder =
