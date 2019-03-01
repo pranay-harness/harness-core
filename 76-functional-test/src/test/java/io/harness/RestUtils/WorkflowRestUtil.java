@@ -16,7 +16,7 @@ import javax.ws.rs.core.GenericType;
 
 @Singleton
 public class WorkflowRestUtil extends AbstractFunctionalTest {
-  public Workflow createWorkflow(String accountId, String appId, Workflow workflow) {
+  public Workflow createWorkflow(String accountId, String appId, Workflow workflow) throws Exception {
     GenericType<RestResponse<Workflow>> workflowType = new GenericType<RestResponse<Workflow>>() {};
 
     RestResponse<Workflow> savedWorkflowResponse = Setup.portal()
@@ -28,6 +28,10 @@ public class WorkflowRestUtil extends AbstractFunctionalTest {
                                                        .contentType(ContentType.JSON)
                                                        .post("/workflows")
                                                        .as(workflowType.getType());
+
+    if (savedWorkflowResponse.getResource() == null) {
+      throw new Exception(String.valueOf(savedWorkflowResponse.getResponseMessages()));
+    }
 
     return savedWorkflowResponse.getResource();
   }

@@ -105,7 +105,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  public void testWFWithRollback() {
+  public void testWFWithRollback() throws Exception {
     Workflow savedWorkflow = addWorkflow();
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotNull();
@@ -168,7 +168,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
     return null;
   }
 
-  private Workflow addWorkflow() {
+  private Workflow addWorkflow() throws Exception {
     WorkflowPhase phase1 =
         aWorkflowPhase().serviceId(service.getUuid()).infraMappingId(infrastructureMapping.getUuid()).build();
     WorkflowPhase phase2 =

@@ -95,7 +95,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Category(FunctionalTests.class)
   @Ignore
-  public void shouldDeployIISAppWithPhysicalInfra() {
+  public void shouldDeployIISAppWithPhysicalInfra() throws Exception {
     Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
     Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
     InfrastructureMapping infrastructureMapping =
@@ -139,7 +139,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Category(FunctionalTests.class)
   @Ignore
-  public void shouldDeployIISAppWithAzureCloudProvider() {
+  public void shouldDeployIISAppWithAzureCloudProvider() throws Exception {
     Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
     Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
     InfrastructureMapping infrastructureMapping =
@@ -218,8 +218,8 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
         : null;
   }
 
-  private Workflow saveAndGetWorkflow(
-      String appId, String envId, String serviceId, String infraMappingId, String commandName, boolean specificHosts) {
+  private Workflow saveAndGetWorkflow(String appId, String envId, String serviceId, String infraMappingId,
+      String commandName, boolean specificHosts) throws Exception {
     List<PhaseStep> phaseSteps = new ArrayList<>();
     Map<String, Object> selectNodeProperties = new HashMap<>();
     selectNodeProperties.put("specificHosts", specificHosts);

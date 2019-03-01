@@ -80,7 +80,7 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   @Test
   @Category(FunctionalTests.class)
   @Ignore
-  public void shouldCreateJiraStepinWorkflow() {
+  public void shouldCreateJiraStepinWorkflow() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
     Workflow jiraWorkflow =
