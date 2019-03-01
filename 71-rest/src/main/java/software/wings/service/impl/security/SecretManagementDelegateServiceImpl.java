@@ -76,11 +76,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     Throwable t = e.getCause() == null ? e : e.getCause();
 
     if (t instanceof AWSKMSException) {
-      if (t instanceof KMSInternalException || t instanceof DependencyTimeoutException
-          || t instanceof KeyUnavailableException) {
-        return true;
-      }
-      return false;
+      logger.info("Got AWSKMSEception {}: {}", t.getClass().getName(), t.getMessage());
+      return t instanceof KMSInternalException || t instanceof DependencyTimeoutException
+          || t instanceof KeyUnavailableException;
     } else {
       // Else if not IllegalArgumentException, it should retry.
       return !(t instanceof IllegalArgumentException);
@@ -90,26 +88,25 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   @Override
   public EncryptedRecord encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
     Preconditions.checkNotNull(kmsConfig, "null for " + accountId);
-    for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
+    int failedAttempts = 0;
+    while (true) {
       try {
         return timeLimiter.callWithTimeout(
             () -> encryptInternal(accountId, value, kmsConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
+        failedAttempts++;
+        logger.warn(format("Encryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
-          if (retry < NUM_OF_RETRIES) {
-            logger.warn(format("Encryption failed. trial num: %d", retry), e);
-            sleep(ofMillis(1000));
-          } else {
+          if (failedAttempts == NUM_OF_RETRIES) {
             String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
             throw new DelegateRetryableException(new KmsOperationException(reason, e, USER));
           }
+          sleep(ofMillis(1000));
         } else {
           throw new KmsOperationException(e.getMessage(), e, USER);
         }
       }
     }
-
-    throw new IllegalStateException("Encryption failed. This state should never have been reached");
   }
 
   @Override
@@ -120,50 +117,49 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
     Preconditions.checkNotNull(kmsConfig, "null for " + data);
 
-    for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
+    int failedAttempts = 0;
+    while (true) {
       try {
         return timeLimiter.callWithTimeout(() -> decryptInternal(data, kmsConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
+        failedAttempts++;
+        logger.warn(format("Decryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
-          if (retry < NUM_OF_RETRIES) {
-            logger.warn(format("Decryption failed. trial num: %d", retry), e);
-            sleep(ofMillis(1000));
-          } else {
+          if (failedAttempts == NUM_OF_RETRIES) {
             String reason =
                 format("Decryption failed for encryptedData %s after %d retries", data.getName(), NUM_OF_RETRIES);
             throw new DelegateRetryableException(new KmsOperationException(reason, e, USER));
           }
+          sleep(ofMillis(1000));
         } else {
           throw new KmsOperationException(e.getMessage(), e, USER);
         }
       }
     }
-    throw new IllegalStateException("Decryption failed. This state should never have been reached");
   }
 
   @Override
   public EncryptedRecord encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedRecord savedEncryptedData) {
-    for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
+    int failedAttempts = 0;
+    while (true) {
       try {
         return timeLimiter.callWithTimeout(
             ()
                 -> encryptInternal(name, value, accountId, settingType, vaultConfig, savedEncryptedData),
             5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
+        failedAttempts++;
+        logger.warn(format("encryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
-          if (retry < NUM_OF_RETRIES) {
-            logger.warn(format("encryption failed. trial num: %d", retry), e);
-            sleep(ofMillis(1000));
-          } else {
-            logger.error(format("encryption failed after %d retries ", retry), e);
+          if (failedAttempts == NUM_OF_RETRIES) {
             throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
                 .addParam("reason", "encryption failed after " + NUM_OF_RETRIES + " retries");
           }
+          sleep(ofMillis(1000));
         }
       }
     }
-    throw new IllegalStateException("Encryption failed. This state should never have been reached");
   }
 
   @Override
@@ -172,23 +168,22 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       return null;
     }
 
-    for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
+    int failedAttempts = 0;
+    while (true) {
       try {
         return timeLimiter.callWithTimeout(() -> decryptInternal(data, vaultConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
+        failedAttempts++;
+        logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
         if (isRetryable(e)) {
-          if (retry < NUM_OF_RETRIES) {
-            logger.warn(format("decryption failed. trial num: %d", retry), e);
-            sleep(ofMillis(1000));
-          } else {
-            logger.error("decryption failed after {} retries for {}", retry, data, e);
+          if (failedAttempts == NUM_OF_RETRIES) {
             throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
                 .addParam("reason", "Decryption failed after " + NUM_OF_RETRIES + " retries");
           }
+          sleep(ofMillis(1000));
         }
       }
     }
-    throw new IllegalStateException("Decryption failed. This state should never have been reached");
   }
 
   @Override
@@ -254,7 +249,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   @Override
   public boolean renewVaultToken(VaultConfig vaultConfig) {
-    for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
+    int failedAttempts = 0;
+    while (true) {
       try {
         logger.info("renewing token for vault {}", vaultConfig);
         boolean isSuccessful = VaultRestClientFactory.create(vaultConfig).renewToken(vaultConfig.getAuthToken());
@@ -266,17 +262,15 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           throw new IOException(errorMsg);
         }
       } catch (Exception e) {
-        if (retry < NUM_OF_RETRIES) {
-          logger.warn(format("renewal failed. trial num: %d", retry), e);
-          sleep(ofMillis(1000));
-        } else {
-          logger.error("renewal failed after {} retries for {}", retry, vaultConfig, e);
+        failedAttempts++;
+        logger.warn(format("renewal failed. trial num: %d", failedAttempts), e);
+        if (failedAttempts == NUM_OF_RETRIES) {
           throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
               .addParam("reason", "renewal failed after " + NUM_OF_RETRIES + " retries");
         }
+        sleep(ofMillis(1000));
       }
     }
-    return false;
   }
 
   private EncryptedRecord encryptInternal(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
