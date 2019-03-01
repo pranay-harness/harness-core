@@ -48,6 +48,7 @@ import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -267,9 +268,12 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
   @Override
   protected Map<String, Integer> getTrafficWeights(ContextData contextData) {
+    KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
+    if (!resizeParams.isUseIstioRouteRule()) {
+      return new HashMap<>();
+    }
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
-    KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
     return kubernetesContainerService.getTrafficWeights(kubernetesConfig, encryptedDataDetails, controllerName);
   }
