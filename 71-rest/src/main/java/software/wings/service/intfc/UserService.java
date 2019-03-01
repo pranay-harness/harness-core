@@ -122,9 +122,10 @@ public interface UserService extends OwnedByAccount {
    * List.
    *
    * @param pageRequest the page request
+   * @param loadUserGroups if load user groups is needed
    * @return the page response
    */
-  PageResponse<User> list(PageRequest<User> pageRequest);
+  PageResponse<User> list(PageRequest<User> pageRequest, boolean loadUserGroups);
 
   /**
    * Delete.

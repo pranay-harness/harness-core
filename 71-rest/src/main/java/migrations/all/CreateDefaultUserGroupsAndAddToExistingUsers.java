@@ -32,7 +32,7 @@ public class CreateDefaultUserGroupsAndAddToExistingUsers implements Migration {
   @Override
   public void migrate() {
     PageRequest<User> userPageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    PageResponse<User> userPageResponse = userService.list(userPageRequest);
+    PageResponse<User> userPageResponse = userService.list(userPageRequest, false);
     List<User> userList = userPageResponse.getResponse();
 
     if (userList != null) {

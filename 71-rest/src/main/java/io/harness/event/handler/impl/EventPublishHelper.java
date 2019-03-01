@@ -262,7 +262,7 @@ public class EventPublishHelper {
                                           .withLimit("10")
                                           .build();
 
-      PageResponse<User> pageResponse = userService.list(pageRequest);
+      PageResponse<User> pageResponse = userService.list(pageRequest, false);
       List<User> users = pageResponse.getResponse();
       if (isEmpty(users)) {
         return false;

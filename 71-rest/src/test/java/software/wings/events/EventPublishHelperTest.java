@@ -178,18 +178,19 @@ public class EventPublishHelperTest extends WingsBaseTest {
   public void testSendRBACEventForFirstUser() {
     UserThreadLocal.set(user);
     try {
-      when(userService.list(any(PageRequest.class))).thenReturn(PageResponseBuilder.aPageResponse().build());
+      when(userService.list(any(PageRequest.class), anyBoolean()))
+          .thenReturn(PageResponseBuilder.aPageResponse().build());
       eventPublishHelper.publishSetupRbacEvent(ACCOUNT_ID, USER_ID, EntityType.USER);
       verify(eventPublisher, never()).publishEvent(any(Event.class));
 
       User user = User.Builder.anUser().withUuid("invalid").withEmail("invalid@abcd.com").build();
-      when(userService.list(any(PageRequest.class)))
+      when(userService.list(any(PageRequest.class), anyBoolean()))
           .thenReturn(PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(user)).withTotal(1).build());
       eventPublishHelper.publishSetupRbacEvent(ACCOUNT_ID, USER_ID, EntityType.USER);
       verify(eventPublisher, never()).publishEvent(any(Event.class));
 
       user = User.Builder.anUser().withUuid(USER_ID).withEmail("valid@abcd.com").build();
-      when(userService.list(any(PageRequest.class)))
+      when(userService.list(any(PageRequest.class), anyBoolean()))
           .thenReturn(PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(user)).withTotal(1).build());
       eventPublishHelper.publishSetupRbacEvent(ACCOUNT_ID, USER_ID, EntityType.USER);
       verify(eventPublisher, times(1)).publishEvent(any(Event.class));

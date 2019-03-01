@@ -4,6 +4,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -71,7 +72,7 @@ public class UserResourceTest {
 
   @Test
   public void shouldListUsers() {
-    when(USER_SERVICE.list(any(PageRequest.class)))
+    when(USER_SERVICE.list(any(PageRequest.class), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(asList(anUser().build())).build());
     RestResponse<PageResponse<User>> restResponse = RESOURCES.client()
                                                         .target("/users?accountId=ACCOUNT_ID")
@@ -79,7 +80,7 @@ public class UserResourceTest {
                                                         .get(new GenericType<RestResponse<PageResponse<User>>>() {});
 
     assertThat(restResponse.getResource()).isInstanceOf(PageResponse.class);
-    verify(USER_SERVICE).list(any(PageRequest.class));
+    verify(USER_SERVICE).list(any(PageRequest.class), anyBoolean());
   }
 
   @Test(expected = BadRequestException.class)

@@ -139,11 +139,12 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
-  public RestResponse<PageResponse<User>> list(
-      @BeanParam PageRequest<User> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
+  public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest,
+      @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("details") @DefaultValue("true") boolean loadUserGroups) {
     Account account = accountService.get(accountId);
     pageRequest.addFilter("accounts", Operator.HAS, account);
-    PageResponse<User> pageResponse = userService.list(pageRequest);
+    PageResponse<User> pageResponse = userService.list(pageRequest, loadUserGroups);
     List<User> userList = pageResponse.getResponse();
     if (isNotEmpty(userList)) {
       userList.forEach(user -> user.setAccounts(Arrays.asList(account)));

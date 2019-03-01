@@ -33,6 +33,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -79,9 +80,10 @@ public class UserGroupResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
-  public RestResponse<PageResponse<UserGroup>> list(
-      @BeanParam PageRequest<UserGroup> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
-    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
+  public RestResponse<PageResponse<UserGroup>> list(@BeanParam PageRequest<UserGroup> pageRequest,
+      @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("details") @DefaultValue("true") boolean loadUsers) {
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, loadUsers);
     return getPublicUserGroups(pageResponse);
   }
 

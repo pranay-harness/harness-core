@@ -68,7 +68,7 @@ public class NotificationGroupBasedDispatcher implements NotificationDispatcher<
                                       .addFieldsIncluded("email", "emailVerified")
                                       .build();
 
-      PageResponse<User> users = userService.list(request);
+      PageResponse<User> users = userService.list(request, false);
       List<String> toAddresses = users.stream().filter(User::isEmailVerified).map(User::getEmail).collect(toList());
       log.info("Dispatching notifications to all the users of role {}", role.getRoleType().getDisplayName());
       emailDispatcher.dispatch(notifications, toAddresses);
