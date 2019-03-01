@@ -57,6 +57,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -105,9 +106,35 @@ public class UserGroupServiceImpl implements UserGroupService {
     // Currently, it only supports ASC and DSC.
     Collections.sort(userGroupList, new UserGroupComparator());
     if (loadUsers) {
-      userGroupList.forEach(userGroup -> loadUsers(userGroup, account));
+      loadUsersForUserGroups(userGroupList, account);
     }
     return res;
+  }
+
+  private void loadUsersForUserGroups(List<UserGroup> userGroups, Account account) {
+    PageRequest<User> req = aPageRequest().addFilter("accounts", Operator.HAS, account).build();
+    PageResponse<User> res = userService.list(req, false);
+    List<User> allUsersList = res.getResponse();
+    if (isEmpty(allUsersList)) {
+      return;
+    }
+
+    Map<String, User> userMap = allUsersList.stream().collect(Collectors.toMap(User::getUuid, u -> u));
+    userGroups.forEach(userGroup -> {
+      List<String> memberIds = userGroup.getMemberIds();
+      if (isEmpty(memberIds)) {
+        userGroup.setMembers(new ArrayList<>());
+        return;
+      }
+      List<User> members = new ArrayList<>();
+      memberIds.forEach(memberId -> {
+        User user = userMap.get(memberId);
+        if (user != null) {
+          members.add(user);
+        }
+      });
+      userGroup.setMembers(members);
+    });
   }
 
   @Override
@@ -179,7 +206,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                                   .addFilter(ID_KEY, Operator.IN, userGroup.getMemberIds().toArray())
                                   .addFilter("accounts", Operator.IN, account)
                                   .build();
-      PageResponse<User> res = userService.list(req);
+      PageResponse<User> res = userService.list(req, false);
       userGroup.setMembers(res.getResponse());
     } else {
       userGroup.setMembers(new ArrayList<>());

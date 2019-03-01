@@ -39,9 +39,11 @@ import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
@@ -139,6 +141,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -1355,7 +1358,7 @@ public class UserServiceImpl implements UserService {
    * @see software.wings.service.intfc.UserService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<User> list(PageRequest<User> pageRequest) {
+  public PageResponse<User> list(PageRequest<User> pageRequest, boolean loadUserGroups) {
     String accountId = null;
     SearchFilter searchFilter = pageRequest.getFilters()
                                     .stream()
@@ -1368,17 +1371,39 @@ public class UserServiceImpl implements UserService {
       accountId = account.getUuid();
     }
 
-    final String accountIdFinal = accountId;
     PageResponse<User> pageResponse = wingsPersistence.query(User.class, pageRequest);
-    if (pageResponse != null) {
-      pageResponse.forEach(user -> {
-        loadSupportAccounts(user);
-        if (accountIdFinal != null) {
-          loadUserGroups(accountIdFinal, user, false);
-        }
-      });
+    if (loadUserGroups) {
+      loadUserGroupsForUsers(pageResponse.getResponse(), accountId);
     }
     return pageResponse;
+  }
+
+  private void loadUserGroupsForUsers(List<User> users, String accountId) {
+    PageRequest<UserGroup> req = aPageRequest().addFilter("accountId", Operator.EQ, accountId).build();
+    PageResponse<UserGroup> res = userGroupService.list(accountId, req, false);
+    List<UserGroup> allUserGroupList = res.getResponse();
+    if (isEmpty(allUserGroupList)) {
+      return;
+    }
+
+    Multimap<String, UserGroup> userUserGroupMap = HashMultimap.create();
+
+    allUserGroupList.forEach(userGroup -> {
+      List<String> memberIds = userGroup.getMemberIds();
+      if (isEmpty(memberIds)) {
+        return;
+      }
+      memberIds.forEach(userId -> userUserGroupMap.put(userId, userGroup));
+    });
+
+    users.forEach(user -> {
+      Collection<UserGroup> userGroups = userUserGroupMap.get(user.getUuid());
+      if (isEmpty(userGroups)) {
+        user.setUserGroups(new ArrayList<>());
+      } else {
+        user.setUserGroups(new ArrayList<>(userGroups));
+      }
+    });
   }
 
   /* (non-Javadoc)
@@ -1454,9 +1479,7 @@ public class UserServiceImpl implements UserService {
       throw new WingsException(USER_DOES_NOT_EXIST);
     }
 
-    if (harnessUserGroupService.isHarnessSupportUser(userId)) {
-      loadSupportAccounts(user);
-    }
+    loadSupportAccounts(user);
 
     List<Account> accounts = user.getAccounts();
     if (isNotEmpty(accounts)) {

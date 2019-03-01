@@ -40,7 +40,7 @@ public class RoleRefreshUtil extends WingsBaseTest {
   @Test
   @Ignore
   public void recreateRoles() {
-    PageResponse<User> users = userService.list(aPageRequest().build());
+    PageResponse<User> users = userService.list(aPageRequest().build(), false);
 
     PageResponse<Account> accounts = wingsPersistence.query(Account.class, aPageRequest().build());
 
