@@ -4,6 +4,7 @@ import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_URL;
 import static software.wings.beans.InfrastructureProvisionerType.CLOUD_FORMATION;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.EmbeddedUser;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("CLOUD_FORMATION")
 public class CloudFormationInfrastructureProvisioner extends InfrastructureProvisioner {
   private static String VARIABLE_KEY = "cloudformation";
@@ -34,11 +36,11 @@ public class CloudFormationInfrastructureProvisioner extends InfrastructureProvi
   @Builder
   private CloudFormationInfrastructureProvisioner(String uuid, String appId, String name, String awsConfigId,
       String sourceType, String templateBody, String templateFilePath, List<NameValuePair> variables,
-      List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId, String provisionerTemplateData,
-      String stackName, String description, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, String entityYamlPath) {
-    super(name, description, CLOUD_FORMATION.name(), variables, mappingBlueprints, accountId, uuid, appId, createdBy,
-        createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
+      List<InfrastructureMappingBlueprint> mappingBlueprints, String provisionerTemplateData, String stackName,
+      String description, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
+      String entityYamlPath) {
+    super(name, description, CLOUD_FORMATION.name(), variables, mappingBlueprints, uuid, appId, createdBy, createdAt,
+        lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     setSourceType(sourceType);
     setTemplateBody(templateBody);
     setTemplateFilePath(templateFilePath);
