@@ -2,7 +2,6 @@ package software.wings.integration.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static software.wings.service.ExtendedFile.Builder.anExtendedFile;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 
 import com.google.common.io.Files;
@@ -14,6 +13,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
+import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.FileService;
@@ -78,9 +78,11 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveBaseFile() throws Exception {
-    assertThat(fileService.saveFile(anExtendedFile().withName("dummy.txt").withFileName("dummy.txt").build(),
-                   new FileInputStream(tempFile), FileBucket.ARTIFACTS))
-        .isNotNull();
+    final BaseFile baseFile = new BaseFile();
+    baseFile.setName("dummy.txt");
+    baseFile.setFileName("dummy.txt");
+
+    assertThat(fileService.saveFile(baseFile, new FileInputStream(tempFile), FileBucket.ARTIFACTS)).isNotNull();
   }
 
   /**
@@ -90,8 +92,11 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateEntityId() throws Exception {
-    String fileId = fileService.saveFile(anExtendedFile().withName("dummy.txt").withFileName("dummy.txt").build(),
-        new FileInputStream(tempFile), FileBucket.ARTIFACTS);
+    final BaseFile baseFile = new BaseFile();
+    baseFile.setName("dummy.txt");
+    baseFile.setFileName("dummy.txt");
+
+    String fileId = fileService.saveFile(baseFile, new FileInputStream(tempFile), FileBucket.ARTIFACTS);
     assertThat(fileId).isNotNull();
     fileService.updateParentEntityIdAndVersion(null, FILE_ID, 1, fileId, null, FileBucket.ARTIFACTS);
     assertThat(fileService.getAllFileIds(FILE_ID, FileBucket.ARTIFACTS)).hasSize(1).contains(fileId);
@@ -104,9 +109,9 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowExceptionWhenFileNameIsNullWithBaseFile() throws Exception {
+    final BaseFile baseFile = new BaseFile();
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(
-            () -> fileService.saveFile(anExtendedFile().build(), new FileInputStream(tempFile), FileBucket.ARTIFACTS))
+        .isThrownBy(() -> fileService.saveFile(baseFile, new FileInputStream(tempFile), FileBucket.ARTIFACTS))
         .isNotNull();
   }
 }
