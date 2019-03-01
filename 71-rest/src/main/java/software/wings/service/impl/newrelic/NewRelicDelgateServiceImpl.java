@@ -54,7 +54,6 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -289,7 +288,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     if (apiCallLog == null) {
       apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), Base.GLOBAL_APP_ID, null);
     }
-    for (int retry = 0; retry <= NUM_OF_RETRIES; retry++) {
+    int failedAttempts = 0;
+    while (true) {
       try {
         for (String txnName : txnsToCollect) {
           apiCallLog.setTitle("Fetching web transactions names from " + newRelicConfig.getNewRelicUrl());
@@ -331,19 +331,17 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         }
         return newRelicMetrics;
       } catch (RuntimeException e) {
-        if (retry < NUM_OF_RETRIES) {
-          logger.warn(format("txn name fetch failed. trial num: %d", retry), e);
-          sleep(ofMillis(1000));
-        } else {
-          logger.error(format("txn name fetch failed after %d retries ", retry), e);
+        failedAttempts++;
+        logger.warn(format("txn name fetch failed. trial num: %d", failedAttempts), e);
+        if (failedAttempts == NUM_OF_RETRIES) {
+          logger.error(format("txn name fetch failed after %d retries ", failedAttempts), e);
           throw new IOException("txn name fetch failed after " + NUM_OF_RETRIES + " retries", e);
         }
+        sleep(ofMillis(1000));
       } finally {
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
       }
     }
-
-    throw new IllegalStateException("This state should have never reached ");
   }
 
   public Set<NewRelicMetric> getTxnsWithDataInLastHour(Collection<NewRelicMetric> metrics,
@@ -459,9 +457,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
     Collection<String> updatedMetrics = new ArrayList<>();
     // TODO: Make a longterm fix for encoding '|'
-    Iterator<String> namesIter = metricNames.iterator();
-    while (namesIter.hasNext()) {
-      String name = namesIter.next();
+    for (String name : metricNames) {
       if (name.contains("|")) {
         name = name.replace("|", URLEncoder.encode("|", "UTF-8"));
       }
@@ -475,8 +471,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         + updatedMetrics.size() + " transactions from " + newRelicConfig.getNewRelicUrl() + urlToCall);
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
-    Response<NewRelicMetricDataResponse> response = null;
-    for (int retry = 0; retry <= NUM_OF_RETRIES; retry++) {
+    Response<NewRelicMetricDataResponse> response;
+    int failedAttempts = 0;
+    while (true) {
       final Call<NewRelicMetricDataResponse> request = instanceId > 0
           ? getNewRelicRestClient(newRelicConfig)
                 .getInstanceMetricData(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId,
@@ -493,27 +490,29 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
                                        .build());
       try {
         response = request.execute();
+        break;
       } catch (Exception e) {
-        if (retry < NUM_OF_RETRIES) {
-          logger.warn(format("Unsuccessful response while fetching data from NewRelic. trial num: %d", retry), e);
-          sleep(ofMillis(1000));
-        } else {
+        failedAttempts++;
+        logger.warn(
+            format("Unsuccessful response while fetching data from NewRelic. trial num: %d", failedAttempts), e);
+        if (failedAttempts == NUM_OF_RETRIES) {
           apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
           apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
           delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-          logger.error(format("txn name fetch failed after %d retries ", retry), e);
+          logger.error(format("txn name fetch failed after %d retries ", failedAttempts), e);
           throw new WingsException("Unsuccessful response while fetching data from NewRelic failed after "
               + NUM_OF_RETRIES + " retries. Error message: " + e.getMessage()
               + " Request: " + request.request().url().toString());
         }
+        sleep(ofMillis(1000));
       }
+    }
+    if (response.isSuccessful()) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       if (response.isSuccessful()) {
-        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        if (response.isSuccessful()) {
-          apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-          delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-          return response.body().getMetric_data();
-        }
+        apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
+        delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+        return response.body().getMetric_data();
       }
     }
     String errMsg = "Unsuccessful response from NewRelic. Response Code " + response.code()

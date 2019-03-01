@@ -30,21 +30,21 @@ public class KmsTransitionEventListener extends QueueListener<KmsTransitionEvent
   public void onMessage(KmsTransitionEvent message) {
     logger.info("Processing secret manager transition event for secret '{}' in account '{}'", message.getEntityId(),
         message.getAccountId());
-    for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
+    int failedAttempts = 0;
+    while (true) {
       try {
         secretManager.changeSecretManager(message.getAccountId(), message.getEntityId(),
             message.getFromEncryptionType(), message.getFromKmsId(), message.getToEncryptionType(),
             message.getToKmsId());
         break;
       } catch (WingsException e) {
-        // Upon other runtime exception, default retry 3 times and then give up. The secret won't be transitioned as the
-        // result.
-        if (retry < NUM_OF_RETRIES) {
-          logger.warn("Transitioning secret '{}' failed. trial num: {}", message, retry);
-          sleep(ofMillis(1000));
-        } else {
+        failedAttempts++;
+        logger.warn("Transitioning secret '{}' failed. trial num: {}", message, failedAttempts);
+        if (failedAttempts == NUM_OF_RETRIES) {
           logger.error("Transitioning secret '{}' failed after {} retries", message, NUM_OF_RETRIES, e);
+          break;
         }
+        sleep(ofMillis(1000));
       } catch (IllegalStateException | IOException e) {
         logger.error("Could not transition secret '{}'", message, e);
         break;
