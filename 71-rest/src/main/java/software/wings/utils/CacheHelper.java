@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import static software.wings.common.Constants.NEW_RELIC_APPLICATION_CACHE;
+import static software.wings.common.Constants.TRIAL_EMAIL_CACHE;
 import static software.wings.common.Constants.USER_CACHE;
 import static software.wings.common.Constants.USER_PERMISSION_CACHE;
 import static software.wings.common.Constants.USER_RESTRICTION_CACHE;
@@ -50,6 +51,10 @@ public class CacheHelper {
 
   public <K, V> Cache<K, V> getCache(String cacheName, Class<K> keyType, Class<V> valueType) {
     return getCache(cacheName, keyType, valueType, EternalExpiryPolicy.factoryOf());
+  }
+
+  public Cache<String, Integer> getTrialRegistrationEmailCache() {
+    return getCache(TRIAL_EMAIL_CACHE, String.class, Integer.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
   }
 
   public Cache<String, User> getUserCache() {

@@ -163,6 +163,8 @@ public class UserServiceImpl implements UserService {
   public static final String INVITE_EMAIL_TEMPLATE_NAME = "invite";
   public static final String TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME = "invite_trial";
   public static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
+  public static final int REGISTRATION_SPAM_THRESHOLD = 3;
+
   private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
   /**
@@ -254,14 +256,42 @@ public class UserServiceImpl implements UserService {
       sendVerificationEmail(userInvite);
       eventPublishHelper.publishTrialUserSignupEvent(emailAddress);
     } else if (userInvite.isCompleted()) {
+      if (isTrialRegistrationSpam(userInvite)) {
+        return false;
+      }
       // HAR-7590: If user invite has completed. Send an email saying so and ask the user to login directly.
       sendTrialSignupCompletedEmail(userInvite);
     } else {
+      if (isTrialRegistrationSpam(userInvite)) {
+        return false;
+      }
       // HAR-7250: If the user invite was not completed. Resend the verification/invitation email.
       sendVerificationEmail(userInvite);
     }
 
     return true;
+  }
+
+  private boolean isTrialRegistrationSpam(UserInvite userInvite) {
+    // HAR-7639: If the same email is being used repeatedly for trial signup, it's likely a spam activity.
+    // Reject/throttle these registration request to avoid the verification or access-your-account email spamming
+    // the legitimate trial user's mailbox.
+    Cache<String, Integer> trialEmailCache = cacheHelper.getTrialRegistrationEmailCache();
+    String emailAddress = userInvite.getEmail();
+    Integer registrationCount = trialEmailCache.get(emailAddress);
+    if (registrationCount == null) {
+      registrationCount = 1;
+    } else {
+      registrationCount += 1;
+    }
+    trialEmailCache.put(emailAddress, registrationCount);
+    if (registrationCount > REGISTRATION_SPAM_THRESHOLD) {
+      logger.info(
+          "Trial registration has been performed already using the email from user invite '{}' shortly before, rejecting this request.",
+          userInvite.getUuid());
+      return true;
+    }
+    return false;
   }
 
   @Override
