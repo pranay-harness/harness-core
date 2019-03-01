@@ -1363,6 +1363,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private DelegateTask saveAndBroadcastTask(DelegateTask task, boolean async) {
+    task.setStatus(QUEUED);
     task.setAsync(async);
     task.setVersion(getVersion());
     task.setBroadcastCount(1);
