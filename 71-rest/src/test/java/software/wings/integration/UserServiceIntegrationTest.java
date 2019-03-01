@@ -39,6 +39,7 @@ import software.wings.beans.security.HarnessUserGroup;
 import software.wings.common.Constants;
 import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
@@ -170,11 +171,13 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertTrue(savedUser.isEmailVerified());
     assertEquals(1, savedUser.getAccounts().size());
 
-    // Trial signup again after signup completed will result in user to get another email saying he/she should just
-    // login.
-    target.request().post(entity(email, TEXT_PLAIN), new GenericType<RestResponse<Boolean>>() {});
+    // Trial signup a few more time using the same email will trigger the rejection, and the singup result will be
+    // false.
+    for (int i = 0; i < UserServiceImpl.REGISTRATION_SPAM_THRESHOLD; i++) {
+      response = target.request().post(entity(email, TEXT_PLAIN), new GenericType<RestResponse<Boolean>>() {});
+    }
     assertEquals(0, response.getResponseMessages().size());
-    assertTrue(response.getResource());
+    assertFalse(response.getResource());
 
     // Delete the user just created as a cleanup
     userService.delete(savedUser.getAccounts().get(0).getUuid(), savedUser.getUuid());

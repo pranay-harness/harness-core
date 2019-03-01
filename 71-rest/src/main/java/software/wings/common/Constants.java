@@ -536,6 +536,12 @@ public interface Constants {
    * The constant DELEGATE_SYNC_CACHE.
    */
   String DELEGATE_SYNC_CACHE = "delegateSyncCache";
+
+  /**
+   * A cache to track the trial registration email for rate limiting purpose.
+   */
+  String TRIAL_EMAIL_CACHE = "trialEmailCache";
+
   /**
    * The constant USER_CACHE.
    */
