@@ -5,6 +5,7 @@ import io.harness.event.model.EventConstants;
 import io.harness.event.model.EventType;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.Collector.Type;
+import io.prometheus.client.Histogram;
 
 public class DeploymentDurationEvent implements HarnessMetricsEvent {
   private static final String[] deploymentDurationLabelNames =
@@ -39,6 +40,19 @@ public class DeploymentDurationEvent implements HarnessMetricsEvent {
 
   @Override
   public void registerMetrics(HarnessMetricRegistry registry) {
-    registry.registerHistogramMetric(getEventType().name(), getLabelNames(), getMetricHelpDocument());
+    String name = getEventType().name();
+    String doc = getMetricHelpDocument();
+    Histogram.Builder builder = Histogram.build().name(name).help(doc);
+    String[] labels = getLabelNames();
+    if (labels != null) {
+      builder.labelNames(labels);
+    }
+    builder.help(doc);
+    /**
+     * 30 seconds bucket with 120 buckets total -> until 1 hour
+     */
+    builder.linearBuckets(0, 30, 120);
+
+    registry.registerHistogramMetric(getEventType().name(), builder);
   }
 }

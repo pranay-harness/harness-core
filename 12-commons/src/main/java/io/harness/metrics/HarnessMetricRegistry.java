@@ -96,19 +96,9 @@ public class HarnessMetricRegistry {
     namesToCollectors.put(name, metric2);
   }
 
-  public void registerHistogramMetric(String metricName, String[] labels, String doc) {
+  public void registerHistogramMetric(String metricName, Histogram.Builder builder) {
     String name = getAbsoluteMetricName(metricName);
-    Histogram.Builder builder = Histogram.build().name(name).help(doc);
-    if (labels != null) {
-      builder.labelNames(labels);
-    }
-    if (doc != null) {
-      builder.help(doc);
-    } else {
-      builder.help(metricName);
-    }
     Histogram metric = builder.create();
-
     collectorRegistry.register(metric);
     namesToCollectors.put(name, metric);
   }
