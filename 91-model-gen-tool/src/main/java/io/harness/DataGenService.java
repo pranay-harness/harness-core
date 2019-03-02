@@ -200,7 +200,6 @@ public class DataGenService {
     createGlobalSettings(account);
     createApps(account);
     createTestApplication(account);
-    sampleDataProviderService.createK8sV2SampleApp(account);
 
     loadAppStackCatalogs();
   }
