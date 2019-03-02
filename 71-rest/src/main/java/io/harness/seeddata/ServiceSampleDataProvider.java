@@ -143,44 +143,30 @@ public class ServiceSampleDataProvider {
                                                       .description(K8S_SERVICE_DESC)
                                                       .build());
 
-    ManifestFile namespaceManifest = ManifestFile.builder()
-                                         .fileName("templates/namespace.yaml")
-                                         .fileContent("apiVersion: v1\n"
-                                             + "kind: Namespace\n"
-                                             + "metadata:\n"
-                                             + "  name: {{.Values.namespace}}")
-                                         .build();
-    namespaceManifest.setAppId(appId);
-
-    ManifestFile serviceManifest = ManifestFile.builder()
-                                       .fileName("templates/service.yaml")
-                                       .fileContent("apiVersion: v1\n"
-                                           + "kind: Service\n"
-                                           + "metadata:\n"
-                                           + "  name: {{.Values.name}}-svc\n"
-                                           + "spec:\n"
-                                           + "  type: LoadBalancer\n"
-                                           + "  ports:\n"
-                                           + "  - port: 80\n"
-                                           + "    targetPort: 8080\n"
-                                           + "    protocol: TCP\n"
-                                           + "  selector:\n"
-                                           + "    app: {{.Values.name}}")
-                                       .build();
-    serviceManifest.setAppId(appId);
-
-    applicationManifestService.createManifestFileByServiceId(namespaceManifest, service.getUuid());
-
-    applicationManifestService.createManifestFileByServiceId(serviceManifest, service.getUuid());
-
     ApplicationManifest appManifest = applicationManifestService.getByServiceId(appId, service.getUuid());
 
     ManifestFile valuesFile =
         applicationManifestService.getManifestFileByFileName(appManifest.getUuid(), "values.yaml");
     valuesFile.setFileContent("name: harness-example\n"
         + "replicas: 1\n"
+        + "\n"
         + "image: ${artifact.metadata.image}\n"
-        + "namespace: ${infra.kubernetes.namespace}");
+        + "dockercfg: ${artifact.source.dockerconfig}\n"
+        + "\n"
+        + "createImagePullSecret: false\n"
+        + "\n"
+        + "createNamespace: true\n"
+        + "namespace: ${infra.kubernetes.namespace}\n"
+        + "\n"
+        + "# Service Type allow you to specify what kind of service you want.\n"
+        + "# Possible values for ServiceType are:\n"
+        + "# ClusterIP | NodePort | LoadBalancer | ExternalName\n"
+        + "serviceType: LoadBalancer\n"
+        + "\n"
+        + "# A Service can map an incoming port to any targetPort.\n"
+        + "# targetPort is where application is listening on inside the container.\n"
+        + "servicePort: 80\n"
+        + "serviceTargetPort: 8080");
 
     applicationManifestService.updateManifestFileByServiceId(valuesFile, service.getUuid());
 

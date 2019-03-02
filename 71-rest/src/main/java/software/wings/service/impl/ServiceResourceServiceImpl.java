@@ -183,13 +183,21 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private static final String IIS_INSTALL_COMMAND_NAME = "Install";
   private static final String INSTALL_IIS_WEBSITE_TEMPLATE_NAME = "Install IIS Website";
   private static final String INSTALL_IIS_APPLICATION_TEMPLATE_NAME = "Install IIS Application";
-  private static String default_k8s_spec_yaml;
+  private static String default_k8s_deployment_yaml;
+  private static String default_k8s_namespace_yaml;
+  private static String default_k8s_service_yaml;
   private static String default_k8s_values_yaml;
 
   static {
     try {
-      URL url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/spec.yaml");
-      default_k8s_spec_yaml = Resources.toString(url, Charsets.UTF_8);
+      URL url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/deployment.yaml");
+      default_k8s_deployment_yaml = Resources.toString(url, Charsets.UTF_8);
+
+      url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/namespace.yaml");
+      default_k8s_namespace_yaml = Resources.toString(url, Charsets.UTF_8);
+
+      url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/service.yaml");
+      default_k8s_service_yaml = Resources.toString(url, Charsets.UTF_8);
 
       url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/values.yaml");
       default_k8s_values_yaml = Resources.toString(url, Charsets.UTF_8);
@@ -1901,10 +1909,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     applicationManifestService.create(applicationManifest);
 
-    ManifestFile defaultSpec =
-        ManifestFile.builder().fileName("templates/spec.yaml").fileContent(default_k8s_spec_yaml).build();
-    defaultSpec.setAppId(service.getAppId());
-    applicationManifestService.createManifestFileByServiceId(defaultSpec, service.getUuid());
+    ManifestFile defaultDeploymentSpec =
+        ManifestFile.builder().fileName("templates/deployment.yaml").fileContent(default_k8s_deployment_yaml).build();
+    defaultDeploymentSpec.setAppId(service.getAppId());
+    applicationManifestService.createManifestFileByServiceId(defaultDeploymentSpec, service.getUuid());
+
+    ManifestFile defaultNamespaceSpec =
+        ManifestFile.builder().fileName("templates/namespace.yaml").fileContent(default_k8s_namespace_yaml).build();
+    defaultNamespaceSpec.setAppId(service.getAppId());
+    applicationManifestService.createManifestFileByServiceId(defaultNamespaceSpec, service.getUuid());
+
+    ManifestFile defaultServiceSpec =
+        ManifestFile.builder().fileName("templates/service.yaml").fileContent(default_k8s_service_yaml).build();
+    defaultServiceSpec.setAppId(service.getAppId());
+    applicationManifestService.createManifestFileByServiceId(defaultServiceSpec, service.getUuid());
 
     ManifestFile defaultValues =
         ManifestFile.builder().fileName("values.yaml").fileContent(default_k8s_values_yaml).build();

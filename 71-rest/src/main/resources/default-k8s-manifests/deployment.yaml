@@ -5,6 +5,18 @@ metadata:
 data:
   key: value
 ---
+{{- if .Values.createImagePullSecret}}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{.Values.name}}-dockercfg
+  annotations:
+    harness.io/skip-versioning: true
+data:
+  .dockercfg: {{.Values.dockercfg}}
+type: kubernetes.io/dockercfg
+{{- end}}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,11 +31,13 @@ spec:
       labels:
         app: {{.Values.name}}
     spec:
+      {{- if .Values.createImagePullSecret}}
+      imagePullSecrets:
+      - name: {{.Values.name}}-dockercfg
+      {{- end}}
       containers:
       - name: {{.Values.name}}
         image: {{.Values.image}}
         envFrom:
         - configMapRef:
             name: {{.Values.name}}-config
-        ports:
-        - containerPort: 80
