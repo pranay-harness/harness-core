@@ -82,6 +82,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
   public static final String URL_KEY = "url";
   public static final String METHOD_KEY = "method";
+  public static final String HEADER = "header";
+  public static final String BODY = "body";
 
   @Attributes(required = true, title = "URL") private String url;
   @Attributes(required = true, enums = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}, title = "Method")
