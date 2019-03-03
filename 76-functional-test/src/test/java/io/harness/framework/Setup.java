@@ -19,12 +19,19 @@ import javax.ws.rs.core.GenericType;
 public class Setup {
   private static RequestSpecProvider rqProvider = new RequestSpecProvider();
 
+  private static ScmSecret instScmSecret = null;
+
   public static RequestSpecification portal() {
     return given().spec(rqProvider.useDefaultSpec());
   }
 
   public static RequestSpecification email() {
     return given().spec(rqProvider.useEmailSpec());
+  }
+
+  public static RequestSpecification mailinator() {
+    String secret = instScmSecret.decryptToString(new SecretName("mailinator_trial_api_key"));
+    return given().spec(rqProvider.useMailinatorSpec(secret));
   }
 
   public static String getAuthToken(String email, String password) {
@@ -46,7 +53,8 @@ public class Setup {
   }
 
   public static SettingAttribute getEmailConfig(ScmSecret scmSecret, String accountId) {
-    String secret = scmSecret.decryptToString(new SecretName("smtp_paid_sendgrid_config_password"));
+    instScmSecret = scmSecret;
+    String secret = instScmSecret.decryptToString(new SecretName("smtp_paid_sendgrid_config_password"));
     SmtpConfig smtpConfig = SmtpConfig.builder()
                                 .host("smtp.sendgrid.net")
                                 .port(465)

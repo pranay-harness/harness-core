@@ -1,6 +1,7 @@
 package io.harness.framework;
 
 import io.harness.framework.matchers.EmailMatcher;
+import io.harness.framework.matchers.MailinatorEmailMatcher;
 import io.harness.framework.matchers.Matcher;
 import io.harness.framework.matchers.SettingsAttributeMatcher;
 import org.slf4j.Logger;
@@ -47,6 +48,10 @@ public class Retry<T> {
             return actual;
           }
         } else if (matcher instanceof SettingsAttributeMatcher) {
+          if (matcher.matches(expected, actual)) {
+            return actual;
+          }
+        } else if (matcher instanceof MailinatorEmailMatcher) {
           if (matcher.matches(expected, actual)) {
             return actual;
           }
