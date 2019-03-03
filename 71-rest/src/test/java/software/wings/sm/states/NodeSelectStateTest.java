@@ -128,7 +128,8 @@ public class NodeSelectStateTest extends WingsBaseTest {
         .thenReturn(asList("Host1", "Host2", "Host3"));
 
     when(context.getContextElement(ContextElementType.INSTANCE)).thenReturn(contextElement);
-    when(context.getContextElement(ContextElementType.PARAM, Constants.SERVICE_INSTANCE_ARTIFACT_PARAMS))
+    when(context.getContextElement(
+             ContextElementType.PARAM, ServiceInstanceArtifactParam.SERVICE_INSTANCE_ARTIFACT_PARAMS))
         .thenReturn(serviceInstanceArtifactParam);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
   }

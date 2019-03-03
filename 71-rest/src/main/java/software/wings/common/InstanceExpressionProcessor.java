@@ -56,13 +56,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 /**
  * The Class InstanceExpressionProcessor.
- *
- * @author Rishi
  */
 public class InstanceExpressionProcessor implements ExpressionProcessor {
-  /**
-   * The Expression start pattern.
-   */
   public static final String DEFAULT_EXPRESSION = "${instances}";
 
   private static final String EXPRESSION_START_PATTERN = "instances()";
@@ -394,7 +389,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       return null;
     }
     for (ContextElement param : params) {
-      if (Constants.SERVICE_INSTANCE_IDS_PARAMS.equals(param.getName())) {
+      if (ServiceInstanceIdsParam.SERVICE_INSTANCE_IDS_PARAMS.equals(param.getName())) {
         return (ServiceInstanceIdsParam) param;
       }
     }

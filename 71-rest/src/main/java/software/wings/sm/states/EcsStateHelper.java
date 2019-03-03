@@ -642,8 +642,8 @@ public class EcsStateHelper {
             .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
             .findFirst()
             .orElse(ContainerServiceElement.builder().build());
-    ContainerRollbackRequestElement rollbackElement =
-        context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
+    ContainerRollbackRequestElement rollbackElement = context.getContextElement(
+        ContextElementType.PARAM, ContainerRollbackRequestElement.CONTAINER_ROLLBACK_REQUEST_PARAM);
 
     return EcsDeployDataBag.builder()
         .app(app)

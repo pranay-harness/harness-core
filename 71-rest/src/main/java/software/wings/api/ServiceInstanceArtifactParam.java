@@ -1,17 +1,15 @@
 package software.wings.api;
 
 import io.harness.context.ContextElementType;
-import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by rishi on 4/5/17.
- */
 public class ServiceInstanceArtifactParam implements ContextElement {
+  public static final String SERVICE_INSTANCE_ARTIFACT_PARAMS = "SERVICE_INSTANCE_ARTIFACT_PARAMS";
+
   private Map<String, String> instanceArtifactMap = new HashMap<>();
 
   @Override
@@ -26,7 +24,7 @@ public class ServiceInstanceArtifactParam implements ContextElement {
 
   @Override
   public String getName() {
-    return Constants.SERVICE_INSTANCE_ARTIFACT_PARAMS;
+    return SERVICE_INSTANCE_ARTIFACT_PARAMS;
   }
 
   public Map<String, String> getInstanceArtifactMap() {

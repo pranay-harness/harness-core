@@ -344,7 +344,8 @@ public abstract class ContainerServiceDeploy extends State {
                              .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
                              .findFirst()
                              .orElse(ContainerServiceElement.builder().build());
-      rollbackElement = context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
+      rollbackElement = context.getContextElement(
+          ContextElementType.PARAM, ContainerRollbackRequestElement.CONTAINER_ROLLBACK_REQUEST_PARAM);
 
       subscriptionId = infrastructureMapping instanceof AzureKubernetesInfrastructureMapping
           ? ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getSubscriptionId()

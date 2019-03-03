@@ -27,7 +27,6 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
-import software.wings.common.Constants;
 import software.wings.sm.ExecutionContext;
 
 /**
@@ -45,8 +44,8 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, Service service,
       ContainerInfrastructureMapping infrastructureMapping, ContainerTask containerTask, String clusterName) {
-    ContainerRollbackRequestElement rollbackElement =
-        context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
+    ContainerRollbackRequestElement rollbackElement = context.getContextElement(
+        ContextElementType.PARAM, ContainerRollbackRequestElement.CONTAINER_ROLLBACK_REQUEST_PARAM);
 
     String subscriptionId = null;
     String resourceGroup = null;
