@@ -638,18 +638,16 @@ public class AccountServiceImpl implements AccountService {
       services.add(serviceId);
     }
 
-    List<CVConfiguration> cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class)
-                                                    .field("appId")
-                                                    .in(userAppPermissions.keySet())
-                                                    .filter("isWorkflowConfig", false)
-                                                    .asList();
+    List<CVConfiguration> cvConfigurationList =
+        wingsPersistence.createQuery(CVConfiguration.class).field("appId").in(userAppPermissions.keySet()).asList();
     if (cvConfigurationList == null) {
       return null;
     }
     Map<String, List<CVConfiguration>> serviceCvConfigMap = new HashMap<>();
     cvConfigurationList.forEach(cvConfiguration -> {
       String serviceIdOfConfig = cvConfiguration.getServiceId();
-      if (services.contains(serviceIdOfConfig) && allowedEnvs.contains(cvConfiguration.getEnvId())) {
+      if (!cvConfiguration.isWorkflowConfig() && services.contains(serviceIdOfConfig)
+          && allowedEnvs.contains(cvConfiguration.getEnvId())) {
         cvConfigurationService.fillInServiceAndConnectorNames(cvConfiguration);
         List<CVConfiguration> configList = new ArrayList<>();
         if (serviceCvConfigMap.containsKey(serviceIdOfConfig)) {

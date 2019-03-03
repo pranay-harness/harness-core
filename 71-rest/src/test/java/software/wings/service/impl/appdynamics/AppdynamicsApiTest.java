@@ -14,6 +14,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.common.VerificationConstants.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.BT_PERFORMANCE_PATH_PREFIX;
 import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.EXTERNAL_CALLS;
@@ -40,7 +41,6 @@ import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -265,7 +265,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .accountname(UUID.randomUUID().toString())
                                               .build();
     List<AppdynamicsMetric> tierBTMetrics = delegateService.getTierBTMetrics(appDynamicsConfig, new Random().nextLong(),
-        new Random().nextLong(), Collections.emptyList(), createApiCallLog(accountId, Base.GLOBAL_APP_ID, null));
+        new Random().nextLong(), Collections.emptyList(), createApiCallLog(accountId, GLOBAL_APP_ID, null));
     assertEquals(2, tierBTMetrics.size());
     assertEquals(bts, tierBTMetrics);
   }
@@ -356,7 +356,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     List<AppdynamicsMetricData> tierBTMetricData =
         delegateService.getTierBTMetricData(appDynamicsConfig, new Random().nextLong(), generateUuid(), generateUuid(),
             generateUuid(), System.currentTimeMillis() - new Random().nextInt(), System.currentTimeMillis(),
-            Collections.emptyList(), createApiCallLog(accountId, Base.GLOBAL_APP_ID, null));
+            Collections.emptyList(), createApiCallLog(accountId, GLOBAL_APP_ID, null));
     assertEquals(2, tierBTMetricData.size());
     assertEquals(btData, tierBTMetricData);
   }

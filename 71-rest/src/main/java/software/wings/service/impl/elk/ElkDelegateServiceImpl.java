@@ -7,6 +7,7 @@ import static io.harness.network.Http.getOkHttpClientBuilderWithReadtimeOut;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.common.VerificationConstants.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.collect.Lists;
@@ -28,7 +29,6 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.beans.Base;
 import software.wings.beans.ElkConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.elk.ElkRestClient;
@@ -91,7 +91,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   public Object search(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,
       ElkLogFetchRequest logFetchRequest, ThirdPartyApiCallLog apiCallLog, int maxRecords) throws IOException {
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(elkConfig.getAccountId(), Base.GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(elkConfig.getAccountId(), GLOBAL_APP_ID, null);
     }
 
     apiCallLog.setTitle("Fetching logs from " + elkConfig.getElkUrl());
@@ -144,7 +144,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   public Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,
       ThirdPartyApiCallLog apiCallLog) throws IOException {
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(elkConfig.getAccountId(), Base.GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(elkConfig.getAccountId(), GLOBAL_APP_ID, null);
     }
     apiCallLog.setTitle("Fetching indices from " + elkConfig.getElkUrl());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
