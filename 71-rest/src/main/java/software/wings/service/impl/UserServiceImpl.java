@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -1442,8 +1443,8 @@ public class UserServiceImpl implements UserService {
         }
       }
 
-      PageResponse<UserGroup> pageResponse = userGroupService.list(
-          accountId, aPageRequest().addFilter("memberIds", Operator.HAS, user.getUuid()).build(), true);
+      PageResponse<UserGroup> pageResponse =
+          userGroupService.list(accountId, aPageRequest().addFilter("memberIds", HAS, user.getUuid()).build(), true);
       List<UserGroup> userGroupList = pageResponse.getResponse();
       userGroupList.forEach(userGroup -> {
         List<User> members = userGroup.getMembers();
@@ -1828,7 +1829,8 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public List<User> getUsersOfAccount(String accountId) {
-    PageRequest<User> pageRequest = aPageRequest().addFilter("accounts", Operator.IN, accountId).build();
+    Account account = accountService.get(accountId);
+    PageRequest<User> pageRequest = aPageRequest().addFilter("accounts", HAS, account).build();
     PageResponse<User> pageResponse = wingsPersistence.query(User.class, pageRequest);
     return pageResponse.getResponse();
   }
