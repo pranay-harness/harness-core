@@ -6,7 +6,9 @@ import static org.junit.Assert.assertNotNull;
 
 import io.harness.RestUtils.GuerillaMailUtil;
 import io.harness.RestUtils.HTMLUtils;
+import io.harness.RestUtils.MailinatorRestUtils;
 import io.harness.RestUtils.UserRestUtil;
+import io.harness.Utils.TestUtils;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Retry;
 import io.harness.framework.Setup;
@@ -15,6 +17,8 @@ import io.harness.framework.email.EmailMetaData;
 import io.harness.framework.email.GuerillaEmailDetails;
 import io.harness.framework.email.GuerillaEmailInfo;
 import io.harness.framework.email.GuerillaIndividualEmail;
+import io.harness.framework.email.mailinator.MailinatorMessageDetails;
+import io.harness.framework.email.mailinator.MailinatorMetaMessage;
 import io.harness.framework.matchers.EmailMatcher;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.OwnerRule.Owner;
@@ -41,7 +45,9 @@ public class UserTest extends AbstractFunctionalTest {
   final String EXPECTED_SUBJECT = "You are invited to join Harness at Harness platform";
   UserRestUtil urUtil = new UserRestUtil();
   GuerillaMailUtil gmailUtil = new GuerillaMailUtil();
+  MailinatorRestUtils mailinatorRestUtils = new MailinatorRestUtils();
   HTMLUtils htmlUtils = new HTMLUtils();
+  TestUtils testUtils = new TestUtils();
 
   @Test()
   @Category(FunctionalTests.class)
@@ -83,6 +89,52 @@ public class UserTest extends AbstractFunctionalTest {
     assertTrue(StringUtils.isNotBlank(inviteUrl));
     logger.info("Successfully completed signup email delivery test");
     assertTrue(gmailUtil.forgetEmailId(emailInfo.getSidToken()));
+    // Complete registration using the API
+    UserInvite incomplete = userInvitationList.get(0);
+    UserInvite completed = urUtil.completeUserRegistration(account, incomplete);
+    assertNotNull(completed);
+    assertFalse("Error : Agreement is true before signup", incomplete.isAgreement());
+    assertFalse("Error : Completion is true before signup", incomplete.isCompleted());
+    assertTrue("Error: Completion is false after signup", completed.isCompleted());
+    // Assert.assertTrue("Error : Agreement is false after signup",completed.isAgreement());
+    assertTrue(incomplete.getEmail().equals(completed.getEmail()));
+    assertTrue(incomplete.getName().equals(completed.getName()));
+    assertTrue(incomplete.getAccountId().equals(completed.getAccountId()));
+    // Verify if the signed-up user can login
+    String bearerToken = Setup.getAuthToken(completed.getEmail(), UserConstants.DEFAULT_PASSWORD);
+    assertNotNull("Bearer Token not successfully provided", bearerToken);
+    int statusCode = Setup.signOut(completed.getUuid(), bearerToken);
+    assertTrue(statusCode == HttpStatus.SC_OK);
+    logger.info("Successfully completed user registration email");
+  }
+
+  @Test()
+  @Category(FunctionalTests.class)
+  @Owner(emails = "swamy@harness.io")
+  public void testUserInvite() throws IOException, MessagingException {
+    Account account = this.getAccount();
+    String domainName = "@swamy-harness.mailinator.com";
+    String emailId = testUtils.generateRandomString(8);
+    List<UserInvite> userInvitationList = urUtil.inviteUser(account, emailId + domainName);
+    assertNotNull(userInvitationList);
+    assertTrue(userInvitationList.size() == 1);
+    // Verify if email is sent, received and has signup link
+    // Email check will run every 6 seconds upto 2 mins to see if email is delivered.
+    MailinatorMetaMessage message = mailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_SUBJECT);
+    String emailFetchId = message.getId();
+    MailinatorMessageDetails messageDetails = mailinatorRestUtils.readEmail(emailId, emailFetchId);
+    assertNotNull(messageDetails);
+    String inviteUrl = htmlUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody());
+    assertNotNull(inviteUrl);
+    assertTrue(StringUtils.isNotBlank(inviteUrl));
+    logger.info("Successfully completed signup email delivery test");
+
+    messageDetails = null;
+    messageDetails = mailinatorRestUtils.deleteEmail(emailId, emailFetchId);
+    assertNotNull(messageDetails.getAdditionalProperties());
+    assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
+    assertTrue(messageDetails.getAdditionalProperties().get("status").toString().equals("ok"));
+
     // Complete registration using the API
     UserInvite incomplete = userInvitationList.get(0);
     UserInvite completed = urUtil.completeUserRegistration(account, incomplete);

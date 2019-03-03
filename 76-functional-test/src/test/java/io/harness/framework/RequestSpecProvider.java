@@ -26,4 +26,16 @@ public class RequestSpecProvider {
     RestAssured.useRelaxedHTTPSValidation();
     return requestSpecBuilder.build();
   }
+
+  public RequestSpecification useMailinatorSpec(String decryptedToken) {
+    RequestSpecBuilder requestSpecBuilder = new RequestSpecBuilder();
+    requestSpecBuilder.setAccept(ContentType.JSON);
+    requestSpecBuilder.setContentType(ContentType.JSON);
+    requestSpecBuilder.setBaseUri("https://api.mailinator.com");
+    requestSpecBuilder.setBasePath("/api");
+    requestSpecBuilder.addQueryParam("token", decryptedToken);
+    requestSpecBuilder.addQueryParam("private_domain", "true");
+    RestAssured.useRelaxedHTTPSValidation();
+    return requestSpecBuilder.build();
+  }
 }
