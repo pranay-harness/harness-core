@@ -7,11 +7,11 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.mongo.KryoConverter;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-import io.harness.serializer.KryoUtils;
 import lombok.Data;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -21,9 +21,9 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
-import org.mongodb.morphia.converters.TypeConverter;
-import org.mongodb.morphia.mapping.MappedField;
-import software.wings.beans.DelegateTask.Converter;
+import org.mongodb.morphia.converters.SimpleValueConverter;
+import software.wings.beans.DelegateTask.ParametersConverter;
+import software.wings.beans.DelegateTask.ResponseDataConverter;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -36,9 +36,10 @@ import javax.validation.constraints.NotNull;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "delegateTasks", noClassnameStored = true)
-@Converters(Converter.class)
+@Converters({ParametersConverter.class, ResponseDataConverter.class})
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static final String APP_ID_KEY = "appId";
+  public static final String NOTIFY_RESPONSE_KEY = "notifyResponse";
 
   public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
 
@@ -66,14 +67,13 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private int broadcastCount;
   private Set<String> validatingDelegateIds;
   private Set<String> validationCompleteDelegateIds;
-  private byte[] serializedNotifyResponseData;
   private String preAssignedDelegateId;
   private Set<String> alreadyTriedDelegates;
   private String serviceTemplateId;
   private String artifactStreamId;
   private String correlationId;
+  private ResponseData notifyResponse;
 
-  @Transient private transient ResponseData notifyResponse;
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
 
   @SchemaIgnore
@@ -81,23 +81,12 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
 
-  public boolean isTimedOut() {
-    return getLastUpdatedAt() + timeout <= System.currentTimeMillis();
-  }
-
   public ResponseData getNotifyResponse() {
-    if (notifyResponse != null) {
-      return notifyResponse;
-    }
-    if (serializedNotifyResponseData != null) {
-      return (ResponseData) KryoUtils.asObject(serializedNotifyResponseData);
-    }
-    return null;
+    return notifyResponse;
   }
 
   public void setNotifyResponse(ResponseData notifyResponse) {
     this.notifyResponse = notifyResponse;
-    setSerializedNotifyResponseData(notifyResponse != null ? KryoUtils.asBytes(notifyResponse) : null);
   }
 
   @Override
@@ -116,7 +105,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
         && Objects.equals(envId, that.envId) && Objects.equals(infrastructureMappingId, that.infrastructureMappingId)
         && Objects.equals(delegateRunnableTask, that.delegateRunnableTask)
         && Objects.equals(notifyResponse, that.notifyResponse)
-        && Arrays.equals(serializedNotifyResponseData, that.serializedNotifyResponseData)
         && Objects.equals(preAssignedDelegateId, that.preAssignedDelegateId)
         && Objects.equals(serviceTemplateId, that.serviceTemplateId)
         && Objects.equals(artifactStreamId, that.artifactStreamId);
@@ -125,8 +113,8 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), version, taskType, parameters, tags, accountId, waitId, status, delegateId,
-        timeout, async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse,
-        serializedNotifyResponseData, preAssignedDelegateId, serviceTemplateId, artifactStreamId);
+        timeout, async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse, preAssignedDelegateId,
+        serviceTemplateId, artifactStreamId);
   }
 
   @Override
@@ -151,19 +139,15 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
     private String correlationId;
   }
 
-  public static class Converter extends TypeConverter {
-    public Converter() {
+  public static class ParametersConverter extends KryoConverter {
+    public ParametersConverter() {
       super(Object[].class);
     }
+  }
 
-    @Override
-    public Object encode(Object value, MappedField optionalExtraInfo) {
-      return KryoUtils.asString(value);
-    }
-
-    @Override
-    public Object decode(Class<?> targetClass, Object fromDBObject, MappedField optionalExtraInfo) {
-      return KryoUtils.asObject((String) fromDBObject);
+  public static class ResponseDataConverter extends KryoConverter implements SimpleValueConverter {
+    public ResponseDataConverter() {
+      super(ResponseData.class);
     }
   }
 
