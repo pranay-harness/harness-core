@@ -1622,7 +1622,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     } else {
       wingsPersistence.update(taskQuery,
           wingsPersistence.createUpdateOperations(DelegateTask.class)
-              .set("serializedNotifyResponseData", KryoUtils.asBytes(response.getResponse()))
+              .set(DelegateTask.NOTIFY_RESPONSE_KEY, KryoUtils.asBytes(response.getResponse()))
               .set("status", error));
     }
   }
