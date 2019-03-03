@@ -91,8 +91,8 @@ public class EcsSetupRollback extends State {
     Activity activity = ecsStateHelper.createActivity(context, ECS_DAEMON_SERVICE_ROLLBACK_COMMAND, getStateType(),
         CommandUnitType.AWS_ECS_SERVICE_ROLLBACK_DAEMON, activityService);
 
-    ContainerRollbackRequestElement rollbackElement =
-        context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
+    ContainerRollbackRequestElement rollbackElement = context.getContextElement(
+        ContextElementType.PARAM, ContainerRollbackRequestElement.CONTAINER_ROLLBACK_REQUEST_PARAM);
 
     EcsSetupParams ecsSetupParams = (EcsSetupParams) ecsStateHelper.buildContainerSetupParams(context,
         EcsSetupStateConfig.builder()

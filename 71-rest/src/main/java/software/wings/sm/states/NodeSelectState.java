@@ -319,8 +319,8 @@ public abstract class NodeSelectState extends State {
   private Artifact findArtifact(ExecutionContext context, String serviceId) {
     ContextElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
     if (instanceElement != null) {
-      ServiceInstanceArtifactParam serviceArtifactElement =
-          context.getContextElement(ContextElementType.PARAM, Constants.SERVICE_INSTANCE_ARTIFACT_PARAMS);
+      ServiceInstanceArtifactParam serviceArtifactElement = context.getContextElement(
+          ContextElementType.PARAM, ServiceInstanceArtifactParam.SERVICE_INSTANCE_ARTIFACT_PARAMS);
       if (serviceArtifactElement != null) {
         String artifactId = serviceArtifactElement.getInstanceArtifactMap().get(instanceElement.getUuid());
         if (artifactId != null) {

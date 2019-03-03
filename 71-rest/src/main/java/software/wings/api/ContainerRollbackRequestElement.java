@@ -4,7 +4,6 @@ import io.harness.context.ContextElementType;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.container.AwsAutoScalarConfig;
-import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
@@ -17,6 +16,8 @@ import java.util.Map;
 @Data
 @Builder
 public class ContainerRollbackRequestElement implements ContextElement {
+  public static final String CONTAINER_ROLLBACK_REQUEST_PARAM = "CONTAINER_ROLLBACK_REQUEST_PARAM";
+
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
   private String namespace;
@@ -38,7 +39,7 @@ public class ContainerRollbackRequestElement implements ContextElement {
 
   @Override
   public String getName() {
-    return Constants.CONTAINER_ROLLBACK_REQUEST_PARAM;
+    return CONTAINER_ROLLBACK_REQUEST_PARAM;
   }
 
   @Override
