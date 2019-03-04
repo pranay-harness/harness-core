@@ -110,7 +110,7 @@ public class UserTest extends AbstractFunctionalTest {
 
   @Test()
   @Category(FunctionalTests.class)
-  @Owner(emails = "swamy@harness.io")
+  @Owner(emails = "swamy@harness.io", intermittent = true)
   public void testUserInvite() throws IOException, MessagingException {
     Account account = this.getAccount();
     String domainName = "@swamy-harness.mailinator.com";
