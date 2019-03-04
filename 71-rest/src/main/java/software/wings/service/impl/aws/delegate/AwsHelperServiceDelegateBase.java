@@ -10,7 +10,7 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
 import com.amazonaws.services.cloudformation.model.AmazonCloudFormationException;
@@ -35,7 +35,8 @@ class AwsHelperServiceDelegateBase {
   protected void attachCredentials(
       AwsClientBuilder builder, boolean useEc2IamCredentials, String accessKey, char[] secretKey) {
     if (useEc2IamCredentials) {
-      builder.withCredentials(InstanceProfileCredentialsProvider.getInstance());
+      logger.info("Instantiating EC2ContainerCredentialsProviderWrapper");
+      builder.withCredentials(new EC2ContainerCredentialsProviderWrapper());
     } else {
       builder.withCredentials(
           new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))));
