@@ -48,7 +48,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
     super(false);
   }
 
-  FindAndModifyOptions OPTIONS =
+  FindAndModifyOptions findAndModifyOptions =
       new FindAndModifyOptions().writeConcern(WriteConcern.MAJORITY).upsert(false).returnNew(false);
 
   private WaitInstance getWaitInstance(String waitInstanceId, long now) {
@@ -63,8 +63,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
     final UpdateOperations<WaitInstance> updateOperations =
         persistence.createUpdateOperations(WaitInstance.class).set(WaitInstance.CALLBACK_PROCESSING_AT_KEY, now);
 
-    return persistence.getDatastore(WaitInstance.class, ReadPref.CRITICAL)
-        .findAndModify(waitInstanceQuery, updateOperations, OPTIONS);
+    return persistence.findAndModify(waitInstanceQuery, updateOperations, findAndModifyOptions);
   }
 
   @Override
