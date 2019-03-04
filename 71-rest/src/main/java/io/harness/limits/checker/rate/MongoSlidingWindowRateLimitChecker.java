@@ -4,10 +4,10 @@ import com.mongodb.BasicDBObject;
 import io.harness.limits.Action;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.lib.RateLimitChecker;
-import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import lombok.Getter;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
@@ -63,7 +63,9 @@ public class MongoSlidingWindowRateLimitChecker implements RateLimitChecker, Rat
     UpdateOperations<UsageBucket> update = ds.createUpdateOperations(UsageBucket.class,
         new BasicDBObject("$pull", new BasicDBObject("accessTimes", new BasicDBObject("$lt", leastAllowedTime))));
 
-    return persistence.findAndModify(query, update, HPersistence.returnNewOptions);
+    FindAndModifyOptions options = new FindAndModifyOptions();
+    options.returnNew(true);
+    return persistence.findAndModify(query, update, options);
   }
 
   private UsageBucket addNewTime(long now) {
@@ -72,7 +74,11 @@ public class MongoSlidingWindowRateLimitChecker implements RateLimitChecker, Rat
     UpdateOperations<UsageBucket> update =
         persistence.createUpdateOperations(UsageBucket.class).push("accessTimes", now);
 
-    return persistence.findAndModify(query, update, HPersistence.upsertReturnNewOptions);
+    FindAndModifyOptions options = new FindAndModifyOptions();
+    options.returnNew(true);
+    options.upsert(true);
+
+    return persistence.findAndModify(query, update, options);
   }
 
   @Override

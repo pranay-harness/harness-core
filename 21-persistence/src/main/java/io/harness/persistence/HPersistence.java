@@ -225,8 +225,8 @@ public interface HPersistence {
    */
   <T extends PersistentEntity> boolean delete(T entity);
 
-  FindAndModifyOptions upsertReturnNewOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
-  FindAndModifyOptions upsertReturnOldOptions = new FindAndModifyOptions().upsert(true).returnNew(false);
+  FindAndModifyOptions UPSERT_RETURN_NEW_OPTIONS = new FindAndModifyOptions().upsert(true).returnNew(true);
+  FindAndModifyOptions UPSERT_RETURN_OLD_OPTIONS = new FindAndModifyOptions().upsert(true).returnNew(false);
 
   /**
    * Upsert.
@@ -255,9 +255,6 @@ public interface HPersistence {
    * @return the update results
    */
   <T extends PersistentEntity> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
-
-  FindAndModifyOptions returnNewOptions = new FindAndModifyOptions().upsert(false).returnNew(true);
-  FindAndModifyOptions returnOldOptions = new FindAndModifyOptions().upsert(false).returnNew(false);
 
   /**
    * Find and modify.

@@ -99,7 +99,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.network.Http;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.ReadPref;
 import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
@@ -1643,7 +1643,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                           .set("delegateId", delegateId)
                                                           .set("status", STARTED);
-    DelegateTask task = wingsPersistence.findAndModify(query, updateOperations, HPersistence.returnOldOptions);
+    DelegateTask task =
+        wingsPersistence.getDatastore(DelegateTask.class, ReadPref.NORMAL).findAndModify(query, updateOperations);
     // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in case
     // client is retrying the request
     if (task != null) {
