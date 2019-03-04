@@ -113,8 +113,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
             totalDataCollectionTasks.getAndIncrement();
           }
-          metricRegistry.recordGaugeValue(DATA_COLLECTION_TASKS_PER_MINUTE, null, totalDataCollectionTasks.get());
         });
+    metricRegistry.recordGaugeValue(DATA_COLLECTION_TASKS_PER_MINUTE, null, totalDataCollectionTasks.get());
     return true;
   }
 
@@ -286,6 +286,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public boolean triggerLogDataCollection(String accountId) {
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
     long endMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TIME_DELAY_QUERY_MINS;
+    AtomicLong totalDataCollectionTasks = new AtomicLong(0);
     cvConfigurations.stream()
         .filter(cvConfiguration
             -> cvConfiguration.isEnabled24x7() && getLogAnalysisStates().contains(cvConfiguration.getStateType()))
@@ -321,12 +322,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
             verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
                 cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
-
-            metricRegistry.recordGaugeInc(DATA_COLLECTION_TASKS_PER_MINUTE,
-                new String[] {accountId, cvConfiguration.getStateType().toString(),
-                    String.valueOf(cvConfiguration.isEnabled24x7())});
+            totalDataCollectionTasks.getAndIncrement();
           }
         });
+    metricRegistry.recordGaugeValue(DATA_COLLECTION_TASKS_PER_MINUTE, null, totalDataCollectionTasks.get());
     return true;
   }
 
