@@ -503,8 +503,8 @@ public abstract class TerraformProvisionState extends State {
                                             .workflowExecutionId(context.getWorkflowExecutionId())
                                             .targets(executionData.getTargets())
                                             .command(executionData.getCommandExecuted())
+                                            .appId(context.getAppId())
                                             .build();
-
     wingsPersistence.save(terraformfConfig);
   }
 
