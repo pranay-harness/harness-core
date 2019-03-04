@@ -1,6 +1,6 @@
 package io.harness.state.inspection;
 
-import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+import static io.harness.persistence.HPersistence.UPSERT_RETURN_NEW_OPTIONS;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
@@ -55,7 +55,7 @@ public class StateInspectionServiceImpl implements StateInspectionService {
 
     // TODO: there is a bug in morphia for obtaining the old value with projection. Change this to send notification
     //       only for inserts when this is fixed.
-    persistence.upsert(query, updateOperations, upsertReturnNewOptions);
+    persistence.upsert(query, updateOperations, UPSERT_RETURN_NEW_OPTIONS);
 
     subject.fireInform(StateInspectionListener::appendedDataFor, stateExecutionInstanceId);
   }

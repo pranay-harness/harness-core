@@ -25,10 +25,10 @@ import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.HPersistence;
 import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -238,7 +238,10 @@ public class UserGroupServiceImpl implements UserGroupService {
                                  .field("_id")
                                  .equal(groupId);
 
-    UserGroup updatedGroup = wingsPersistence.findAndModify(query, update, HPersistence.returnNewOptions);
+    FindAndModifyOptions options = new FindAndModifyOptions();
+    options.returnNew(true);
+
+    UserGroup updatedGroup = wingsPersistence.findAndModify(query, update, options);
     if (null == updatedGroup) {
       log.error("No user group found. groupId={}, accountId={}", groupId, accountId);
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "No user group found");
