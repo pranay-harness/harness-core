@@ -33,6 +33,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
+import io.harness.rule.OwnerRule.Owner;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
@@ -105,6 +106,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
+  @Owner(emails = "pooja@harness.io", intermittent = true)
   public void testWFWithRollback() throws Exception {
     Workflow savedWorkflow = addWorkflow();
     assertThat(savedWorkflow).isNotNull();
