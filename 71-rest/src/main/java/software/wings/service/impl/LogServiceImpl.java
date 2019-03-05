@@ -5,11 +5,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -98,7 +98,7 @@ public class LogServiceImpl implements LogService {
   public void batchedSave(List<Log> logs) {
     if (isNotEmpty(logs)) {
       logs = logs.stream().filter(Objects::nonNull).collect(toList());
-      dataStoreService.save(Log.class, logs);
+      dataStoreService.save(Log.class, logs, false);
 
       // Map of [ActivityId -> [CommandUnitName -> LastLogLineStatus]]
 
@@ -116,7 +116,7 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public boolean batchedSaveCommandUnitLogs(String activityId, String unitName, Log log) {
-    dataStoreService.save(Log.class, singletonList(log));
+    dataStoreService.save(Log.class, Lists.newArrayList(log), false);
     activityService.updateCommandUnitStatus(log.getAppId(), activityId, unitName, log.getCommandExecutionStatus());
     return true;
   }

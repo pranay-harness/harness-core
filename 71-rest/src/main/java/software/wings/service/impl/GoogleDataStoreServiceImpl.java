@@ -56,7 +56,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
   }
 
   @Override
-  public <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records) {
+  public <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records, boolean ignoreDuplicate) {
     if (isEmpty(records)) {
       return;
     }

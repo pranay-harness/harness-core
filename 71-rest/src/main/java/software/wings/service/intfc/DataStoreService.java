@@ -7,7 +7,7 @@ import io.harness.persistence.GoogleDataStoreAware;
 import java.util.List;
 
 public interface DataStoreService {
-  <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records);
+  <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records, boolean ignoreDuplicate);
 
   <T extends GoogleDataStoreAware> PageResponse<T> list(Class<T> clazz, PageRequest<T> pageRequest);
 

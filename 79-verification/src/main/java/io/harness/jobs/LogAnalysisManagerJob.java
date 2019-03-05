@@ -214,7 +214,7 @@ public class LogAnalysisManagerJob implements Job {
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
         apiCallLog.addFieldToResponse(
             HttpStatus.SC_INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(ex), FieldType.TEXT);
-        dataStoreService.save(ThirdPartyApiCallLog.class, Lists.newArrayList(apiCallLog));
+        dataStoreService.save(ThirdPartyApiCallLog.class, Lists.newArrayList(apiCallLog), false);
       } finally {
         try {
           // send notification to state manager and delete cron.

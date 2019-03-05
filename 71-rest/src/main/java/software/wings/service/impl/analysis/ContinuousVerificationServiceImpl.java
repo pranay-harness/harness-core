@@ -992,9 +992,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, entry.getValue());
       }
 
-      if (featureFlagService.isEnabled(
-              FeatureName.METRIC_READ_GOOGLE, appService.getAccountIdByAppId(cvConfiguration.getAppId()))
-          && dataStoreService instanceof GoogleDataStoreServiceImpl) {
+      if (dataStoreService instanceof GoogleDataStoreServiceImpl) {
         dataRecordPageRequest.setLimit(UNLIMITED);
         final List<NewRelicMetricDataRecord> records = new ArrayList<>();
         dataStoreService.list(NewRelicMetricDataRecord.class, dataRecordPageRequest)

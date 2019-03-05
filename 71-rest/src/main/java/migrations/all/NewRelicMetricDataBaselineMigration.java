@@ -47,7 +47,7 @@ public class NewRelicMetricDataBaselineMigration implements Migration {
           metricDataRecords.forEach(
               dataRecord -> dataRecord.setValidUntil(WorkflowExecutionBaselineServiceImpl.BASELINE_TTL));
 
-          dataStoreService.save(NewRelicMetricDataRecord.class, metricDataRecords);
+          dataStoreService.save(NewRelicMetricDataRecord.class, metricDataRecords, false);
         }
       }
     }

@@ -29,7 +29,7 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
   }
 
   @Override
-  public <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records) {
+  public <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records, boolean ignoreDuplicate) {
     if (isEmpty(records)) {
       return;
     }
@@ -46,8 +46,11 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
         return;
       }
     }
-
-    wingsPersistence.saveIgnoringDuplicateKeys(records);
+    if (ignoreDuplicate) {
+      wingsPersistence.saveIgnoringDuplicateKeys(records);
+    } else {
+      wingsPersistence.save(records);
+    }
   }
 
   @Override
