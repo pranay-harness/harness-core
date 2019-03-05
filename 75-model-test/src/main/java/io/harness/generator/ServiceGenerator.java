@@ -14,8 +14,9 @@ import com.mongodb.DuplicateKeyException;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.exception.WingsException;
 import io.harness.generator.ApplicationGenerator.Applications;
-import io.harness.generator.ArtifactStreamGenerator.ArtifactStreams;
 import io.harness.generator.OwnerManager.Owners;
+import io.harness.generator.artifactstream.ArtifactStreamManager;
+import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
@@ -26,12 +27,12 @@ import software.wings.utils.ArtifactType;
 public class ServiceGenerator {
   @Inject private OwnerManager ownerManager;
   @Inject ApplicationGenerator applicationGenerator;
-  @Inject ArtifactStreamGenerator artifactStreamGenerator;
+  @Inject ArtifactStreamManager artifactStreamManager;
 
   @Inject ServiceResourceService serviceResourceService;
   @Inject WingsPersistence wingsPersistence;
 
-  public enum Services { GENERIC_TEST, KUBERNETES_GENERIC_TEST, FUNCTIONAL_TEST, WINDOWS_TEST }
+  public enum Services { GENERIC_TEST, KUBERNETES_GENERIC_TEST, FUNCTIONAL_TEST, WINDOWS_TEST, ECS_TEST }
 
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
     switch (predefined) {
@@ -53,21 +54,28 @@ public class ServiceGenerator {
   public Service ensureWindowsTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.IIS_APP).build()));
-    artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_IIS_APP);
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_IIS_APP);
+    return owners.obtainService();
+  }
+
+  public Service ensureEcsTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.DOCKER).build()));
+    owners.add(artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECR));
     return owners.obtainService();
   }
 
   public Service ensureGenericTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
-    artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
     return owners.obtainService();
   }
 
   public Service ensureFunctionalTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
-    artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
     return owners.obtainService();
   }
 
