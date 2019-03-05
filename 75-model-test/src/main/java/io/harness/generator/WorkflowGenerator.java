@@ -35,12 +35,13 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
-import io.harness.generator.ArtifactStreamGenerator.ArtifactStreams;
 import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings;
 import io.harness.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.generator.artifactstream.ArtifactStreamManager;
+import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.Builder;
@@ -81,7 +82,7 @@ public class WorkflowGenerator {
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
-  @Inject private ArtifactStreamGenerator artifactStreamGenerator;
+  @Inject private ArtifactStreamManager artifactStreamManager;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private ScmSecret scmSecret;
@@ -97,7 +98,8 @@ public class WorkflowGenerator {
     TERRAFORM,
     PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT,
     BUILD_JENKINS,
-    BUILD_SHELL_SCRIPT
+    BUILD_SHELL_SCRIPT,
+    BASIC_ECS
   }
 
   public Workflow ensurePredefined(Randomizer.Seed seed, Owners owners, Workflows predefined) {
@@ -264,7 +266,7 @@ public class WorkflowGenerator {
     // Ensure artifact stream
 
     // TODO: Change it to Docker ArtifactStream
-    artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
 
     SettingAttribute jenkinsConfig = settingGenerator.ensurePredefined(seed, owners, HARNESS_JENKINS_CONNECTOR);
 

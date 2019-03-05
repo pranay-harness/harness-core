@@ -10,8 +10,6 @@ import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
-import io.harness.generator.ArtifactStreamGenerator;
-import io.harness.generator.ArtifactStreamGenerator.ArtifactStreams;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -19,6 +17,8 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.WorkflowGenerator.Workflows;
+import io.harness.generator.artifactstream.ArtifactStreamManager;
+import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.rest.RestResponse;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
@@ -41,7 +41,7 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private ServiceGenerator serviceGenerator;
-  @Inject private ArtifactStreamGenerator artifactStreamGenerator;
+  @Inject private ArtifactStreamManager artifactStreamManager;
 
   Application application;
 
@@ -63,7 +63,7 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
         owners.obtainService(() -> serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST));
     assertThat(service).isNotNull();
     ArtifactStream artifactStream =
-        artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
     assertThat(artifactStream).isNotNull();
     Workflow buildWorkflow = workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD_JENKINS);
     assertThat(buildWorkflow).isNotNull();

@@ -8,6 +8,8 @@ import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTO
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
+import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.AZURE_INFRA;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
@@ -30,6 +32,7 @@ import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureInfrastructureMapping.Builder;
+import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -69,7 +72,9 @@ public class InfrastructureMappingGenerator {
     TERRAFORM_AWS_SSH_TEST,
     AWS_SSH_FUNCTIONAL_TEST,
     PHYSICAL_WINRM_TEST,
-    AZURE_WINRM_TEST
+    AZURE_WINRM_TEST,
+    ECS_EC2_TEST,
+    ECS_FARGATE_TEST
   }
 
   public InfrastructureMapping ensurePredefined(
@@ -85,6 +90,8 @@ public class InfrastructureMappingGenerator {
         return ensurePhysicalWinRMTest(seed, owners);
       case AZURE_WINRM_TEST:
         return ensureAzureWinRMTest(seed, owners);
+      case ECS_EC2_TEST:
+        return ensureEcsEc2Test(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -122,6 +129,52 @@ public class InfrastructureMappingGenerator {
             .withResourceGroup(AZURE_RESOURCE_GROUP)
             .withUsePublicDns(true)
             .build());
+  }
+
+  private InfrastructureMapping ensureEcsEc2Test(Randomizer.Seed seed, Owners owners) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.ECS_TEST);
+      owners.add(service);
+    }
+
+    final SettingAttribute ecsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+
+    InfrastructureMapping newInfrastructureMapping =
+        anEcsInfrastructureMapping()
+            .withName("Ecs Ec2 type deployment Functional test" + System.currentTimeMillis())
+            .withAutoPopulate(false)
+            .withInfraMappingType(AWS_ECS.name())
+            .withDeploymentType(DeploymentType.ECS.name())
+            .withComputeProviderType(SettingVariableTypes.AWS.name())
+            .withComputeProviderSettingId(ecsCloudProvider.getUuid())
+            .withClusterName("SdkTesting")
+            .withLaunchType("EC2")
+            .withRegion("us-east-1")
+            .withServiceId(service.getUuid())
+            .withAssignPublicIp(false)
+            .withEnvId(environment.getUuid())
+            .withAccountId(owners.obtainAccount().getUuid())
+            .withAppId(owners.obtainApplication().getUuid())
+            .withServiceTemplateId(owners.obtainServiceTemplate().getUuid())
+            .build();
+    try {
+      return infrastructureMappingService.save(newInfrastructureMapping, true);
+    } catch (WingsException de) {
+      if (de.getCause() instanceof DuplicateKeyException) {
+        InfrastructureMapping exists = exists(newInfrastructureMapping);
+        if (exists != null) {
+          return exists;
+        }
+      }
+      throw de;
+    }
   }
 
   private InfrastructureMapping ensurePhysicalWinRMTest(Randomizer.Seed seed, Owners owners) {
@@ -437,7 +490,15 @@ public class InfrastructureMappingGenerator {
 
         newInfrastructureMapping = builder.build();
         break;
+      case AWS_ECS:
+        EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
+        existing = exists(ecsInfrastructureMapping);
+        if (existing != null) {
+          return existing;
+        }
 
+        newInfrastructureMapping = ecsInfrastructureMapping;
+        break;
       case AZURE_INFRA:
         AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infrastructureMapping;
         final AzureInfrastructureMapping.Builder azureInfraMappingBuilder =

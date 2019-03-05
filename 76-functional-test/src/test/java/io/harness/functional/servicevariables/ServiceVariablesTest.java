@@ -23,8 +23,6 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
-import io.harness.generator.ArtifactStreamGenerator;
-import io.harness.generator.ArtifactStreamGenerator.ArtifactStreams;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureMappingGenerator;
@@ -34,6 +32,8 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
+import io.harness.generator.artifactstream.ArtifactStreamManager;
+import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.rule.OwnerRule.Owner;
 import io.restassured.path.json.JsonPath;
 import org.awaitility.Awaitility;
@@ -73,7 +73,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private ArtifactStreamGenerator artifactStreamGenerator;
+  @Inject private ArtifactStreamManager artifactStreamManager;
   @Inject private WorkflowRestUtil workflowRestUtil;
   @Inject private ArtifactRestUtil artifactRestUtil;
 
@@ -111,7 +111,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     assertThat(infrastructureMapping).isNotNull();
 
     ArtifactStream artifactStream =
-        artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
     assertThat(artifactStream).isNotNull();
 
     resetCache();

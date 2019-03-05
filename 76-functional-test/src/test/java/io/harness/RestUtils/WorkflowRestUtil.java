@@ -2,6 +2,7 @@ package io.harness.RestUtils;
 
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
@@ -16,7 +17,7 @@ import javax.ws.rs.core.GenericType;
 
 @Singleton
 public class WorkflowRestUtil extends AbstractFunctionalTest {
-  public Workflow createWorkflow(String accountId, String appId, Workflow workflow) throws Exception {
+  public Workflow createWorkflow(String accountId, String appId, Workflow workflow) {
     GenericType<RestResponse<Workflow>> workflowType = new GenericType<RestResponse<Workflow>>() {};
 
     RestResponse<Workflow> savedWorkflowResponse = Setup.portal()
@@ -30,7 +31,7 @@ public class WorkflowRestUtil extends AbstractFunctionalTest {
                                                        .as(workflowType.getType());
 
     if (savedWorkflowResponse.getResource() == null) {
-      throw new Exception(String.valueOf(savedWorkflowResponse.getResponseMessages()));
+      throw new WingsException(String.valueOf(savedWorkflowResponse.getResponseMessages()));
     }
 
     return savedWorkflowResponse.getResource();

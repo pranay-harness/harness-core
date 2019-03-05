@@ -227,8 +227,10 @@ public class SettingGenerator {
             .withEnvId(GLOBAL_ENV_ID)
             .withAccountId(account.getUuid())
             .withValue(AwsConfig.builder()
-                           .accessKey(scmSecret.decryptToString(new SecretName("aws_playground_access_key")))
-                           .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")))
+                           .accessKey(/*scmSecret.decryptToString(new SecretName("aws_playground_access_key")*/
+                               "AKIAIYGWYGS2L3J7HI7A")
+                           .secretKey(/*scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")*/
+                               "g4Qsaf42nqkhMCj9/2QAuUEc18HoqVa+TnjlaD+E".toCharArray())
                            .accountId(account.getUuid())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
