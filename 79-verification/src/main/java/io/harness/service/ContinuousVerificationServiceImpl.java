@@ -688,6 +688,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     .stateType(logsCVConfiguration.getStateType())
                     .tolerance(cvConfiguration.getAnalysisTolerance().tolerance())
                     .cvConfigId(logsCVConfiguration.getUuid())
+                    .analysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy())
                     .build();
 
             analysisTask.setAppId(logsCVConfiguration.getAppId());
@@ -696,7 +697,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               analysisTask.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(6).toInstant()));
             }
             if (logsCVConfiguration.getComparisonStrategy() == PREDICTIVE) {
-              analysisTask.setAnalysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy());
               final String lastLogAnalysisGetUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
                   + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL
                   + "?appId=" + logsCVConfiguration.getAppId() + "&cvConfigId=" + logsCVConfiguration.getUuid()

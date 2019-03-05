@@ -53,6 +53,10 @@ public class CVConfiguration extends Base {
 
   @Default @SchemaIgnore @JsonIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
 
+  public AnalysisComparisonStrategy getComparisonStrategy() {
+    return comparisonStrategy == null ? AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS : comparisonStrategy;
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
