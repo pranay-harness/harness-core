@@ -49,8 +49,8 @@ import java.util.Map;
   @Index(fields =
       {
         @Field("name")
-        , @Field("host"), @Field("timeStamp"), @Field("workflowExecutionId"), @Field("stateExecutionId"),
-            @Field("serviceId"), @Field("workflowId"), @Field("level"), @Field("stateType"), @Field("groupName")
+        , @Field("host"), @Field("timeStamp"), @Field("stateExecutionId"), @Field("level"), @Field("stateType"),
+            @Field("groupName")
       },
       options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
   ,

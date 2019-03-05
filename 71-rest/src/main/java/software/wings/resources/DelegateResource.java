@@ -557,6 +557,6 @@ public class DelegateResource {
   @ExceptionMetered
   public void saveApiCallLogs(@PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId,
       List<ThirdPartyApiCallLog> logs) {
-    dataStoreService.save(ThirdPartyApiCallLog.class, logs);
+    dataStoreService.save(ThirdPartyApiCallLog.class, logs, false);
   }
 }

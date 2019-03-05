@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
-import static java.util.Arrays.asList;
 import static software.wings.common.VerificationConstants.DEMO_APPLICAITON_ID;
 import static software.wings.common.VerificationConstants.DEMO_FAILURE_TS_STATE_EXECUTION_ID;
 import static software.wings.common.VerificationConstants.DEMO_SUCCESS_TS_STATE_EXECUTION_ID;
@@ -27,13 +26,11 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -49,7 +46,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
@@ -80,7 +76,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Inject private LearningEngineService learningEngineService;
   @Inject protected SettingsService settingsService;
   @Inject private WorkflowService workflowService;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
   @Inject private DataStoreService dataStoreService;
 
@@ -89,44 +84,28 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       StateType stateType, String appId, String workflowId, String serviceId) {
     List<String> successfulExecutions =
         workflowService.getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId);
-    final boolean isGoogleMetricReadEnabled =
-        featureFlagService.isEnabled(FeatureName.METRIC_READ_GOOGLE, appService.getAccountIdByAppId(appId));
     for (String successfulExecution : successfulExecutions) {
-      if (isGoogleMetricReadEnabled) {
-        PageRequest<NewRelicMetricDataRecord> pageRequest =
-            aPageRequest()
-                .withLimit(UNLIMITED)
-                .addFilter("workflowExecutionId", Operator.EQ, successfulExecution)
-                .build();
+      PageRequest<NewRelicMetricDataRecord> pageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter("workflowExecutionId", Operator.EQ, successfulExecution)
+              .build();
 
-        if (dataStoreService instanceof MongoDataStoreServiceImpl) {
-          pageRequest.addFilter("appId", Operator.EQ, appId);
-        }
-
-        final PageResponse<NewRelicMetricDataRecord> results =
-            dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
-        List<NewRelicMetricDataRecord> rv =
-            results.stream()
-                .filter(dataRecord
-                    -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
-                        && !ClusterLevel.H0.equals(dataRecord.getLevel())
-                        && !ClusterLevel.HF.equals(dataRecord.getLevel()))
-                .collect(Collectors.toList());
-
-        if (isNotEmpty(rv)) {
-          return successfulExecution;
-        }
+      if (dataStoreService instanceof MongoDataStoreServiceImpl) {
+        pageRequest.addFilter("appId", Operator.EQ, appId);
       }
-      if (wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-              .filter("stateType", stateType)
-              .filter("appId", appId)
-              .filter("workflowId", workflowId)
-              .filter("workflowExecutionId", successfulExecution)
-              .filter("serviceId", serviceId)
-              .field("level")
-              .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
-              .count(new CountOptions().limit(1))
-          > 0) {
+
+      final PageResponse<NewRelicMetricDataRecord> results =
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+      List<NewRelicMetricDataRecord> rv =
+          results.stream()
+              .filter(dataRecord
+                  -> dataRecord.getStateType().equals(stateType) && dataRecord.getServiceId().equals(serviceId)
+                      && !ClusterLevel.H0.equals(dataRecord.getLevel())
+                      && !ClusterLevel.HF.equals(dataRecord.getLevel()))
+              .collect(Collectors.toList());
+
+      if (isNotEmpty(rv)) {
         return successfulExecution;
       }
     }

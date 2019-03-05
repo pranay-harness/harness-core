@@ -157,7 +157,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     labeledLogRecord.setUsers(userList);
 
     // save the labelled record.
-    dataStoreService.save(LabeledLogRecord.class, Arrays.asList(labeledLogRecord));
+    dataStoreService.save(LabeledLogRecord.class, Arrays.asList(labeledLogRecord), false);
 
     // increment the timesLabeled count in logDataRecords
 
