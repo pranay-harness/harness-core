@@ -67,6 +67,7 @@ import io.harness.stream.BoundedInputStream;
 import io.harness.validation.Create;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -96,6 +97,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
@@ -1977,5 +1979,23 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     return DeploymentType.valueOf(infraMapping.getDeploymentType());
+  }
+
+  @Override
+  public void setK8v2ServiceFromAppManifest(ApplicationManifest applicationManifest, AppManifestType appManifestType) {
+    if (!AppManifestType.SERVICE.equals(appManifestType)) {
+      return;
+    }
+
+    if (exists(applicationManifest.getAppId(), applicationManifest.getServiceId())) {
+      UpdateOperations<Service> updateOperations =
+          wingsPersistence.createUpdateOperations(Service.class).set("isK8sV2", true);
+
+      Query<Service> query = wingsPersistence.createQuery(Service.class)
+                                 .filter(Service.APP_ID_KEY, applicationManifest.getAppId())
+                                 .filter(Service.ID_KEY, applicationManifest.getServiceId());
+
+      wingsPersistence.update(query, updateOperations);
+    }
   }
 }
