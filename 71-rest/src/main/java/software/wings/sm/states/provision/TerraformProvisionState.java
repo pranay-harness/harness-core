@@ -238,13 +238,13 @@ public abstract class TerraformProvisionState extends State {
       }
     }
 
+    fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
+        terraformExecutionData.getStateFileId(), others, FileBucket.TERRAFORM_STATE);
     TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
     if (outputInfoElement == null) {
       outputInfoElement = TerraformOutputInfoElement.builder().build();
     }
     if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
-      fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
-          terraformExecutionData.getStateFileId(), others, FileBucket.TERRAFORM_STATE);
       if (terraformExecutionData.getOutputs() != null) {
         Map<String, Object> outputs = parseOutputs(terraformExecutionData.getOutputs());
         Map<String, Object> contextOutputs = new HashMap<>();
