@@ -21,12 +21,14 @@ import software.wings.api.TerraformExecutionData;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.PhaseStep;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.beans.infrastructure.TerraformfConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -176,6 +178,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) entry.getValue();
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
 
+    fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
+        terraformExecutionData.getStateFileId(), null, FileBucket.TERRAFORM_STATE);
     if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
       if (terraformExecutionData.getCommandExecuted() == TerraformCommand.APPLY) {
         saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
