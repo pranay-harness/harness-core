@@ -1,5 +1,7 @@
 package io.harness.notifications;
 
+import io.harness.notifications.conditions.CVFilterMatcher;
+import io.harness.notifications.conditions.ManualInterventionFilterMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.alert.Alert;
@@ -29,10 +31,22 @@ public class AlertNotificationRuleCheckerImpl implements AlertNotificationRuleCh
   }
 
   private boolean alertSatisfiesFilter(Alert alert, AlertFilter filter) {
+    FilterMatcher matcher = null;
+
     // Matcher should be based on type on alert. Basic Filter Matcher will just compare alert type in alert with
     // alertType in rule. But for certain alerts like AlertType.SSOSyncFailedAlert , we might need custom checker which
     // will check that `ssoId` in rule is same as `ssoId` in alert.
-    FilterMatcher matcher = new BasicFilterMatcher(filter, alert);
+    switch (alert.getType()) {
+      case ManualInterventionNeeded:
+        matcher = new ManualInterventionFilterMatcher(filter, alert);
+        break;
+      case CONTINUOUS_VERIFICATION_ALERT:
+        matcher = new CVFilterMatcher(filter, alert);
+        break;
+      default:
+        matcher = new BasicFilterMatcher(filter, alert);
+    }
+
     return matcher.matchesCondition();
   }
 }
