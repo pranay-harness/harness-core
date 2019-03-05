@@ -121,8 +121,7 @@ public class WaitNotifyEngine {
               .asList();
 
       waitQueues.forEach(waitQueue
-          -> notifyQueue.send(
-              aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).withError(error).build()));
+          -> notifyQueue.send(aNotifyEvent().waitInstanceId(waitQueue.getWaitInstanceId()).error(error).build()));
 
       return notificationId;
     } catch (DuplicateKeyException exception) {

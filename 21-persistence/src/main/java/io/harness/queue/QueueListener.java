@@ -155,8 +155,12 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     } else {
       logger.error("Exception happened while processing message " + message, exception);
     }
+
     if (message.getRetries() > 0) {
       requeue(message);
+    } else {
+      logger.error("Out of retries for message " + message, exception);
+      queue.ack(message);
     }
   }
 

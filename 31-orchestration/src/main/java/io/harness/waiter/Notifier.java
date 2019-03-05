@@ -103,7 +103,7 @@ public class Notifier implements Runnable {
     }
 
     waitInstances.forEach((waitInstanceId, correlationIdList) -> {
-      notifyQueue.send(aNotifyEvent().withWaitInstanceId(waitInstanceId).withCorrelationIds(correlationIdList).build());
+      notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstanceId).correlationIds(correlationIdList).build());
       logger.info("Send notification for waitInstanceId: {}", waitInstanceId);
     });
 
