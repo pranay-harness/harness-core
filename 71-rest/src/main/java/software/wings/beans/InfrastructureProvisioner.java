@@ -3,7 +3,6 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import lombok.Data;
@@ -27,9 +26,9 @@ public abstract class InfrastructureProvisioner extends Base {
   public static final String MAPPING_BLUEPRINTS_KEY = "mappingBlueprints";
   public static final String NAME_KEY = "name";
 
-  @NotEmpty @Trimmed @NaturalKey private String name;
+  @NotEmpty @Trimmed private String name;
   private String description;
-  @NotEmpty @NaturalKey private String infrastructureProvisionerType;
+  @NotEmpty private String infrastructureProvisionerType;
   private List<NameValuePair> variables;
   @Valid List<InfrastructureMappingBlueprint> mappingBlueprints;
 

@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
@@ -43,13 +42,13 @@ public class Workflow extends Base {
   public static final String KEYWORDS_KEY = "keywords";
   public static final String ORCHESTRATION_KEY = "orchestration";
 
-  @NotNull @EntityName @NaturalKey private String name;
+  @NotNull @EntityName private String name;
 
   private String description;
 
-  @NaturalKey private WorkflowType workflowType;
+  private WorkflowType workflowType;
 
-  @NaturalKey private String envId;
+  private String envId;
 
   private Integer defaultVersion;
 

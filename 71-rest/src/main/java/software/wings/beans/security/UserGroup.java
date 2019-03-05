@@ -6,7 +6,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.notifications.NotificationReceiverInfo;
@@ -54,7 +53,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
   public static final String NAME_KEY = "name";
   public static final String ACCOUNT_ID_KEY = "accountId";
 
-  @NotEmpty @NaturalKey private String name;
+  @NotEmpty private String name;
   private String description;
 
   // TODO: User composition with SSOInfo class to store this info
@@ -66,7 +65,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
   private String ssoGroupId;
   private String ssoGroupName;
 
-  @Indexed @NaturalKey private String accountId;
+  @Indexed private String accountId;
   private List<String> memberIds;
 
   @Transient private List<User> members;

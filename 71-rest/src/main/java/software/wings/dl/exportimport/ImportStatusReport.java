@@ -22,6 +22,5 @@ public class ImportStatusReport {
     private String collectionName;
     private int imported;
     private int idClashes;
-    private int naturalKeyClashes;
   }
 }

@@ -4,7 +4,6 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,10 +35,10 @@ public class VersionedTemplate extends Base {
   public static final String TEMPLATE_ID_KEY = "templateId";
   public static final String VERSION_KEY = "version";
 
-  @NaturalKey private String templateId;
-  @NaturalKey private Long version;
-  @NaturalKey private String accountId;
-  @NaturalKey private String galleryId;
+  private String templateId;
+  private Long version;
+  private String accountId;
+  private String galleryId;
   @NotNull private BaseTemplate templateObject;
   private List<Variable> variables;
 }

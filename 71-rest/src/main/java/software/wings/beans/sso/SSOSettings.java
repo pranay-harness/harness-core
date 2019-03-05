@@ -2,7 +2,6 @@ package software.wings.beans.sso;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -16,9 +15,9 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public abstract class SSOSettings extends Base {
-  @NotNull @NaturalKey protected SSOType type;
+  @NotNull protected SSOType type;
   @NotEmpty protected String displayName;
-  @NotEmpty @NaturalKey protected String url;
+  @NotEmpty protected String url;
 
   public SSOSettings(SSOType type, String displayName, String url) {
     this.type = type;

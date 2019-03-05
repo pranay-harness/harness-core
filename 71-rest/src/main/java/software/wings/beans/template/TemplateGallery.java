@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.validation.Create;
@@ -36,8 +35,8 @@ import java.util.List;
 public class TemplateGallery extends Base {
   public static final String ACCOUNT_NAME_KEY = "accountName";
   public static final String NAME_KEY = "name";
-  @NotEmpty @EntityName(groups = {Create.class, Update.class}) @NaturalKey private String name;
-  @NotEmpty @NaturalKey private String accountId;
+  @NotEmpty @EntityName(groups = {Create.class, Update.class}) private String name;
+  @NotEmpty private String accountId;
   private String description;
   private String referencedGalleryId;
   private boolean global;

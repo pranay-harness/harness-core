@@ -1,7 +1,6 @@
 package software.wings.beans.appmanifest;
 
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,7 +26,7 @@ public class ManifestFile extends Base {
   public static final String FILE_NAME_KEY = "fileName";
   public static final String APPLICATION_MANIFEST_ID_KEY = "applicationManifestId";
 
-  @NotEmpty @NaturalKey String fileName;
+  @NotEmpty String fileName;
   private String fileContent;
   private String applicationManifestId;
 

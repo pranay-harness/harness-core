@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,9 +13,9 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class SamlSettings extends SSOSettings {
-  @JsonIgnore @NotNull @NaturalKey private String metaDataFile;
-  @NotNull @NaturalKey private String accountId;
-  @NotNull @NaturalKey private String origin;
+  @JsonIgnore @NotNull private String metaDataFile;
+  @NotNull private String accountId;
+  @NotNull private String origin;
   private String groupMembershipAttr;
 
   @Builder

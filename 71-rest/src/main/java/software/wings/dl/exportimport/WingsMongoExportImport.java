@@ -9,8 +9,6 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.DBCollectionFindOptions;
-import io.harness.annotation.NaturalKey;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
@@ -19,12 +17,8 @@ import org.mongodb.morphia.annotations.Entity;
 import software.wings.dl.WingsPersistence;
 import software.wings.dl.exportimport.ImportStatusReport.ImportStatus;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author marklu on 10/24/18
@@ -33,8 +27,6 @@ import java.util.Set;
 @Singleton
 public class WingsMongoExportImport {
   private static final int BATCH_SIZE = 1000;
-  private static final Set<String> DEFAULT_NATURAL_KEY_FIELDS =
-      new HashSet<>(Arrays.asList("accountId", "appId", "name", "version"));
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -64,17 +56,14 @@ public class WingsMongoExportImport {
    *
    * @param  mode one of the supported import mode such as DRY_RUN/UPSERT etc.
    */
-  public ImportStatus importRecords(
-      String collectionName, List<String> records, ImportMode mode, String[] naturalKeyFields) {
+  public ImportStatus importRecords(String collectionName, List<String> records, ImportMode mode) {
     DBCollection collection = wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE, ReadPref.NORMAL)
                                   .getDB()
                                   .getCollection(collectionName);
-    boolean disableNaturalKeyCheck = EmptyPredicate.isEmpty(naturalKeyFields);
 
     int totalRecords = records.size();
     int importedRecords = 0;
     int idClashCount = 0;
-    int naturalKeyClashCount = 0;
     for (String record : records) {
       // Check for if there is any existing record with the same _id.
       DBObject importRecord = BasicDBObject.parse(record);
@@ -82,25 +71,11 @@ public class WingsMongoExportImport {
       long recordCountFromId = collection.getCount(new BasicDBObject("_id", id));
       idClashCount += recordCountFromId;
 
-      long recordCountFromNaturalKey = 0;
-      DBObject naturalKeyQuery = null;
-      if (!disableNaturalKeyCheck) {
-        naturalKeyQuery = getNaturalKeyQueryFromKeyFields(naturalKeyFields, importRecord);
-        recordCountFromNaturalKey = collection.getCount(naturalKeyQuery);
-        if (recordCountFromNaturalKey > 1) {
-          // This usually means this entity has no naturaly key. E.g 'secretChangeLogs' collection
-          log.debug("Record {} in collection {} matched {} records using natural key query {}.", id, collectionName,
-              recordCountFromNaturalKey, naturalKeyQuery);
-          recordCountFromNaturalKey = 1;
-        }
-        naturalKeyClashCount += recordCountFromNaturalKey;
-      }
-
       switch (mode) {
         case DRY_RUN:
           break;
         case INSERT:
-          if (recordCountFromId == 0 && (disableNaturalKeyCheck || recordCountFromNaturalKey == 0)) {
+          if (recordCountFromId == 0) {
             // Totally new record, it can be inserted directly.
             collection.insert(importRecord, WriteConcern.ACKNOWLEDGED);
             importedRecords++;
@@ -108,23 +83,14 @@ public class WingsMongoExportImport {
           break;
         case UPSERT:
           // We should not UPSERT record if same ID record exists, but with different natural key.
-          if (disableNaturalKeyCheck || recordCountFromId == recordCountFromNaturalKey) {
-            collection.save(importRecord, WriteConcern.ACKNOWLEDGED);
-            importedRecords++;
-          } else {
-            log.debug(
-                "Skipped importing of record {} in collection {} because it matches {} records using natural key query {} but only matches {} records using id query.",
-                id, collectionName, recordCountFromNaturalKey, naturalKeyQuery, recordCountFromId);
-          }
+          collection.save(importRecord, WriteConcern.ACKNOWLEDGED);
+          importedRecords++;
           break;
         default:
           throw new IllegalArgumentException("Import mode " + mode + " is not supported");
       }
     }
 
-    if (naturalKeyClashCount > 0) {
-      log.info("{} '{}' records have the same natural key as existing records.", naturalKeyClashCount, collectionName);
-    }
     if (importedRecords + idClashCount > 0) {
       log.info("{} '{}' records have the same ID as existing records.", idClashCount, collectionName);
       log.info("{} out of {} '{}' records have been imported successfully in {} mode.", importedRecords, totalRecords,
@@ -134,55 +100,10 @@ public class WingsMongoExportImport {
         .collectionName(collectionName)
         .imported(importedRecords)
         .idClashes(idClashCount)
-        .naturalKeyClashes(naturalKeyClashCount)
         .build();
-  }
-
-  private DBObject getNaturalKeyQueryFromKeyFields(String[] naturalKeyFields, DBObject importRecord) {
-    // Check for if there is any existing record with the same natural key.
-    List<BasicDBObject> objectList = new ArrayList<>();
-    BasicDBObject lastQuery = null;
-    for (String field : naturalKeyFields) {
-      Object fieldValue = importRecord.get(field);
-      if (fieldValue != null) {
-        lastQuery = new BasicDBObject(field, fieldValue);
-        objectList.add(lastQuery);
-      }
-    }
-
-    if (objectList.size() > 1) {
-      BasicDBObject andQuery = new BasicDBObject();
-      andQuery.put("$and", objectList);
-      return andQuery;
-    } else {
-      return lastQuery;
-    }
   }
 
   public static String getCollectionName(Class<? extends PersistentEntity> clazz) {
     return clazz.getAnnotation(Entity.class).value();
-  }
-
-  public static String[] getNaturalKeyFields(Class<? extends PersistentEntity> clazz) {
-    Set<String> fieldSet = new HashSet<>(DEFAULT_NATURAL_KEY_FIELDS);
-    Field[] fields = clazz.getDeclaredFields();
-    for (Field field : fields) {
-      if (field.isAnnotationPresent(NaturalKey.class)) {
-        fieldSet.add(field.getName());
-      }
-    }
-
-    // Recursively inspect the super class for @NaturalKey annotations.
-    Class<?> superClazz = clazz.getSuperclass();
-    if (superClazz != null && !superClazz.isInterface()) {
-      String[] naturalKeyFieldsFromSuperClazz = getNaturalKeyFields((Class<? extends PersistentEntity>) superClazz);
-      for (String naturalKeyField : naturalKeyFieldsFromSuperClazz) {
-        fieldSet.add(naturalKeyField);
-      }
-    }
-
-    String[] naturalKeyFields = new String[fieldSet.size()];
-    fieldSet.toArray(naturalKeyFields);
-    return naturalKeyFields;
   }
 }

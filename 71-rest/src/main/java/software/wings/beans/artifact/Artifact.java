@@ -14,7 +14,6 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -54,15 +53,15 @@ public class Artifact extends Base {
   public static final String ARTIFACT_SOURCE_NAME_KEY = "artifactSourceName";
   public static final String ARTIFACT_FILES_KEY = "artifactFiles";
 
-  @NaturalKey private String artifactStreamId;
-  @NaturalKey private String artifactSourceName;
-  @NaturalKey private Map<String, String> metadata = Maps.newHashMap();
+  private String artifactStreamId;
+  private String artifactSourceName;
+  private Map<String, String> metadata = Maps.newHashMap();
   @NotEmpty private String displayName;
-  @NaturalKey private String revision;
+  private String revision;
   private List<String> serviceIds = new ArrayList<>();
   @Transient private List<Service> services;
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
-  @NaturalKey private Status status;
+  private Status status;
   private String description;
   private String errorMessage;
   private ContentStatus contentStatus;

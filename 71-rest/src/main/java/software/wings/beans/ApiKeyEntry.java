@@ -3,7 +3,6 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonView;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -20,9 +19,9 @@ import software.wings.jersey.JsonViews;
 @HarnessExportableEntity
 @EqualsAndHashCode(callSuper = true)
 public class ApiKeyEntry extends Base {
-  @Indexed @NotEmpty @NaturalKey private String accountId;
+  @Indexed @NotEmpty private String accountId;
   @JsonView(JsonViews.Internal.class) @NotEmpty private char[] encryptedKey;
-  @JsonView(JsonViews.Internal.class) @NotEmpty @NaturalKey private String hashOfKey;
+  @JsonView(JsonViews.Internal.class) @NotEmpty private String hashOfKey;
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   @Builder

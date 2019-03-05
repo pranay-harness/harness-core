@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -28,8 +27,8 @@ import java.util.Optional;
 @Entity(value = "serviceCommands", noClassnameStored = true)
 @HarnessExportableEntity
 public class ServiceCommand extends Base {
-  @NaturalKey private String name;
-  @Indexed @NaturalKey private String serviceId;
+  private String name;
+  @Indexed private String serviceId;
   private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
   private Integer defaultVersion;
 

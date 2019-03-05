@@ -3,7 +3,6 @@ package software.wings.dl.exportimport;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static software.wings.dl.exportimport.WingsMongoExportImport.getNaturalKeyFields;
 
 import com.google.inject.Inject;
 
@@ -59,7 +58,7 @@ public class WingsMongoExportImportTest extends WingsBaseTest {
     // Remove the inserted application to make space for re-importing.
     wingsPersistence.delete(accountId, Application.class, appId);
 
-    mongoExportImport.importRecords(collectionName, records, ImportMode.UPSERT, getNaturalKeyFields(Application.class));
+    mongoExportImport.importRecords(collectionName, records, ImportMode.UPSERT);
 
     Application application = wingsPersistence.get(Application.class, appId);
     assertNotNull(application);

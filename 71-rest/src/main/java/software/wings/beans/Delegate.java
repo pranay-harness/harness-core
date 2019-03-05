@@ -3,7 +3,6 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,17 +34,17 @@ public class Delegate extends Base {
   // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
   public static final String SEQUENCE_NUM_KEY = "sequenceNum";
 
-  @NotEmpty @NaturalKey private String accountId;
+  @NotEmpty private String accountId;
   private Status status = Status.ENABLED;
   private String description;
   private boolean connected;
-  @NaturalKey private String ip;
-  @NaturalKey private String hostName;
+  private String ip;
+  private String hostName;
   private String delegateGroupName;
-  @NaturalKey private String delegateName;
-  @NaturalKey private String delegateProfileId;
+  private String delegateName;
+  private String delegateProfileId;
   private long lastHeartBeat;
-  @NaturalKey private String version;
+  private String version;
   private transient String sequenceNum;
   private String delegateType;
   private transient String delegateRandomToken;

@@ -3,7 +3,6 @@ package software.wings.beans;
 import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
@@ -20,10 +19,10 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 public class AuthToken extends Base {
   @Transient private User user;
-  @NaturalKey private String userId;
-  @NaturalKey private long expireAt;
-  @NaturalKey private String jwtToken;
-  @NaturalKey private boolean refreshed;
+  private String userId;
+  private long expireAt;
+  private String jwtToken;
+  private boolean refreshed;
 
   // TODO: remove this a after February 10th 2019
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date ttl;

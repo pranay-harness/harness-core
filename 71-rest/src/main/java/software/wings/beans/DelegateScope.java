@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,8 +23,8 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class DelegateScope extends Base {
-  @NotEmpty @NaturalKey private String accountId;
-  @NaturalKey private String name;
+  @NotEmpty private String accountId;
+  private String name;
   private List<TaskGroup> taskTypes;
   private List<EnvironmentType> environmentTypes;
   private List<String> applications;
