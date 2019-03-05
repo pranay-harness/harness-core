@@ -12,6 +12,7 @@ import io.harness.PersistenceTest;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
+import io.harness.queue.QueueController;
 import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
@@ -20,6 +21,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
@@ -29,6 +31,7 @@ public class PersistenceIteratorTest extends PersistenceTest {
   private static final Logger logger = LoggerFactory.getLogger(PersistenceIteratorTest.class);
 
   @Inject private HPersistence persistence;
+  @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
   PersistenceIterator<IterableEntity> iterator;
@@ -54,6 +57,7 @@ public class PersistenceIteratorTest extends PersistenceTest {
                    .redistribute(true)
                    .build();
     on(iterator).set("persistence", persistence);
+    on(iterator).set("queueController", queueController);
   }
 
   @Test
@@ -62,7 +66,7 @@ public class PersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
-  public void testLoopWithEmptyCollection() {
+  public void testLoopWithEmptyCollection() throws IOException {
     final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
     Morpheus.sleep(ofMillis(300));
     future1.cancel(true);

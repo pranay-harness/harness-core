@@ -9,8 +9,10 @@ import static java.time.Duration.ofSeconds;
 import com.google.inject.Inject;
 
 import io.harness.iterator.PersistenceIterator;
+import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentIterable;
+import io.harness.queue.QueueController;
 import lombok.Builder;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -30,6 +32,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   private static final Duration QUERY_TIME = ofMillis(200);
 
   @Inject private final HPersistence persistence;
+  @Inject private final QueueController queueController;
 
   public interface Handler<T> { void handle(T entity); }
 
@@ -47,12 +50,23 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
     return (15 * current + sample) / 16;
   }
 
+  private boolean shouldProcess() {
+    return !MaintenanceController.isMaintenance() && queueController.isPrimary();
+  }
+
   @Override
   @SuppressWarnings("PMD")
   public void process(ProcessMode mode) {
     long movingAverage = 0;
     long previous = 0;
     while (true) {
+      if (!shouldProcess()) {
+        if (mode == PUMP) {
+          return;
+        }
+        sleep(ofSeconds(1));
+        continue;
+      }
       try {
         // make sure we did not hit the limit
         semaphore.acquire();
