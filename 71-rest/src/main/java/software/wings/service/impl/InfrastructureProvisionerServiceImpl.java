@@ -8,7 +8,6 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -432,7 +431,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
             .accountId(accountId)
             .appId(appId)
@@ -496,7 +495,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
 
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
             .accountId(accountId)
             .appId(appId)

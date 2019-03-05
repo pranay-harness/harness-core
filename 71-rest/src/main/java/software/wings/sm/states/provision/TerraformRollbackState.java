@@ -2,7 +2,6 @@ package software.wings.sm.states.provision;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
@@ -149,7 +148,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .targets(targets)
             .build();
 
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .taskType(TERRAFORM_PROVISION_TASK.name())
                                     .accountId(executionContext.getApp().getAccountId())

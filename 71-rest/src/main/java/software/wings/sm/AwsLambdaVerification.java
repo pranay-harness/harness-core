@@ -3,7 +3,6 @@ package software.wings.sm;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.VerificationConstants.GLOBAL_APP_ID;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -130,7 +129,7 @@ public class AwsLambdaVerification extends State {
 
   private ExecutionResponse executeTask(String accountId, AwsLambdaRequest request, String appId, String activityId) {
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .taskType(TaskType.AWS_LAMBDA_TASK.name())
             .accountId(accountId)
             .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)

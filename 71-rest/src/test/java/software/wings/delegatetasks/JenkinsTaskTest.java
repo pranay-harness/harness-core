@@ -8,7 +8,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
@@ -27,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.TaskType;
@@ -67,7 +67,8 @@ public class JenkinsTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private JenkinsTask jenkinsTask = (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask("delid1",
-      aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(), notifyResponseData -> {}, () -> true);
+      DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+      notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

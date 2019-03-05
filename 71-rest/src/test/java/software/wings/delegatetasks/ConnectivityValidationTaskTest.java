@@ -8,7 +8,6 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostValidationResponse.Builder.aHostValidationResponse;
@@ -21,6 +20,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -37,7 +37,7 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
   @InjectMocks
   private ConnectivityValidationTask task =
       (ConnectivityValidationTask) CONNECTIVITY_VALIDATION.getDelegateRunnableTask("delegateid",
-          aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+          DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
           notifyResponseData -> {}, () -> true);
 
   @Before

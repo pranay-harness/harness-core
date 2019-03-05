@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.common.collect.Lists;
 
@@ -178,7 +177,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     String waitId = generateUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .taskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
                                     .accountId(accountId)

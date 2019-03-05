@@ -4,7 +4,6 @@ import static java.util.Collections.emptyList;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import org.junit.Before;
@@ -12,6 +11,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationCreateStackHandler;
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationDeleteStackHandler;
@@ -29,7 +29,7 @@ public class CloudFormationCommandTaskTest extends WingsBaseTest {
   @InjectMocks
   private CloudFormationCommandTask task =
       (CloudFormationCommandTask) TaskType.CLOUD_FORMATION_TASK.getDelegateRunnableTask("delegateid",
-          aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+          DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
           notifyResponseData -> {}, () -> true);
 
   @Before

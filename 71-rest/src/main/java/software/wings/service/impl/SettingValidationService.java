@@ -6,7 +6,6 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
@@ -129,7 +128,7 @@ public class SettingValidationService {
                                                           .encryptedDataDetails(encryptionDetails)
                                                           .settingAttribute(settingAttribute)
                                                           .build();
-      DelegateTask delegateTask = aDelegateTask()
+      DelegateTask delegateTask = DelegateTask.builder()
                                       .taskType(TaskType.CONNECTIVITY_VALIDATION.name())
                                       .accountId(settingAttribute.getAccountId())
                                       .appId(settingAttribute.getAppId())

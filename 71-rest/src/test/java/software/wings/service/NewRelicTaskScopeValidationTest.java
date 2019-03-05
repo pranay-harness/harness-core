@@ -87,7 +87,7 @@ public class NewRelicTaskScopeValidationTest {
 
   private void validate(boolean shouldBeValidated) {
     NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
-        DelegateTask.Builder.aDelegateTask()
+        DelegateTask.builder()
             .async(true)
             .parameters(new Object[] {NewRelicConfig.builder()
                                           .newRelicUrl(newRelicUrl)

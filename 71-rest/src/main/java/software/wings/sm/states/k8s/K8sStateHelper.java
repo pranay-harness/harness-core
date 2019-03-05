@@ -11,7 +11,6 @@ import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -179,7 +178,7 @@ public class K8sStateHelper {
     setValuesYamlPath(fetchFilesTaskParams);
 
     String waitId = generateUuid();
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(app.getAccountId())
                                     .appId(app.getUuid())
                                     .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
@@ -426,7 +425,7 @@ public class K8sStateHelper {
     k8sTaskParameters.setWorkflowExecutionId(context.getWorkflowExecutionId());
 
     String waitId = generateUuid();
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(app.getAccountId())
                                     .appId(app.getUuid())
@@ -554,7 +553,7 @@ public class K8sStateHelper {
             .build();
 
     String waitId = generateUuid();
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(containerInfrastructureMapping.getAccountId())
                                     .appId(containerInfrastructureMapping.getAppId())

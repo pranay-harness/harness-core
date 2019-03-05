@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.delegatetasks.jira.JiraAction.CREATE_WEBHOOK;
 import static software.wings.delegatetasks.jira.JiraAction.DELETE_WEBHOOK;
@@ -78,7 +77,7 @@ public class JiraHelperService {
     jiraTaskParameters.setEncryptionDetails(
         secretManager.getEncryptionDetails(jiraConfig, APP_ID_KEY, WORKFLOW_EXECUTION_ID));
 
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .taskType(TaskType.JIRA.name())
                                     .accountId(accountId)
                                     .appId(APP_ID_KEY)
@@ -212,7 +211,7 @@ public class JiraHelperService {
     jiraTaskParameters.setEncryptionDetails(
         secretManager.getEncryptionDetails(jiraConfig, appId, WORKFLOW_EXECUTION_ID));
 
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .taskType(TaskType.JIRA.name())
                                     .accountId(accountId)
                                     .appId(appId)

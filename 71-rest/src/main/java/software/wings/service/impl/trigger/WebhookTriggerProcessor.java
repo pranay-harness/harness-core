@@ -1,7 +1,6 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.WorkflowExecution.STATUS_KEY;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_BRANCH_NAME_KEY;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_GIT_CONNECTOR_ID_KEY;
@@ -116,7 +115,7 @@ public class WebhookTriggerProcessor {
         webhookEventDetails.getPrevCommitId(), webhookEventDetails.getBranchName(), webhookEventDetails.getFilePaths());
 
     String waitId = generateUuid();
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .taskType(TaskType.TRIGGER_TASK.name())
                                     .parameters(new Object[] {triggerDeploymentNeededRequest})

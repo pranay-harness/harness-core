@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Event.Builder.anEvent;
 
@@ -108,7 +107,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         SettingAttribute settingAttribute = settingsService.get(jenkinsArtifactStream.getSettingId());
         JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
 
-        return aDelegateTask()
+        return DelegateTask.builder()
             .async(true)
             .taskType(TaskType.JENKINS_COLLECTION.name())
             .accountId(accountId)
@@ -124,7 +123,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         SettingAttribute settingAttribute = settingsService.get(bambooArtifactStream.getSettingId());
         BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
 
-        return aDelegateTask()
+        return DelegateTask.builder()
             .async(true)
             .taskType(TaskType.BAMBOO_COLLECTION.name())
             .accountId(accountId)
@@ -140,7 +139,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         SettingAttribute settingAttribute = settingsService.get(nexusArtifactStream.getSettingId());
         NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
 
-        return aDelegateTask()
+        return DelegateTask.builder()
             .async(true)
             .taskType(TaskType.NEXUS_COLLECTION.name())
             .accountId(accountId)
@@ -157,7 +156,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         SettingAttribute settingAttribute = settingsService.get(artifactoryArtifactStream.getSettingId());
         ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
 
-        return aDelegateTask()
+        return DelegateTask.builder()
             .async(true)
             .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
             .accountId(accountId)
@@ -174,7 +173,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         SettingAttribute settingAttribute = settingsService.get(amazonS3ArtifactStream.getSettingId());
         AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
 
-        return aDelegateTask()
+        return DelegateTask.builder()
             .async(true)
             .taskType(TaskType.AMAZON_S3_COLLECTION.name())
             .accountId(accountId)

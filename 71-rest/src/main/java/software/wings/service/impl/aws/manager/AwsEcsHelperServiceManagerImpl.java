@@ -3,7 +3,6 @@ package software.wings.service.impl.aws.manager;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -46,7 +45,7 @@ public class AwsEcsHelperServiceManagerImpl implements AwsEcsHelperServiceManage
 
   private AwsResponse executeTask(String accountId, AwsEcsRequest request, String appId) {
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .taskType(TaskType.AWS_ECS_TASK.name())
             .accountId(accountId)
             .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)

@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -119,7 +118,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
                                                      .build();
       setTimeOutOnRequest(request);
       delegateTask =
-          aDelegateTask()
+          DelegateTask.builder()
               .async(true)
               .taskType(CLOUD_FORMATION_TASK.name())
               .accountId(executionContext.getApp().getAccountId())
@@ -145,7 +144,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       CloudFormationCreateStackRequest request = builder.build();
       setTimeOutOnRequest(request);
       delegateTask =
-          aDelegateTask()
+          DelegateTask.builder()
               .async(true)
               .taskType(CLOUD_FORMATION_TASK.name())
               .accountId(executionContext.getApp().getAccountId())

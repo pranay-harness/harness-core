@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -48,7 +47,7 @@ public class AwsRoute53HelperServiceManagerImpl implements AwsRoute53HelperServi
 
   private AwsResponse executeTask(String accountId, AwsRoute53Request request, String appId) {
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .async(true)
             .taskType(TaskType.AWS_ROUTE53_TASK.name())
             .accountId(accountId)

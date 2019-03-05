@@ -3,7 +3,6 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.common.collect.Maps;
@@ -16,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.Result;
@@ -38,7 +38,8 @@ public class BambooTaskTest {
 
   @InjectMocks
   private BambooTask bambooTask = (BambooTask) TaskType.BAMBOO.getDelegateRunnableTask("delid1",
-      aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(), notifyResponseData -> {}, () -> true);
+      DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+      notifyResponseData -> {}, () -> true);
 
   private String bambooUrl = "http://localhost:9095/";
   private String userName = "admin";

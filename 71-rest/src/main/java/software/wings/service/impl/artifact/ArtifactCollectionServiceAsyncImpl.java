@@ -7,7 +7,6 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -34,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTask.DelegateTaskBuilder;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -128,12 +128,12 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     BuildSourceRequest buildSourceRequest;
 
     String waitId = generateUuid();
-    DelegateTask.Builder delegateTaskBuilder = aDelegateTask()
-                                                   .async(true)
-                                                   .taskType(TaskType.BUILD_SOURCE_TASK.name())
-                                                   .appId(GLOBAL_APP_ID)
-                                                   .waitId(waitId)
-                                                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
+                                                  .async(true)
+                                                  .taskType(TaskType.BUILD_SOURCE_TASK.name())
+                                                  .appId(GLOBAL_APP_ID)
+                                                  .waitId(waitId)
+                                                  .timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
 
     if (CUSTOM.name().equals(artifactStreamType)) {
       // Defaulting to the 60 secs

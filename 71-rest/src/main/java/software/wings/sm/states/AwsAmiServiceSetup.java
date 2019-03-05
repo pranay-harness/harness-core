@@ -5,7 +5,6 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -291,7 +290,7 @@ public class AwsAmiServiceSetup extends State {
 
       AwsAmiServiceSetupRequest request = requestBuilder.build();
       DelegateTask delegateTask =
-          aDelegateTask()
+          DelegateTask.builder()
               .accountId(app.getAccountId())
               .appId(app.getUuid())
               .taskType(TaskType.AWS_AMI_ASYNC_TASK.name())

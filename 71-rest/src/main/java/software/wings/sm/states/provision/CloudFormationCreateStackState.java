@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 
@@ -81,7 +80,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .awsConfig(awsConfig);
     CloudFormationCreateStackRequest request = builder.build();
     setTimeOutOnRequest(request);
-    return aDelegateTask()
+    return DelegateTask.builder()
         .async(true)
         .taskType(CLOUD_FORMATION_TASK.name())
         .accountId(executionContext.getApp().getAccountId())

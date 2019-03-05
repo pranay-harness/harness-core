@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 
 import com.google.inject.Inject;
@@ -167,7 +166,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
     String waitId = generateUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .taskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
                                     .accountId(appService.get(context.getAppId()).getAccountId())

@@ -13,7 +13,6 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
@@ -330,7 +329,7 @@ public class EcsStateHelper {
 
   public DelegateTask getDelegateTask(String accountId, String appId, TaskType taskType, String waitId, String envId,
       String infrastructureMappingId, Object[] parameters, long timeout) {
-    return aDelegateTask()
+    return DelegateTask.builder()
         .async(true)
         .appId(appId)
         .accountId(accountId)
@@ -525,7 +524,7 @@ public class EcsStateHelper {
   public String createAndQueueDelegateTaskForEcsServiceSetUp(
       EcsCommandRequest request, EcsSetUpDataBag dataBag, Activity activity, DelegateService delegateService) {
     DelegateTask task =
-        aDelegateTask()
+        DelegateTask.builder()
             .async(true)
             .appId(dataBag.getApplication().getUuid())
             .accountId(dataBag.getApplication().getAccountId())
@@ -593,7 +592,7 @@ public class EcsStateHelper {
   public String createAndQueueDelegateTaskForEcsServiceDeploy(EcsDeployDataBag deployDataBag,
       EcsServiceDeployRequest request, Activity activity, DelegateService delegateService) {
     DelegateTask task =
-        aDelegateTask()
+        DelegateTask.builder()
             .async(true)
             .accountId(deployDataBag.getApp().getAccountId())
             .appId(deployDataBag.getApp().getUuid())

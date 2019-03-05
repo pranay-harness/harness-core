@@ -7,7 +7,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -41,6 +40,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -164,7 +164,7 @@ public abstract class ContainerServiceDeploy extends State {
 
       String waitId = UUID.randomUUID().toString();
       String delegateTaskId =
-          delegateService.queueTask(aDelegateTask()
+          delegateService.queueTask(DelegateTask.builder()
                                         .async(true)
                                         .accountId(contextData.app.getAccountId())
                                         .appId(contextData.appId)

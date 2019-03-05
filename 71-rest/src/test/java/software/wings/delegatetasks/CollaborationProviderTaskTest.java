@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -19,6 +18,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest.CommunicationType;
@@ -41,7 +41,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
   @InjectMocks
   private CollaborationProviderTask collaborationProviderTask =
       (CollaborationProviderTask) TaskType.COLLABORATION_PROVIDER_TASK.getDelegateRunnableTask("delid1",
-          aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+          DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
           notifyResponseData -> {}, () -> true);
 
   @Test

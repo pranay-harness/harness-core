@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -34,7 +33,7 @@ public class AcrValidationTest extends WingsBaseTest {
   private static final String registryName = "my-registry";
 
   static DelegateTask delegateTask =
-      aDelegateTask()
+      DelegateTask.builder()
           .uuid("id")
           .async(true)
           .accountId(ACCOUNT_ID)

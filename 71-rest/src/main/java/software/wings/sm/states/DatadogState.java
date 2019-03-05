@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
@@ -173,7 +172,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     String waitId = generateUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
                                     .accountId(accountId)

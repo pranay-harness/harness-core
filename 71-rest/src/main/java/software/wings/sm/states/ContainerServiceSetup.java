@@ -6,7 +6,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -39,6 +38,7 @@ import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -208,7 +208,7 @@ public abstract class ContainerServiceSetup extends State {
               .build();
 
       String delegateTaskId =
-          delegateService.queueTask(aDelegateTask()
+          delegateService.queueTask(DelegateTask.builder()
                                         .async(true)
                                         .accountId(app.getAccountId())
                                         .appId(app.getUuid())

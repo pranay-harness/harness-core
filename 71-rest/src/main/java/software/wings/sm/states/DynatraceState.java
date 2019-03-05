@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.base.Preconditions;
@@ -129,7 +128,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     String waitId = generateUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .taskType(TaskType.DYNA_TRACE_METRIC_DATA_COLLECTION_TASK.name())
                                     .accountId(appService.get(context.getAppId()).getAccountId())

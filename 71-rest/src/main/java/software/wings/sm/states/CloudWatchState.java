@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
@@ -196,7 +195,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     String waitId = generateUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .taskType(TaskType.CLOUD_WATCH_COLLECT_METRIC_DATA.name())
                                     .accountId(appService.get(context.getAppId()).getAccountId())

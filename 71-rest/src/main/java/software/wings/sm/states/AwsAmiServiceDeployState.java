@@ -10,7 +10,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
@@ -360,7 +359,7 @@ public class AwsAmiServiceDeployState extends State {
                                              .infraMappingTargetGroupArns(targetGroupArns)
                                              .build();
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .accountId(accountId)
             .appId(appId)
             .waitId(activityId)

@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
@@ -20,6 +19,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -129,7 +129,7 @@ public class NewRelicDeploymentMarkerState extends State {
     String correlationId = UUID.randomUUID().toString();
 
     String delegateTaskId =
-        delegateService.queueTask(aDelegateTask()
+        delegateService.queueTask(DelegateTask.builder()
                                       .async(true)
                                       .taskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER.name())
                                       .accountId(((ExecutionContextImpl) context).getApp().getAccountId())

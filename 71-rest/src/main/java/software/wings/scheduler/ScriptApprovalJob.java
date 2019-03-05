@@ -1,6 +1,5 @@
 package software.wings.scheduler;
 
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.common.Constants.APP_ID_KEY;
 import static software.wings.common.Constants.SCRIPT_APPROVAL_COMMAND;
@@ -120,7 +119,7 @@ public class ScriptApprovalJob implements Job {
             .script(scriptString)
             .build();
 
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .taskType(TaskType.SHELL_SCRIPT_APPROVAL.name())
                                     .accountId(accountId)
                                     .appId(appId)

@@ -15,7 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTask.Builder;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.GitConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
@@ -42,7 +42,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   TerraformInputVariablesObtainTask delegateRunnableTask =
       (TerraformInputVariablesObtainTask) TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.getDelegateRunnableTask(
           WingsTestConstants.DELEGATE_ID,
-          Builder.aDelegateTask().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+          DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
           notifyResponseData -> {}, () -> true);
 
   @Before

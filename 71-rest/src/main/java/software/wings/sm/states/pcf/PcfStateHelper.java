@@ -1,7 +1,6 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.exception.WingsException.USER;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
@@ -59,7 +58,7 @@ public class PcfStateHelper {
 
   public DelegateTask getDelegateTask(String accountId, String appId, TaskType taskType, String waitId, String envId,
       String infrastructureMappingId, Object[] parameters, long timeout) {
-    return aDelegateTask()
+    return DelegateTask.builder()
         .async(true)
         .accountId(accountId)
         .appId(appId)

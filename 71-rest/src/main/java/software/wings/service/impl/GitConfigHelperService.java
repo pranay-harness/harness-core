@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
 import com.google.inject.Inject;
@@ -16,6 +15,7 @@ import io.harness.waiter.ErrorNotifyResponseData;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
@@ -64,7 +64,7 @@ public class GitConfigHelperService {
 
     try {
       ResponseData notifyResponseData = delegateService.executeTask(
-          aDelegateTask()
+          DelegateTask.builder()
               .taskType(TaskType.GIT_COMMAND.name())
               .accountId(gitConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
