@@ -36,11 +36,11 @@ public class CloudFormationInfrastructureProvisioner extends InfrastructureProvi
   @Builder
   private CloudFormationInfrastructureProvisioner(String uuid, String appId, String name, String awsConfigId,
       String sourceType, String templateBody, String templateFilePath, List<NameValuePair> variables,
-      List<InfrastructureMappingBlueprint> mappingBlueprints, String provisionerTemplateData, String stackName,
-      String description, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
-      String entityYamlPath) {
-    super(name, description, CLOUD_FORMATION.name(), variables, mappingBlueprints, uuid, appId, createdBy, createdAt,
-        lastUpdatedBy, lastUpdatedAt, entityYamlPath);
+      List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId, String provisionerTemplateData,
+      String stackName, String description, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
+      long lastUpdatedAt, String entityYamlPath) {
+    super(name, description, CLOUD_FORMATION.name(), variables, mappingBlueprints, accountId, uuid, appId, createdBy,
+        createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     setSourceType(sourceType);
     setTemplateBody(templateBody);
     setTemplateFilePath(templateFilePath);

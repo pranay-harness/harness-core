@@ -269,6 +269,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @ValidationGroups(Create.class)
   public Service save(Service service, boolean createdFromYaml, boolean createDefaultCommands) {
     String accountId = appService.getAccountIdByAppId(service.getAppId());
+    service.setAccountId(accountId);
 
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new Action(accountId, ActionType.CREATE_SERVICE));

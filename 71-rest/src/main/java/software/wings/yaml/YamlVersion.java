@@ -7,7 +7,6 @@ import com.google.common.base.MoreObjects;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 
@@ -177,11 +176,6 @@ public class YamlVersion extends Base implements YamlHistory {
 
     private String accountId;
 
-    private EmbeddedUser createdBy;
-    private long createdAt;
-    private EmbeddedUser lastUpdatedBy;
-    private long lastUpdatedAt;
-
     private Builder() {}
 
     public static YamlVersion.Builder aYamlVersion() {
@@ -225,30 +219,6 @@ public class YamlVersion extends Base implements YamlHistory {
 
     public YamlVersion.Builder withAccountId(String accountId) {
       this.accountId = accountId;
-      return this;
-    }
-
-    @SuppressFBWarnings("URF_UNREAD_FIELD") // TODO
-    public YamlVersion.Builder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    @SuppressFBWarnings("URF_UNREAD_FIELD") // TODO
-    public YamlVersion.Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    @SuppressFBWarnings("URF_UNREAD_FIELD") // TODO
-    public YamlVersion.Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    @SuppressFBWarnings("URF_UNREAD_FIELD") // TODO
-    public YamlVersion.Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 

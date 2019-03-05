@@ -2,6 +2,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import migrations.all.AddReplCtrlNameToKubeSetupProperties;
@@ -193,6 +194,7 @@ public class MigrationList {
         .add(Pair.of(226, InitInfraProvisionerCounters.class))
         .add(Pair.of(227, MigrateCVMetadataApplicationId.class))
         .add(Pair.of(228, NewRelicMetricDataBaselineMigration.class))
+        .add(Pair.of(229, AddAccountIdToAppEntities.class))
         .build();
   }
 }
