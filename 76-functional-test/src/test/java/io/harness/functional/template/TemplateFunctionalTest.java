@@ -58,6 +58,8 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
   final Randomizer.Seed seed = new Randomizer.Seed(0);
   final String SCRIPT_TEMPLATE_NAME = "Another Sample Shell Script";
+  final String SCRIPT_NAME1 = "Another Sample Shell Script - 1";
+  final String SCRIPT_NAME2 = "Another Sample Shell Script - 2";
   OwnerManager.Owners owners;
   Application application;
   Account account;
@@ -251,5 +253,113 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                                 .get("/templates/{templateId}")
                                 .as(templateType.getType());
     assertThat(savedTemplateResponse.getResource()).isNull();
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void shouldNotUpdateTemplateWithDuplicateNameInSameFolder() {
+    GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {};
+    Template template1 = createTemplateAndValidate(SCRIPT_NAME1);
+    Template template2 = createTemplateAndValidate(SCRIPT_NAME2);
+    template2.setName(SCRIPT_NAME1);
+    Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .contentType(ContentType.JSON)
+        .body(template2)
+        .queryParam("accountId", account.getUuid())
+        .pathParam("templateId", template2.getUuid())
+        .put("/templates/{templateId}")
+        .as(templateType.getType());
+    RestResponse<Template> savedTemplateResponse = Setup.portal()
+                                                       .auth()
+                                                       .oauth2(bearerToken)
+                                                       .contentType(ContentType.JSON)
+                                                       .queryParam("accountId", account.getUuid())
+                                                       .pathParam("templateId", template2.getUuid())
+                                                       .get("/templates/{templateId}")
+                                                       .as(templateType.getType());
+    assertThat(savedTemplateResponse.getResource().getName()).isEqualTo(SCRIPT_NAME2);
+    deleteTemplate(template1.getUuid());
+    deleteTemplate(template2.getUuid());
+  }
+
+  private Template createTemplateAndValidate(String name) {
+    // Create template
+    TemplateFolder parentFolder = templateFolderGenerator.ensurePredefined(seed, owners, TEMPLATE_FOLDER);
+    ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
+                                                  .scriptType(ScriptType.BASH.name())
+                                                  .scriptString("echo \"Hello\" ${name}\n"
+                                                      + "export A=\"aaa\"\n"
+                                                      + "export B=\"bbb\"")
+                                                  .outputVars("A,B")
+                                                  .build();
+    Template template = Template.builder()
+                            .type(TemplateType.SHELL_SCRIPT.name())
+                            .accountId(account.getUuid())
+                            .name(name)
+                            .templateObject(shellScriptTemplate)
+                            .folderId(parentFolder.getUuid())
+                            .appId(GLOBAL_APP_ID)
+                            .variables(asList(aVariable().withType(TEXT).withName("name").withMandatory(true).build()))
+                            .build();
+    GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {
+
+    };
+
+    RestResponse<Template> savedTemplateResponse = Setup.portal()
+                                                       .auth()
+                                                       .oauth2(bearerToken)
+                                                       .queryParam("accountId", account.getUuid())
+                                                       .body(template)
+                                                       .contentType(ContentType.JSON)
+                                                       .post("/templates")
+                                                       .as(templateType.getType());
+
+    Template savedTemplate = savedTemplateResponse.getResource();
+    resetCache();
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getUuid()).isNotEmpty();
+    assertThat(savedTemplate.getName()).isEqualTo(name);
+    assertThat(savedTemplate.getType()).isEqualTo(TemplateType.SHELL_SCRIPT.name());
+    assertThat(savedTemplate.getVersion()).isEqualTo(1L);
+
+    // Get template and validate template object and variables
+    savedTemplateResponse = Setup.portal()
+                                .auth()
+                                .oauth2(bearerToken)
+                                .contentType(ContentType.JSON)
+                                .queryParam("accountId", account.getUuid())
+                                .pathParam("templateId", savedTemplate.getUuid())
+                                .get("/templates/{templateId}")
+                                .as(templateType.getType());
+
+    savedTemplate = savedTemplateResponse.getResource();
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getUuid()).isNotEmpty();
+    assertThat(savedTemplate.getName()).isEqualTo(name);
+    assertThat(savedTemplate.getType()).isEqualTo(TemplateType.SHELL_SCRIPT.name());
+    assertThat(savedTemplate.getVersion()).isEqualTo(1L);
+    assertThat(savedTemplate.getTemplateObject()).isNotNull();
+    shellScriptTemplate = (ShellScriptTemplate) savedTemplate.getTemplateObject();
+    assertThat(shellScriptTemplate.getOutputVars()).isEqualTo("A,B");
+    assertThat(shellScriptTemplate.getTimeoutMillis()).isEqualTo(600000);
+    assertThat(shellScriptTemplate.getScriptString())
+        .isEqualTo("echo \"Hello\" ${name}\n"
+            + "export A=\"aaa\"\n"
+            + "export B=\"bbb\"");
+    return savedTemplate;
+  }
+
+  private void deleteTemplate(String templateId) {
+    // Delete template
+    Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", account.getUuid())
+        .pathParam("templateId", templateId)
+        .delete("/templates/{templateId}")
+        .then()
+        .statusCode(200);
   }
 }

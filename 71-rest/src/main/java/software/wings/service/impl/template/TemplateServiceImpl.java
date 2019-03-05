@@ -12,6 +12,7 @@ import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
+import static software.wings.beans.template.Template.NAME_KEY;
 import static software.wings.beans.template.Template.VERSION_KEY;
 import static software.wings.beans.template.TemplateHelper.addUserKeyWords;
 import static software.wings.beans.template.TemplateHelper.mappedEntity;
@@ -193,7 +194,7 @@ public class TemplateServiceImpl implements TemplateService {
       templateDetailsChanged = true;
     }
 
-    wingsPersistence.save(template);
+    Validator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
 
     Template savedTemplate = get(template.getAccountId(), template.getUuid(), String.valueOf(template.getVersion()));
     if (templateDetailsChanged) {
@@ -390,10 +391,10 @@ public class TemplateServiceImpl implements TemplateService {
 
     String templateName = obtainTemplateName(templateUri);
     Template template = wingsPersistence.createQuery(Template.class)
-                            .project(Template.NAME_KEY, true)
+                            .project(NAME_KEY, true)
                             .project(Template.ACCOUNT_ID_KEY, true)
                             .filter(Template.ACCOUNT_ID_KEY, accountId)
-                            .filter(Template.NAME_KEY, templateName)
+                            .filter(NAME_KEY, templateName)
                             .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
                             .get();
     if (template == null) {
@@ -405,10 +406,10 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public String fetchTemplateIdByNameAndFolderId(String accountId, String name, String folderId) {
     Template template = wingsPersistence.createQuery(Template.class)
-                            .project(Template.NAME_KEY, true)
+                            .project(NAME_KEY, true)
                             .project(Template.ACCOUNT_ID_KEY, true)
                             .filter(Template.ACCOUNT_ID_KEY, accountId)
-                            .filter(Template.NAME_KEY, name)
+                            .filter(NAME_KEY, name)
                             .filter(Template.FOLDER_ID_KEY, folderId)
                             .get();
     if (template == null) {
