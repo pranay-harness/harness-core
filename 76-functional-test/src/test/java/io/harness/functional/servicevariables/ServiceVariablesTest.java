@@ -180,7 +180,8 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
-    Artifact artifact = artifactRestUtil.getArtifact(application.getUuid(), environment.getUuid(), service.getUuid());
+    Artifact artifact =
+        artifactRestUtil.getExistingArtifact(application.getUuid(), environment.getUuid(), service.getUuid());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());

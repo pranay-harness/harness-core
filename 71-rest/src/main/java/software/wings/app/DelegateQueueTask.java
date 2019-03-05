@@ -79,7 +79,7 @@ public class DelegateQueueTask implements Runnable {
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
-      logger.error("Error seen in the Notifier call", exception);
+      logger.error("Error seen in the DelegateQueueTask call", exception);
     }
   }
 

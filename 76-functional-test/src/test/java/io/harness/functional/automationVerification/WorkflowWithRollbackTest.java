@@ -106,7 +106,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Owner(emails = "pooja@harness.io", intermittent = true)
+  @Owner(emails = "pooja@harness.io")
   public void testWFWithRollback() throws Exception {
     Workflow savedWorkflow = addWorkflow();
     assertThat(savedWorkflow).isNotNull();
@@ -115,7 +115,8 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
     WorkflowPhase updatedPhase2 = addVerificationPhase2(savedWorkflow);
     assertThat(updatedPhase2).isNotNull();
 
-    Artifact artifact = artifactRestUtil.getArtifact(application.getUuid(), environment.getUuid(), service.getUuid());
+    Artifact artifact =
+        artifactRestUtil.getExistingArtifact(application.getUuid(), environment.getUuid(), service.getUuid());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
