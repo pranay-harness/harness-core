@@ -49,7 +49,6 @@ public class ExecutionGenTest extends WingsBaseTest {
       int day = random.nextInt(30);
       long interval = day * 24 * 3600 * 1000;
       workflowExecution.setCreatedAt(workflowExecution.getCreatedAt() - interval);
-      workflowExecution.setLastUpdatedAt(workflowExecution.getLastUpdatedAt() - interval);
 
       wingsPersistence.save(workflowExecution);
     }

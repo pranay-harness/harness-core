@@ -12,15 +12,21 @@ import com.google.common.base.MoreObjects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UuidAware;
+import io.harness.validation.Update;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
@@ -42,37 +48,44 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 /**
  * The Class WorkflowExecution.
  *
  * @author Rishi
  */
+@Data
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 @Indexes(@Index(options = @IndexOptions(name = "search"), fields = { @Field("workflowId")
                                                                      , @Field("status") }))
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class WorkflowExecution extends Base {
+public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware {
+  public static final String APP_ID_KEY = "appId";
   public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";
+  public static final String ARTIFACTS_KEY = "artifacts";
   public static final String DEPLOYMENT_TRIGGERED_ID_KEY = "deploymentTriggerId";
   public static final String END_TS_KEY = "endTs";
+  public static final String ENV_ID_KEY = "envId";
+  public static final String EXECUTION_ARGS = "executionArgs";
   public static final String INFRA_MAPPING_IDS_KEY = "infraMappingIds";
   public static final String NAME_KEY = "name";
   public static final String PIPELINE_EXECUTION_ID_KEY = "pipelineExecutionId";
+  public static final String SERVICE_EXECUTION_SUMMARIES = "serviceExecutionSummaries";
   public static final String START_TS_KEY = "startTs";
   public static final String STATUS_KEY = "status";
   public static final String TRIGGERED_BY = "triggeredBy";
   public static final String UUID_KEY = "uuid";
   public static final String WORKFLOW_ID_KEY = "workflowId";
-  public static final String ENV_ID_KEY = "envId";
   public static final String WORKFLOW_TYPE_ID_KEY = "workflowType";
-  public static final String EXECUTION_ARGS = "executionArgs";
-  public static final String SERVICE_EXECUTION_SUMMARIES = "serviceExecutionSummaries";
-  public static final String ARTIFACTS_KEY = "artifacts";
 
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);
+
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @Indexed private long createdAt;
 
   private String workflowId;
 
@@ -129,14 +142,6 @@ public class WorkflowExecution extends Base {
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
-  public String getDeploymentTriggerId() {
-    return deploymentTriggerId;
-  }
-
-  public void setDeploymentTriggerId(String deploymentTriggerId) {
-    this.deploymentTriggerId = deploymentTriggerId;
-  }
-
   /**
    * Gets name.
    *
@@ -153,442 +158,11 @@ public class WorkflowExecution extends Base {
     return name;
   }
 
-  /**
-   * Sets name.
-   *
-   * @param name the name
-   */
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public List<EnvSummary> getEnvironments() {
-    return environments;
-  }
-
-  public void setEnvironments(List<EnvSummary> environments) {
-    this.environments = environments;
-  }
-
-  public String getReleaseNo() {
-    return releaseNo;
-  }
-
-  public void setReleaseNo(String releaseNo) {
-    this.releaseNo = releaseNo;
-  }
-
-  /**
-   * Gets workflow id.
-   *
-   * @return the workflow id
-   */
-  public String getWorkflowId() {
-    return workflowId;
-  }
-
-  /**
-   * Sets workflow id.
-   *
-   * @param workflowId the workflow id
-   */
-  public void setWorkflowId(String workflowId) {
-    this.workflowId = workflowId;
-  }
-
-  /**
-   * Gets state machine id.
-   *
-   * @return the state machine id
-   */
-  public String getStateMachineId() {
-    return stateMachineId;
-  }
-
-  /**
-   * Sets state machine id.
-   *
-   * @param stateMachineId the state machine id
-   */
-  public void setStateMachineId(String stateMachineId) {
-    this.stateMachineId = stateMachineId;
-  }
-
-  public String getPipelineExecutionId() {
-    return pipelineExecutionId;
-  }
-
-  public void setPipelineExecutionId(String pipelineExecutionId) {
-    this.pipelineExecutionId = pipelineExecutionId;
-  }
-
-  /**
-   * Gets workflow type.
-   *
-   * @return the workflow type
-   */
-  public WorkflowType getWorkflowType() {
-    return workflowType;
-  }
-
-  /**
-   * Sets workflow type.
-   *
-   * @param workflowType the workflow type
-   */
-  public void setWorkflowType(WorkflowType workflowType) {
-    this.workflowType = workflowType;
-  }
-
-  /**
-   * Gets graph.
-   *
-   * @return the graph
-   */
-  public Graph getGraph() {
-    return graph;
-  }
-
-  /**
-   * Sets graph.
-   *
-   * @param graph the graph
-   */
-  public void setGraph(Graph graph) {
-    this.graph = graph;
-  }
-
-  /**
-   * Gets status.
-   *
-   * @return the status
-   */
-  public ExecutionStatus getStatus() {
-    return status;
-  }
-
-  /**
-   * Sets status.
-   *
-   * @param status the status
-   */
-  public void setStatus(ExecutionStatus status) {
-    this.status = status;
-  }
-
-  /**
-   * Gets env id.
-   *
-   * @return the env id
-   */
-  public String getEnvId() {
-    return envId;
-  }
-
-  /**
-   * Sets env id.
-   *
-   * @param envId the env id
-   */
-  public void setEnvId(String envId) {
-    this.envId = envId;
-  }
-
-  /**
-   * Getter for property 'total'.
-   *
-   * @return Value for property 'total'.
-   */
-  public int getTotal() {
-    return total;
-  }
-
-  /**
-   * Setter for property 'total'.
-   *
-   * @param total Value to set for property 'total'.
-   */
-  public void setTotal(int total) {
-    this.total = total;
-  }
-
-  public PipelineExecution getPipelineExecution() {
-    return pipelineExecution;
-  }
-
-  public void setPipelineExecution(PipelineExecution pipelineExecution) {
-    this.pipelineExecution = pipelineExecution;
-  }
-
-  /**
-   * Gets breakdown.
-   *
-   * @return the breakdown
-   */
-  public CountsByStatuses getBreakdown() {
-    return breakdown;
-  }
-
-  /**
-   * Sets breakdown.
-   *
-   * @param breakdown the breakdown
-   */
-  public void setBreakdown(CountsByStatuses breakdown) {
-    this.breakdown = breakdown;
-  }
-
-  /**
-   * Gets execution args.
-   *
-   * @return the execution args
-   */
-  public ExecutionArgs getExecutionArgs() {
-    return executionArgs;
-  }
-
-  /**
-   * Sets execution args.
-   *
-   * @param executionArgs the execution args
-   */
-  public void setExecutionArgs(ExecutionArgs executionArgs) {
-    this.executionArgs = executionArgs;
-  }
-
-  /**
-   * Gets service execution summaries.
-   *
-   * @return the service execution summaries
-   */
-  public List<ElementExecutionSummary> getServiceExecutionSummaries() {
-    return serviceExecutionSummaries;
-  }
-
-  /**
-   * Sets service execution summaries.
-   *
-   * @param serviceExecutionSummaries the service execution summaries
-   */
-  public void setServiceExecutionSummaries(List<ElementExecutionSummary> serviceExecutionSummaries) {
-    this.serviceExecutionSummaries = serviceExecutionSummaries;
-  }
-
-  /**
-   * Gets status instance breakdown map.
-   *
-   * @return the status instance breakdown map
-   */
-  public LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> getStatusInstanceBreakdownMap() {
-    return statusInstanceBreakdownMap;
-  }
-
-  /**
-   * Sets status instance breakdown map.
-   *
-   * @param statusInstanceBreakdownMap the status instance breakdown map
-   */
-  public void setStatusInstanceBreakdownMap(
-      LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap) {
-    this.statusInstanceBreakdownMap = statusInstanceBreakdownMap;
-  }
-
-  /**
-   * Gets execution node.
-   *
-   * @return the execution node
-   */
-  public GraphNode getExecutionNode() {
-    return executionNode;
-  }
-
-  /**
-   * Sets execution node.
-   *
-   * @param executionNode the execution node
-   */
-  public void setExecutionNode(GraphNode executionNode) {
-    this.executionNode = executionNode;
-  }
-
-  /**
-   * Is running status boolean.
-   *
-   * @return the boolean
-   */
   public boolean isRunningStatus() {
     return ExecutionStatus.isRunningStatus(status);
   }
-
-  /**
-   * Is paused status boolean.
-   *
-   * @return the boolean
-   */
   public boolean isPausedStatus() {
     return status != null && (status == ExecutionStatus.PAUSED || status == ExecutionStatus.WAITING);
-  }
-
-  /**
-   * Gets start ts.
-   *
-   * @return the start ts
-   */
-  public Long getStartTs() {
-    return startTs;
-  }
-
-  /**
-   * Sets start ts.
-   *
-   * @param startTs the start ts
-   */
-  public void setStartTs(Long startTs) {
-    this.startTs = startTs;
-  }
-
-  /**
-   * Gets end ts.
-   *
-   * @return the end ts
-   */
-  public Long getEndTs() {
-    return endTs;
-  }
-
-  /**
-   * Sets end ts.
-   *
-   * @param endTs the end ts
-   */
-  public void setEndTs(Long endTs) {
-    this.endTs = endTs;
-  }
-
-  /**
-   * Gets error strategy.
-   *
-   * @return the error strategy
-   */
-  public ErrorStrategy getErrorStrategy() {
-    return errorStrategy;
-  }
-
-  /**
-   * Sets error strategy.
-   *
-   * @param errorStrategy the error strategy
-   */
-  public void setErrorStrategy(ErrorStrategy errorStrategy) {
-    this.errorStrategy = errorStrategy;
-  }
-
-  /**
-   * Gets app name.
-   *
-   * @return the app name
-   */
-  public String getAppName() {
-    return appName;
-  }
-
-  /**
-   * Sets app name.
-   *
-   * @param appName the app name
-   */
-  public void setAppName(String appName) {
-    this.appName = appName;
-  }
-
-  /**
-   * Gets env name.
-   *
-   * @return the env name
-   */
-  public String getEnvName() {
-    return envName;
-  }
-
-  /**
-   * Sets env name.
-   *
-   * @param envName the env name
-   */
-  public void setEnvName(String envName) {
-    this.envName = envName;
-  }
-
-  public EnvironmentType getEnvType() {
-    return envType;
-  }
-
-  public void setEnvType(EnvironmentType envType) {
-    this.envType = envType;
-  }
-
-  public EmbeddedUser getTriggeredBy() {
-    return triggeredBy;
-  }
-
-  public void setTriggeredBy(EmbeddedUser triggeredBy) {
-    this.triggeredBy = triggeredBy;
-  }
-
-  public List<String> getEnvIds() {
-    return envIds;
-  }
-
-  public void setEnvIds(List<String> envIds) {
-    this.envIds = envIds;
-  }
-
-  public List<String> getServiceIds() {
-    return serviceIds;
-  }
-
-  public void setServiceIds(List<String> serviceIds) {
-    this.serviceIds = serviceIds;
-  }
-
-  public PipelineSummary getPipelineSummary() {
-    return pipelineSummary;
-  }
-
-  public void setPipelineSummary(PipelineSummary pipelineSummary) {
-    this.pipelineSummary = pipelineSummary;
-  }
-
-  public List<BuildExecutionSummary> getBuildExecutionSummaries() {
-    return buildExecutionSummaries;
-  }
-
-  public void setBuildExecutionSummaries(List<BuildExecutionSummary> buildExecutionSummaries) {
-    this.buildExecutionSummaries = buildExecutionSummaries;
-  }
-
-  public OrchestrationWorkflowType getOrchestrationType() {
-    return orchestrationType;
-  }
-
-  public void setOrchestrationType(OrchestrationWorkflowType orchestrationType) {
-    this.orchestrationType = orchestrationType;
-  }
-
-  public boolean isBaseline() {
-    return isBaseline;
-  }
-
-  public void setBaseline(boolean baseline) {
-    isBaseline = baseline;
-  }
-
-  public List<String> getInfraMappingIds() {
-    return infraMappingIds;
-  }
-
-  public void setInfraMappingIds(List<String> infraMappingIds) {
-    this.infraMappingIds = infraMappingIds;
   }
 
   // TODO: this is silly, we should get rid of it
@@ -896,8 +470,6 @@ public class WorkflowExecution extends Base {
       workflowExecution.setStartTs(startTs);
       workflowExecution.setEndTs(endTs);
       workflowExecution.setCreatedAt(createdAt);
-      workflowExecution.setLastUpdatedBy(lastUpdatedBy);
-      workflowExecution.setLastUpdatedAt(lastUpdatedAt);
       workflowExecution.setTriggeredBy(triggeredBy);
       workflowExecution.setPipelineSummary(pipelineSummary);
       workflowExecution.setServiceIds(serviceIds);

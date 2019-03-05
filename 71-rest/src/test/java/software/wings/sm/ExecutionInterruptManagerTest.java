@@ -45,8 +45,8 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    WorkflowExecution workflowExecution =
-        wingsPersistence.saveAndGet(WorkflowExecution.class, aWorkflowExecution().withAppId(app.getAppId()).build());
+    WorkflowExecution workflowExecution = aWorkflowExecution().withAppId(app.getAppId()).build();
+    wingsPersistence.save(workflowExecution);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
@@ -256,8 +256,8 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    WorkflowExecution workflowExecution =
-        wingsPersistence.saveAndGet(WorkflowExecution.class, aWorkflowExecution().withAppId(app.getAppId()).build());
+    WorkflowExecution workflowExecution = aWorkflowExecution().withAppId(app.getAppId()).build();
+    wingsPersistence.save(workflowExecution);
 
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
@@ -290,8 +290,8 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    WorkflowExecution workflowExecution =
-        wingsPersistence.saveAndGet(WorkflowExecution.class, aWorkflowExecution().withAppId(app.getAppId()).build());
+    WorkflowExecution workflowExecution = aWorkflowExecution().withAppId(app.getAppId()).build();
+    wingsPersistence.save(workflowExecution);
 
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
@@ -355,8 +355,8 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    WorkflowExecution workflowExecution =
-        wingsPersistence.saveAndGet(WorkflowExecution.class, aWorkflowExecution().withAppId(app.getAppId()).build());
+    WorkflowExecution workflowExecution = aWorkflowExecution().withAppId(app.getAppId()).build();
+    wingsPersistence.save(workflowExecution);
 
     ExecutionInterrupt pauseAll = anExecutionInterrupt()
                                       .withAppId(app.getUuid())
@@ -388,8 +388,8 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    WorkflowExecution workflowExecution =
-        wingsPersistence.saveAndGet(WorkflowExecution.class, aWorkflowExecution().withAppId(app.getAppId()).build());
+    WorkflowExecution workflowExecution = aWorkflowExecution().withAppId(app.getAppId()).build();
+    wingsPersistence.save(workflowExecution);
 
     ExecutionInterrupt pauseAll = anExecutionInterrupt()
                                       .withAppId(app.getUuid())
