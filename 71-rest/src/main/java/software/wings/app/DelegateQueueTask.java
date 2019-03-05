@@ -5,7 +5,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.maintenance.MaintenanceController.isMaintenance;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.beans.DelegateTask.Status.STARTED;
@@ -34,7 +34,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AssignDelegateService;
 
 import java.time.Clock;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -113,27 +115,68 @@ public class DelegateQueueTask implements Runnable {
   }
 
   private void markTasksAsFailed(List<String> taskIds) {
-    List<DelegateTask> delegateTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                           .field(ID_KEY)
-                                           .in(taskIds)
-                                           .project(ID_KEY, true)
-                                           .project("delegateId", true)
-                                           .project("waitId", true)
-                                           .project("tags", true)
-                                           .project("accountId", true)
-                                           .project("taskType", true)
-                                           .project("parameters", true)
-                                           .asList();
+    Map<String, DelegateTask> delegateTasks = new HashMap<>();
+    Map<String, String> taskWaitIds = new HashMap<>();
+    try {
+      List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                     .field(ID_KEY)
+                                     .in(taskIds)
+                                     .project(ID_KEY, true)
+                                     .project("delegateId", true)
+                                     .project("waitId", true)
+                                     .project("tags", true)
+                                     .project("accountId", true)
+                                     .project("taskType", true)
+                                     .project("parameters", true)
+                                     .asList();
+      delegateTasks.putAll(tasks.stream().collect(toMap(DelegateTask::getUuid, delegateTask -> delegateTask)));
+      taskWaitIds.putAll(tasks.stream().collect(toMap(DelegateTask::getUuid, DelegateTask::getWaitId)));
+    } catch (Exception e1) {
+      logger.error("Failed to deserialize {} tasks. Trying individually...", taskIds.size(), e1);
+      for (String taskId : taskIds) {
+        try {
+          DelegateTask task = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                  .filter(ID_KEY, taskId)
+                                  .project(ID_KEY, true)
+                                  .project("delegateId", true)
+                                  .project("waitId", true)
+                                  .project("tags", true)
+                                  .project("accountId", true)
+                                  .project("taskType", true)
+                                  .project("parameters", true)
+                                  .get();
+          delegateTasks.put(taskId, task);
+          taskWaitIds.put(taskId, task.getWaitId());
+        } catch (Exception e2) {
+          logger.error("Could not deserialize task {}. Trying again with only waitId field.", taskId, e2);
+          try {
+            String waitId = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                .filter(ID_KEY, taskId)
+                                .project("waitId", true)
+                                .get()
+                                .getWaitId();
+            taskWaitIds.put(taskId, waitId);
+          } catch (Exception e3) {
+            logger.error(
+                "Could not deserialize task {} with waitId only, giving up. Task will be deleted but notify not called.",
+                taskId, e3);
+          }
+        }
+      }
+    }
 
     boolean deleted = wingsPersistence.delete(
         wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).field(Mapper.ID_KEY).in(taskIds));
+
     if (deleted) {
-      delegateTasks.forEach(delegateTask -> {
-        if (isNotBlank(delegateTask.getWaitId())) {
-          String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
-          logger.info("Marking task as failed - {}: {}", delegateTask.getUuid(), errorMessage);
+      taskIds.forEach(taskId -> {
+        if (taskWaitIds.containsKey(taskId)) {
+          String errorMessage = delegateTasks.containsKey(taskId)
+              ? assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTasks.get(taskId))
+              : "Unable to determine proper error as delegate task could not be deserialized.";
+          logger.info("Marking task as failed - {}: {}", taskId, errorMessage);
           waitNotifyEngine.notify(
-              delegateTask.getWaitId(), ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
+              taskWaitIds.get(taskId), ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
         }
       });
     }
