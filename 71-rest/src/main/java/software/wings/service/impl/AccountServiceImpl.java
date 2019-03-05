@@ -653,8 +653,10 @@ public class AccountServiceImpl implements AccountService {
         if (serviceCvConfigMap.containsKey(serviceIdOfConfig)) {
           configList = serviceCvConfigMap.get(serviceIdOfConfig);
         }
-        configList.add(cvConfiguration);
-        serviceCvConfigMap.put(serviceIdOfConfig, configList);
+        if (cvConfiguration.isEnabled24x7()) {
+          configList.add(cvConfiguration);
+          serviceCvConfigMap.put(serviceIdOfConfig, configList);
+        }
       }
     });
 
