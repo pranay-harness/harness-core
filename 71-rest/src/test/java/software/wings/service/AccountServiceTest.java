@@ -293,6 +293,45 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void testGetServicesForAccountDisabledCVConfig() {
+    String serviceId = UUID.randomUUID().toString();
+    String envId = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String appId = UUID.randomUUID().toString();
+    String workflowId = UUID.randomUUID().toString();
+    String cvConfigId = UUID.randomUUID().toString();
+    User user = new User();
+
+    // setup
+    setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
+    // Save one with isEnabled set to false
+    CVConfiguration config = NewRelicCVServiceConfiguration.builder().build();
+    config.setAccountId(accountId);
+    config.setServiceId(serviceId);
+    config.setEnvId(envId);
+    config.setAppId(appId);
+    config.setEnabled24x7(false);
+    config.setUuid(cvConfigId + "-disabled");
+    config.setName("NewRelic-disabled");
+    config.setStateType(StateType.NEW_RELIC);
+    wingsPersistence.save(config);
+
+    PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("0").build();
+
+    // test behavior
+    PageResponse<CVEnabledService> cvConfigs = accountService.getServices(accountId, user, request, null);
+
+    // verify results
+    assertTrue("Service list should not be empty", cvConfigs.getResponse().size() == 1);
+    assertTrue("Config list should be size 1", cvConfigs.getResponse().get(0).getCvConfig().size() == 1);
+    assertEquals("Service id should be same", serviceId, cvConfigs.getResponse().get(0).getService().getUuid());
+    assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
+    assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getService().getName());
+    assertEquals(
+        "CVConfigType name should be same", "NewRelic", cvConfigs.getResponse().get(0).getCvConfig().get(0).getName());
+  }
+
+  @Test
   public void testGetServicesForAccountSpecificService() {
     String serviceId = UUID.randomUUID().toString();
     String envId = UUID.randomUUID().toString();
