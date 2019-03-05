@@ -12,6 +12,8 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
@@ -460,4 +462,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   DeploymentType getDeploymentType(InfrastructureMapping infraMapping, Service service, String serviceId);
 
   void deleteHelmChartSpecification(HelmChartSpecification helmChartSpecification);
+
+  void setK8v2ServiceFromAppManifest(ApplicationManifest applicationManifest, AppManifestType appManifestType);
 }

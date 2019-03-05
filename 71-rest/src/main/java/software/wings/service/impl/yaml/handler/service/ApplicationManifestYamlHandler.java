@@ -24,6 +24,7 @@ import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
   @Inject ApplicationManifestService applicationManifestService;
   @Inject GitFileConfigHelperService gitFileConfigHelperService;
   @Inject YamlResourceService yamlResourceService;
+  @Inject ServiceResourceService serviceResourceService;
 
   @Override
   public Yaml toYaml(ApplicationManifest applicationManifest, String appId) {
@@ -63,6 +65,8 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
       applicationManifest.setUuid(previous.getUuid());
       return applicationManifestService.update(applicationManifest);
     } else {
+      serviceResourceService.setK8v2ServiceFromAppManifest(
+          applicationManifest, applicationManifestService.getAppManifestType(applicationManifest));
       return applicationManifestService.create(applicationManifest);
     }
   }
