@@ -1,6 +1,7 @@
 package software.wings.beans.alert;
 
 import static software.wings.alerts.AlertCategory.Approval;
+import static software.wings.alerts.AlertCategory.ContinuousVerification;
 import static software.wings.alerts.AlertCategory.ManualIntervention;
 import static software.wings.alerts.AlertCategory.Setup;
 import static software.wings.alerts.AlertSeverity.Error;
@@ -8,6 +9,7 @@ import static software.wings.alerts.AlertSeverity.Warning;
 
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 
 public enum AlertType {
   ApprovalNeeded(Approval, Warning, ApprovalNeededAlert.class),
@@ -25,7 +27,8 @@ public enum AlertType {
   USAGE_LIMIT_EXCEEDED(Setup, Error, UsageLimitExceededAlert.class),
   INSTANCE_USAGE_APPROACHING_LIMIT(Setup, Warning, InstanceUsageLimitAlert.class),
   RESOURCE_USAGE_APPROACHING_LIMIT(Setup, Warning, ResourceUsageApproachingLimitAlert.class),
-  DEPLOYMENT_RATE_APPROACHING_LIMIT(Setup, Warning, DeploymentRateApproachingLimitAlert.class);
+  DEPLOYMENT_RATE_APPROACHING_LIMIT(Setup, Warning, DeploymentRateApproachingLimitAlert.class),
+  CONTINUOUS_VERIFICATION_ALERT(ContinuousVerification, Warning, ContinuousVerificationAlertData.class);
 
   private AlertCategory category;
   private AlertSeverity severity;
