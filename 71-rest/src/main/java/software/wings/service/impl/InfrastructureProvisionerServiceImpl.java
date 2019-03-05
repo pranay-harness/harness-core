@@ -114,6 +114,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @ValidationGroups(Create.class)
   public InfrastructureProvisioner save(@Valid InfrastructureProvisioner infrastructureProvisioner) {
     String accountId = appService.getAccountIdByAppId(infrastructureProvisioner.getAppId());
+    infrastructureProvisioner.setAccountId(accountId);
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new Action(accountId, ActionType.CREATE_INFRA_PROVISIONER));
 
