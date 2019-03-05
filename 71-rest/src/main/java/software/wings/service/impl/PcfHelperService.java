@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -14,6 +13,7 @@ import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
@@ -48,7 +48,7 @@ public class PcfHelperService {
 
     try {
       pcfCommandExecutionResponse =
-          delegateService.executeTask(aDelegateTask()
+          delegateService.executeTask(DelegateTask.builder()
                                           .taskType(TaskType.PCF_COMMAND_TASK.name())
                                           .accountId(pcfConfig.getAccountId())
                                           .appId(GLOBAL_APP_ID)
@@ -83,7 +83,7 @@ public class PcfHelperService {
       List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
 
       pcfCommandExecutionResponse =
-          delegateService.executeTask(aDelegateTask()
+          delegateService.executeTask(DelegateTask.builder()
                                           .taskType(TaskType.PCF_COMMAND_TASK.name())
                                           .accountId(pcfConfig.getAccountId())
                                           .appId(GLOBAL_APP_ID)
@@ -148,7 +148,7 @@ public class PcfHelperService {
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
     try {
       pcfCommandExecutionResponse =
-          delegateService.executeTask(aDelegateTask()
+          delegateService.executeTask(DelegateTask.builder()
                                           .taskType(TaskType.PCF_COMMAND_TASK.name())
                                           .accountId(pcfConfig.getAccountId())
                                           .appId(GLOBAL_APP_ID)
@@ -183,7 +183,7 @@ public class PcfHelperService {
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
     try {
       pcfCommandExecutionResponse =
-          delegateService.executeTask(aDelegateTask()
+          delegateService.executeTask(DelegateTask.builder()
                                           .taskType(TaskType.PCF_COMMAND_TASK.name())
                                           .accountId(pcfConfig.getAccountId())
                                           .appId(GLOBAL_APP_ID)
@@ -224,7 +224,7 @@ public class PcfHelperService {
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
     try {
       pcfCommandExecutionResponse =
-          delegateService.executeTask(aDelegateTask()
+          delegateService.executeTask(DelegateTask.builder()
                                           .taskType(TaskType.PCF_COMMAND_TASK.name())
                                           .accountId(pcfConfig.getAccountId())
                                           .appId(GLOBAL_APP_ID)
@@ -259,7 +259,7 @@ public class PcfHelperService {
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
     try {
       pcfCommandExecutionResponse =
-          delegateService.executeTask(aDelegateTask()
+          delegateService.executeTask(DelegateTask.builder()
                                           .taskType(TaskType.PCF_COMMAND_TASK.name())
                                           .accountId(pcfConfig.getAccountId())
                                           .appId(GLOBAL_APP_ID)
@@ -295,7 +295,7 @@ public class PcfHelperService {
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
     try {
       pcfCommandExecutionResponse =
-          delegateService.executeTask(aDelegateTask()
+          delegateService.executeTask(DelegateTask.builder()
                                           .taskType(TaskType.PCF_COMMAND_TASK.name())
                                           .accountId(pcfConfig.getAccountId())
                                           .appId(GLOBAL_APP_ID)

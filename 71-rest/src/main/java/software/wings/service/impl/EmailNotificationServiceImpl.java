@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -112,7 +111,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     try {
       EmailRequest request =
           EmailRequest.builder().emailData(emailData).encryptionDetails(encryptionDetails).smtpConfig(config).build();
-      DelegateTask delegateTask = aDelegateTask()
+      DelegateTask delegateTask = DelegateTask.builder()
                                       .taskType(TaskType.COLLABORATION_PROVIDER_TASK.name())
                                       .accountId(emailData.getAccountId())
                                       .appId(GLOBAL_APP_ID)

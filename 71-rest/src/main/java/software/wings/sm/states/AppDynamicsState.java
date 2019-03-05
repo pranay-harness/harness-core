@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APP_DYNAMICS_24X7_VALUES_TO_ANALYZE;
@@ -277,7 +276,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
             .build();
 
     String waitId = generateUuid();
-    delegateTasks.add(aDelegateTask()
+    delegateTasks.add(DelegateTask.builder()
                           .async(true)
                           .taskType(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA.name())
                           .accountId(appService.get(context.getAppId()).getAccountId())

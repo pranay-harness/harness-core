@@ -10,7 +10,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
@@ -1565,7 +1564,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private DelegateTask createDelegateTask(
       TaskType taskType, String accountId, String appId, String waitId, Object[] dataCollectionInfo, String envId) {
-    return aDelegateTask()
+    return DelegateTask.builder()
         .async(true)
         .taskType(taskType.name())
         .accountId(accountId)

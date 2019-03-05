@@ -9,7 +9,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.TaskType.JENKINS;
-
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;

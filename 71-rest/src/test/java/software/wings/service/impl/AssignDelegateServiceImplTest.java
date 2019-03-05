@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.Delegate.Status.ENABLED;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
@@ -61,7 +60,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldAssignDelegateWithNoScope() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -80,7 +79,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldAssignDelegateWithMatchingIncludeScopes() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -100,7 +99,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldNotAssignDelegateWithoutMatchingIncludeScopes() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -120,7 +119,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldAssignDelegateWithoutMatchingExcludeScopes() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -140,7 +139,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldNotAssignDelegateWithMatchingExcludeScopes() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -160,7 +159,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldAssignTaskWithAllMatchingTags() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -181,7 +180,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldNotAssignTaskWithPartialMatchingTags() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -202,7 +201,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldNotAssignTaskWithNoMatchingTags() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -223,7 +222,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldAssignTaskWithEmptyDelegateTaskTags() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -244,7 +243,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldNotAssignTaskWithEmptyDelegateTags() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
@@ -317,7 +316,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
 
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
@@ -338,7 +337,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .build());
     Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
 
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
@@ -359,7 +358,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .build());
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
 
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
@@ -389,7 +388,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
@@ -422,7 +421,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
@@ -454,7 +453,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
@@ -486,7 +485,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
@@ -502,7 +501,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldGetNullFirstAttemptDelegate() {
     Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
@@ -534,7 +533,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())

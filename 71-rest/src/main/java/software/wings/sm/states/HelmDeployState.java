@@ -9,7 +9,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
@@ -239,7 +238,7 @@ public class HelmDeployState extends State {
         releaseName, app.getAccountId(), app.getUuid(), activity.getUuid(), imageDetails, containerInfraMapping,
         repoName, gitConfig, encryptedDataDetails, commandFlags);
 
-    delegateService.queueTask(aDelegateTask()
+    delegateService.queueTask(DelegateTask.builder()
                                   .async(true)
                                   .accountId(app.getAccountId())
                                   .appId(app.getUuid())
@@ -362,7 +361,7 @@ public class HelmDeployState extends State {
             .commandFlags(commandFlags)
             .build();
 
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .taskType(TaskType.HELM_COMMAND_TASK.name())
                                     .parameters(new Object[] {helmReleaseHistoryCommandRequest})
                                     .accountId(accountId)

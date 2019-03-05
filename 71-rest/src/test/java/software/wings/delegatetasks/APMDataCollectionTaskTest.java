@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +50,7 @@ public class APMDataCollectionTaskTest {
                              .dataCollectionMinute(0)
                              .build();
 
-    DelegateTask task = aDelegateTask()
+    DelegateTask task = DelegateTask.builder()
                             .async(true)
                             .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
                             .accountId(accountId)

@@ -6,7 +6,6 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -186,7 +185,7 @@ public class BambooState extends State {
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
 
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .async(true)
             .taskType(getTaskType().name())
             .accountId(((ExecutionContextImpl) context).getApp().getAccountId())

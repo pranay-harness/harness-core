@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -336,7 +335,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                                       .url(finalUrl)
                                                       .socketTimeoutMillis(taskSocketTimeout)
                                                       .build();
-    final DelegateTask delegateTask = aDelegateTask()
+    final DelegateTask delegateTask = DelegateTask.builder()
                                           .async(true)
                                           .taskType(getTaskType().name())
                                           .accountId(((ExecutionContextImpl) context).getApp().getAccountId())

@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -88,7 +87,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
               .build();
 
       String waitId = generateUuid();
-      delegateTasks.add(aDelegateTask()
+      delegateTasks.add(DelegateTask.builder()
                             .async(true)
                             .taskType(TaskType.LOGZ_COLLECT_LOG_DATA.name())
                             .accountId(appService.get(context.getAppId()).getAccountId())

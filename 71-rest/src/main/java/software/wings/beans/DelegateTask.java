@@ -3,8 +3,6 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.mongo.KryoConverter;
@@ -12,7 +10,10 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Converters;
@@ -20,20 +21,19 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.converters.SimpleValueConverter;
 import software.wings.beans.DelegateTask.ParametersConverter;
 import software.wings.beans.DelegateTask.ResponseDataConverter;
 
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @Data
+@Builder
+@EqualsAndHashCode(exclude = {"uuid", "createdAt", "lastUpdatedAt", "validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
@@ -74,61 +74,16 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private String correlationId;
   private ResponseData notifyResponse;
 
-  @Transient private transient DelegateRunnableTask delegateRunnableTask;
+  private transient DelegateRunnableTask delegateRunnableTask;
 
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
 
-  public ResponseData getNotifyResponse() {
-    return notifyResponse;
-  }
-
-  public void setNotifyResponse(ResponseData notifyResponse) {
-    this.notifyResponse = notifyResponse;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    DelegateTask that = (DelegateTask) o;
-    return timeout == that.timeout && async == that.async && Objects.equals(version, that.version)
-        && Objects.equals(taskType, that.taskType) && Arrays.equals(parameters, that.parameters)
-        && Objects.equals(tags, that.tags) && Objects.equals(accountId, that.accountId)
-        && Objects.equals(waitId, that.waitId) && status == that.status && Objects.equals(delegateId, that.delegateId)
-        && Objects.equals(envId, that.envId) && Objects.equals(infrastructureMappingId, that.infrastructureMappingId)
-        && Objects.equals(delegateRunnableTask, that.delegateRunnableTask)
-        && Objects.equals(notifyResponse, that.notifyResponse)
-        && Objects.equals(preAssignedDelegateId, that.preAssignedDelegateId)
-        && Objects.equals(serviceTemplateId, that.serviceTemplateId)
-        && Objects.equals(artifactStreamId, that.artifactStreamId);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), version, taskType, parameters, tags, accountId, waitId, status, delegateId,
-        timeout, async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse, preAssignedDelegateId,
-        serviceTemplateId, artifactStreamId);
-  }
-
-  @Override
-  public String toString() {
-    return "DelegateTask{"
-        + "version='" + version + '\'' + ", taskType=" + taskType + ", parameters=" + Arrays.toString(parameters)
-        + ", tag='" + tags + '\'' + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + '\''
-        + ", status=" + status + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async
-        + ", envId='" + envId + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
-        + ", delegateRunnableTask=" + delegateRunnableTask + ", notifyResponse=" + notifyResponse + '}';
-  }
-
   @Value
-  @lombok.Builder
+  @Builder
   public static class SyncTaskContext {
     private String accountId;
     private String appId;
@@ -152,204 +107,4 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   }
 
   public enum Status { QUEUED, STARTED, FINISHED, ERROR, ABORTED }
-
-  public static final class Builder {
-    private String version;
-    private String taskType;
-    private Object[] parameters;
-    private List<String> tags;
-    private String accountId;
-    private String waitId;
-    private Status status = Status.QUEUED;
-    private String delegateId;
-    private long timeout = DEFAULT_ASYNC_CALL_TIMEOUT;
-    private boolean async = true;
-    private String envId;
-    private String uuid;
-    private String infrastructureMappingId;
-    private String appId;
-    private EmbeddedUser createdBy;
-    private long createdAt;
-    private EmbeddedUser lastUpdatedBy;
-    private long lastUpdatedAt;
-    private ResponseData notifyResponse;
-    private String preAssignedDelegateId;
-    private String serviceTemplateId;
-    private String artifactStreamId;
-    private String correlationId;
-
-    private Builder() {}
-
-    public static Builder aDelegateTask() {
-      return new Builder();
-    }
-
-    public Builder version(String version) {
-      this.version = version;
-      return this;
-    }
-
-    public Builder taskType(String taskType) {
-      this.taskType = taskType;
-      return this;
-    }
-
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
-    public Builder parameters(Object[] parameters) {
-      this.parameters = parameters;
-      return this;
-    }
-
-    public Builder tags(List<String> tags) {
-      this.tags = tags;
-      return this;
-    }
-
-    public Builder accountId(String accountId) {
-      this.accountId = accountId;
-      return this;
-    }
-
-    public Builder waitId(String waitId) {
-      this.waitId = waitId;
-      return this;
-    }
-
-    public Builder status(Status status) {
-      this.status = status;
-      return this;
-    }
-
-    public Builder delegateId(String delegateId) {
-      this.delegateId = delegateId;
-      return this;
-    }
-
-    public Builder timeout(long timeout) {
-      this.timeout = timeout;
-      return this;
-    }
-
-    public Builder async(boolean async) {
-      this.async = async;
-      return this;
-    }
-
-    public Builder envId(String envId) {
-      this.envId = envId;
-      return this;
-    }
-
-    public Builder uuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder infrastructureMappingId(String infrastructureMappingId) {
-      this.infrastructureMappingId = infrastructureMappingId;
-      return this;
-    }
-
-    public Builder appId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    public Builder createdBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder createdAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder lastUpdatedBy(EmbeddedUser lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder lastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder notifyResponse(ResponseData notifyResponse) {
-      this.notifyResponse = notifyResponse;
-      return this;
-    }
-
-    public Builder preAssignedDelegateId(String preAssignedDelegateId) {
-      this.preAssignedDelegateId = preAssignedDelegateId;
-      return this;
-    }
-
-    public Builder serviceTemplateId(String serviceTemplateId) {
-      this.serviceTemplateId = serviceTemplateId;
-      return this;
-    }
-
-    public Builder artifactStreamId(String artifactStreamId) {
-      this.artifactStreamId = artifactStreamId;
-      return this;
-    }
-
-    public Builder correlationId(String correlationId) {
-      this.correlationId = correlationId;
-      return this;
-    }
-
-    public Builder but() {
-      return aDelegateTask()
-          .version(version)
-          .taskType(taskType)
-          .parameters(parameters)
-          .tags(tags)
-          .accountId(accountId)
-          .waitId(waitId)
-          .status(status)
-          .delegateId(delegateId)
-          .timeout(timeout)
-          .async(async)
-          .envId(envId)
-          .uuid(uuid)
-          .infrastructureMappingId(infrastructureMappingId)
-          .appId(appId)
-          .createdBy(createdBy)
-          .createdAt(createdAt)
-          .lastUpdatedBy(lastUpdatedBy)
-          .lastUpdatedAt(lastUpdatedAt)
-          .notifyResponse(notifyResponse)
-          .preAssignedDelegateId(preAssignedDelegateId)
-          .serviceTemplateId(serviceTemplateId)
-          .artifactStreamId(artifactStreamId)
-          .correlationId(correlationId);
-    }
-
-    public DelegateTask build() {
-      DelegateTask delegateTask = new DelegateTask();
-      delegateTask.setVersion(version);
-      delegateTask.setTaskType(taskType);
-      delegateTask.setParameters(parameters);
-      delegateTask.setTags(tags);
-      delegateTask.setAccountId(accountId);
-      delegateTask.setWaitId(waitId);
-      delegateTask.setStatus(status);
-      delegateTask.setDelegateId(delegateId);
-      delegateTask.setTimeout(timeout);
-      delegateTask.setAsync(async);
-      delegateTask.setEnvId(envId);
-      delegateTask.setUuid(uuid);
-      delegateTask.setInfrastructureMappingId(infrastructureMappingId);
-      delegateTask.setAppId(appId);
-      delegateTask.setLastUpdatedAt(lastUpdatedAt);
-      delegateTask.setNotifyResponse(notifyResponse);
-      delegateTask.setPreAssignedDelegateId(preAssignedDelegateId);
-      delegateTask.setServiceTemplateId(serviceTemplateId);
-      delegateTask.setArtifactStreamId(artifactStreamId);
-      delegateTask.setCorrelationId(correlationId);
-      return delegateTask;
-    }
-  }
 }

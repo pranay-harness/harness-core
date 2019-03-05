@@ -3,7 +3,6 @@ package software.wings.service.impl.aws.manager;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -63,7 +62,7 @@ public class AwsEcrHelperServiceManagerImpl implements AwsEcrHelperServiceManage
 
   private AwsResponse executeTask(String accountId, AwsEcrRequest request, String appId) {
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .taskType(TaskType.AWS_ECR_TASK.name())
             .accountId(accountId)
             .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)

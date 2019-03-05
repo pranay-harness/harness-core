@@ -8,7 +8,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.reflect.Whitebox.setInternalState;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import org.junit.Test;
 import org.mockito.Mock;
@@ -55,7 +54,7 @@ public class LogDataCollectionTaskTest {
     String timeDuration = "10";
     dataCollectionInfo = getDataCollectionInfo(logDefinition, hosts);
 
-    DelegateTask task = aDelegateTask()
+    DelegateTask task = DelegateTask.builder()
                             .async(true)
                             .taskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
                             .accountId(accountId)

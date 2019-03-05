@@ -2,10 +2,10 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import software.wings.beans.AwsConfig;
-import software.wings.beans.DelegateTask.Builder;
+import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTask.DelegateTaskBuilder;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -35,17 +35,17 @@ public class DelegateInvocationHandler implements InvocationHandler {
     delegateArguments[0] = proxy.getClass().getInterfaces()[0].getName();
     delegateArguments[1] = method.getName();
     System.arraycopy(args, 0, delegateArguments, 2, args.length);
-    Builder builder = aDelegateTask()
-                          .taskType(taskType.name())
-                          .parameters(delegateArguments)
-                          .accountId(syncTaskContext.getAccountId())
-                          .appId(syncTaskContext.getAppId())
-                          .envId(syncTaskContext.getEnvId())
-                          .infrastructureMappingId(syncTaskContext.getInfrastructureMappingId())
-                          .async(false)
-                          .timeout(syncTaskContext.getTimeout())
-                          .tags(syncTaskContext.getTags())
-                          .correlationId(syncTaskContext.getCorrelationId());
+    DelegateTaskBuilder builder = DelegateTask.builder()
+                                      .taskType(taskType.name())
+                                      .parameters(delegateArguments)
+                                      .accountId(syncTaskContext.getAccountId())
+                                      .appId(syncTaskContext.getAppId())
+                                      .envId(syncTaskContext.getEnvId())
+                                      .infrastructureMappingId(syncTaskContext.getInfrastructureMappingId())
+                                      .async(false)
+                                      .timeout(syncTaskContext.getTimeout())
+                                      .tags(syncTaskContext.getTags())
+                                      .correlationId(syncTaskContext.getCorrelationId());
 
     String awsConfigTag = getAwsConfigTags(args);
     if (isNotEmpty(awsConfigTag)) {

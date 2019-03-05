@@ -21,7 +21,6 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Delegate.Builder.aDelegate;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -299,7 +298,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetDelegateTaskEvents() {
     String delegateId = generateUuid();
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
@@ -318,7 +317,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldSaveDelegateTask() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
@@ -336,7 +335,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId() {
     when(assignDelegateService.pickFirstAttemptDelegate(any(DelegateTask.class))).thenReturn(DELEGATE_ID);
 
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
@@ -354,7 +353,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldProcessDelegateTaskResponse() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
@@ -379,7 +378,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldProcessDelegateTaskResponseWithoutWaitId() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
@@ -401,7 +400,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldProcessSyncDelegateTaskResponse() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
@@ -422,7 +421,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void processDelegateTaskResponseShouldRequeueTask() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
@@ -455,7 +454,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldNotRequeueTaskWhenAfterDelegatesAreTried() {
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
@@ -623,8 +622,9 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(assignDelegateService.isWhitelisted(any(DelegateTask.class), any(String.class))).thenReturn(true);
     when(assignDelegateService.canAssign(any(String.class), any(DelegateTask.class))).thenReturn(true);
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
+                                    .status(DelegateTask.Status.QUEUED)
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
                                     .taskType(TaskType.HTTP.name())
@@ -641,7 +641,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   public void shouldNotAcquireTaskWhenAlreadyAcquired() {
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
@@ -660,7 +660,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   public void shouldFilterTaskForAccount() {
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID + "1")
                                     .waitId(generateUuid())
@@ -677,7 +677,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   public void shouldNotFilterTaskWhenItMatchesDelegateCriteria() {
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
@@ -700,7 +700,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void testProcessDelegateTaskResponseWithDelegateMetaInfo() {
     Delegate delegate = aDelegate().withUuid(DELEGATE_ID).withHostName(USER_NAME).build();
 
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())

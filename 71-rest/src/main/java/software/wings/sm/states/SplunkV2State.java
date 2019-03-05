@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -146,7 +145,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
       String waitId = generateUuid();
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-      delegateTasks.add(aDelegateTask()
+      delegateTasks.add(DelegateTask.builder()
                             .async(true)
                             .taskType(TaskType.SPLUNK_COLLECT_LOG_DATA.name())
                             .accountId(appService.get(context.getAppId()).getAccountId())

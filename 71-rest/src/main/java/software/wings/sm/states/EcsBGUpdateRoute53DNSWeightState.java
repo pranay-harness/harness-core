@@ -8,7 +8,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static software.wings.beans.Activity.Type.Command;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AWS_ECS_UPDATE_ROUTE_53_DNS_WEIGHT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -172,7 +171,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
             .build();
 
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .accountId(infrastructureMapping.getAccountId())
             .appId(infrastructureMapping.getAppId())
             .waitId(activity.getUuid())

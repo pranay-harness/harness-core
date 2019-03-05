@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.common.VerificationConstants.GLOBAL_APP_ID;
-
 import static software.wings.common.VerificationConstants.STATIC_CLOUD_WATCH_METRIC_URL;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 

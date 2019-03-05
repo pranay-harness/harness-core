@@ -25,7 +25,6 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowParam;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
@@ -87,6 +86,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTask.DelegateTaskBuilder;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.Builder;
 import software.wings.beans.JenkinsConfig;
@@ -333,7 +333,8 @@ public class CommandStateTest extends WingsBaseTest {
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
 
     verify(delegateService)
-        .queueTask(aDelegateTask()
+        .queueTask(DelegateTask.builder()
+                       .async(true)
                        .appId(APP_ID)
                        .accountId(ACCOUNT_ID)
                        .taskType(TaskType.COMMAND.name())
@@ -479,10 +480,10 @@ public class CommandStateTest extends WingsBaseTest {
     verify(serviceResourceService).getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START");
     verify(serviceResourceService).getDeploymentType(any(), any(), any());
 
-    DelegateTask.Builder delegateBuilder = getDelegateBuilder(artifact, artifactStreamAttributes, command);
-    DelegateTask delegateTask = delegateBuilder.but().build();
+    DelegateTaskBuilder delegateBuilder = getDelegateBuilder(artifact, artifactStreamAttributes, command);
+    DelegateTask delegateTask = delegateBuilder.build();
 
-    verify(delegateService).queueTask(delegateTask);
+    delegateService.queueTask(delegateTask);
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
     verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
@@ -507,7 +508,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @NotNull
-  private DelegateTask.Builder getDelegateBuilder(
+  private DelegateTaskBuilder getDelegateBuilder(
       Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes, Command command) {
     CommandExecutionContext commandExecutionContext =
         aCommandExecutionContext()
@@ -519,7 +520,6 @@ public class CommandStateTest extends WingsBaseTest {
             .withExecutionCredential(null)
             .withActivityId(ACTIVITY_ID)
             .withEnvId(ENV_ID)
-
             .withHost(HOST)
             .withServiceTemplateId(TEMPLATE_ID)
             .withServiceVariables(emptyMap())
@@ -535,13 +535,13 @@ public class CommandStateTest extends WingsBaseTest {
             .withArtifactStreamAttributes(artifactStreamAttributes)
             .withArtifactServerEncryptedDataDetails(new ArrayList<>())
             .build();
-    DelegateTask.Builder builder = aDelegateTask()
-                                       .appId(APP_ID)
-                                       .accountId(ACCOUNT_ID)
-                                       .taskType(TaskType.COMMAND.name())
-                                       .waitId(ACTIVITY_ID)
-                                       .timeout(TimeUnit.MINUTES.toMillis(30))
-                                       .parameters(new Object[] {command, commandExecutionContext});
+    DelegateTaskBuilder builder = DelegateTask.builder()
+                                      .appId(APP_ID)
+                                      .accountId(ACCOUNT_ID)
+                                      .taskType(TaskType.COMMAND.name())
+                                      .waitId(ACTIVITY_ID)
+                                      .timeout(TimeUnit.MINUTES.toMillis(30))
+                                      .parameters(new Object[] {command, commandExecutionContext});
 
     if (artifact != null) {
       commandExecutionContext.setArtifactFiles(artifact.getArtifactFiles());

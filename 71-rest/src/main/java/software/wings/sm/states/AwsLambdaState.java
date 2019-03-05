@@ -8,7 +8,6 @@ import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_LAMBDA_TASK;
@@ -310,7 +309,7 @@ public class AwsLambdaState extends State {
           env.getUuid(), infrastructureMapping, (AwsConfig) cloudProviderSetting.getValue(), region, artifact,
           app.getAccountId(), activity.getUuid());
       DelegateTask delegateTask =
-          aDelegateTask()
+          DelegateTask.builder()
               .async(true)
               .taskType(AWS_LAMBDA_TASK.name())
               .accountId(app.getAccountId())

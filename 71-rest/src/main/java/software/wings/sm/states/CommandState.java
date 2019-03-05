@@ -7,7 +7,6 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -380,7 +379,7 @@ public class CommandState extends State {
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId).withDeploymentType(deploymentType.name()).build();
 
-      DelegateTask delegateTask = aDelegateTask()
+      DelegateTask delegateTask = DelegateTask.builder()
                                       .async(true)
                                       .accountId(accountId)
                                       .appId(appId)

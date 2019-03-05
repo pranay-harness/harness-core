@@ -2,7 +2,6 @@ package software.wings.service.impl.aws.manager;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.inject.Inject;
 
@@ -49,7 +48,7 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
 
   private AwsResponse executeTask(String accountId, AwsLambdaFunctionRequest request) {
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .taskType(TaskType.AWS_LAMBDA_TASK.name())
             .accountId(accountId)
             .async(false)

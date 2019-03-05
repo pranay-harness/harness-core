@@ -8,7 +8,6 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Base.APP_ID_KEY;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.appmanifest.ManifestFile.APPLICATION_MANIFEST_ID_KEY;
 import static software.wings.beans.appmanifest.ManifestFile.FILE_NAME_KEY;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
@@ -424,7 +423,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         k8sStateHelper.createGitFetchFilesTaskParams(null, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(generateUuid());
 
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(app.getAccountId())
                                     .appId(app.getUuid())
                                     .async(false)

@@ -7,7 +7,6 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -334,7 +333,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     }
 
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .async(true)
             .taskType(TaskType.SCRIPT.name())
             .accountId(executionContext.getApp().getAccountId())

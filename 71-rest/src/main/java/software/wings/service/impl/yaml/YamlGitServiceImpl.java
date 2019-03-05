@@ -14,7 +14,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.GitCommit.STATUS_KEY;
 import static software.wings.beans.GitCommit.YAML_GIT_CONFIG_IDS_KEY;
@@ -525,7 +524,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                       .append(yamlChangeSets.get(yamlChangeSets.size() - 1).getUuid())
                       .toString());
     }
-    DelegateTask delegateTask = aDelegateTask()
+    DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .taskType(TaskType.GIT_COMMAND.name())
                                     .accountId(accountId)
@@ -675,7 +674,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       String waitId = generateUuid();
       GitConfig gitConfig = getGitConfig(yamlGitConfig);
       DelegateTask delegateTask =
-          aDelegateTask()
+          DelegateTask.builder()
               .async(true)
               .taskType(TaskType.GIT_COMMAND.name())
               .accountId(accountId)

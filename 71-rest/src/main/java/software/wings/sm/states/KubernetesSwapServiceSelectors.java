@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.common.Constants.PRIMARY_SERVICE_NAME_EXPRESSION;
@@ -239,7 +238,7 @@ public class KubernetesSwapServiceSelectors extends State {
             .service2(renderedService2)
             .build();
     DelegateTask delegateTask =
-        aDelegateTask()
+        DelegateTask.builder()
             .async(true)
             .accountId(app.getAccountId())
             .appId(app.getUuid())
