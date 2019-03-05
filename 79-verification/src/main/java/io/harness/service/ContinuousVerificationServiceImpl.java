@@ -133,45 +133,50 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .filter(cvConfiguration
             -> cvConfiguration.isEnabled24x7() && getMetricAnalysisStates().contains(cvConfiguration.getStateType()))
         .forEach(cvConfiguration -> {
-          logger.info(
-              "Executing APM data analysis Job for accountId {} and configId {}", accountId, cvConfiguration.getUuid());
-          long lastCVDataCollectionMinute =
-              timeSeriesAnalysisService.getMaxCVCollectionMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
-          if (lastCVDataCollectionMinute <= 0) {
-            logger.info(
-                "For account {} and CV config {} name {} type {} no data has been collected yet. Skipping analysis",
-                cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
-                cvConfiguration.getStateType());
-            return;
-          }
+          try {
+            logger.info("Executing APM data analysis Job for accountId {} and configId {}", accountId,
+                cvConfiguration.getUuid());
+            long lastCVDataCollectionMinute = timeSeriesAnalysisService.getMaxCVCollectionMinute(
+                cvConfiguration.getAppId(), cvConfiguration.getUuid());
+            if (lastCVDataCollectionMinute <= 0) {
+              logger.info(
+                  "For account {} and CV config {} name {} type {} no data has been collected yet. Skipping analysis",
+                  cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
+                  cvConfiguration.getStateType());
+              return;
+            }
 
-          long lastCVAnalysisMinute =
-              timeSeriesAnalysisService.getLastCVAnalysisMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
+            long lastCVAnalysisMinute = timeSeriesAnalysisService.getLastCVAnalysisMinute(
+                cvConfiguration.getAppId(), cvConfiguration.getUuid());
 
-          if (lastCVAnalysisMinute <= 0) {
-            logger.info(
-                "For account {} and CV config {} name {} type {} no analysis has been done yet. This is going to be first analysis",
-                cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
-                cvConfiguration.getStateType());
-          }
+            if (lastCVAnalysisMinute <= 0) {
+              logger.info(
+                  "For account {} and CV config {} name {} type {} no analysis has been done yet. This is going to be first analysis",
+                  cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
+                  cvConfiguration.getStateType());
+            }
 
-          if (lastCVDataCollectionMinute - lastCVAnalysisMinute >= TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL)) {
-            long analysisStartMinute = lastCVAnalysisMinute <= 0
-                ? lastCVDataCollectionMinute - TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL)
-                : lastCVAnalysisMinute;
-            long endMinute = analysisStartMinute + TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL);
+            if (lastCVDataCollectionMinute - lastCVAnalysisMinute >= TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL)) {
+              long analysisStartMinute = lastCVAnalysisMinute <= 0
+                  ? lastCVDataCollectionMinute - TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL)
+                  : lastCVAnalysisMinute;
+              long endMinute = analysisStartMinute + TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL);
 
-            // since analysis startMin is inclusive in LE, we  need to add 1.
-            analysisStartMinute += 1;
+              // since analysis startMin is inclusive in LE, we  need to add 1.
+              analysisStartMinute += 1;
 
-            LearningEngineAnalysisTask learningEngineAnalysisTask =
-                createLearningEngineAnalysisTask(accountId, cvConfiguration, analysisStartMinute, endMinute);
+              LearningEngineAnalysisTask learningEngineAnalysisTask =
+                  createLearningEngineAnalysisTask(accountId, cvConfiguration, analysisStartMinute, endMinute);
 
-            learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+              learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
 
-            logger.info("Triggering Data Analysis for account {} ", accountId);
-            logger.info("Queuing analysis task for state {} config {} with startTime {}",
-                cvConfiguration.getStateType(), cvConfiguration.getUuid(), analysisStartMinute);
+              logger.info("Triggering Data Analysis for account {} ", accountId);
+              logger.info("Queuing analysis task for state {} config {} with startTime {}",
+                  cvConfiguration.getStateType(), cvConfiguration.getUuid(), analysisStartMinute);
+            }
+          } catch (Exception ex) {
+            logger.error("Exception occurred while triggering metric data collection for cvConfig {}",
+                cvConfiguration.getUuid(), ex);
           }
         });
   }
@@ -291,38 +296,44 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .filter(cvConfiguration
             -> cvConfiguration.isEnabled24x7() && getLogAnalysisStates().contains(cvConfiguration.getStateType()))
         .forEach(cvConfiguration -> {
-          LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
-          if (logsCVConfiguration.getBaselineStartMinute() < 0 || logsCVConfiguration.getBaselineEndMinute() < 0) {
-            logger.error("For {} baseline is not set. Skipping collection", logsCVConfiguration.getUuid());
-            return;
-          }
-          final long maxCVCollectionMinute = logAnalysisService.getMaxCVCollectionMinute(
-              logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid());
-
-          long startTime = maxCVCollectionMinute <= 0
-              ? TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute())
-              : TimeUnit.MINUTES.toMillis(maxCVCollectionMinute + 1);
-          long endTime = startTime + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES - 1);
-
-          if (PREDICTIVE.equals(cvConfiguration.getComparisonStrategy())
-              && maxCVCollectionMinute >= logsCVConfiguration.getBaselineEndMinute()) {
-            AnalysisContext analysisContext =
-                wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
-            endTime = startTime + TimeUnit.MINUTES.toMillis(1);
-
-            if (maxCVCollectionMinute
-                >= logsCVConfiguration.getBaselineEndMinute() + analysisContext.getTimeDuration()) {
-              logger.info("collection for {} is done", analysisContext.getStateExecutionId());
+          try {
+            LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
+            if (logsCVConfiguration.getBaselineStartMinute() < 0 || logsCVConfiguration.getBaselineEndMinute() < 0) {
+              logger.error("For {} baseline is not set. Skipping collection", logsCVConfiguration.getUuid());
               return;
             }
-          }
+            final long maxCVCollectionMinute = logAnalysisService.getMaxCVCollectionMinute(
+                logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid());
 
-          if (endTime < TimeUnit.MINUTES.toMillis(endMinute)) {
-            logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
-                cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
-            verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
-                cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
-            totalDataCollectionTasks.getAndIncrement();
+            long startTime = maxCVCollectionMinute <= 0
+                ? TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute())
+                : TimeUnit.MINUTES.toMillis(maxCVCollectionMinute + 1);
+            long endTime = startTime + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES - 1);
+
+            if (PREDICTIVE.equals(cvConfiguration.getComparisonStrategy())
+                && maxCVCollectionMinute >= logsCVConfiguration.getBaselineEndMinute()) {
+              AnalysisContext analysisContext =
+                  wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
+              endTime = startTime + TimeUnit.MINUTES.toMillis(1);
+
+              if (maxCVCollectionMinute
+                  >= logsCVConfiguration.getBaselineEndMinute() + analysisContext.getTimeDuration()) {
+                logger.info("collection for {} is done", analysisContext.getStateExecutionId());
+                return;
+              }
+            }
+
+            if (endTime < TimeUnit.MINUTES.toMillis(endMinute)) {
+              logger.info(
+                  "triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
+                  cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
+              verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
+                  cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
+              totalDataCollectionTasks.getAndIncrement();
+            }
+          } catch (Exception ex) {
+            logger.error(
+                "Exception occurred while triggering datacollection for cvConfig {}", cvConfiguration.getUuid(), ex);
           }
         });
     metricRegistry.recordGaugeValue(DATA_COLLECTION_TASKS_PER_MINUTE, null, totalDataCollectionTasks.get());
