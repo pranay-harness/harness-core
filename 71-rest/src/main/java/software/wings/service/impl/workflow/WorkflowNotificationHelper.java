@@ -280,7 +280,7 @@ public class WorkflowNotificationHelper {
       triggeredBy = triggeredBy.toLowerCase();
     }
     long startTs = Optional.ofNullable(workflowExecution.getStartTs()).orElse(workflowExecution.getCreatedAt());
-    long endTs = Optional.ofNullable(workflowExecution.getEndTs()).orElse(workflowExecution.getLastUpdatedAt());
+    long endTs = Optional.ofNullable(workflowExecution.getEndTs()).orElse(startTs);
 
     if (phaseSubWorkflow != null) {
       StateExecutionInstance stateExecutionInstance = wingsPersistence.createQuery(StateExecutionInstance.class)
