@@ -9,6 +9,7 @@ import com.bertramlabs.plugins.hcl4j.HCLParserException;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
@@ -85,8 +86,8 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
               parsedContents = hclParser.parse(file.getFileContent());
             } catch (HCLParserException e) {
               logger.error("HCL Parser Exception for file [" + file.getFilePath() + "], " + gitConfig, e);
-              throw new WingsException(
-                  ErrorCode.GENERAL_ERROR, "Invalid Terraform File [" + file.getFilePath() + "] : " + e.getMessage());
+              throw new WingsException(ErrorCode.GENERAL_ERROR)
+                  .addParam("message", "Invalid Terraform File [" + file.getFilePath() + "] : " + e.getMessage());
             }
             LinkedHashMap<String, Object> variables = (LinkedHashMap) parsedContents.get("variable");
             if (variables != null) {
@@ -99,9 +100,9 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
         }
       }
       if (!foundTerraformFiles) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR, "No Terraform Files Found");
+        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", "No Terraform Files Found");
       } else if (variablesList.isEmpty()) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR, "No Variables Found");
+        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", "No Variables Found");
       }
       return TerraformInputVariablesTaskResponse.builder()
           .variablesList(new ArrayList<>(variablesList))
@@ -112,7 +113,7 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
       return TerraformInputVariablesTaskResponse.builder()
           .terraformExecutionData(TerraformExecutionData.builder()
                                       .executionStatus(ExecutionStatus.FAILED)
-                                      .errorMessage(e.getMessage())
+                                      .errorMessage(ExceptionUtils.getMessage(e))
                                       .build())
           .build();
     }
