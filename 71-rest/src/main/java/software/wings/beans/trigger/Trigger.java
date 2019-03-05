@@ -6,7 +6,6 @@ import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import lombok.Builder;
@@ -39,7 +38,7 @@ import javax.validation.constraints.NotNull;
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
                                                                                   , @Field("name") }))
 public class Trigger extends Base {
-  @NotEmpty @NaturalKey private String name;
+  @NotEmpty private String name;
   private String description;
   @NotNull private TriggerCondition condition;
   private String pipelineId;

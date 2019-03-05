@@ -5,7 +5,6 @@ import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.validation.Update;
@@ -29,8 +28,8 @@ import java.util.List;
 public class UserInvite extends Base {
   public static final String UUID_KEY = "uuid";
 
-  @NaturalKey private String accountId;
-  @NotEmpty(groups = {Update.class}) @NaturalKey private String email;
+  private String accountId;
+  @NotEmpty(groups = {Update.class}) private String email;
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
   @Transient private List<UserGroup> userGroups = new ArrayList<>();
   private boolean completed;

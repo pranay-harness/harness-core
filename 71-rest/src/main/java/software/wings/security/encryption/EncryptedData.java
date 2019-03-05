@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
@@ -54,7 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class EncryptedData extends Base implements EncryptedRecord {
   public static final String NAME_KEY = "name";
 
-  @NotEmpty @Indexed @NaturalKey private String name;
+  @NotEmpty @Indexed private String name;
 
   @NotEmpty private String encryptionKey;
 
@@ -67,7 +66,7 @@ public class EncryptedData extends Base implements EncryptedRecord {
 
   @NotEmpty @Default private Set<String> parentIds = new HashSet<>();
 
-  @NotEmpty @Indexed @NaturalKey private String accountId;
+  @NotEmpty @Indexed private String accountId;
 
   @Builder.Default private boolean enabled = true;
 

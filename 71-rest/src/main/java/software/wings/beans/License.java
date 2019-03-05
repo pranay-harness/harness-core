@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -16,10 +15,10 @@ import java.util.concurrent.TimeUnit;
 @HarnessExportableEntity
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class License extends Base {
-  @NaturalKey private String name;
+  private String name;
   private List<Entitlement> entitlements;
-  @NaturalKey private boolean isActive;
-  @NaturalKey private long expiryDuration;
+  private boolean isActive;
+  private long expiryDuration;
 
   public static class Entitlement {
     private String operation;

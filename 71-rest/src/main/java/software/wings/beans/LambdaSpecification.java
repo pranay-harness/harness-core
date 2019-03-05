@@ -3,7 +3,6 @@ package software.wings.beans;
 import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,7 +23,7 @@ import javax.validation.Valid;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class LambdaSpecification extends DeploymentSpecification {
-  @NotEmpty @Indexed(options = @IndexOptions(unique = true)) @NaturalKey private String serviceId;
+  @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
   private DefaultSpecification defaults;
   @Valid private List<FunctionSpecification> functions;
 

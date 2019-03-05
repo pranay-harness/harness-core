@@ -3,7 +3,6 @@ package software.wings.beans.security.access;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
@@ -24,10 +23,10 @@ import software.wings.beans.Base;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class Whitelist extends Base {
-  @Indexed @NotEmpty @NaturalKey private String accountId;
+  @Indexed @NotEmpty private String accountId;
   private String description;
-  @NotEmpty @NaturalKey private WhitelistStatus status = WhitelistStatus.ACTIVE;
-  @NotEmpty @NaturalKey private String filter;
+  @NotEmpty private WhitelistStatus status = WhitelistStatus.ACTIVE;
+  @NotEmpty private String filter;
 
   @Builder
   public Whitelist(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

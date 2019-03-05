@@ -3,7 +3,6 @@ package software.wings.verification;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,11 +34,11 @@ public class CVConfiguration extends Base {
   public static final String NAME_KEY = "name";
   public static final String SERVICE_ID_KEY = "serviceId";
 
-  @NotNull @NaturalKey private String name;
-  @NotNull @Indexed @NaturalKey private String accountId;
+  @NotNull private String name;
+  @NotNull @Indexed private String accountId;
   @NotNull private String connectorId;
-  @NotNull @Indexed @NaturalKey private String envId;
-  @NotNull @Indexed @NaturalKey private String serviceId;
+  @NotNull @Indexed private String envId;
+  @NotNull @Indexed private String serviceId;
   @NotNull private StateType stateType;
   @NotNull private AnalysisTolerance analysisTolerance;
   private boolean enabled24x7;

@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 
 /**
@@ -15,13 +14,13 @@ public class EntityVersion extends Base {
 
   public static final Integer INITIAL_VERSION = 1;
 
-  @NaturalKey private EntityType entityType;
+  private EntityType entityType;
   private String entityName;
   private ChangeType changeType;
-  @NaturalKey private String entityUuid;
+  private String entityUuid;
   private String entityParentUuid;
   private String entityData;
-  @NaturalKey private Integer version;
+  private Integer version;
 
   public EntityType getEntityType() {
     return entityType;

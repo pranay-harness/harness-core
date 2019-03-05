@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.encryption.Encrypted;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -38,7 +37,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "kmsConfig", noClassnameStored = true)
 @HarnessExportableEntity
 public class KmsConfig extends Base implements EncryptionConfig {
-  @Attributes(title = "Name", required = true) @NaturalKey private String name;
+  @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "AWS Access Key", required = true) @Encrypted private String accessKey;
 
@@ -50,7 +49,7 @@ public class KmsConfig extends Base implements EncryptionConfig {
 
   private boolean isDefault = true;
 
-  @SchemaIgnore @NotEmpty @NaturalKey private String accountId;
+  @SchemaIgnore @NotEmpty private String accountId;
 
   @SchemaIgnore @Transient private int numOfEncryptedValue;
 

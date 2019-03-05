@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,9 +29,9 @@ public class DelegateSequenceConfig extends Base {
   public static final String SEQUENCE_NUM = "sequenceNum";
   public static final String DELEGATE_TOKEN = "delegateToken";
 
-  @NotEmpty @NaturalKey private String accountId;
-  @NotEmpty @NaturalKey private String hostName;
-  @NotEmpty @NaturalKey private Integer sequenceNum;
+  @NotEmpty private String accountId;
+  @NotEmpty private String hostName;
+  @NotEmpty private Integer sequenceNum;
   @NotEmpty private String delegateToken;
 
   public static final class Builder {

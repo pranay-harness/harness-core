@@ -8,7 +8,6 @@ import static software.wings.yaml.YamlHelper.trimYaml;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import lombok.Data;
@@ -46,7 +45,7 @@ public class Environment extends Base {
   public static final String NAME_KEY = "name";
   public static final String ENVIRONMENT_TYPE_KEY = "environmentType";
 
-  @NotEmpty @EntityName @NaturalKey private String name;
+  @NotEmpty @EntityName private String name;
   private String description;
   private String configMapYaml;
   private String helmValueYaml;

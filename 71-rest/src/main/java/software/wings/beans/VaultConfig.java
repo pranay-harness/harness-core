@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
@@ -43,9 +42,9 @@ import org.mongodb.morphia.annotations.Transient;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "vaultConfig", noClassnameStored = true)
 public class VaultConfig extends Base implements EncryptionConfig {
-  @Attributes(title = "Name", required = true) @NaturalKey private String name;
+  @Attributes(title = "Name", required = true) private String name;
 
-  @Attributes(title = "Vault Url", required = true) @NaturalKey private String vaultUrl;
+  @Attributes(title = "Vault Url", required = true) private String vaultUrl;
 
   @Attributes(title = "Auth token", required = true) private String authToken;
 
@@ -64,7 +63,7 @@ public class VaultConfig extends Base implements EncryptionConfig {
 
   private long renewedAt;
 
-  @SchemaIgnore @NotEmpty @NaturalKey private String accountId;
+  @SchemaIgnore @NotEmpty private String accountId;
 
   @SchemaIgnore @Transient private int numOfEncryptedValue;
 

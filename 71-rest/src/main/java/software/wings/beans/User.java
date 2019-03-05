@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -43,7 +42,7 @@ public class User extends Base implements Principal {
 
   @NotEmpty private String name;
 
-  @Indexed(options = @IndexOptions(unique = true)) @Email @NaturalKey private String email;
+  @Indexed(options = @IndexOptions(unique = true)) @Email private String email;
 
   @JsonIgnore private String passwordHash;
 

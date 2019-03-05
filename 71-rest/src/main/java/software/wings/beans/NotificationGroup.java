@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.notifications.NotificationReceiverInfo;
 import lombok.Builder;
@@ -43,8 +42,8 @@ import javax.validation.constraints.NotNull;
 public class NotificationGroup extends Base implements NotificationReceiverInfo {
   public static final String NAME_KEY = "name";
 
-  @NotEmpty @NaturalKey private String accountId;
-  @NotNull @NaturalKey private String name;
+  @NotEmpty private String accountId;
+  @NotNull private String name;
   private boolean editable = true;
 
   @Override

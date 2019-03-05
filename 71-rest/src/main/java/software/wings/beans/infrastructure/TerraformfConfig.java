@@ -2,7 +2,6 @@ package software.wings.beans.infrastructure;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -28,17 +27,17 @@ public class TerraformfConfig implements PersistentEntity, UuidAware, CreatedAtA
   public static final String APP_ID_KEY = "appId";
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed @NotNull @SchemaIgnore @NaturalKey protected String appId;
+  @Indexed @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore @Indexed private long createdAt;
 
   public static final String ENTITY_ID_KEY = "entityId";
   public static final String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
 
-  @NaturalKey private final String sourceRepoSettingId;
+  private final String sourceRepoSettingId;
   /**
    * This is generally represented by commit SHA in git.
    */
-  @NaturalKey private final String sourceRepoReference;
+  private final String sourceRepoReference;
 
   /**
    * All variables of type TEXT & ENCRYPTED_TEXT.
@@ -49,6 +48,6 @@ public class TerraformfConfig implements PersistentEntity, UuidAware, CreatedAtA
   private final List<String> targets;
   private final TerraformCommand command;
 
-  @Indexed @NaturalKey private final String entityId;
-  @NaturalKey private final String workflowExecutionId;
+  @Indexed private final String entityId;
+  private final String workflowExecutionId;
 }

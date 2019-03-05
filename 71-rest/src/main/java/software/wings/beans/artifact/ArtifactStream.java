@@ -2,7 +2,6 @@ package software.wings.beans.artifact;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.PersistentIterable;
@@ -49,9 +48,9 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   private String artifactStreamType;
   private String sourceName;
   private String settingId;
-  @EntityName @NaturalKey private String name;
+  @EntityName private String name;
   private boolean autoPopulate;
-  @NotEmpty @Indexed @NaturalKey private String serviceId;
+  @NotEmpty @Indexed private String serviceId;
   @Deprecated private transient boolean autoDownload;
   @Deprecated private transient boolean autoApproveForProduction;
   private boolean metadataOnly;

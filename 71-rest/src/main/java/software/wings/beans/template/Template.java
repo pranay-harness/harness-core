@@ -6,7 +6,6 @@ import static java.util.Arrays.asList;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.validation.Create;
@@ -48,10 +47,10 @@ public class Template extends Base {
   public static final String TYPE_KEY = "type";
   public static final String VERSION_KEY = "version";
 
-  @Indexed @NotNull @EntityName(groups = {Create.class, Update.class}) @NaturalKey private String name;
-  @NotEmpty @NaturalKey private String accountId;
+  @Indexed @NotNull @EntityName(groups = {Create.class, Update.class}) private String name;
+  @NotEmpty private String accountId;
   private String type;
-  @Indexed @NaturalKey private String folderId;
+  @Indexed private String folderId;
   Long version;
   private String description;
   private String folderPathId;

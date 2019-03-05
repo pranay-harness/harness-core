@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,9 +19,9 @@ public class Schema extends Base {
   public static final String BACKGROUND_VERSION_KEY = "backgroundVersion";
   public static final String SEED_DATA_VERSION_KEY = "seedDataVersion";
 
-  @NaturalKey private int version;
-  @NaturalKey private int backgroundVersion;
-  @NaturalKey private int seedDataVersion;
+  private int version;
+  private int backgroundVersion;
+  private int seedDataVersion;
 
   public static final class SchemaBuilder {
     private int version;

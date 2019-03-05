@@ -6,7 +6,6 @@ import com.google.common.base.MoreObjects;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -43,10 +42,10 @@ import java.util.Objects;
 public class Application extends Base {
   public static final String NAME_KEY = "name";
 
-  @NotEmpty @NaturalKey private String name;
+  @NotEmpty private String name;
   private String description;
 
-  @NotEmpty @NaturalKey private String accountId;
+  @NotEmpty private String accountId;
 
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<Environment> environments = new ArrayList<>();

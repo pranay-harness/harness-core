@@ -3,7 +3,6 @@ package software.wings.resources;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.dl.exportimport.WingsMongoExportImport.getCollectionName;
-import static software.wings.dl.exportimport.WingsMongoExportImport.getNaturalKeyFields;
 
 import com.google.common.io.Files;
 import com.google.gson.Gson;
@@ -347,7 +346,6 @@ public class AccountExportImportResource {
   public RestResponse<ImportStatusReport> importAccountData(@QueryParam("accountId") final String accountId,
       @QueryParam("mode") @DefaultValue("UPSERT") ImportMode importMode,
       @QueryParam("disableSchemaCheck") boolean disableSchemaCheck,
-      @QueryParam("disableNaturalKeyCheck") @DefaultValue("true") boolean disableNaturalKeyCheck,
       @FormDataParam("file") final InputStream uploadInputStream) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!usageRestrictionsService.isAccountAdmin(accountId)) {
@@ -375,12 +373,8 @@ public class AccountExportImportResource {
     String accountCollectionName = getCollectionName(Account.class);
     JsonArray accounts = getJsonArray(zipEntryDataMap, accountCollectionName);
     if (accounts != null) {
-      String[] naturalKeyFields = null;
-      if (!disableNaturalKeyCheck) {
-        naturalKeyFields = new String[] {"accountName"};
-      }
-      importStatuses.add(mongoExportImport.importRecords(
-          accountCollectionName, convertJsonArrayToStringList(accounts), importMode, naturalKeyFields));
+      importStatuses.add(
+          mongoExportImport.importRecords(accountCollectionName, convertJsonArrayToStringList(accounts), importMode));
     }
 
     // 3. Import users
@@ -389,57 +383,37 @@ public class AccountExportImportResource {
     // Find potential user email clashes and find the mapping of imported user id to existing user id.
     Map<String, String> clashedUserIdMapping = findClashedUserIdMapping(accountId, users);
     if (users != null) {
-      String[] naturalKeyFields = null;
-      if (!disableNaturalKeyCheck) {
-        naturalKeyFields = getNaturalKeyFields(User.class);
-      }
-      importStatuses.add(mongoExportImport.importRecords(
-          userCollectionName, convertJsonArrayToStringList(users), importMode, naturalKeyFields));
+      importStatuses.add(
+          mongoExportImport.importRecords(userCollectionName, convertJsonArrayToStringList(users), importMode));
     }
 
     // 4. Import applications
     String applicationsCollectionName = getCollectionName(Application.class);
     JsonArray applications = getJsonArray(zipEntryDataMap, applicationsCollectionName, clashedUserIdMapping);
     if (applications != null) {
-      String[] naturalKeyFields = null;
-      if (!disableNaturalKeyCheck) {
-        naturalKeyFields = getNaturalKeyFields(Application.class);
-      }
       importStatuses.add(mongoExportImport.importRecords(
-          applicationsCollectionName, convertJsonArrayToStringList(applications), importMode, naturalKeyFields));
+          applicationsCollectionName, convertJsonArrayToStringList(applications), importMode));
     }
 
     // 5. Import all "encryptedRecords", "configs.file" and "configs.chunks" content
     String encryptedDataCollectionName = getCollectionName(EncryptedData.class);
     JsonArray encryptedData = getJsonArray(zipEntryDataMap, encryptedDataCollectionName, clashedUserIdMapping);
     if (encryptedData != null) {
-      String[] naturalKeyFields = null;
-      if (!disableNaturalKeyCheck) {
-        naturalKeyFields = getNaturalKeyFields(EncryptedData.class);
-      }
       importStatuses.add(mongoExportImport.importRecords(
-          encryptedDataCollectionName, convertJsonArrayToStringList(encryptedData), importMode, naturalKeyFields));
+          encryptedDataCollectionName, convertJsonArrayToStringList(encryptedData), importMode));
     }
     JsonArray configFiles = getJsonArray(zipEntryDataMap, COLLECTION_CONFIG_FILES);
     if (configFiles != null) {
-      String[] naturalKeyFields = null;
-      if (!disableNaturalKeyCheck) {
-        naturalKeyFields = new String[] {"_id"};
-      }
       ImportStatus importStatus = mongoExportImport.importRecords(
-          COLLECTION_CONFIG_FILES, convertJsonArrayToStringList(configFiles), importMode, naturalKeyFields);
+          COLLECTION_CONFIG_FILES, convertJsonArrayToStringList(configFiles), importMode);
       if (importStatus != null) {
         importStatuses.add(importStatus);
       }
     }
     JsonArray configChunks = getJsonArray(zipEntryDataMap, COLLECTION_CONFIG_CHUNKS);
     if (configChunks != null) {
-      String[] naturalKeyFields = null;
-      if (!disableNaturalKeyCheck) {
-        naturalKeyFields = new String[] {"files_id", "n"};
-      }
       ImportStatus importStatus = mongoExportImport.importRecords(
-          COLLECTION_CONFIG_CHUNKS, convertJsonArrayToStringList(configChunks), importMode, naturalKeyFields);
+          COLLECTION_CONFIG_CHUNKS, convertJsonArrayToStringList(configChunks), importMode);
       if (importStatus != null) {
         importStatuses.add(importStatus);
       }
@@ -452,12 +426,8 @@ public class AccountExportImportResource {
       if (jsonArray == null) {
         log.info("No data found for collection '{}' to import.", collectionName);
       } else {
-        String[] naturalKeyFields = null;
-        if (!disableNaturalKeyCheck) {
-          naturalKeyFields = getNaturalKeyFields(entry.getValue());
-        }
-        ImportStatus importStatus = mongoExportImport.importRecords(
-            collectionName, convertJsonArrayToStringList(jsonArray), importMode, naturalKeyFields);
+        ImportStatus importStatus =
+            mongoExportImport.importRecords(collectionName, convertJsonArrayToStringList(jsonArray), importMode);
         if (importStatus != null) {
           importStatuses.add(importStatus);
         }

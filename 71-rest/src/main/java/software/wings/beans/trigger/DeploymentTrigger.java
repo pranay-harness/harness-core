@@ -1,7 +1,6 @@
 package software.wings.beans.trigger;
 
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
@@ -32,10 +31,10 @@ import javax.validation.constraints.NotNull;
                                                                                   , @Field("name") }))
 @HarnessExportableEntity
 public class DeploymentTrigger extends Base {
-  @EntityName @NotEmpty @Trimmed @NaturalKey private String name;
+  @EntityName @NotEmpty @Trimmed private String name;
   private String description;
-  @NotEmpty @NaturalKey private String workflowId;
-  @NaturalKey private String workflowName;
+  @NotEmpty private String workflowId;
+  private String workflowName;
   @NotNull private WorkflowType workflowType;
   @NotNull private Condition condition;
 

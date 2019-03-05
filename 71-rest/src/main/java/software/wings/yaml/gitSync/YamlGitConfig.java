@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -59,10 +58,10 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
   private boolean enabled;
   private String webhookToken;
 
-  @SchemaIgnore @NotEmpty @NaturalKey private String accountId;
+  @SchemaIgnore @NotEmpty private String accountId;
 
-  @NotEmpty @NaturalKey private String entityId;
-  @NotNull @NaturalKey private EntityType entityType;
+  @NotEmpty private String entityId;
+  @NotNull private EntityType entityType;
 
   @Override
   public SettingVariableTypes getSettingType() {

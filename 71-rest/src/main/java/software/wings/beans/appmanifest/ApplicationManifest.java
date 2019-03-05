@@ -1,7 +1,6 @@
 package software.wings.beans.appmanifest;
 
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,9 +28,9 @@ public class ApplicationManifest extends Base {
   public static final String ENV_ID_KEY = "envId";
   public static final String KIND_KEY = "kind";
 
-  @NaturalKey private String serviceId;
-  @NaturalKey private String envId;
-  @NaturalKey private AppManifestKind kind;
+  private String serviceId;
+  private String envId;
+  private AppManifestKind kind;
   @NonNull StoreType storeType;
   GitFileConfig gitFileConfig;
 

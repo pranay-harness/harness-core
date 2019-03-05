@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,8 +18,8 @@ import org.mongodb.morphia.annotations.Entity;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class DelegateProfile extends Base {
-  @NotEmpty @NaturalKey private String accountId;
-  @NotEmpty @NaturalKey private String name;
+  @NotEmpty private String accountId;
+  @NotEmpty private String name;
   private String description;
   private String startupScript;
 }

@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
-import io.harness.annotation.NaturalKey;
 import io.harness.beans.EmbeddedUser;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
@@ -66,9 +65,9 @@ public class StateMachine extends Base {
   public static final String ORIGIN_ID_KEY = "originId";
   public static final String ORIGIN_VERSION_KEY = "originVersion";
 
-  @Indexed @NaturalKey private String originId;
+  @Indexed private String originId;
 
-  @NaturalKey private Integer originVersion;
+  private Integer originVersion;
 
   private String name;
 
