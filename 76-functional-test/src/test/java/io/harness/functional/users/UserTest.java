@@ -110,32 +110,37 @@ public class UserTest extends AbstractFunctionalTest {
 
   @Test()
   @Category(FunctionalTests.class)
-  @Owner(emails = "swamy@harness.io", intermittent = true)
+  @Owner(emails = "swamy@harness.io")
   public void testUserInvite() throws IOException, MessagingException {
     Account account = this.getAccount();
     String domainName = "@swamy-harness.mailinator.com";
-    String emailId = testUtils.generateRandomString(8);
+    String emailId = testUtils.generateUniqueInboxId();
     List<UserInvite> userInvitationList = urUtil.inviteUser(account, emailId + domainName);
     assertNotNull(userInvitationList);
     assertTrue(userInvitationList.size() == 1);
     // Verify if email is sent, received and has signup link
     // Email check will run every 6 seconds upto 2 mins to see if email is delivered.
+    logger.info("Attempting to retrieve signup mail from inbox");
     MailinatorMetaMessage message = mailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_SUBJECT);
+    logger.info("Signup mail retrieved");
+    logger.info("Reading the retrieved email");
     String emailFetchId = message.getId();
     MailinatorMessageDetails messageDetails = mailinatorRestUtils.readEmail(emailId, emailFetchId);
     assertNotNull(messageDetails);
     String inviteUrl = htmlUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody());
     assertNotNull(inviteUrl);
     assertTrue(StringUtils.isNotBlank(inviteUrl));
-    logger.info("Successfully completed signup email delivery test");
+    logger.info("Email read and Signup URL is available for user signup");
 
     messageDetails = null;
     messageDetails = mailinatorRestUtils.deleteEmail(emailId, emailFetchId);
+    logger.info("Email deleted for the inbox : " + emailId);
     assertNotNull(messageDetails.getAdditionalProperties());
     assertNotNull(messageDetails.getAdditionalProperties().containsKey("status"));
     assertTrue(messageDetails.getAdditionalProperties().get("status").toString().equals("ok"));
 
     // Complete registration using the API
+    logger.info("Entering user invite validation");
     UserInvite incomplete = userInvitationList.get(0);
     UserInvite completed = urUtil.completeUserRegistration(account, incomplete);
     assertNotNull(completed);
@@ -151,6 +156,6 @@ public class UserTest extends AbstractFunctionalTest {
     assertNotNull("Bearer Token not successfully provided", bearerToken);
     int statusCode = Setup.signOut(completed.getUuid(), bearerToken);
     assertTrue(statusCode == HttpStatus.SC_OK);
-    logger.info("Successfully completed user registration email");
+    logger.info("All validation completed");
   }
 }

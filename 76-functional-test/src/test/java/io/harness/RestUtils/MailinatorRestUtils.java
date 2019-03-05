@@ -1,18 +1,23 @@
 package io.harness.RestUtils;
 
+import static org.junit.Assert.assertNotNull;
+
 import io.harness.framework.Retry;
 import io.harness.framework.Setup;
 import io.harness.framework.email.mailinator.MailinatorInbox;
 import io.harness.framework.email.mailinator.MailinatorMessageDetails;
 import io.harness.framework.email.mailinator.MailinatorMetaMessage;
 import io.harness.framework.matchers.MailinatorEmailMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class MailinatorRestUtils {
-  final int MAX_RETRIES = 20;
+  final int MAX_RETRIES = 40;
   final int DELAY_IN_MS = 6000;
   final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
+  private static final Logger logger = LoggerFactory.getLogger(MailinatorRestUtils.class);
 
   public MailinatorInbox retrieveInbox(String inboxName) {
     MailinatorInbox inbox = Setup.mailinator().queryParam("to", inboxName).get("/inbox").as(MailinatorInbox.class);
@@ -44,6 +49,7 @@ public class MailinatorRestUtils {
   public MailinatorMetaMessage retrieveMessageFromInbox(String inboxName, final String EXPECTED_SUBJECT) {
     MailinatorInbox inbox = (MailinatorInbox) retry.executeWithRetry(
         () -> retrieveInbox(inboxName), new MailinatorEmailMatcher<>(), EXPECTED_SUBJECT);
+    assertNotNull("All retries failed: Unable to retrieve message for : " + inboxName, inbox.getMessages());
     List<MailinatorMetaMessage> messages = inbox.getMessages();
     MailinatorMetaMessage messageToReturn[] = new MailinatorMetaMessage[1];
     messages.forEach(message -> {
@@ -51,6 +57,7 @@ public class MailinatorRestUtils {
         messageToReturn[0] = message;
       }
     });
+    logger.info("Message successfully retrieved from inbox");
     return messageToReturn[0];
   }
 }
