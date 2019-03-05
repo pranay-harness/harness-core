@@ -128,26 +128,23 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
 
   @Override
   public void updateResetDuration(T message) {
-    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
-
-    Objects.requireNonNull(message);
-
-    Query<T> query = createQuery()
-                         .filter("_id", message.getId())
-                         .field(Queuable.RESET_TIMESTAMP_KEY)
-                         .greaterThan(new Date())
-                         .filter(Queuable.RUNNING_KEY, true);
-
     Date resetTimestamp = new Date(System.currentTimeMillis() + resetDurationMillis());
 
-    UpdateOperations<T> updateOperations =
-        datastore.createUpdateOperations(klass).set("resetTimestamp", resetTimestamp);
+    Query<T> query = persistence.createQuery(klass)
+                         .filter(Queuable.ID_KEY, message.getId())
+                         .field(Queuable.RESET_TIMESTAMP_KEY)
+                         .lessThan(resetTimestamp)
+                         .filter(Queuable.RUNNING_KEY, true);
 
-    if (datastore.findAndModify(query, updateOperations) != null) {
+    UpdateOperations<T> updateOperations =
+        persistence.createUpdateOperations(klass).set(Queuable.RESET_TIMESTAMP_KEY, resetTimestamp);
+
+    if (persistence.findAndModify(query, updateOperations, HPersistence.returnOldOptions) != null) {
       message.setResetTimestamp(resetTimestamp);
-    } else {
-      logger.error("Reset duration failed");
+      return;
     }
+    final T currentState = persistence.createQuery(klass).filter(Queuable.ID_KEY, message.getId()).get();
+    logger.error("Reset duration failed for {}", currentState.toString());
   }
 
   @Override
@@ -172,10 +169,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   @Override
   public void ack(final T message) {
     Objects.requireNonNull(message);
-    String id = message.getId();
-
-    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
-    HPersistence.retry(() -> datastore.delete(klass, id));
+    persistence.delete(klass, message.getId());
   }
 
   @Override
@@ -211,8 +205,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
 
   @Override
   public String name() {
-    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
-    return datastore.getCollection(klass).getName();
+    return persistence.getCollection(klass, ReadPref.CRITICAL).getName();
   }
 
   /**
@@ -226,9 +219,10 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   }
 
   private Query<T> createQuery() {
-    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
-    return filterWithVersion
-        ? datastore.createQuery(klass).filter(Queuable.VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
-        : datastore.createQuery(klass);
+    final Query<T> query = persistence.createQuery(klass, ReadPref.CRITICAL);
+    if (filterWithVersion) {
+      query.filter(Queuable.VERSION_KEY, versionInfoManager.getVersionInfo().getVersion());
+    }
+    return query;
   }
 }

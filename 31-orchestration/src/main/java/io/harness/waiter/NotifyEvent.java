@@ -4,11 +4,13 @@ import com.google.common.base.MoreObjects;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.queue.Queuable;
+import lombok.Data;
 import org.mongodb.morphia.annotations.Entity;
 
 import java.util.Date;
 import java.util.List;
 
+@Data
 @Entity(value = "notifyQueue", noClassnameStored = true)
 public class NotifyEvent extends Queuable {
   private String waitInstanceId;
@@ -16,65 +18,6 @@ public class NotifyEvent extends Queuable {
   private List<String> correlationIds;
 
   private boolean error;
-
-  /**
-   * Instantiates a new notify event.
-   */
-  public NotifyEvent() {}
-
-  /**
-   * Gets wait instance id.
-   *
-   * @return the wait instance id
-   */
-  public String getWaitInstanceId() {
-    return waitInstanceId;
-  }
-
-  /**
-   * Sets wait instance id.
-   *
-   * @param waitInstanceId the wait instance id
-   */
-  public void setWaitInstanceId(String waitInstanceId) {
-    this.waitInstanceId = waitInstanceId;
-  }
-
-  /**
-   * Gets correlation ids.
-   *
-   * @return the correlation ids
-   */
-  public List<String> getCorrelationIds() {
-    return correlationIds;
-  }
-
-  /**
-   * Sets correlation ids.
-   *
-   * @param correlationIds the correlation ids
-   */
-  public void setCorrelationIds(List<String> correlationIds) {
-    this.correlationIds = correlationIds;
-  }
-
-  /**
-   * Getter for property 'error'.
-   *
-   * @return Value for property 'error'.
-   */
-  public boolean isError() {
-    return error;
-  }
-
-  /**
-   * Setter for property 'error'.
-   *
-   * @param error Value to set for property 'error'.
-   */
-  public void setError(boolean error) {
-    this.error = error;
-  }
 
   /* (non-Javadoc)
    * @see java.lang.Object#toString()
@@ -106,71 +49,71 @@ public class NotifyEvent extends Queuable {
       return new Builder();
     }
 
-    public Builder withWaitInstanceId(String waitInstanceId) {
+    public Builder waitInstanceId(String waitInstanceId) {
       this.waitInstanceId = waitInstanceId;
       return this;
     }
 
-    public Builder withCorrelationIds(List<String> correlationIds) {
+    public Builder correlationIds(List<String> correlationIds) {
       this.correlationIds = correlationIds;
       return this;
     }
 
-    public Builder withError(boolean error) {
+    public Builder error(boolean error) {
       this.error = error;
       return this;
     }
 
-    public Builder withId(String id) {
+    public Builder id(String id) {
       this.id = id;
       return this;
     }
 
-    public Builder withRunning(boolean running) {
+    public Builder running(boolean running) {
       this.running = running;
       return this;
     }
 
     @SuppressFBWarnings("EI_EXPOSE_REP2")
-    public Builder withResetTimestamp(Date resetTimestamp) {
+    public Builder resetTimestamp(Date resetTimestamp) {
       this.resetTimestamp = resetTimestamp;
       return this;
     }
 
     @SuppressFBWarnings("EI_EXPOSE_REP2")
-    public Builder withEarliestGet(Date earliestGet) {
+    public Builder earliestGet(Date earliestGet) {
       this.earliestGet = earliestGet;
       return this;
     }
 
-    public Builder withPriority(double priority) {
+    public Builder priority(double priority) {
       this.priority = priority;
       return this;
     }
 
     @SuppressFBWarnings("EI_EXPOSE_REP2")
-    public Builder withCreated(Date created) {
+    public Builder created(Date created) {
       this.created = created;
       return this;
     }
 
-    public Builder withRetries(int retries) {
+    public Builder retries(int retries) {
       this.retries = retries;
       return this;
     }
 
     public Builder but() {
       return aNotifyEvent()
-          .withWaitInstanceId(waitInstanceId)
-          .withCorrelationIds(correlationIds)
-          .withError(error)
-          .withId(id)
-          .withRunning(running)
-          .withResetTimestamp(resetTimestamp)
-          .withEarliestGet(earliestGet)
-          .withPriority(priority)
-          .withCreated(created)
-          .withRetries(retries);
+          .waitInstanceId(waitInstanceId)
+          .correlationIds(correlationIds)
+          .error(error)
+          .id(id)
+          .running(running)
+          .resetTimestamp(resetTimestamp)
+          .earliestGet(earliestGet)
+          .priority(priority)
+          .created(created)
+          .retries(retries);
     }
 
     public NotifyEvent build() {

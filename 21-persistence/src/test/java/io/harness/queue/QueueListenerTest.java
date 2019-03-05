@@ -170,7 +170,7 @@ public class QueueListenerTest extends PersistenceTest {
 
       listener.run();
 
-      assertThat(queue.count(Filter.ALL)).isEqualTo(1);
+      assertThat(queue.count(Filter.ALL)).isEqualTo(0);
       verify(listener).onMessage(message);
       verify(listener).onException(any(Exception.class), eq(message));
     }

@@ -256,6 +256,9 @@ public interface HPersistence {
    */
   <T extends PersistentEntity> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
 
+  FindAndModifyOptions returnNewOptions = new FindAndModifyOptions().upsert(false).returnNew(true);
+  FindAndModifyOptions returnOldOptions = new FindAndModifyOptions().upsert(false).returnNew(false);
+
   /**
    * Find and modify.
    *
