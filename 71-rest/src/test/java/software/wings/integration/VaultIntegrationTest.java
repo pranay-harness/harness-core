@@ -19,6 +19,7 @@ import io.harness.rest.RestResponse;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
+import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
@@ -32,13 +33,18 @@ import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.SecretText;
+import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
+import java.util.Base64;
 import java.util.List;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -158,19 +164,41 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  public void testCreateKmsVaultConfig_shouldSucceed() {
-    // 1. Create a new KMS config.
+  public void testUpdateKmsSecretText_shouldSucceed() {
     String kmsConfigId = createKmsConfig(kmsConfig);
+    KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
+    assertNotNull(savedKmsConfig);
 
-    // 2. Create a new Vault config.
+    try {
+      testUpdateSecretText(savedKmsConfig);
+    } finally {
+      deleteKmsConfig(kmsConfigId);
+    }
+  }
+
+  @Test
+  public void testUpdateKmsEncryptedSeretFile_withNoContent_shouldNot_UpdateFileContent() throws IOException {
+    String kmsConfigId = createKmsConfig(kmsConfig);
+    KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
+    assertNotNull(savedKmsConfig);
+
+    try {
+      testUpdateEncryptedFile(savedKmsConfig);
+    } finally {
+      deleteKmsConfig(kmsConfigId);
+    }
+  }
+
+  @Test
+  public void testUpdateVaultEncryptedSeretFile_withNoContent_shouldNot_UpdateFileContent() throws IOException {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
     assertNotNull(savedVaultConfig);
 
     try {
-      testUpdateSecretText(savedVaultConfig);
+      testUpdateEncryptedFile(savedVaultConfig);
     } finally {
-      deleteKmsConfig(kmsConfigId);
+      deleteVaultConfig(vaultConfigId);
     }
   }
 
@@ -294,6 +322,48 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertNotNull(savedVaultConfig);
 
     testUpdateSecretText(savedVaultConfig);
+  }
+
+  private void testUpdateEncryptedFile(KmsConfig savedKmsConfig) throws IOException {
+    String secretUuid = null;
+    try {
+      secretUuid = createEncryptedFile("FooBarEncryptedFile", "configfiles/config1.txt");
+      updateEncryptedFileWithNoContent("FooBarEncryptedFile", secretUuid);
+      verifyEncryptedFileValue(secretUuid, "Config file 1", savedKmsConfig);
+    } finally {
+      // Clean up.
+      if (secretUuid != null) {
+        deleteEncryptedFile(secretUuid);
+      }
+    }
+  }
+
+  private void testUpdateEncryptedFile(VaultConfig savedVaultConfig) throws IOException {
+    String secretUuid = null;
+    try {
+      secretUuid = createEncryptedFile("FooBarEncryptedFile", "configfiles/config1.txt");
+      updateEncryptedFileWithNoContent("FooBarEncryptedFile", secretUuid);
+      verifyEncryptedFileValue(secretUuid, "Config file 1", savedVaultConfig);
+    } finally {
+      // Clean up.
+      if (secretUuid != null) {
+        deleteEncryptedFile(secretUuid);
+      }
+    }
+  }
+
+  private void testUpdateSecretText(KmsConfig savedKmsConfig) {
+    String secretUuid = null;
+    try {
+      secretUuid = createSecretText("FooBarSecret", "MySecretValue", null);
+      updateSecretText(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", null);
+      verifySecretValue(secretUuid, "MySecretValue_Modified", kmsConfig);
+    } finally {
+      // Clean up.
+      if (secretUuid != null) {
+        deleteSecretText(secretUuid);
+      }
+    }
   }
 
   private void testUpdateSecretText(VaultConfig savedVaultConfig) {
@@ -462,6 +532,44 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     }
   }
 
+  private String createEncryptedFile(String name, String fileName) {
+    File fileToImport = new File(getClass().getClassLoader().getResource(fileName).getFile());
+
+    MultiPart multiPart = new MultiPart();
+    FormDataBodyPart filePart = new FormDataBodyPart("file", fileToImport, MediaType.MULTIPART_FORM_DATA_TYPE);
+    FormDataBodyPart namePart = new FormDataBodyPart("name", name, MediaType.MULTIPART_FORM_DATA_TYPE);
+    multiPart.bodyPart(filePart);
+    multiPart.bodyPart(namePart);
+
+    WebTarget target = client.target(API_BASE + "/secrets/add-file?accountId=" + accountId);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), new GenericType<RestResponse<String>>() {});
+    // Verify vault config was successfully created.
+    assertEquals(0, restResponse.getResponseMessages().size());
+    String encryptedDataId = restResponse.getResource();
+    assertTrue(isNotEmpty(encryptedDataId));
+
+    return encryptedDataId;
+  }
+
+  private String updateEncryptedFileWithNoContent(String name, String uuid) {
+    MultiPart multiPart = new MultiPart();
+    FormDataBodyPart uuidPart = new FormDataBodyPart("uuid", uuid, MediaType.MULTIPART_FORM_DATA_TYPE);
+    FormDataBodyPart namePart = new FormDataBodyPart("name", name, MediaType.MULTIPART_FORM_DATA_TYPE);
+    multiPart.bodyPart(uuidPart);
+    multiPart.bodyPart(namePart);
+
+    WebTarget target = client.target(API_BASE + "/secrets/update-file?accountId=" + accountId);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), new GenericType<RestResponse<String>>() {});
+    // Verify vault config was successfully created.
+    assertEquals(0, restResponse.getResponseMessages().size());
+    String encryptedDataId = restResponse.getResource();
+    assertTrue(isNotEmpty(encryptedDataId));
+
+    return encryptedDataId;
+  }
+
   private String createSecretText(String name, String value, String path) {
     WebTarget target = client.target(API_BASE + "/secrets/add-secret?accountId=" + accountId);
     SecretText secretText = SecretText.builder().name(name).value(value).path(path).build();
@@ -499,6 +607,16 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify vault config was successfully created.
     assertEquals(0, restResponse.getResponseMessages().size());
     assertNotNull(restResponse.getResource());
+  }
+
+  private void deleteEncryptedFile(String uuid) {
+    WebTarget target = client.target(API_BASE + "/secrets/delete-file?accountId=" + accountId + "&uuid=" + uuid);
+    RestResponse<Boolean> restResponse =
+        getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
+    // Verify vault config was successfully created.
+    assertEquals(0, restResponse.getResponseMessages().size());
+    Boolean deleted = restResponse.getResource();
+    assertTrue(deleted);
   }
 
   private void deleteSecretText(String uuid) {
@@ -570,7 +688,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     // Verify the vault config was deleted successfully
     assertEquals(0, deleteRestResponse.getResponseMessages().size());
     assertTrue(Boolean.valueOf(deleteRestResponse.getResource()));
-    assertNull(wingsPersistence.get(VaultConfig.class, kmsConfigId));
+    assertNull(wingsPersistence.get(KmsConfig.class, kmsConfigId));
   }
 
   private void verifySecretValue(String secretUuid, String expectedValue, VaultConfig vaultConfig) {
@@ -581,6 +699,49 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     char[] decrypted = secretManagementDelegateService.decrypt(encryptedData, vaultConfig);
     assertTrue(isNotEmpty(decrypted));
     assertEquals(expectedValue, new String(decrypted));
+  }
+
+  private void verifySecretValue(String secretUuid, String expectedValue, KmsConfig kmsConfig) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretUuid);
+    assertNotNull(encryptedData);
+
+    char[] decrypted = secretManagementDelegateService.decrypt(encryptedData, kmsConfig);
+    assertTrue(isNotEmpty(decrypted));
+    assertEquals(expectedValue, new String(decrypted));
+  }
+
+  private void verifyEncryptedFileValue(String encryptedFileUuid, String expectedValue, VaultConfig savedVaultConfig)
+      throws IOException {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFileUuid);
+    assertNotNull(encryptedData);
+
+    savedVaultConfig.setAuthToken(vaultConfig.getAuthToken());
+    char[] decrypted = secretManagementDelegateService.decrypt(encryptedData, savedVaultConfig);
+    String retrievedFileValue = encryptedData.isBase64Encoded()
+        ? new String(Base64.getDecoder().decode(new String(decrypted)))
+        : new String(decrypted);
+    assertTrue(isNotEmpty(decrypted));
+    assertEquals(expectedValue, retrievedFileValue);
+  }
+
+  private void verifyEncryptedFileValue(String encryptedFileUuid, String expectedValue, KmsConfig savedKmsConfig)
+      throws IOException {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFileUuid);
+    assertNotNull(encryptedData);
+    String fileId = new String(encryptedData.getEncryptedValue());
+    InputStream inputStream = fileService.openDownloadStream(fileId, FileBucket.CONFIGS);
+    char[] fileContent = IOUtils.toString(inputStream, Charset.defaultCharset()).toCharArray();
+    encryptedData.setEncryptedValue(fileContent);
+
+    savedKmsConfig.setAccessKey(kmsConfig.getAccessKey());
+    savedKmsConfig.setKmsArn(kmsConfig.getKmsArn());
+    savedKmsConfig.setSecretKey(kmsConfig.getSecretKey());
+    char[] decrypted = secretManagementDelegateService.decrypt(encryptedData, savedKmsConfig);
+    String retrievedFileValue = encryptedData.isBase64Encoded()
+        ? new String(Base64.getDecoder().decode(new String(decrypted)))
+        : new String(decrypted);
+    assertTrue(isNotEmpty(decrypted));
+    assertEquals(expectedValue, retrievedFileValue);
   }
 
   private void verifySecretTextExists(String secretName) {

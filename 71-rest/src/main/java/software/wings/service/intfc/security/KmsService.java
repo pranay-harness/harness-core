@@ -1,6 +1,5 @@
 package software.wings.service.intfc.security;
 
-import io.harness.stream.BoundedInputStream;
 import software.wings.beans.KmsConfig;
 import software.wings.security.encryption.EncryptedData;
 
@@ -28,7 +27,7 @@ public interface KmsService {
 
   Collection<KmsConfig> listKmsConfigs(String accountId, boolean maskSecret);
 
-  EncryptedData encryptFile(String accountId, KmsConfig kmsConfig, String name, BoundedInputStream inputStream);
+  EncryptedData encryptFile(String accountId, KmsConfig kmsConfig, String name, byte[] inputBytes);
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
 

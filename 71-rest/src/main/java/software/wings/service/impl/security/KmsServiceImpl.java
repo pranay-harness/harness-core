@@ -15,7 +15,6 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,7 +24,6 @@ import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.stream.BoundedInputStream;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
@@ -299,28 +297,24 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   @Override
-  public EncryptedData encryptFile(String accountId, KmsConfig kmsConfig, String name, BoundedInputStream inputStream) {
-    try {
-      Preconditions.checkNotNull(kmsConfig);
-      byte[] bytes = encodeBase64ToByteArray(ByteStreams.toByteArray(inputStream));
-      EncryptedData fileData = encrypt(CHARSET.decode(ByteBuffer.wrap(bytes)).array(), accountId, kmsConfig);
-      fileData.setName(name);
-      fileData.setAccountId(accountId);
-      fileData.setType(SettingVariableTypes.CONFIG_FILE);
-      fileData.setBase64Encoded(true);
-      char[] encryptedValue = fileData.getEncryptedValue();
-      BaseFile baseFile = new BaseFile();
-      baseFile.setFileName(name);
-      baseFile.setAccountId(accountId);
-      baseFile.setFileUuid(UUIDGenerator.generateUuid());
-      String fileId = fileService.saveFile(
-          baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedValue)).array()), CONFIGS);
-      fileData.setEncryptedValue(fileId.toCharArray());
-      fileData.setFileSize(inputStream.getTotalBytesRead());
-      return fileData;
-    } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
-    }
+  public EncryptedData encryptFile(String accountId, KmsConfig kmsConfig, String name, byte[] inputBytes) {
+    Preconditions.checkNotNull(kmsConfig);
+    byte[] bytes = encodeBase64ToByteArray(inputBytes);
+    EncryptedData fileData = encrypt(CHARSET.decode(ByteBuffer.wrap(bytes)).array(), accountId, kmsConfig);
+    fileData.setName(name);
+    fileData.setAccountId(accountId);
+    fileData.setType(SettingVariableTypes.CONFIG_FILE);
+    fileData.setBase64Encoded(true);
+    char[] encryptedValue = fileData.getEncryptedValue();
+    BaseFile baseFile = new BaseFile();
+    baseFile.setFileName(name);
+    baseFile.setAccountId(accountId);
+    baseFile.setFileUuid(UUIDGenerator.generateUuid());
+    String fileId = fileService.saveFile(
+        baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedValue)).array()), CONFIGS);
+    fileData.setEncryptedValue(fileId.toCharArray());
+    fileData.setFileSize(inputBytes.length);
+    return fileData;
   }
 
   @Override

@@ -1,6 +1,5 @@
 package software.wings.service.intfc.security;
 
-import io.harness.stream.BoundedInputStream;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
@@ -35,8 +34,8 @@ public interface VaultService {
 
   void renewTokens(String accountId);
 
-  EncryptedData encryptFile(String accountId, VaultConfig vaultConfig, String name, BoundedInputStream inputStream,
-      EncryptedData savedEncryptedData);
+  EncryptedData encryptFile(
+      String accountId, VaultConfig vaultConfig, String name, byte[] inputBytes, EncryptedData savedEncryptedData);
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
 
