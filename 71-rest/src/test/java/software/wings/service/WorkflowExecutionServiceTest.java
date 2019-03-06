@@ -21,7 +21,6 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
@@ -272,10 +271,14 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(query.fetch()).thenReturn(executionIterator);
     when(executionIterator.getCursor()).thenReturn(dbCursor);
     WorkflowExecution workflowExecution1 =
-        aWorkflowExecution().appId(APP_ID).appName(APP_NAME).envType(PROD).status(SUCCESS).build();
+        WorkflowExecution.builder().appId(APP_ID).appName(APP_NAME).envType(PROD).status(SUCCESS).build();
 
-    WorkflowExecution workflowExecution2 =
-        aWorkflowExecution().appId(APP_ID).appName(APP_NAME).envType(NON_PROD).status(ExecutionStatus.FAILED).build();
+    WorkflowExecution workflowExecution2 = WorkflowExecution.builder()
+                                               .appId(APP_ID)
+                                               .appName(APP_NAME)
+                                               .envType(NON_PROD)
+                                               .status(ExecutionStatus.FAILED)
+                                               .build();
 
     when(executionIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
 
@@ -291,7 +294,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Test
   public void shouldFetchWorkflowExecution() {
     when(query.order(Sort.descending(anyString()))).thenReturn(query);
-    when(query.get(any(FindOptions.class))).thenReturn(aWorkflowExecution().appId(APP_ID).build());
+    when(query.get(any(FindOptions.class))).thenReturn(WorkflowExecution.builder().appId(APP_ID).build());
     WorkflowExecution workflowExecution =
         workflowExecutionService.fetchWorkflowExecution(APP_ID, asList(SERVICE_ID), asList(ENV_ID), WORKFLOW_ID);
     assertThat(workflowExecution).isNotNull();
@@ -526,7 +529,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   private WorkflowExecution createNewWorkflowExecution() {
-    return aWorkflowExecution()
+    return WorkflowExecution.builder()
         .appId(APP_ID)
         .appName(APP_NAME)
         .envType(NON_PROD)

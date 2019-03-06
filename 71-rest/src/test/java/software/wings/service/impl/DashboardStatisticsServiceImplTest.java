@@ -12,7 +12,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_1_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_2_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_1_ID;
@@ -466,7 +465,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                                             .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
                                             .build()));
 
-      WorkflowExecution workflowExecution = aWorkflowExecution()
+      WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                                 .pipelineSummary(pipelineSummary)
                                                 .executionArgs(executionArgs)
                                                 .appId(APP_1_ID)

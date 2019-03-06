@@ -21,7 +21,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -76,6 +75,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
@@ -221,7 +221,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     setInternalState(pcfRouteSwapState, "pcfStateHelper", new PcfStateHelper());
     setInternalState(pcfSwitchBlueGreenRoutes, "pcfStateHelper", new PcfStateHelper());
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
-        .thenReturn(aWorkflowExecution().build());
+        .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);

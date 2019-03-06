@@ -7,7 +7,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -26,6 +25,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.User;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
@@ -98,7 +98,7 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
     user = new User();
 
     wingsPersistence.save(Application.Builder.anApplication().withUuid(appId).withAccountId(accountId).build());
-    wingsPersistence.save(aWorkflowExecution()
+    wingsPersistence.save(WorkflowExecution.builder()
                               .appId(appId)
                               .workflowId(workflowId)
                               .uuid(workflowExecutionId)

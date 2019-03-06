@@ -23,7 +23,6 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -72,6 +71,7 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.VariableProcessor;
@@ -206,7 +206,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, OBTAIN_VALUE))
         .thenReturn(emptyList());
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
-        .thenReturn(aWorkflowExecution().build());
+        .thenReturn(WorkflowExecution.builder().build());
     when(containerDeploymentHelper.getContainerServiceParams(any(), any(), any()))
         .thenReturn(ContainerServiceParams.builder().build());
     when(artifactCollectionUtil.fetchContainerImageDetails(any(), anyString(), any()))

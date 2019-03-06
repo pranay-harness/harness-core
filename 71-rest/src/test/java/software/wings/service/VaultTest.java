@@ -63,7 +63,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
 import software.wings.beans.VaultConfig;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
+import software.wings.beans.WorkflowExecution;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -141,8 +141,7 @@ public class VaultTest extends WingsBaseTest {
     appId = UUID.randomUUID().toString();
     workflowName = UUID.randomUUID().toString();
     envId = UUID.randomUUID().toString();
-    workflowExecutionId =
-        wingsPersistence.save(WorkflowExecutionBuilder.aWorkflowExecution().name(workflowName).envId(envId).build());
+    workflowExecutionId = wingsPersistence.save(WorkflowExecution.builder().name(workflowName).envId(envId).build());
     when(secretManagementDelegateService.encrypt(anyString(), anyObject(), anyString(), any(SettingVariableTypes.class),
              any(VaultConfig.class), any(EncryptedData.class)))
         .then(invocation -> {

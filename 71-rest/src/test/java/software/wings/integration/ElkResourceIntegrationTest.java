@@ -11,7 +11,6 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
@@ -24,6 +23,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute.Builder;
+import software.wings.beans.WorkflowExecution;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -63,7 +63,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
 
     workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
     workflowExecutionId = wingsPersistence.save(
-        aWorkflowExecution().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());
+        WorkflowExecution.builder().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());
     wingsPersistence.save(aStateExecutionInstance()
                               .withExecutionUuid(workflowExecutionId)
                               .withStateType(StateType.PHASE.name())

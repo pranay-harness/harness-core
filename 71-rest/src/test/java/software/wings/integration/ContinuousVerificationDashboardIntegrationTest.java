@@ -19,7 +19,6 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
@@ -199,11 +198,8 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
                                                               .workflowExecutionId(workflowExecutionId)
                                                               .build());
 
-    WorkflowExecution execution1 = WorkflowExecutionBuilder.aWorkflowExecution()
-                                       .appId(appId)
-                                       .uuid(workflowExecutionId)
-                                       .status(ExecutionStatus.SUCCESS)
-                                       .build();
+    WorkflowExecution execution1 =
+        WorkflowExecution.builder().appId(appId).uuid(workflowExecutionId).status(ExecutionStatus.SUCCESS).build();
     wingsPersistence.save(execution1);
 
     // Call
@@ -224,7 +220,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     long now = System.currentTimeMillis();
 
     WorkflowExecution execution1 =
-        WorkflowExecutionBuilder.aWorkflowExecution()
+        WorkflowExecution.builder()
             .appId(appId)
             .uuid(workflowExecutionId)
             .status(ExecutionStatus.SUCCESS)
@@ -258,7 +254,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     long now = System.currentTimeMillis();
 
     WorkflowExecution execution1 =
-        WorkflowExecutionBuilder.aWorkflowExecution()
+        WorkflowExecution.builder()
             .appId(appId)
             .uuid(workflowExecutionId)
             .status(ExecutionStatus.SUCCESS)
@@ -269,7 +265,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     wingsPersistence.save(execution1);
 
     WorkflowExecution execution2 =
-        WorkflowExecutionBuilder.aWorkflowExecution()
+        WorkflowExecution.builder()
             .appId(appId)
             .uuid(workflowExecutionId + "2")
             .status(ExecutionStatus.SUCCESS)

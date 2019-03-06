@@ -264,7 +264,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     wingsPersistence.save(stateExecutionInstance);
 
-    final WorkflowExecution workflowExecution = new WorkflowExecution();
+    final WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setAppId(appId);
     workflowExecution.setUuid(workflowExecutionId);
     workflowExecution.setWorkflowId(workflowId);
@@ -421,7 +421,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @RealMongo
   @Ignore
   public void testIsBaseLineCreatedNoRecords() throws Exception {
-    final WorkflowExecution workflowExecution = new WorkflowExecution();
+    final WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setStateMachineId(UUID.randomUUID().toString());
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(workflowId);
@@ -438,7 +438,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
   @Test
   public void testIsBaseLineCreatedNoSuccessfulExecution() throws Exception {
-    final WorkflowExecution workflowExecution = new WorkflowExecution();
+    final WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(workflowId);
     workflowExecution.setStatus(ExecutionStatus.FAILED);
@@ -479,7 +479,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     wingsPersistence.save(stateExecutionInstance);
 
-    final WorkflowExecution workflowExecution = new WorkflowExecution();
+    final WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setStateMachineId(UUID.randomUUID().toString());
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(workflowId);
