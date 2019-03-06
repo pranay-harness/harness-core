@@ -137,12 +137,7 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
-  /**
-   * Gets name.
-   *
-   * @return the name
-   */
-  public String getName() {
+  public String normalizedName() {
     if (isBlank(name)) {
       if (pipelineExecution != null && pipelineExecution.getPipeline() != null
           && isNotBlank(pipelineExecution.getPipeline().getName())) {

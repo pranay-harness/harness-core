@@ -865,7 +865,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       }
 
       EntitySummary workflowExecutionSummary =
-          getEntitySummary(workflowExecution.getName(), workflowExecution.getUuid(), EntityType.WORKFLOW.name());
+          getEntitySummary(workflowExecution.normalizedName(), workflowExecution.getUuid(), EntityType.WORKFLOW.name());
       EmbeddedUser triggeredByUser = workflowExecution.getTriggeredBy();
       EntitySummary triggeredBySummary = null;
       if (triggeredByUser != null) {
@@ -890,7 +890,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
       if (executionArgs == null) {
         if (logger.isDebugEnabled()) {
-          logger.debug("executionArgs is null for workflowExecution:" + workflowExecution.getName());
+          logger.debug("executionArgs is null for workflowExecution:" + workflowExecution.normalizedName());
         }
         continue;
       }
@@ -898,7 +898,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       List<Artifact> artifacts = executionArgs.getArtifacts();
       if (artifacts == null) {
         if (logger.isDebugEnabled()) {
-          logger.debug("artifacts is null for workflowExecution:" + workflowExecution.getName());
+          logger.debug("artifacts is null for workflowExecution:" + workflowExecution.normalizedName());
         }
         continue;
       }

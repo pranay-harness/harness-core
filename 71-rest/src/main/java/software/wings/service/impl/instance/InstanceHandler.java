@@ -115,7 +115,7 @@ public abstract class InstanceHandler {
     Validator.notNullCheck("triggeredBy", triggeredBy);
     String infraMappingType = infrastructureMapping.getInfraMappingType();
 
-    String workflowName = instanceUtil.getWorkflowName(workflowExecution.getName());
+    String workflowName = instanceUtil.getWorkflowName(workflowExecution.normalizedName());
     Validator.notNullCheck("WorkflowName", workflowName);
 
     InstanceType instanceType = instanceUtil.getInstanceType(infraMappingType);
@@ -127,7 +127,7 @@ public abstract class InstanceHandler {
     deploymentSummary.setInfraMappingId(phaseExecutionData.getInfraMappingId());
     deploymentSummary.setStateExecutionInstanceId(stateExecutionInstanceId);
     deploymentSummary.setWorkflowExecutionId(workflowExecution.getUuid());
-    deploymentSummary.setWorkflowExecutionName(workflowExecution.getName());
+    deploymentSummary.setWorkflowExecutionName(workflowExecution.normalizedName());
     deploymentSummary.setWorkflowId(workflowExecution.getWorkflowId());
 
     if (artifact != null) {

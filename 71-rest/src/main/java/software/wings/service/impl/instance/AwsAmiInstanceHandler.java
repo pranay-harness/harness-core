@@ -162,12 +162,12 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
         }
       } else {
         throw new HarnessException(
-            "Step execution summary null for AMI Deploy Step for workflow: " + workflowExecution.getName());
+            "Step execution summary null for AMI Deploy Step for workflow: " + workflowExecution.normalizedName());
       }
 
     } else {
       throw new HarnessException(
-          "Phase step execution summary null for AMI Deploy for workflow: " + workflowExecution.getName());
+          "Phase step execution summary null for AMI Deploy for workflow: " + workflowExecution.normalizedName());
     }
 
     return autoScalingGroupNames;

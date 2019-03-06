@@ -1131,8 +1131,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
       WorkflowStandardParams stdParams, Trigger trigger, Pipeline pipeline, Workflow workflow,
       ContextElement... contextElements) {
-    List<Object> keywords = newArrayList(
-        workflowExecution.getName(), workflowExecution.getWorkflowType(), workflowExecution.getOrchestrationType());
+    List<Object> keywords = newArrayList(workflowExecution.normalizedName(), workflowExecution.getWorkflowType(),
+        workflowExecution.getOrchestrationType());
 
     ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
 
@@ -1174,7 +1174,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(workflowExecution.getAppId());
-    stateExecutionInstance.setExecutionName(workflowExecution.getName());
+    stateExecutionInstance.setExecutionName(workflowExecution.normalizedName());
     stateExecutionInstance.setExecutionUuid(workflowExecution.getUuid());
     stateExecutionInstance.setExecutionType(workflowExecution.getWorkflowType());
     stateExecutionInstance.setOrchestrationWorkflowType(workflowExecution.getOrchestrationType());
@@ -1245,13 +1245,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (stdParams.getWorkflowElement() == null) {
       stdParams.setWorkflowElement(WorkflowElement.builder()
                                        .uuid(workflowExecution.getUuid())
-                                       .name(workflowExecution.getName())
+                                       .name(workflowExecution.normalizedName())
                                        .url(workflowUrl)
                                        .displayName(workflowExecution.displayName())
                                        .releaseNo(workflowExecution.getReleaseNo())
                                        .build());
     } else {
-      stdParams.getWorkflowElement().setName(workflowExecution.getName());
+      stdParams.getWorkflowElement().setName(workflowExecution.normalizedName());
       stdParams.getWorkflowElement().setUuid(workflowExecution.getUuid());
       stdParams.getWorkflowElement().setUrl(workflowUrl);
       stdParams.getWorkflowElement().setDisplayName(workflowExecution.displayName());
