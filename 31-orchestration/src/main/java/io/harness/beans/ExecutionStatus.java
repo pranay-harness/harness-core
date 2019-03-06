@@ -35,6 +35,7 @@ public enum ExecutionStatus {
       EnumSet.<ExecutionStatus>of(ABORTED, DISCONTINUING, ERROR, FAILED, REJECTED, EXPIRED);
   private static Set<ExecutionStatus> runningStatuses =
       EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, RUNNING, STARTING, QUEUED);
+  private static Set<ExecutionStatus> haltedStatuses = EnumSet.<ExecutionStatus>of(PAUSED, WAITING);
   private static Set<ExecutionStatus> activeStatuses =
       EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, PAUSED, RUNNING, STARTING, QUEUED, WAITING);
   private static Set<ExecutionStatus> positiveStatuses = EnumSet.<ExecutionStatus>of(SUCCESS, SKIPPED);
@@ -76,6 +77,10 @@ public enum ExecutionStatus {
 
   public static boolean isRunningStatus(ExecutionStatus status) {
     return status != null && runningStatuses.contains(status);
+  }
+
+  public static boolean isHaltedStatus(ExecutionStatus status) {
+    return status != null && haltedStatuses.contains(status);
   }
 
   public static boolean isDiscontinueStatus(ExecutionStatus status) {
