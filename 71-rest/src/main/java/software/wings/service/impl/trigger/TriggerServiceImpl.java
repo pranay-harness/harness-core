@@ -546,7 +546,7 @@ public class TriggerServiceImpl implements TriggerService {
         triggerExecution.setExecutionArgs(executionArgs);
         webhookTriggerProcessor.initiateTriggerContentChangeDelegateTask(
             trigger, lastTriggerExecution, triggerExecution);
-        workflowExecution = aWorkflowExecution().withStatus(ExecutionStatus.NEW).build();
+        workflowExecution = aWorkflowExecution().status(ExecutionStatus.NEW).build();
       }
     } else {
       workflowExecution = workflowExecutionService.triggerPipelineExecution(
@@ -710,7 +710,7 @@ public class TriggerServiceImpl implements TriggerService {
         triggerExecution.setExecutionArgs(executionArgs);
         webhookTriggerProcessor.initiateTriggerContentChangeDelegateTask(
             trigger, lastTriggerExecution, triggerExecution);
-        workflowExecution = aWorkflowExecution().withStatus(ExecutionStatus.NEW).build();
+        workflowExecution = aWorkflowExecution().status(ExecutionStatus.NEW).build();
       }
     } else {
       workflowExecution =

@@ -85,24 +85,23 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
     CountsByStatuses countsByStatuses = aCountsByStatuses().build();
 
     final WorkflowExecutionBuilder workflowExecutionBuilder =
-        aWorkflowExecution().withAppId(APP_ID).withEnvId(ENV_ID).withStateMachineId(STATE_MACHINE_ID);
+        aWorkflowExecution().appId(APP_ID).envId(ENV_ID).stateMachineId(STATE_MACHINE_ID);
 
-    wingsPersistence.save(workflowExecutionBuilder.withUuid(generateUuid()).withStatus(SUCCESS).build());
-    wingsPersistence.save(workflowExecutionBuilder.withUuid(generateUuid())
-                              .withStatus(ExecutionStatus.ERROR)
-                              .withBreakdown(countsByStatuses)
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(SUCCESS).build());
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                              .status(ExecutionStatus.ERROR)
+                              .breakdown(countsByStatuses)
                               .build());
-    wingsPersistence.save(workflowExecutionBuilder.withUuid(generateUuid())
-                              .withStatus(ExecutionStatus.FAILED)
-                              .withBreakdown(countsByStatuses)
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                              .status(ExecutionStatus.FAILED)
+                              .breakdown(countsByStatuses)
                               .build());
-    wingsPersistence.save(
-        workflowExecutionBuilder.withUuid(generateUuid()).withStatus(ExecutionStatus.ABORTED).build());
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(ExecutionStatus.ABORTED).build());
 
-    wingsPersistence.save(workflowExecutionBuilder.withUuid(generateUuid()).withStatus(RUNNING).build());
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(RUNNING).build());
 
-    wingsPersistence.save(workflowExecutionBuilder.withUuid(generateUuid()).withStatus(PAUSED).build());
-    wingsPersistence.save(workflowExecutionBuilder.withUuid(generateUuid()).withStatus(WAITING).build());
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(PAUSED).build());
+    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(WAITING).build());
 
     PageResponse<WorkflowExecution> pageResponse = workflowExecutionService.listExecutions(
         aPageRequest().addFilter(WorkflowExecution.APP_ID_KEY, Operator.EQ, APP_ID).build(), false, true, false, true);
@@ -143,12 +142,12 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
     String stateMachineId = wingsPersistence.save(stateMachine);
 
     WorkflowExecution workflowExecution = aWorkflowExecution()
-                                              .withAppId(appId)
-                                              .withEnvId(envId)
-                                              .withStateMachineId(stateMachineId)
-                                              .withWorkflowId(workflowId)
-                                              .withStatus(ExecutionStatus.SUCCESS)
-                                              .withServiceExecutionSummaries(executionSummaries)
+                                              .appId(appId)
+                                              .envId(envId)
+                                              .stateMachineId(stateMachineId)
+                                              .workflowId(workflowId)
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .serviceExecutionSummaries(executionSummaries)
                                               .build();
     wingsPersistence.save(workflowExecution);
     List<InstanceElement> deployedNodes = workflowResource.getDeployedNodes(appId, workflowId).getResource();

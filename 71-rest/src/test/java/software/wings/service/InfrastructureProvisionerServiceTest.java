@@ -122,7 +122,7 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
   //            .name("basic")
   //            .appId(infrastructureMapping.getAppId())
   //            .envId(infrastructureMapping.getEnvId())
-  //            .withWorkflowType(WorkflowType.ORCHESTRATION)
+  //            .workflowType(WorkflowType.ORCHESTRATION)
   //            .serviceId(infrastructureMapping.getServiceId())
   //            .infraMappingId(infrastructureMapping.getUuid())
   //            .withOrchestrationWorkflow(

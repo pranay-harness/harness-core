@@ -467,16 +467,16 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                                             .build()));
 
       WorkflowExecution workflowExecution = aWorkflowExecution()
-                                                .withPipelineSummary(pipelineSummary)
-                                                .withExecutionArgs(executionArgs)
-                                                .withAppId(APP_1_ID)
-                                                .withStatus(ExecutionStatus.ERROR)
-                                                .withEnvIds(asList(ENV_1_ID))
-                                                .withServiceIds(asList(SERVICE_1_ID, SERVICE_2_ID))
-                                                .withInfraMappingIds(asList(INFRA_MAPPING_1_ID, INFRA_MAPPING_2_ID))
-                                                .withWorkflowId(WORKFLOW_ID)
-                                                .withUuid(WORKFLOW_EXECUTION_ID)
-                                                .withName(WORKFLOW_NAME)
+                                                .pipelineSummary(pipelineSummary)
+                                                .executionArgs(executionArgs)
+                                                .appId(APP_1_ID)
+                                                .status(ExecutionStatus.ERROR)
+                                                .envIds(asList(ENV_1_ID))
+                                                .serviceIds(asList(SERVICE_1_ID, SERVICE_2_ID))
+                                                .infraMappingIds(asList(INFRA_MAPPING_1_ID, INFRA_MAPPING_2_ID))
+                                                .workflowId(WORKFLOW_ID)
+                                                .uuid(WORKFLOW_EXECUTION_ID)
+                                                .name(WORKFLOW_NAME)
                                                 .build();
       PageResponse<WorkflowExecution> executionsPageResponse =
           aPageResponse().withResponse(asList(workflowExecution)).build();

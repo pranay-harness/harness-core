@@ -201,8 +201,6 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
     private Long startTs;
     private Long endTs;
     private long createdAt;
-    private EmbeddedUser lastUpdatedBy;
-    private long lastUpdatedAt;
     private EmbeddedUser triggeredBy;
     private Map<String, InfraMappingSummary> infraMappingSummary;
     private PipelineSummary pipelineSummary;
@@ -220,176 +218,168 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
       return new WorkflowExecutionBuilder();
     }
 
-    public WorkflowExecutionBuilder withWorkflowId(String workflowId) {
+    public WorkflowExecutionBuilder workflowId(String workflowId) {
       this.workflowId = workflowId;
       return this;
     }
 
-    public WorkflowExecutionBuilder withStateMachineId(String stateMachineId) {
+    public WorkflowExecutionBuilder stateMachineId(String stateMachineId) {
       this.stateMachineId = stateMachineId;
       return this;
     }
 
-    public WorkflowExecutionBuilder withEnvId(String envId) {
+    public WorkflowExecutionBuilder envId(String envId) {
       this.envId = envId;
       return this;
     }
 
-    public WorkflowExecutionBuilder withAppName(String appName) {
+    public WorkflowExecutionBuilder appName(String appName) {
       this.appName = appName;
       return this;
     }
 
-    public WorkflowExecutionBuilder withEnvName(String envName) {
+    public WorkflowExecutionBuilder envName(String envName) {
       this.envName = envName;
       return this;
     }
 
-    public WorkflowExecutionBuilder withEnvType(EnvironmentType envType) {
+    public WorkflowExecutionBuilder envType(EnvironmentType envType) {
       this.envType = envType;
       return this;
     }
 
-    public WorkflowExecutionBuilder withWorkflowType(WorkflowType workflowType) {
+    public WorkflowExecutionBuilder workflowType(WorkflowType workflowType) {
       this.workflowType = workflowType;
       return this;
     }
 
-    public WorkflowExecutionBuilder withStatus(ExecutionStatus status) {
+    public WorkflowExecutionBuilder status(ExecutionStatus status) {
       this.status = status;
       return this;
     }
 
-    public WorkflowExecutionBuilder withGraph(Graph graph) {
+    public WorkflowExecutionBuilder graph(Graph graph) {
       this.graph = graph;
       return this;
     }
 
-    public WorkflowExecutionBuilder withExecutionNode(GraphNode executionNode) {
+    public WorkflowExecutionBuilder executionNode(GraphNode executionNode) {
       this.executionNode = executionNode;
       return this;
     }
 
-    public WorkflowExecutionBuilder withErrorStrategy(ErrorStrategy errorStrategy) {
+    public WorkflowExecutionBuilder errorStrategy(ErrorStrategy errorStrategy) {
       this.errorStrategy = errorStrategy;
       return this;
     }
 
-    public WorkflowExecutionBuilder withName(String name) {
+    public WorkflowExecutionBuilder name(String name) {
       this.name = name;
       return this;
     }
 
-    public WorkflowExecutionBuilder withTotal(int total) {
+    public WorkflowExecutionBuilder total(int total) {
       this.total = total;
       return this;
     }
 
-    public WorkflowExecutionBuilder withBreakdown(CountsByStatuses breakdown) {
+    public WorkflowExecutionBuilder breakdown(CountsByStatuses breakdown) {
       this.breakdown = breakdown;
       return this;
     }
 
-    public WorkflowExecutionBuilder withExecutionArgs(ExecutionArgs executionArgs) {
+    public WorkflowExecutionBuilder executionArgs(ExecutionArgs executionArgs) {
       this.executionArgs = executionArgs;
       return this;
     }
 
-    public WorkflowExecutionBuilder withServiceExecutionSummaries(
-        List<ElementExecutionSummary> serviceExecutionSummaries) {
+    public WorkflowExecutionBuilder serviceExecutionSummaries(List<ElementExecutionSummary> serviceExecutionSummaries) {
       this.serviceExecutionSummaries = serviceExecutionSummaries;
       return this;
     }
 
-    public WorkflowExecutionBuilder withUuid(String uuid) {
+    public WorkflowExecutionBuilder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public WorkflowExecutionBuilder withStatusInstanceBreakdownMap(
+    public WorkflowExecutionBuilder statusInstanceBreakdownMap(
         LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap) {
       this.statusInstanceBreakdownMap = statusInstanceBreakdownMap;
       return this;
     }
 
-    public WorkflowExecutionBuilder withAppId(String appId) {
+    public WorkflowExecutionBuilder appId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public WorkflowExecutionBuilder withCreatedBy(EmbeddedUser createdBy) {
+    public WorkflowExecutionBuilder createdBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public WorkflowExecutionBuilder withStartTs(Long startTs) {
+    public WorkflowExecutionBuilder startTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
-    public WorkflowExecutionBuilder withEndTs(Long endTs) {
+    public WorkflowExecutionBuilder endTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
-    public WorkflowExecutionBuilder withCreatedAt(long createdAt) {
+    public WorkflowExecutionBuilder createdAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public WorkflowExecutionBuilder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public WorkflowExecutionBuilder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-    public WorkflowExecutionBuilder withTriggeredBy(EmbeddedUser triggeredBy) {
+    public WorkflowExecutionBuilder triggeredBy(EmbeddedUser triggeredBy) {
       this.triggeredBy = triggeredBy;
       return this;
     }
-    public WorkflowExecutionBuilder withPipelineSummary(PipelineSummary pipelineSummary) {
+
+    public WorkflowExecutionBuilder pipelineSummary(PipelineSummary pipelineSummary) {
       this.pipelineSummary = pipelineSummary;
       return this;
     }
-    public WorkflowExecutionBuilder withInfraMappingSummary(Map<String, InfraMappingSummary> infraMappingSummary) {
+
+    public WorkflowExecutionBuilder infraMappingSummary(Map<String, InfraMappingSummary> infraMappingSummary) {
       this.infraMappingSummary = infraMappingSummary;
       return this;
     }
 
-    public WorkflowExecutionBuilder withServiceIds(List<String> serviceIds) {
+    public WorkflowExecutionBuilder serviceIds(List<String> serviceIds) {
       this.serviceIds = serviceIds;
       return this;
     }
 
-    public WorkflowExecutionBuilder withEnvIds(List<String> envIds) {
+    public WorkflowExecutionBuilder envIds(List<String> envIds) {
       this.envIds = envIds;
       return this;
     }
 
-    public WorkflowExecutionBuilder withInfraMappingIds(List<String> infraMappingIds) {
+    public WorkflowExecutionBuilder infraMappingIds(List<String> infraMappingIds) {
       this.infraMappingIds = infraMappingIds;
       return this;
     }
 
-    public WorkflowExecutionBuilder withBuildExecutionSummaries(List<BuildExecutionSummary> buildExecutionSummaries) {
+    public WorkflowExecutionBuilder buildExecutionSummaries(List<BuildExecutionSummary> buildExecutionSummaries) {
       this.buildExecutionSummaries = buildExecutionSummaries;
       return this;
     }
 
-    public WorkflowExecutionBuilder withOrchestratonWorkflowType(OrchestrationWorkflowType orchestratonWorkflowType) {
-      this.orchestrationWorkflowType = orchestratonWorkflowType;
+    public WorkflowExecutionBuilder orchestrationWorkflowType(OrchestrationWorkflowType orchestrationWorkflowType) {
+      this.orchestrationWorkflowType = orchestrationWorkflowType;
       return this;
     }
 
-    public WorkflowExecutionBuilder withPipelineExecutionId(String pipelineExecutionId) {
+    public WorkflowExecutionBuilder pipelineExecutionId(String pipelineExecutionId) {
       this.pipelineExecutionId = pipelineExecutionId;
       return this;
     }
 
-    public WorkflowExecutionBuilder withPipelineExecution(PipelineExecution pipelineExecution) {
+    public WorkflowExecutionBuilder pipelineExecution(PipelineExecution pipelineExecution) {
       this.pipelineExecution = pipelineExecution;
       return this;
     }
@@ -409,40 +399,38 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
 
     public WorkflowExecutionBuilder but() {
       return aWorkflowExecution()
-          .withWorkflowId(workflowId)
-          .withStateMachineId(stateMachineId)
-          .withEnvId(envId)
-          .withAppName(appName)
-          .withEnvName(envName)
-          .withEnvType(envType)
-          .withWorkflowType(workflowType)
-          .withStatus(status)
-          .withGraph(graph)
-          .withExecutionNode(executionNode)
-          .withErrorStrategy(errorStrategy)
-          .withName(name)
-          .withTotal(total)
-          .withBreakdown(breakdown)
-          .withExecutionArgs(executionArgs)
-          .withServiceExecutionSummaries(serviceExecutionSummaries)
-          .withUuid(uuid)
-          .withStatusInstanceBreakdownMap(statusInstanceBreakdownMap)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withStartTs(startTs)
-          .withEndTs(endTs)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withTriggeredBy(triggeredBy)
-          .withPipelineSummary(pipelineSummary)
-          .withInfraMappingSummary(infraMappingSummary)
-          .withServiceIds(serviceIds)
-          .withEnvIds(envIds)
-          .withInfraMappingIds(infraMappingIds)
-          .withBuildExecutionSummaries(buildExecutionSummaries)
-          .withOrchestratonWorkflowType(orchestrationWorkflowType)
-          .withPipelineExecutionId(pipelineExecutionId);
+          .workflowId(workflowId)
+          .stateMachineId(stateMachineId)
+          .envId(envId)
+          .appName(appName)
+          .envName(envName)
+          .envType(envType)
+          .workflowType(workflowType)
+          .status(status)
+          .graph(graph)
+          .executionNode(executionNode)
+          .errorStrategy(errorStrategy)
+          .name(name)
+          .total(total)
+          .breakdown(breakdown)
+          .executionArgs(executionArgs)
+          .serviceExecutionSummaries(serviceExecutionSummaries)
+          .uuid(uuid)
+          .statusInstanceBreakdownMap(statusInstanceBreakdownMap)
+          .appId(appId)
+          .createdBy(createdBy)
+          .startTs(startTs)
+          .endTs(endTs)
+          .createdAt(createdAt)
+          .triggeredBy(triggeredBy)
+          .pipelineSummary(pipelineSummary)
+          .infraMappingSummary(infraMappingSummary)
+          .serviceIds(serviceIds)
+          .envIds(envIds)
+          .infraMappingIds(infraMappingIds)
+          .buildExecutionSummaries(buildExecutionSummaries)
+          .orchestrationWorkflowType(orchestrationWorkflowType)
+          .pipelineExecutionId(pipelineExecutionId);
     }
 
     public WorkflowExecution build() {

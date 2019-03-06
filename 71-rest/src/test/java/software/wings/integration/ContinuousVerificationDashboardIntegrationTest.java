@@ -200,9 +200,9 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
                                                               .build());
 
     WorkflowExecution execution1 = WorkflowExecutionBuilder.aWorkflowExecution()
-                                       .withAppId(appId)
-                                       .withUuid(workflowExecutionId)
-                                       .withStatus(ExecutionStatus.SUCCESS)
+                                       .appId(appId)
+                                       .uuid(workflowExecutionId)
+                                       .status(ExecutionStatus.SUCCESS)
                                        .build();
     wingsPersistence.save(execution1);
 
@@ -225,13 +225,12 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
 
     WorkflowExecution execution1 =
         WorkflowExecutionBuilder.aWorkflowExecution()
-            .withAppId(appId)
-            .withUuid(workflowExecutionId)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withStartTs(now)
-            .withServiceIds(Arrays.asList(serviceId))
-            .withPipelineSummary(
-                PipelineSummary.builder().pipelineId("pipelineId").pipelineName("pipelineName").build())
+            .appId(appId)
+            .uuid(workflowExecutionId)
+            .status(ExecutionStatus.SUCCESS)
+            .startTs(now)
+            .serviceIds(Arrays.asList(serviceId))
+            .pipelineSummary(PipelineSummary.builder().pipelineId("pipelineId").pipelineName("pipelineName").build())
             .build();
     wingsPersistence.save(execution1);
 
@@ -260,24 +259,22 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
 
     WorkflowExecution execution1 =
         WorkflowExecutionBuilder.aWorkflowExecution()
-            .withAppId(appId)
-            .withUuid(workflowExecutionId)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withStartTs(now)
-            .withServiceIds(Arrays.asList(serviceId))
-            .withPipelineSummary(
-                PipelineSummary.builder().pipelineId("pipelineId").pipelineName("pipelineName").build())
+            .appId(appId)
+            .uuid(workflowExecutionId)
+            .status(ExecutionStatus.SUCCESS)
+            .startTs(now)
+            .serviceIds(Arrays.asList(serviceId))
+            .pipelineSummary(PipelineSummary.builder().pipelineId("pipelineId").pipelineName("pipelineName").build())
             .build();
     wingsPersistence.save(execution1);
 
     WorkflowExecution execution2 =
         WorkflowExecutionBuilder.aWorkflowExecution()
-            .withAppId(appId)
-            .withUuid(workflowExecutionId + "2")
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withStartTs(now)
-            .withPipelineSummary(
-                PipelineSummary.builder().pipelineId("pipelineId").pipelineName("pipelineName").build())
+            .appId(appId)
+            .uuid(workflowExecutionId + "2")
+            .status(ExecutionStatus.SUCCESS)
+            .startTs(now)
+            .pipelineSummary(PipelineSummary.builder().pipelineId("pipelineId").pipelineName("pipelineName").build())
             .build();
     wingsPersistence.save(execution2);
 

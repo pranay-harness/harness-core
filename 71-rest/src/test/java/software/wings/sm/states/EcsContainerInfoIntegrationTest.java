@@ -106,10 +106,10 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(awsConfig).build();
     String awsConfigid = wingsPersistence.save(settingAttribute);
     WorkflowExecution workflowExecution = WorkflowExecutionBuilder.aWorkflowExecution()
-                                              .withAppId(appId)
-                                              .withUuid(previousWorkflowExecutionId)
-                                              .withWorkflowId(workflowId)
-                                              .withStatus(ExecutionStatus.SUCCESS)
+                                              .appId(appId)
+                                              .uuid(previousWorkflowExecutionId)
+                                              .workflowId(workflowId)
+                                              .status(ExecutionStatus.SUCCESS)
                                               .build();
 
     Workflow workflow = WorkflowBuilder.aWorkflow().withAppId(appId).withUuid(workflowId).build();

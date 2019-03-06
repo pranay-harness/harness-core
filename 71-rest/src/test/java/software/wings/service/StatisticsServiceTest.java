@@ -234,24 +234,24 @@ public class StatisticsServiceTest extends WingsBaseTest {
   private WorkflowExecution aFailedServiceWfExecution(
       List<ElementExecutionSummary> serviceExecutionSummaries, long startEpoch) {
     return aWorkflowExecution()
-        .withAppId(APP_ID)
-        .withEnvType(NON_PROD)
-        .withStatus(ExecutionStatus.FAILED)
-        .withWorkflowType(ORCHESTRATION)
-        .withServiceExecutionSummaries(serviceExecutionSummaries)
-        .withCreatedAt(startEpoch)
+        .appId(APP_ID)
+        .envType(NON_PROD)
+        .status(ExecutionStatus.FAILED)
+        .workflowType(ORCHESTRATION)
+        .serviceExecutionSummaries(serviceExecutionSummaries)
+        .createdAt(startEpoch)
         .build();
   }
 
   private WorkflowExecution aSuccessfulServiceWfExecution(
       List<ElementExecutionSummary> serviceExecutionSummaries, long startEpoch) {
     return aWorkflowExecution()
-        .withAppId(APP_ID)
-        .withEnvType(PROD)
-        .withStatus(SUCCESS)
-        .withWorkflowType(ORCHESTRATION)
-        .withServiceExecutionSummaries(serviceExecutionSummaries)
-        .withCreatedAt(startEpoch)
+        .appId(APP_ID)
+        .envType(PROD)
+        .status(SUCCESS)
+        .workflowType(ORCHESTRATION)
+        .serviceExecutionSummaries(serviceExecutionSummaries)
+        .createdAt(startEpoch)
         .build();
   }
 
@@ -268,24 +268,24 @@ public class StatisticsServiceTest extends WingsBaseTest {
   private WorkflowExecution aFailedWorkflowExecution(
       List<ElementExecutionSummary> serviceFailureExecutionSummaries, long startEpoch) {
     return aWorkflowExecution()
-        .withAppId(APP_ID)
-        .withAppName(APP_NAME)
-        .withEnvType(NON_PROD)
-        .withStatus(ExecutionStatus.FAILED)
-        .withServiceExecutionSummaries(serviceFailureExecutionSummaries)
-        .withCreatedAt(startEpoch)
+        .appId(APP_ID)
+        .appName(APP_NAME)
+        .envType(NON_PROD)
+        .status(ExecutionStatus.FAILED)
+        .serviceExecutionSummaries(serviceFailureExecutionSummaries)
+        .createdAt(startEpoch)
         .build();
   }
 
   private WorkflowExecution aSuccessWorkflowExecution(
       List<ElementExecutionSummary> serviceExecutionSummaries, long endEpoch) {
     return aWorkflowExecution()
-        .withAppId(APP_ID)
-        .withAppName(APP_NAME)
-        .withEnvType(PROD)
-        .withStatus(SUCCESS)
-        .withServiceExecutionSummaries(serviceExecutionSummaries)
-        .withCreatedAt(endEpoch)
+        .appId(APP_ID)
+        .appName(APP_NAME)
+        .envType(PROD)
+        .status(SUCCESS)
+        .serviceExecutionSummaries(serviceExecutionSummaries)
+        .createdAt(endEpoch)
         .build();
   }
 
@@ -309,27 +309,27 @@ public class StatisticsServiceTest extends WingsBaseTest {
   private WorkflowExecution aPipelineServiceWfExecution(EnvironmentType environmentType,
       ExecutionStatus executionStatus, List<ElementExecutionSummary> serviceExecutionSummaries) {
     return aWorkflowExecution()
-        .withAppId(APP_ID)
-        .withAppName(APP_NAME)
-        .withEnvType(environmentType)
-        .withStatus(executionStatus)
-        .withWorkflowType(PIPELINE)
-        .withPipelineExecution(
+        .appId(APP_ID)
+        .appName(APP_NAME)
+        .envType(environmentType)
+        .status(executionStatus)
+        .workflowType(PIPELINE)
+        .pipelineExecution(
             aPipelineExecution()
                 .withPipelineStageExecutions(
                     asList(PipelineStageExecution.builder()
                                .workflowExecutions(asList(aWorkflowExecution()
-                                                              .withAppId(APP_ID)
-                                                              .withEnvType(NON_PROD)
-                                                              .withAppName(APP_NAME)
-                                                              .withStatus(executionStatus)
-                                                              .withWorkflowType(PIPELINE)
-                                                              .withServiceExecutionSummaries(serviceExecutionSummaries)
-                                                              .withCreatedAt(getStartEpoch())
+                                                              .appId(APP_ID)
+                                                              .envType(NON_PROD)
+                                                              .appName(APP_NAME)
+                                                              .status(executionStatus)
+                                                              .workflowType(PIPELINE)
+                                                              .serviceExecutionSummaries(serviceExecutionSummaries)
+                                                              .createdAt(getStartEpoch())
                                                               .build()))
                                .build()))
                 .build())
-        .withCreatedAt(getStartEpoch())
+        .createdAt(getStartEpoch())
         .build();
   }
 

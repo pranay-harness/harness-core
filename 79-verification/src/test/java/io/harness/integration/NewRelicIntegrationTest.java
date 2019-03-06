@@ -192,7 +192,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
     String workflowExecutionId = wingsPersistence.save(
-        aWorkflowExecution().withAppId(appId).withWorkflowId(workflowId).withStatus(ExecutionStatus.SUCCESS).build());
+        aWorkflowExecution().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());
     wingsPersistence.save(aStateExecutionInstance()
                               .withExecutionUuid(workflowExecutionId)
                               .withStateType(StateType.PHASE.name())
@@ -595,11 +595,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     WorkflowExecution workflowExecution =
         aWorkflowExecution()
-            .withWorkflowId(workflowId)
-            .withAppId(appId)
-            .withName(workflowId + "-prev-execution-" + 0)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .workflowId(workflowId)
+            .appId(appId)
+            .name(workflowId + "-prev-execution-" + 0)
+            .status(ExecutionStatus.SUCCESS)
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
 
@@ -627,11 +627,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = aWorkflowExecution()
-                            .withUuid(workflowExecutionId)
-                            .withWorkflowId(workflowId)
-                            .withAppId(appId)
-                            .withName(workflowId + "-curr-execution-" + 0)
-                            .withStatus(ExecutionStatus.RUNNING)
+                            .uuid(workflowExecutionId)
+                            .workflowId(workflowId)
+                            .appId(appId)
+                            .name(workflowId + "-curr-execution-" + 0)
+                            .status(ExecutionStatus.RUNNING)
                             .build();
     wingsPersistence.save(workflowExecution);
 
@@ -711,11 +711,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     WorkflowExecution workflowExecution =
         aWorkflowExecution()
-            .withWorkflowId(workflowId)
-            .withAppId(appId)
-            .withName(workflowId + "-prev-execution-" + 0)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .workflowId(workflowId)
+            .appId(appId)
+            .name(workflowId + "-prev-execution-" + 0)
+            .status(ExecutionStatus.SUCCESS)
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
 
@@ -760,11 +760,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = aWorkflowExecution()
-                            .withUuid(workflowExecutionId)
-                            .withWorkflowId(workflowId)
-                            .withAppId(appId)
-                            .withName(workflowId + "-curr-execution-" + 0)
-                            .withStatus(ExecutionStatus.RUNNING)
+                            .uuid(workflowExecutionId)
+                            .workflowId(workflowId)
+                            .appId(appId)
+                            .name(workflowId + "-curr-execution-" + 0)
+                            .status(ExecutionStatus.RUNNING)
                             .build();
     wingsPersistence.save(workflowExecution);
 
@@ -845,11 +845,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     WorkflowExecution workflowExecution =
         aWorkflowExecution()
-            .withWorkflowId(workflowId)
-            .withAppId(appId)
-            .withName(workflowId + "-prev-execution-" + 0)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .workflowId(workflowId)
+            .appId(appId)
+            .name(workflowId + "-prev-execution-" + 0)
+            .status(ExecutionStatus.SUCCESS)
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
 
@@ -878,11 +878,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = aWorkflowExecution()
-                            .withUuid(workflowExecutionId)
-                            .withWorkflowId(workflowId)
-                            .withAppId(appId)
-                            .withName(workflowId + "-curr-execution-" + 0)
-                            .withStatus(ExecutionStatus.RUNNING)
+                            .uuid(workflowExecutionId)
+                            .workflowId(workflowId)
+                            .appId(appId)
+                            .name(workflowId + "-curr-execution-" + 0)
+                            .status(ExecutionStatus.RUNNING)
                             .build();
     wingsPersistence.save(workflowExecution);
 
@@ -981,12 +981,12 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     WorkflowExecution workflowExecution =
         aWorkflowExecution()
-            .withWorkflowId(workflowId)
-            .withAppId(appId)
-            .withServiceIds(Lists.newArrayList(serviceId))
-            .withName(workflowId + "-prev-execution-" + 0)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .workflowId(workflowId)
+            .appId(appId)
+            .serviceIds(Lists.newArrayList(serviceId))
+            .name(workflowId + "-prev-execution-" + 0)
+            .status(ExecutionStatus.SUCCESS)
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
 
@@ -1036,11 +1036,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = aWorkflowExecution()
-                            .withUuid(workflowExecutionId)
-                            .withWorkflowId(workflowId)
-                            .withAppId(appId)
-                            .withName(workflowId + "-curr-execution-" + 0)
-                            .withStatus(ExecutionStatus.RUNNING)
+                            .uuid(workflowExecutionId)
+                            .workflowId(workflowId)
+                            .appId(appId)
+                            .name(workflowId + "-curr-execution-" + 0)
+                            .status(ExecutionStatus.RUNNING)
                             .build();
     wingsPersistence.save(workflowExecution);
 
@@ -1205,12 +1205,12 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     WorkflowExecution workflowExecution =
         aWorkflowExecution()
-            .withWorkflowId(workflowId)
-            .withAppId(appId)
-            .withServiceIds(Lists.newArrayList(serviceId))
-            .withName(workflowId + "-prev-execution-" + 0)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .workflowId(workflowId)
+            .appId(appId)
+            .serviceIds(Lists.newArrayList(serviceId))
+            .name(workflowId + "-prev-execution-" + 0)
+            .status(ExecutionStatus.SUCCESS)
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
 
@@ -1254,11 +1254,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = aWorkflowExecution()
-                            .withUuid(workflowExecutionId)
-                            .withWorkflowId(workflowId)
-                            .withAppId(appId)
-                            .withName(workflowId + "-curr-execution-" + 0)
-                            .withStatus(ExecutionStatus.RUNNING)
+                            .uuid(workflowExecutionId)
+                            .workflowId(workflowId)
+                            .appId(appId)
+                            .name(workflowId + "-curr-execution-" + 0)
+                            .status(ExecutionStatus.RUNNING)
                             .build();
     wingsPersistence.save(workflowExecution);
 

@@ -129,8 +129,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, emptySet()))
         .thenReturn(aWorkflowExecution()
-                        .withServiceIds(asList("service-1", "service-2"))
-                        .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
+                        .serviceIds(asList("service-1", "service-2"))
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
                         .build());
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setUrl(BASE_URL);
@@ -218,10 +218,10 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   public void shouldSendWorkflowStatusChangeNotificationPipeline() {
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, emptySet()))
         .thenReturn(aWorkflowExecution()
-                        .withServiceIds(asList("service-1", "service-2"))
-                        .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
-                        .withPipelineExecutionId(PIPELINE_EXECUTION_ID)
-                        .withPipelineSummary(
+                        .serviceIds(asList("service-1", "service-2"))
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
+                        .pipelineExecutionId(PIPELINE_EXECUTION_ID)
+                        .pipelineSummary(
                             PipelineSummary.builder().pipelineId(PIPELINE_ID).pipelineName("Pipeline Name").build())
                         .build());
     NotificationRule notificationRule = aNotificationRule()
@@ -375,7 +375,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   public void shouldSendWorkflowStatusChangeNotificationNoServices() {
     when(executionContext.getArtifacts()).thenReturn(null);
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, emptySet()))
-        .thenReturn(aWorkflowExecution().withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build()).build());
+        .thenReturn(aWorkflowExecution().triggeredBy(EmbeddedUser.builder().name(USER_NAME).build()).build());
     NotificationRule notificationRule = aNotificationRule()
                                             .withExecutionScope(ExecutionScope.WORKFLOW)
                                             .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
@@ -414,7 +414,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getEnv()).thenReturn(null);
     when(executionContext.getArtifacts()).thenReturn(null);
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, emptySet()))
-        .thenReturn(aWorkflowExecution().withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build()).build());
+        .thenReturn(aWorkflowExecution().triggeredBy(EmbeddedUser.builder().name(USER_NAME).build()).build());
     NotificationRule notificationRule = aNotificationRule()
                                             .withExecutionScope(ExecutionScope.WORKFLOW)
                                             .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))

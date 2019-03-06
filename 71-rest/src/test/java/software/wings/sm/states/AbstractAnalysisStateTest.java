@@ -116,13 +116,13 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     }
     WorkflowExecution workflowExecution =
         WorkflowExecutionBuilder.aWorkflowExecution()
-            .withAppId(appId)
-            .withUuid(previousWorkflowExecutionId)
-            .withWorkflowId(workflowId)
-            .withEnvId(envId)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withServiceExecutionSummaries(elementExecutionSummary)
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .appId(appId)
+            .uuid(previousWorkflowExecutionId)
+            .workflowId(workflowId)
+            .envId(envId)
+            .status(ExecutionStatus.SUCCESS)
+            .serviceExecutionSummaries(elementExecutionSummary)
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
 
     Workflow workflow = WorkflowBuilder.aWorkflow().withAppId(appId).withUuid(workflowId).withEnvId(envId).build();
@@ -186,13 +186,13 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     }
     WorkflowExecution workflowExecution =
         WorkflowExecutionBuilder.aWorkflowExecution()
-            .withAppId(appId)
-            .withUuid(previousWorkflowExecutionId)
-            .withWorkflowId(workflowId)
-            .withEnvId(envId)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withServiceExecutionSummaries(elementExecutionSummary)
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .appId(appId)
+            .uuid(previousWorkflowExecutionId)
+            .workflowId(workflowId)
+            .envId(envId)
+            .status(ExecutionStatus.SUCCESS)
+            .serviceExecutionSummaries(elementExecutionSummary)
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
 
     Workflow workflow = WorkflowBuilder.aWorkflow().withAppId(appId).withUuid(workflowId).withEnvId(envId).build();

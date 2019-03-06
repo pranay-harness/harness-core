@@ -94,9 +94,9 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     when(workflowExecutionService.getWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
         .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution()
-                        .withAppId(APP_ID)
-                        .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
-                        .withCreatedAt(70L)
+                        .appId(APP_ID)
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .createdAt(70L)
                         .build());
 
     when(notificationSetupService.listDefaultNotificationGroup(any()))

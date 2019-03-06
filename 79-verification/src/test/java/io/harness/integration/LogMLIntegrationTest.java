@@ -489,12 +489,12 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     WorkflowExecution workflowExecution =
         aWorkflowExecution()
-            .withWorkflowId(workflowId)
-            .withAppId(appId)
-            .withName(workflowId + "-execution-" + 0)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withServiceIds(Lists.newArrayList(serviceId))
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .workflowId(workflowId)
+            .appId(appId)
+            .name(workflowId + "-execution-" + 0)
+            .status(ExecutionStatus.SUCCESS)
+            .serviceIds(Lists.newArrayList(serviceId))
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String workFlowExecutionId = wingsPersistence.save(workflowExecution);
 
@@ -530,11 +530,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = aWorkflowExecution()
-                            .withUuid(workflowExecutionId)
-                            .withWorkflowId(workflowId)
-                            .withAppId(appId)
-                            .withName(workflowId + "-execution-" + 0)
-                            .withStatus(ExecutionStatus.RUNNING)
+                            .uuid(workflowExecutionId)
+                            .workflowId(workflowId)
+                            .appId(appId)
+                            .name(workflowId + "-execution-" + 0)
+                            .status(ExecutionStatus.RUNNING)
                             .build();
     wingsPersistence.save(workflowExecution);
 
@@ -615,11 +615,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     WorkflowExecution workflowExecution =
         aWorkflowExecution()
-            .withWorkflowId(workflowId)
-            .withAppId(appId)
-            .withName(workflowId + "-execution-" + 0)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .workflowId(workflowId)
+            .appId(appId)
+            .name(workflowId + "-execution-" + 0)
+            .status(ExecutionStatus.SUCCESS)
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String workFlowExecutionId = wingsPersistence.save(workflowExecution);
 
@@ -654,11 +654,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = aWorkflowExecution()
-                            .withUuid(workflowExecutionId)
-                            .withWorkflowId(workflowId)
-                            .withAppId(appId)
-                            .withName(workflowId + "-execution-" + 0)
-                            .withStatus(ExecutionStatus.RUNNING)
+                            .uuid(workflowExecutionId)
+                            .workflowId(workflowId)
+                            .appId(appId)
+                            .name(workflowId + "-execution-" + 0)
+                            .status(ExecutionStatus.RUNNING)
                             .build();
     wingsPersistence.save(workflowExecution);
 
@@ -823,11 +823,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     WorkflowExecution workflowExecution =
         aWorkflowExecution()
-            .withWorkflowId(workflowId)
-            .withAppId(appId)
-            .withName(workflowId + "-execution-" + 0)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .workflowId(workflowId)
+            .appId(appId)
+            .name(workflowId + "-execution-" + 0)
+            .status(ExecutionStatus.SUCCESS)
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String workFlowExecutionId = wingsPersistence.save(workflowExecution);
 
@@ -860,11 +860,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = aWorkflowExecution()
-                            .withUuid(workflowExecutionId)
-                            .withWorkflowId(workflowId)
-                            .withAppId(appId)
-                            .withName(workflowId + "-execution-" + 0)
-                            .withStatus(ExecutionStatus.RUNNING)
+                            .uuid(workflowExecutionId)
+                            .workflowId(workflowId)
+                            .appId(appId)
+                            .name(workflowId + "-execution-" + 0)
+                            .status(ExecutionStatus.RUNNING)
                             .build();
     wingsPersistence.save(workflowExecution);
 
@@ -931,11 +931,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     WorkflowExecution workflowExecution =
         aWorkflowExecution()
-            .withWorkflowId(workflowId)
-            .withAppId(appId)
-            .withName(workflowId + "-execution-" + 0)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .workflowId(workflowId)
+            .appId(appId)
+            .name(workflowId + "-execution-" + 0)
+            .status(ExecutionStatus.SUCCESS)
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
 
@@ -984,11 +984,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = aWorkflowExecution()
-                            .withUuid(workflowExecutionId)
-                            .withWorkflowId(workflowId)
-                            .withAppId(appId)
-                            .withName(workflowId + "-execution-" + 0)
-                            .withStatus(ExecutionStatus.RUNNING)
+                            .uuid(workflowExecutionId)
+                            .workflowId(workflowId)
+                            .appId(appId)
+                            .name(workflowId + "-execution-" + 0)
+                            .status(ExecutionStatus.RUNNING)
                             .build();
     wingsPersistence.save(workflowExecution);
 
@@ -1105,12 +1105,12 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     WorkflowExecution workflowExecution =
         aWorkflowExecution()
-            .withWorkflowId(workflowId)
-            .withAppId(appId)
-            .withName(workflowId + "-execution-" + 0)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withServiceIds(Lists.newArrayList(serviceId))
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .workflowId(workflowId)
+            .appId(appId)
+            .name(workflowId + "-execution-" + 0)
+            .status(ExecutionStatus.SUCCESS)
+            .serviceIds(Lists.newArrayList(serviceId))
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String workFlowExecutionId = wingsPersistence.save(workflowExecution);
 
@@ -1188,7 +1188,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     final Set<String> hosts = new HashSet<>();
 
     WorkflowExecution workflowExecution =
-        aWorkflowExecution().withStatus(ExecutionStatus.SUCCESS).withWorkflowId(workflowId).withAppId(appId).build();
+        aWorkflowExecution().status(ExecutionStatus.SUCCESS).workflowId(workflowId).appId(appId).build();
     wingsPersistence.save(workflowExecution);
     for (int executionNumber = 1; executionNumber <= numOfExecutions; executionNumber++) {
       final String stateExecutionId = "se" + executionNumber;
@@ -1262,10 +1262,10 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     final TreeBasedTable<Integer, Integer, Set<LogDataRecord>> addedMessages = TreeBasedTable.create();
 
     WorkflowExecution workflowExecution = aWorkflowExecution()
-                                              .withStatus(ExecutionStatus.SUCCESS)
-                                              .withWorkflowId(workflowId)
-                                              .withAppId(appId)
-                                              .withStateMachineId(UUID.randomUUID().toString())
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .workflowId(workflowId)
+                                              .appId(appId)
+                                              .stateMachineId(UUID.randomUUID().toString())
                                               .build();
     wingsPersistence.save(workflowExecution);
     StateMachine stateMachine = new StateMachine();
@@ -1393,12 +1393,12 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     WorkflowExecution workflowExecution =
         aWorkflowExecution()
-            .withWorkflowId(workflowId)
-            .withAppId(appId)
-            .withName(workflowId + "-execution-" + 0)
-            .withStatus(ExecutionStatus.SUCCESS)
-            .withServiceIds(Lists.newArrayList(serviceId))
-            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .workflowId(workflowId)
+            .appId(appId)
+            .name(workflowId + "-execution-" + 0)
+            .status(ExecutionStatus.SUCCESS)
+            .serviceIds(Lists.newArrayList(serviceId))
+            .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
     String workFlowExecutionId = wingsPersistence.save(workflowExecution);
 
@@ -1431,11 +1431,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = aWorkflowExecution()
-                            .withUuid(workflowExecutionId)
-                            .withWorkflowId(workflowId)
-                            .withAppId(appId)
-                            .withName(workflowId + "-execution-" + 0)
-                            .withStatus(ExecutionStatus.RUNNING)
+                            .uuid(workflowExecutionId)
+                            .workflowId(workflowId)
+                            .appId(appId)
+                            .name(workflowId + "-execution-" + 0)
+                            .status(ExecutionStatus.RUNNING)
                             .build();
     wingsPersistence.save(workflowExecution);
 
