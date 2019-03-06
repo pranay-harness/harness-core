@@ -68,7 +68,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   ExecutionLogCallback executionLogCallback;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException, IOException, TimeoutException {
     helmInstallCommandRequest = createHelmInstallCommandRequest();
     helmInstallCommandResponse = createHelmInstallCommandResponse();
     helmCliReleaseHistoryResponse = createHelmCliResponse();
@@ -85,6 +85,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                         .build());
     when(helmCommandHelper.checkValidChartSpecification(any())).thenReturn(true);
     when(helmCommandHelper.generateHelmDeployChartSpecFromYaml(any())).thenReturn(Optional.empty());
+    when(helmClient.repoUpdate(any())).thenReturn(HelmCliResponse.builder().build());
   }
 
   @Test

@@ -86,6 +86,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
       fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
       addRepoForCommand(commandRequest);
+      repoUpdate(commandRequest);
 
       if (!helmCommandHelper.checkValidChartSpecification(commandRequest.getChartSpecification())) {
         String msg =
@@ -133,10 +134,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog(stringBuilder.toString(), LogLevel.ERROR);
       throw e;
     } catch (Exception e) {
-      String msg = format("Exception in deploying helm chart [%s]", commandRequest.toString());
+      String exceptionMessage = ExceptionUtils.getMessage(e);
+      String msg = format("Exception in deploying helm chart " + exceptionMessage);
       logger.error(msg, e);
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
-      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(e));
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, exceptionMessage);
     } finally {
       if (checkDeleteReleaseNeeded(commandRequest)) {
         executionLogCallback.saveExecutionLog("Deployment failed.");
@@ -488,6 +490,25 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           CommandExecutionStatus.RUNNING);
       HelmCommandResponse helmCommandResponse = addPublicRepo(helmCommandRequest);
       executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
+    }
+  }
+
+  private void repoUpdate(HelmInstallCommandRequest helmCommandRequest)
+      throws InterruptedException, TimeoutException, IOException {
+    if (HelmCommandType.INSTALL != helmCommandRequest.getHelmCommandType()) {
+      return;
+    }
+
+    LogCallback executionLogCallback = helmCommandRequest.getExecutionLogCallback();
+    executionLogCallback.saveExecutionLog("Updating information about charts from the respective chart repositories");
+
+    try {
+      HelmCliResponse helmCliResponse = helmClient.repoUpdate(helmCommandRequest);
+      executionLogCallback.saveExecutionLog(helmCliResponse.getOutput());
+    } catch (Exception ex) {
+      executionLogCallback.saveExecutionLog(
+          "Failed to update information about charts with message " + ExceptionUtils.getMessage(ex));
+      throw ex;
     }
   }
 }
