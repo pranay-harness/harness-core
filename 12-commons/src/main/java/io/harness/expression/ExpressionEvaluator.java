@@ -14,8 +14,6 @@ import org.apache.commons.jexl3.JexlEngine;
 import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.logging.impl.NoOpLog;
 import org.apache.commons.text.StrSubstitutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,8 +26,6 @@ import java.util.regex.Pattern;
  * The Class ExpressionEvaluator.
  */
 public class ExpressionEvaluator {
-  private static final Logger logger = LoggerFactory.getLogger(ExpressionEvaluator.class);
-
   public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
   public static final Pattern variableNamePattern = Pattern.compile("^[-_a-zA-Z][-_\\w]*$");
 

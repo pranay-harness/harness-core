@@ -56,6 +56,7 @@ import static software.wings.delegate.service.InstallUtils.installKubectl;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.utils.Misc.getDurationString;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -69,14 +70,21 @@ import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.SecretDetail;
+import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.task.DelegateRunnableTask;
+import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.rest.RestResponse;
 import io.harness.security.TokenGenerator;
+import io.harness.security.encryption.DelegateDecryptionService;
+import io.harness.security.encryption.EncryptedRecord;
+import io.harness.security.encryption.EncryptionConfig;
 import io.harness.serializer.JsonUtils;
 import io.harness.version.VersionInfoManager;
 import okhttp3.MediaType;
@@ -109,6 +117,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnectionHeartbeat;
+import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
@@ -194,6 +203,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private Clock clock;
   @Inject private TimeLimiter timeLimiter;
   @Inject private VersionInfoManager versionInfoManager;
+  @Inject private DelegateDecryptionService delegateDecryptionService;
 
   private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   private final Object waiter = new Object();
@@ -1201,7 +1211,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
+  void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
 
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
@@ -1234,16 +1244,18 @@ public class DelegateServiceImpl implements DelegateService {
 
       logger.info("Validating DelegateTask - uuid: {}, accountId: {}", delegateTaskId, accountId);
 
-      DelegateTask delegateTask = execute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
-
-      if (delegateTask == null) {
+      DelegatePackage delegatePackage = execute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
+      if (delegatePackage == null || delegatePackage.getDelegateTask() == null) {
         logger.info("DelegateTask not available for validation - uuid: {}, accountId: {}", delegateTaskId,
             delegateTaskEvent.getAccountId());
         return;
       }
 
+      DelegateTask delegateTask = delegatePackage.getDelegateTask();
       if (isEmpty(delegateTask.getDelegateId())) {
         // Not whitelisted. Perform validation.
+        //@TODO Remove this once TaskValidation does not use secrets
+        applyDelegateSecretFunctor(delegatePackage);
         DelegateValidateTask delegateValidateTask = TaskType.valueOf(delegateTask.getTaskType())
                                                         .getDelegateValidateTask(delegateId, delegateTask,
                                                             getPostValidationFunction(delegateTaskEvent, delegateTask));
@@ -1255,6 +1267,7 @@ public class DelegateServiceImpl implements DelegateService {
         currentlyValidatingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
+        applyDelegateSecretFunctor(delegatePackage);
         // Whitelisted. Proceed immediately.
         logger.info("Delegate {} whitelisted for task {}, accountId: {}", delegateId, delegateTaskId, accountId);
         executeTask(delegateTask);
@@ -1275,11 +1288,14 @@ public class DelegateServiceImpl implements DelegateService {
       boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
       logger.info("Validation {} for task {}", validated ? "succeeded" : "failed", taskId);
       try {
-        DelegateTask delegateTaskPostValidation = execute(managerClient.reportConnectionResults(
+        DelegatePackage delegatePackage = execute(managerClient.reportConnectionResults(
             delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, results));
-        if (delegateTaskPostValidation != null && delegateId.equals(delegateTaskPostValidation.getDelegateId())) {
+
+        if (delegatePackage != null && delegatePackage.getDelegateTask() != null
+            && delegateId.equals(delegatePackage.getDelegateTask().getDelegateId())) {
           logger.info("Got the go-ahead to proceed for task {}.", taskId);
-          executeTask(delegateTaskPostValidation);
+          applyDelegateSecretFunctor(delegatePackage);
+          executeTask(delegatePackage.getDelegateTask());
         } else {
           logger.info("Did not get the go-ahead to proceed for task {}", taskId);
           if (validated) {
@@ -1625,6 +1641,36 @@ public class DelegateServiceImpl implements DelegateService {
           DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (IOException e) {
       logger.warn("Failed to create DelegateSequenceConfigFile");
+    }
+  }
+
+  @VisibleForTesting
+  void applyDelegateSecretFunctor(DelegatePackage delegatePackage) {
+    final Map<String, EncryptionConfig> encryptionConfigs = delegatePackage.getEncryptionConfigs();
+    final Map<String, SecretDetail> secretDetails = delegatePackage.getSecretDetails();
+    if (isEmpty(encryptionConfigs) || isEmpty(secretDetails)) {
+      return;
+    }
+    List<EncryptedRecord> encryptedRecordList = new ArrayList();
+    Map<EncryptionConfig, List<EncryptedRecord>> encryptionConfigListMap = new HashMap<>();
+    secretDetails.forEach((key, secretDetail) -> {
+      encryptedRecordList.add(secretDetail.getEncryptedRecord());
+      encryptionConfigListMap.put(encryptionConfigs.get(secretDetail.getConfigUuid()), encryptedRecordList);
+    });
+
+    final Map<String, char[]> decryptedRecords = delegateDecryptionService.decrypt(encryptionConfigListMap);
+    Map<String, char[]> secretUuidToValues = new HashMap<>();
+    secretDetails.forEach(
+        (key, value) -> secretUuidToValues.put(key, decryptedRecords.get(value.getEncryptedRecord().getUuid())));
+
+    //@TODO: Should we catch the Expression expression
+    final DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(secretUuidToValues);
+    final DelegateTask delegateTask = delegatePackage.getDelegateTask();
+    if (delegateTask.getParameters() != null && delegateTask.getParameters().length == 1
+        && delegateTask.getParameters()[0] instanceof TaskParameters) {
+      logger.info("Applying DelegateExpression Evaluator for delegateTask {}", delegateTask.getUuid());
+      ExpressionReflectionUtils.applyExpression(
+          delegateTask.getParameters()[0], value -> delegateExpressionEvaluator.substitute(value, new HashMap<>()));
     }
   }
 }

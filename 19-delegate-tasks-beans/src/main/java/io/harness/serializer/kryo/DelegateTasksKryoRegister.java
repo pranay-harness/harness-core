@@ -5,6 +5,7 @@ import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.HttpTaskParameters;
 import io.harness.delegate.beans.ScriptType;
+import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -24,5 +25,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(CommandExecutionStatus.class, 5037);
     kryo.register(DelegateScripts.class, 5002);
     kryo.register(DelegateConfiguration.class, 5469);
+    kryo.register(SecretDetail.class, 19001);
   }
 }

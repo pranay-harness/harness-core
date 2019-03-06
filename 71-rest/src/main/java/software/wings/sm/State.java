@@ -306,11 +306,22 @@ public abstract class State {
     this.templateVariables = templateVariables;
   }
 
-  protected String scheduleDelegateTask(ExecutionContext context, DelegateTask task,
-      StateExecutionData stateExecutionData, boolean adoptDelegateDecryption) {
+  protected void renderTaskParameters(
+      ExecutionContext context, StateExecutionData stateExecutionData, TaskParameters parameters) {
+    ExpressionReflectionUtils.applyExpression(
+        parameters, value -> context.renderExpression(value, stateExecutionData, null, true));
+  }
+
+  protected String scheduleDelegateTask(DelegateTask task) {
+    return delegateService.queueTask(task);
+  }
+
+  protected String renderAndScheduleDelegateTask(
+      ExecutionContext context, DelegateTask task, StateExecutionData stateExecutionData) {
     if (task.getParameters().length == 1 && task.getParameters()[0] instanceof TaskParameters) {
-      ExpressionReflectionUtils.applyExpression(task.getParameters()[0],
-          value -> context.renderExpression(value, stateExecutionData, null, adoptDelegateDecryption));
+      task.setWorkflowExecutionId(context.getWorkflowExecutionId());
+      ExpressionReflectionUtils.applyExpression(
+          task.getParameters()[0], value -> context.renderExpression(value, stateExecutionData, null, false));
     }
     return delegateService.queueTask(task);
   }

@@ -126,6 +126,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
     httpStateExecutionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
     try {
       HttpResponse httpResponse = httpclient.execute(httpUriRequest);
+      httpStateExecutionResponse.setHeader(headers);
       httpStateExecutionResponse.setHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
       HttpEntity entity = httpResponse.getEntity();
       httpStateExecutionResponse.setHttpResponseBody(

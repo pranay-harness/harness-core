@@ -126,6 +126,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnectionHeartbeat;
+import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateSequenceConfig;
@@ -149,6 +150,7 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
+import software.wings.expression.SecretManagerFunctor;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.artifact.ArtifactCollectionUtil;
@@ -1426,7 +1428,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
+  public DelegatePackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
     logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
@@ -1442,8 +1444,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return assignTask(delegateId, taskId, delegateTask);
     } else if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
       setValidationStarted(delegateId, delegateTask);
-      resolvePreAssignmentExpressions(delegateTask, delegateId);
-      return delegateTask;
+      return resolvePreAssignmentExpressions(delegateTask, delegateId);
+
     } else {
       logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
       return null;
@@ -1451,7 +1453,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public DelegateTask reportConnectionResults(
+  public DelegatePackage reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
     assignDelegateService.saveConnectionResults(results);
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
@@ -1582,17 +1584,28 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return null;
   }
 
-  private void resolvePreAssignmentExpressions(DelegateTask delegateTask, String delegateId) {
+  private DelegatePackage resolvePreAssignmentExpressions(DelegateTask delegateTask, String delegateId) {
     try {
       final ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
           new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
               delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtil,
-              delegateTask.getArtifactStreamId(), managerDecryptionService, secretManager, delegateTask.getAccountId());
+              delegateTask.getArtifactStreamId(), managerDecryptionService, secretManager, delegateTask.getAccountId(),
+              delegateTask.getWorkflowExecutionId());
       if (delegateTask.getParameters().length == 1 && delegateTask.getParameters()[0] instanceof TaskParameters) {
         logger.info("Applying ManagerPreExecutionExpressionEvaluator for delegateTask {}", delegateTask.getUuid());
         ExpressionReflectionUtils.applyExpression(delegateTask.getParameters()[0],
             value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
+
+        final SecretManagerFunctor secretManagerFunctor =
+            (SecretManagerFunctor) managerPreExecutionExpressionEvaluator.getSecretManagerFunctor();
+
+        return DelegatePackage.builder()
+            .delegateTask(delegateTask)
+            .encryptionConfigs(secretManagerFunctor.getEncryptionConfigs())
+            .secretDetails(secretManagerFunctor.getSecretDetails())
+            .build();
       }
+
     } catch (FunctorException | CriticalExpressionEvaluationException exception) {
       logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
@@ -1606,6 +1619,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .build();
       handleResponse(delegateTask.getUuid(), delegateId, delegateTask, taskQuery, response, ERROR);
     }
+    return DelegatePackage.builder().delegateTask(delegateTask).build();
   }
 
   private void handleResponse(String taskId, String delegateId, DelegateTask delegateTask,
@@ -1627,7 +1641,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
   }
 
-  private DelegateTask assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
+  private DelegatePackage assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 
@@ -1650,8 +1664,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (task != null) {
       logger.info("Task {} assigned to delegate {}", taskId, delegateId);
       task.setParameters(delegateTask.getParameters());
-      resolvePreAssignmentExpressions(task, delegateId);
-      return task;
+      return resolvePreAssignmentExpressions(task, delegateId);
     }
     task = wingsPersistence.createQuery(DelegateTask.class)
                .filter(ACCOUNT_ID, delegateTask.getAccountId())
@@ -1660,14 +1673,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                .filter(ID_KEY, taskId)
                .project("parameters", false)
                .get();
-    if (task != null) {
-      task.setParameters(delegateTask.getParameters());
-      resolvePreAssignmentExpressions(task, delegateId);
-      logger.info("Returning previously assigned task {} to delegate {}", taskId, delegateId);
-    } else {
+    if (task == null) {
       logger.info("Task {} no longer available for delegate {}", taskId, delegateId);
+      return null;
     }
-    return task;
+
+    task.setParameters(delegateTask.getParameters());
+    logger.info("Returning previously assigned task {} to delegate {}", taskId, delegateId);
+    return resolvePreAssignmentExpressions(task, delegateId);
   }
 
   @Override
