@@ -44,7 +44,6 @@ import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
@@ -395,7 +394,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   private String createWorkflowExecution(StateMachine sm) {
     String executionUuid = generateUuid();
 
-    WorkflowExecution workflowExecution = new WorkflowExecution();
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setUuid(executionUuid);
     workflowExecution.setAppId(sm.getAppId());
     workflowExecution.setStateMachineId(sm.getUuid());
@@ -884,7 +883,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.getExecutionDetails(
              eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), any()))
-        .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution()
+        .thenReturn(WorkflowExecution.builder()
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
                         .startTs(70L)
                         .build());

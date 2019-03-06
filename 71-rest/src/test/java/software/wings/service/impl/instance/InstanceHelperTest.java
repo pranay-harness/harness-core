@@ -54,7 +54,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.InstanceType;
@@ -131,7 +130,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    workflowExecution = WorkflowExecutionBuilder.aWorkflowExecution()
+    workflowExecution = WorkflowExecution.builder()
                             .appId("app_1")
                             .appName("app1")
                             .uuid(WORKFLOW_EXECUTION_ID)

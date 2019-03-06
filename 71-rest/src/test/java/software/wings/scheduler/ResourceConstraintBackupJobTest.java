@@ -62,7 +62,7 @@ public class ResourceConstraintBackupJobTest extends WingsBaseTest {
     final Consumer.State state = constraint.registerConsumer(
         new ConstraintUnit("1"), new ConsumerId("1"), 1, constraintContext, resourceConstraintService.getRegistry());
 
-    final WorkflowExecution workflowExecution = new WorkflowExecution();
+    final WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setStatus(ExecutionStatus.ABORTED);
     when(workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId)).thenReturn(workflowExecution);
 

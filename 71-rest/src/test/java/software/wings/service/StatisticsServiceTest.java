@@ -19,7 +19,6 @@ import static software.wings.beans.ElementExecutionSummary.ElementExecutionSumma
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -233,7 +232,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   private WorkflowExecution aFailedServiceWfExecution(
       List<ElementExecutionSummary> serviceExecutionSummaries, long startEpoch) {
-    return aWorkflowExecution()
+    return WorkflowExecution.builder()
         .appId(APP_ID)
         .envType(NON_PROD)
         .status(ExecutionStatus.FAILED)
@@ -245,7 +244,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   private WorkflowExecution aSuccessfulServiceWfExecution(
       List<ElementExecutionSummary> serviceExecutionSummaries, long startEpoch) {
-    return aWorkflowExecution()
+    return WorkflowExecution.builder()
         .appId(APP_ID)
         .envType(PROD)
         .status(SUCCESS)
@@ -267,7 +266,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   private WorkflowExecution aFailedWorkflowExecution(
       List<ElementExecutionSummary> serviceFailureExecutionSummaries, long startEpoch) {
-    return aWorkflowExecution()
+    return WorkflowExecution.builder()
         .appId(APP_ID)
         .appName(APP_NAME)
         .envType(NON_PROD)
@@ -279,7 +278,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   private WorkflowExecution aSuccessWorkflowExecution(
       List<ElementExecutionSummary> serviceExecutionSummaries, long endEpoch) {
-    return aWorkflowExecution()
+    return WorkflowExecution.builder()
         .appId(APP_ID)
         .appName(APP_NAME)
         .envType(PROD)
@@ -308,7 +307,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   private WorkflowExecution aPipelineServiceWfExecution(EnvironmentType environmentType,
       ExecutionStatus executionStatus, List<ElementExecutionSummary> serviceExecutionSummaries) {
-    return aWorkflowExecution()
+    return WorkflowExecution.builder()
         .appId(APP_ID)
         .appName(APP_NAME)
         .envType(environmentType)
@@ -318,7 +317,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             aPipelineExecution()
                 .withPipelineStageExecutions(
                     asList(PipelineStageExecution.builder()
-                               .workflowExecutions(asList(aWorkflowExecution()
+                               .workflowExecutions(asList(WorkflowExecution.builder()
                                                               .appId(APP_ID)
                                                               .envType(NON_PROD)
                                                               .appName(APP_NAME)

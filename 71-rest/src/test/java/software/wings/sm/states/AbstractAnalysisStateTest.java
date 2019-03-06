@@ -44,7 +44,6 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
@@ -115,7 +114,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
                                       .build());
     }
     WorkflowExecution workflowExecution =
-        WorkflowExecutionBuilder.aWorkflowExecution()
+        WorkflowExecution.builder()
             .appId(appId)
             .uuid(previousWorkflowExecutionId)
             .workflowId(workflowId)
@@ -185,7 +184,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
                                       .build());
     }
     WorkflowExecution workflowExecution =
-        WorkflowExecutionBuilder.aWorkflowExecution()
+        WorkflowExecution.builder()
             .appId(appId)
             .uuid(previousWorkflowExecutionId)
             .workflowId(workflowId)

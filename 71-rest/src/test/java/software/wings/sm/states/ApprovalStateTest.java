@@ -49,7 +49,7 @@ import software.wings.api.WorkflowElement;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.User;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.NotificationMessageResolver;
@@ -94,7 +94,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(context.getWorkflowExecutionName()).thenReturn(BUILD_JOB_NAME);
 
     when(workflowExecutionService.getWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
-        .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution()
+        .thenReturn(WorkflowExecution.builder()
                         .status(ExecutionStatus.NEW)
                         .appId(APP_ID)
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())

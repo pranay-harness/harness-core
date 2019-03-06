@@ -39,7 +39,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -105,7 +104,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(awsConfig).build();
     String awsConfigid = wingsPersistence.save(settingAttribute);
-    WorkflowExecution workflowExecution = WorkflowExecutionBuilder.aWorkflowExecution()
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .appId(appId)
                                               .uuid(previousWorkflowExecutionId)
                                               .workflowId(workflowId)

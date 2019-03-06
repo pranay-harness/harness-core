@@ -10,7 +10,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.service.impl.WebHookServiceImpl.X_BIT_BUCKET_EVENT;
 import static software.wings.service.impl.WebHookServiceImpl.X_GIT_HUB_EVENT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -74,7 +73,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   final String token = CryptoUtil.secureRandAlphaNumString(40);
 
   WorkflowExecution execution =
-      aWorkflowExecution().appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_EXECUTION_ID).status(RUNNING).build();
+      WorkflowExecution.builder().appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_EXECUTION_ID).status(RUNNING).build();
 
   Trigger trigger = Trigger.builder()
                         .workflowId(PIPELINE_ID)
@@ -365,7 +364,7 @@ public class WebHookServiceTest extends WingsBaseTest {
         anApplication().withUuid(APP_ID).withAppId(APP_ID).withAccountId(ACCOUNT_ID).build();
     doReturn(application).when(appService).get(APP_ID);
     final WorkflowExecution execution =
-        aWorkflowExecution().appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_EXECUTION_ID).status(RUNNING).build();
+        WorkflowExecution.builder().appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_EXECUTION_ID).status(RUNNING).build();
     final String token = CryptoUtil.secureRandAlphaNumString(40);
     doReturn(execution)
         .when(triggerService)

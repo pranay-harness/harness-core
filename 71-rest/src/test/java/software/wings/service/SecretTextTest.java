@@ -61,7 +61,7 @@ import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.User;
 import software.wings.beans.VaultConfig;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
+import software.wings.beans.WorkflowExecution;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -148,8 +148,7 @@ public class SecretTextTest extends WingsBaseTest {
     appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     workflowName = generateUuid();
     envId = generateUuid();
-    workflowExecutionId =
-        wingsPersistence.save(WorkflowExecutionBuilder.aWorkflowExecution().name(workflowName).envId(envId).build());
+    workflowExecutionId = wingsPersistence.save(WorkflowExecution.builder().name(workflowName).envId(envId).build());
     when(secretManagementDelegateService.encrypt(anyString(), anyObject(), any(KmsConfig.class))).then(invocation -> {
       Object[] args = invocation.getArguments();
       return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);

@@ -72,7 +72,7 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -167,8 +167,7 @@ public class KmsTest extends WingsBaseTest {
         Application.Builder.anApplication().withName(generateUuid()).withAccountId(accountId).build());
     workflowName = generateUuid();
     envId = generateUuid();
-    workflowExecutionId =
-        wingsPersistence.save(WorkflowExecutionBuilder.aWorkflowExecution().name(workflowName).envId(envId).build());
+    workflowExecutionId = wingsPersistence.save(WorkflowExecution.builder().name(workflowName).envId(envId).build());
     when(secretManagementDelegateService.encrypt(anyString(), anyObject(), anyObject())).then(invocation -> {
       Object[] args = invocation.getArguments();
       return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);

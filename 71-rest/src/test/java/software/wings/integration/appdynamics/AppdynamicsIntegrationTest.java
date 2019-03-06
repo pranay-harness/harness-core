@@ -12,7 +12,6 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
@@ -37,6 +36,7 @@ import software.wings.api.HostElement;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.WorkflowExecution;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -212,7 +212,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
     String workflowExecutionId = wingsPersistence.save(
-        aWorkflowExecution().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());
+        WorkflowExecution.builder().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());
     wingsPersistence.save(aStateExecutionInstance()
                               .withExecutionUuid(workflowExecutionId)
                               .withStateType(StateType.PHASE.name())

@@ -14,7 +14,6 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
@@ -85,7 +84,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
     CountsByStatuses countsByStatuses = aCountsByStatuses().build();
 
     final WorkflowExecutionBuilder workflowExecutionBuilder =
-        aWorkflowExecution().appId(APP_ID).envId(ENV_ID).stateMachineId(STATE_MACHINE_ID);
+        WorkflowExecution.builder().appId(APP_ID).envId(ENV_ID).stateMachineId(STATE_MACHINE_ID);
 
     wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(SUCCESS).build());
     wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
@@ -141,7 +140,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
     stateMachine.setAppId(appId);
     String stateMachineId = wingsPersistence.save(stateMachine);
 
-    WorkflowExecution workflowExecution = aWorkflowExecution()
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .appId(appId)
                                               .envId(envId)
                                               .stateMachineId(stateMachineId)

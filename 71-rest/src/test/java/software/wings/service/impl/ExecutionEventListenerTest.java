@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
@@ -32,7 +31,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
 
   @Test
   public void shouldNoQueueIfNotRunningOrPaused() throws Exception {
-    wingsPersistence.save(aWorkflowExecution().appId(APP_ID).workflowId(WORKFLOW_ID).status(SUCCESS).build());
+    wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(SUCCESS).build());
 
     executionEventListener.onMessage(ExecutionEvent.builder().appId(APP_ID).workflowId(WORKFLOW_ID).build());
 
@@ -41,7 +40,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
 
   @Test
   public void shouldNoQueueIfNotQueued() throws Exception {
-    wingsPersistence.save(aWorkflowExecution().appId(APP_ID).workflowId(WORKFLOW_ID).status(RUNNING).build());
+    wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(RUNNING).build());
 
     executionEventListener.onMessage(ExecutionEvent.builder().appId(APP_ID).workflowId(WORKFLOW_ID).build());
 
@@ -51,7 +50,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Test
   public void shouldQueueBuildWorkflow() throws Exception {
     WorkflowExecution queuedExecution =
-        aWorkflowExecution().appId(APP_ID).workflowId(WORKFLOW_ID).status(QUEUED).build();
+        WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(QUEUED).build();
 
     wingsPersistence.save(queuedExecution);
 
@@ -63,7 +62,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
 
   @Test
   public void shouldQueueWorkflow() throws Exception {
-    WorkflowExecution queuedExecution = aWorkflowExecution()
+    WorkflowExecution queuedExecution = WorkflowExecution.builder()
                                             .infraMappingIds(asList(INFRA_MAPPING_ID))
                                             .appId(APP_ID)
                                             .workflowId(WORKFLOW_ID)

@@ -926,13 +926,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + pipelineId);
     }
-    WorkflowExecution workflowExecution = new WorkflowExecution();
-    workflowExecution.setUuid(generateUuid());
-    workflowExecution.setAppId(appId);
-    workflowExecution.setWorkflowId(pipelineId);
-    workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
-    workflowExecution.setStateMachineId(stateMachine.getUuid());
-    workflowExecution.setName(pipeline.getName());
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .uuid(generateUuid())
+                                              .appId(appId)
+                                              .workflowId(pipelineId)
+                                              .workflowType(WorkflowType.PIPELINE)
+                                              .stateMachineId(stateMachine.getUuid())
+                                              .name(pipeline.getName())
+                                              .build();
 
     constructBarriers(pipeline, workflowExecution.getUuid());
 
@@ -1018,7 +1019,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw new WingsException("No stateMachine associated with " + workflowId);
     }
 
-    WorkflowExecution workflowExecution = new WorkflowExecution();
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setAppId(appId);
     String resolveEnvId = workflowService.resolveEnvironmentId(workflow, executionArgs.getWorkflowVariables());
     if (resolveEnvId != null) {

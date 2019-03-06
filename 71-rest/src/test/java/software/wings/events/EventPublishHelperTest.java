@@ -42,7 +42,6 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.security.UserThreadLocal;
@@ -290,7 +289,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
       when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
       when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(Arrays.asList(APP_ID));
       WorkflowExecution workflowExecution =
-          WorkflowExecutionBuilder.aWorkflowExecution()
+          WorkflowExecution.builder()
               .uuid(WORKFLOW_EXECUTION_ID)
               .createdBy(EmbeddedUser.builder().email("abcd@abcd.com").uuid(user.getUuid()).build())
               .appId(APP_ID)
@@ -313,7 +312,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
       when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
       when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(Arrays.asList(APP_ID));
       WorkflowExecution workflowExecution =
-          WorkflowExecutionBuilder.aWorkflowExecution()
+          WorkflowExecution.builder()
               .uuid(WORKFLOW_EXECUTION_ID)
               .appId(APP_ID)
               .createdBy(EmbeddedUser.builder().email("abcd@abcd.com").uuid(user.getUuid()).build())

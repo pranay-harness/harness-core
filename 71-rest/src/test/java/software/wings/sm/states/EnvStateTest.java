@@ -12,7 +12,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.common.Constants.ENV_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -35,6 +34,7 @@ import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContextImpl;
@@ -63,7 +63,7 @@ public class EnvStateTest extends WingsBaseTest {
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(workflowExecutionService.triggerOrchestrationExecution(
              eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
-        .thenReturn(aWorkflowExecution().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.NEW).build());
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.NEW).build());
     when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
   }
 

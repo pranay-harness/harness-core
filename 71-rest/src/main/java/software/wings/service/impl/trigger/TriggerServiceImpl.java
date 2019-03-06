@@ -17,7 +17,6 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
@@ -546,7 +545,7 @@ public class TriggerServiceImpl implements TriggerService {
         triggerExecution.setExecutionArgs(executionArgs);
         webhookTriggerProcessor.initiateTriggerContentChangeDelegateTask(
             trigger, lastTriggerExecution, triggerExecution);
-        workflowExecution = aWorkflowExecution().status(ExecutionStatus.NEW).build();
+        workflowExecution = WorkflowExecution.builder().status(ExecutionStatus.NEW).build();
       }
     } else {
       workflowExecution = workflowExecutionService.triggerPipelineExecution(
@@ -710,7 +709,7 @@ public class TriggerServiceImpl implements TriggerService {
         triggerExecution.setExecutionArgs(executionArgs);
         webhookTriggerProcessor.initiateTriggerContentChangeDelegateTask(
             trigger, lastTriggerExecution, triggerExecution);
-        workflowExecution = aWorkflowExecution().status(ExecutionStatus.NEW).build();
+        workflowExecution = WorkflowExecution.builder().status(ExecutionStatus.NEW).build();
       }
     } else {
       workflowExecution =
