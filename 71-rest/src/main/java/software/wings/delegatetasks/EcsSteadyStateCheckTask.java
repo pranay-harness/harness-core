@@ -20,6 +20,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.EcsSteadyStateCheckParams;
 import software.wings.beans.container.EcsSteadyStateCheckResponse;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.cloudprovider.UpdateServiceCountRequestData;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -75,17 +76,26 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
       executionLogCallback.saveExecutionLog(
           String.format("Waiting for running count to reach: %d for Ecs service: %s in Ecs cluster: %s.",
               service.getDesiredCount(), params.getServiceName(), params.getClusterName()));
-      ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(params.getRegion(), params.getAwsConfig(),
-          params.getEncryptionDetails(), params.getClusterName(), params.getServiceName(), executionLogCallback,
-          service.getDesiredCount());
+
+      UpdateServiceCountRequestData updateCountRequestData =
+          UpdateServiceCountRequestData.builder()
+              .region(params.getRegion())
+              .encryptedDataDetails(params.getEncryptionDetails())
+              .cluster(params.getClusterName())
+              .desiredCount(service.getDesiredCount())
+              .executionLogCallback(executionLogCallback)
+              .serviceName(params.getServiceName())
+              .serviceEvents(ecsContainerService.getEventsFromService(service))
+              .awsConfig(params.getAwsConfig())
+              .build();
+      ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(updateCountRequestData);
 
       // Now poll for events API to notify of steady state
       executionLogCallback.saveExecutionLog(
           String.format("Starting to wait for steady state for Ecs service: %s in Ecs cluster: %s.",
               params.getServiceName(), params.getClusterName()));
-      ecsContainerService.waitForServiceToReachSteadyState(params.getRegion(), params.getAwsConfig(),
-          params.getEncryptionDetails(), params.getClusterName(), params.getServiceName(),
-          (int) TimeUnit.MILLISECONDS.toMinutes(params.getTimeoutInMs()), executionLogCallback);
+      ecsContainerService.waitForServiceToReachSteadyState(
+          (int) TimeUnit.MILLISECONDS.toMinutes(params.getTimeoutInMs()), updateCountRequestData);
       executionLogCallback.saveExecutionLog(String.format(
           "Completed wait for steady state for Ecs service: %s in Ecs cluster: %s. Now getting all container infos.",
           params.getServiceName(), params.getClusterName()));

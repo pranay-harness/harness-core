@@ -3,6 +3,7 @@ package software.wings.cloudprovider.aws;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
@@ -11,6 +12,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.cloudprovider.UpdateServiceCountRequestData;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
@@ -44,13 +46,9 @@ public interface EcsContainerService {
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
       int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 
-  void waitForTasksToBeInRunningStateButDontThrowException(String region, AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      ExecutionLogCallback executionLogCallback, int desiredCount);
+  void waitForTasksToBeInRunningStateButDontThrowException(UpdateServiceCountRequestData requestData);
 
-  void waitForServiceToReachSteadyState(String region, AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
+  void waitForServiceToReachSteadyState(int serviceSteadyStateTimeout, UpdateServiceCountRequestData requestData);
 
   List<ContainerInfo> getContainerInfosAfterEcsWait(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
@@ -88,6 +86,10 @@ public interface EcsContainerService {
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 
-  void updateServiceCount(String region, List<EncryptedDataDetail> encryptedDataDetails, String clusterName,
-      String serviceName, int desiredCount, ExecutionLogCallback executionLogCallback, AwsConfig awsConfig);
+  void updateServiceCount(UpdateServiceCountRequestData updateServiceCountRequestData);
+
+  List<ServiceEvent> getServiceEvents(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName);
+
+  List<ServiceEvent> getEventsFromService(Service service);
 }
