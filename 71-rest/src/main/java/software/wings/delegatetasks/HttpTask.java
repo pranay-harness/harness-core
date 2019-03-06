@@ -69,9 +69,6 @@ public class HttpTask extends AbstractDelegateRunnableTask {
       String method, String url, String body, String headers, int socketTimeoutMillis) {
     HttpStateExecutionResponse httpStateExecutionResponse = new HttpStateExecutionResponse();
 
-    httpStateExecutionResponse.setHttpUrl(url);
-    httpStateExecutionResponse.setHttpMethod(method);
-
     SSLContextBuilder builder = new SSLContextBuilder();
     try {
       builder.loadTrustMaterial((x509Certificates, s) -> true);
