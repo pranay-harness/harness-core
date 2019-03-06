@@ -96,7 +96,7 @@ public class StateMachine extends Base {
    * Instantiates a new state machine.
    *
    * @param workflow   the workflow
-   * @param graph   the graph
+   * @param graph      the graph
    * @param stencilMap the stencil map
    */
   public StateMachine(Workflow workflow, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
@@ -542,6 +542,7 @@ public class StateMachine extends Base {
     }
     return nextStates.get(0);
   }
+
   public State getNextState(String childStateMachineId, String fromStateName, TransitionType transitionType) {
     if (childStateMachineId == null) {
       return getNextState(fromStateName, transitionType);
@@ -722,7 +723,7 @@ public class StateMachine extends Base {
    * Get state based on name.
    *
    * @param childStateMachineId childStateMachineId.
-   * @param stateName name of state to lookup for.
+   * @param stateName           name of state to lookup for.
    * @return state object if found or null.
    */
   public State getState(String childStateMachineId, String stateName) {
@@ -995,8 +996,8 @@ public class StateMachine extends Base {
   /**
    * {@inheritDoc}
    */ /* (non-Javadoc)
-       * @see software.wings.beans.Base#toString()
-       */
+   * @see software.wings.beans.Base#toString()
+   */
   @Override
   public String toString() {
     return "StateMachine [initialStateName=" + initialStateName + ", states=" + states + ", transitions=" + transitions
