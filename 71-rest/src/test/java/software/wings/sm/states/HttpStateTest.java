@@ -161,7 +161,7 @@ public class HttpStateTest extends WingsBaseTest {
         getHttpState(httpStateBuilder, context).getPatternsForRequiredContextElementType();
     assertThat(patternsForRequiredContextElementType).isNotEmpty();
     assertThat(patternsForRequiredContextElementType)
-        .contains("http://${host.hostName}:8088/health/status", "Content-Type: application/xml, Accept: */*",
+        .contains("Content-Type: application/xml, Accept: */*",
             "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
   }
 
@@ -181,7 +181,7 @@ public class HttpStateTest extends WingsBaseTest {
         getHttpState(httpStateBuilder, context).getPatternsForRequiredContextElementType();
     assertThat(patternsForRequiredContextElementType).isNotEmpty();
     assertThat(patternsForRequiredContextElementType)
-        .contains("http://${host.hostName}:8088/health/status", "Content-Type: application/xml, Accept: */*",
+        .contains("Content-Type: application/xml, Accept: */*",
             "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
   }
 
@@ -224,7 +224,6 @@ public class HttpStateTest extends WingsBaseTest {
         .isInstanceOf(HttpStateExecutionData.class)
         .isEqualToComparingOnlyGivenFields(
             HttpStateExecutionData.builder()
-                .httpUrl("http://localhost:8088/health/status")
                 .assertionStatus("SUCCESS")
                 .httpResponseCode(200)
                 .httpResponseBody(
@@ -275,7 +274,6 @@ public class HttpStateTest extends WingsBaseTest {
         .isInstanceOf(HttpStateExecutionData.class)
         .isEqualToComparingOnlyGivenFields(
             HttpStateExecutionData.builder()
-                .httpUrl("http://localhost:8088/health/status")
                 .assertionStatus("SUCCESS")
                 .httpResponseCode(200)
                 .httpResponseBody(
@@ -309,7 +307,6 @@ public class HttpStateTest extends WingsBaseTest {
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
         .isEqualToComparingOnlyGivenFields(HttpStateExecutionData.builder()
-                                               .httpUrl("http://localhost:8088/health/status")
                                                .assertionStatus("SUCCESS")
                                                .httpResponseCode(200)
                                                .httpResponseBody("<health><status>Enabled</status></health>")
@@ -344,7 +341,6 @@ public class HttpStateTest extends WingsBaseTest {
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
         .isEqualToComparingOnlyGivenFields(HttpStateExecutionData.builder()
-                                               .httpUrl("http://localhost:8088/health/status")
                                                .assertionStatus("SUCCESS")
                                                .httpResponseCode(200)
                                                .httpResponseBody("<health><status>Enabled</status></health>")
@@ -380,7 +376,8 @@ public class HttpStateTest extends WingsBaseTest {
             .withUuid(SERVICE_INSTANCE_ID)
             .build());
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
+    ExecutionResponse response =
+        getHttpState(httpStateBuilder.withUrl("http://localhost:8088/health/status").but(), context).execute(context);
 
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
 
@@ -390,7 +387,6 @@ public class HttpStateTest extends WingsBaseTest {
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
         .isEqualToComparingOnlyGivenFields(HttpStateExecutionData.builder()
-                                               .httpUrl("http://localhost:8088/health/status")
                                                .assertionStatus("SUCCESS")
                                                .httpResponseCode(200)
                                                .httpResponseBody("<health><status>Enabled</status></health>")
@@ -451,7 +447,6 @@ public class HttpStateTest extends WingsBaseTest {
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
         .isEqualToComparingOnlyGivenFields(HttpStateExecutionData.builder()
-                                               .httpUrl("http://localhost:8088/health/status")
                                                .assertionStatus("FAILED")
                                                .httpResponseCode(500)
                                                .httpResponseBody("SocketTimeoutException: Read timed out")
@@ -481,7 +476,6 @@ public class HttpStateTest extends WingsBaseTest {
         .isInstanceOf(HttpStateExecutionData.class)
         .isEqualToComparingOnlyGivenFields(
             HttpStateExecutionData.builder()
-                .httpUrl("http://localhost:8088/health/status")
                 .assertionStatus("FAILED")
                 .httpResponseCode(500)
                 .httpResponseBody("NoHttpResponseException: localhost:8088 failed to respond")
@@ -509,7 +503,6 @@ public class HttpStateTest extends WingsBaseTest {
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
         .isEqualToComparingOnlyGivenFields(HttpStateExecutionData.builder()
-                                               .httpUrl("http://localhost:8088/health/status")
                                                .assertionStatus("FAILED")
                                                .httpResponseCode(500)
                                                .httpResponseBody("MalformedChunkCodingException: Bad chunk header")
@@ -537,7 +530,6 @@ public class HttpStateTest extends WingsBaseTest {
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
         .isEqualToComparingOnlyGivenFields(HttpStateExecutionData.builder()
-                                               .httpUrl("http://localhost:8088/health/status")
                                                .assertionStatus("FAILED")
                                                .httpResponseCode(500)
                                                .httpResponseBody("ClientProtocolException: ")
@@ -563,12 +555,9 @@ public class HttpStateTest extends WingsBaseTest {
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
-        .isEqualToComparingOnlyGivenFields(HttpStateExecutionData.builder()
-                                               .httpUrl("http://www.google.com:81/health/status")
-                                               .assertionStatus("FAILED")
-                                               .httpResponseCode(500)
-                                               .build(),
-            "httpUrl", "assertionStatus", "httpResponseCode");
+        .isEqualToComparingOnlyGivenFields(
+            HttpStateExecutionData.builder().assertionStatus("FAILED").httpResponseCode(500).build(), "httpUrl",
+            "assertionStatus", "httpResponseCode");
     assertThat(((HttpStateExecutionData) response.getStateExecutionData()).getHttpResponseBody())
         .contains("Connect to www.google.com:81 ");
     verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());

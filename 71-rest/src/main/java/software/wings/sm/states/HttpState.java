@@ -382,8 +382,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     } else {
       HttpStateExecutionData executionData = (HttpStateExecutionData) context.getStateExecutionData();
       HttpStateExecutionResponse httpStateExecutionResponse = (HttpStateExecutionResponse) notifyResponseData;
-      executionData.setHttpUrl(httpStateExecutionResponse.getHttpUrl());
-      executionData.setHttpMethod(httpStateExecutionResponse.getHttpMethod());
       executionData.setHttpResponseCode(httpStateExecutionResponse.getHttpResponseCode());
       executionData.setHttpResponseBody(httpStateExecutionResponse.getHttpResponseBody());
       executionData.setStatus(httpStateExecutionResponse.getExecutionStatus());
@@ -651,7 +649,5 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     private String errorMessage;
     private String httpResponseBody;
     private int httpResponseCode;
-    private String httpMethod;
-    private String httpUrl;
   }
 }
