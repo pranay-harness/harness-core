@@ -33,6 +33,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -221,6 +222,11 @@ public class SecretManagementResource {
       @FormDataParam("name") final String name,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString,
       @FormDataParam("uuid") final String fileId, @FormDataParam("file") InputStream uploadedInputStream) {
+    // HAR-9736: If the user doesn't make any change in the secret file update, null is expected for now.
+    if (uploadedInputStream == null) {
+      // fill in with an empty input stream
+      uploadedInputStream = new ByteArrayInputStream(new byte[0]);
+    }
     return new RestResponse<>(secretManager.updateFile(accountId, name, fileId,
         usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString),
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));

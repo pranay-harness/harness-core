@@ -15,7 +15,6 @@ import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 
 import com.google.common.base.Preconditions;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -30,7 +29,6 @@ import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.stream.BoundedInputStream;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -310,22 +308,18 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
-  public EncryptedData encryptFile(String accountId, VaultConfig vaultConfig, String name,
-      BoundedInputStream inputStream, EncryptedData savedEncryptedData) {
-    try {
-      Preconditions.checkNotNull(vaultConfig);
-      byte[] bytes = encodeBase64ToByteArray(ByteStreams.toByteArray(inputStream));
-      EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
-          SettingVariableTypes.CONFIG_FILE, vaultConfig, savedEncryptedData);
-      fileData.setAccountId(accountId);
-      fileData.setName(name);
-      fileData.setType(SettingVariableTypes.CONFIG_FILE);
-      fileData.setBase64Encoded(true);
-      fileData.setFileSize(inputStream.getTotalBytesRead());
-      return fileData;
-    } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
-    }
+  public EncryptedData encryptFile(
+      String accountId, VaultConfig vaultConfig, String name, byte[] inputBytes, EncryptedData savedEncryptedData) {
+    Preconditions.checkNotNull(vaultConfig);
+    byte[] bytes = encodeBase64ToByteArray(inputBytes);
+    EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
+        SettingVariableTypes.CONFIG_FILE, vaultConfig, savedEncryptedData);
+    fileData.setAccountId(accountId);
+    fileData.setName(name);
+    fileData.setType(SettingVariableTypes.CONFIG_FILE);
+    fileData.setBase64Encoded(true);
+    fileData.setFileSize(inputBytes.length);
+    return fileData;
   }
 
   @Override

@@ -60,6 +60,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -117,6 +118,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   @Inject protected SecretManager secretManager;
   @Inject protected SecretManagementDelegateService delegateService;
   @Inject protected ScmSecret scmSecret;
+  @Inject protected FileService fileService;
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
 

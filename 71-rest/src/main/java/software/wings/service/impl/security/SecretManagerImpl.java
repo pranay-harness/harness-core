@@ -628,13 +628,13 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedFileData;
     switch (toEncryptionType) {
       case KMS:
-        encryptedFileData = kmsService.encryptFile(accountId, (KmsConfig) toConfig, encryptedData.getName(),
-            new BoundedInputStream(new ByteArrayInputStream(decryptedFileContent)));
+        encryptedFileData =
+            kmsService.encryptFile(accountId, (KmsConfig) toConfig, encryptedData.getName(), decryptedFileContent);
         break;
 
       case VAULT:
-        encryptedFileData = vaultService.encryptFile(accountId, (VaultConfig) toConfig, encryptedData.getName(),
-            new BoundedInputStream(new ByteArrayInputStream(decryptedFileContent)), encryptedData);
+        encryptedFileData = vaultService.encryptFile(
+            accountId, (VaultConfig) toConfig, encryptedData.getName(), decryptedFileContent, encryptedData);
         break;
 
       default:
@@ -1044,54 +1044,65 @@ public class SecretManagerImpl implements SecretManager {
       encryptionType = encryptedData.getEncryptionType();
     }
 
-    EncryptedData encryptedFileData;
-    switch (encryptionType) {
-      case LOCAL:
-        try {
-          byte[] inputBytes = ByteStreams.toByteArray(inputStream);
-          byte[] base64Encoded = encodeBase64ToByteArray(inputBytes);
-          byte[] encryptedFileContent = EncryptionUtils.encrypt(base64Encoded, accountId);
-          try (InputStream encryptedInputStream = new ByteArrayInputStream(encryptedFileContent)) {
-            BaseFile baseFile = new BaseFile();
-            baseFile.setFileName(name);
-            baseFile.setAccountId(accountId);
-            baseFile.setFileUuid(UUIDGenerator.generateUuid());
-            String fileId = fileService.saveFile(baseFile, encryptedInputStream, CONFIGS);
-            encryptedFileData =
-                EncryptedData.builder().encryptionKey(accountId).encryptedValue(fileId.toCharArray()).build();
-            if (update) {
-              fileService.deleteFile(savedFileId, CONFIGS);
+    byte[] inputBytes;
+    try {
+      inputBytes = ByteStreams.toByteArray(inputStream);
+    } catch (IOException e) {
+      throw new WingsException(DEFAULT_ERROR_CODE, e);
+    }
+
+    EncryptedData newEncryptedFile = null;
+    // HAR-9736: Update of encrypted file may not pick a new file for upload and no need to encrypt empty file.
+    if (isNotEmpty(inputBytes)) {
+      switch (encryptionType) {
+        case LOCAL:
+          try {
+            byte[] base64Encoded = encodeBase64ToByteArray(inputBytes);
+            byte[] encryptedFileContent = EncryptionUtils.encrypt(base64Encoded, accountId);
+            try (InputStream encryptedInputStream = new ByteArrayInputStream(encryptedFileContent)) {
+              BaseFile baseFile = new BaseFile();
+              baseFile.setFileName(name);
+              baseFile.setAccountId(accountId);
+              baseFile.setFileUuid(UUIDGenerator.generateUuid());
+              String fileId = fileService.saveFile(baseFile, encryptedInputStream, CONFIGS);
+              newEncryptedFile =
+                  EncryptedData.builder().encryptionKey(accountId).encryptedValue(fileId.toCharArray()).build();
+              if (update) {
+                fileService.deleteFile(savedFileId, CONFIGS);
+              }
             }
+          } catch (IOException e) {
+            throw new WingsException(DEFAULT_ERROR_CODE, e);
           }
-        } catch (IOException e) {
-          throw new WingsException(DEFAULT_ERROR_CODE, e);
-        }
-        break;
+          break;
 
-      case KMS:
-        KmsConfig kmsConfig = update ? kmsService.getKmsConfig(accountId, encryptedData.getKmsId())
-                                     : kmsService.getSecretConfig(accountId);
-        encryptedFileData = kmsService.encryptFile(accountId, kmsConfig, name, inputStream);
-        if (update) {
-          fileService.deleteFile(savedFileId, CONFIGS);
-        }
-        break;
+        case KMS:
+          KmsConfig kmsConfig = update ? kmsService.getKmsConfig(accountId, encryptedData.getKmsId())
+                                       : kmsService.getSecretConfig(accountId);
+          newEncryptedFile = kmsService.encryptFile(accountId, kmsConfig, name, inputBytes);
+          if (update) {
+            fileService.deleteFile(savedFileId, CONFIGS);
+          }
+          break;
 
-      case VAULT:
-        VaultConfig vaultConfig = update ? vaultService.getVaultConfig(accountId, encryptedData.getKmsId())
-                                         : vaultService.getSecretConfig(accountId);
-        encryptedFileData = vaultService.encryptFile(accountId, vaultConfig, name, inputStream, encryptedData);
-        break;
+        case VAULT:
+          VaultConfig vaultConfig = update ? vaultService.getVaultConfig(accountId, encryptedData.getKmsId())
+                                           : vaultService.getSecretConfig(accountId);
+          newEncryptedFile = vaultService.encryptFile(accountId, vaultConfig, name, inputBytes, encryptedData);
+          break;
 
-      default:
-        throw new IllegalArgumentException("Invalid type " + encryptionType);
+        default:
+          throw new IllegalArgumentException("Invalid type " + encryptionType);
+      }
     }
 
     if (update) {
-      encryptedData.setEncryptionKey(encryptedFileData.getEncryptionKey());
-      encryptedData.setEncryptedValue(encryptedFileData.getEncryptedValue());
+      if (newEncryptedFile != null) {
+        encryptedData.setEncryptionKey(newEncryptedFile.getEncryptionKey());
+        encryptedData.setEncryptedValue(newEncryptedFile.getEncryptedValue());
+      }
     } else {
-      encryptedData = encryptedFileData;
+      encryptedData = newEncryptedFile;
       encryptedData.setUuid(uuid);
       encryptedData.setType(SettingVariableTypes.CONFIG_FILE);
       encryptedData.setAccountId(accountId);
@@ -1109,7 +1120,7 @@ public class SecretManagerImpl implements SecretManager {
       throw new KmsOperationException("File " + name + " already exists");
     }
 
-    if (update) {
+    if (update && newEncryptedFile != null) {
       // update parent's file size
       Set<Parent> parents = new HashSet<>();
       if (isNotEmpty(encryptedData.getParentIds())) {
