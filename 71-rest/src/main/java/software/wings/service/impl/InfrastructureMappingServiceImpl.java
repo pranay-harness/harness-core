@@ -1546,6 +1546,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(hostConnectionSetting.getAccountId())
                                           .appId(validationRequest.getAppId())
+                                          .envId(validationRequest.getEnvId())
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
     return delegateProxyFactory.get(HostValidationService.class, syncTaskContext)
