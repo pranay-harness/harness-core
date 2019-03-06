@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
+import static java.util.stream.Collectors.toList;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_NO;
@@ -185,6 +186,12 @@ public class GcsServiceImpl implements GcsService {
   }
 
   private void fillObjectSummaries(Pattern pattern, List<StorageObject> storageObjectList) {
+    storageObjectList =
+        storageObjectList.stream()
+            .filter(storageObject
+                -> !storageObject.getName().endsWith("/") && pattern.matcher(storageObject.getName()).find())
+            .collect(toList());
+
     List<StorageObject> newObjects = Lists.newArrayList();
     try {
       for (StorageObject so : storageObjectList) {
