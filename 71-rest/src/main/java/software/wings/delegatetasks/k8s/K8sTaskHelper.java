@@ -198,6 +198,10 @@ public class K8sTaskHelper {
         logger.warn(result.outputString());
       }
       return success;
+    } catch (Exception e) {
+      logger.error("Exception while doing statusCheck", e);
+      executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+      return false;
     } finally {
       if (eventWatchProcess != null) {
         eventWatchProcess.getProcess().destroyForcibly().waitFor();
