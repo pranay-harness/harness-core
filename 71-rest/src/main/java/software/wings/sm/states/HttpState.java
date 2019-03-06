@@ -335,6 +335,15 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                                       .url(finalUrl)
                                                       .socketTimeoutMillis(taskSocketTimeout)
                                                       .build();
+    HttpStateExecutionDataBuilder executionDataBuilder =
+        HttpStateExecutionData.builder().templateVariables(convertToVariableMap(getTemplateVariables()));
+
+    renderTaskParameters(context, executionDataBuilder.build(), httpTaskParameters);
+
+    executionDataBuilder.httpUrl(httpTaskParameters.getUrl())
+        .httpMethod(httpTaskParameters.getMethod())
+        .header(httpTaskParameters.getHeader());
+
     final DelegateTask delegateTask = DelegateTask.builder()
                                           .async(true)
                                           .taskType(getTaskType().name())
@@ -347,12 +356,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                           .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                           .build();
 
-    HttpStateExecutionDataBuilder executionDataBuilder =
-        HttpStateExecutionData.builder().templateVariables(convertToVariableMap(getTemplateVariables()));
-
-    String delegateTaskId = scheduleDelegateTask(context, delegateTask, executionDataBuilder.build(), true);
-
-    executionDataBuilder.httpUrl(httpTaskParameters.getUrl()).httpMethod(httpTaskParameters.getMethod());
+    String delegateTaskId = scheduleDelegateTask(delegateTask);
 
     return anExecutionResponse()
         .withAsync(true)
@@ -634,6 +638,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       httpState.setAssertion(assertion);
       httpState.setSocketTimeoutMillis(socketTimeoutMillis);
       httpState.setTemplateVariables(templateVariables);
+      httpState.setHeader(header);
       return httpState;
     }
   }
@@ -649,5 +654,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     private String errorMessage;
     private String httpResponseBody;
     private int httpResponseCode;
+    private String httpMethod;
+    private String httpUrl;
+    private String header;
   }
 }

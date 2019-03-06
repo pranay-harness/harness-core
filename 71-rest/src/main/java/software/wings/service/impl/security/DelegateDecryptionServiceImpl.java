@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
-import io.harness.security.encryption.EncryptionType;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.SimpleEncryption;
@@ -29,28 +28,21 @@ public class DelegateDecryptionServiceImpl implements DelegateDecryptionService 
     Map<String, char[]> resultMap = new HashMap<>();
     for (Entry<EncryptionConfig, List<EncryptedRecord>> entry : encryptedRecordMap.entrySet()) {
       EncryptionConfig encryptionConfig = entry.getKey();
-      EncryptionType encryptionType = encryptionConfig.getEncryptionType();
-      switch (encryptionType) {
-        case KMS:
-          for (EncryptedRecord encryptedRecord : entry.getValue()) {
-            resultMap.put(encryptedRecord.getUuid(),
-                secretManagementDelegateService.decrypt(encryptedRecord, (KmsConfig) encryptionConfig));
-          }
-          break;
-        case VAULT:
-          for (EncryptedRecord encryptedRecord : entry.getValue()) {
-            resultMap.put(encryptedRecord.getUuid(),
-                secretManagementDelegateService.decrypt(encryptedRecord, (VaultConfig) encryptionConfig));
-          }
-          break;
-        case LOCAL:
-          for (EncryptedRecord encryptedRecord : entry.getValue()) {
-            SimpleEncryption encryption = new SimpleEncryption(encryptedRecord.getEncryptionKey());
-            resultMap.put(encryptedRecord.getUuid(), encryption.decryptChars(encryptedRecord.getEncryptedValue()));
-          }
-          break;
-        default:
-          throw new IllegalArgumentException("Unsupported encryption type: " + encryptionType);
+      if (encryptionConfig instanceof KmsConfig) {
+        for (EncryptedRecord encryptedRecord : entry.getValue()) {
+          resultMap.put(encryptedRecord.getUuid(),
+              secretManagementDelegateService.decrypt(encryptedRecord, (KmsConfig) encryptionConfig));
+        }
+      } else if (encryptionConfig instanceof VaultConfig) {
+        for (EncryptedRecord encryptedRecord : entry.getValue()) {
+          resultMap.put(encryptedRecord.getUuid(),
+              secretManagementDelegateService.decrypt(encryptedRecord, (VaultConfig) encryptionConfig));
+        }
+      } else {
+        for (EncryptedRecord encryptedRecord : entry.getValue()) {
+          SimpleEncryption encryption = new SimpleEncryption(encryptedRecord.getEncryptionKey());
+          resultMap.put(encryptedRecord.getUuid(), encryption.decryptChars(encryptedRecord.getEncryptedValue()));
+        }
       }
     }
     return resultMap;

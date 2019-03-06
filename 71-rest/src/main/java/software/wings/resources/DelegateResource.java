@@ -32,9 +32,9 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
+import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateStatus;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -462,7 +462,7 @@ public class DelegateResource {
   @Path("{delegateId}/tasks/{taskId}/acquire")
   @Timed
   @ExceptionMetered
-  public DelegateTask acquireDelegateTask(@PathParam("delegateId") String delegateId,
+  public DelegatePackage acquireDelegateTask(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
     return delegateService.acquireDelegateTask(accountId, delegateId, taskId);
   }
@@ -473,7 +473,7 @@ public class DelegateResource {
   @Path("{delegateId}/tasks/{taskId}/report")
   @Timed
   @ExceptionMetered
-  public DelegateTask reportConnectionResults(@PathParam("delegateId") String delegateId,
+  public DelegatePackage reportConnectionResults(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId,
       List<DelegateConnectionResult> results) {
     return delegateService.reportConnectionResults(accountId, delegateId, taskId, results);

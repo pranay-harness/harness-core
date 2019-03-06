@@ -36,6 +36,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Respon
   private String httpResponseBody;
   private String assertionStatement;
   private String assertionStatus;
+  private String header;
 
   @Transient private transient Document document;
 
@@ -43,7 +44,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Respon
   public HttpStateExecutionData(String stateName, String stateType, Long startTs, Long endTs, ExecutionStatus status,
       String errorMsg, Integer waitInterval, ContextElement element, Map<String, Object> stateParams,
       Map<String, Object> templateVariables, String httpUrl, String httpMethod, int httpResponseCode,
-      String httpResponseBody, String assertionStatement, String assertionStatus, Document document) {
+      String httpResponseBody, String assertionStatement, String assertionStatus, Document document, String header) {
     super(
         stateName, stateType, startTs, endTs, status, errorMsg, waitInterval, element, stateParams, templateVariables);
     this.httpUrl = httpUrl;
@@ -53,6 +54,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Respon
     this.assertionStatement = assertionStatement;
     this.assertionStatus = assertionStatus;
     this.document = document;
+    this.header = header;
   }
 
   /**
@@ -107,29 +109,22 @@ public class HttpStateExecutionData extends StateExecutionData implements Respon
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
-    putNotNull(executionDetails, "httpUrl", ExecutionDataValue.builder().displayName("Url").value(httpUrl).build());
-    putNotNull(
-        executionDetails, "httpMethod", ExecutionDataValue.builder().displayName("Method").value(httpMethod).build());
-    putNotNull(executionDetails, "httpResponseCode",
-        ExecutionDataValue.builder().displayName("Response Code").value(httpResponseCode).build());
-    putNotNull(executionDetails, "httpResponseBody",
-        ExecutionDataValue.builder()
-            .displayName("Response Body")
-            .value(StringUtils.abbreviate(httpResponseBody, Constants.SUMMARY_PAYLOAD_LIMIT))
-            .build());
-    putNotNull(executionDetails, "assertionStatement",
-        ExecutionDataValue.builder().displayName("Assertion").value(assertionStatement).build());
-    putNotNull(executionDetails, "assertionStatus",
-        ExecutionDataValue.builder().displayName("Assertion Result").value(assertionStatus).build());
-    return executionDetails;
+    return setHttpExecutionDetails(
+        executionDetails, StringUtils.abbreviate(httpResponseBody, Constants.SUMMARY_PAYLOAD_LIMIT));
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    return setHttpExecutionDetails(executionDetails, httpResponseBody);
+  }
+
+  private Map<String, ExecutionDataValue> setHttpExecutionDetails(
+      Map<String, ExecutionDataValue> executionDetails, String httpResponseBody) {
     putNotNull(executionDetails, "httpUrl", ExecutionDataValue.builder().displayName("Url").value(httpUrl).build());
     putNotNull(
         executionDetails, "httpMethod", ExecutionDataValue.builder().displayName("Method").value(httpMethod).build());
+    putNotNull(executionDetails, "header", ExecutionDataValue.builder().displayName("Header(s)").value(header).build());
     putNotNull(executionDetails, "httpResponseCode",
         ExecutionDataValue.builder().displayName("Response Code").value(httpResponseCode).build());
     putNotNull(executionDetails, "httpResponseBody",
