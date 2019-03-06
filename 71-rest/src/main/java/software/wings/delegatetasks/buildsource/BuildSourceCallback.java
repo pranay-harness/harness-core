@@ -3,6 +3,7 @@ package software.wings.delegatetasks.buildsource;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -16,11 +17,13 @@ import com.google.inject.Inject;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -79,14 +82,22 @@ public class BuildSourceCallback implements NotifyCallback {
         if (buildSourceExecutionResponse.getBuildSourceResponse() != null) {
           builds = buildSourceExecutionResponse.getBuildSourceResponse().getBuildDetails();
         } else {
-          logger.warn("ASYNC_ARTIFACT_CRON: null BuildSourceResponse in buildSourceExecutionResponse:[{}]",
-              buildSourceExecutionResponse);
+          logger.warn(
+              "ASYNC_ARTIFACT_COLLECTION: null BuildSourceResponse in buildSourceExecutionResponse:[{}] for artifactStreamId [{}]",
+              buildSourceExecutionResponse, artifactStreamId);
         }
-        List<Artifact> artifacts = processBuilds(appId, artifactStream);
-        if (isNotEmpty(artifacts)) {
-          logger.info("[{}] new artifacts collected for artifactStreamId {}",
-              artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
-          triggerService.triggerExecutionPostArtifactCollectionAsync(appId, artifactStreamId, artifacts);
+        try {
+          List<Artifact> artifacts = processBuilds(appId, artifactStream);
+          if (isNotEmpty(artifacts)) {
+            logger.info("[{}] new artifacts collected for artifactStreamId {}",
+                artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
+            triggerService.triggerExecutionPostArtifactCollectionAsync(appId, artifactStreamId, artifacts);
+          }
+        } catch (WingsException ex) {
+          ex.addContext(Application.class, appId);
+          ex.addContext(ArtifactStream.class, artifactStreamId);
+          ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
+          updatePermit(artifactStream, true);
         }
       } else {
         logger.info("Request for artifactStreamId:[{}] failed :[{}]", artifactStreamId,
@@ -103,13 +114,14 @@ public class BuildSourceCallback implements NotifyCallback {
     if (failed) {
       artifactStreamService.updateFailedCronAttempts(
           artifactStream.getAppId(), artifactStream.getUuid(), artifactStream.getFailedCronAttempts() + 1);
-      logger.warn("ASYNC_ARTIFACT_CRON: failed to get builds for artifactStream[{}], totalFailedAttempt:[{}]",
+      logger.warn(
+          "ASYNC_ARTIFACT_COLLECTION: failed to fetch/process builds for artifactStream[{}], totalFailedAttempt:[{}]",
           artifactStreamId, artifactStream.getFailedCronAttempts() + 1);
     } else {
       // permitService.releasePermit(permitId);
       if (artifactStream.getFailedCronAttempts() != 0) {
         artifactStreamService.updateFailedCronAttempts(artifactStream.getAppId(), artifactStream.getUuid(), 0);
-        logger.warn("ASYNC_ARTIFACT_CRON: successfully fetched build after [{}] failures for artifactStream[{}]",
+        logger.warn("ASYNC_ARTIFACT_COLLECTION: successfully fetched builds after [{}] failures for artifactStream[{}]",
             artifactStream.getFailedCronAttempts(), artifactStreamId);
       }
     }
@@ -124,7 +136,8 @@ public class BuildSourceCallback implements NotifyCallback {
       logger.info("Request for artifactStreamId:[{}] failed :[{}]", artifactStreamId,
           ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
     } else {
-      logger.error("Unexpected notify response:[{}] for account {}", response, accountId);
+      logger.error("Unexpected  notify response:[{}] during artifact collection for artifactStreamId {} ", response,
+          artifactStreamId);
     }
     updatePermit(artifactStream, true);
   }
