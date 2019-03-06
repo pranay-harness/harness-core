@@ -99,6 +99,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.prune.PruneEntityListener;
 import software.wings.resources.AppResource;
+import software.wings.scheduler.AccountIdAdditionJob;
 import software.wings.scheduler.AdministrativeJob;
 import software.wings.scheduler.ArtifactCollectionHandler;
 import software.wings.scheduler.BarrierBackupJob;
@@ -518,6 +519,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         YamlChangeSetPruneJob.add(jobScheduler);
         ExecutionLogsPruneJob.addJob(jobScheduler);
         InstanceStatsMetricsJob.addJob(jobScheduler);
+        AccountIdAdditionJob.addJob(jobScheduler);
       }
     }
   }
