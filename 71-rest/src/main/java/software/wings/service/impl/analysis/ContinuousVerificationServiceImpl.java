@@ -406,7 +406,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     for (WorkflowExecution execution : workflowExecutionList) {
       deploymentData.get(execution.getUuid()).setStatus(execution.getStatus());
-      deploymentData.get(execution.getUuid()).setWorkflowName(execution.getName());
+      deploymentData.get(execution.getUuid()).setWorkflowName(execution.normalizedName());
       PipelineSummary ps = execution.getPipelineSummary();
       if (ps != null) {
         deploymentData.get(execution.getUuid()).setPipelineName(ps.getPipelineName());

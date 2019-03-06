@@ -290,7 +290,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
           case WORKFLOW:
             final WorkflowExecution workflowExecution =
                 workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
-            builder.releaseEntityName(workflowExecution.getName());
+            builder.releaseEntityName(workflowExecution.normalizedName());
             break;
           default:
             unhandled(scope);

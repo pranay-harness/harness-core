@@ -70,7 +70,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
         CodeDeployParams codeDeployParams = commandStepExecutionSummary.getCodeDeployParams();
         if (codeDeployParams == null) {
           logger.warn("Phase step execution summary null for Deploy for workflow:{} Can't create deployment event",
-              workflowExecution.getName());
+              workflowExecution.normalizedName());
           return Optional.empty();
         }
 
@@ -82,7 +82,8 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
                                              .build()));
 
       } else {
-        throw new HarnessException("Command step execution summary null for workflow: " + workflowExecution.getName());
+        throw new HarnessException(
+            "Command step execution summary null for workflow: " + workflowExecution.normalizedName());
       }
 
     } else {

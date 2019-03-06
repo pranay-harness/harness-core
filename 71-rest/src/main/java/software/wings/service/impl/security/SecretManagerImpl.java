@@ -370,7 +370,7 @@ public class SecretManagerImpl implements SecretManager {
         WorkflowExecution workflowExecution =
             wingsPersistence.get(WorkflowExecution.class, secretUsageLog.getWorkflowExecutionId());
         if (workflowExecution != null) {
-          secretUsageLog.setWorkflowExecutionName(workflowExecution.getName());
+          secretUsageLog.setWorkflowExecutionName(workflowExecution.normalizedName());
         }
       }
     });

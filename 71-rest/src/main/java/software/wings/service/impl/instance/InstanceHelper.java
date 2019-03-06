@@ -160,7 +160,7 @@ public class InstanceHelper {
         if (phaseStepExecutionSummary == null) {
           logger.warn(
               "phaseStepExecutionSummary is null for InfraMappingType {}, appId: {}, WorkflowExecution<Name, Id> :<{},{}>",
-              infrastructureMapping.getInfraMappingType(), appId, workflowExecution.getName(),
+              infrastructureMapping.getInfraMappingType(), appId, workflowExecution.normalizedName(),
               workflowExecution.getWorkflowId());
           return;
         }
@@ -173,7 +173,7 @@ public class InstanceHelper {
         if (phaseStepExecutionData.getElementStatusSummary() == null) {
           logger.warn(
               "elementStatusSummary is null for InfraMappingType {}, appId: {}, WorkflowExecution<Name, Id> :<{},{}>",
-              infrastructureMapping.getInfraMappingType(), appId, workflowExecution.getName(),
+              infrastructureMapping.getInfraMappingType(), appId, workflowExecution.normalizedName(),
               workflowExecution.getWorkflowId());
           return;
         }
@@ -383,7 +383,7 @@ public class InstanceHelper {
           .lastPipelineExecutionName(pipelineSummary.getPipelineName());
     }
 
-    String workflowName = instanceUtil.getWorkflowName(workflowExecution.getName());
+    String workflowName = instanceUtil.getWorkflowName(workflowExecution.normalizedName());
     Validator.notNullCheck("WorkflowName", workflowName);
     builder.lastWorkflowExecutionName(workflowName);
 
