@@ -5,11 +5,14 @@ import static io.harness.persistence.UuidAccess.ID_KEY;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.BackgroundExecutorService;
 import io.harness.scheduler.BackgroundSchedulerLocker;
 import io.harness.scheduler.PersistentScheduler;
+import org.mongodb.morphia.query.Query;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -91,19 +94,31 @@ public class AccountIdAdditionJob implements Job {
   }
 
   private <T extends Base> void setAccountIdForEntities(Class<T> clazz) {
-    try (HIterator<T> entities = new HIterator<>(wingsPersistence.createQuery(clazz)
-                                                     .field("accountId")
-                                                     .doesNotExist()
-                                                     .project(ID_KEY, true)
-                                                     .project("appId", true)
-                                                     .fetch())) {
+    Query<T> query = wingsPersistence.createQuery(clazz);
+    query.or(query.criteria("accountId").doesNotExist(), query.criteria("accountId").equal(null));
+    query.project(ID_KEY, true);
+    query.project("appId", true);
+
+    try (HIterator<T> entities = new HIterator<>(query.fetch())) {
       while (entities.hasNext()) {
-        final T entity = entities.next();
-        String accountId = appService.getAccountIdByAppId(entity.getAppId());
-        if (isEmpty(accountId)) {
-          continue;
+        try {
+          final T entity = entities.next();
+          String appId = entity.getAppId();
+          String entityId = entity.getUuid();
+          String accountId = appService.getAccountIdByAppId(appId);
+
+          if (isEmpty(accountId)) {
+            continue;
+          }
+          wingsPersistence.updateField(clazz, entityId, "accountId", accountId);
+        } catch (WingsException ex) {
+          // There are some orphan entities, whose appId is invalid
+          if (!ErrorCode.INVALID_ARGUMENT.equals(ex.getCode())) {
+            logger.warn("Account id addition job failed to execute for entity {}", clazz.getSimpleName(), ex);
+          }
+        } catch (Exception ex) {
+          logger.warn("Account id addition job failed to execute for entity {}", clazz.getSimpleName(), ex);
         }
-        wingsPersistence.updateField(clazz, entity.getUuid(), "accountId", accountId);
       }
     }
   }
