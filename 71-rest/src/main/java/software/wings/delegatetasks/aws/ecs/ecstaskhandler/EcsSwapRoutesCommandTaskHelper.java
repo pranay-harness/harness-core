@@ -16,11 +16,13 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Tag;
 import com.amazonaws.services.ecs.model.TagResourceRequest;
 import com.amazonaws.services.ecs.model.UntagResourceRequest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.UpdateServiceCountRequestData;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -39,17 +41,27 @@ public class EcsSwapRoutesCommandTaskHelper {
       return;
     }
 
+    List<ServiceEvent> serviceEvents =
+        ecsContainerService.getServiceEvents(region, awsConfig, encryptedDataDetails, cluster, serviceName);
+
+    UpdateServiceCountRequestData serviceCountUpdateRequestData = UpdateServiceCountRequestData.builder()
+                                                                      .awsConfig(awsConfig)
+                                                                      .region(region)
+                                                                      .encryptedDataDetails(encryptedDataDetails)
+                                                                      .cluster(cluster)
+                                                                      .serviceName(serviceName)
+                                                                      .desiredCount(count)
+                                                                      .executionLogCallback(executionLogCallback)
+                                                                      .serviceEvents(serviceEvents)
+                                                                      .build();
     if (needToUpdateDesiredCount(
             awsConfig, encryptedDataDetails, region, cluster, count, serviceName, executionLogCallback)) {
-      ecsContainerService.updateServiceCount(
-          region, encryptedDataDetails, cluster, serviceName, count, executionLogCallback, awsConfig);
+      ecsContainerService.updateServiceCount(serviceCountUpdateRequestData);
+
+      ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(serviceCountUpdateRequestData);
+
+      ecsContainerService.waitForServiceToReachSteadyState(timeout, serviceCountUpdateRequestData);
     }
-
-    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(
-        region, awsConfig, encryptedDataDetails, cluster, serviceName, executionLogCallback, count);
-
-    ecsContainerService.waitForServiceToReachSteadyState(
-        region, awsConfig, encryptedDataDetails, cluster, serviceName, timeout, executionLogCallback);
   }
 
   private boolean needToUpdateDesiredCount(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
@@ -117,8 +129,21 @@ public class EcsSwapRoutesCommandTaskHelper {
       String cluster, String serviceName, ExecutionLogCallback logCallback) {
     if (isNotEmpty(serviceName)) {
       logCallback.saveExecutionLog("Downsizing Green Service: " + serviceName);
-      ecsContainerService.updateServiceCount(
-          region, encryptedDataDetails, cluster, serviceName, 0, logCallback, awsConfig);
+
+      UpdateServiceCountRequestData updateCountServiceRequestData =
+          UpdateServiceCountRequestData.builder()
+              .region(region)
+              .encryptedDataDetails(encryptedDataDetails)
+              .cluster(cluster)
+              .desiredCount(0)
+              .executionLogCallback(logCallback)
+              .serviceName(serviceName)
+              .serviceEvents(
+                  ecsContainerService.getServiceEvents(region, awsConfig, encryptedDataDetails, cluster, serviceName))
+              .awsConfig(awsConfig)
+              .build();
+
+      ecsContainerService.updateServiceCount(updateCountServiceRequestData);
       final int downSizeTimeSecs = 30;
       logCallback.saveExecutionLog(
           format("Waiting: [%d] seconds for the downsize to complete Ecs services to synchrnoze", downSizeTimeSecs));

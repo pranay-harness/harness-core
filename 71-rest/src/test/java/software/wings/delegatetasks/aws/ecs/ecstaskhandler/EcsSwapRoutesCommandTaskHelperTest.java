@@ -39,13 +39,9 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
         .describeServices(anyString(), any(), anyList(), any());
     taskHelper.upsizeOlderService(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "cluster", 1, "foo_1", mockCallback, 20);
-    verify(mockEcsContainerService)
-        .updateServiceCount(eq("us-east-1"), anyList(), eq("cluster"), eq("foo_1"), eq(1), any(), any());
-    verify(mockEcsContainerService)
-        .waitForTasksToBeInRunningStateButDontThrowException(
-            eq("us-east-1"), any(), anyList(), eq("cluster"), eq("foo_1"), any(), eq(1));
-    verify(mockEcsContainerService)
-        .waitForServiceToReachSteadyState(eq("us-east-1"), any(), anyList(), eq("cluster"), eq("foo_1"), eq(20), any());
+    verify(mockEcsContainerService).updateServiceCount(any());
+    verify(mockEcsContainerService).waitForTasksToBeInRunningStateButDontThrowException(any());
+    verify(mockEcsContainerService).waitForServiceToReachSteadyState(eq(20), any());
   }
 
   @Test
@@ -54,8 +50,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     taskHelper.downsizeOlderService(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "cluster", "foo_1", mockCallback);
-    verify(mockEcsContainerService)
-        .updateServiceCount(eq("us-east-1"), anyList(), eq("cluster"), eq("foo_1"), eq(0), any(), any());
+    verify(mockEcsContainerService).updateServiceCount(any());
   }
 
   @Test

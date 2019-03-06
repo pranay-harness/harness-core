@@ -53,6 +53,7 @@ import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.SchedulingStrategy;
 import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.ServiceRegistry;
 import com.amazonaws.services.ecs.model.Tag;
 import com.amazonaws.services.ecs.model.TaskDefinition;
@@ -79,6 +80,7 @@ import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.cloudprovider.UpdateServiceCountRequestData;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -920,14 +922,32 @@ public class EcsSetupCommandTaskHelper {
                           .getServices()
                           .get(0);
 
-    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(region, awsConfig, encryptedDataDetails,
-        clusterName, serviceName, executionLogCallback, service.getDesiredCount());
-    ecsContainerService.waitForServiceToReachSteadyState(region, awsConfig, encryptedDataDetails, clusterName,
-        serviceName, serviceSteadyStateTimeout, executionLogCallback);
+    UpdateServiceCountRequestData updateCountRequestData = UpdateServiceCountRequestData.builder()
+                                                               .region(region)
+                                                               .encryptedDataDetails(encryptedDataDetails)
+                                                               .cluster(clusterName)
+                                                               .desiredCount(service.getDesiredCount())
+                                                               .executionLogCallback(executionLogCallback)
+                                                               .serviceName(serviceName)
+                                                               .serviceEvents(getEventsFromService(service))
+                                                               .awsConfig(awsConfig)
+                                                               .build();
+
+    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(updateCountRequestData);
+    ecsContainerService.waitForServiceToReachSteadyState(serviceSteadyStateTimeout, updateCountRequestData);
+
     return ecsContainerService.getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName,
         serviceName, Collections.EMPTY_LIST, executionLogCallback, false);
   }
 
+  private List<ServiceEvent> getEventsFromService(Service service) {
+    List<ServiceEvent> serviceEvents = new ArrayList<>();
+    if (service != null && isNotEmpty(service.getEvents())) {
+      serviceEvents.addAll(service.getEvents());
+    }
+
+    return serviceEvents;
+  }
   public void downsizeOldOrUnhealthy(SettingAttribute settingAttribute, EcsSetupParams setupParams,
       String containerServiceName, List<EncryptedDataDetail> encryptedDataDetails,
       ExecutionLogCallback executionLogCallback) {
