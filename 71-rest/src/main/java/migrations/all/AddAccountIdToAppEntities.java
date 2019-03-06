@@ -64,8 +64,13 @@ public class AddAccountIdToAppEntities implements Migration {
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
     int i = 1;
-    try (HIterator<T> entities = new HIterator<>(
-             wingsPersistence.createQuery(clazz).field("appId").in(appIdSet).project(ID_KEY, true).fetch())) {
+    try (HIterator<T> entities = new HIterator<>(wingsPersistence.createQuery(clazz)
+                                                     .field("accountId")
+                                                     .doesNotExist()
+                                                     .field("appId")
+                                                     .in(appIdSet)
+                                                     .project(ID_KEY, true)
+                                                     .fetch())) {
       while (entities.hasNext()) {
         final T entity = entities.next();
 
