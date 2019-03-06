@@ -12,6 +12,7 @@ import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aW
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
@@ -103,6 +104,7 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
                               .uuid(workflowExecutionId)
                               .startTs(1519200000000L)
                               .name("dummy workflow")
+                              .status(ExecutionStatus.NEW)
                               .build());
     configuration.getPortal().setJwtExternalServiceSecret(accountId);
   }

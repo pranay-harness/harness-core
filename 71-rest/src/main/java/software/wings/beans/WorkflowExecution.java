@@ -22,8 +22,6 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -43,7 +41,6 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,8 +49,6 @@ import javax.validation.constraints.NotNull;
 
 /**
  * The Class WorkflowExecution.
- *
- * @author Rishi
  */
 @Data
 @Entity(value = "workflowExecutions", noClassnameStored = true)
@@ -98,7 +93,7 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   private String envName;
   private EnvironmentType envType;
   private WorkflowType workflowType;
-  @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
+  @Indexed private ExecutionStatus status;
   @Transient private Graph graph;
 
   @Transient private GraphNode executionNode; // used for workflow details.
@@ -133,9 +128,9 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
 
   private String deploymentTriggerId;
 
-  @Getter @Setter private List<Artifact> artifacts = new ArrayList();
+  private List<Artifact> artifacts;
 
-  @SchemaIgnore @Indexed @Getter @Setter private List<String> keywords;
+  @SchemaIgnore @Indexed private List<String> keywords;
 
   @SchemaIgnore
   @JsonIgnore
@@ -156,13 +151,6 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
       return String.valueOf(workflowType);
     }
     return name;
-  }
-
-  public boolean isRunningStatus() {
-    return ExecutionStatus.isRunningStatus(status);
-  }
-  public boolean isPausedStatus() {
-    return status != null && (status == ExecutionStatus.PAUSED || status == ExecutionStatus.WAITING);
   }
 
   // TODO: this is silly, we should get rid of it

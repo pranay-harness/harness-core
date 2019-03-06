@@ -22,6 +22,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTIO
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.OwnerRule.Owner;
@@ -62,7 +63,7 @@ public class EnvStateTest extends WingsBaseTest {
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(workflowExecutionService.triggerOrchestrationExecution(
              eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
-        .thenReturn(aWorkflowExecution().uuid(WORKFLOW_EXECUTION_ID).build());
+        .thenReturn(aWorkflowExecution().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.NEW).build());
     when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
   }
 

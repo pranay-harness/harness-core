@@ -328,7 +328,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
       }
 
-      if (!runningOnly || workflowExecution.isRunningStatus() || workflowExecution.isPausedStatus()) {
+      if (!runningOnly || ExecutionStatus.isRunningStatus(workflowExecution.getStatus())
+          || ExecutionStatus.isHaltedStatus(workflowExecution.getStatus())) {
         try {
           populateNodeHierarchy(workflowExecution, includeGraph, includeStatus, false, emptySet());
         } catch (Exception e) {
@@ -2720,6 +2721,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     // Pipeline Execution Artifacts collected so far
     List<Artifact> collectedArtifacts = pipelineWorkflowExecution.getArtifacts();
+    if (collectedArtifacts == null) {
+      pipelineWorkflowExecution.setArtifacts(new ArrayList<>());
+      collectedArtifacts = pipelineWorkflowExecution.getArtifacts();
+    }
 
     Set<String> collectedArtifactIds = collectedArtifacts.stream().map(Artifact::getUuid).collect(Collectors.toSet());
     Set<String> artifactIds = artifacts.stream().map(Artifact::getUuid).collect(Collectors.toSet());

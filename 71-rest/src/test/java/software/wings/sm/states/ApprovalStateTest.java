@@ -33,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTIO
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
@@ -94,6 +95,7 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     when(workflowExecutionService.getWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
         .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution()
+                        .status(ExecutionStatus.NEW)
                         .appId(APP_ID)
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
                         .createdAt(70L)
