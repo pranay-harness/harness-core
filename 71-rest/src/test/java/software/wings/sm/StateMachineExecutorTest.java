@@ -885,8 +885,8 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     when(workflowExecutionService.getExecutionDetails(
              eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), any()))
         .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution()
-                        .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
-                        .withStartTs(70L)
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .startTs(70L)
                         .build());
 
     Map<String, String> placeholders = new HashMap<>();

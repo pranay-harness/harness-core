@@ -98,11 +98,11 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
 
     wingsPersistence.save(Application.Builder.anApplication().withUuid(appId).withAccountId(accountId).build());
     wingsPersistence.save(aWorkflowExecution()
-                              .withAppId(appId)
-                              .withWorkflowId(workflowId)
-                              .withUuid(workflowExecutionId)
-                              .withStartTs(1519200000000L)
-                              .withName("dummy workflow")
+                              .appId(appId)
+                              .workflowId(workflowId)
+                              .uuid(workflowExecutionId)
+                              .startTs(1519200000000L)
+                              .name("dummy workflow")
                               .build());
     configuration.getPortal().setJwtExternalServiceSecret(accountId);
   }

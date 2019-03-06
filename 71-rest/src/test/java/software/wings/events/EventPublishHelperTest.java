@@ -291,9 +291,9 @@ public class EventPublishHelperTest extends WingsBaseTest {
       when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(Arrays.asList(APP_ID));
       WorkflowExecution workflowExecution =
           WorkflowExecutionBuilder.aWorkflowExecution()
-              .withUuid(WORKFLOW_EXECUTION_ID)
-              .withCreatedBy(EmbeddedUser.builder().email("abcd@abcd.com").uuid(user.getUuid()).build())
-              .withAppId(APP_ID)
+              .uuid(WORKFLOW_EXECUTION_ID)
+              .createdBy(EmbeddedUser.builder().email("abcd@abcd.com").uuid(user.getUuid()).build())
+              .appId(APP_ID)
               .build();
       when(executionService.listExecutions(any(PageRequest.class), anyBoolean()))
           .thenReturn(
@@ -314,9 +314,9 @@ public class EventPublishHelperTest extends WingsBaseTest {
       when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(Arrays.asList(APP_ID));
       WorkflowExecution workflowExecution =
           WorkflowExecutionBuilder.aWorkflowExecution()
-              .withUuid(WORKFLOW_EXECUTION_ID)
-              .withAppId(APP_ID)
-              .withCreatedBy(EmbeddedUser.builder().email("abcd@abcd.com").uuid(user.getUuid()).build())
+              .uuid(WORKFLOW_EXECUTION_ID)
+              .appId(APP_ID)
+              .createdBy(EmbeddedUser.builder().email("abcd@abcd.com").uuid(user.getUuid()).build())
               .build();
       when(executionService.getExecutionWithoutSummary(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(workflowExecution);
       when(executionService.listExecutions(any(PageRequest.class), anyBoolean()))

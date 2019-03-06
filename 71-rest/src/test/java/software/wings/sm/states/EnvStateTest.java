@@ -62,7 +62,7 @@ public class EnvStateTest extends WingsBaseTest {
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(workflowExecutionService.triggerOrchestrationExecution(
              eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
-        .thenReturn(aWorkflowExecution().withUuid(WORKFLOW_EXECUTION_ID).build());
+        .thenReturn(aWorkflowExecution().uuid(WORKFLOW_EXECUTION_ID).build());
     when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
   }
 

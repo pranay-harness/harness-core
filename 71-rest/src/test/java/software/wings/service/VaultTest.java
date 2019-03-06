@@ -141,8 +141,8 @@ public class VaultTest extends WingsBaseTest {
     appId = UUID.randomUUID().toString();
     workflowName = UUID.randomUUID().toString();
     envId = UUID.randomUUID().toString();
-    workflowExecutionId = wingsPersistence.save(
-        WorkflowExecutionBuilder.aWorkflowExecution().withName(workflowName).withEnvId(envId).build());
+    workflowExecutionId =
+        wingsPersistence.save(WorkflowExecutionBuilder.aWorkflowExecution().name(workflowName).envId(envId).build());
     when(secretManagementDelegateService.encrypt(anyString(), anyObject(), anyString(), any(SettingVariableTypes.class),
              any(VaultConfig.class), any(EncryptedData.class)))
         .then(invocation -> {

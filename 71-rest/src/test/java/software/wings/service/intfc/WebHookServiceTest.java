@@ -73,12 +73,8 @@ public class WebHookServiceTest extends WingsBaseTest {
 
   final String token = CryptoUtil.secureRandAlphaNumString(40);
 
-  WorkflowExecution execution = aWorkflowExecution()
-                                    .withAppId(APP_ID)
-                                    .withEnvId(ENV_ID)
-                                    .withUuid(WORKFLOW_EXECUTION_ID)
-                                    .withStatus(RUNNING)
-                                    .build();
+  WorkflowExecution execution =
+      aWorkflowExecution().appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_EXECUTION_ID).status(RUNNING).build();
 
   Trigger trigger = Trigger.builder()
                         .workflowId(PIPELINE_ID)
@@ -368,12 +364,8 @@ public class WebHookServiceTest extends WingsBaseTest {
     final Application application =
         anApplication().withUuid(APP_ID).withAppId(APP_ID).withAccountId(ACCOUNT_ID).build();
     doReturn(application).when(appService).get(APP_ID);
-    final WorkflowExecution execution = aWorkflowExecution()
-                                            .withAppId(APP_ID)
-                                            .withEnvId(ENV_ID)
-                                            .withUuid(WORKFLOW_EXECUTION_ID)
-                                            .withStatus(RUNNING)
-                                            .build();
+    final WorkflowExecution execution =
+        aWorkflowExecution().appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_EXECUTION_ID).status(RUNNING).build();
     final String token = CryptoUtil.secureRandAlphaNumString(40);
     doReturn(execution)
         .when(triggerService)

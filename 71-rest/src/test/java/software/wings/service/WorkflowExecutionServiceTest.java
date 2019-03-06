@@ -272,14 +272,10 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(query.fetch()).thenReturn(executionIterator);
     when(executionIterator.getCursor()).thenReturn(dbCursor);
     WorkflowExecution workflowExecution1 =
-        aWorkflowExecution().withAppId(APP_ID).withAppName(APP_NAME).withEnvType(PROD).withStatus(SUCCESS).build();
+        aWorkflowExecution().appId(APP_ID).appName(APP_NAME).envType(PROD).status(SUCCESS).build();
 
-    WorkflowExecution workflowExecution2 = aWorkflowExecution()
-                                               .withAppId(APP_ID)
-                                               .withAppName(APP_NAME)
-                                               .withEnvType(NON_PROD)
-                                               .withStatus(ExecutionStatus.FAILED)
-                                               .build();
+    WorkflowExecution workflowExecution2 =
+        aWorkflowExecution().appId(APP_ID).appName(APP_NAME).envType(NON_PROD).status(ExecutionStatus.FAILED).build();
 
     when(executionIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
 
@@ -295,7 +291,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Test
   public void shouldFetchWorkflowExecution() {
     when(query.order(Sort.descending(anyString()))).thenReturn(query);
-    when(query.get(any(FindOptions.class))).thenReturn(aWorkflowExecution().withAppId(APP_ID).build());
+    when(query.get(any(FindOptions.class))).thenReturn(aWorkflowExecution().appId(APP_ID).build());
     WorkflowExecution workflowExecution =
         workflowExecutionService.fetchWorkflowExecution(APP_ID, asList(SERVICE_ID), asList(ENV_ID), WORKFLOW_ID);
     assertThat(workflowExecution).isNotNull();
@@ -531,12 +527,12 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
   private WorkflowExecution createNewWorkflowExecution() {
     return aWorkflowExecution()
-        .withAppId(APP_ID)
-        .withAppName(APP_NAME)
-        .withEnvType(NON_PROD)
-        .withStatus(ExecutionStatus.PAUSED)
-        .withWorkflowType(WorkflowType.ORCHESTRATION)
-        .withUuid(generateUuid())
+        .appId(APP_ID)
+        .appName(APP_NAME)
+        .envType(NON_PROD)
+        .status(ExecutionStatus.PAUSED)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .uuid(generateUuid())
         .build();
   }
 

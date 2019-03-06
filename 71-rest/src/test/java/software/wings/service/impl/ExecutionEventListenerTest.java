@@ -32,8 +32,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
 
   @Test
   public void shouldNoQueueIfNotRunningOrPaused() throws Exception {
-    wingsPersistence.save(
-        aWorkflowExecution().withAppId(APP_ID).withWorkflowId(WORKFLOW_ID).withStatus(SUCCESS).build());
+    wingsPersistence.save(aWorkflowExecution().appId(APP_ID).workflowId(WORKFLOW_ID).status(SUCCESS).build());
 
     executionEventListener.onMessage(ExecutionEvent.builder().appId(APP_ID).workflowId(WORKFLOW_ID).build());
 
@@ -42,8 +41,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
 
   @Test
   public void shouldNoQueueIfNotQueued() throws Exception {
-    wingsPersistence.save(
-        aWorkflowExecution().withAppId(APP_ID).withWorkflowId(WORKFLOW_ID).withStatus(RUNNING).build());
+    wingsPersistence.save(aWorkflowExecution().appId(APP_ID).workflowId(WORKFLOW_ID).status(RUNNING).build());
 
     executionEventListener.onMessage(ExecutionEvent.builder().appId(APP_ID).workflowId(WORKFLOW_ID).build());
 
@@ -53,7 +51,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Test
   public void shouldQueueBuildWorkflow() throws Exception {
     WorkflowExecution queuedExecution =
-        aWorkflowExecution().withAppId(APP_ID).withWorkflowId(WORKFLOW_ID).withStatus(QUEUED).build();
+        aWorkflowExecution().appId(APP_ID).workflowId(WORKFLOW_ID).status(QUEUED).build();
 
     wingsPersistence.save(queuedExecution);
 
@@ -66,10 +64,10 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Test
   public void shouldQueueWorkflow() throws Exception {
     WorkflowExecution queuedExecution = aWorkflowExecution()
-                                            .withInfraMappingIds(asList(INFRA_MAPPING_ID))
-                                            .withAppId(APP_ID)
-                                            .withWorkflowId(WORKFLOW_ID)
-                                            .withStatus(QUEUED)
+                                            .infraMappingIds(asList(INFRA_MAPPING_ID))
+                                            .appId(APP_ID)
+                                            .workflowId(WORKFLOW_ID)
+                                            .status(QUEUED)
                                             .build();
 
     wingsPersistence.save(queuedExecution);

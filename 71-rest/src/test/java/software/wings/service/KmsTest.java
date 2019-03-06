@@ -167,8 +167,8 @@ public class KmsTest extends WingsBaseTest {
         Application.Builder.anApplication().withName(generateUuid()).withAccountId(accountId).build());
     workflowName = generateUuid();
     envId = generateUuid();
-    workflowExecutionId = wingsPersistence.save(
-        WorkflowExecutionBuilder.aWorkflowExecution().withName(workflowName).withEnvId(envId).build());
+    workflowExecutionId =
+        wingsPersistence.save(WorkflowExecutionBuilder.aWorkflowExecution().name(workflowName).envId(envId).build());
     when(secretManagementDelegateService.encrypt(anyString(), anyObject(), anyObject())).then(invocation -> {
       Object[] args = invocation.getArguments();
       return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);

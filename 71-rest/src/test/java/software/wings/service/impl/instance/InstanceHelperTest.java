@@ -132,15 +132,15 @@ public class InstanceHelperTest extends WingsBaseTest {
   public void setUp() {
     MockitoAnnotations.initMocks(this);
     workflowExecution = WorkflowExecutionBuilder.aWorkflowExecution()
-                            .withAppId("app_1")
-                            .withAppName("app1")
-                            .withUuid(WORKFLOW_EXECUTION_ID)
-                            .withName("workflow1")
-                            .withPipelineSummary(null)
-                            .withEnvName("envName")
-                            .withEnvId("env_1")
-                            .withEnvType(EnvironmentType.PROD)
-                            .withTriggeredBy(EmbeddedUser.builder().name("user1").uuid("user_1").build())
+                            .appId("app_1")
+                            .appName("app1")
+                            .uuid(WORKFLOW_EXECUTION_ID)
+                            .name("workflow1")
+                            .pipelineSummary(null)
+                            .envName("envName")
+                            .envId("env_1")
+                            .envType(EnvironmentType.PROD)
+                            .triggeredBy(EmbeddedUser.builder().name("user1").uuid("user_1").build())
                             .build();
 
     when(instanceService.saveOrUpdate(anyList())).thenAnswer(i -> i.getArguments()[0]);
