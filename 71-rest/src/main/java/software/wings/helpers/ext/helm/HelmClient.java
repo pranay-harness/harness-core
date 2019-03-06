@@ -87,4 +87,7 @@ public interface HelmClient {
 
   HelmCliResponse deleteHelmRelease(HelmCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException;
+
+  HelmCliResponse repoUpdate(HelmCommandRequest commandRequest)
+      throws InterruptedException, TimeoutException, IOException;
 }

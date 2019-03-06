@@ -13,6 +13,7 @@ import static software.wings.helpers.ext.helm.HelmConstants.HELM_INSTALL_COMMAND
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_LIST_RELEASE_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_RELEASE_HIST_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_REPO_LIST_COMMAND_TEMPLATE;
+import static software.wings.helpers.ext.helm.HelmConstants.HELM_REPO_UPDATE_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_ROLLBACK_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_UPGRADE_COMMAND_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_VERSION_COMMAND_TEMPLATE;
@@ -168,6 +169,19 @@ public class HelmClientImpl implements HelmClient {
     String command =
         HELM_ADD_REPO_COMMAND_TEMPLATE.replace("${REPO_URL}", commandRequest.getChartSpecification().getChartUrl())
             .replace("${REPO_NAME}", commandRequest.getRepoName());
+
+    command = applyCommandFlags(command, commandRequest);
+    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyKubeConfigToCommand(command, kubeConfigLocation);
+
+    return executeHelmCLICommand(command);
+  }
+
+  @Override
+  public HelmCliResponse repoUpdate(HelmCommandRequest commandRequest)
+      throws InterruptedException, TimeoutException, IOException {
+    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String command = HELM_REPO_UPDATE_COMMAND_TEMPLATE;
 
     command = applyCommandFlags(command, commandRequest);
     logHelmCommandInExecutionLogs(commandRequest, command);
