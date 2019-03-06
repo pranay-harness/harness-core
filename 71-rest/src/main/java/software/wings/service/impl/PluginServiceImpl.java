@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
-import static software.wings.beans.FeatureName.JIRA_INTEGRATION;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
@@ -345,19 +344,15 @@ public class PluginServiceImpl implements PluginService {
                        .withPluginCategories(asList(Artifact))
                        .withUiSchema(readUiSchema("SFTP"))
                        .build());
-
-    boolean jiraEnabled = featureFlagService.isEnabled(JIRA_INTEGRATION, accountId);
-    if (jiraEnabled) {
-      pluginList.add(anAccountPlugin()
-                         .withSettingClass(JiraConfig.class)
-                         .withAccountId(accountId)
-                         .withIsEnabled(true)
-                         .withDisplayName("Jira")
-                         .withType("JIRA")
-                         .withPluginCategories(asList(Collaboration))
-                         .withUiSchema(readUiSchema("JIRA"))
-                         .build());
-    }
+    pluginList.add(anAccountPlugin()
+                       .withSettingClass(JiraConfig.class)
+                       .withAccountId(accountId)
+                       .withIsEnabled(true)
+                       .withDisplayName("Jira")
+                       .withType("JIRA")
+                       .withPluginCategories(asList(Collaboration))
+                       .withUiSchema(readUiSchema("JIRA"))
+                       .build());
 
     return pluginList;
   }

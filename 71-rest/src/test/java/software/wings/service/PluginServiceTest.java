@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
@@ -28,7 +27,6 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -71,7 +69,6 @@ public class PluginServiceTest {
   public void setup() throws IOException {
     initMocks(this);
     setInternalState(pluginService, "featureFlagService", mockFeatureFlagService);
-    when(mockFeatureFlagService.isEnabled(FeatureName.JIRA_INTEGRATION, accountId)).thenReturn(true);
   }
 
   @Test
