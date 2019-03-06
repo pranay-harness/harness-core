@@ -52,7 +52,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Fun
   @Inject private ScmSecret scmSecret;
   @Inject private SettingsService settingsService;
 
-  @Getter Account account;
+  @Getter static Account account;
 
   @Before
   public void testSetup() throws IOException {
