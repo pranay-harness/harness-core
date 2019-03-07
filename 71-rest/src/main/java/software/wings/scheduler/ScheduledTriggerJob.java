@@ -64,6 +64,10 @@ public class ScheduledTriggerJob implements Job {
     jobScheduler.scheduleJob(job, trigger);
   }
 
+  public static void delete(PersistentScheduler jobScheduler, String triggerId) {
+    jobScheduler.deleteJob(triggerId, GROUP);
+  }
+
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     String triggerId = jobExecutionContext.getMergedJobDataMap().getString(TRIGGER_ID_KEY);

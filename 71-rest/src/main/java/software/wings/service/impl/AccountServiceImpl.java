@@ -59,12 +59,20 @@ import software.wings.beans.RoleType;
 import software.wings.beans.Service;
 import software.wings.beans.SystemCatalog;
 import software.wings.beans.User;
+import software.wings.beans.governance.GovernanceConfig;
+import software.wings.beans.sso.LdapSettings;
+import software.wings.beans.sso.SSOType;
+import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
+import software.wings.scheduler.InstanceSyncJob;
+import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.scheduler.LimitVicinityCheckerJob;
+import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
@@ -82,6 +90,7 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.template.TemplateGalleryService;
@@ -96,6 +105,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -140,6 +150,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private SampleDataProviderService sampleDataProviderService;
   @Inject private AlertNotificationRuleService notificationRuleService;
+  @Inject private GovernanceConfigService governanceConfigService;
+  @Inject private SSOSettingServiceImpl ssoSettingService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -513,7 +525,80 @@ public class AccountServiceImpl implements AccountService {
     newLicenseInfo.setAccountStatus(accountStatus);
     licenseService.updateAccountLicense(accountId, newLicenseInfo);
 
+    if (AccountStatus.MIGRATING.equals(accountStatus)) {
+      // 1. To freeze the deployments once the account is set to status MIGRATING
+      freezeDeployments(accountId);
+      // 2. Stop all quartz jobs associated with this account
+      deleteQuartzJobs(accountId);
+    }
+
     return true;
+  }
+
+  private void freezeDeployments(String accountId) {
+    GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
+    if (governanceConfig == null) {
+      governanceConfig = GovernanceConfig.builder().accountId(accountId).deploymentFreeze(true).build();
+      wingsPersistence.save(governanceConfig);
+    } else {
+      governanceConfig.setDeploymentFreeze(true);
+      governanceConfigService.update(accountId, governanceConfig);
+    }
+    logger.info("Freezed deployment for account {}", accountId);
+  }
+
+  private void deleteQuartzJobs(String accountId) {
+    // 1. Account level jobs
+    AlertCheckJob.delete(jobScheduler, accountId);
+    InstanceStatsCollectorJob.delete(jobScheduler, accountId);
+    LimitVicinityCheckerJob.delete(jobScheduler, accountId);
+
+    List<String> appIds = appService.getAppIdsByAccountId(accountId);
+
+    // 2. ScheduledTriggerJob
+    List<Trigger> triggers = getAllScheduledTriggersForAccount(appIds);
+    for (Trigger trigger : triggers) {
+      // Scheduled triggers is using the cron expression as trigger. No need to add special delay.
+      ScheduledTriggerJob.delete(jobScheduler, trigger.getUuid());
+    }
+
+    // 3. InstanceSyncJob:
+    for (String appId : appIds) {
+      InstanceSyncJob.delete(jobScheduler, appId);
+    }
+
+    // 4. LdapGroupSyncJob
+    List<LdapSettings> ldapSettings = getAllLdapSettingsForAccount(accountId);
+    for (LdapSettings ldapSetting : ldapSettings) {
+      LdapGroupSyncJob.delete(jobScheduler, ssoSettingService, accountId, ldapSetting.getUuid());
+    }
+    logger.info("Stopped all background quartz jobs for account {}", accountId);
+  }
+
+  private List<Trigger> getAllScheduledTriggersForAccount(List<String> appIds) {
+    List<Trigger> triggers = new ArrayList<>();
+    Query<Trigger> query = wingsPersistence.createQuery(Trigger.class).filter("appId in", appIds);
+    Iterator<Trigger> iterator = query.iterator();
+    while (iterator.hasNext()) {
+      Trigger trigger = iterator.next();
+      if (trigger.getCondition().getConditionType() == TriggerConditionType.SCHEDULED) {
+        triggers.add(trigger);
+      }
+    }
+
+    return triggers;
+  }
+
+  private List<LdapSettings> getAllLdapSettingsForAccount(String accountId) {
+    List<LdapSettings> ldapSettings = new ArrayList<>();
+    Query<LdapSettings> query =
+        wingsPersistence.createQuery(LdapSettings.class).filter("accountId", accountId).filter("type", SSOType.LDAP);
+    Iterator<LdapSettings> iterator = query.iterator();
+    while (iterator.hasNext()) {
+      ldapSettings.add(iterator.next());
+    }
+
+    return ldapSettings;
   }
 
   private void createDefaultNotificationGroup(Account account, Role role) {

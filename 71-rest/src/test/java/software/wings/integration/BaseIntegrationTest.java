@@ -67,10 +67,10 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.utils.WingsIntegrationTestConstants;
 
 import java.net.UnknownHostException;
@@ -113,12 +113,12 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   @Inject protected ConfigService configService;
   @Inject protected ServiceResourceService serviceResourceService;
   @Inject protected ServiceTemplateService serviceTemplateService;
-  @Inject protected CVConfigurationService cvConfigurationService;
   @Inject protected KmsService kmsService;
   @Inject protected SecretManager secretManager;
   @Inject protected SecretManagementDelegateService delegateService;
   @Inject protected ScmSecret scmSecret;
   @Inject protected FileService fileService;
+  @Inject protected GovernanceConfigService governanceConfigService;
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
 
