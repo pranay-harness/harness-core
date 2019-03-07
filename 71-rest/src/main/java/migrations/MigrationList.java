@@ -192,9 +192,10 @@ public class MigrationList {
         .add(Pair.of(224, CreateDefaultAlertNotificationRule.class))
         .add(Pair.of(225, InitServiceCounters.class))
         .add(Pair.of(226, InitInfraProvisionerCounters.class))
-        .add(Pair.of(227, MigrateCVMetadataApplicationId.class))
+        .add(Pair.of(227, BaseMigration.class))
         .add(Pair.of(228, NewRelicMetricDataBaselineMigration.class))
         .add(Pair.of(229, AddAccountIdToAppEntities.class))
+        .add(Pair.of(230, MigrateCVMetadataApplicationId.class))
         .build();
   }
 }

@@ -240,7 +240,9 @@ public abstract class AbstractAnalysisState extends State {
             .pipelineId(workflowExecution.getExecutionArgs().getPipelineId());
       }
 
-      continuousVerificationService.saveCVExecutionMetaData(cvExecutionMetaDataBuilder.build());
+      ContinuousVerificationExecutionMetaData metaData = cvExecutionMetaDataBuilder.build();
+      metaData.setAppId(executionContext.getAppId());
+      continuousVerificationService.saveCVExecutionMetaData(metaData);
     } catch (Exception ex) {
       getLogger().error("[learning-engine] Unable to save ml analysis metadata", ex);
     }

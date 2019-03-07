@@ -355,8 +355,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     // TODO should we limit the number of executions to search in ??
     List<String> successfulExecutions = new ArrayList<>();
     List<ContinuousVerificationExecutionMetaData> cvList =
-        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-            .filter("applicationId", appId)
+        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
+            .filter("appId", appId)
             .filter("stateType", stateType)
             .filter("workflowId", workflowId)
             .filter("executionStatus", ExecutionStatus.SUCCESS)
