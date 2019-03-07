@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.UuidAccess.ID_KEY;
 
 import com.google.inject.Inject;
@@ -94,7 +95,7 @@ public class AccountIdAdditionJob implements Job {
   }
 
   private <T extends Base> void setAccountIdForEntities(Class<T> clazz) {
-    Query<T> query = wingsPersistence.createQuery(clazz);
+    Query<T> query = wingsPersistence.createQuery(clazz, excludeAuthority);
     query.or(query.criteria("accountId").doesNotExist(), query.criteria("accountId").equal(null));
     query.project(ID_KEY, true);
     query.project("appId", true);
