@@ -394,7 +394,7 @@ public class PcfSetupState extends State {
             .commandName(PCF_SETUP_COMMAND)
             .maxInstanceCount(stateExecutionData.getMaxInstanceCount())
             .useCurrentRunningInstanceCount(stateExecutionData.isUseCurrentRunningInstanceCount())
-            .currentRunningInstanceCount(stateExecutionData.getCurrentRunningInstanceCount())
+            .currentRunningInstanceCount(generateCurrentRunningCount(pcfSetupCommandResponse))
             .resizeStrategy(resizeStrategy)
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .pcfCommandRequest(stateExecutionData.getPcfCommandRequest())
@@ -421,6 +421,16 @@ public class PcfSetupState extends State {
         .addContextElement(pcfSetupContextElement)
         .addNotifyElement(pcfSetupContextElement)
         .build();
+  }
+
+  private Integer generateCurrentRunningCount(PcfSetupCommandResponse pcfSetupCommandResponse) {
+    Integer currentRunningCountFetched = pcfSetupCommandResponse.getInstanceCountForMostRecentVersion();
+
+    if (currentRunningCountFetched == null || currentRunningCountFetched.intValue() <= 0) {
+      return Integer.valueOf(2);
+    }
+
+    return currentRunningCountFetched;
   }
 
   private void addNewlyCreateRouteMapIfRequired(ExecutionContext context, PcfSetupStateExecutionData stateExecutionData,
