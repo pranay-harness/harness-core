@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
+import lombok.EqualsAndHashCode;
 import software.wings.beans.NotificationAction.NotificationActionType;
 
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 7/25/16.
  */
 @JsonTypeName("FAILURE")
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@EqualsAndHashCode(callSuper = true)
 public class FailureNotification extends ActionableNotification {
   @NotNull private String entityName;
   @NotNull private String executionId;
