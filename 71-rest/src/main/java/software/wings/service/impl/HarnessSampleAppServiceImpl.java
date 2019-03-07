@@ -16,6 +16,7 @@ import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_NAME;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.seeddata.SampleDataProviderService;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -90,11 +91,11 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
 
     // Clean up existing app
     cleanUpSampleApp(accountId);
+    authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
 
     // Create a new k8s sample app
     Account account = accountService.get(accountId);
     if (account != null) {
-      // sampleDataProviderService.createHarnessSampleApp(account);
       sampleDataProviderService.createK8sV2SampleApp(account);
       authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
     } else {
@@ -106,13 +107,18 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
   }
 
   private void cleanUpSampleApp(String accountId) {
-    // Verify app exists
     Application existingApp = appService.getAppByName(accountId, HARNESS_SAMPLE_APP);
     if (existingApp == null) {
-      // app does not exist
       return;
     }
-    appService.delete(existingApp.getAppId());
+
+    // Try cleanup app
+    try {
+      appService.delete(existingApp.getAppId());
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.GENERAL_ERROR, WingsException.USER)
+          .addParam("reason", "Could not clean up harness sample application : " + e.getMessage());
+    }
   }
 
   private SampleAppStatus isK8sApplicationHealthy(String accountId) {
