@@ -381,7 +381,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
     String hostNameField = null;
     if (StateType.valueOf(getStateType()).equals(StateType.SUMO)) {
-      hostNameField = ((SumoLogicAnalysisState) this).getHostnameField();
+      hostNameField = ((SumoLogicAnalysisState) this).getHostnameField().getHostNameField();
     }
     return AnalysisContext.builder()
         .accountId(this.appService.get(context.getAppId()).getAccountId())
@@ -405,6 +405,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         .envId(envId)
         .hostNameField(hostNameField)
         .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
+        .predictiveHistoryMinutes(Integer.parseInt(getPredictiveHistoryMinutes()))
         .build();
   }
 

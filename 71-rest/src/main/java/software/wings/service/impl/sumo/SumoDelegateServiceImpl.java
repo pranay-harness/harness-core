@@ -36,6 +36,7 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
+import software.wings.sm.states.SumoLogicAnalysisState.SumoHostNameField;
 
 import java.net.MalformedURLException;
 import java.time.Duration;
@@ -49,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Delegate Service impl for Sumo Logic.
- *
+ * <p>
  * Created by sriram_parthasarathy on 9/11/17.
  */
 @Singleton
@@ -168,7 +169,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
           : searchJobStatusResponse.getMessageCount();
       logger.info("Search job Status Response received from SumoLogic with message Count : "
           + searchJobStatusResponse.getMessageCount());
-      return getMessagesForSearchJob(dataCollectionInfo.getQuery(), messageCount, sumoClient, searchJobId, 0, 0,
+      return getMessagesForSearchJob(dataCollectionInfo, messageCount, sumoClient, searchJobId, 0, 0,
           Math.min(messageCount, 5), logCollectionMinute, is247Task);
     } catch (InterruptedException e) {
       throw new WingsException("Unable to get client for given config");
@@ -193,6 +194,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
 
   /**
    * Method to get sumologic client.
+   *
    * @param sumoConfig
    * @param encryptedDataDetails
    * @param encryptionService
@@ -220,18 +222,10 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
 
   /**
    * Method gets the actual messages for given query and returns List of LogElements.
-   * @param query
-   * @param messageCount
-   * @param sumoClient
-   * @param searchJobId
-   * @param clusterLabel
-   * @param messageOffset
-   * @param messageLength       @return
-   * @param is247Task
-   * */
-  private List<LogElement> getMessagesForSearchJob(String query, int messageCount, SumoLogicClient sumoClient,
-      String searchJobId, int clusterLabel, int messageOffset, int messageLength, int logCollectionMinute,
-      boolean is247Task) {
+   */
+  private List<LogElement> getMessagesForSearchJob(SumoDataCollectionInfo dataCollectionInfo, int messageCount,
+      SumoLogicClient sumoClient, String searchJobId, int clusterLabel, int messageOffset, int messageLength,
+      int logCollectionMinute, boolean is247Task) {
     List<LogElement> logElements = new ArrayList<>();
     if (messageCount > 0) {
       do {
@@ -239,14 +233,14 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
             sumoClient.getMessagesForSearchJob(searchJobId, messageOffset, messageLength);
         for (LogMessage logMessage : getMessagesForSearchJobResponse.getMessages()) {
           final LogElement sumoLogElement = new LogElement();
-          sumoLogElement.setQuery(query);
-          sumoLogElement.setHost(logMessage.getSourceHost());
+          sumoLogElement.setQuery(dataCollectionInfo.getQuery());
           sumoLogElement.setClusterLabel(String.valueOf(clusterLabel++));
           sumoLogElement.setCount(1);
           sumoLogElement.setLogMessage(logMessage.getProperties().get("_raw"));
           sumoLogElement.setTimeStamp(Long.parseLong(logMessage.getProperties().get("_timeslice")));
           sumoLogElement.setLogCollectionMinute(
               is247Task ? (int) TimeUnit.MILLISECONDS.toMinutes(sumoLogElement.getTimeStamp()) : logCollectionMinute);
+          sumoLogElement.setHost(parseHostName(is247Task, dataCollectionInfo, logMessage));
           logElements.add(sumoLogElement);
         }
         messageCount -= messageLength;
@@ -257,8 +251,24 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     return logElements;
   }
 
+  private String parseHostName(boolean is247Task, SumoDataCollectionInfo dataCollectionInfo, LogMessage logMessage) {
+    if (is247Task) {
+      return logMessage.getSourceHost();
+    }
+    switch (SumoHostNameField.getHostNameFieldFromValue(dataCollectionInfo.getHostnameField())) {
+      case SOURCE_HOST:
+        return logMessage.getSourceHost();
+      case SOURCE_NAME:
+        return logMessage.getSourceName();
+      default:
+        throw new WingsException(
+            "Invalid host name field " + dataCollectionInfo.getHostnameField(), WingsException.USER);
+    }
+  }
+
   /**
    * Method gets the Search job status response once the state is "DONE GATHERING RESULTS" | "CANCELLED".
+   *
    * @param sumoClient
    * @param searchJobId
    * @return
@@ -285,6 +295,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
 
   /**
    * Method to save third party call logs for given searchJobStatusResponse.
+   *
    * @param apiCallLog
    * @param config
    * @param query

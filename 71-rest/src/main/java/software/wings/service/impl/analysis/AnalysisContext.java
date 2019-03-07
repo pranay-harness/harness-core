@@ -45,6 +45,7 @@ public class AnalysisContext extends Base {
   private String stateExecutionId;
   private String serviceId;
   private String predictiveCvConfigId;
+  private int predictiveHistoryMinutes;
   private Map<String, String> controlNodes;
   private Map<String, String> testNodes;
   private String query;
@@ -86,8 +87,8 @@ public class AnalysisContext extends Base {
   private AnalysisContext(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, boolean syncFromGit, String accountId, String workflowId,
       String workflowExecutionId, String stateExecutionId, String serviceId, String predictiveCvConfigId,
-      Map<String, String> controlNodes, Map<String, String> testNodes, String query, boolean isSSL, int appPort,
-      AnalysisComparisonStrategy comparisonStrategy, int timeDuration, StateType stateType,
+      int predictiveHistoryMinutes, Map<String, String> controlNodes, Map<String, String> testNodes, String query,
+      boolean isSSL, int appPort, AnalysisComparisonStrategy comparisonStrategy, int timeDuration, StateType stateType,
       String analysisServerConfigId, String correlationId, int smooth_window, int tolerance,
       String prevWorkflowExecutionId, int minimumRequestsPerMinute, int comparisonWindow, int parallelProcesses,
       Map<String, List<TimeSeries>> timeSeriesToCollect, boolean runTillConvergence, String delegateTaskId,
@@ -99,6 +100,7 @@ public class AnalysisContext extends Base {
     this.workflowExecutionId = workflowExecutionId;
     this.stateExecutionId = stateExecutionId;
     this.serviceId = serviceId;
+    this.predictiveHistoryMinutes = predictiveHistoryMinutes;
     this.predictiveCvConfigId = predictiveCvConfigId;
     this.controlNodes = controlNodes == null ? new HashMap<>() : controlNodes;
     this.testNodes = testNodes == null ? new HashMap<>() : testNodes;

@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
-import software.wings.delegatetasks.AbstractDelegateDataCollectionTask;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -139,8 +138,8 @@ public class VerificationServiceExecutorService {
           logsCVConfiguration.setAppId(context.getAppId());
           logsCVConfiguration.setQuery(context.getQuery());
           logsCVConfiguration.setBaselineEndMinute(context.getStartDataCollectionMinute());
-          logsCVConfiguration.setBaselineStartMinute(context.getStartDataCollectionMinute()
-              - AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES + 1);
+          logsCVConfiguration.setBaselineStartMinute(
+              context.getStartDataCollectionMinute() - context.getPredictiveHistoryMinutes() + 1);
           logsCVConfiguration.setUuid(cvConfigUuid);
           logsCVConfiguration.setName(cvConfigUuid);
           logsCVConfiguration.setAccountId(context.getAccountId());
