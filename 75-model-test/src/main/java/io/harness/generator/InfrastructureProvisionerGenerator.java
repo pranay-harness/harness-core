@@ -55,8 +55,6 @@ public class InfrastructureProvisionerGenerator {
   }
   private InfrastructureProvisioner ensureTerraformTest(Randomizer.Seed seed, Owners owners) {
     final Service archive = serviceGenerator.ensureGenericTest(seed, owners, "Archive");
-    final Service factory = serviceGenerator.ensureGenericTest(seed, owners, "Factory");
-    final Service warehouse = serviceGenerator.ensureGenericTest(seed, owners, "Warehouse");
 
     final SettingAttribute gitSourceSettingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.TERRAFORM_CITY_GIT_REPO);
@@ -75,24 +73,6 @@ public class InfrastructureProvisionerGenerator {
                     .properties(asList(NameValuePair.builder().name("region").value("${terraform.region}").build(),
                         NameValuePair.builder().name("securityGroups").value("${terraform.security_group}").build(),
                         NameValuePair.builder().name("tags").value("${terraform.archive_tags}").build()))
-                    .nodeFilteringType(AWS_INSTANCE_FILTER)
-                    .build(),
-                InfrastructureMappingBlueprint.builder()
-                    .serviceId(factory.getUuid())
-                    .deploymentType(SSH)
-                    .cloudProviderType(AWS)
-                    .properties(asList(NameValuePair.builder().name("region").value("${terraform.region}").build(),
-                        NameValuePair.builder().name("securityGroups").value("${terraform.security_group}").build(),
-                        NameValuePair.builder().name("tags").value("${terraform.factory_tags}").build()))
-                    .nodeFilteringType(AWS_INSTANCE_FILTER)
-                    .build(),
-                InfrastructureMappingBlueprint.builder()
-                    .serviceId(warehouse.getUuid())
-                    .deploymentType(SSH)
-                    .cloudProviderType(AWS)
-                    .properties(asList(NameValuePair.builder().name("region").value("${terraform.region}").build(),
-                        NameValuePair.builder().name("securityGroups").value("${terraform.security_group}").build(),
-                        NameValuePair.builder().name("tags").value("${terraform.warehouse_tags}").build()))
                     .nodeFilteringType(AWS_INSTANCE_FILTER)
                     .build()))
             .build();
