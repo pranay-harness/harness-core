@@ -246,7 +246,7 @@ public abstract class AbstractAnalysisState extends State {
     }
   }
 
-  protected void scheduleAnalysisCronJob(AnalysisContext context, String delegateTaskId) {
+  protected String scheduleAnalysisCronJob(AnalysisContext context, String delegateTaskId) {
     Map<String, String> controlNodes = new HashMap<>();
     context.getControlNodes().forEach((host, groupName) -> controlNodes.put(replaceDotWithUnicode(host), groupName));
     context.setControlNodes(controlNodes);
@@ -256,7 +256,7 @@ public abstract class AbstractAnalysisState extends State {
     context.setTestNodes(testNodes);
 
     context.setDelegateTaskId(delegateTaskId);
-    wingsPersistence.save(context);
+    return wingsPersistence.save(context);
   }
 
   protected Map<String, String> getLastExecutionNodes(ExecutionContext context) {

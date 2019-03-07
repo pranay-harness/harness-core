@@ -247,7 +247,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public List<LogMLFeedbackRecord> getMLFeedback(String accountId, String workflowId) {
     List<LogMLFeedbackRecord> feedbackRecords = null;
-    if (accountResource.isFeatureEnabled(FeatureName.GLOBAL_CV_DASH, accountId).getResource()) {
+    if (accountResource.isFeatureEnabled(FeatureName.GLOBAL_CV_DASH.name(), accountId).getResource()) {
       Query<LogMLFeedbackRecord> query =
           wingsPersistence.createQuery(LogMLFeedbackRecord.class).filter("workflowId", workflowId);
       feedbackRecords = query.asList();

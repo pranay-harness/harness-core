@@ -57,6 +57,7 @@ import software.wings.api.HostElement;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
@@ -128,6 +129,20 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
                            .filter("accountId", accountId)
                            .get()
                            .getUuid();
+  }
+
+  @Test
+  public void testFeatureEnabled() {
+    WebTarget target = client.target(API_BASE + "/account/feature-flag-enabled?accountId=" + accountId
+        + "&featureName=" + FeatureName.values()[0].name());
+    RestResponse<Boolean> restResponse =
+        getRequestBuilderWithLearningAuthHeader(target).get(new GenericType<RestResponse<Boolean>>() {});
+    assertFalse(restResponse.getResource());
+
+    target = client.target(
+        API_BASE + "/account/feature-flag-enabled?accountId=" + accountId + "&featureName=" + generateUuid());
+    restResponse = getRequestBuilderWithLearningAuthHeader(target).get(new GenericType<RestResponse<Boolean>>() {});
+    assertFalse(restResponse.getResource());
   }
 
   @Test

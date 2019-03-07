@@ -9,7 +9,6 @@ import org.hibernate.validator.constraints.NotBlank;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
 import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.service.impl.analysis.CVEnabledService;
@@ -73,7 +72,7 @@ public interface AccountService {
    */
   Collection<FeatureFlag> getFeatureFlags(@NotBlank String accountId);
 
-  boolean isFeatureFlagEnabled(FeatureName featureName, String accountId);
+  boolean isFeatureFlagEnabled(String featureName, String accountId);
 
   PageResponse<CVEnabledService> getServices(
       String accountId, User user, PageRequest<String> request, String serviceId);
