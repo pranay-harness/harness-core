@@ -1,5 +1,6 @@
 package migrations.all;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.mongo.MongoUtils.setUnset;
 
 import com.google.inject.Inject;
@@ -7,6 +8,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SortOrder.OrderType;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -23,21 +25,26 @@ public class MigrateCVMetadataApplicationId implements Migration {
 
   @Override
   public void migrate() {
-    PageRequest<ContinuousVerificationExecutionMetaData> cvMetadataRequest =
-        PageRequestBuilder.aPageRequest().withLimit("999").withOffset("0").build();
+    PageRequest<ContinuousVerificationExecutionMetaData> cvMetadataRequest = PageRequestBuilder.aPageRequest()
+                                                                                 .withLimit("999")
+                                                                                 .withOffset("0")
+                                                                                 .addOrder("createdAt", OrderType.DESC)
+                                                                                 .build();
     PageResponse<ContinuousVerificationExecutionMetaData> cvMetadataResponse =
         wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, cvMetadataRequest);
     int previousOffSet = 0;
     while (!cvMetadataResponse.isEmpty()) {
       List<ContinuousVerificationExecutionMetaData> cvList = cvMetadataResponse.getResponse();
       for (ContinuousVerificationExecutionMetaData cvMetadata : cvList) {
-        cvMetadata.setAppId(cvMetadata.getApplicationId());
-        UpdateOperations<ContinuousVerificationExecutionMetaData> op =
-            wingsPersistence.createUpdateOperations(ContinuousVerificationExecutionMetaData.class);
-        setUnset(op, "appId", cvMetadata.getApplicationId());
-        wingsPersistence.update(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-                                    .filter("stateExecutionId", cvMetadata.getStateExecutionId()),
-            op);
+        if (isEmpty(cvMetadata.getAppId())) {
+          cvMetadata.setAppId(cvMetadata.getApplicationId());
+          UpdateOperations<ContinuousVerificationExecutionMetaData> op =
+              wingsPersistence.createUpdateOperations(ContinuousVerificationExecutionMetaData.class);
+          setUnset(op, "appId", cvMetadata.getApplicationId());
+          wingsPersistence.update(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
+                                      .filter("stateExecutionId", cvMetadata.getStateExecutionId()),
+              op);
+        }
       }
       logger.info("Updated appId for {} CVExecutionMetadata records", cvList.size());
       previousOffSet += cvList.size();
