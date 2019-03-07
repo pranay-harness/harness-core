@@ -28,6 +28,7 @@ import static software.wings.utils.Misc.generateSecretKey;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -663,8 +664,12 @@ public class AccountServiceImpl implements AccountService {
     }
   }
 
-  public boolean isFeatureFlagEnabled(FeatureName featureName, String accountId) {
-    return featureFlagService.isEnabled(featureName, accountId);
+  public boolean isFeatureFlagEnabled(String featureName, String accountId) {
+    if (Sets.newHashSet(FeatureName.values()).contains(featureName)) {
+      FeatureName feature = FeatureName.valueOf(featureName);
+      return featureFlagService.isEnabled(feature, accountId);
+    }
+    return false;
   }
 
   public List<Service> getServicesBreadCrumb(String accountId, User user) {

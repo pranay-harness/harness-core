@@ -14,7 +14,6 @@ import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.AccountSalesContactsInfo;
-import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.licensing.LicenseService;
@@ -97,7 +96,7 @@ public class AccountResource {
   @ExceptionMetered
   @LearningEngineAuth
   public RestResponse<Boolean> isFeatureEnabled(
-      @QueryParam("featureName") FeatureName featureName, @QueryParam("accountId") String accountId) {
+      @QueryParam("featureName") String featureName, @QueryParam("accountId") String accountId) {
     return new RestResponse<>(accountService.isFeatureFlagEnabled(featureName, accountId));
   }
 

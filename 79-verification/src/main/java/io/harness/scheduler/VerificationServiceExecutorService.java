@@ -33,6 +33,7 @@ import software.wings.delegatetasks.AbstractDelegateDataCollectionTask;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.verification.log.LogsCVConfiguration;
 
@@ -158,6 +159,8 @@ public class VerificationServiceExecutorService {
 
           context.setPredictiveCvConfigId(cvConfigUuid);
           wingsPersistence.updateField(AnalysisContext.class, context.getUuid(), "predictiveCvConfigId", cvConfigUuid);
+          wingsPersistence.updateField(
+              StateExecutionInstance.class, context.getStateExecutionId(), "lastUpdatedAt", System.currentTimeMillis());
           logger.info("Created Configuration for Type {}, cvConfigId {}, stateExecutionId {}",
               logsCVConfiguration.getStateType(), logsCVConfiguration.getUuid(), context.getStateExecutionId());
           break;
