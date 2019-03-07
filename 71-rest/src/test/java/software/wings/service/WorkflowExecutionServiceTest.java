@@ -1,16 +1,12 @@
 package software.wings.service;
 
-import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
-import static io.harness.time.EpochUtils.PST_ZONE_ID;
-import static io.harness.time.EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -18,7 +14,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
-import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
@@ -49,9 +44,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.HIterator;
 import io.harness.waiter.NotifyEventListener;
-import org.assertj.core.api.Assertions;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -255,40 +248,6 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       assertThat(exception).hasMessage(INVALID_REQUEST.name());
       assertThat(exception.getParams()).containsEntry("message", "Associated state machine not found");
     }
-  }
-
-  @Test
-  public void shouldTestWorkflowExecutionIterator() {
-    when(query.fetch()).thenReturn(executionIterator);
-    long fromDateEpochMilli = calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(30, PST_ZONE_ID);
-    HIterator<WorkflowExecution> executionIterator =
-        workflowExecutionService.obtainWorkflowExecutionIterator(asList(APP_ID), fromDateEpochMilli);
-    assertNotNull(executionIterator);
-  }
-
-  @Test
-  public void shouldTestGetWorkflowExecutionsByIterator() {
-    when(query.fetch()).thenReturn(executionIterator);
-    when(executionIterator.getCursor()).thenReturn(dbCursor);
-    WorkflowExecution workflowExecution1 =
-        WorkflowExecution.builder().appId(APP_ID).appName(APP_NAME).envType(PROD).status(SUCCESS).build();
-
-    WorkflowExecution workflowExecution2 = WorkflowExecution.builder()
-                                               .appId(APP_ID)
-                                               .appName(APP_NAME)
-                                               .envType(NON_PROD)
-                                               .status(ExecutionStatus.FAILED)
-                                               .build();
-
-    when(executionIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-
-    when(executionIterator.next()).thenReturn(workflowExecution1).thenReturn(workflowExecution2);
-
-    long fromDateEpochMilli = calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(30, PST_ZONE_ID);
-    List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.obtainWorkflowExecutions(asList(APP_ID), fromDateEpochMilli);
-    assertNotNull(workflowExecutions);
-    Assertions.assertThat(workflowExecutions).hasSize(2);
   }
 
   @Test

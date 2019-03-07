@@ -30,6 +30,7 @@ import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateMachine;
 import software.wings.sm.StateStatusUpdate;
 import software.wings.sm.StateType;
 
@@ -150,4 +151,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   WorkflowExecution getWorkflowExecutionForVerificationService(String appId, String workflowExecutionId);
 
   void refreshCollectedArtifacts(String appId, String pipelineExecutionId, String workflowExecutionId);
+
+  StateMachine obtainStateMachine(WorkflowExecution workflowExecution);
 }
