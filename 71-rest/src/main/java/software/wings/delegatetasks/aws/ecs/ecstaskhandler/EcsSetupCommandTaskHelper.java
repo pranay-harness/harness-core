@@ -844,8 +844,18 @@ public class EcsSetupCommandTaskHelper {
     Map<String, Integer> activeServiceCounts = awsClusterService.getActiveServiceCounts(setupParams.getRegion(),
         cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
 
+    Integer instanceCountForLatestVersion = Integer.valueOf(0);
+    if (isNotEmpty(activeServiceCounts)) {
+      List<String> existingServiceNames = new ArrayList<>(activeServiceCounts.keySet());
+      Collections.sort(existingServiceNames);
+
+      instanceCountForLatestVersion =
+          activeServiceCounts.get(existingServiceNames.get(existingServiceNames.size() - 1));
+    }
+
     commandExecutionDataBuilder.containerServiceName(containerServiceName)
-        .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts));
+        .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts))
+        .instanceCountForLatestVersion(instanceCountForLatestVersion);
 
     CreateServiceRequest createServiceRequest = getCreateServiceRequest(cloudProviderSetting, encryptedDataDetails,
         setupParams, taskDefinition, containerServiceName, executionLogCallback, logger, commandExecutionDataBuilder);
