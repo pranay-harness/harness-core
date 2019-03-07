@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
+import software.wings.beans.governance.GovernanceConfig;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -106,6 +107,10 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     Boolean statusUpdated = restResponse.getResource();
     assertNotNull(statusUpdated);
     assertTrue(statusUpdated);
+
+    GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
+    assertNotNull(governanceConfig);
+    assertTrue(governanceConfig.isDeploymentFreeze());
   }
 
   private void completeAccountMigration(String accountId) {

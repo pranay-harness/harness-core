@@ -3,6 +3,7 @@ package software.wings.beans.governance;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.harness.annotation.HarnessExportableEntity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,6 +20,7 @@ import software.wings.beans.Base;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@HarnessExportableEntity
 public class GovernanceConfig extends Base {
   @Indexed private String accountId;
   private boolean deploymentFreeze;
