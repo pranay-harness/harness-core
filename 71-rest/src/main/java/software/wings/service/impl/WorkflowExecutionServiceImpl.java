@@ -45,11 +45,9 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.Base.APP_ID_KEY;
-import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
-import static software.wings.beans.WorkflowExecution.PIPELINE_EXECUTION_ID_KEY;
 import static software.wings.beans.WorkflowExecution.STATUS_KEY;
 import static software.wings.beans.WorkflowExecution.WORKFLOW_ID_KEY;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
@@ -928,9 +926,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .uuid(generateUuid())
+                                              .status(NEW)
                                               .appId(appId)
                                               .workflowId(pipelineId)
                                               .workflowType(WorkflowType.PIPELINE)
+                                              .stateMachine(stateMachine)
                                               .stateMachineId(stateMachine.getUuid())
                                               .name(pipeline.getName())
                                               .build();
@@ -1031,6 +1031,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowType(ORCHESTRATION);
     workflowExecution.setOrchestrationType(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+    workflowExecution.setStateMachine(stateMachine);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setPipelineExecutionId(pipelineExecutionId);
     workflowExecution.setExecutionArgs(executionArgs);
@@ -2062,8 +2063,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       breakdown = getBreakdownFromPhases(workflowExecution);
       breakdown.setQueued(total - (breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress()));
     } else {
-      StateMachine sm = wingsPersistence.getWithAppId(
-          StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
+      StateMachine sm = obtainStateMachine(workflowExecution);
 
       Map<String, ExecutionStatus> stateExecutionStatuses = new HashMap<>();
       try (HIterator<StateExecutionInstance> iterator =
@@ -2550,14 +2550,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(List<String> appIds, long epochMilli) {
-    return new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class)
-                               .field(CREATED_AT_KEY)
-                               .greaterThanOrEq(epochMilli)
-                               .field(PIPELINE_EXECUTION_ID_KEY)
-                               .doesNotExist()
-                               .field(APP_ID_KEY)
-                               .in(appIds)
-                               .fetch());
+    final Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                               .field(WorkflowExecution.CREATED_AT_KEY)
+                                               .greaterThanOrEq(epochMilli)
+                                               .field(WorkflowExecution.PIPELINE_EXECUTION_ID_KEY)
+                                               .doesNotExist()
+                                               .field(WorkflowExecution.APP_ID_KEY)
+                                               .in(appIds)
+                                               .project(WorkflowExecution.STATE_MACHINE_KEY, false);
+    return new HIterator<>(query.fetch());
   }
 
   @Override
@@ -2746,5 +2747,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                         .set(WorkflowExecution.ARTIFACTS_KEY, collectedArtifacts);
 
     wingsPersistence.update(updatedQuery, updateOps);
+  }
+
+  public StateMachine obtainStateMachine(WorkflowExecution workflowExecution) {
+    if (workflowExecution.getStateMachine() != null) {
+      return workflowExecution.getStateMachine();
+    }
+    logger.warn(String.format("Workflow execution %s do not have inline state machine", workflowExecution.getUuid()));
+    return wingsPersistence.getWithAppId(
+        StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
   }
 }

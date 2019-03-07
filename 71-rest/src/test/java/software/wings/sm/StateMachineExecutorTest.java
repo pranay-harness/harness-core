@@ -397,6 +397,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
     workflowExecution.setUuid(executionUuid);
     workflowExecution.setAppId(sm.getAppId());
+    workflowExecution.setStateMachine(sm);
     workflowExecution.setStateMachineId(sm.getUuid());
     wingsPersistence.save(workflowExecution);
     return executionUuid;

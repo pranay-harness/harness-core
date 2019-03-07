@@ -175,7 +175,10 @@ public class ExecutionResource {
       }
     }
 
-    return new RestResponse<>(workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs, null));
+    final WorkflowExecution workflowExecution =
+        workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs, null);
+    workflowExecution.setStateMachine(null);
+    return new RestResponse<>(workflowExecution);
   }
 
   /**
