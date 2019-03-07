@@ -166,8 +166,10 @@ public class StateMachineExecutor implements StateInspectionListener {
   public StateExecutionInstance execute(String appId, String executionUuid, String executionName,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
     final WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, executionUuid);
-    final StateMachine stateMachine = workflowExecutionService.obtainStateMachine(workflowExecution);
-    return execute(stateMachine, executionUuid, executionName, contextParams, callback, null);
+
+    return execute(
+        wingsPersistence.getWithAppId(StateMachine.class, appId, workflowExecution.getStateMachineId(), CRITICAL),
+        executionUuid, executionName, contextParams, callback, null);
   }
 
   /**
@@ -186,8 +188,9 @@ public class StateMachineExecutor implements StateInspectionListener {
       List<ContextElement> contextParams, StateMachineExecutionCallback callback,
       ExecutionEventAdvisor executionEventAdvisor) {
     final WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, executionUuid);
-    final StateMachine stateMachine = workflowExecutionService.obtainStateMachine(workflowExecution);
-    return execute(stateMachine, executionUuid, executionName, contextParams, callback, executionEventAdvisor);
+    return execute(
+        wingsPersistence.getWithAppId(StateMachine.class, appId, workflowExecution.getStateMachineId(), CRITICAL),
+        executionUuid, executionName, contextParams, callback, executionEventAdvisor);
   }
 
   /**

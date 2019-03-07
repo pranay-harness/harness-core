@@ -143,7 +143,6 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .appId(appId)
                                               .envId(envId)
-                                              .stateMachine(stateMachine)
                                               .stateMachineId(stateMachineId)
                                               .workflowId(workflowId)
                                               .status(ExecutionStatus.SUCCESS)

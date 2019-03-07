@@ -422,17 +422,16 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Ignore
   public void testIsBaseLineCreatedNoRecords() throws Exception {
     final WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
-    workflowExecution.setUuid(generateUuid());
     workflowExecution.setStateMachineId(UUID.randomUUID().toString());
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(workflowId);
     workflowExecution.setStatus(ExecutionStatus.SUCCESS);
+    wingsPersistence.save(workflowExecution);
     StateMachine stateMachine = new StateMachine();
     stateMachine.setInitialStateName("some-state");
     stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
     stateMachine.setUuid(workflowExecution.getStateMachineId());
-    workflowExecution.setStateMachine(stateMachine);
-    wingsPersistence.save(workflowExecution);
+    wingsPersistence.save(stateMachine);
     assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
         appId, workflowId, workflowExecutionId, serviceId, null));
   }

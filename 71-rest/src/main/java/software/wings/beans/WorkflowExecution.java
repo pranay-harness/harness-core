@@ -34,7 +34,6 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.sm.PipelineSummary;
-import software.wings.sm.StateMachine;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -68,7 +67,6 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   public static final String PIPELINE_EXECUTION_ID_KEY = "pipelineExecutionId";
   public static final String SERVICE_EXECUTION_SUMMARIES = "serviceExecutionSummaries";
   public static final String START_TS_KEY = "startTs";
-  public static final String STATE_MACHINE_KEY = "stateMachine";
   public static final String STATUS_KEY = "status";
   public static final String TRIGGERED_BY = "triggeredBy";
   public static final String UUID_KEY = "uuid";
@@ -86,7 +84,6 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   private String workflowId;
 
   private String stateMachineId;
-  private StateMachine stateMachine;
   @Indexed private String envId;
   private List<String> envIds;
   @Indexed private List<String> serviceIds;
