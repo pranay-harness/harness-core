@@ -10,6 +10,7 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptedRecord;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.KmsConfig;
@@ -44,6 +45,7 @@ public class SecretManagementDelegateServiceTest {
   }
 
   @Test
+  @Ignore
   public void test_EncryptDecryptKmsSecret_ShouldSucceed() throws Exception {
     String secret = "TopSecret";
     EncryptedRecord encryptedRecord =
