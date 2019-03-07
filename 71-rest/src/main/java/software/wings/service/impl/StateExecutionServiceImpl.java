@@ -18,7 +18,6 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.StateExecutionService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionData;
@@ -37,7 +36,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class StateExecutionServiceImpl implements StateExecutionService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private WorkflowExecutionService workflowExecutionService;
 
   public Map<String, StateExecutionInstance> executionStatesMap(String appId, String executionUuid) {
     Map<String, StateExecutionInstance> allInstancesIdMap = new HashMap<>();
@@ -190,7 +188,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
   public StateMachine obtainStateMachine(StateExecutionInstance stateExecutionInstance) {
     final WorkflowExecution workflowExecution = wingsPersistence.getWithAppId(
         WorkflowExecution.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid());
-
-    return workflowExecutionService.obtainStateMachine(workflowExecution);
+    return wingsPersistence.getWithAppId(
+        StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
   }
 }
