@@ -102,6 +102,10 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
           ? Integer.valueOf(0)
           : previousReleases.stream().mapToInt(ApplicationSummary ::getInstances).sum();
 
+      Integer instanceCountForMostRecentVersion = CollectionUtils.isEmpty(previousReleases)
+          ? Integer.valueOf(0)
+          : previousReleases.get(previousReleases.size() - 1).getRunningInstances();
+
       // New appName to be created
       String newReleaseName =
           ServiceVersionConvention.getServiceName(pcfCommandSetupRequest.getReleaseNamePrefix(), releaseRevision);
@@ -141,6 +145,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
                                          .initialInstanceCount(0)
                                          .build())
               .totalPreviousInstanceCount(totalPreviousInstanceCount)
+              .instanceCountForMostRecentVersion(instanceCountForMostRecentVersion)
               .downsizeDetails(downsizeAppDetails)
               .build();
 
