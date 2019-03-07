@@ -21,6 +21,7 @@ public class ContainerSetupCommandUnitExecutionData implements CommandExecutionD
   private List<String[]> activeServiceCounts;
   private List<String[]> trafficWeights;
   private String autoscalerYaml;
+  private Integer instanceCountForLatestVersion;
 
   // Following 3 fields are required while Daemon ECS service rollback
   private String previousEcsServiceSnapshotJson;

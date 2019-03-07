@@ -100,12 +100,10 @@ import software.wings.sm.states.EcsSetupContextVariableHolder.EcsSetupContextVar
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -378,16 +376,14 @@ public class EcsStateHelper {
             .clusterName(executionData.getClusterName())
             .deploymentType(DeploymentType.ECS)
             .infraMappingId(setupParams.getInfraMappingId());
+
     if (setupExecutionData != null) {
       containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName())
           .activeServiceCounts(setupExecutionData.getActiveServiceCounts());
-      int totalActiveServiceCount = Optional.ofNullable(setupExecutionData.getActiveServiceCounts())
-                                        .orElse(new ArrayList<>())
-                                        .stream()
-                                        .mapToInt(item -> Integer.valueOf(item[1]))
-                                        .sum();
-      if (totalActiveServiceCount > 0) {
-        containerServiceElementBuilder.maxInstances(totalActiveServiceCount);
+
+      Integer instanceCountForLatestVersion = setupExecutionData.getInstanceCountForLatestVersion();
+      if (instanceCountForLatestVersion != null && instanceCountForLatestVersion.intValue() > 0) {
+        containerServiceElementBuilder.maxInstances(instanceCountForLatestVersion.intValue());
       }
     }
 
