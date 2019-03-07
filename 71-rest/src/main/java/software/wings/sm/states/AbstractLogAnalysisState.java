@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
@@ -33,6 +34,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
+import software.wings.verification.log.LogsCVConfiguration;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -322,13 +324,27 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   public void handleAbortEvent(ExecutionContext executionContext) {
     continuousVerificationService.setMetaDataExecutionStatus(
         executionContext.getStateExecutionInstanceId(), ExecutionStatus.ABORTED);
-    AnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
+    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class)
+                                          .filter("appId", executionContext.getAppId())
+                                          .filter("stateExecutionId", executionContext.getStateExecutionInstanceId())
+                                          .get();
+
+    if (analysisContext == null) {
+      analysisContext = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
+    }
 
     final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
-        context.getStateExecutionId(), context.getAppId(), StateType.valueOf(getStateType()));
+        analysisContext.getStateExecutionId(), analysisContext.getAppId(), StateType.valueOf(getStateType()));
 
     if (analysisSummary == null) {
-      generateAnalysisResponse(context, ExecutionStatus.ABORTED, "Workflow was aborted while analysing");
+      generateAnalysisResponse(analysisContext, ExecutionStatus.ABORTED, "Workflow was aborted while analysing");
+    }
+
+    if (isNotEmpty(analysisContext.getPredictiveCvConfigId())) {
+      getLogger().info("disabling the predictive cv config {} state {}", analysisContext.getPredictiveCvConfigId(),
+          analysisContext.getStateExecutionId());
+      wingsPersistence.updateField(
+          LogsCVConfiguration.class, analysisContext.getPredictiveCvConfigId(), "enabled24x7", false);
     }
   }
 
