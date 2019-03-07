@@ -11,6 +11,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
+import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.utils.Misc.replaceDotWithUnicode;
 
@@ -118,6 +119,7 @@ public abstract class AbstractAnalysisState extends State {
   protected String timeDuration;
   protected String comparisonStrategy;
   protected String tolerance;
+  protected String predictiveHistoryMinutes;
 
   private static final int TIMEOUT_BUFFER = 150; // 150 Minutes.
 
@@ -197,6 +199,19 @@ public abstract class AbstractAnalysisState extends State {
 
   public void setComparisonStrategy(String comparisonStrategy) {
     this.comparisonStrategy = comparisonStrategy;
+  }
+
+  @Attributes(title = "Predictive history in Minutes")
+  @DefaultValue("30")
+  public String getPredictiveHistoryMinutes() {
+    if (isEmpty(predictiveHistoryMinutes)) {
+      return String.valueOf(PREDECTIVE_HISTORY_MINUTES);
+    }
+    return predictiveHistoryMinutes;
+  }
+
+  public void setPredictiveHistoryMinutes(String predictiveHistoryMinutes) {
+    this.predictiveHistoryMinutes = predictiveHistoryMinutes;
   }
 
   public AbstractAnalysisState(String name, String stateType) {

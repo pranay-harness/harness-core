@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
+import static software.wings.sm.states.SumoLogicAnalysisState.SumoHostNameField.SOURCE_HOST;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -144,7 +145,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
               .hosts(hostBatch)
               .encryptedDataDetails(
                   secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()))
-              .hostnameField(getHostnameField())
+              .hostnameField(getHostnameField().getHostNameField())
               .initialDelayMinutes(DELAY_MINUTES)
               .build();
 
@@ -174,14 +175,15 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
 
   @DefaultValue("_sourceHost")
   @Attributes(required = true, title = "Field name for Host/Container")
-  public String getHostnameField() {
+  public SumoHostNameField getHostnameField() {
     if (isEmpty(hostnameField)) {
-      return "_sourceHost";
+      return SOURCE_HOST;
     }
-    return hostnameField;
+    return SumoHostNameField.getHostNameFieldFromValue(hostnameField);
   }
 
   public void setHostnameField(String hostnameField) {
+    SumoHostNameField.getHostNameFieldFromValue(hostnameField);
     this.hostnameField = hostnameField;
   }
 
@@ -201,5 +203,29 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
       return String.valueOf(15);
     }
     return timeDuration;
+  }
+
+  public enum SumoHostNameField {
+    SOURCE_HOST("_sourceHost"),
+    SOURCE_NAME("_sourceName");
+
+    private String hostNameField;
+
+    SumoHostNameField(String hostNameField) {
+      this.hostNameField = hostNameField;
+    }
+
+    public String getHostNameField() {
+      return hostNameField;
+    }
+
+    public static SumoHostNameField getHostNameFieldFromValue(String hostNameField) {
+      for (SumoHostNameField sumoHost : SumoHostNameField.values()) {
+        if (sumoHost.getHostNameField().equals(hostNameField)) {
+          return sumoHost;
+        }
+      }
+      throw new WingsException("Invalid host name field " + hostNameField, WingsException.USER);
+    }
   }
 }
