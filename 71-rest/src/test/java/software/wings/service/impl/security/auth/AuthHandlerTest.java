@@ -176,6 +176,8 @@ public class AuthHandlerTest extends WingsBaseTest {
 
   @Test
   public void shouldWorkForAccountAdministratorFirstTime() {
+    setupForAllApp();
+
     when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList());
     List<UserGroup> userGroups = asList(UserGroup.builder()
                                             .accountId(ACCOUNT_ID)
@@ -245,6 +247,10 @@ public class AuthHandlerTest extends WingsBaseTest {
     when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(appIds);
     PageResponse<Service> svcResponse = aPageResponse().withResponse(asList(service1, service2)).build();
     when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(false))).thenReturn(svcResponse);
+
+    PageResponse<InfrastructureProvisioner> infrastructureProvisionersResponse =
+        aPageResponse().withResponse(asList(infrastructureProvisioner)).build();
+    when(infrastructureProvisionerService.list(any(PageRequest.class))).thenReturn(infrastructureProvisionersResponse);
 
     PageResponse<Environment> envResponse;
     if (env == null) {

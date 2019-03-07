@@ -138,7 +138,7 @@ public class AuthHandler {
 
     // Fetch all entities by appIds
     Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap =
-        fetchRequiredEntities(permissionTypeAppIdSetMap);
+        fetchRequiredEntities(accountId, permissionTypeAppIdSetMap);
 
     // Filter and assign permissions
     Map<String, AppPermissionSummary> appPermissionMap =
@@ -508,33 +508,28 @@ public class AuthHandler {
   }
 
   private Map<PermissionType, Map<String, List<Base>>> fetchRequiredEntities(
-      Map<PermissionType, Set<String>> permissionTypeAppIdSetMap) {
+      String accountId, Map<PermissionType, Set<String>> permissionTypeAppIdSetMap) {
     Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap = new HashMap<>();
     permissionTypeAppIdSetMap.keySet().forEach(permissionType -> {
       switch (permissionType) {
         case SERVICE: {
-          permissionTypeAppIdEntityMap.put(
-              permissionType, getAppIdServiceMap(permissionTypeAppIdSetMap.get(permissionType)));
+          permissionTypeAppIdEntityMap.put(permissionType, getAppIdServiceMap(accountId));
           break;
         }
         case PROVISIONER: {
-          permissionTypeAppIdEntityMap.put(
-              permissionType, getAppIdProvisionerMap(permissionTypeAppIdSetMap.get(permissionType)));
+          permissionTypeAppIdEntityMap.put(permissionType, getAppIdProvisionerMap(accountId));
           break;
         }
         case ENV: {
-          permissionTypeAppIdEntityMap.put(
-              permissionType, getAppIdEnvMap(permissionTypeAppIdSetMap.get(permissionType)));
+          permissionTypeAppIdEntityMap.put(permissionType, getAppIdEnvMap(accountId));
           break;
         }
         case WORKFLOW: {
-          permissionTypeAppIdEntityMap.put(
-              permissionType, getAppIdWorkflowMap(permissionTypeAppIdSetMap.get(permissionType)));
+          permissionTypeAppIdEntityMap.put(permissionType, getAppIdWorkflowMap(accountId));
           break;
         }
         case PIPELINE: {
-          permissionTypeAppIdEntityMap.put(
-              permissionType, getAppIdPipelineMap(permissionTypeAppIdSetMap.get(permissionType)));
+          permissionTypeAppIdEntityMap.put(permissionType, getAppIdPipelineMap(accountId));
           break;
         }
         default: { noop(); }
@@ -543,34 +538,25 @@ public class AuthHandler {
     return permissionTypeAppIdEntityMap;
   }
 
-  private Map<String, List<Base>> getAppIdServiceMap(Set<String> appIds) {
-    if (isEmpty(appIds)) {
-      return new HashMap<>();
-    }
+  private Map<String, List<Base>> getAppIdServiceMap(String accountId) {
     PageRequest<Service> pageRequest =
-        aPageRequest().addFilter("appId", Operator.IN, appIds.toArray()).addFieldsIncluded("_id", "appId").build();
+        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("_id", "appId").build();
     List<Service> list = getAllEntities(pageRequest, () -> serviceResourceService.list(pageRequest, false, false));
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
-  private Map<String, List<Base>> getAppIdProvisionerMap(Set<String> appIds) {
-    if (isEmpty(appIds)) {
-      return new HashMap<>();
-    }
+  private Map<String, List<Base>> getAppIdProvisionerMap(String accountId) {
     PageRequest<InfrastructureProvisioner> pageRequest =
-        aPageRequest().addFilter("appId", Operator.IN, appIds.toArray()).addFieldsIncluded("_id", "appId").build();
+        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("_id", "appId").build();
 
     List<InfrastructureProvisioner> list =
         getAllEntities(pageRequest, () -> infrastructureProvisionerService.list(pageRequest));
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
-  private Map<String, List<Base>> getAppIdEnvMap(Set<String> appIds) {
-    if (isEmpty(appIds)) {
-      return new HashMap<>();
-    }
+  private Map<String, List<Base>> getAppIdEnvMap(String accountId) {
     PageRequest<Environment> pageRequest = aPageRequest()
-                                               .addFilter("appId", Operator.IN, appIds.toArray())
+                                               .addFilter("accountId", Operator.EQ, accountId)
                                                .addFieldsIncluded("_id", "appId", "environmentType")
                                                .build();
 
@@ -579,14 +565,10 @@ public class AuthHandler {
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
-  private Map<String, List<Base>> getAppIdWorkflowMap(Set<String> appIds) {
-    if (isEmpty(appIds)) {
-      return new HashMap<>();
-    }
-
+  private Map<String, List<Base>> getAppIdWorkflowMap(String accountId) {
     PageRequest<Workflow> pageRequest =
         aPageRequest()
-            .addFilter("appId", Operator.IN, appIds.toArray())
+            .addFilter("accountId", Operator.EQ, accountId)
             .addFieldsIncluded("_id", "appId", "envId", "templatized", "templateExpressions")
             .build();
 
@@ -595,11 +577,8 @@ public class AuthHandler {
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
-  private Map<String, List<Base>> getAppIdPipelineMap(Set<String> appIds) {
-    if (isEmpty(appIds)) {
-      return new HashMap<>();
-    }
-    PageRequest<Pipeline> pageRequest = aPageRequest().addFilter("appId", Operator.IN, appIds.toArray()).build();
+  private Map<String, List<Base>> getAppIdPipelineMap(String accountId) {
+    PageRequest<Pipeline> pageRequest = aPageRequest().addFilter("accountId", Operator.EQ, accountId).build();
     List<Pipeline> list = getAllEntities(pageRequest, () -> pipelineService.listPipelines(pageRequest));
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
