@@ -1,9 +1,5 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.mongo.KryoConverter;
 import io.harness.persistence.CreatedAtAware;
@@ -34,7 +30,6 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @EqualsAndHashCode(exclude = {"uuid", "createdAt", "lastUpdatedAt", "validUntil"})
-@JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
@@ -42,7 +37,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   public static final String NOTIFY_RESPONSE_KEY = "notifyResponse";
 
   public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
-
   public static final long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
   @Id private String uuid;
@@ -75,10 +69,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private String workflowExecutionId;
   private ResponseData notifyResponse;
 
-  private transient DelegateRunnableTask delegateRunnableTask;
-
-  @SchemaIgnore
-  @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
