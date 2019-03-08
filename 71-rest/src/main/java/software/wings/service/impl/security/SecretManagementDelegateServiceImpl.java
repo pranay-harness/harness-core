@@ -138,7 +138,16 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(() -> decryptInternal(data, kmsConfig), 5, TimeUnit.SECONDS, true);
+        // If plain text key is cached already, no need to decrypt under a TimeLimiter.callWithTimeout. We know it will
+        // be fast.
+        KmsEncryptionKeyCacheKey cacheKey = new KmsEncryptionKeyCacheKey(data.getUuid(), data.getEncryptionKey());
+        byte[] cachedEncryptedKey = kmsEncryptionKeyCache.getIfPresent(cacheKey);
+        if (isNotEmpty(cachedEncryptedKey)) {
+          return decryptInternalIfCached(cacheKey, data, cachedEncryptedKey, System.currentTimeMillis());
+        } else {
+          // Use TimeLimiter.callWithTimeout only if the KMS plain text key is not cached.
+          return timeLimiter.callWithTimeout(() -> decryptInternal(data, kmsConfig), 5, TimeUnit.SECONDS, true);
+        }
       } catch (Exception e) {
         failedAttempts++;
         logger.warn(format("Decryption failed. trial num: %d", failedAttempts), e);
@@ -344,6 +353,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       return encryptedKey;
     });
 
+    return decryptInternalIfCached(cacheKey, data, encryptedPlainTextKey, startTime);
+  }
+
+  private char[] decryptInternalIfCached(KmsEncryptionKeyCacheKey cacheKey, EncryptedRecord data,
+      byte[] encryptedPlainTextKey, long startTime) throws Exception {
     byte[] plainTextKey = decryptPlainTextKey(encryptedPlainTextKey, cacheKey.uuid);
     char[] decryptedSecret = decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey, "AES")).toCharArray();
 

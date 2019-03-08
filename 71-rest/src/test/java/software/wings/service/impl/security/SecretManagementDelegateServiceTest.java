@@ -12,7 +12,6 @@ import io.harness.security.encryption.EncryptedRecord;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.MockitoAnnotations;
 import software.wings.beans.KmsConfig;
 import software.wings.security.encryption.EncryptedData;
 
@@ -29,8 +28,6 @@ public class SecretManagementDelegateServiceTest {
 
   @Before
   public void setup() {
-    MockitoAnnotations.initMocks(this);
-
     secretManagementDelegateService = new SecretManagementDelegateServiceImpl(timeLimiter);
 
     kmsConfig = KmsConfig.builder()
@@ -46,7 +43,7 @@ public class SecretManagementDelegateServiceTest {
 
   @Test
   @Ignore
-  public void test_EncryptDecryptKmsSecret_ShouldSucceed() throws Exception {
+  public void test_EncryptDecryptKmsSecret_ShouldSucceed() {
     String secret = "TopSecret";
     EncryptedRecord encryptedRecord =
         secretManagementDelegateService.encrypt(accountId, secret.toCharArray(), kmsConfig);
