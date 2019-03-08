@@ -4,7 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Singleton;
 
-import io.harness.delegate.beans.HttpTaskParameters;
+import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
