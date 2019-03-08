@@ -17,9 +17,14 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.NameValuePair;
+import software.wings.beans.Variable;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.utils.Util;
 import software.wings.yaml.BaseEntityYaml;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ArtifactStream bean class.
@@ -56,6 +61,9 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   private boolean metadataOnly;
   private int failedCronAttempts;
   @Indexed private Long nextIteration;
+  private String templateUuid;
+  private String templateVersion;
+  private List<Variable> templateVariables = new ArrayList<>();
 
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
@@ -101,6 +109,8 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   public abstract static class Yaml extends BaseEntityYaml {
     private String serverName;
     private boolean metadataOnly;
+    private String templateUri;
+    private List<NameValuePair> templateVariables;
 
     public Yaml(String type, String harnessApiVersion, String serverName, boolean metadataOnly) {
       super(type, harnessApiVersion);
@@ -110,6 +120,15 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
 
     public Yaml(String type, String harnessApiVersion) {
       super(type, harnessApiVersion);
+    }
+
+    public Yaml(String type, String harnessApiVersion, String serverName, boolean metadataOnly, String templateUri,
+        List<NameValuePair> templateVariables) {
+      super(type, harnessApiVersion);
+      this.serverName = serverName;
+      this.metadataOnly = metadataOnly;
+      this.templateUri = templateUri;
+      this.templateVariables = templateVariables;
     }
   }
 }

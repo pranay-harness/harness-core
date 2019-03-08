@@ -1,7 +1,7 @@
 package io.harness.functional.artifactstream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.template.artifacts.CustomRepositoryMapping.AttributeMapping.builder;
+import static software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping.builder;
 
 import com.google.inject.Inject;
 
@@ -29,7 +29,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Script;
-import software.wings.beans.template.artifacts.CustomRepositoryMapping;
+import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
 
 import java.util.ArrayList;
 import java.util.Arrays;

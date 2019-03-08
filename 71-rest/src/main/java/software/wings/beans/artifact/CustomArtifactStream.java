@@ -12,7 +12,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.template.artifacts.CustomRepositoryMapping;
+import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
 
 import java.util.ArrayList;
 import java.util.List;

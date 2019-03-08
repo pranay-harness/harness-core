@@ -4,7 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import software.wings.beans.template.artifacts.ArtifactSourceTemplate;
+import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;

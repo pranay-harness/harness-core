@@ -1,4 +1,4 @@
-package software.wings.beans.template.artifacts;
+package software.wings.beans.template.artifactsource;
 
 import lombok.Builder;
 import lombok.Value;

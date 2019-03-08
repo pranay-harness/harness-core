@@ -81,10 +81,7 @@ public class TemplateHelper {
     if (isEmpty(templateUuids)) {
       return false;
     }
-    // TODO: remove once linking logic added to artifact stream
-    if (templateType.equals(TemplateType.ARTIFACT_SOURCE)) {
-      return false;
-    }
+
     long templatesOfType = wingsPersistence.createQuery(Template.class)
                                .field(TYPE_KEY)
                                .equal(templateType.name())
@@ -104,8 +101,9 @@ public class TemplateHelper {
         return TEMPATE_UUID_KEY;
       case HTTP:
       case SHELL_SCRIPT:
-      case ARTIFACT_SOURCE:
         return LINKED_TEMPLATE_UUIDS_KEY;
+      case ARTIFACT_SOURCE:
+        return TEMPATE_UUID_KEY;
       default:
         unhandled(templateType);
     }

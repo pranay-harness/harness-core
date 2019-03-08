@@ -1,4 +1,4 @@
-package software.wings.beans.template.artifacts;
+package software.wings.beans.template.artifactsource;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 

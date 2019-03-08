@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.EntityType.ARTIFACT_STREAM;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
@@ -18,6 +19,7 @@ import static software.wings.beans.template.TemplateHelper.addUserKeyWords;
 import static software.wings.beans.template.TemplateHelper.mappedEntity;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
+import static software.wings.beans.template.TemplateType.ARTIFACT_SOURCE;
 import static software.wings.beans.template.TemplateType.HTTP;
 import static software.wings.beans.template.TemplateType.SHELL_SCRIPT;
 import static software.wings.beans.template.TemplateType.SSH;
@@ -55,6 +57,7 @@ import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.VersionedTemplate;
+import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
@@ -345,6 +348,9 @@ public class TemplateServiceImpl implements TemplateService {
     if (templateHelper.templatesLinked(SHELL_SCRIPT, templateUuids)) {
       throwException(templateFolder, SHELL_SCRIPT, WORKFLOW);
     }
+    if (templateHelper.templatesLinked(ARTIFACT_SOURCE, templateUuids)) {
+      throwException(templateFolder, ARTIFACT_SOURCE, ARTIFACT_STREAM);
+    }
     // Delete templates
     return wingsPersistence.delete(wingsPersistence.createQuery(Template.class)
                                        .filter(ACCOUNT_ID, templateFolder.getAccountId())
@@ -449,6 +455,8 @@ public class TemplateServiceImpl implements TemplateService {
       return HTTP;
     } else if (templateObject instanceof ShellScriptTemplate) {
       return SHELL_SCRIPT;
+    } else if (templateObject instanceof ArtifactSourceTemplate) {
+      return ARTIFACT_SOURCE;
     }
     throw new InvalidRequestException("Template Type not yet supported", USER);
   }

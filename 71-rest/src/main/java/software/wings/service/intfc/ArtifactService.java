@@ -94,6 +94,12 @@ public interface ArtifactService extends OwnedByArtifactStream {
   void updateStatus(String artifactId, String appId, Status status, ContentStatus contentStatus, String errorMessage);
 
   /**
+   * Update artifact source name
+   * @param artifactStream
+   */
+  void updateArtifactSourceName(ArtifactStream artifactStream);
+
+  /**
    * Adds the artifact file.
    *
    * @param artifactId    the artifact id
