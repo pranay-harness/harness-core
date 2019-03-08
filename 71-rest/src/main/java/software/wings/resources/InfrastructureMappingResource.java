@@ -13,7 +13,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.delegate.task.protocol.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;

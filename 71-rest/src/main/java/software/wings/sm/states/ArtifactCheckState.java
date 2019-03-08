@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.Artifact;

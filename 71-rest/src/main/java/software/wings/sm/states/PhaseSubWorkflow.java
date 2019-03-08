@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.serializer.MapperUtils;

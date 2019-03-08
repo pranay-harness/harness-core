@@ -1,6 +1,6 @@
 package software.wings.service.intfc.aws.manager;
 
-import io.harness.delegate.task.protocol.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListener;
 import software.wings.beans.AwsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 

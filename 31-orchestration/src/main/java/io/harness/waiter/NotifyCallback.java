@@ -1,6 +1,6 @@
 package io.harness.waiter;
 
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 
 import java.util.Map;
 

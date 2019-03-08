@@ -42,7 +42,7 @@ import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;

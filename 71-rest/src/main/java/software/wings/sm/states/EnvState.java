@@ -22,7 +22,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.ExceptionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;

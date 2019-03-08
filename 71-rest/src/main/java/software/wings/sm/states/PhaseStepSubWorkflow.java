@@ -23,7 +23,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AmiServiceSetupElement;

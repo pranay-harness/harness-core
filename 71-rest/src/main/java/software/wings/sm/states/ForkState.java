@@ -7,7 +7,7 @@ import com.google.common.base.Joiner;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.serializer.KryoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

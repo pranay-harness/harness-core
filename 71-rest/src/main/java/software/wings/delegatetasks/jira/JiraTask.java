@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.delegate.task.protocol.ResponseData;
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.Field;
 import net.rcarz.jiraclient.Issue;

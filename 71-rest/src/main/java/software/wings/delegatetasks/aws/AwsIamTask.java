@@ -5,7 +5,7 @@ import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;

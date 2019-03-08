@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;

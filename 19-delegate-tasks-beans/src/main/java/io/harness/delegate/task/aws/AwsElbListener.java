@@ -1,9 +1,9 @@
-package io.harness.delegate.task.protocol;
+package io.harness.delegate.task.aws;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 
-@Data
+@Value
 @Builder
 public class AwsElbListener {
   private String listenerArn;

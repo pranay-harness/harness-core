@@ -1,4 +1,4 @@
-package io.harness.delegate.task.protocol;
+package io.harness.delegate.beans;
 
 import lombok.Builder;
 import lombok.Data;

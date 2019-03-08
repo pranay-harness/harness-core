@@ -1,6 +1,6 @@
-package io.harness.delegate.beans;
+package io.harness.delegate.task.shell;
 
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Data;

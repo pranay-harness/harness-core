@@ -5,7 +5,7 @@ import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;

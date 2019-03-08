@@ -51,7 +51,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroupNotFoundException;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.task.protocol.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;

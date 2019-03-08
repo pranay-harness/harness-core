@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.pcf.response;
 
+import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 

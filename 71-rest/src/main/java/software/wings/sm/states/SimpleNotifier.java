@@ -4,7 +4,7 @@
 
 package software.wings.sm.states;
 
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
 /**

@@ -1,6 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import software.wings.beans.command.CommandUnit;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.sm.ExecutionContext;

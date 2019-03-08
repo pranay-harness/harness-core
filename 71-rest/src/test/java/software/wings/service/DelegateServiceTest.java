@@ -44,7 +44,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;

@@ -14,7 +14,7 @@ import static software.wings.service.impl.artifact.ArtifactCollectionServiceAsyn
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;

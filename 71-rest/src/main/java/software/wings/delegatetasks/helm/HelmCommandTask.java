@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessException;
 import org.apache.commons.lang3.NotImplementedException;

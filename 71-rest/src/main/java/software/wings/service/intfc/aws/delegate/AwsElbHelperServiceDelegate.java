@@ -4,7 +4,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResu
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
-import io.harness.delegate.task.protocol.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListener;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.security.encryption.EncryptedDataDetail;

@@ -1,4 +1,4 @@
-package io.harness.delegate.task.protocol;
+package io.harness.delegate.beans;
 
 public interface DelegateTaskNotifyResponseData extends ResponseData {
   DelegateMetaInfo getDelegateMetaInfo();

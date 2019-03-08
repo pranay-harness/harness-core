@@ -75,7 +75,7 @@ import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.task.DelegateRunnableTask;
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
 import io.harness.network.FibonacciBackOff;

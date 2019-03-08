@@ -14,10 +14,10 @@ import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 
-import io.harness.delegate.beans.ScriptType;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.shell.ScriptType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.zeroturnaround.exec.ProcessExecutor;

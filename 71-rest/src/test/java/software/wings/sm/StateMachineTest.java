@@ -10,7 +10,7 @@ import com.google.inject.Injector;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.threading.ThreadPool;

@@ -12,7 +12,7 @@ import com.auth0.jwt.interfaces.Claim;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
 import net.sf.json.JSONArray;

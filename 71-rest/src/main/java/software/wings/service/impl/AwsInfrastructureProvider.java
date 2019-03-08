@@ -21,7 +21,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.model.AmazonECSException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.delegate.task.protocol.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;

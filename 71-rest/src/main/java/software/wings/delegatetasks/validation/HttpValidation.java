@@ -2,7 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
-import io.harness.delegate.beans.HttpTaskParameters;
+import io.harness.delegate.task.http.HttpTaskParameters;
 import software.wings.beans.DelegateTask;
 
 import java.util.List;

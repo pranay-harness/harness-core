@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import lombok.Builder;
 import lombok.Data;
 

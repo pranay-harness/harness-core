@@ -6,8 +6,8 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import com.google.common.base.Splitter;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.HttpTaskParameters;
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.http.HttpTaskParameters;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
