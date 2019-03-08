@@ -313,11 +313,17 @@ public class ArtifactCollectionUtil {
       String repositoryName = ArtifactUtilities.getNexusRepositoryName(
           nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort(), nexusArtifactStream.getImageName());
       logger.info("Nexus Registry url: " + registryUrl);
-      imageDetailsBuilder.name(repositoryName)
-          .sourceName(nexusArtifactStream.getSourceName())
-          .registryUrl(registryUrl)
-          .username(nexusConfig.getUsername())
-          .password(new String(nexusConfig.getPassword()));
+      if (nexusConfig.hasCredentials()) {
+        imageDetailsBuilder.name(repositoryName)
+            .sourceName(nexusArtifactStream.getSourceName())
+            .registryUrl(registryUrl)
+            .username(nexusConfig.getUsername())
+            .password(new String(nexusConfig.getPassword()));
+      } else {
+        imageDetailsBuilder.name(repositoryName)
+            .sourceName(nexusArtifactStream.getSourceName())
+            .registryUrl(registryUrl);
+      }
     } else if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
       imageDetailsBuilder.sourceName(artifactStream.getSourceName());
     } else {
