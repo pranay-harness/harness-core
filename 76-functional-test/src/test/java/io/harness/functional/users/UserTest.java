@@ -113,7 +113,7 @@ public class UserTest extends AbstractFunctionalTest {
   @Owner(emails = "swamy@harness.io")
   public void testUserInvite() throws IOException, MessagingException {
     Account account = this.getAccount();
-    String domainName = "@mailinator-harness.mailinator.com";
+    String domainName = "@swamy-harness.mailinator.com";
     String emailId = testUtils.generateUniqueInboxId();
     List<UserInvite> userInvitationList = urUtil.inviteUser(account, emailId + domainName);
     assertNotNull(userInvitationList);
