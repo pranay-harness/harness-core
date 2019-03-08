@@ -2,6 +2,7 @@ package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -356,7 +357,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                              .build();
         break;
       case CLOUD_WATCH:
-        metricTemplates = CloudWatchState.fetchMetricTemplates(CloudWatchServiceImpl.fetchMetrics());
+        metricTemplates = CloudWatchState.fetchMetricTemplates(
+            CloudWatchServiceImpl.fetchMetrics((CloudWatchCVServiceConfiguration) cvConfiguration));
         metricTemplate = TimeSeriesMetricTemplates.builder()
                              .stateType(stateType)
                              .metricTemplates(metricTemplates)
@@ -373,6 +375,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     }
     metricTemplate.setAppId(appId);
     metricTemplate.setAccountId(accountId);
+    metricTemplate.setStateExecutionId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid());
     wingsPersistence.save(metricTemplate);
   }
 

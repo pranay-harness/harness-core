@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.common.VerificationConstants.GLOBAL_APP_ID;
@@ -38,6 +39,7 @@ import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -220,5 +222,26 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       throw new WingsException(e);
     }
     return cloudWatchMetrics;
+  }
+
+  public static Map<AwsNameSpace, List<CloudWatchMetric>> fetchMetrics(
+      CloudWatchCVServiceConfiguration cloudwatchConfig) {
+    Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics, metricsTemplate = new HashMap<>();
+    cloudWatchMetrics = fetchMetrics();
+
+    if (isNotEmpty(cloudwatchConfig.getLoadBalancerMetrics())) {
+      metricsTemplate.put(AwsNameSpace.ELB, cloudWatchMetrics.get(AwsNameSpace.ELB));
+    }
+    if (isNotEmpty(cloudwatchConfig.getClusterName())) {
+      metricsTemplate.put(AwsNameSpace.ECS, cloudWatchMetrics.get(AwsNameSpace.ECS));
+    }
+    if (isNotEmpty(cloudwatchConfig.getEc2Metrics())) {
+      metricsTemplate.put(AwsNameSpace.EC2, cloudWatchMetrics.get(AwsNameSpace.EC2));
+    }
+    if (isNotEmpty(cloudwatchConfig.getLambdaFunctions())) {
+      metricsTemplate.put(AwsNameSpace.LAMBDA, cloudWatchMetrics.get(AwsNameSpace.LAMBDA));
+    }
+
+    return metricsTemplate;
   }
 }
