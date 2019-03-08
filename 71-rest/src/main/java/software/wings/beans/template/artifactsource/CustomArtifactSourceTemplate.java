@@ -1,18 +1,22 @@
-package software.wings.beans.template.artifacts;
+package software.wings.beans.template.artifactsource;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @JsonTypeName("CUSTOM")
-@Value
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(NON_NULL)
 public class CustomArtifactSourceTemplate implements ArtifactSource {
   private String script;
-  @Builder.Default private long timeoutSeconds = 60;
+  @Builder.Default private String timeoutSeconds = "60";
   private CustomRepositoryMapping customRepositoryMapping;
 }

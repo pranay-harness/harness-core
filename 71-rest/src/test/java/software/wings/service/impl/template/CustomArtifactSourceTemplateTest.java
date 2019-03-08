@@ -9,14 +9,13 @@ import static software.wings.beans.VariableType.TEXT;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import io.harness.exception.WingsException;
-import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
-import software.wings.beans.template.artifacts.ArtifactSourceTemplate;
-import software.wings.beans.template.artifacts.CustomArtifactSourceTemplate;
-import software.wings.beans.template.artifacts.CustomRepositoryMapping;
-import software.wings.beans.template.artifacts.CustomRepositoryMapping.AttributeMapping;
+import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
+import software.wings.beans.template.artifactsource.CustomArtifactSourceTemplate;
+import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
+import software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +32,11 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
     CustomArtifactSourceTemplate customArtifactSourceTemplate1 =
         (CustomArtifactSourceTemplate) savedCustomArtifactStreamTemplate.getArtifactSource();
     assertThat(customArtifactSourceTemplate1.getScript().equals("echo \"hello world\""));
-    assertThat(customArtifactSourceTemplate1.getTimeoutSeconds()).isEqualTo(60);
+    assertThat(customArtifactSourceTemplate1.getTimeoutSeconds().equals("60"));
     assertThat(customArtifactSourceTemplate1.getCustomRepositoryMapping()).isNotNull();
   }
 
   @Test
-  @Ignore
   public void shouldUpdateCustomArtifactSourceTemplate() {
     Template template = constructCustomArtifactTemplateEntity();
     Template savedTemplate = templateService.save(template);
@@ -58,7 +56,7 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
                                           .build();
     CustomArtifactSourceTemplate customArtifactSourceTemplate = CustomArtifactSourceTemplate.builder()
                                                                     .script("echo \"hi\"")
-                                                                    .timeoutSeconds(100)
+                                                                    .timeoutSeconds("100")
                                                                     .customRepositoryMapping(mapping)
                                                                     .build();
     savedTemplate.setTemplateObject(
@@ -79,7 +77,7 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
     assertThat(((CustomArtifactSourceTemplate) ((ArtifactSourceTemplate) updatedTemplate.getTemplateObject())
                        .getArtifactSource())
                    .getTimeoutSeconds())
-        .isEqualTo(100);
+        .isEqualTo("100");
     CustomRepositoryMapping customRepositoryMapping =
         ((CustomArtifactSourceTemplate) ((ArtifactSourceTemplate) updatedTemplate.getTemplateObject())
                 .getArtifactSource())
@@ -118,7 +116,7 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTest {
     assertThat(((CustomArtifactSourceTemplate) ((ArtifactSourceTemplate) savedTemplate.getTemplateObject())
                        .getArtifactSource())
                    .getTimeoutSeconds())
-        .isEqualTo(60);
+        .isEqualTo("60");
     CustomRepositoryMapping customRepositoryMapping =
         ((CustomArtifactSourceTemplate) ((ArtifactSourceTemplate) savedTemplate.getTemplateObject())
                 .getArtifactSource())

@@ -3,6 +3,7 @@ package software.wings.service.impl.artifact;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -50,7 +51,7 @@ public class CustomBuildSourceServiceTest extends WingsBaseTest {
             .scripts(asList(CustomArtifactStream.Script.builder()
                                 .action(Action.FETCH_VERSIONS)
                                 .scriptString("echo Hello World!! and echo ${secrets.getValue(My Secret)}")
-                                .timeout("")
+                                .timeout("60")
                                 .build()))
             .build();
 
@@ -68,6 +69,6 @@ public class CustomBuildSourceServiceTest extends WingsBaseTest {
     final List<BuildDetails> builds = customBuildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID);
     assertThat(builds).isNotEmpty();
     verify(appService).get(APP_ID);
-    verify(evaluator).substitute(any(), any());
+    verify(evaluator, times(2)).substitute(any(), any());
   }
 }

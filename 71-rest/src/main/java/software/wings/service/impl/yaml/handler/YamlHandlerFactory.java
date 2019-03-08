@@ -438,6 +438,6 @@ public class YamlHandlerFactory {
         "AmiArtifactStream", "AmazonS3ArtifactStream", "AcrArtifactStream", "HelmChartSpecification",
         "EcsServiceSpecification", "PcfServiceSpecification", "LambdaSpecification", "UserDataSpecification",
         "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute", "ServiceCommand",
-        "ManifestFile", "ApplicationManifest");
+        "ManifestFile", "ApplicationManifest", "CustomArtifactStream");
   }
 }

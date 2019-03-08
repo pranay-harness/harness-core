@@ -274,6 +274,14 @@ public class ArtifactServiceImpl implements ArtifactService {
     wingsPersistence.update(query, ops);
   }
 
+  @Override
+  public void updateArtifactSourceName(ArtifactStream artifactStream) {
+    Query<Artifact> query = prepareArtifactWithMetadataQuery(artifactStream);
+    UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
+    ops.set("artifactSourceName", artifactStream.getSourceName());
+    wingsPersistence.update(query, ops);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ArtifactService#addArtifactFile(java.lang.String, java.lang.String,
    * java.util.List)

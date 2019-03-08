@@ -1,6 +1,7 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
@@ -32,7 +33,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.artifact.ArtifactUtilities;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.network.Http;
 import org.mongodb.morphia.annotations.Transient;
@@ -60,7 +64,8 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
-import software.wings.beans.template.artifacts.CustomRepositoryMapping.AttributeMapping;
+import software.wings.beans.template.TemplateHelper;
+import software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.expression.SecretFunctor;
 import software.wings.helpers.ext.azure.AzureHelperService;
@@ -76,6 +81,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
@@ -99,6 +105,7 @@ public class ArtifactCollectionUtil {
   @Inject private AwsEcrHelperServiceManager awsEcrHelperServiceManager;
   @Inject private AppService appService;
   @Inject private ExpressionEvaluator evaluator;
+  @Inject private TemplateService templateService;
 
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionUtil.class);
 
@@ -377,7 +384,13 @@ public class ArtifactCollectionUtil {
             .filter(script -> script.getAction() == null || script.getAction().equals(Action.FETCH_VERSIONS))
             .findFirst()
             .orElse(null);
-
+    if (isNotEmpty(customArtifactStream.getTemplateVariables())) {
+      Map<String, Object> templateVariableMap =
+          TemplateHelper.convertToVariableMap(customArtifactStream.getTemplateVariables());
+      if (isNotEmpty(templateVariableMap)) {
+        context.putAll(templateVariableMap);
+      }
+    }
     Validator.notNullCheck("Fetch Version script is missing", versionScript, USER);
 
     ArtifactStreamAttributes artifactStreamAttributes = customArtifactStream.fetchArtifactStreamAttributes();
@@ -386,17 +399,43 @@ public class ArtifactCollectionUtil {
     Validator.notNullCheck("Script string can not be empty", scriptString, USER);
     artifactStreamAttributes.setCustomArtifactStreamScript(evaluator.substitute(scriptString, context));
     artifactStreamAttributes.setAccountId(app.getAccountId());
-    artifactStreamAttributes.setCustomScriptTimeout(versionScript.getTimeout());
+    artifactStreamAttributes.setCustomScriptTimeout(evaluator.substitute(versionScript.getTimeout(), context));
     if (versionScript.getCustomRepositoryMapping() != null) {
+      validateAttributeMapping(versionScript.getCustomRepositoryMapping().getArtifactRoot(),
+          versionScript.getCustomRepositoryMapping().getBuildNoPath());
       artifactStreamAttributes.setCustomAttributeMappingNeeded(true);
-      artifactStreamAttributes.setArtifactRoot(versionScript.getCustomRepositoryMapping().getArtifactRoot());
-      artifactStreamAttributes.setBuildNoPath(versionScript.getCustomRepositoryMapping().getBuildNoPath());
+      artifactStreamAttributes.setArtifactRoot(
+          evaluator.substitute(versionScript.getCustomRepositoryMapping().getArtifactRoot(), context));
+      artifactStreamAttributes.setBuildNoPath(
+          evaluator.substitute(versionScript.getCustomRepositoryMapping().getBuildNoPath(), context));
       Map<String, String> map = new HashMap<>();
-      for (AttributeMapping attributeMapping : versionScript.getCustomRepositoryMapping().getArtifactAttributes()) {
-        map.put(attributeMapping.getRelativePath(), attributeMapping.getMappedAttribute());
+      if (EmptyPredicate.isNotEmpty(versionScript.getCustomRepositoryMapping().getArtifactAttributes())) {
+        for (AttributeMapping attributeMapping : versionScript.getCustomRepositoryMapping().getArtifactAttributes()) {
+          String relativePath = null;
+          if (isNotEmpty(attributeMapping.getRelativePath())) {
+            relativePath = evaluator.substitute(attributeMapping.getRelativePath(), context);
+          }
+          String mappedAttribute = null;
+          if (isNotEmpty(attributeMapping.getMappedAttribute())) {
+            mappedAttribute = evaluator.substitute(attributeMapping.getMappedAttribute(), context);
+          }
+          map.put(relativePath, mappedAttribute);
+        }
       }
+
       artifactStreamAttributes.setArtifactAttributes(map);
     }
     return artifactStreamAttributes;
+  }
+
+  private void validateAttributeMapping(String artifactRoot, String buildNoPath) {
+    if (isEmpty(artifactRoot)) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
+          .addParam("message", "Artifacts Array Path cannot be empty. Please refer the documentation.");
+    }
+    if (isEmpty(buildNoPath)) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
+          .addParam("message", "BuildNo. Path cannot be empty. Please refer the documentation.");
+    }
   }
 }

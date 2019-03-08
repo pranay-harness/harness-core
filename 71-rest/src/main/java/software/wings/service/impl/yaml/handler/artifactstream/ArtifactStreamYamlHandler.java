@@ -1,22 +1,28 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
+import static software.wings.beans.template.TemplateHelper.obtainTemplateVersion;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
 import io.harness.exception.HarnessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.Yaml;
+import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.template.TemplateService;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,9 +32,11 @@ import java.util.Optional;
  */
 public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends ArtifactStream>
     extends BaseYamlHandler<Y, B> {
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactStreamYamlHandler.class);
   @Inject SettingsService settingsService;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject YamlHelper yamlHelper;
+  @Inject private TemplateService templateService;
 
   protected String getSettingId(String accountId, String appId, String settingName) {
     SettingAttribute settingAttribute = settingsService.getByName(accountId, appId, settingName);
@@ -81,6 +89,20 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
       yaml.setMetadataOnly(bean.isMetadataOnly());
     }
     yaml.setHarnessApiVersion(getHarnessApiVersion());
+    String templateUri = null;
+    String templateUuid = bean.getTemplateUuid();
+    if (templateUuid != null) {
+      // ArtifactStream is linked
+      templateUri = templateService.fetchTemplateUri(templateUuid);
+      if (templateUri == null) {
+        logger.warn("Linked template for Artifact Source template  {} was deleted", templateUuid);
+      }
+      if (bean.getTemplateVersion() != null) {
+        templateUri = templateUri + ":" + bean.getTemplateVersion();
+      }
+    }
+    yaml.setTemplateUri(templateUri);
+    yaml.setTemplateVariables(TemplateHelper.convertToTemplateVariables(bean.getTemplateVariables()));
   }
 
   @Override
@@ -115,6 +137,14 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
       bean.setSettingId(getSettingId(changeContext.getChange().getAccountId(), appId, yaml.getServerName()));
       bean.setMetadataOnly(yaml.isMetadataOnly());
     }
+
+    String templateUri = yaml.getTemplateUri();
+    if (isNotEmpty(templateUri)) {
+      bean.setTemplateUuid(
+          templateService.fetchTemplateIdFromUri(changeContext.getChange().getAccountId(), templateUri));
+      bean.setTemplateVersion(obtainTemplateVersion(templateUri));
+    }
+    bean.setTemplateVariables(TemplateHelper.convertToEntityVariables(yaml.getTemplateVariables()));
   }
 
   protected abstract B getNewArtifactStreamObject();

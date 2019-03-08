@@ -23,6 +23,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.common.Constants.REFERENCED_ENTITIES_TO_SHOW;
+import static software.wings.common.TemplateConstants.LATEST_TAG;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -48,11 +49,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
+import software.wings.beans.Variable;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.config.ArtifactSourceable;
+import software.wings.beans.template.TemplateHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
@@ -65,11 +68,13 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Util;
+import software.wings.utils.Validator;
 
 import java.util.HashMap;
 import java.util.List;
@@ -98,6 +103,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private ArtifactService artifactService; // Do not delete it is being used by Prune
   @Inject private YamlPushService yamlPushService;
   @Inject @Transient private transient FeatureFlagService featureFlagService;
+  @Inject private TemplateService templateService;
+  @Inject private TemplateHelper templateHelper;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -127,7 +134,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream, boolean validate) {
-    if (validate) {
+    if (validate && artifactStream.getTemplateUuid() == null) {
       validateArtifactSourceData(artifactStream);
     }
 
@@ -137,6 +144,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new WingsException("Please provide valid artifact name", USER);
     }
 
+    if (artifactStream.getTemplateUuid() != null) {
+      if (isEmpty(artifactStream.getTemplateVariables())) {
+        String version = artifactStream.getTemplateVersion() != null ? artifactStream.getTemplateVersion() : LATEST_TAG;
+        ArtifactStream artifactStream1 =
+            (ArtifactStream) templateService.constructEntityFromTemplate(artifactStream.getTemplateUuid(), version);
+        artifactStream.setTemplateVariables(artifactStream1.getTemplateVariables());
+      } else {
+        if (validate) {
+          validateArtifactSourceData(artifactStream);
+        }
+      }
+    }
     String id = wingsPersistence.save(artifactStream);
     String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
 
@@ -188,14 +207,52 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
 
+    if (artifactStream.getArtifactStreamType() != null && existingArtifactStream.getArtifactStreamType() != null
+        && !artifactStream.getArtifactStreamType().equals(existingArtifactStream.getArtifactStreamType())) {
+      throw new InvalidRequestException("Artifact Stream type cannot be updated", USER);
+    }
+
+    boolean versionChanged = false;
+    List<Variable> oldTemplateVariables = existingArtifactStream.getTemplateVariables();
+    if (artifactStream.getTemplateVersion() != null && existingArtifactStream.getTemplateVersion() != null
+        && !artifactStream.getTemplateVersion().equals(existingArtifactStream.getTemplateVersion())) {
+      versionChanged = true;
+    }
+
+    if (versionChanged || existingArtifactStream.getTemplateUuid() == null) {
+      if (artifactStream.getTemplateUuid() != null) {
+        String version = artifactStream.getTemplateVersion() != null ? artifactStream.getTemplateVersion() : LATEST_TAG;
+        ArtifactStream artifactStreamFromTemplate =
+            (ArtifactStream) templateService.constructEntityFromTemplate(artifactStream.getTemplateUuid(), version);
+        Validator.notNullCheck("Template does not exist", artifactStreamFromTemplate, USER);
+        artifactStream.setTemplateVariables(
+            templateHelper.overrideVariables(artifactStreamFromTemplate.getTemplateVariables(), oldTemplateVariables));
+        if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
+          ((CustomArtifactStream) artifactStream)
+              .setScripts(((CustomArtifactStream) artifactStreamFromTemplate).getScripts());
+        }
+      }
+    } else if (existingArtifactStream.getTemplateUuid() != null) {
+      artifactStream.setTemplateVariables(
+          templateHelper.overrideVariables(artifactStream.getTemplateVariables(), oldTemplateVariables));
+      if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
+        ((CustomArtifactStream) artifactStream)
+            .setScripts(((CustomArtifactStream) existingArtifactStream).getScripts());
+      }
+    }
+
     if (validate) {
       validateArtifactSourceData(artifactStream);
     }
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
+
     ArtifactStream finalArtifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
 
     if (!existingArtifactStream.getSourceName().equals(finalArtifactStream.getSourceName())) {
+      if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+        artifactService.updateArtifactSourceName(finalArtifactStream);
+      }
       executorService.submit(() -> triggerService.updateByApp(existingArtifactStream.getAppId()));
     }
 
@@ -361,7 +418,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
-    String accountId = appService.getAccountIdByAppId(appId);
     Service service = serviceResourceService.get(appId, serviceId, false);
     // Observed NPE in logs due to invalid service id provided by the ui due to a stale screen.
     if (service == null) {
@@ -374,25 +430,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                          .put(ACR.name(), ACR.name())
                                                          .put(GCR.name(), GCR.name())
                                                          .put(ARTIFACTORY.name(), ARTIFACTORY.name())
-                                                         .put(NEXUS.name(), NEXUS.name());
-
-      if (featureFlagService.isEnabled(FeatureName.CUSTOM_ARTIFACT_SOURCE, accountId)) {
-        builder.put(CUSTOM.name(), CUSTOM.name());
-      }
+                                                         .put(NEXUS.name(), NEXUS.name())
+                                                         .put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
     } else if (service.getArtifactType().equals(ArtifactType.AWS_LAMBDA)) {
-      ImmutableMap.Builder<String, String> builder =
-          new ImmutableMap.Builder<String, String>().put(AMAZON_S3.name(), AMAZON_S3.name());
-      if (featureFlagService.isEnabled(FeatureName.CUSTOM_ARTIFACT_SOURCE, accountId)) {
-        builder.put(CUSTOM.name(), CUSTOM.name());
-      }
+      ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
+                                                         .put(AMAZON_S3.name(), AMAZON_S3.name())
+                                                         .put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
     } else if (service.getArtifactType().equals(ArtifactType.AMI)) {
       ImmutableMap.Builder<String, String> builder =
-          new ImmutableMap.Builder<String, String>().put(AMI.name(), AMI.name());
-      if (featureFlagService.isEnabled(FeatureName.CUSTOM_ARTIFACT_SOURCE, accountId)) {
-        builder.put(CUSTOM.name(), CUSTOM.name());
-      }
+          new ImmutableMap.Builder<String, String>().put(AMI.name(), AMI.name()).put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
     } else if (service.getArtifactType().equals(ArtifactType.OTHER)) {
       ImmutableMap.Builder<String, String> builder =
@@ -409,10 +457,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
               .put(AMAZON_S3.name(), AMAZON_S3.name())
               .put(SMB.name(), SMB.name())
               .put(AMI.name(), AMI.name())
-              .put(SFTP.name(), SFTP.name());
-      if (featureFlagService.isEnabled(FeatureName.CUSTOM_ARTIFACT_SOURCE, accountId)) {
-        builder.put(CUSTOM.name(), CUSTOM.name());
-      }
+              .put(SFTP.name(), SFTP.name())
+              .put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
     }
 
@@ -426,11 +472,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .put(AMAZON_S3.name(), AMAZON_S3.name())
             .put(SMB.name(), SMB.name())
             .put(AMI.name(), AMI.name())
-            .put(SFTP.name(), SFTP.name());
-
-    if (featureFlagService.isEnabled(FeatureName.CUSTOM_ARTIFACT_SOURCE, accountId)) {
-      builder.put(CUSTOM.name(), CUSTOM.name());
-    }
+            .put(SFTP.name(), SFTP.name())
+            .put(CUSTOM.name(), CUSTOM.name());
     return builder.build();
   }
 

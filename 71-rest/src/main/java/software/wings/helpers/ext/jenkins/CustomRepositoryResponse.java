@@ -13,7 +13,7 @@ import java.util.Map;
 @Data
 @Builder
 public class CustomRepositoryResponse {
-  private List<Result> results = new ArrayList<>();
+  @Builder.Default private List<Result> results = new ArrayList<>();
 
   @Data
   @Builder
