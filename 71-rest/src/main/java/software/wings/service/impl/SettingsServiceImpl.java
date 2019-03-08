@@ -323,7 +323,16 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public SettingAttribute get(String varId) {
-    return wingsPersistence.get(SettingAttribute.class, varId);
+    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, varId);
+    setInternal(settingAttribute);
+    return settingAttribute;
+  }
+
+  private void setInternal(SettingAttribute settingAttribute) {
+    if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
+      GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+      gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
+    }
   }
 
   @Override
