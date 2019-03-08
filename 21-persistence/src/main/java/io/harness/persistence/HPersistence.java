@@ -225,8 +225,8 @@ public interface HPersistence {
    */
   <T extends PersistentEntity> boolean delete(T entity);
 
-  FindAndModifyOptions UPSERT_RETURN_NEW_OPTIONS = new FindAndModifyOptions().upsert(true).returnNew(true);
-  FindAndModifyOptions UPSERT_RETURN_OLD_OPTIONS = new FindAndModifyOptions().upsert(true).returnNew(false);
+  FindAndModifyOptions upsertReturnNewOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
+  FindAndModifyOptions upsertReturnOldOptions = new FindAndModifyOptions().upsert(true).returnNew(false);
 
   /**
    * Upsert.
