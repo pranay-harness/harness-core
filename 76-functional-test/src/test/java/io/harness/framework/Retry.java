@@ -40,6 +40,7 @@ public class Retry<T> {
     retryCounter = 0;
     T actual = null;
     while (retryCounter < maxRetries) {
+      logger.info("Retry Attempt : " + retryCounter);
       try {
         TimeUnit.MILLISECONDS.sleep(this.introduceDelayInMS);
         actual = function.get();

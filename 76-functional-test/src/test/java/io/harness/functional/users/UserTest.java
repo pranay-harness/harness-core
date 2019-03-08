@@ -113,14 +113,14 @@ public class UserTest extends AbstractFunctionalTest {
   @Owner(emails = "swamy@harness.io")
   public void testUserInvite() throws IOException, MessagingException {
     Account account = this.getAccount();
-    String domainName = "@swamy-harness.mailinator.com";
+    String domainName = "@mailinator-harness.mailinator.com";
     String emailId = testUtils.generateUniqueInboxId();
     List<UserInvite> userInvitationList = urUtil.inviteUser(account, emailId + domainName);
     assertNotNull(userInvitationList);
     assertTrue(userInvitationList.size() == 1);
     // Verify if email is sent, received and has signup link
     // Email check will run every 6 seconds upto 2 mins to see if email is delivered.
-    logger.info("Attempting to retrieve signup mail from inbox");
+    logger.info("Attempting to retrieve signup mail from inbox : " + emailId);
     MailinatorMetaMessage message = mailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_SUBJECT);
     logger.info("Signup mail retrieved");
     logger.info("Reading the retrieved email");
