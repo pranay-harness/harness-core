@@ -7,7 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static io.harness.persistence.HPersistence.UPSERT_RETURN_NEW_OPTIONS;
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -796,7 +796,7 @@ public class YamlGitServiceImpl implements YamlGitService {
             .set("fullSyncPath", fullSyncPath)
             .set(APP_ID_KEY, appId);
 
-    wingsPersistence.upsert(failedQuery, failedUpdateOperations, UPSERT_RETURN_NEW_OPTIONS);
+    wingsPersistence.upsert(failedQuery, failedUpdateOperations, upsertReturnNewOptions);
   }
 
   private String obtainAppIdFromGitFileChange(String accountId, String yamlFilePath) {
