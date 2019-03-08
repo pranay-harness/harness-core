@@ -25,6 +25,7 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
   private String accountId;
   private String delegateId;
   private Object[] parameters;
+  private String taskType;
   private Consumer<List<DelegateConnectionResult>> consumer;
 
   public AbstractDelegateValidateTask(
@@ -33,6 +34,7 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
     this.delegateId = delegateId;
     this.parameters = delegateTask.getParameters();
     this.delegateTaskId = delegateTask.getUuid();
+    this.taskType = delegateTask.getTaskType();
     this.consumer = consumer;
   }
 
@@ -77,5 +79,9 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
   @SuppressFBWarnings("EI_EXPOSE_REP")
   public Object[] getParameters() {
     return parameters;
+  }
+
+  protected String getTaskType() {
+    return taskType;
   }
 }
