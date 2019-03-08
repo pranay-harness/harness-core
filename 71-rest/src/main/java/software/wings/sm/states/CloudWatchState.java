@@ -8,6 +8,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -232,6 +233,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
             TimeSeriesMetricDefinition.builder()
                 .metricName(timeSeries.getMetricName())
                 .metricType(MetricType.valueOf(timeSeries.getMetricType()))
+                .tags(Sets.newHashSet(entry.getKey().name()))
                 .build());
       }
     }
