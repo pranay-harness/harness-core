@@ -53,6 +53,7 @@ import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.BambooCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
+import software.wings.delegatetasks.delegatecapability.CapabilityCheckController;
 import software.wings.delegatetasks.helm.HelmCommandTask;
 import software.wings.delegatetasks.jira.JiraTask;
 import software.wings.delegatetasks.jira.ShellScriptApprovalTask;
@@ -81,7 +82,6 @@ import software.wings.delegatetasks.validation.GitFetchFilesValidation;
 import software.wings.delegatetasks.validation.GitValidation;
 import software.wings.delegatetasks.validation.HelmCommandValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
-import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
 import software.wings.delegatetasks.validation.JiraValidation;
 import software.wings.delegatetasks.validation.K8sCommandValidation;
@@ -110,7 +110,7 @@ import java.util.function.Supplier;
 public enum TaskType {
   COMMAND(TaskGroup.COMMAND, CommandTask.class, CommandValidation.class),
   SCRIPT(TaskGroup.SCRIPT, ShellScriptTask.class, ShellScriptValidation.class),
-  HTTP(TaskGroup.HTTP, HttpTask.class, HttpValidation.class),
+  HTTP(TaskGroup.HTTP, HttpTask.class, CapabilityCheckController.class),
   JENKINS(TaskGroup.JENKINS, JenkinsTask.class, JenkinsValidation.class),
   JENKINS_COLLECTION(TaskGroup.JENKINS, JenkinsCollectionTask.class, JenkinsValidation.class),
   JENKINS_GET_BUILDS(TaskGroup.JENKINS, ServiceImplDelegateTask.class, JenkinsValidation.class),
