@@ -20,7 +20,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
-import io.harness.delegate.beans.HttpTaskParameters;
+import io.harness.delegate.task.http.HttpTaskParameters;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;

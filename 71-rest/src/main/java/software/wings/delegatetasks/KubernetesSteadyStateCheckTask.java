@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;

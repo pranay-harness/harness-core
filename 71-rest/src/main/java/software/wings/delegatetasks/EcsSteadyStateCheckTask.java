@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;

@@ -3,14 +3,14 @@ package io.harness.serializer.kryo;
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.HttpTaskParameters;
-import io.harness.delegate.beans.ScriptType;
 import io.harness.delegate.beans.SecretDetail;
-import io.harness.delegate.beans.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.delegate.task.protocol.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.delegate.task.shell.ScriptType;
+import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.serializer.KryoRegistrar;
 
 public class DelegateTasksKryoRegister implements KryoRegistrar {

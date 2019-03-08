@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import org.apache.commons.lang3.NotImplementedException;

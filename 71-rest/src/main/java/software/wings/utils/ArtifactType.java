@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static io.harness.delegate.beans.ScriptType.POWERSHELL;
+import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Graph.Builder.aGraph;

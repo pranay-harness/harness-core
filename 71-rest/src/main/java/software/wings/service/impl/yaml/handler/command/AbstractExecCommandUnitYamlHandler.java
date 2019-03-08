@@ -9,7 +9,7 @@ import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_TYPE
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_FILES;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_PATTERNS;
 
-import io.harness.delegate.beans.ScriptType;
+import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.HarnessException;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;

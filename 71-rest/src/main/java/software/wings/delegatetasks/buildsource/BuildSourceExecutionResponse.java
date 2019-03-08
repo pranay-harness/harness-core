@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.buildsource;
 
+import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.delegate.task.protocol.DelegateMetaInfo;
-import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -4,8 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.task.protocol.ResponseData;
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;

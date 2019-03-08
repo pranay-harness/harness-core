@@ -10,7 +10,7 @@ import static software.wings.beans.artifact.Artifact.Status.ERROR;
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.waiter.ListNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import org.slf4j.Logger;

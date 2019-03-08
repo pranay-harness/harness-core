@@ -19,7 +19,7 @@ import static software.wings.utils.WingsTestConstants.PHASE_STEP;
 import com.google.common.collect.Lists;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import org.joor.Reflect;
 import org.junit.Test;

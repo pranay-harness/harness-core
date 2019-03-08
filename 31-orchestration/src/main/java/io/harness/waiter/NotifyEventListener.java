@@ -13,7 +13,7 @@ import com.google.inject.Singleton;
 
 import com.mongodb.WriteConcern;
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;

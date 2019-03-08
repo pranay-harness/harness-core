@@ -5,7 +5,7 @@ package software.wings.sm;
  */
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 
 import java.util.Objects;
 

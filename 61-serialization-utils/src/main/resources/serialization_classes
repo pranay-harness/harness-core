@@ -398,8 +398,8 @@ software.wings.api.ExecutionDataValue, 5368
 software.wings.service.impl.WorkflowExecutionServiceImpl$Tree, 5369
 software.wings.beans.container.EcsSteadyStateCheckParams, 5370
 software.wings.beans.container.EcsSteadyStateCheckResponse, 5371
-io.harness.delegate.task.protocol.DelegateMetaInfo, 5372
-io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData, 5373
+io.harness.delegate.beans.DelegateMetaInfo, 5372
+io.harness.delegate.beans.DelegateTaskNotifyResponseData, 5373
 software.wings.sm.states.BambooState$BambooExecutionResponse, 5374
 software.wings.sm.states.HttpState$HttpStateExecutionResponse, 5375
 software.wings.service.impl.elk.ElkLogFetchRequest, 5376

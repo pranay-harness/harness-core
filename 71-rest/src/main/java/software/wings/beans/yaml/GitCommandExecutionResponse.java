@@ -1,6 +1,6 @@
 package software.wings.beans.yaml;
 
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
 import lombok.Builder;
 import lombok.Data;

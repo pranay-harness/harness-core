@@ -4,7 +4,7 @@ import static software.wings.common.Constants.BUILD_NO;
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.NotImplementedException;

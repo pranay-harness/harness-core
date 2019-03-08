@@ -1,7 +1,7 @@
 package io.harness.delegate.command;
 
-import io.harness.delegate.task.protocol.DelegateMetaInfo;
-import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.Builder;
 import lombok.Data;
 

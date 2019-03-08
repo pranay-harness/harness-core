@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.mongo.KryoConverter;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;

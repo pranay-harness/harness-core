@@ -7,9 +7,9 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.DelegateRunnableTask;
-import io.harness.delegate.task.protocol.ResponseData;
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;

@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
-import io.harness.delegate.beans.ScriptType;
+import io.harness.delegate.task.shell.ScriptType;
 import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.AccountGenerator;

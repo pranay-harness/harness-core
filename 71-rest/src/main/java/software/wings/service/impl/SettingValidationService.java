@@ -11,7 +11,7 @@ import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;

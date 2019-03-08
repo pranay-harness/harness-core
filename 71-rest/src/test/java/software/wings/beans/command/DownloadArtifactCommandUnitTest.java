@@ -20,8 +20,8 @@ import static software.wings.utils.WingsTestConstants.S3_URL;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
-import io.harness.delegate.beans.ScriptType;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.WingsException;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;

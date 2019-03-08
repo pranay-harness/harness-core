@@ -1,6 +1,6 @@
 package software.wings.service.impl.aws.model;
 
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.AwsConfig;

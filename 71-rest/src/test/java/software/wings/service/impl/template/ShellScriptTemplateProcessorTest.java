@@ -31,7 +31,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import io.harness.beans.WorkflowType;
-import io.harness.delegate.beans.ScriptType;
+import io.harness.delegate.task.shell.ScriptType;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;

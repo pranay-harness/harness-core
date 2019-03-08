@@ -7,7 +7,7 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;

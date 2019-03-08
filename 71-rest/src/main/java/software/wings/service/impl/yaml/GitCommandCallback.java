@@ -14,7 +14,7 @@ import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
-import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
