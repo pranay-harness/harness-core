@@ -21,12 +21,23 @@ public interface NexusThreeRestClient {
   Call<RepositoryResponse> getRepositories(
       @Header("Authorization") String authorization, @Body RepositoryRequest repositoryRequest);
 
+  @Headers("Accept: application/json")
+  @POST("service/extdirect")
+  Call<RepositoryResponse> getRepositories(@Body RepositoryRequest repositoryRequest);
+
   @GET("repository/{repoKey}/v2/_catalog")
   Call<DockerImageResponse> getDockerImages(
       @Header("Authorization") String authorization, @Path(value = "repoKey", encoded = true) String repository);
 
+  @GET("repository/{repoKey}/v2/_catalog")
+  Call<DockerImageResponse> getDockerImages(@Path(value = "repoKey", encoded = true) String repository);
+
   @GET("repository/{repoKey}/v2/{imageName}/tags/list")
   Call<DockerImageTagResponse> getDockerTags(@Header("Authorization") String authorization,
       @Path(value = "repoKey", encoded = true) String repository,
+      @Path(value = "imageName", encoded = true) String imageName);
+
+  @GET("repository/{repoKey}/v2/{imageName}/tags/list")
+  Call<DockerImageTagResponse> getDockerTags(@Path(value = "repoKey", encoded = true) String repository,
       @Path(value = "imageName", encoded = true) String imageName);
 }

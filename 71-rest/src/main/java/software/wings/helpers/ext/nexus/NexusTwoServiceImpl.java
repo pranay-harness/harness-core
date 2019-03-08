@@ -77,9 +77,14 @@ public class NexusTwoServiceImpl {
   public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails)
       throws IOException {
     logger.info("Retrieving repositories");
-    final Call<RepositoryListResourceResponse> request =
-        getRestClient(nexusConfig, encryptionDetails)
-            .getAllRepositories(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
+    final Call<RepositoryListResourceResponse> request;
+    if (nexusConfig.hasCredentials()) {
+      request =
+          getRestClient(nexusConfig, encryptionDetails)
+              .getAllRepositories(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
+    } else {
+      request = getRestClient(nexusConfig, encryptionDetails).getAllRepositories();
+    }
 
     final Response<RepositoryListResourceResponse> response = request.execute();
     if (isSuccessful(response)) {
@@ -267,10 +272,11 @@ public class NexusTwoServiceImpl {
                 String artifactUrl = constructArtifactDownloadUrl(nexusConfig, artifact);
                 logger.info("Artifact Url:" + artifactUrl);
                 try {
-                  encryptionService.decrypt(nexusConfig, encryptionDetails);
-                  Authenticator.setDefault(
-                      new MyAuthenticator(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
-
+                  if (nexusConfig.hasCredentials()) {
+                    encryptionService.decrypt(nexusConfig, encryptionDetails);
+                    Authenticator.setDefault(
+                        new MyAuthenticator(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
+                  }
                   URL url = new URL(artifactUrl);
                   URLConnection conn = url.openConnection();
                   if (conn instanceof HttpsURLConnection) {
@@ -329,10 +335,15 @@ public class NexusTwoServiceImpl {
     queryParams.put("g", groupId);
     queryParams.put("a", artifactName);
     queryParams.put("v", isBlank(version) ? "LATEST" : version);
-    Call<Project> request =
-        getRestClient(nexusConfig, encryptionDetails)
-            .getPomModel(
-                Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), url, queryParams);
+    Call<Project> request;
+
+    if (nexusConfig.hasCredentials()) {
+      request = getRestClient(nexusConfig, encryptionDetails)
+                    .getPomModel(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                        url, queryParams);
+    } else {
+      request = getRestClient(nexusConfig, encryptionDetails).getPomModel(url, queryParams);
+    }
     try {
       final Response<Project> response = request.execute();
       if (isSuccessful(response)) {
@@ -350,8 +361,13 @@ public class NexusTwoServiceImpl {
 
   private Response<IndexBrowserTreeViewResponse> getIndexBrowserTreeViewResponseResponse(
       NexusRestClient nexusRestClient, NexusConfig nexusConfig, String url) throws IOException {
-    final Call<IndexBrowserTreeViewResponse> request = nexusRestClient.getIndexContentByUrl(
-        Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), url);
+    Call<IndexBrowserTreeViewResponse> request;
+    if (nexusConfig.hasCredentials()) {
+      request = nexusRestClient.getIndexContentByUrl(
+          Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), url);
+    } else {
+      request = nexusRestClient.getIndexContentByUrl(url);
+    }
     return request.execute();
   }
 
@@ -366,8 +382,13 @@ public class NexusTwoServiceImpl {
     try {
       Response<IndexBrowserTreeViewResponse> response;
       if (isEmpty(repoPath)) {
-        final Call<IndexBrowserTreeViewResponse> request = nexusRestClient.getIndexContent(
-            Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoKey);
+        final Call<IndexBrowserTreeViewResponse> request;
+        if (nexusConfig.hasCredentials()) {
+          request = nexusRestClient.getIndexContent(
+              Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoKey);
+        } else {
+          request = nexusRestClient.getIndexContent(repoKey);
+        }
         response = request.execute();
       } else {
         response = getIndexBrowserTreeViewResponseResponse(
@@ -409,7 +430,9 @@ public class NexusTwoServiceImpl {
   }
 
   private NexusRestClient getRestClient(final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(nexusConfig, encryptionDetails);
+    if (nexusConfig.hasCredentials()) {
+      encryptionService.decrypt(nexusConfig, encryptionDetails);
+    }
     return getRetrofit(getBaseUrl(nexusConfig), SimpleXmlConverterFactory.createNonStrict())
         .create(NexusRestClient.class);
   }

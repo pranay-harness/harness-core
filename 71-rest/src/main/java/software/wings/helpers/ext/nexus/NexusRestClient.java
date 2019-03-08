@@ -26,6 +26,8 @@ public interface NexusRestClient {
   @GET("service/local/repositories")
   Call<RepositoryListResourceResponse> getAllRepositories(@Header("Authorization") String authorization);
 
+  @GET("service/local/repositories") Call<RepositoryListResourceResponse> getAllRepositories();
+
   /**
    * List Repository contents call.
    *
@@ -36,6 +38,9 @@ public interface NexusRestClient {
   Call<ContentListResourceResponse> getRepositoryContents(
       @Header("Authorization") String authorization, @Path("repoId") String repoId);
 
+  @GET("service/local/repositories/{repoId}/content/")
+  Call<ContentListResourceResponse> getRepositoryContents(@Path("repoId") String repoId);
+
   /**
    * List  Repository Contents .
    *
@@ -44,6 +49,10 @@ public interface NexusRestClient {
    */
   @GET("service/local/repositories/{repoId}/content/{relativePath}")
   Call<ContentListResourceResponse> getRepositoryContents(@Header("Authorization") String authorization,
+      @Path("repoId") String repoId, @Path("relativePath") String relativePath);
+
+  @GET("service/local/repositories/{repoId}/content/{relativePath}")
+  Call<ContentListResourceResponse> getRepositoryContentsWithoutCredentials(
       @Path("repoId") String repoId, @Path("relativePath") String relativePath);
 
   /**
@@ -56,21 +65,18 @@ public interface NexusRestClient {
   Call<IndexBrowserTreeViewResponse> getIndexContent(
       @Header("Authorization") String authorization, @Path("repoId") String repoId);
 
-  /**
-   * List Repository contents call.
-   *
-   * @param authorization the authorization
-   * @return the call
-   */
-  @GET("service/local/repositories/{repoId}/index_content/{path}/")
-  Call<IndexBrowserTreeViewResponse> getIndexContent(
-      @Header("Authorization") String authorization, @Path("repoId") String repoId, @Path("path") String path);
+  @GET("service/local/repositories/{repoId}/index_content/")
+  Call<IndexBrowserTreeViewResponse> getIndexContent(@Path("repoId") String repoId);
 
   @GET
   Call<IndexBrowserTreeViewResponse> getIndexContentByUrl(
       @Header("Authorization") String authorization, @Url String url);
 
+  @GET Call<IndexBrowserTreeViewResponse> getIndexContentByUrl(@Url String url);
+
   @GET
   Call<Project> getPomModel(
       @Header("Authorization") String authorization, @Url String url, @QueryMap Map<String, String> options);
+
+  @GET Call<Project> getPomModel(@Url String url, @QueryMap Map<String, String> options);
 }

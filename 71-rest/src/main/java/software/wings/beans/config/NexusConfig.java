@@ -1,5 +1,7 @@
 package software.wings.beans.config;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -31,9 +33,9 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   @Builder.Default
   private String version = "2.x";
 
-  @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @Attributes(title = "Username") private String username;
 
-  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
+  @Attributes(title = "Password") @Encrypted private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
@@ -43,6 +45,10 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
    */
   public NexusConfig() {
     super(SettingVariableTypes.NEXUS.name());
+  }
+
+  public boolean hasCredentials() {
+    return isNotEmpty(username);
   }
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")

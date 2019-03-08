@@ -66,11 +66,16 @@ public class NexusThreeServiceImpl {
             .build();
 
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
-    Response<RepositoryResponse> response =
-        nexusThreeRestClient
-            .getRepositories(
-                Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repositoryRequest)
-            .execute();
+    Response<RepositoryResponse> response;
+    if (nexusConfig.hasCredentials()) {
+      response =
+          nexusThreeRestClient
+              .getRepositories(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                  repositoryRequest)
+              .execute();
+    } else {
+      response = nexusThreeRestClient.getRepositories(repositoryRequest).execute();
+    }
 
     if (isSuccessful(response)) {
       if (response.body().getResult().isSuccess()) {
@@ -92,11 +97,16 @@ public class NexusThreeServiceImpl {
       String repository, List<String> images) throws IOException {
     logger.info("Retrieving docker images for repository {} from url {}", repository, nexusConfig.getNexusUrl());
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
-    Response<DockerImageResponse> response =
-        nexusThreeRestClient
-            .getDockerImages(
-                Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repository)
-            .execute();
+    Response<DockerImageResponse> response;
+    if (nexusConfig.hasCredentials()) {
+      response =
+          nexusThreeRestClient
+              .getDockerImages(
+                  Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repository)
+              .execute();
+    } else {
+      response = nexusThreeRestClient.getDockerImages(repository).execute();
+    }
     if (isSuccessful(response)) {
       if (response.body() != null && response.body().getRepositories() != null) {
         images.addAll(response.body().getRepositories().stream().collect(toList()));
@@ -121,11 +131,18 @@ public class NexusThreeServiceImpl {
     logger.info("Retrieving docker tags for repository {} imageName {} ", repoKey, imageName);
     List<BuildDetails> buildDetails = new ArrayList<>();
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
-    Response<DockerImageTagResponse> response =
-        nexusThreeRestClient
-            .getDockerTags(
-                Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoKey, imageName)
-            .execute();
+    Response<DockerImageTagResponse> response;
+
+    if (nexusConfig.hasCredentials()) {
+      response = nexusThreeRestClient
+                     .getDockerTags(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                         repoKey, imageName)
+                     .execute();
+
+    } else {
+      response = nexusThreeRestClient.getDockerTags(repoKey, imageName).execute();
+    }
+
     if (isSuccessful(response)) {
       if (response.body() != null && response.body().getTags() != null) {
         return response.body()
@@ -149,7 +166,9 @@ public class NexusThreeServiceImpl {
 
   private NexusThreeRestClient getNexusThreeClient(
       final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(nexusConfig, encryptionDetails);
+    if (nexusConfig.hasCredentials()) {
+      encryptionService.decrypt(nexusConfig, encryptionDetails);
+    }
     return getRetrofit(getBaseUrl(nexusConfig), JacksonConverterFactory.create()).create(NexusThreeRestClient.class);
   }
 }
