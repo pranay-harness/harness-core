@@ -130,7 +130,9 @@ public class DelegateQueueTask implements Runnable {
                                      .project("parameters", true)
                                      .asList();
       delegateTasks.putAll(tasks.stream().collect(toMap(DelegateTask::getUuid, delegateTask -> delegateTask)));
-      taskWaitIds.putAll(tasks.stream().collect(toMap(DelegateTask::getUuid, DelegateTask::getWaitId)));
+      taskWaitIds.putAll(tasks.stream()
+                             .filter(task -> isNotEmpty(task.getWaitId()))
+                             .collect(toMap(DelegateTask::getUuid, DelegateTask::getWaitId)));
     } catch (Exception e1) {
       logger.error("Failed to deserialize {} tasks. Trying individually...", taskIds.size(), e1);
       for (String taskId : taskIds) {
@@ -146,7 +148,9 @@ public class DelegateQueueTask implements Runnable {
                                   .project("parameters", true)
                                   .get();
           delegateTasks.put(taskId, task);
-          taskWaitIds.put(taskId, task.getWaitId());
+          if (isNotEmpty(task.getWaitId())) {
+            taskWaitIds.put(taskId, task.getWaitId());
+          }
         } catch (Exception e2) {
           logger.error("Could not deserialize task {}. Trying again with only waitId field.", taskId, e2);
           try {
@@ -155,7 +159,9 @@ public class DelegateQueueTask implements Runnable {
                                 .project("waitId", true)
                                 .get()
                                 .getWaitId();
-            taskWaitIds.put(taskId, waitId);
+            if (isNotEmpty(waitId)) {
+              taskWaitIds.put(taskId, waitId);
+            }
           } catch (Exception e3) {
             logger.error(
                 "Could not deserialize task {} with waitId only, giving up. Task will be deleted but notify not called.",
