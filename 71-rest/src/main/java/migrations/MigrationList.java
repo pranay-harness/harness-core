@@ -8,7 +8,6 @@ import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import migrations.all.AddReplCtrlNameToKubeSetupProperties;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
-import migrations.all.AddValidUntilToDelegateConnectionResults;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.AddValidUntilToWaitQueue;
 import migrations.all.AppDTemplateMigration;
@@ -134,7 +133,7 @@ public class MigrationList {
         .add(Pair.of(166, BaseMigration.class))
         .add(Pair.of(167, AddReplCtrlNameToKubeSetupProperties.class))
         .add(Pair.of(168, BaseMigration.class))
-        .add(Pair.of(169, AddValidUntilToDelegateConnectionResults.class))
+        .add(Pair.of(169, BaseMigration.class))
         .add(Pair.of(170, EntityNameValidationMigration_All_04.class))
         .add(Pair.of(171, DropOldCollectionMigration.class))
         .add(Pair.of(172, BaseMigration.class))
