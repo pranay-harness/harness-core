@@ -1,21 +1,14 @@
 package software.wings.security;
 
-import static com.google.common.collect.ImmutableList.copyOf;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.NOT_WHITELISTED_IP;
 import static io.harness.exception.WingsException.USER;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,17 +20,12 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.AccountRole;
-import software.wings.beans.ApplicationRole;
-import software.wings.beans.EnvironmentRole;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
-import software.wings.common.AuditHelper;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserRequestContext.UserRequestContextBuilder;
-import software.wings.security.UserRequestInfo.UserRequestInfoBuilder;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.CustomApiAuth;
 import software.wings.security.annotations.DelegateAuth;
@@ -48,7 +36,6 @@ import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserService;
@@ -79,9 +66,9 @@ import javax.ws.rs.core.MultivaluedMap;
 public class AuthRuleFilter implements ContainerRequestFilter {
   private static final Logger logger = LoggerFactory.getLogger(AuthRuleFilter.class);
 
-  private static final String[] NO_FILTERING_URIS_PREFIXES =
-      new String[] {"users/user", "users/sso/zendesk", "users/account", "users/two-factor-auth",
-          "users/disable-two-factor-auth", "users/enable-two-factor-auth", "users/refresh-token", "account/new"};
+  private static final String[] NO_FILTERING_URIS_PREFIXES = new String[] {"users/user", "users/sso/zendesk",
+      "users/account", "users/two-factor-auth", "users/disable-two-factor-auth", "users/enable-two-factor-auth",
+      "users/refresh-token", "account/new", "global-api-keys"};
   private static final String[] NO_FILTERING_URIS_SUFFIXES = new String[] {"/logout"};
   private static final String[] EXEMPTED_URI_PREFIXES =
       new String[] {"limits/configure", "account/license", "account/export", "account/import", "account/delete/"};
@@ -90,8 +77,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
 
-  private AuditService auditService;
-  private AuditHelper auditHelper;
   private AuthService authService;
   private AuthHandler authHandler;
   private UserService userService;
@@ -102,19 +87,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   /**
    * Instantiates a new Auth rule filter.
    *
-   * @param auditService the audit service
-   * @param auditHelper  the audit helper
    * @param authService  the auth service
    * @param appService   the appService
    * @param userService  the userService
    * @param whitelistService
    */
   @Inject
-  public AuthRuleFilter(AuditService auditService, AuditHelper auditHelper, AuthService authService,
-      AuthHandler authHandler, AppService appService, UserService userService, WhitelistService whitelistService,
-      HarnessUserGroupService harnessUserGroupService) {
-    this.auditService = auditService;
-    this.auditHelper = auditHelper;
+  public AuthRuleFilter(AuthService authService, AuthHandler authHandler, AppService appService,
+      UserService userService, WhitelistService whitelistService, HarnessUserGroupService harnessUserGroupService) {
     this.authService = authService;
     this.authHandler = authHandler;
     this.appService = appService;
@@ -353,28 +333,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return entityId;
   }
 
-  private List<String> getValidAppsFromAccount(
-      String accountId, List<String> appIdsFromRequest, boolean emptyAppIdsInReq) {
-    List<String> appIdsOfAccount = appService.getAppIdsByAccountId(accountId);
-    if (isNotEmpty(appIdsOfAccount)) {
-      if (!emptyAppIdsInReq) {
-        List<String> invalidAppIdList = Lists.newArrayList();
-        for (String appId : appIdsFromRequest) {
-          if (!appIdsOfAccount.contains(appId)) {
-            invalidAppIdList.add(appId);
-          }
-        }
-
-        if (!invalidAppIdList.isEmpty()) {
-          String msg = "The appIds from request %s do not belong to the given account :" + accountId;
-          String formattedMsg = format(msg, (Object[]) invalidAppIdList.toArray());
-          throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", formattedMsg);
-        }
-      }
-    }
-    return appIdsOfAccount;
-  }
-
   private Set<String> getAllowedAppIds(UserPermissionInfo userPermissionInfo) {
     Set<String> allowedAppIds;
 
@@ -438,56 +396,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     return false;
-  }
-
-  private void setUserRequestInfoBasedOnRole(UserRequestInfoBuilder userRequestInfoBuilder, User user, String accountId,
-      List<String> appIdsFromRequest, boolean emptyAppIdsInReq, List<String> appIdsOfAccount) {
-    if (user.isAccountAdmin(accountId) || user.isAllAppAdmin(accountId)) {
-      userRequestInfoBuilder.allAppsAllowed(true).allEnvironmentsAllowed(true);
-      List<ResourceType> requiredResourceTypes = getAllResourceTypes();
-      if (emptyAppIdsInReq && isPresent(requiredResourceTypes, ResourceType.APPLICATION)) {
-        userRequestInfoBuilder.appIdFilterRequired(true).allowedAppIds(ImmutableList.copyOf(appIdsOfAccount));
-      }
-    } else {
-      // TODO:
-      logger.info("User [{}] is neither account admin nor all app admin", user.getUuid());
-      AccountRole userAccountRole = userService.getUserAccountRole(user.getUuid(), accountId);
-      ImmutableList<String> allowedAppIds = ImmutableList.<String>builder().build();
-
-      if (userAccountRole == null) {
-        logger.info("No account role exist for user [{}]", user.getUuid());
-      } else {
-        logger.info("User account role [{}]", userAccountRole);
-        allowedAppIds = copyOf(
-            userAccountRole.getApplicationRoles().stream().map(ApplicationRole::getAppId).distinct().collect(toList()));
-      }
-
-      if (!emptyAppIdsInReq) {
-        for (String appId : appIdsFromRequest) {
-          if (user.isAppAdmin(accountId, appId)) {
-            userRequestInfoBuilder.allEnvironmentsAllowed(true);
-          } else {
-            ApplicationRole applicationRole = userService.getUserApplicationRole(user.getUuid(), appId);
-            if (applicationRole != null) {
-              List<EnvironmentRole> environmentRoles = applicationRole.getEnvironmentRoles();
-              if (environmentRoles != null) {
-                ImmutableList<String> envIds =
-                    copyOf(environmentRoles.stream().map(EnvironmentRole::getEnvId).distinct().collect(toList()));
-                userRequestInfoBuilder.allEnvironmentsAllowed(false).allowedEnvIds(envIds);
-              } else {
-                userRequestInfoBuilder.allEnvironmentsAllowed(false).allowedEnvIds(
-                    ImmutableList.<String>builder().build());
-              }
-            } else {
-              userRequestInfoBuilder.allEnvironmentsAllowed(false).allowedEnvIds(
-                  ImmutableList.<String>builder().build());
-            }
-          }
-        }
-      }
-
-      userRequestInfoBuilder.allAppsAllowed(false).allowedAppIds(allowedAppIds);
-    }
   }
 
   private boolean isPresent(List<ResourceType> requiredResourceTypes, ResourceType resourceType) {

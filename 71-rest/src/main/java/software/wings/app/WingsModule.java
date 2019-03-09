@@ -130,6 +130,7 @@ import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.GcpInfrastructureProvider;
 import software.wings.service.impl.GcrBuildServiceImpl;
 import software.wings.service.impl.GcsBuildServiceImpl;
+import software.wings.service.impl.GlobalApiKeyServiceImpl;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.HarnessSampleAppServiceImpl;
 import software.wings.service.impl.HarnessUserGroupServiceImpl;
@@ -287,6 +288,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.GcrBuildService;
 import software.wings.service.intfc.GcsBuildService;
+import software.wings.service.intfc.GlobalApiKeyService;
 import software.wings.service.intfc.HarnessSampleAppService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.HostService;
@@ -560,6 +562,7 @@ public class WingsModule extends DependencyModule {
     bind(StatsCollector.class).to(StatsCollectorImpl.class);
     bind(LogLabelingService.class).to(LogLabelingServiceImpl.class);
     bind(AwsRoute53HelperServiceManager.class).to(AwsRoute53HelperServiceManagerImpl.class);
+    bind(GlobalApiKeyService.class).to(GlobalApiKeyServiceImpl.class);
 
     bind(SamlUserGroupSync.class);
     bind(SmbService.class).to(SmbServiceImpl.class);
