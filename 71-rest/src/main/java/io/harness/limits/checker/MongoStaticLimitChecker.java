@@ -107,7 +107,6 @@ public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement 
                              .lessThan(limit.getCount());
 
       UpdateOperations<Counter> updateOp = persistence.createUpdateOperations(Counter.class).inc("value", change);
-
       return persistence.upsert(q, updateOp, HPersistence.upsertReturnNewOptions);
     } catch (MongoCommandException e) {
       if (e.getErrorCode() == MongoError.DUPLICATE_KEY.getErrorCode()) {
