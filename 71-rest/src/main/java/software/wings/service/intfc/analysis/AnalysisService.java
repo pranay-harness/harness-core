@@ -3,9 +3,7 @@ package software.wings.service.intfc.analysis;
 import software.wings.api.InstanceElement;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
-import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
@@ -19,23 +17,16 @@ import software.wings.sm.StateType;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
  * Created by rsingh on 4/17/17.
  */
 public interface AnalysisService {
-  Boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
-
   LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String appId, StateType stateType);
 
   void validateConfig(
       @NotNull SettingAttribute settingAttribute, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails);
-
-  boolean isBaselineCreated(String stateExecutionId, AnalysisComparisonStrategy comparisonStrategy, StateType stateType,
-      String appId, String workflowId, String workflowExecutionId, String serviceId, String query);
 
   /**
    * Method to return Sample data for given configurations.
@@ -49,12 +40,6 @@ public interface AnalysisService {
   Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType, int duration);
 
   void createAndSaveSummary(StateType stateType, String appId, String stateExecutionId, String query, String message);
-
-  void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
-      Set<String> host, int logCollectionMinute, ClusterLevel fromLevel, ClusterLevel toLevel);
-
-  void deleteClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
-      Set<String> host, int logCollectionMinute, ClusterLevel... clusterLevels);
 
   boolean isStateValid(String appId, String stateExecutionID);
 

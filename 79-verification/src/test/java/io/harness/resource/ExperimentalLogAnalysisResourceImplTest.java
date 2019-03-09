@@ -80,17 +80,6 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   }
 
   @Test
-  public void testGetLogAnalysisSummary_shouldSuccess() throws IOException {
-    LogMLAnalysisSummary expectedData = getLogMLAnalysisSummary();
-    when(logAnalysisService.getExperimentalAnalysisSummary(anyString(), anyString(), any(StateType.class), anyString()))
-        .thenReturn(expectedData);
-    RestResponse<LogMLAnalysisSummary> response = logAnalysisResource.getLogAnalysisSummary(
-        mockAccountId, mockApplicationId, mockStateExecutionId, StateType.ELK, "testExp");
-
-    assertEquals(response.getResource(), expectedData);
-  }
-
-  @Test
   public void testGetLogExpAnalysisInfo_shouldSuccess() throws IOException {
     List<LogMLExpAnalysisInfo> expectedData = getLogMLExpAnalysisInfo();
     when(logAnalysisService.getExpAnalysisInfoList()).thenReturn(expectedData);
@@ -112,7 +101,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   }
 
   private LogMLAnalysisSummary getLogMLAnalysisSummary() {
-    LogMLAnalysisSummary summary = new LogMLAnalysisSummary();
+    LogMLAnalysisSummary summary = LogMLAnalysisSummary.builder().build();
     summary.setQuery("exception");
     summary.setRiskLevel(RiskLevel.LOW);
     return summary;

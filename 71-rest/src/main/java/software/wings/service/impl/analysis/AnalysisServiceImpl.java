@@ -1,8 +1,6 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -10,8 +8,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.VerificationConstants.DEMO_APPLICAITON_ID;
 import static software.wings.common.VerificationConstants.DEMO_FAILURE_LOG_STATE_EXECUTION_ID;
@@ -21,14 +17,11 @@ import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
@@ -45,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ElkConfig;
@@ -69,7 +61,6 @@ import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTa
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -84,6 +75,7 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
+import software.wings.verification.log.LogsCVConfiguration;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -95,7 +87,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -116,48 +107,11 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Inject protected SettingsService settingsService;
   @Inject protected WorkflowExecutionService workflowExecutionService;
-  @Inject protected MainConfiguration configuration;
   @Inject protected DelegateServiceImpl delegateService;
   @Inject protected SecretManager secretManager;
-  @Inject private LearningEngineService learningEngineService;
   @Inject private AccountResource accountResource;
   @Inject private HarnessMetricRegistry metricRegistry;
   @Inject private UsageMetricsHelper usageMetricsHelper;
-
-  @Override
-  public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
-      Set<String> host, int logCollectionMinute, ClusterLevel fromLevel, ClusterLevel toLevel) {
-    Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class)
-                                     .filter("stateType", stateType)
-                                     .filter("stateExecutionId", stateExecutionId)
-                                     .filter("appId", appId)
-                                     .filter("query", searchQuery)
-                                     .filter("logCollectionMinute", logCollectionMinute)
-                                     .filter("clusterLevel", fromLevel);
-
-    if (isNotEmpty(host)) {
-      query = query.field("host").in(host);
-    }
-    wingsPersistence.update(
-        query, wingsPersistence.createUpdateOperations(LogDataRecord.class).set("clusterLevel", toLevel));
-  }
-
-  @Override
-  public void deleteClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
-      Set<String> host, int logCollectionMinute, ClusterLevel... clusterLevels) {
-    Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class)
-                                     .filter("stateType", stateType)
-                                     .filter("stateExecutionId", stateExecutionId)
-                                     .filter("appId", appId)
-                                     .filter("query", searchQuery)
-                                     .filter("logCollectionMinute", logCollectionMinute)
-                                     .field("clusterLevel")
-                                     .in(asList(clusterLevels));
-    if (isNotEmpty(host)) {
-      query = query.field("host").in(host);
-    }
-    wingsPersistence.delete(query);
-  }
 
   @Override
   public void cleanUpForLogRetry(String stateExecutionId) {
@@ -338,18 +292,6 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public boolean isBaselineCreated(String stateExecutionId, AnalysisComparisonStrategy comparisonStrategy,
-      StateType stateType, String appId, String workflowId, String workflowExecutionId, String serviceId,
-      String query) {
-    if (comparisonStrategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-      return true;
-    }
-    return getLastSuccessfulWorkflowExecutionIdWithLogs(
-               stateExecutionId, stateType, appId, serviceId, workflowId, query)
-        != null;
-  }
-
-  @Override
   public String getLastSuccessfulWorkflowExecutionIdWithLogs(
       String stateExecutionId, StateType stateType, String appId, String serviceId, String workflowId, String query) {
     // TODO should we limit the number of executions to search in ??
@@ -385,71 +327,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
     logger.warn("Could not get a successful workflow to find control nodes for stateExecutionId: {}", stateExecutionId);
     return null;
-  }
-
-  private List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId) {
-    final PageRequest<WorkflowExecution> pageRequest = aPageRequest()
-                                                           .addFilter("appId", Operator.EQ, appId)
-                                                           .addFilter("workflowId", Operator.EQ, workflowId)
-                                                           .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
-                                                           .addFilter("serviceIds", Operator.CONTAINS, serviceId)
-                                                           .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.DESC)
-                                                           .build();
-
-    final PageResponse<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.listExecutions(pageRequest, false, true, false, false);
-    final List<String> workflowExecutionIds = new ArrayList<>();
-
-    if (workflowExecutions != null) {
-      for (WorkflowExecution workflowExecution : workflowExecutions) {
-        workflowExecutionIds.add(workflowExecution.getUuid());
-      }
-    }
-    return workflowExecutionIds;
-  }
-
-  @Override
-  public Boolean saveLogAnalysisRecords(
-      LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId) {
-    mlAnalysisResponse.setStateType(stateType);
-    LogMLAnalysisRecord logAnalysisDetails = LogMLAnalysisRecord.builder()
-                                                 .unknown_events(mlAnalysisResponse.getUnknown_events())
-                                                 .test_events(mlAnalysisResponse.getTest_events())
-                                                 .control_events(mlAnalysisResponse.getControl_events())
-                                                 .control_clusters(mlAnalysisResponse.getControl_clusters())
-                                                 .unknown_clusters(mlAnalysisResponse.getUnknown_clusters())
-                                                 .test_clusters(mlAnalysisResponse.getTest_clusters())
-                                                 .ignore_clusters(mlAnalysisResponse.getIgnore_clusters())
-                                                 .build();
-    try {
-      mlAnalysisResponse.setAnalysisDetailsCompressedJson(compressString(JsonUtils.asJson(logAnalysisDetails)));
-    } catch (IOException e) {
-      throw new WingsException("failed to compress analysis details", e);
-    }
-
-    mlAnalysisResponse.setUnknown_events(null);
-    mlAnalysisResponse.setTest_events(null);
-    mlAnalysisResponse.setControl_events(null);
-    mlAnalysisResponse.setControl_clusters(null);
-    mlAnalysisResponse.setUnknown_clusters(null);
-    mlAnalysisResponse.setTest_clusters(null);
-    mlAnalysisResponse.setIgnore_clusters(null);
-
-    if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isEmpty(logAnalysisDetails.getControl_events())
-        || !isEmpty(logAnalysisDetails.getTest_events())) {
-      wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
-    }
-    if (logger.isDebugEnabled()) {
-      logger.debug("inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getAppId()
-          + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
-    }
-    bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getAppId(),
-        mlAnalysisResponse.getQuery(), emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
-        ClusterLevel.getHeartBeatLevel(ClusterLevel.L2), ClusterLevel.getFinal());
-    if (taskId.isPresent()) {
-      learningEngineService.markCompleted(taskId.get());
-    }
-    return true;
   }
 
   private void decompressLogAnalysisRecord(LogMLAnalysisRecord logMLAnalysisRecord) {
@@ -539,22 +416,40 @@ public class AnalysisServiceImpl implements AnalysisService {
     decompressLogAnalysisRecord(analysisRecord);
     Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> mlUserFeedbacks = getMLUserFeedbacks(stateExecutionId, appId);
 
-    final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
-    analysisSummary.setQuery(analysisRecord.getQuery());
-    analysisSummary.setAnalysisMinute(analysisRecord.getLogCollectionMinute());
-    analysisSummary.setScore(analysisRecord.getScore() * 100);
-    analysisSummary.setBaseLineExecutionId(analysisRecord.getBaseLineExecutionId());
-    analysisSummary.setControlClusters(
-        computeCluster(analysisRecord.getControl_clusters(), Collections.emptyMap(), CLUSTER_TYPE.CONTROL));
     LogMLClusterScores logMLClusterScores =
         analysisRecord.getCluster_scores() != null ? analysisRecord.getCluster_scores() : new LogMLClusterScores();
-    analysisSummary.setTestClusters(
-        computeCluster(analysisRecord.getTest_clusters(), logMLClusterScores.getTest(), CLUSTER_TYPE.TEST));
-    analysisSummary.setUnknownClusters(
-        computeCluster(analysisRecord.getUnknown_clusters(), logMLClusterScores.getUnknown(), CLUSTER_TYPE.UNKNOWN));
-    analysisSummary.setIgnoreClusters(
-        computeCluster(analysisRecord.getIgnore_clusters(), Collections.emptyMap(), CLUSTER_TYPE.IGNORE));
 
+    final LogMLAnalysisSummary analysisSummary =
+        LogMLAnalysisSummary.builder()
+            .query(analysisRecord.getQuery())
+            .stateType(stateType)
+            .analysisMinute(analysisRecord.getLogCollectionMinute())
+            .score(analysisRecord.getScore() * 100)
+            .baseLineExecutionId(analysisRecord.getBaseLineExecutionId())
+            .controlClusters(
+                computeCluster(analysisRecord.getControl_clusters(), Collections.emptyMap(), CLUSTER_TYPE.CONTROL))
+            .testClusters(
+                computeCluster(analysisRecord.getTest_clusters(), logMLClusterScores.getTest(), CLUSTER_TYPE.TEST))
+            .unknownClusters(computeCluster(
+                analysisRecord.getUnknown_clusters(), logMLClusterScores.getUnknown(), CLUSTER_TYPE.UNKNOWN))
+            .ignoreClusters(
+                computeCluster(analysisRecord.getIgnore_clusters(), Collections.emptyMap(), CLUSTER_TYPE.IGNORE))
+            .build();
+
+    final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class)
+                                                .filter("appId", appId)
+                                                .filter("stateExecutionId", stateExecutionId)
+                                                .get();
+
+    if (analysisContext != null) {
+      analysisSummary.setAnalysisComparisonStrategy(analysisContext.getComparisonStrategy());
+      analysisSummary.setTimeDuration(analysisContext.getTimeDuration());
+      analysisSummary.setNewVersionNodes(
+          isEmpty(analysisContext.getTestNodes()) ? Collections.emptySet() : analysisContext.getTestNodes().keySet());
+      analysisSummary.setPreviousVersionNodes(isEmpty(analysisContext.getControlNodes())
+              ? Collections.emptySet()
+              : analysisContext.getControlNodes().keySet());
+    }
     if (!analysisRecord.isBaseLineCreated()) {
       analysisSummary.setTestClusters(analysisSummary.getControlClusters());
       analysisSummary.setControlClusters(new ArrayList<>());
@@ -613,29 +508,61 @@ public class AnalysisServiceImpl implements AnalysisService {
     analysisSummary.setRiskLevel(riskLevel);
     analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
     analysisSummary.setStateType(stateType);
-    populateProgress(analysisSummary, analysisRecord);
+    populateWorkflowDetails(analysisSummary, analysisContext);
     return analysisSummary;
   }
 
-  private void populateProgress(LogMLAnalysisSummary analysisSummary, LogMLAnalysisRecord analysisRecord) {
-    Preconditions.checkNotNull(analysisSummary);
-    Preconditions.checkNotNull(analysisRecord);
-    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class)
-                                          .filter("appId", analysisRecord.getAppId())
-                                          .filter("stateExecutionId", analysisRecord.getStateExecutionId())
-                                          .get();
-    if (analysisContext == null) {
+  private void populateWorkflowDetails(LogMLAnalysisSummary analysisSummary, AnalysisContext analysisContext) {
+    if (analysisSummary == null || analysisContext == null) {
       return;
     }
-    int numOfAnalysis = (int) wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-                            .filter("appId", analysisRecord.getAppId())
-                            .filter("stateExecutionId", analysisRecord.getStateExecutionId())
-                            .count();
-    if (numOfAnalysis > 0) {
-      numOfAnalysis -= 1;
+
+    long minAnalyzedMinute = getLogRecordMinute(
+        analysisContext.getAppId(), analysisContext.getStateExecutionId(), ClusterLevel.HF, OrderType.ASC);
+
+    if (minAnalyzedMinute < 0) {
+      // no analysis yet
+      return;
     }
+
+    long maxAnalyzedMinute = getLogRecordMinute(
+        analysisContext.getAppId(), analysisContext.getStateExecutionId(), ClusterLevel.HF, OrderType.DESC);
+    if (AnalysisComparisonStrategy.PREDICTIVE.equals(analysisContext.getComparisonStrategy())) {
+      if (isNotEmpty(analysisContext.getPredictiveCvConfigId())) {
+        LogsCVConfiguration logsCVConfiguration =
+            wingsPersistence.get(LogsCVConfiguration.class, analysisContext.getPredictiveCvConfigId());
+        analysisSummary.setBaselineStartTime(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
+        analysisSummary.setBaselineEndTime(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineEndMinute()));
+        if (maxAnalyzedMinute > 0) {
+          if (maxAnalyzedMinute > logsCVConfiguration.getBaselineEndMinute()) {
+            maxAnalyzedMinute -=
+                logsCVConfiguration.getBaselineEndMinute() - logsCVConfiguration.getBaselineStartMinute();
+          } else {
+            maxAnalyzedMinute = minAnalyzedMinute;
+          }
+        }
+      }
+    } else {
+      // since both min and max are inclusive
+      maxAnalyzedMinute += 1;
+    }
+
     int duration = analysisContext.getTimeDuration();
-    analysisSummary.setProgress((numOfAnalysis * 100) / duration);
+    int progressedMinutes = (int) (maxAnalyzedMinute - minAnalyzedMinute);
+    analysisSummary.setProgress(Math.min(100, progressedMinutes * 100 / duration));
+  }
+
+  private long getLogRecordMinute(
+      String appId, String stateExecutionId, ClusterLevel clusterLevel, OrderType orderType) {
+    LogDataRecord logDataRecord =
+        wingsPersistence.createQuery(LogDataRecord.class)
+            .filter("appId", appId)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("clusterLevel", clusterLevel)
+            .order(orderType == OrderType.DESC ? "-logCollectionMinute" : "logCollectionMinute")
+            .get();
+
+    return logDataRecord == null ? -1 : logDataRecord.getLogCollectionMinute();
   }
 
   @Override
@@ -979,7 +906,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                    .control_events(Collections.emptyMap())
                                                    .test_events(Collections.emptyMap())
                                                    .build();
-    saveLogAnalysisRecords(analysisRecord, stateType, Optional.empty());
+    wingsPersistence.save(analysisRecord);
   }
 
   @Override
@@ -1064,19 +991,21 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (analysisRecord == null) {
       return null;
     }
-    final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
-    analysisSummary.setQuery(analysisRecord.getQuery());
-    analysisSummary.setScore(analysisRecord.getScore() * 100);
-    analysisSummary.setControlClusters(computeCluster(
-        analysisRecord.getControl_clusters(), Collections.emptyMap(), AnalysisServiceImpl.CLUSTER_TYPE.CONTROL));
     LogMLClusterScores logMLClusterScores =
         analysisRecord.getCluster_scores() != null ? analysisRecord.getCluster_scores() : new LogMLClusterScores();
-    analysisSummary.setTestClusters(computeCluster(
-        analysisRecord.getTest_clusters(), logMLClusterScores.getTest(), AnalysisServiceImpl.CLUSTER_TYPE.TEST));
-    analysisSummary.setUnknownClusters(computeCluster(analysisRecord.getUnknown_clusters(),
-        logMLClusterScores.getUnknown(), AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN));
-    analysisSummary.setIgnoreClusters(
-        computeCluster(analysisRecord.getIgnore_clusters(), Collections.emptyMap(), CLUSTER_TYPE.IGNORE));
+    final LogMLAnalysisSummary analysisSummary =
+        LogMLAnalysisSummary.builder()
+            .query(analysisRecord.getQuery())
+            .score(analysisRecord.getScore() * 100)
+            .controlClusters(computeCluster(
+                analysisRecord.getControl_clusters(), Collections.emptyMap(), AnalysisServiceImpl.CLUSTER_TYPE.CONTROL))
+            .testClusters(computeCluster(
+                analysisRecord.getTest_clusters(), logMLClusterScores.getTest(), AnalysisServiceImpl.CLUSTER_TYPE.TEST))
+            .unknownClusters(computeCluster(analysisRecord.getUnknown_clusters(), logMLClusterScores.getUnknown(),
+                AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN))
+            .ignoreClusters(
+                computeCluster(analysisRecord.getIgnore_clusters(), Collections.emptyMap(), CLUSTER_TYPE.IGNORE))
+            .build();
 
     if (!analysisRecord.isBaseLineCreated()) {
       analysisSummary.setTestClusters(analysisSummary.getControlClusters());

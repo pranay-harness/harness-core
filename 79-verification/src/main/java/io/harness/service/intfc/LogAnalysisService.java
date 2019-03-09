@@ -9,9 +9,7 @@ import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
-import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
-import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -50,23 +48,15 @@ public interface LogAnalysisService {
 
   LogMLAnalysisRecord getLogAnalysisRecords(String appId, String cvConfigId, int analysisMinute);
 
-  LogMLAnalysisSummary getExperimentalAnalysisSummary(
-      String stateExecutionId, String appId, StateType stateType, String expName);
-
   List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
 
   boolean reQueueExperimentalTask(String appId, String stateExecutionId);
-
-  boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String appId,
-      String workflowId, String workflowExecutionId, String serviceId, String query);
 
   void deleteClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
       Set<String> host, long logCollectionMinute, ClusterLevel... clusterLevels);
 
   String getLastSuccessfulWorkflowExecutionIdWithLogs(
       StateType stateType, String appId, String serviceId, String workflowId, String query);
-
-  boolean saveFeedback(LogMLFeedback feedback, StateType stateType);
 
   boolean saveExperimentalLogAnalysisRecords(
       ExperimentalLogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
@@ -95,7 +85,7 @@ public interface LogAnalysisService {
   boolean isLogDataCollected(
       String appId, String stateExecutionId, String query, long logCollectionMinute, StateType splunkv2);
 
-  LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String appId, StateType stateType);
+  boolean isAnalysisPresent(String stateExecutionId, String appId);
 
   void createAndSaveSummary(StateType stateType, String appId, String stateExecutionId, String query, String message);
 
@@ -108,9 +98,6 @@ public interface LogAnalysisService {
   Set<String> getHostsForMinute(String appId, String cvConfigId, long logRecordMinute, ClusterLevel... clusterLevels);
 
   long getLastCVAnalysisMinute(String appId, String cvConfigId);
-
-  List<LogDataRecord> getLogRecords(
-      String appId, String cvConfigId, ClusterLevel clusterLevel, long startMin, long endMin);
 
   long getLastLogDataCollectedMinute(String query, String appId, String stateExecutionId, StateType type);
 }

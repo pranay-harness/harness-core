@@ -13,6 +13,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
@@ -63,6 +64,7 @@ import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.DataStoreService;
+import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateExecutionData;
@@ -104,6 +106,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private VerificationManagerClient managerClient;
   @Inject private LearningEngineService learningEngineService;
   @Inject private DataStoreService dataStoreService;
+  private AnalysisService mgrAnalysisService = new AnalysisServiceImpl();
   private Random r;
   private String appId;
   private String stateExecutionId;
@@ -129,6 +132,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     serviceId = UUID.randomUUID().toString();
     delegateTaskId = UUID.randomUUID().toString();
     r = new Random(System.currentTimeMillis());
+    setInternalState(mgrAnalysisService, "wingsPersistence", wingsPersistence);
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {
@@ -597,7 +601,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         .call();
     Thread.sleep(TimeUnit.SECONDS.toMillis(20));
     LogMLAnalysisSummary logMLAnalysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+        mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertEquals(1, logMLAnalysisSummary.getControlClusters().size());
     assertEquals(0, logMLAnalysisSummary.getTestClusters().size());
     assertEquals("No new data for the given queries. Showing baseline data if any.",
@@ -719,7 +723,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         managerClient, managerClientHelper, wingsPersistence)
         .call();
     LogMLAnalysisSummary logMLAnalysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
+        mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
     assertEquals("No baseline data for the given query was found.", logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, 0);
@@ -741,7 +745,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
         entity(mlFeedback, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
 
-    LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
+    LogMLAnalysisSummary analysisSummary =
+        mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
 
     assertEquals(AnalysisServiceImpl.LogMLFeedbackType.IGNORE_ALWAYS,
         analysisSummary.getTestClusters().get(0).getLogMLFeedbackType());
@@ -799,7 +804,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         .call();
 
     LogMLAnalysisSummary logMLAnalysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
+        mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
     //    assertEquals("No baseline data for the given query was found.",
     //    logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord =
@@ -912,7 +917,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         managerClient, managerClientHelper, wingsPersistence)
         .call();
     LogMLAnalysisSummary logMLAnalysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
+        mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertEquals("No data found for the given queries.", logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.ELK, logCollectionMinute);
@@ -1046,7 +1051,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
           .call();
     }
     LogMLAnalysisSummary logMLAnalysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
+        mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
     assertEquals(1, logMLAnalysisSummary.getControlClusters().size());
     assertEquals(1, logMLAnalysisSummary.getTestClusters().size());
     assertEquals(0, logMLAnalysisSummary.getUnknownClusters().size());

@@ -29,7 +29,6 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
-import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -201,9 +200,7 @@ public class LogAnalysisManagerJob implements Job {
         }
 
         // if no data generated till this time, create a dummy summary so UI can get a response
-        final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
-            context.getStateExecutionId(), context.getAppId(), context.getStateType());
-        if (analysisSummary == null) {
+        if (!analysisService.isAnalysisPresent(context.getStateExecutionId(), context.getAppId())) {
           analysisService.createAndSaveSummary(context.getStateType(), context.getAppId(),
               context.getStateExecutionId(), context.getQuery(), "No data found for the given queries.");
         }

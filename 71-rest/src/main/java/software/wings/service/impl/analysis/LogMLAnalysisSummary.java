@@ -2,18 +2,22 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import software.wings.metrics.RiskLevel;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by rsingh on 6/30/17.
  */
 
 @Data
+@Builder
 public class LogMLAnalysisSummary {
   private String query;
   private RiskLevel riskLevel;
@@ -23,21 +27,21 @@ public class LogMLAnalysisSummary {
   private int highRiskClusters;
   private int mediumRiskClusters;
   private int lowRiskClusters;
-  private List<LogMLClusterSummary> controlClusters;
-  private List<LogMLClusterSummary> testClusters;
-  private List<LogMLClusterSummary> unknownClusters;
-  private List<LogMLClusterSummary> ignoreClusters;
+  @Default private List<LogMLClusterSummary> controlClusters = new ArrayList<>();
+  @Default private List<LogMLClusterSummary> testClusters = new ArrayList<>();
+  @Default private List<LogMLClusterSummary> unknownClusters = new ArrayList<>();
+  @Default private List<LogMLClusterSummary> ignoreClusters = new ArrayList<>();
   private StateType stateType;
+  private AnalysisComparisonStrategy analysisComparisonStrategy;
   private int analysisMinute;
   private int progress;
+  private int timeDuration;
+  private Set<String> newVersionNodes;
+  private Set<String> previousVersionNodes;
+  private long baselineStartTime;
+  private long baselineEndTime;
 
   public boolean isEmptyResult() {
     return isEmpty(testClusters) && isEmpty(unknownClusters);
-  }
-  public void initializeClusters() {
-    controlClusters = new ArrayList<>();
-    testClusters = new ArrayList<>();
-    unknownClusters = new ArrayList<>();
-    ignoreClusters = new ArrayList<>();
   }
 }
