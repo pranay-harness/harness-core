@@ -68,7 +68,6 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
-import software.wings.common.AuditHelper;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AuthRuleFilter;
@@ -80,7 +79,6 @@ import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -124,8 +122,6 @@ public class SecureResourceTest {
    */
   public static final Entity<Base> ENTITY = entity(new Base(), APPLICATION_JSON);
 
-  private static AuditService auditService = mock(AuditService.class);
-  private static AuditHelper auditHelper = mock(AuditHelper.class);
   private static GenericDbCache genericDbCache = mock(GenericDbCache.class);
   private static AccountService accountService = mock(AccountService.class);
   private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
@@ -152,8 +148,8 @@ public class SecureResourceTest {
       learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager,
       usageMetricsEventPublisher, whitelistService, ssoSettingService, appService);
 
-  private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(auditService, auditHelper, authService, authHandler,
-      appService, userService, whitelistService, harnessUserGroupService);
+  private static AuthRuleFilter authRuleFilter =
+      new AuthRuleFilter(authService, authHandler, appService, userService, whitelistService, harnessUserGroupService);
 
   Cache<String, User> cache = Mockito.mock(Cache.class);
   Cache<String, UserPermissionInfo> cachePermissionInfo = Mockito.mock(Cache.class);
