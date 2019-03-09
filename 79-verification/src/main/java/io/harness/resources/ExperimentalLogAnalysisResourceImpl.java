@@ -17,7 +17,6 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
-import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.sm.StateType;
 
@@ -88,22 +87,11 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
   }
 
   @GET
-  @Path(ExperimentalLogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL)
-  @Timed
-  @ExceptionMetered
-  public RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("stateType") StateType stateType, @QueryParam("expName") String expName) throws IOException {
-    return new RestResponse<>(
-        analysisService.getExperimentalAnalysisSummary(stateExecutionId, applicationId, stateType, expName));
-  }
-  @GET
   @Path(ExperimentalLogAnalysisResource.ANALYSIS_STATE_GET_EXP_ANALYSIS_INFO_URL)
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<List<LogMLExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId)
-      throws IOException {
+  public RestResponse<List<LogMLExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(analysisService.getExpAnalysisInfoList());
   }
 

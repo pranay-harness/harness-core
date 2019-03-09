@@ -17,13 +17,13 @@ import com.google.inject.Inject;
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.managerclient.VerificationManagerClient;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RealMongo;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LogAnalysisService;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -38,7 +38,6 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
@@ -49,6 +48,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
+import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
@@ -57,9 +57,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
-import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ElkAnalysisState;
 
 import java.io.IOException;
@@ -95,6 +93,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   private Random r;
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private HarnessMetricRegistry metricRegistry;
   @Inject private LogAnalysisService analysisService;
   @Inject private WingsPersistence wingsPersistence;
   private AnalysisService managerAnalysisService;
@@ -124,6 +123,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     WorkflowExecutionService workflowExecutionService = new WorkflowExecutionServiceImpl();
     setInternalState(workflowExecutionService, "wingsPersistence", wingsPersistence);
     setInternalState(managerAnalysisService, "workflowExecutionService", workflowExecutionService);
+    setInternalState(managerAnalysisService, "metricRegistry", metricRegistry);
   }
 
   @Test
@@ -412,110 +412,6 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  public void testIsBaseLineCreatedWithCurrentStrategy() throws Exception {
-    assertTrue(analysisService.isBaselineCreated(
-        AnalysisComparisonStrategy.COMPARE_WITH_CURRENT, null, null, null, null, null, null));
-  }
-
-  @Test
-  @RealMongo
-  @Ignore
-  public void testIsBaseLineCreatedNoRecords() throws Exception {
-    final WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
-    workflowExecution.setStateMachineId(UUID.randomUUID().toString());
-    workflowExecution.setAppId(appId);
-    workflowExecution.setWorkflowId(workflowId);
-    workflowExecution.setStatus(ExecutionStatus.SUCCESS);
-    wingsPersistence.save(workflowExecution);
-    StateMachine stateMachine = new StateMachine();
-    stateMachine.setInitialStateName("some-state");
-    stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
-    stateMachine.setUuid(workflowExecution.getStateMachineId());
-    wingsPersistence.save(stateMachine);
-    assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
-        appId, workflowId, workflowExecutionId, serviceId, null));
-  }
-
-  @Test
-  public void testIsBaseLineCreatedNoSuccessfulExecution() throws Exception {
-    final WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
-    workflowExecution.setAppId(appId);
-    workflowExecution.setWorkflowId(workflowId);
-    workflowExecution.setStatus(ExecutionStatus.FAILED);
-    wingsPersistence.save(workflowExecution);
-
-    final List<LogElement> logElements = new ArrayList<>();
-    final String query = UUID.randomUUID().toString();
-    final String host = UUID.randomUUID().toString();
-    final int logCollectionMinute = 3;
-    LogElement splunkHeartBeatElement = new LogElement();
-    splunkHeartBeatElement.setQuery(query);
-    splunkHeartBeatElement.setClusterLabel("-3");
-    splunkHeartBeatElement.setHost(host);
-    splunkHeartBeatElement.setCount(0);
-    splunkHeartBeatElement.setLogMessage("");
-    splunkHeartBeatElement.setTimeStamp(0);
-    splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
-
-    logElements.add(splunkHeartBeatElement);
-
-    LogElement logElement = new LogElement(query, "0", host, 0, 0, UUID.randomUUID().toString(), logCollectionMinute);
-    logElements.add(logElement);
-    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
-
-    assertFalse(
-        managerAnalysisService.isBaselineCreated(stateExecutionId, AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
-            StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, query));
-  }
-
-  @Test
-  @RealMongo
-  @Ignore
-  public void testIsBaseLineCreate() throws Exception {
-    final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setAppId(appId);
-    stateExecutionInstance.setUuid(stateExecutionId);
-    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
-    wingsPersistence.save(stateExecutionInstance);
-
-    final WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
-    workflowExecution.setStateMachineId(UUID.randomUUID().toString());
-    workflowExecution.setAppId(appId);
-    workflowExecution.setWorkflowId(workflowId);
-    workflowExecution.setStatus(ExecutionStatus.SUCCESS);
-    workflowExecutionId = wingsPersistence.save(workflowExecution);
-    StateMachine stateMachine = new StateMachine();
-    stateMachine.setInitialStateName("some-state");
-    stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
-    stateMachine.setUuid(workflowExecution.getStateMachineId());
-    wingsPersistence.save(stateMachine);
-
-    final List<LogElement> logElements = new ArrayList<>();
-    final String query = UUID.randomUUID().toString();
-    final String host = UUID.randomUUID().toString();
-    final int logCollectionMinute = 3;
-    LogElement splunkHeartBeatElement = new LogElement();
-    splunkHeartBeatElement.setQuery(query);
-    splunkHeartBeatElement.setClusterLabel("-3");
-    splunkHeartBeatElement.setHost(host);
-    splunkHeartBeatElement.setCount(0);
-    splunkHeartBeatElement.setLogMessage("");
-    splunkHeartBeatElement.setTimeStamp(0);
-    splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
-
-    logElements.add(splunkHeartBeatElement);
-
-    LogElement logElement = new LogElement(query, "0", host, 0, 0, UUID.randomUUID().toString(), logCollectionMinute);
-    logElements.add(logElement);
-    assertTrue(analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements));
-
-    assertTrue(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
-        appId, workflowId, workflowExecutionId, serviceId, query));
-  }
-
-  @Test
   public void shouldSaveLogCollectionMinuteMinusOne() throws Exception {
     int numOfUnknownClusters = 2 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
@@ -541,7 +437,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
 
     LogMLAnalysisSummary analysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+        managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertNotNull(analysisSummary);
     assertEquals("This is a -1 test", analysisSummary.getAnalysisSummaryMessage());
   }
@@ -572,7 +468,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
 
     LogMLAnalysisSummary analysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+        managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertNull(analysisSummary);
   }
 
@@ -605,7 +501,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
 
     LogMLAnalysisSummary analysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+        managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertNotNull(analysisSummary);
     assertEquals(RiskLevel.HIGH, analysisSummary.getRiskLevel());
     assertEquals(numOfUnknownClusters, analysisSummary.getUnknownClusters().size());
@@ -708,7 +604,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
       }
     }
     LogMLAnalysisSummary analysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+        managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertNotNull(analysisSummary);
     assertEquals(numOfUnexpectedFreq > 0 ? RiskLevel.HIGH : RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(numOfTestClusters, analysisSummary.getTestClusters().size());
@@ -774,7 +670,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertNull(logMLAnalysisRecord.getIgnore_clusters());
 
     LogMLAnalysisSummary analysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+        managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertNotNull(analysisSummary);
     assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(numOfControlClusters, analysisSummary.getControlClusters().size());
@@ -1018,7 +914,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     records.setAnalysisSummaryMessage("10");
     analysisService.saveLogAnalysisRecords(records, StateType.SPLUNKV2, Optional.empty());
     LogMLAnalysisSummary analysisSummary =
-        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+        managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertEquals(0, Double.compare(analysisSummary.getScore(), 0.23477964144180682 * 100));
     for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
       assert clusterSummary.getScore() > 0;
@@ -1056,7 +952,10 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                       .stateExecutionId(stateExecutionId)
                                       .build();
 
-    analysisService.saveFeedback(logMLFeedback, StateType.ELK);
+    managerAnalysisService.saveFeedback(logMLFeedback, StateType.ELK);
+    List<LogMLFeedbackRecord> mlFeedback =
+        managerAnalysisService.getMLFeedback(appId, serviceId, workflowId, workflowExecutionId);
+    assertFalse(mlFeedback.isEmpty());
   }
 
   @Test
@@ -1067,7 +966,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  public void formatDate() throws Exception {
+  public void formatDate() {
     ZonedDateTime zdt = ZonedDateTime.parse("2018-05-10T16:35:27.044Z");
     logger.info("" + zdt.toEpochSecond());
 

@@ -1,12 +1,9 @@
 package io.harness.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.LogAnalysisService;
 import io.swagger.annotations.Api;
@@ -20,7 +17,6 @@ import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRequest;
-import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -178,18 +174,6 @@ public class LogVerificationResource {
   public RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(@QueryParam("appId") String appId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute) {
     return new RestResponse<>(analysisService.getLogAnalysisRecords(appId, cvConfigId, analysisMinute));
-  }
-
-  @POST
-  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> createUserFeedback(
-      @QueryParam("accountId") String accountId, @QueryParam("stateType") StateType stateType, LogMLFeedback feedback) {
-    if (!isEmpty(feedback.getLogMLFeedbackId())) {
-      throw new WingsException("feedback id should not be set in POST call. to update feedback use PUT");
-    }
-    return new RestResponse<>(analysisService.saveFeedback(feedback, stateType));
   }
 
   @DELETE
