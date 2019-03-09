@@ -160,6 +160,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   public void getRepositoryTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
