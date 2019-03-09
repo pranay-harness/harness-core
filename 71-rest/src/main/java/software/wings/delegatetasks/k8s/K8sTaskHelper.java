@@ -380,24 +380,27 @@ public class K8sTaskHelper {
       FileIo.writeUtf8StringToFile(
           k8sDelegateTaskParams.getWorkingDirectory() + "/template.yaml", manifestFile.getFileContent());
 
-      ProcessExecutor processExecutor =
-          new ProcessExecutor()
-              .timeout(10, TimeUnit.SECONDS)
-              .directory(new File(k8sDelegateTaskParams.getWorkingDirectory()))
-              .commandSplit(encloseWithQuotesIfNeeded(k8sDelegateTaskParams.getGoTemplateClientPath())
-                  + " -t template.yaml " + valuesFileOptions)
-              .readOutput(true);
-      ProcessResult processResult = processExecutor.execute();
+      try (LogOutputStream logErrorStream = getExecutionLogOutputStream(executionLogCallback, ERROR)) {
+        ProcessExecutor processExecutor =
+            new ProcessExecutor()
+                .timeout(10, TimeUnit.SECONDS)
+                .directory(new File(k8sDelegateTaskParams.getWorkingDirectory()))
+                .commandSplit(encloseWithQuotesIfNeeded(k8sDelegateTaskParams.getGoTemplateClientPath())
+                    + " -t template.yaml " + valuesFileOptions)
+                .readOutput(true)
+                .redirectError(logErrorStream);
+        ProcessResult processResult = processExecutor.execute();
 
-      if (processResult.getExitValue() != 0) {
-        throw new WingsException(format("Failed to render template for %s. Error %s", manifestFile.getFileName(),
-            processResult.getOutput().getUTF8()));
+        if (processResult.getExitValue() != 0) {
+          throw new WingsException(format("Failed to render template for %s. Error %s", manifestFile.getFileName(),
+              processResult.getOutput().getUTF8()));
+        }
+
+        result.add(ManifestFile.builder()
+                       .fileName(manifestFile.getFileName())
+                       .fileContent(processResult.outputString())
+                       .build());
       }
-
-      result.add(ManifestFile.builder()
-                     .fileName(manifestFile.getFileName())
-                     .fileContent(processResult.outputString())
-                     .build());
     }
 
     return result;
