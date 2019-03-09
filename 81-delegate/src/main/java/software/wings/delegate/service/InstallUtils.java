@@ -21,7 +21,7 @@ public class InstallUtils {
   private static final String defaultKubectlVersion = "v1.13.2";
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
 
-  private static final String goTemplateClientVersion = "v0.2";
+  private static final String goTemplateClientVersion = "v0.3";
   private static final String goTemplateClientBaseDir = "./client-tools/go-template/";
 
   private static String kubectlPath = "kubectl";
