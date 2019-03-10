@@ -21,6 +21,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.mongodb.morphia.Key;
@@ -196,19 +197,19 @@ public class AwsCodeDeployState extends State {
                                                           .withCodeDeployParams(codeDeployParams)
                                                           .build();
 
-    String delegateTaskId =
-        delegateService.queueTask(DelegateTask.builder()
-                                      .async(true)
-                                      .accountId(app.getAccountId())
-                                      .appId(app.getAppId())
-                                      .taskType(TaskType.COMMAND.name())
-                                      .waitId(activity.getUuid())
-                                      .timeout(getTaskTimeout())
-                                      .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-                                      .parameters(new Object[] {command, commandExecutionContext})
-                                      .envId(envId)
-                                      .infrastructureMappingId(infrastructureMapping.getUuid())
-                                      .build());
+    String delegateTaskId = delegateService.queueTask(
+        DelegateTask.builder()
+            .async(true)
+            .accountId(app.getAccountId())
+            .appId(app.getAppId())
+            .taskType(TaskType.COMMAND.name())
+            .waitId(activity.getUuid())
+            .timeout(getTaskTimeout())
+            .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+            .data(TaskData.builder().parameters(new Object[] {command, commandExecutionContext}).build())
+            .envId(envId)
+            .infrastructureMappingId(infrastructureMapping.getUuid())
+            .build());
 
     return anExecutionResponse()
         .withAsync(true)

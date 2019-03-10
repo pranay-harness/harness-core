@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -428,7 +429,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
                                     .appId(app.getUuid())
                                     .async(false)
                                     .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
-                                    .parameters(new Object[] {fetchFilesTaskParams})
+                                    .data(TaskData.builder().parameters(new Object[] {fetchFilesTaskParams}).build())
                                     .timeout(TimeUnit.MINUTES.toMillis(60))
                                     .build();
 

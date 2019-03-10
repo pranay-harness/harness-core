@@ -297,7 +297,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    CommandExecutionContext executionContext = (CommandExecutionContext) delegateTask.getParameters()[1];
+    CommandExecutionContext executionContext = (CommandExecutionContext) delegateTask.getData().getParameters()[1];
 
     Map<String, String> serviceVariables = executionContext.getServiceVariables();
     assertThat(serviceVariables.size()).isEqualTo(2);

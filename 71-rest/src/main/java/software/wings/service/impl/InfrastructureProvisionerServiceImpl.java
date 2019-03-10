@@ -18,6 +18,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -436,13 +437,15 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
             .accountId(accountId)
             .appId(appId)
-            .parameters(new Object[] {
-                TerraformProvisionParameters.builder()
-                    .scriptPath(terraformDirectory)
-                    .sourceRepo(gitConfig)
-                    .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
-                    .sourceRepoBranch(sourceRepoBranch)
-                    .build()})
+            .data(TaskData.builder()
+                      .parameters(new Object[] {
+                          TerraformProvisionParameters.builder()
+                              .scriptPath(terraformDirectory)
+                              .sourceRepo(gitConfig)
+                              .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
+                              .sourceRepoBranch(sourceRepoBranch)
+                              .build()})
+                      .build())
             .timeout(TimeUnit.SECONDS.toMillis(30))
             .async(false)
             .build();
@@ -500,13 +503,15 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
             .accountId(accountId)
             .appId(appId)
-            .parameters(new Object[] {
-                TerraformProvisionParameters.builder()
-                    .sourceRepo(gitConfig)
-                    .sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch())
-                    .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))
-                    .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
-                    .build()})
+            .data(TaskData.builder()
+                      .parameters(new Object[] {
+                          TerraformProvisionParameters.builder()
+                              .sourceRepo(gitConfig)
+                              .sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch())
+                              .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))
+                              .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
+                              .build()})
+                      .build())
             .timeout(TimeUnit.SECONDS.toMillis(30))
             .async(false)
             .build();

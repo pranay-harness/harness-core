@@ -219,7 +219,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     verify(mockDelegateService).queueTask(taskCaptor.capture());
     assertEquals("Task type should match", taskCaptor.getValue().getTaskType(),
         TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name());
-    APMDataCollectionInfo dataCollectionInfo = (APMDataCollectionInfo) taskCaptor.getValue().getParameters()[0];
+    APMDataCollectionInfo dataCollectionInfo =
+        (APMDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertEquals(
         "State type in datacollectionInfo should match", dataCollectionInfo.getStateType(), StateType.DATA_DOG);
     assertEquals("Start time should match", dataCollectionInfo.getStartTime(), 1540419553000l);
@@ -258,7 +259,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     assertEquals("Task type should match", taskCaptor.getValue().getTaskType(),
         TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA.name());
     AppdynamicsDataCollectionInfo dataCollectionInfo =
-        (AppdynamicsDataCollectionInfo) taskCaptor.getValue().getParameters()[0];
+        (AppdynamicsDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertEquals(dataCollectionInfo.getAppDynamicsConfig(), appDynamicsConfig);
     assertEquals(dataCollectionInfo.getCollectionTime(), 15);
     assertEquals(dataCollectionInfo.getStartTime(), 1540419553000l);
@@ -295,7 +296,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     assertEquals("Task type should match", taskCaptor.getValue().getTaskType(),
         TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA.name());
     NewRelicDataCollectionInfo dataCollectionInfo =
-        (NewRelicDataCollectionInfo) taskCaptor.getValue().getParameters()[0];
+        (NewRelicDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertEquals(dataCollectionInfo.getNewRelicConfig(), nrConfig);
     assertEquals(dataCollectionInfo.getCollectionTime(), 15);
     assertEquals(dataCollectionInfo.getStartTime(), 1540419553000l);
@@ -338,7 +339,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     assertEquals("Task type should match", taskCaptor.getValue().getTaskType(),
         TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA.name());
     PrometheusDataCollectionInfo dataCollectionInfo =
-        (PrometheusDataCollectionInfo) taskCaptor.getValue().getParameters()[0];
+        (PrometheusDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertEquals(dataCollectionInfo.getCollectionTime(), 15);
     assertEquals(dataCollectionInfo.getStartTime(), 1540419553000l);
     assertEquals(dataCollectionInfo.getTimeSeriesMlAnalysisType(), TimeSeriesMlAnalysisType.PREDICTIVE);
@@ -370,7 +371,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     assertEquals("Task type should match", taskCaptor.getValue().getTaskType(),
         TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA.name());
     CloudWatchDataCollectionInfo dataCollectionInfo =
-        (CloudWatchDataCollectionInfo) taskCaptor.getValue().getParameters()[0];
+        (CloudWatchDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertEquals(dataCollectionInfo.getCollectionTime(), 15);
     assertEquals(dataCollectionInfo.getStartTime(), 1540419553000l);
     assertEquals(dataCollectionInfo.getAnalysisComparisonStrategy(), AnalysisComparisonStrategy.PREDICTIVE);

@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.mongo.KryoConverter;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -34,9 +35,12 @@ import javax.validation.constraints.NotNull;
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static final String APP_ID_KEY = "appId";
   public static final String NOTIFY_RESPONSE_KEY = "notifyResponse";
+  public static final String DATA_PARAMETERS_KEY = "data.parameters";
 
   public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
   public static final long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+
+  @NotNull private TaskData data;
 
   @Id private String uuid;
   @Indexed protected String appId;
@@ -45,7 +49,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
 
   private String version;
   @NotNull private String taskType;
-  private Object[] parameters;
   private List<String> tags;
   @NotEmpty private String accountId;
   private String waitId;

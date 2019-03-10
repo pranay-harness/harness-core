@@ -32,7 +32,7 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
     this.accountId = delegateTask.getAccountId();
     this.delegateId = delegateId;
-    this.parameters = delegateTask.getParameters();
+    this.parameters = delegateTask.getData().getParameters();
     this.delegateTaskId = delegateTask.getUuid();
     this.taskType = delegateTask.getTaskType();
     this.consumer = consumer;

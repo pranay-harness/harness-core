@@ -11,6 +11,7 @@ import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
@@ -125,7 +126,10 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .waitId(activityId)
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .appId(executionContext.getApp().getUuid())
-              .parameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+              .data(TaskData.builder()
+                        .parameters(
+                            new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+                        .build())
               .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
               .build();
     } else {
@@ -151,7 +155,10 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .waitId(activityId)
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .appId(executionContext.getApp().getUuid())
-              .parameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+              .data(TaskData.builder()
+                        .parameters(
+                            new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+                        .build())
               .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
               .build();
     }

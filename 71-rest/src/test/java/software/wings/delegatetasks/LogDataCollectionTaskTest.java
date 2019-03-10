@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
+import io.harness.delegate.beans.TaskData;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -60,7 +61,7 @@ public class LogDataCollectionTaskTest {
                             .accountId(accountId)
                             .appId(appId)
                             .waitId(waitId)
-                            .parameters(new Object[] {dataCollectionInfo})
+                            .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
                             .envId(envId)
                             .infrastructureMappingId(infrastructureMappingId)
                             .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))

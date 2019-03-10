@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -41,7 +42,11 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
   @InjectMocks
   private CollaborationProviderTask collaborationProviderTask =
       (CollaborationProviderTask) TaskType.COLLABORATION_PROVIDER_TASK.getDelegateRunnableTask("delid1",
-          DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+          DelegateTask.builder()
+              .async(true)
+              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+              .data(TaskData.builder().build())
+              .build(),
           notifyResponseData -> {}, () -> true);
 
   @Test

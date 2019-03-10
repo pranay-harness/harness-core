@@ -1666,11 +1666,11 @@ public class DelegateServiceImpl implements DelegateService {
     //@TODO: Should we catch the Expression expression
     final DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(secretUuidToValues);
     final DelegateTask delegateTask = delegatePackage.getDelegateTask();
-    if (delegateTask.getParameters() != null && delegateTask.getParameters().length == 1
-        && delegateTask.getParameters()[0] instanceof TaskParameters) {
+    if (delegateTask.getData().getParameters() != null && delegateTask.getData().getParameters().length == 1
+        && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
       logger.info("Applying DelegateExpression Evaluator for delegateTask {}", delegateTask.getUuid());
-      ExpressionReflectionUtils.applyExpression(
-          delegateTask.getParameters()[0], value -> delegateExpressionEvaluator.substitute(value, new HashMap<>()));
+      ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
+          value -> delegateExpressionEvaluator.substitute(value, new HashMap<>()));
     }
   }
 }

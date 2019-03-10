@@ -9,6 +9,7 @@ import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAIL
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
@@ -115,15 +116,16 @@ public class WebhookTriggerProcessor {
         webhookEventDetails.getPrevCommitId(), webhookEventDetails.getBranchName(), webhookEventDetails.getFilePaths());
 
     String waitId = generateUuid();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .taskType(TaskType.TRIGGER_TASK.name())
-                                    .parameters(new Object[] {triggerDeploymentNeededRequest})
-                                    .accountId(accountId)
-                                    .appId(trigger.getAppId())
-                                    .waitId(waitId)
-                                    .timeout(TimeUnit.MINUTES.toMillis(TRIGGER_TASK_TIMEOUT))
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .async(true)
+            .taskType(TaskType.TRIGGER_TASK.name())
+            .data(TaskData.builder().parameters(new Object[] {triggerDeploymentNeededRequest}).build())
+            .accountId(accountId)
+            .appId(trigger.getAppId())
+            .waitId(waitId)
+            .timeout(TimeUnit.MINUTES.toMillis(TRIGGER_TASK_TIMEOUT))
+            .build();
 
     waitNotifyEngine.waitForAll(
         new TriggerCallback(accountId, trigger.getAppId(), savedTriggerExecution.getUuid()), waitId);

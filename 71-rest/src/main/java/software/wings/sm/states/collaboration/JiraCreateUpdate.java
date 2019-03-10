@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 import lombok.Setter;
@@ -125,7 +126,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                                     .accountId(executionContext.getApp().getAccountId())
                                     .waitId(activityId)
                                     .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .parameters(new Object[] {parameters})
+                                    .data(TaskData.builder().parameters(new Object[] {parameters}).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 

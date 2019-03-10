@@ -23,6 +23,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -184,20 +185,22 @@ public class BambooState extends State {
 
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
 
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .taskType(getTaskType().name())
-            .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
-            .waitId(activityId)
-            .appId(((ExecutionContextImpl) context).getApp().getAppId())
-            .parameters(new Object[] {bambooConfig,
-                secretManager.getEncryptionDetails(bambooConfig, context.getAppId(), context.getWorkflowExecutionId()),
-                finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
-            .envId(envId)
-            .infrastructureMappingId(infrastructureMappingId)
-            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .taskType(getTaskType().name())
+                                    .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                    .waitId(activityId)
+                                    .appId(((ExecutionContextImpl) context).getApp().getAppId())
+                                    .data(TaskData.builder()
+                                              .parameters(new Object[] {bambooConfig,
+                                                  secretManager.getEncryptionDetails(bambooConfig, context.getAppId(),
+                                                      context.getWorkflowExecutionId()),
+                                                  finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
+                                              .build())
+                                    .envId(envId)
+                                    .infrastructureMappingId(infrastructureMappingId)
+                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                    .build();
 
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());

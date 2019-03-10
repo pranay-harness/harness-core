@@ -127,7 +127,7 @@ public class DelegateQueueTask implements Runnable {
                                      .project("tags", true)
                                      .project("accountId", true)
                                      .project("taskType", true)
-                                     .project("parameters", true)
+                                     .project(DelegateTask.DATA_PARAMETERS_KEY, true)
                                      .asList();
       delegateTasks.putAll(tasks.stream().collect(toMap(DelegateTask::getUuid, delegateTask -> delegateTask)));
       taskWaitIds.putAll(tasks.stream()
@@ -145,7 +145,7 @@ public class DelegateQueueTask implements Runnable {
                                   .project("tags", true)
                                   .project("accountId", true)
                                   .project("taskType", true)
-                                  .project("parameters", true)
+                                  .project(DelegateTask.DATA_PARAMETERS_KEY, true)
                                   .get();
           delegateTasks.put(taskId, task);
           if (isNotEmpty(task.getWaitId())) {

@@ -14,6 +14,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.scheduler.PersistentScheduler;
@@ -119,15 +120,16 @@ public class ScriptApprovalJob implements Job {
             .script(scriptString)
             .build();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .taskType(TaskType.SHELL_SCRIPT_APPROVAL.name())
-                                    .accountId(accountId)
-                                    .appId(appId)
-                                    .waitId(activityId)
-                                    .parameters(new Object[] {shellScriptApprovalTaskParameters})
-                                    .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
-                                    .async(false)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .taskType(TaskType.SHELL_SCRIPT_APPROVAL.name())
+            .accountId(accountId)
+            .appId(appId)
+            .waitId(activityId)
+            .data(TaskData.builder().parameters(new Object[] {shellScriptApprovalTaskParameters}).build())
+            .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
+            .async(false)
+            .build();
 
     boolean isTerminal = false;
 

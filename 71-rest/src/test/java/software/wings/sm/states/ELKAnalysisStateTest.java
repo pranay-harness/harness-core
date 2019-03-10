@@ -238,7 +238,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
             .hosts(Sets.newHashSet("test", "control"))
             .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, null, null))
             .build();
-    final ElkDataCollectionInfo actualCollectionInfo = (ElkDataCollectionInfo) task.getParameters()[0];
+    final ElkDataCollectionInfo actualCollectionInfo = (ElkDataCollectionInfo) task.getData().getParameters()[0];
     expectedCollectionInfo.setStartTime(actualCollectionInfo.getStartTime());
     assertEquals(expectedCollectionInfo, actualCollectionInfo);
     assertEquals(accountId, task.getAccountId());

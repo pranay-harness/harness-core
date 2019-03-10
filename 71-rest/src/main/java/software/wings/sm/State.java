@@ -318,10 +318,10 @@ public abstract class State {
 
   protected String renderAndScheduleDelegateTask(
       ExecutionContext context, DelegateTask task, StateExecutionData stateExecutionData) {
-    if (task.getParameters().length == 1 && task.getParameters()[0] instanceof TaskParameters) {
+    if (task.getData().getParameters().length == 1 && task.getData().getParameters()[0] instanceof TaskParameters) {
       task.setWorkflowExecutionId(context.getWorkflowExecutionId());
       ExpressionReflectionUtils.applyExpression(
-          task.getParameters()[0], value -> context.renderExpression(value, stateExecutionData, null, false));
+          task.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionData, null, false));
     }
     return delegateService.queueTask(task);
   }

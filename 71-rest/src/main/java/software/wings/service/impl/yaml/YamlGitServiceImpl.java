@@ -47,6 +47,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -530,14 +531,16 @@ public class YamlGitServiceImpl implements YamlGitService {
                                     .accountId(accountId)
                                     .appId(GLOBAL_APP_ID)
                                     .waitId(waitId)
-                                    .parameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, gitConfig,
-                                        secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
-                                        GitCommitRequest.builder()
-                                            .gitFileChanges(gitFileChanges)
-                                            .forcePush(true)
-                                            .yamlChangeSetIds(yamlChangeSetIds)
-                                            .yamlGitConfig(yamlGitConfig)
-                                            .build()})
+                                    .data(TaskData.builder()
+                                              .parameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, gitConfig,
+                                                  secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
+                                                  GitCommitRequest.builder()
+                                                      .gitFileChanges(gitFileChanges)
+                                                      .forcePush(true)
+                                                      .yamlChangeSetIds(yamlChangeSetIds)
+                                                      .yamlGitConfig(yamlGitConfig)
+                                                      .build()})
+                                              .build())
                                     .timeout(TimeUnit.MINUTES.toMillis(20))
                                     .build();
 
@@ -673,18 +676,22 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       String waitId = generateUuid();
       GitConfig gitConfig = getGitConfig(yamlGitConfig);
-      DelegateTask delegateTask =
-          DelegateTask.builder()
-              .async(true)
-              .taskType(TaskType.GIT_COMMAND.name())
-              .accountId(accountId)
-              .appId(GLOBAL_APP_ID)
-              .waitId(waitId)
-              .parameters(new Object[] {GitCommandType.DIFF, gitConfig,
-                  secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
-                  GitDiffRequest.builder().lastProcessedCommitId(processedCommit).yamlGitConfig(yamlGitConfig).build()})
-              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-              .build();
+      DelegateTask delegateTask = DelegateTask.builder()
+                                      .async(true)
+                                      .taskType(TaskType.GIT_COMMAND.name())
+                                      .accountId(accountId)
+                                      .appId(GLOBAL_APP_ID)
+                                      .waitId(waitId)
+                                      .data(TaskData.builder()
+                                                .parameters(new Object[] {GitCommandType.DIFF, gitConfig,
+                                                    secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
+                                                    GitDiffRequest.builder()
+                                                        .lastProcessedCommitId(processedCommit)
+                                                        .yamlGitConfig(yamlGitConfig)
+                                                        .build()})
+                                                .build())
+                                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                      .build();
 
       waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, GitCommandType.DIFF), waitId);
       delegateService.queueTask(delegateTask);

@@ -254,7 +254,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    HelmInstallCommandRequest helmInstallCommandRequest = (HelmInstallCommandRequest) delegateTask.getParameters()[0];
+    HelmInstallCommandRequest helmInstallCommandRequest =
+        (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmInstallCommandRequest.getHelmCommandType()).isEqualTo(HelmCommandType.INSTALL);
     assertThat(helmInstallCommandRequest.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
     assertThat(helmInstallCommandRequest.getRepoName()).isEqualTo("app-name-service-name");
@@ -334,7 +335,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    HelmInstallCommandRequest helmInstallCommandRequest = (HelmInstallCommandRequest) delegateTask.getParameters()[0];
+    HelmInstallCommandRequest helmInstallCommandRequest =
+        (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmInstallCommandRequest.getCommandFlags()).isEqualTo(COMMAND_FLAGS);
   }
 
@@ -365,7 +367,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     DelegateTask delegateTask = captor.getValue();
 
     HelmRollbackCommandRequest helmRollbackCommandRequest =
-        (HelmRollbackCommandRequest) delegateTask.getParameters()[0];
+        (HelmRollbackCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmRollbackCommandRequest.getCommandFlags()).isEqualTo(COMMAND_FLAGS);
     assertThat(helmRollbackCommandRequest.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
   }

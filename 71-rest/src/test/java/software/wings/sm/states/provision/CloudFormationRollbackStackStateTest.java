@@ -103,11 +103,11 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     verify(mockDelegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     assertNotNull(delegateTask);
-    assertNotNull(delegateTask.getParameters());
-    assertEquals(delegateTask.getParameters().length, 2);
-    assertTrue(delegateTask.getParameters()[0] instanceof CloudFormationCreateStackRequest);
+    assertNotNull(delegateTask.getData().getParameters());
+    assertEquals(delegateTask.getData().getParameters().length, 2);
+    assertTrue(delegateTask.getData().getParameters()[0] instanceof CloudFormationCreateStackRequest);
     CloudFormationCreateStackRequest createStackRequest =
-        (CloudFormationCreateStackRequest) delegateTask.getParameters()[0];
+        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
     assertEquals(createStackRequest.getCommandType(), CREATE_STACK);
     assertEquals(createStackRequest.getData(), "oldBody");
     assertEquals(createStackRequest.getTimeoutInMs(), 1000);

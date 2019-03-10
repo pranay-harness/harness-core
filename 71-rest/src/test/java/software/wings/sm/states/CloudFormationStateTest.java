@@ -322,7 +322,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     DelegateTask delegateTask = captor.getValue();
 
     CloudFormationCreateStackRequest cloudFormationCreateStackRequest =
-        (CloudFormationCreateStackRequest) delegateTask.getParameters()[0];
+        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
     assertNotNull(cloudFormationCreateStackRequest);
     assertEquals(Regions.US_EAST_1.name(), cloudFormationCreateStackRequest.getRegion());
     assertEquals(CloudFormationCommandType.CREATE_STACK, cloudFormationCreateStackRequest.getCommandType());
@@ -373,7 +373,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     DelegateTask delegateTask = captor.getValue();
 
     CloudFormationDeleteStackRequest cloudFormationDeleteStackRequest =
-        (CloudFormationDeleteStackRequest) delegateTask.getParameters()[0];
+        (CloudFormationDeleteStackRequest) delegateTask.getData().getParameters()[0];
     assertNotNull(cloudFormationDeleteStackRequest);
     assertEquals(Regions.US_EAST_1.name(), cloudFormationDeleteStackRequest.getRegion());
     assertEquals(CloudFormationCommandType.DELETE_STACK, cloudFormationDeleteStackRequest.getCommandType());

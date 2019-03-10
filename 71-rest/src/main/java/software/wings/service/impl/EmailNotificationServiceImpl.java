@@ -6,6 +6,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import io.harness.waiter.WaitNotifyEngine;
@@ -116,7 +117,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
                                       .accountId(emailData.getAccountId())
                                       .appId(GLOBAL_APP_ID)
                                       .waitId(waitId)
-                                      .parameters(new Object[] {request})
+                                      .data(TaskData.builder().parameters(new Object[] {request}).build())
                                       .timeout(TimeUnit.MINUTES.toMillis(10))
                                       .async(true)
                                       .build();

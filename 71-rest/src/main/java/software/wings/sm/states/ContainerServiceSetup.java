@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -207,19 +208,19 @@ public abstract class ContainerServiceSetup extends State {
               .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
               .build();
 
-      String delegateTaskId =
-          delegateService.queueTask(DelegateTask.builder()
-                                        .async(true)
-                                        .accountId(app.getAccountId())
-                                        .appId(app.getUuid())
-                                        .taskType(TaskType.COMMAND.name())
-                                        .waitId(activity.getUuid())
-                                        .parameters(new Object[] {command, commandExecutionContext})
-                                        .envId(env.getUuid())
-                                        .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-                                        .infrastructureMappingId(infrastructureMapping.getUuid())
-                                        .timeout(TimeUnit.HOURS.toMillis(1))
-                                        .build());
+      String delegateTaskId = delegateService.queueTask(
+          DelegateTask.builder()
+              .async(true)
+              .accountId(app.getAccountId())
+              .appId(app.getUuid())
+              .taskType(TaskType.COMMAND.name())
+              .waitId(activity.getUuid())
+              .data(TaskData.builder().parameters(new Object[] {command, commandExecutionContext}).build())
+              .envId(env.getUuid())
+              .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+              .infrastructureMappingId(infrastructureMapping.getUuid())
+              .timeout(TimeUnit.HOURS.toMillis(1))
+              .build());
 
       return anExecutionResponse()
           .withAsync(true)

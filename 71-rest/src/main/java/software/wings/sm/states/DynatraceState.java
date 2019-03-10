@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.TaskData;
 import io.harness.time.Timestamp;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -134,7 +135,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
                                     .accountId(appService.get(context.getAppId()).getAccountId())
                                     .appId(context.getAppId())
                                     .waitId(waitId)
-                                    .parameters(new Object[] {dataCollectionInfo})
+                                    .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
                                     .envId(envId)
                                     .infrastructureMappingId(infrastructureMappingId)
                                     .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))

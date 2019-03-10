@@ -14,6 +14,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
 import io.harness.time.Timestamp;
@@ -178,7 +179,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
                                     .accountId(accountId)
                                     .appId(context.getAppId())
                                     .waitId(waitId)
-                                    .parameters(new Object[] {dataCollectionInfo})
+                                    .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
                                     .envId(envId)
                                     .infrastructureMappingId(infrastructureMappingId)
                                     .timeout(TimeUnit.MINUTES.toMillis(timeDurationInInteger + 120))

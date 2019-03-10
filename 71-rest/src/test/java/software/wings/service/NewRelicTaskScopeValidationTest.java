@@ -10,6 +10,7 @@ import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.common.collect.Lists;
 
+import io.harness.delegate.beans.TaskData;
 import io.harness.network.Http;
 import org.junit.Before;
 import org.junit.Test;
@@ -89,15 +90,17 @@ public class NewRelicTaskScopeValidationTest {
     NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
         DelegateTask.builder()
             .async(true)
-            .parameters(new Object[] {NewRelicConfig.builder()
-                                          .newRelicUrl(newRelicUrl)
-                                          .accountId(generateUuid())
-                                          .apiKey(generateUuid().toCharArray())
-                                          .build(),
-                NewRelicDataCollectionInfo.builder()
-                    .encryptedDataDetails(
-                        Lists.newArrayList(EncryptedDataDetail.builder().encryptionConfig(vaultConfig).build()))
-                    .build()})
+            .data(TaskData.builder()
+                      .parameters(new Object[] {NewRelicConfig.builder()
+                                                    .newRelicUrl(newRelicUrl)
+                                                    .accountId(generateUuid())
+                                                    .apiKey(generateUuid().toCharArray())
+                                                    .build(),
+                          NewRelicDataCollectionInfo.builder()
+                              .encryptedDataDetails(Lists.newArrayList(
+                                  EncryptedDataDetail.builder().encryptionConfig(vaultConfig).build()))
+                              .build()})
+                      .build())
             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build(),
         null);

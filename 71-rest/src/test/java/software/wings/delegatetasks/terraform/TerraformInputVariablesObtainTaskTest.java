@@ -7,6 +7,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
+import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,7 +43,11 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   TerraformInputVariablesObtainTask delegateRunnableTask =
       (TerraformInputVariablesObtainTask) TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.getDelegateRunnableTask(
           WingsTestConstants.DELEGATE_ID,
-          DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+          DelegateTask.builder()
+              .async(true)
+              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+              .data(TaskData.builder().build())
+              .build(),
           notifyResponseData -> {}, () -> true);
 
   @Before

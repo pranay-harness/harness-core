@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.bertramlabs.plugins.hcl4j.HCLParser;
+import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -17,7 +18,7 @@ import java.util.Map;
 
 public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
   TerraformFetchTargetsTask terraformFetchTargetsTask = new TerraformFetchTargetsTask(WingsTestConstants.DELEGATE_ID,
-      DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+      DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).data(TaskData.builder().build()).build(),
       delegateTaskResponse -> {}, () -> true);
   Map<String, Object> parsedContentWithModulesAndResources, getParsedContentWithoutModulesAndResources;
 

@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -163,19 +164,19 @@ public abstract class ContainerServiceDeploy extends State {
               .build();
 
       String waitId = UUID.randomUUID().toString();
-      String delegateTaskId =
-          delegateService.queueTask(DelegateTask.builder()
-                                        .async(true)
-                                        .accountId(contextData.app.getAccountId())
-                                        .appId(contextData.appId)
-                                        .taskType(TaskType.COMMAND.name())
-                                        .waitId(waitId)
-                                        .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-                                        .parameters(new Object[] {contextData.command, commandExecutionContext})
-                                        .envId(contextData.env.getUuid())
-                                        .infrastructureMappingId(contextData.infrastructureMappingId)
-                                        .timeout(TimeUnit.HOURS.toMillis(1))
-                                        .build());
+      String delegateTaskId = delegateService.queueTask(
+          DelegateTask.builder()
+              .async(true)
+              .accountId(contextData.app.getAccountId())
+              .appId(contextData.appId)
+              .taskType(TaskType.COMMAND.name())
+              .waitId(waitId)
+              .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+              .data(TaskData.builder().parameters(new Object[] {contextData.command, commandExecutionContext}).build())
+              .envId(contextData.env.getUuid())
+              .infrastructureMappingId(contextData.infrastructureMappingId)
+              .timeout(TimeUnit.HOURS.toMillis(1))
+              .build());
 
       return anExecutionResponse()
           .withAsync(true)

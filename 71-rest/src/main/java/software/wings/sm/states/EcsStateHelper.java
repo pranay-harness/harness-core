@@ -28,6 +28,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
@@ -334,7 +335,7 @@ public class EcsStateHelper {
         .taskType(taskType.name())
         .envId(envId)
         .waitId(waitId)
-        .parameters(parameters)
+        .data(TaskData.builder().parameters(parameters).build())
         .infrastructureMappingId(infrastructureMappingId)
         .timeout(TimeUnit.MINUTES.toMillis(timeout))
         .build();
@@ -527,7 +528,7 @@ public class EcsStateHelper {
             .taskType(ECS_COMMAND_TASK.name())
             .envId(dataBag.getEnvironment().getUuid())
             .waitId(activity.getUuid())
-            .parameters(new Object[] {request, dataBag.getEncryptedDataDetails()})
+            .data(TaskData.builder().parameters(new Object[] {request, dataBag.getEncryptedDataDetails()}).build())
             .tags(isNotEmpty(dataBag.getAwsConfig().getTag()) ? singletonList(dataBag.getAwsConfig().getTag()) : null)
             .infrastructureMappingId(dataBag.getEcsInfrastructureMapping().getUuid())
             .timeout(MINUTES.toMillis(dataBag.getServiceSteadyStateTimeout()))
@@ -597,7 +598,8 @@ public class EcsStateHelper {
             .tags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
                     ? singletonList(deployDataBag.getAwsConfig().getTag())
                     : null)
-            .parameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()})
+            .data(
+                TaskData.builder().parameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()}).build())
             .envId(deployDataBag.getEnv().getUuid())
             .infrastructureMappingId(deployDataBag.getEcsInfrastructureMapping().getUuid())
             .timeout(MINUTES.toMillis(deployDataBag.getContainerElement().getServiceSteadyStateTimeout()))

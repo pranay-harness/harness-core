@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -70,7 +71,9 @@ public class GitConfigHelperService {
               .appId(GLOBAL_APP_ID)
               .async(false)
               .timeout(TimeUnit.SECONDS.toMillis(60))
-              .parameters(new Object[] {GitCommandType.VALIDATE, gitConfig, encryptionDetails})
+              .data(TaskData.builder()
+                        .parameters(new Object[] {GitCommandType.VALIDATE, gitConfig, encryptionDetails})
+                        .build())
               .build());
 
       if (notifyResponseData instanceof ErrorNotifyResponseData) {

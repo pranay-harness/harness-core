@@ -16,6 +16,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -37,7 +38,11 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
   @InjectMocks
   private EcsSteadyStateCheckTask task =
       (EcsSteadyStateCheckTask) TaskType.ECS_STEADY_STATE_CHECK_TASK.getDelegateRunnableTask(DELEGATE_ID,
-          DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+          DelegateTask.builder()
+              .async(true)
+              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+              .data(TaskData.builder().build())
+              .build(),
           notifyResponseData -> {}, () -> true);
   @Before
   public void setUp() throws Exception {

@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.TaskData;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -64,7 +65,7 @@ public class PcfStateHelper {
         .appId(appId)
         .taskType(taskType.name())
         .waitId(waitId)
-        .parameters(parameters)
+        .data(TaskData.builder().parameters(parameters).build())
         .envId(envId)
         .timeout(TimeUnit.MINUTES.toMillis(timeout))
         .infrastructureMappingId(infrastructureMappingId)

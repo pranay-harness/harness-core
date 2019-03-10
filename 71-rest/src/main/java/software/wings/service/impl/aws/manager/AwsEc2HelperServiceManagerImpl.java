@@ -11,6 +11,7 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.ResourceType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -151,7 +152,7 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
             .async(false)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
-            .parameters(new Object[] {request})
+            .data(TaskData.builder().parameters(new Object[] {request}).build())
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);

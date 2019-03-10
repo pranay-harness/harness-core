@@ -215,7 +215,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
             .hosts(Collections.singleton("test"))
             .encryptedDataDetails(Collections.emptyList())
             .build();
-    final SplunkDataCollectionInfo actualCollectionInfo = (SplunkDataCollectionInfo) task.getParameters()[0];
+    final SplunkDataCollectionInfo actualCollectionInfo = (SplunkDataCollectionInfo) task.getData().getParameters()[0];
     expectedCollectionInfo.setStartTime(actualCollectionInfo.getStartTime());
     assertEquals(expectedCollectionInfo, actualCollectionInfo);
     assertEquals(accountId, task.getAccountId());

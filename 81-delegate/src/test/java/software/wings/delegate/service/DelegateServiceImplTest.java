@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 import io.harness.CategoryTest;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.SecretDetail;
+import io.harness.delegate.beans.TaskData;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.EncryptionConfig;
 import org.junit.Before;
@@ -57,10 +58,14 @@ public class DelegateServiceImplTest extends CategoryTest {
   public void shouldNotApplyFunctorIfNoSecrets() throws Exception {
     final String delegateTaskId = UUIDGenerator.generateUuid();
 
-    final DelegatePackage delegatePackage =
-        DelegatePackage.builder()
-            .delegateTask(DelegateTask.builder().async(true).taskType("HTTP").uuid(delegateTaskId).build())
-            .build();
+    final DelegatePackage delegatePackage = DelegatePackage.builder()
+                                                .delegateTask(DelegateTask.builder()
+                                                                  .async(true)
+                                                                  .taskType("HTTP")
+                                                                  .uuid(delegateTaskId)
+                                                                  .data(TaskData.builder().build())
+                                                                  .build())
+                                                .build();
 
     delegateService.applyDelegateSecretFunctor(delegatePackage);
     verify(delegateDecryptionService, times(0)).decrypt(anyMap());
@@ -83,12 +88,16 @@ public class DelegateServiceImplTest extends CategoryTest {
 
     secretDetails.put("SECRET_UUID", secretDetail);
 
-    final DelegatePackage delegatePackage =
-        DelegatePackage.builder()
-            .delegateTask(DelegateTask.builder().async(true).taskType("HTTP").uuid(delegateTaskId).build())
-            .encryptionConfigs(encryptionConfigMap)
-            .secretDetails(secretDetails)
-            .build();
+    final DelegatePackage delegatePackage = DelegatePackage.builder()
+                                                .delegateTask(DelegateTask.builder()
+                                                                  .async(true)
+                                                                  .taskType("HTTP")
+                                                                  .uuid(delegateTaskId)
+                                                                  .data(TaskData.builder().build())
+                                                                  .build())
+                                                .encryptionConfigs(encryptionConfigMap)
+                                                .secretDetails(secretDetails)
+                                                .build();
 
     delegateService.applyDelegateSecretFunctor(delegatePackage);
     verify(delegateDecryptionService, times(1)).decrypt(anyMap());

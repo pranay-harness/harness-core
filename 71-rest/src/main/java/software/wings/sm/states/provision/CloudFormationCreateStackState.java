@@ -12,6 +12,7 @@ import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 import com.google.inject.Inject;
 
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -87,7 +88,10 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .waitId(activityId)
         .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
         .appId(executionContext.getApp().getUuid())
-        .parameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+        .data(
+            TaskData.builder()
+                .parameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+                .build())
         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
         .build();
   }

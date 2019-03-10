@@ -7,6 +7,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 
+import io.harness.delegate.beans.TaskData;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
@@ -52,7 +53,10 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
         .waitId(activityId)
         .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
         .appId(executionContext.getApp().getUuid())
-        .parameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+        .data(
+            TaskData.builder()
+                .parameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+                .build())
         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
         .build();
   }

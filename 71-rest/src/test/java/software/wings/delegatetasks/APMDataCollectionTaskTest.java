@@ -6,6 +6,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.delegate.beans.TaskData;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -56,7 +57,7 @@ public class APMDataCollectionTaskTest {
                             .accountId(accountId)
                             .appId(appId)
                             .waitId(waitId)
-                            .parameters(new Object[] {dataCollectionInfo})
+                            .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
                             .envId(envId)
                             .infrastructureMappingId(infrastructureMappingId)
                             .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))

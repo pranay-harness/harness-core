@@ -273,7 +273,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    PcfCommandRequest PcfCommandRequest = (PcfCommandRequest) delegateTask.getParameters()[0];
+    PcfCommandRequest PcfCommandRequest = (PcfCommandRequest) delegateTask.getData().getParameters()[0];
     pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
     assertEquals("APP_NAME__SERVICE_NAME__ENV_NAME", pcfCommandSetupRequest.getReleaseNamePrefix());
     assertEquals(PcfCommandType.SETUP, pcfCommandSetupRequest.getPcfCommandType());

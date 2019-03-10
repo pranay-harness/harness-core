@@ -20,6 +20,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -296,7 +297,7 @@ public class AwsAmiServiceSetup extends State {
               .taskType(TaskType.AWS_AMI_ASYNC_TASK.name())
               .waitId(activity.getUuid())
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-              .parameters(new Object[] {request})
+              .data(TaskData.builder().parameters(new Object[] {request}).build())
               .envId(env.getUuid())
               .async(true)
               .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
