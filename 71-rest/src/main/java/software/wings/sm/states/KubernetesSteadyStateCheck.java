@@ -109,7 +109,7 @@ public class KubernetesSteadyStateCheck extends State {
               .containerServiceParams(
                   containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "", context))
               .labels(labelMap)
-              .timeoutMillis(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
+              .timeoutMillis(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
               .build();
       DelegateTask delegateTask =
           DelegateTask.builder()
@@ -120,7 +120,7 @@ public class KubernetesSteadyStateCheck extends State {
               .waitId(activity.getUuid())
               .data(TaskData.builder().parameters(new Object[] {kubernetesSteadyStateCheckParams}).build())
               .envId(env.getUuid())
-              .timeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
+              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
               .infrastructureMappingId(containerInfraMapping.getUuid())
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);

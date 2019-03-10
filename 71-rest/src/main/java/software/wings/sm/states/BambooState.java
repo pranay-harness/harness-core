@@ -199,12 +199,9 @@ public class BambooState extends State {
                                               .build())
                                     .envId(envId)
                                     .infrastructureMappingId(infrastructureMappingId)
-                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                    .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                                     .build();
 
-    if (getTimeoutMillis() != null) {
-      delegateTask.setTimeout(getTimeoutMillis());
-    }
     String delegateTaskId = delegateService.queueTask(delegateTask);
     return anExecutionResponse()
         .withAsync(true)

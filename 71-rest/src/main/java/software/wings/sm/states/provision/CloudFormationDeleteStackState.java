@@ -32,7 +32,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
     return COMMAND_UNIT;
   }
 
-  protected DelegateTask getDelegateTask(ExecutionContextImpl executionContext,
+  protected DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
     CloudFormationDeleteStackRequest request =
         CloudFormationDeleteStackRequest.builder()
@@ -57,7 +57,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
             TaskData.builder()
                 .parameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
                 .build())
-        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+        .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
         .build();
   }
 

@@ -263,7 +263,6 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         buildDelegateTask(context, activityId, jenkinsTaskParams, envId, infrastructureMappingId);
 
     if (getTimeoutMillis() != null) {
-      delegateTask.setTimeout(getTimeoutMillis());
       jenkinsTaskParams.setTimeout(getTimeoutMillis());
       jenkinsTaskParams.setStartTs(System.currentTimeMillis());
     }
@@ -297,7 +296,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         .data(TaskData.builder().parameters(new Object[] {jenkinsTaskParams}).build())
         .envId(envId)
         .infrastructureMappingId(infrastructureMappingId)
-        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+        .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
         .build();
   }
 
@@ -345,7 +344,6 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
       jenkinsTaskParams.setStartTs(System.currentTimeMillis());
       // Set remaining time for Poll task plus 2 minutes
       jenkinsTaskParams.setTimeout(getTimeoutMillis() - jenkinsExecutionResponse.getTimeElapsed() + 120000);
-      delegateTask.setTimeout(getTimeoutMillis());
     }
 
     String delegateTaskId = delegateService.queueTask(delegateTask);

@@ -460,12 +460,8 @@ public abstract class TerraformProvisionState extends State {
                                     .waitId(activityId)
                                     .appId(((ExecutionContextImpl) context).getApp().getAppId())
                                     .data(TaskData.builder().parameters(new Object[] {parameters}).build())
-                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                    .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                                     .build();
-
-    if (getTimeoutMillis() != null) {
-      delegateTask.setTimeout(getTimeoutMillis());
-    }
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return anExecutionResponse()

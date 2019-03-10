@@ -258,6 +258,10 @@ public abstract class State {
     return timeoutMillis;
   }
 
+  public long defaultIfNullTimeout(long defaultValue) {
+    return timeoutMillis != null ? timeoutMillis : defaultValue;
+  }
+
   public void setTimeoutMillis(Integer timeoutMillis) {
     this.timeoutMillis = timeoutMillis;
   }

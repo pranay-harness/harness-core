@@ -247,7 +247,7 @@ public class KubernetesSwapServiceSelectors extends State {
             .waitId(activity.getUuid())
             .data(TaskData.builder().parameters(new Object[] {kubernetesSwapServiceSelectorsParams}).build())
             .envId(env.getUuid())
-            .timeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
+            .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
             .infrastructureMappingId(containerInfraMapping.getUuid())
             .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
