@@ -19,6 +19,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -176,7 +177,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
             .appId(infrastructureMapping.getAppId())
             .waitId(activity.getUuid())
             .timeout(MINUTES.toMillis(containerServiceElement.getServiceSteadyStateTimeout()))
-            .parameters(new Object[] {request, encryptedDetails})
+            .data(TaskData.builder().parameters(new Object[] {request, encryptedDetails}).build())
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .taskType(ECS_COMMAND_TASK.name())
             .async(true)

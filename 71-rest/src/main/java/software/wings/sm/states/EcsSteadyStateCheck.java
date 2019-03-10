@@ -20,6 +20,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -122,7 +123,7 @@ public class EcsSteadyStateCheck extends State {
               .taskType(TaskType.ECS_STEADY_STATE_CHECK_TASK.name())
               .waitId(activity.getUuid())
               .tags(isNotEmpty(params.getAwsConfig().getTag()) ? singletonList(params.getAwsConfig().getTag()) : null)
-              .parameters(new Object[] {params})
+              .data(TaskData.builder().parameters(new Object[] {params}).build())
               .envId(env.getUuid())
               .timeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
               .build();

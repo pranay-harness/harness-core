@@ -10,6 +10,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -113,8 +114,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .accountId(accountId)
             .appId(jenkinsArtifactStream.getAppId())
             .waitId(waitId)
-            .parameters(new Object[] {jenkinsConfig, secretManager.getEncryptionDetails(jenkinsConfig, null, null),
-                jenkinsArtifactStream.getJobname(), jenkinsArtifactStream.getArtifactPaths(), artifact.getMetadata()})
+            .data(TaskData.builder()
+                      .parameters(
+                          new Object[] {jenkinsConfig, secretManager.getEncryptionDetails(jenkinsConfig, null, null),
+                              jenkinsArtifactStream.getJobname(), jenkinsArtifactStream.getArtifactPaths(),
+                              artifact.getMetadata()})
+                      .build())
             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
       }
@@ -129,8 +134,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .accountId(accountId)
             .appId(bambooArtifactStream.getAppId())
             .waitId(waitId)
-            .parameters(new Object[] {bambooConfig, secretManager.getEncryptionDetails(bambooConfig, null, null),
-                bambooArtifactStream.getJobname(), bambooArtifactStream.getArtifactPaths(), artifact.getMetadata()})
+            .data(
+                TaskData.builder()
+                    .parameters(new Object[] {bambooConfig,
+                        secretManager.getEncryptionDetails(bambooConfig, null, null), bambooArtifactStream.getJobname(),
+                        bambooArtifactStream.getArtifactPaths(), artifact.getMetadata()})
+                    .build())
             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
       }
@@ -145,9 +154,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .accountId(accountId)
             .appId(nexusArtifactStream.getAppId())
             .waitId(waitId)
-            .parameters(new Object[] {nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, null),
-                nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
-                nexusArtifactStream.getArtifactPaths(), artifact.getBuildNo()})
+            .data(
+                TaskData.builder()
+                    .parameters(new Object[] {nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, null),
+                        nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
+                        nexusArtifactStream.getArtifactPaths(), artifact.getBuildNo()})
+                    .build())
             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
       }
@@ -162,9 +174,11 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .accountId(accountId)
             .appId(artifactoryArtifactStream.getAppId())
             .waitId(waitId)
-            .parameters(
-                new Object[] {artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, null, null),
-                    artifactoryArtifactStream.getJobname(), artifact.getMetadata()})
+            .data(TaskData.builder()
+                      .parameters(new Object[] {artifactoryConfig,
+                          secretManager.getEncryptionDetails(artifactoryConfig, null, null),
+                          artifactoryArtifactStream.getJobname(), artifact.getMetadata()})
+                      .build())
             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
       }
@@ -180,8 +194,10 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
             .appId(amazonS3ArtifactStream.getAppId())
             .waitId(waitId)
-            .parameters(new Object[] {awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null),
-                amazonS3ArtifactStream.getJobname(), amazonS3ArtifactStream.getArtifactPaths()})
+            .data(TaskData.builder()
+                      .parameters(new Object[] {awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null),
+                          amazonS3ArtifactStream.getJobname(), amazonS3ArtifactStream.getArtifactPaths()})
+                      .build())
             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
       }

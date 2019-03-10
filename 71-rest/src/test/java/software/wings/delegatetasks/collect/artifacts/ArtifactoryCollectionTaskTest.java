@@ -12,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.delegate.beans.TaskData;
 import io.harness.waiter.ListNotifyResponseData;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,9 +44,11 @@ public class ArtifactoryCollectionTaskTest {
           .accountId(ACCOUNT_ID)
           .appId(APP_ID)
           .waitId("123456789")
-          .parameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
-              artifactoryConfig.getPassword(), "harness-maven", "io.harness.todolist", asList("todolist"), "",
-              ImmutableMap.of("buildNo", "1.1")})
+          .data(TaskData.builder()
+                    .parameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
+                        artifactoryConfig.getPassword(), "harness-maven", "io.harness.todolist", asList("todolist"), "",
+                        ImmutableMap.of("buildNo", "1.1")})
+                    .build())
           .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
           .build();
 
@@ -60,7 +63,7 @@ public class ArtifactoryCollectionTaskTest {
     when(artifactoryService.downloadArtifacts(
              any(ArtifactoryConfig.class), any(), anyString(), anyMap(), anyString(), anyString(), anyString()))
         .thenReturn(res);
-    res = artifactoryCollectionTask.run(collectionTask.getParameters());
+    res = artifactoryCollectionTask.run(collectionTask.getData().getParameters());
     assertThat(res).isNotNull();
   }
 }

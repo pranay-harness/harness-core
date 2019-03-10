@@ -8,6 +8,7 @@ import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STAT
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -154,7 +155,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
                                     .accountId(executionContext.getApp().getAccountId())
                                     .waitId(activityId)
                                     .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .parameters(new Object[] {parameters})
+                                    .data(TaskData.builder().parameters(new Object[] {parameters}).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 

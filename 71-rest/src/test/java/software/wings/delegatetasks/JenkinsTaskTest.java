@@ -17,6 +17,7 @@ import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.TaskData;
 import org.apache.http.client.HttpResponseException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -67,7 +68,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private JenkinsTask jenkinsTask = (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask("delid1",
-      DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+      DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).data(TaskData.builder().build()).build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

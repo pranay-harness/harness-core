@@ -15,6 +15,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
@@ -136,7 +137,7 @@ public class AwsLambdaVerification extends State {
             .async(true)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
-            .parameters(new Object[] {request})
+            .data(TaskData.builder().parameters(new Object[] {request}).build())
             .waitId(activityId)
             .build();
 

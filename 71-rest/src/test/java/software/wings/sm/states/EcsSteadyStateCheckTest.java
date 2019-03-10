@@ -114,10 +114,10 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     verify(mockDelegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     assertNotNull(delegateTask);
-    assertNotNull(delegateTask.getParameters());
-    assertEquals(delegateTask.getParameters().length, 1);
-    assertTrue(delegateTask.getParameters()[0] instanceof EcsSteadyStateCheckParams);
-    EcsSteadyStateCheckParams params = (EcsSteadyStateCheckParams) delegateTask.getParameters()[0];
+    assertNotNull(delegateTask.getData().getParameters());
+    assertEquals(delegateTask.getData().getParameters().length, 1);
+    assertTrue(delegateTask.getData().getParameters()[0] instanceof EcsSteadyStateCheckParams);
+    EcsSteadyStateCheckParams params = (EcsSteadyStateCheckParams) delegateTask.getData().getParameters()[0];
     assertEquals(params.getCommandName(), "Ecs Steady State Check");
     assertEquals(params.getAppId(), APP_ID);
     assertEquals(params.getAccountId(), ACCOUNT_ID);

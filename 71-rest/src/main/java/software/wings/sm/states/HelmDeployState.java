@@ -23,6 +23,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -244,7 +245,7 @@ public class HelmDeployState extends State {
                                   .appId(app.getUuid())
                                   .taskType(TaskType.HELM_COMMAND_TASK.name())
                                   .waitId(activity.getUuid())
-                                  .parameters(new Object[] {commandRequest})
+                                  .data(TaskData.builder().parameters(new Object[] {commandRequest}).build())
                                   .envId(env.getUuid())
                                   .timeout(TimeUnit.HOURS.toMillis(1))
                                   .infrastructureMappingId(containerInfraMapping.getUuid())
@@ -361,14 +362,15 @@ public class HelmDeployState extends State {
             .commandFlags(commandFlags)
             .build();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .taskType(TaskType.HELM_COMMAND_TASK.name())
-                                    .parameters(new Object[] {helmReleaseHistoryCommandRequest})
-                                    .accountId(accountId)
-                                    .appId(appId)
-                                    .async(false)
-                                    .timeout(Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS) * 2 * 1000)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .taskType(TaskType.HELM_COMMAND_TASK.name())
+            .data(TaskData.builder().parameters(new Object[] {helmReleaseHistoryCommandRequest}).build())
+            .accountId(accountId)
+            .appId(appId)
+            .async(false)
+            .timeout(Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS) * 2 * 1000)
+            .build();
 
     HelmCommandExecutionResponse helmCommandExecutionResponse;
     ResponseData notifyResponseData = delegateService.executeTask(delegateTask);

@@ -45,6 +45,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -305,7 +306,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
                                     .status(DelegateTask.Status.QUEUED)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
@@ -323,7 +324,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .waitId(generateUuid())
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
     delegateService.queueTask(delegateTask);
@@ -341,7 +342,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .waitId(generateUuid())
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
@@ -359,7 +360,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .waitId(generateUuid())
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
@@ -383,7 +384,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
@@ -404,7 +405,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .async(false)
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
@@ -428,7 +429,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .taskType(TaskType.HTTP.name())
                                     .delegateId(DELEGATE_ID)
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
@@ -461,7 +462,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .taskType(TaskType.HTTP.name())
                                     .delegateId(DELEGATE_ID)
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
@@ -629,7 +630,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .waitId(generateUuid())
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
@@ -647,7 +648,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .waitId(generateUuid())
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .delegateId(DELEGATE_ID + "1")
                                     .status(DelegateTask.Status.STARTED)
@@ -666,7 +667,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .waitId(generateUuid())
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
@@ -683,7 +684,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .waitId(generateUuid())
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
@@ -706,7 +707,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .waitId(generateUuid())
                                     .taskType(TaskType.HTTP.name())
                                     .appId(APP_ID)
-                                    .parameters(new Object[] {})
+                                    .data(TaskData.builder().parameters(new Object[] {}).build())
                                     .tags(new ArrayList<>())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();

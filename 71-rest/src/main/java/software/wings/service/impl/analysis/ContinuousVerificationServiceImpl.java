@@ -37,6 +37,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -1568,7 +1569,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .accountId(accountId)
         .appId(appId)
         .waitId(waitId)
-        .parameters(dataCollectionInfo)
+        .data(TaskData.builder().parameters(dataCollectionInfo).build())
         .envId(envId)
         .timeout(TimeUnit.MINUTES.toMillis(30))
         .build();

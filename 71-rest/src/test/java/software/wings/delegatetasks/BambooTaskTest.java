@@ -7,6 +7,7 @@ import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.common.collect.Maps;
 
+import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,7 +39,7 @@ public class BambooTaskTest {
 
   @InjectMocks
   private BambooTask bambooTask = (BambooTask) TaskType.BAMBOO.getDelegateRunnableTask("delid1",
-      DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+      DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).data(TaskData.builder().build()).build(),
       notifyResponseData -> {}, () -> true);
 
   private String bambooUrl = "http://localhost:9095/";

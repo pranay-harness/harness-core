@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -134,7 +135,7 @@ public class SettingValidationService {
                                       .appId(settingAttribute.getAppId())
                                       .async(false)
                                       .timeout(TimeUnit.MINUTES.toMillis(2))
-                                      .parameters(new Object[] {request})
+                                      .data(TaskData.builder().parameters(new Object[] {request}).build())
                                       .build();
       try {
         ResponseData notifyResponseData = delegateService.executeTask(delegateTask);

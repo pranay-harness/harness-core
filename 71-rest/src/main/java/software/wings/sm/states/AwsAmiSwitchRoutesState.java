@@ -15,6 +15,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -153,7 +154,7 @@ public class AwsAmiSwitchRoutesState extends State {
             .appId(infrastructureMapping.getAppId())
             .waitId(activity.getUuid())
             .timeout(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()))
-            .parameters(new Object[] {routesRequest})
+            .data(TaskData.builder().parameters(new Object[] {routesRequest}).build())
             .tags(isNotEmpty(routesRequest.getAwsConfig().getTag())
                     ? singletonList(routesRequest.getAwsConfig().getTag())
                     : null)

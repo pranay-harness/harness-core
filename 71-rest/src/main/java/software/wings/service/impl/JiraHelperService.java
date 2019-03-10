@@ -13,6 +13,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
 import net.sf.json.JSONArray;
@@ -81,7 +82,7 @@ public class JiraHelperService {
                                     .taskType(TaskType.JIRA.name())
                                     .accountId(accountId)
                                     .appId(APP_ID_KEY)
-                                    .parameters(new Object[] {jiraTaskParameters})
+                                    .data(TaskData.builder().parameters(new Object[] {jiraTaskParameters}).build())
                                     .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
                                     .async(false)
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
@@ -215,7 +216,7 @@ public class JiraHelperService {
                                     .taskType(TaskType.JIRA.name())
                                     .accountId(accountId)
                                     .appId(appId)
-                                    .parameters(new Object[] {jiraTaskParameters})
+                                    .data(TaskData.builder().parameters(new Object[] {jiraTaskParameters}).build())
                                     .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
                                     .async(false)
                                     .build();

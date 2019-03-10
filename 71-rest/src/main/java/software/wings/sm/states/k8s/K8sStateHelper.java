@@ -22,6 +22,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -184,7 +185,7 @@ public class K8sStateHelper {
                                     .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
                                     .waitId(waitId)
                                     .async(true)
-                                    .parameters(new Object[] {fetchFilesTaskParams})
+                                    .data(TaskData.builder().parameters(new Object[] {fetchFilesTaskParams}).build())
                                     .timeout(TimeUnit.MINUTES.toMillis(60))
                                     .build();
 
@@ -432,7 +433,7 @@ public class K8sStateHelper {
                                     .taskType(TaskType.K8S_COMMAND_TASK.name())
                                     .waitId(waitId)
                                     .tags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sTaskParameters))
-                                    .parameters(new Object[] {k8sTaskParameters})
+                                    .data(TaskData.builder().parameters(new Object[] {k8sTaskParameters}).build())
                                     .envId(env.getUuid())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .infrastructureMappingId(infraMapping.getUuid())
@@ -553,18 +554,19 @@ public class K8sStateHelper {
             .build();
 
     String waitId = generateUuid();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .accountId(containerInfrastructureMapping.getAccountId())
-                                    .appId(containerInfrastructureMapping.getAppId())
-                                    .taskType(TaskType.K8S_COMMAND_TASK.name())
-                                    .waitId(waitId)
-                                    .tags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sInstanceSyncTaskParameters))
-                                    .parameters(new Object[] {k8sInstanceSyncTaskParameters})
-                                    .envId(containerInfrastructureMapping.getEnvId())
-                                    .infrastructureMappingId(containerInfrastructureMapping.getUuid())
-                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .async(true)
+            .accountId(containerInfrastructureMapping.getAccountId())
+            .appId(containerInfrastructureMapping.getAppId())
+            .taskType(TaskType.K8S_COMMAND_TASK.name())
+            .waitId(waitId)
+            .tags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sInstanceSyncTaskParameters))
+            .data(TaskData.builder().parameters(new Object[] {k8sInstanceSyncTaskParameters}).build())
+            .envId(containerInfrastructureMapping.getEnvId())
+            .infrastructureMappingId(containerInfrastructureMapping.getUuid())
+            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+            .build();
 
     try {
       K8sTaskExecutionResponse k8sTaskExecutionResponse = delegateService.executeTask(delegateTask);

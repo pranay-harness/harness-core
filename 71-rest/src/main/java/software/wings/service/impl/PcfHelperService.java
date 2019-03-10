@@ -5,6 +5,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -47,20 +48,22 @@ public class PcfHelperService {
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
 
     try {
-      pcfCommandExecutionResponse =
-          delegateService.executeTask(DelegateTask.builder()
-                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .accountId(pcfConfig.getAccountId())
-                                          .appId(GLOBAL_APP_ID)
-                                          .async(false)
-                                          .timeout(TimeUnit.MINUTES.toMillis(2))
-                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                        .pcfConfig(pcfConfig)
-                                                                        .pcfCommandType(PcfCommandType.VALIDATE)
-                                                                        .timeoutIntervalInMin(2)
-                                                                        .build(),
-                                              null})
-                                          .build());
+      pcfCommandExecutionResponse = delegateService.executeTask(
+          DelegateTask.builder()
+              .taskType(TaskType.PCF_COMMAND_TASK.name())
+              .accountId(pcfConfig.getAccountId())
+              .appId(GLOBAL_APP_ID)
+              .async(false)
+              .timeout(TimeUnit.MINUTES.toMillis(2))
+              .data(TaskData.builder()
+                        .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                      .pcfConfig(pcfConfig)
+                                                      .pcfCommandType(PcfCommandType.VALIDATE)
+                                                      .timeoutIntervalInMin(2)
+                                                      .build(),
+                            null})
+                        .build())
+              .build());
 
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
@@ -82,23 +85,25 @@ public class PcfHelperService {
     try {
       List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
 
-      pcfCommandExecutionResponse =
-          delegateService.executeTask(DelegateTask.builder()
-                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .accountId(pcfConfig.getAccountId())
-                                          .appId(GLOBAL_APP_ID)
-                                          .async(false)
-                                          .timeout(TimeUnit.MINUTES.toMillis(5))
-                                          .parameters(new Object[] {PcfInstanceSyncRequest.builder()
-                                                                        .pcfConfig(pcfConfig)
-                                                                        .pcfApplicationName(pcfApplicationName)
-                                                                        .organization(organization)
-                                                                        .space(space)
-                                                                        .pcfCommandType(PcfCommandType.APP_DETAILS)
-                                                                        .timeoutIntervalInMin(5)
-                                                                        .build(),
-                                              encryptionDetails})
-                                          .build());
+      pcfCommandExecutionResponse = delegateService.executeTask(
+          DelegateTask.builder()
+              .taskType(TaskType.PCF_COMMAND_TASK.name())
+              .accountId(pcfConfig.getAccountId())
+              .appId(GLOBAL_APP_ID)
+              .async(false)
+              .timeout(TimeUnit.MINUTES.toMillis(5))
+              .data(TaskData.builder()
+                        .parameters(new Object[] {PcfInstanceSyncRequest.builder()
+                                                      .pcfConfig(pcfConfig)
+                                                      .pcfApplicationName(pcfApplicationName)
+                                                      .organization(organization)
+                                                      .space(space)
+                                                      .pcfCommandType(PcfCommandType.APP_DETAILS)
+                                                      .timeoutIntervalInMin(5)
+                                                      .build(),
+                            encryptionDetails})
+                        .build())
+              .build());
 
       PcfInstanceSyncResponse pcfInstanceSyncResponse =
           (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
@@ -147,21 +152,23 @@ public class PcfHelperService {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
     try {
-      pcfCommandExecutionResponse =
-          delegateService.executeTask(DelegateTask.builder()
-                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .accountId(pcfConfig.getAccountId())
-                                          .appId(GLOBAL_APP_ID)
-                                          .async(false)
-                                          .timeout(TimeUnit.MINUTES.toMillis(2))
-                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                        .pcfConfig(pcfConfig)
-                                                                        .pcfCommandType(PcfCommandType.DATAFETCH)
-                                                                        .actionType(ActionType.FETCH_ORG)
-                                                                        .timeoutIntervalInMin(2)
-                                                                        .build(),
-                                              encryptionDetails})
-                                          .build());
+      pcfCommandExecutionResponse = delegateService.executeTask(
+          DelegateTask.builder()
+              .taskType(TaskType.PCF_COMMAND_TASK.name())
+              .accountId(pcfConfig.getAccountId())
+              .appId(GLOBAL_APP_ID)
+              .async(false)
+              .timeout(TimeUnit.MINUTES.toMillis(2))
+              .data(TaskData.builder()
+                        .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                      .pcfConfig(pcfConfig)
+                                                      .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                      .actionType(ActionType.FETCH_ORG)
+                                                      .timeoutIntervalInMin(2)
+                                                      .build(),
+                            encryptionDetails})
+                        .build())
+              .build());
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -182,28 +189,30 @@ public class PcfHelperService {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
     try {
-      pcfCommandExecutionResponse =
-          delegateService.executeTask(DelegateTask.builder()
-                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .accountId(pcfConfig.getAccountId())
-                                          .appId(GLOBAL_APP_ID)
-                                          .async(false)
-                                          .timeout(TimeUnit.MINUTES.toMillis(2))
-                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                        .pcfConfig(pcfConfig)
-                                                                        .pcfCommandType(PcfCommandType.CREATE_ROUTE)
-                                                                        .organization(organization)
-                                                                        .space(space)
-                                                                        .host(host)
-                                                                        .domain(domain)
-                                                                        .path(path)
-                                                                        .tcpRoute(tcpRoute)
-                                                                        .useRandomPort(useRandomPort)
-                                                                        .port(port)
-                                                                        .timeoutIntervalInMin(2)
-                                                                        .build(),
-                                              encryptionDetails})
-                                          .build());
+      pcfCommandExecutionResponse = delegateService.executeTask(
+          DelegateTask.builder()
+              .taskType(TaskType.PCF_COMMAND_TASK.name())
+              .accountId(pcfConfig.getAccountId())
+              .appId(GLOBAL_APP_ID)
+              .async(false)
+              .timeout(TimeUnit.MINUTES.toMillis(2))
+              .data(TaskData.builder()
+                        .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                      .pcfConfig(pcfConfig)
+                                                      .pcfCommandType(PcfCommandType.CREATE_ROUTE)
+                                                      .organization(organization)
+                                                      .space(space)
+                                                      .host(host)
+                                                      .domain(domain)
+                                                      .path(path)
+                                                      .tcpRoute(tcpRoute)
+                                                      .useRandomPort(useRandomPort)
+                                                      .port(port)
+                                                      .timeoutIntervalInMin(2)
+                                                      .build(),
+                            encryptionDetails})
+                        .build())
+              .build());
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -223,22 +232,24 @@ public class PcfHelperService {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
     try {
-      pcfCommandExecutionResponse =
-          delegateService.executeTask(DelegateTask.builder()
-                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .accountId(pcfConfig.getAccountId())
-                                          .appId(GLOBAL_APP_ID)
-                                          .async(false)
-                                          .timeout(TimeUnit.MINUTES.toMillis(2))
-                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                        .pcfConfig(pcfConfig)
-                                                                        .organization(organization)
-                                                                        .pcfCommandType(PcfCommandType.DATAFETCH)
-                                                                        .actionType(ActionType.FETCH_SPACE)
-                                                                        .timeoutIntervalInMin(2)
-                                                                        .build(),
-                                              encryptionDetails})
-                                          .build());
+      pcfCommandExecutionResponse = delegateService.executeTask(
+          DelegateTask.builder()
+              .taskType(TaskType.PCF_COMMAND_TASK.name())
+              .accountId(pcfConfig.getAccountId())
+              .appId(GLOBAL_APP_ID)
+              .async(false)
+              .timeout(TimeUnit.MINUTES.toMillis(2))
+              .data(TaskData.builder()
+                        .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                      .pcfConfig(pcfConfig)
+                                                      .organization(organization)
+                                                      .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                      .actionType(ActionType.FETCH_SPACE)
+                                                      .timeoutIntervalInMin(2)
+                                                      .build(),
+                            encryptionDetails})
+                        .build())
+              .build());
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -258,23 +269,25 @@ public class PcfHelperService {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
     try {
-      pcfCommandExecutionResponse =
-          delegateService.executeTask(DelegateTask.builder()
-                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .accountId(pcfConfig.getAccountId())
-                                          .appId(GLOBAL_APP_ID)
-                                          .async(false)
-                                          .timeout(TimeUnit.MINUTES.toMillis(2))
-                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                        .pcfConfig(pcfConfig)
-                                                                        .organization(organization)
-                                                                        .space(space)
-                                                                        .pcfCommandType(PcfCommandType.DATAFETCH)
-                                                                        .actionType(ActionType.FETCH_ROUTE)
-                                                                        .timeoutIntervalInMin(2)
-                                                                        .build(),
-                                              encryptionDetails})
-                                          .build());
+      pcfCommandExecutionResponse = delegateService.executeTask(
+          DelegateTask.builder()
+              .taskType(TaskType.PCF_COMMAND_TASK.name())
+              .accountId(pcfConfig.getAccountId())
+              .appId(GLOBAL_APP_ID)
+              .async(false)
+              .timeout(TimeUnit.MINUTES.toMillis(2))
+              .data(TaskData.builder()
+                        .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                      .pcfConfig(pcfConfig)
+                                                      .organization(organization)
+                                                      .space(space)
+                                                      .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                      .actionType(ActionType.FETCH_ROUTE)
+                                                      .timeoutIntervalInMin(2)
+                                                      .build(),
+                            encryptionDetails})
+                        .build())
+              .build());
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -294,24 +307,26 @@ public class PcfHelperService {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
     try {
-      pcfCommandExecutionResponse =
-          delegateService.executeTask(DelegateTask.builder()
-                                          .taskType(TaskType.PCF_COMMAND_TASK.name())
-                                          .accountId(pcfConfig.getAccountId())
-                                          .appId(GLOBAL_APP_ID)
-                                          .async(false)
-                                          .timeout(TimeUnit.MINUTES.toMillis(2))
-                                          .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                                        .pcfConfig(pcfConfig)
-                                                                        .organization(organization)
-                                                                        .space(space)
-                                                                        .actionType(ActionType.RUNNING_COUNT)
-                                                                        .pcfCommandType(PcfCommandType.DATAFETCH)
-                                                                        .applicationNamePrefix(appPrefix)
-                                                                        .timeoutIntervalInMin(2)
-                                                                        .build(),
-                                              encryptionDetails})
-                                          .build());
+      pcfCommandExecutionResponse = delegateService.executeTask(
+          DelegateTask.builder()
+              .taskType(TaskType.PCF_COMMAND_TASK.name())
+              .accountId(pcfConfig.getAccountId())
+              .appId(GLOBAL_APP_ID)
+              .async(false)
+              .timeout(TimeUnit.MINUTES.toMillis(2))
+              .data(TaskData.builder()
+                        .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
+                                                      .pcfConfig(pcfConfig)
+                                                      .organization(organization)
+                                                      .space(space)
+                                                      .actionType(ActionType.RUNNING_COUNT)
+                                                      .pcfCommandType(PcfCommandType.DATAFETCH)
+                                                      .applicationNamePrefix(appPrefix)
+                                                      .timeoutIntervalInMin(2)
+                                                      .build(),
+                            encryptionDetails})
+                        .build())
+              .build());
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)

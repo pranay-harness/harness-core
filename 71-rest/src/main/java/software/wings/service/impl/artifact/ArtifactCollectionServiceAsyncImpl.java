@@ -24,6 +24,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -133,6 +134,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
                                                   .taskType(TaskType.BUILD_SOURCE_TASK.name())
                                                   .appId(GLOBAL_APP_ID)
                                                   .waitId(waitId)
+                                                  .data(TaskData.builder().build())
                                                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
 
     if (CUSTOM.name().equals(artifactStreamType)) {
@@ -166,7 +168,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       delegateTaskBuilder.accountId(accountId);
       delegateTaskBuilder.tags(tags);
       delegateTaskBuilder.timeout(timeout);
-      delegateTaskBuilder.parameters(new Object[] {buildSourceRequest});
+      delegateTaskBuilder.data(TaskData.builder().parameters(new Object[] {buildSourceRequest}).build());
 
     } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
@@ -202,7 +204,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
                                .build();
 
       delegateTaskBuilder.accountId(accountId);
-      delegateTaskBuilder.parameters(new Object[] {buildSourceRequest});
+      delegateTaskBuilder.data(TaskData.builder().parameters(new Object[] {buildSourceRequest}).build());
       delegateTaskBuilder.timeout(TimeUnit.MINUTES.toMillis(1));
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
     }

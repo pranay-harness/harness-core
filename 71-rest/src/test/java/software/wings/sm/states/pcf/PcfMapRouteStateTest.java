@@ -288,7 +288,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) delegateTask.getParameters()[0];
+    pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) delegateTask.getData().getParameters()[0];
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
     appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
@@ -467,7 +467,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) delegateTask.getParameters()[0];
+    pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) delegateTask.getData().getParameters()[0];
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
     assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName());
     appName = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName();

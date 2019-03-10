@@ -258,7 +258,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
-    CommandExecutionContext executionContext = (CommandExecutionContext) delegateTask.getParameters()[1];
+    CommandExecutionContext executionContext = (CommandExecutionContext) delegateTask.getData().getParameters()[1];
     KubernetesResizeParams params = (KubernetesResizeParams) executionContext.getContainerResizeParams();
     assertThat(params.getInstanceCount()).isEqualTo(1);
     assertThat(params.getContainerServiceName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);

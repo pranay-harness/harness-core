@@ -151,7 +151,8 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
             .analysisComparisonStrategy(dynatraceState.getComparisonStrategy())
             .build();
 
-    final DynaTraceDataCollectionInfo actualCollectionInfo = (DynaTraceDataCollectionInfo) task.getParameters()[0];
+    final DynaTraceDataCollectionInfo actualCollectionInfo =
+        (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
     expectedCollectionInfo.setStartTime(actualCollectionInfo.getStartTime());
     assertEquals(expectedCollectionInfo, actualCollectionInfo);
     assertEquals(accountId, task.getAccountId());

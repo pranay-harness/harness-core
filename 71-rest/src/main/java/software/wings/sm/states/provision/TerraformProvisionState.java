@@ -28,6 +28,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.Getter;
@@ -458,7 +459,7 @@ public abstract class TerraformProvisionState extends State {
                                     .accountId(executionContext.getApp().getAccountId())
                                     .waitId(activityId)
                                     .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .parameters(new Object[] {parameters})
+                                    .data(TaskData.builder().parameters(new Object[] {parameters}).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 

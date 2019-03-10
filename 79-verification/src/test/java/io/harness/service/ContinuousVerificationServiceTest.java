@@ -195,7 +195,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertEquals(accountId, delegateTask.getAccountId());
     assertEquals(appId, delegateTask.getAppId());
     assertEquals(TaskType.SUMO_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getTaskType()));
-    SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getParameters()[0];
+    SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
     assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
     assertEquals(cvConfigId, sumoDataCollectionInfo.getCvConfigId());
     assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
@@ -233,7 +233,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertEquals(accountId, delegateTask.getAccountId());
     assertEquals(appId, delegateTask.getAppId());
     assertEquals(TaskType.SUMO_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getTaskType()));
-    SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getParameters()[0];
+    SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
     assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
     assertEquals(cvConfigId, sumoDataCollectionInfo.getCvConfigId());
     assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
@@ -267,7 +267,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertEquals(accountId, delegateTask.getAccountId());
     assertEquals(appId, delegateTask.getAppId());
     assertEquals(TaskType.SUMO_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getTaskType()));
-    sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getParameters()[0];
+    sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
     assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
     assertEquals(cvConfigId, sumoDataCollectionInfo.getCvConfigId());
     assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
@@ -298,7 +298,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertEquals(accountId, delegateTask.getAccountId());
     assertEquals(appId, delegateTask.getAppId());
     assertEquals(TaskType.SUMO_COLLECT_LOG_DATA, TaskType.valueOf(delegateTask.getTaskType()));
-    SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getParameters()[0];
+    SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
     assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
     assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
     assertEquals(accountId, sumoDataCollectionInfo.getAccountId());

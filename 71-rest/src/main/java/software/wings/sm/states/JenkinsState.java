@@ -27,6 +27,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -293,7 +294,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
         .waitId(activityId)
         .appId(((ExecutionContextImpl) context).getApp().getAppId())
-        .parameters(new Object[] {jenkinsTaskParams})
+        .data(TaskData.builder().parameters(new Object[] {jenkinsTaskParams}).build())
         .envId(envId)
         .infrastructureMappingId(infrastructureMappingId)
         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)

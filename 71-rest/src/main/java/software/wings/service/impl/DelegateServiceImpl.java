@@ -1591,9 +1591,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               delegateTask.getEnvId(), delegateTask.getServiceTemplateId(), artifactCollectionUtil,
               delegateTask.getArtifactStreamId(), managerDecryptionService, secretManager, delegateTask.getAccountId(),
               delegateTask.getWorkflowExecutionId());
-      if (delegateTask.getParameters().length == 1 && delegateTask.getParameters()[0] instanceof TaskParameters) {
+      if (delegateTask.getData().getParameters().length == 1
+          && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
         logger.info("Applying ManagerPreExecutionExpressionEvaluator for delegateTask {}", delegateTask.getUuid());
-        ExpressionReflectionUtils.applyExpression(delegateTask.getParameters()[0],
+        ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
             value -> managerPreExecutionExpressionEvaluator.substitute(value, new HashMap<>()));
 
         final SecretManagerFunctor secretManagerFunctor =
@@ -1653,7 +1654,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                     .field("delegateId")
                                     .doesNotExist()
                                     .filter(ID_KEY, taskId)
-                                    .project("parameters", false);
+                                    .project(DelegateTask.DATA_PARAMETERS_KEY, false);
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                           .set("delegateId", delegateId)
                                                           .set("status", STARTED);
@@ -1663,7 +1664,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     // client is retrying the request
     if (task != null) {
       logger.info("Task {} assigned to delegate {}", taskId, delegateId);
-      task.setParameters(delegateTask.getParameters());
+      task.getData().setParameters(delegateTask.getData().getParameters());
       return resolvePreAssignmentExpressions(task, delegateId);
     }
     task = wingsPersistence.createQuery(DelegateTask.class)
@@ -1671,14 +1672,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                .filter("status", STARTED)
                .filter("delegateId", delegateId)
                .filter(ID_KEY, taskId)
-               .project("parameters", false)
+               .project(DelegateTask.DATA_PARAMETERS_KEY, false)
                .get();
     if (task == null) {
       logger.info("Task {} no longer available for delegate {}", taskId, delegateId);
       return null;
     }
 
-    task.setParameters(delegateTask.getParameters());
+    task.getData().setParameters(delegateTask.getData().getParameters());
     logger.info("Returning previously assigned task {} to delegate {}", taskId, delegateId);
     return resolvePreAssignmentExpressions(task, delegateId);
   }

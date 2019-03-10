@@ -52,7 +52,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     this.delegateId = delegateId;
     this.taskId = delegateTask.getUuid();
-    this.parameters = delegateTask.getParameters();
+    this.parameters = delegateTask.getData().getParameters();
     this.accountId = delegateTask.getAccountId();
     this.appId = delegateTask.getAppId();
     this.consumer = consumer;

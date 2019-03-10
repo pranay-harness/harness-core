@@ -19,6 +19,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -344,17 +345,18 @@ public class HttpState extends State implements SweepingOutputStateMixin {
         .httpMethod(httpTaskParameters.getMethod())
         .header(httpTaskParameters.getHeader());
 
-    final DelegateTask delegateTask = DelegateTask.builder()
-                                          .async(true)
-                                          .taskType(getTaskType().name())
-                                          .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                          .waitId(activityId)
-                                          .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                          .parameters(new Object[] {httpTaskParameters})
-                                          .envId(envId)
-                                          .infrastructureMappingId(infrastructureMappingId)
-                                          .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                          .build();
+    final DelegateTask delegateTask =
+        DelegateTask.builder()
+            .async(true)
+            .taskType(getTaskType().name())
+            .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+            .waitId(activityId)
+            .appId(((ExecutionContextImpl) context).getApp().getAppId())
+            .data(TaskData.builder().parameters(new Object[] {httpTaskParameters}).build())
+            .envId(envId)
+            .infrastructureMappingId(infrastructureMappingId)
+            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+            .build();
 
     String delegateTaskId = scheduleDelegateTask(delegateTask);
 

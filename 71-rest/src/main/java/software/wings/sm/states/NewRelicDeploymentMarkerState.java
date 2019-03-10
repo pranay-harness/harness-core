@@ -13,6 +13,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
@@ -135,7 +136,7 @@ public class NewRelicDeploymentMarkerState extends State {
                                       .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
                                       .waitId(correlationId)
                                       .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                      .parameters(new Object[] {dataCollectionInfo})
+                                      .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
                                       .envId(envId)
                                       .infrastructureMappingId(infrastructureMappingId)
                                       .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)

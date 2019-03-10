@@ -14,6 +14,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.TaskData;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -38,7 +39,12 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
   @InjectMocks
   private KubernetesSwapServiceSelectorsTask kubernetesSwapServiceSelectorsTask =
       (KubernetesSwapServiceSelectorsTask) TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.getDelegateRunnableTask(
-          "delid1", DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build(),
+          "delid1",
+          DelegateTask.builder()
+              .async(true)
+              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+              .data(TaskData.builder().build())
+              .build(),
           notifyResponseData -> {}, () -> true);
 
   private Service createService(String serviceName, Map<String, String> labelSelectors) {

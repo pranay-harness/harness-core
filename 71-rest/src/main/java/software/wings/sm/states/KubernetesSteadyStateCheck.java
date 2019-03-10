@@ -15,6 +15,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -117,7 +118,7 @@ public class KubernetesSteadyStateCheck extends State {
               .appId(app.getUuid())
               .taskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK.name())
               .waitId(activity.getUuid())
-              .parameters(new Object[] {kubernetesSteadyStateCheckParams})
+              .data(TaskData.builder().parameters(new Object[] {kubernetesSteadyStateCheckParams}).build())
               .envId(env.getUuid())
               .timeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
               .infrastructureMappingId(containerInfraMapping.getUuid())

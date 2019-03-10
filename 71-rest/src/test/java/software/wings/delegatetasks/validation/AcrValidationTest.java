@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
+import io.harness.delegate.beans.TaskData;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -40,11 +41,13 @@ public class AcrValidationTest extends WingsBaseTest {
           .appId(APP_ID)
           .taskType(TaskType.ACR_GET_BUILDS.name())
           .waitId("")
-          .parameters(new Object[] {ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
-                                        .withRegistryName(registryName)
-                                        .withRepositoryName(repositoryName)
-                                        .build(),
-              asList(EncryptedDataDetail.builder().build()), AzureConfig.builder().build()})
+          .data(TaskData.builder()
+                    .parameters(new Object[] {ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
+                                                  .withRegistryName(registryName)
+                                                  .withRepositoryName(repositoryName)
+                                                  .build(),
+                        asList(EncryptedDataDetail.builder().build()), AzureConfig.builder().build()})
+                    .build())
           .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
           .build();
 

@@ -23,6 +23,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
@@ -379,18 +380,19 @@ public class CommandState extends State {
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId).withDeploymentType(deploymentType.name()).build();
 
-      DelegateTask delegateTask = DelegateTask.builder()
-                                      .async(true)
-                                      .accountId(accountId)
-                                      .appId(appId)
-                                      .taskType(TaskType.COMMAND.name())
-                                      .waitId(activityId)
-                                      .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-                                      .parameters(new Object[] {command, commandExecutionContext})
-                                      .envId(envId)
-                                      .timeout(TimeUnit.MINUTES.toMillis(30))
-                                      .infrastructureMappingId(infrastructureMappingId)
-                                      .build();
+      DelegateTask delegateTask =
+          DelegateTask.builder()
+              .async(true)
+              .accountId(accountId)
+              .appId(appId)
+              .taskType(TaskType.COMMAND.name())
+              .waitId(activityId)
+              .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+              .data(TaskData.builder().parameters(new Object[] {command, commandExecutionContext}).build())
+              .envId(envId)
+              .timeout(TimeUnit.MINUTES.toMillis(30))
+              .infrastructureMappingId(infrastructureMappingId)
+              .build();
 
       if (getTimeoutMillis() != null) {
         delegateTask.setTimeout(getTimeoutMillis());

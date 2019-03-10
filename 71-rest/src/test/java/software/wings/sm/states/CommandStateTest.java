@@ -69,6 +69,7 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.rule.OwnerRule.Owner;
@@ -333,43 +334,47 @@ public class CommandStateTest extends WingsBaseTest {
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
 
     verify(delegateService)
-        .queueTask(DelegateTask.builder()
-                       .async(true)
-                       .appId(APP_ID)
-                       .accountId(ACCOUNT_ID)
-                       .taskType(TaskType.COMMAND.name())
-                       .waitId(ACTIVITY_ID)
-                       .timeout(TimeUnit.MINUTES.toMillis(30))
-                       .parameters(new Object[] {COMMAND,
-                           aCommandExecutionContext()
-                               .withAppId(APP_ID)
-                               .withBackupPath(BACKUP_PATH)
-                               .withRuntimePath(RUNTIME_PATH)
-                               .withStagingPath(STAGING_PATH)
-                               .withWindowsRuntimePath(WINDOWS_RUNTIME_PATH_TEST)
-                               .withExecutionCredential(null)
-                               .withActivityId(ACTIVITY_ID)
-                               .withEnvId(ENV_ID)
-                               .withHost(HOST)
-                               .withServiceTemplateId(TEMPLATE_ID)
-                               .withHostConnectionAttributes(
-                                   aSettingAttribute()
-                                       .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build())
-                                       .build())
-                               .withHostConnectionCredentials(Collections.emptyList())
-                               .withBastionConnectionAttributes(
-                                   aSettingAttribute()
-                                       .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build())
-                                       .build())
-                               .withBastionConnectionCredentials(Collections.emptyList())
-                               .withServiceVariables(emptyMap())
-                               .withSafeDisplayServiceVariables(emptyMap())
-                               .withDeploymentType("ECS")
-                               .withAccountId(ACCOUNT_ID)
-                               .build()})
-                       .envId(ENV_ID)
-                       .infrastructureMappingId(INFRA_MAPPING_ID)
-                       .build());
+        .queueTask(
+            DelegateTask.builder()
+                .async(true)
+                .appId(APP_ID)
+                .accountId(ACCOUNT_ID)
+                .taskType(TaskType.COMMAND.name())
+                .waitId(ACTIVITY_ID)
+                .timeout(TimeUnit.MINUTES.toMillis(30))
+                .data(
+                    TaskData.builder()
+                        .parameters(new Object[] {COMMAND,
+                            aCommandExecutionContext()
+                                .withAppId(APP_ID)
+                                .withBackupPath(BACKUP_PATH)
+                                .withRuntimePath(RUNTIME_PATH)
+                                .withStagingPath(STAGING_PATH)
+                                .withWindowsRuntimePath(WINDOWS_RUNTIME_PATH_TEST)
+                                .withExecutionCredential(null)
+                                .withActivityId(ACTIVITY_ID)
+                                .withEnvId(ENV_ID)
+                                .withHost(HOST)
+                                .withServiceTemplateId(TEMPLATE_ID)
+                                .withHostConnectionAttributes(
+                                    aSettingAttribute()
+                                        .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build())
+                                        .build())
+                                .withHostConnectionCredentials(Collections.emptyList())
+                                .withBastionConnectionAttributes(
+                                    aSettingAttribute()
+                                        .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build())
+                                        .build())
+                                .withBastionConnectionCredentials(Collections.emptyList())
+                                .withServiceVariables(emptyMap())
+                                .withSafeDisplayServiceVariables(emptyMap())
+                                .withDeploymentType("ECS")
+                                .withAccountId(ACCOUNT_ID)
+                                .build()})
+                        .build())
+                .envId(ENV_ID)
+                .infrastructureMappingId(INFRA_MAPPING_ID)
+                .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
     verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
@@ -535,13 +540,14 @@ public class CommandStateTest extends WingsBaseTest {
             .withArtifactStreamAttributes(artifactStreamAttributes)
             .withArtifactServerEncryptedDataDetails(new ArrayList<>())
             .build();
-    DelegateTaskBuilder builder = DelegateTask.builder()
-                                      .appId(APP_ID)
-                                      .accountId(ACCOUNT_ID)
-                                      .taskType(TaskType.COMMAND.name())
-                                      .waitId(ACTIVITY_ID)
-                                      .timeout(TimeUnit.MINUTES.toMillis(30))
-                                      .parameters(new Object[] {command, commandExecutionContext});
+    DelegateTaskBuilder builder =
+        DelegateTask.builder()
+            .appId(APP_ID)
+            .accountId(ACCOUNT_ID)
+            .taskType(TaskType.COMMAND.name())
+            .waitId(ACTIVITY_ID)
+            .timeout(TimeUnit.MINUTES.toMillis(30))
+            .data(TaskData.builder().parameters(new Object[] {command, commandExecutionContext}).build());
 
     if (artifact != null) {
       commandExecutionContext.setArtifactFiles(artifact.getArtifactFiles());

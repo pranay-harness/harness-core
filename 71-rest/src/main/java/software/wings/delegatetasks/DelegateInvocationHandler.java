@@ -3,6 +3,7 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 
+import io.harness.delegate.beans.TaskData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.DelegateTaskBuilder;
@@ -37,7 +38,7 @@ public class DelegateInvocationHandler implements InvocationHandler {
     System.arraycopy(args, 0, delegateArguments, 2, args.length);
     DelegateTaskBuilder builder = DelegateTask.builder()
                                       .taskType(taskType.name())
-                                      .parameters(delegateArguments)
+                                      .data(TaskData.builder().parameters(delegateArguments).build())
                                       .accountId(syncTaskContext.getAccountId())
                                       .appId(syncTaskContext.getAppId())
                                       .envId(syncTaskContext.getEnvId())

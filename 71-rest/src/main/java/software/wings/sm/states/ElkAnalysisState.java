@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -306,7 +307,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
                             .accountId(accountId)
                             .appId(context.getAppId())
                             .waitId(waitId)
-                            .parameters(new Object[] {dataCollectionInfo})
+                            .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
                             .envId(envId)
                             .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                             .build());

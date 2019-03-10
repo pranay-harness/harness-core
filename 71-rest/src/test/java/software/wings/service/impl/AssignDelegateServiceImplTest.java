@@ -20,6 +20,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,6 +66,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
                                     .envId(ENV_ID)
+                                    .data(TaskData.builder().build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
     Delegate delegate = aDelegate()
@@ -84,6 +86,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
                                     .envId(ENV_ID)
+                                    .data(TaskData.builder().build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
     Delegate delegate = aDelegate()
@@ -104,6 +107,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
                                     .envId(ENV_ID)
+                                    .data(TaskData.builder().build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
     Delegate delegate = aDelegate()
@@ -124,6 +128,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
                                     .envId(ENV_ID)
+                                    .data(TaskData.builder().build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
     Delegate delegate = aDelegate()
@@ -144,6 +149,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
                                     .envId(ENV_ID)
+                                    .data(TaskData.builder().build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
     Delegate delegate = aDelegate()
@@ -165,6 +171,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .appId(APP_ID)
                                     .taskType(TaskType.SCRIPT.name())
                                     .tags(ImmutableList.of("a", "b"))
+                                    .data(TaskData.builder().build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
     Delegate delegate = aDelegate()
@@ -186,6 +193,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .appId(APP_ID)
                                     .taskType(TaskType.SCRIPT.name())
                                     .tags(ImmutableList.of("a", "b"))
+                                    .data(TaskData.builder().build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
     Delegate delegate = aDelegate()
@@ -207,6 +215,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .appId(APP_ID)
                                     .taskType(TaskType.SCRIPT.name())
                                     .tags(ImmutableList.of("a", "b"))
+                                    .data(TaskData.builder().build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
     Delegate delegate = aDelegate()
@@ -228,6 +237,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .appId(APP_ID)
                                     .taskType(TaskType.SCRIPT.name())
                                     .tags(null)
+                                    .data(TaskData.builder().build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
     Delegate delegate = aDelegate()
@@ -249,6 +259,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .appId(APP_ID)
                                     .taskType(TaskType.SCRIPT.name())
                                     .tags(ImmutableList.of("a", "b"))
+                                    .data(TaskData.builder().build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
     Delegate delegate = aDelegate()
@@ -320,7 +331,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
-                                    .parameters(params)
+                                    .data(TaskData.builder().parameters(params).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
@@ -341,7 +352,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
-                                    .parameters(params)
+                                    .data(TaskData.builder().parameters(params).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
@@ -362,7 +373,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
-                                    .parameters(params)
+                                    .data(TaskData.builder().parameters(params).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
@@ -392,7 +403,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
-                                    .parameters(params)
+                                    .data(TaskData.builder().parameters(params).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
@@ -425,7 +436,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
-                                    .parameters(params)
+                                    .data(TaskData.builder().parameters(params).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
@@ -457,7 +468,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
-                                    .parameters(params)
+                                    .data(TaskData.builder().parameters(params).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
@@ -489,7 +500,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
-                                    .parameters(params)
+                                    .data(TaskData.builder().parameters(params).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
@@ -505,7 +516,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
-                                    .parameters(params)
+                                    .data(TaskData.builder().parameters(params).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
@@ -537,7 +548,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .taskType(TaskType.HTTP.name())
-                                    .parameters(params)
+                                    .data(TaskData.builder().parameters(params).build())
                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 

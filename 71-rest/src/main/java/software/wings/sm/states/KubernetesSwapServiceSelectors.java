@@ -17,6 +17,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -244,7 +245,7 @@ public class KubernetesSwapServiceSelectors extends State {
             .appId(app.getUuid())
             .taskType(TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.name())
             .waitId(activity.getUuid())
-            .parameters(new Object[] {kubernetesSwapServiceSelectorsParams})
+            .data(TaskData.builder().parameters(new Object[] {kubernetesSwapServiceSelectorsParams}).build())
             .envId(env.getUuid())
             .timeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
             .infrastructureMappingId(containerInfraMapping.getUuid())

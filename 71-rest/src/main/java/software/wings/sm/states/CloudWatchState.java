@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import lombok.Builder;
@@ -205,7 +206,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
                                     .tags(isNotEmpty(dataCollectionInfo.getAwsConfig().getTag())
                                             ? singletonList(dataCollectionInfo.getAwsConfig().getTag())
                                             : null)
-                                    .parameters(new Object[] {dataCollectionInfo})
+                                    .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
                                     .envId(envId)
                                     .infrastructureMappingId(infrastructureMappingId)
                                     .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))

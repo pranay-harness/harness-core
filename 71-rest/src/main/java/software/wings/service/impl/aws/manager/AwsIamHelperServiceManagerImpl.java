@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
@@ -62,7 +63,7 @@ public class AwsIamHelperServiceManagerImpl implements AwsIamHelperServiceManage
             .async(false)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
-            .parameters(new Object[] {request})
+            .data(TaskData.builder().parameters(new Object[] {request}).build())
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
