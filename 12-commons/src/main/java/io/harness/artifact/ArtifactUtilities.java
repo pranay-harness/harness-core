@@ -1,5 +1,6 @@
 package io.harness.artifact;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
 public class ArtifactUtilities {
@@ -34,7 +35,10 @@ public class ArtifactUtilities {
     int firstDotIndex = url.indexOf('.');
     int colonIndex = url.indexOf(':', firstDotIndex);
     int endIndex = colonIndex > 0 ? colonIndex : url.length();
-    registryUrl = url.substring(0, endIndex) + ":" + (dockerPort != null ? dockerPort : "5000");
+    registryUrl = url.substring(0, endIndex);
+    if (isNotEmpty(dockerPort)) {
+      registryUrl = registryUrl + ":" + dockerPort;
+    }
     return registryUrl;
   }
 
