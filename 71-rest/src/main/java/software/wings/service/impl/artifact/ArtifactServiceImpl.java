@@ -24,6 +24,8 @@ import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADING;
 import static software.wings.beans.artifact.Artifact.ContentStatus.METADATA_ONLY;
 import static software.wings.beans.artifact.Artifact.ContentStatus.NOT_DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ERROR_MSG_KEY;
+import static software.wings.beans.artifact.Artifact.METADATA_KEY;
+import static software.wings.beans.artifact.Artifact.REVISION_KEY;
 import static software.wings.beans.artifact.Artifact.STATUS_KEY;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.FAILED;
@@ -590,16 +592,17 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   public Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream) {
     Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class)
-                                        .project("metadata", true)
+                                        .project(METADATA_KEY, true)
+                                        .project(REVISION_KEY, true)
                                         .filter(APP_ID_KEY, artifactStream.getAppId())
-                                        .filter("artifactStreamId", artifactStream.getUuid())
-                                        .field("status")
+                                        .filter(ARTIFACT_STREAM_ID_KEY, artifactStream.getUuid())
+                                        .field(STATUS_KEY)
                                         .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
                                         .disableValidation();
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       return artifactQuery;
     }
-    artifactQuery.filter("artifactSourceName", artifactStream.getSourceName());
+    artifactQuery.filter(ARTIFACT_SOURCE_NAME_KEY, artifactStream.getSourceName());
     return artifactQuery;
   }
 

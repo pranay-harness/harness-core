@@ -40,6 +40,8 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.SettingGenerator;
+import io.harness.generator.artifactstream.ArtifactStreamManager;
+import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.rule.OwnerRule.Owner;
 import org.awaitility.Awaitility;
 import org.junit.Before;
@@ -63,6 +65,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
@@ -93,6 +96,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ArtifactRestUtil artifactRestUtil;
+  @Inject private ArtifactStreamManager artifactStreamManager;
   private static final Logger logger = LoggerFactory.getLogger(EcsWorkflowFunctionalTest.class);
   final Seed seed = new Seed(0);
   Owners owners;
@@ -113,6 +117,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   private InfrastructureMapping infrastructureMapping;
   private SettingAttribute awsSettingAttribute;
   private Artifact artifact;
+  private ArtifactStream artifactStream;
 
   @Before
   public void setUp() {
@@ -134,7 +139,10 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     awsSettingAttribute = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
 
-    artifact = artifactRestUtil.getExistingArtifact(application.getUuid(), environment.getUuid(), service.getUuid());
+    artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECR);
+    assertThat(artifactStream).isNotNull();
+
+    artifact = artifactRestUtil.waitAndFetchArtifactByArtifactStream(application.getUuid(), artifactStream.getUuid());
 
     resetCache();
   }

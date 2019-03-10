@@ -86,6 +86,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   private Service service;
   private Environment environment;
   private InfrastructureMapping infrastructureMapping;
+  private ArtifactStream artifactStream;
   final Seed seed = new Seed(0);
   Owners owners;
 
@@ -110,8 +111,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
         infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.AWS_SSH_FUNCTIONAL_TEST);
     assertThat(infrastructureMapping).isNotNull();
 
-    ArtifactStream artifactStream =
-        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
+    artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
     assertThat(artifactStream).isNotNull();
 
     resetCache();
@@ -181,7 +181,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
     Artifact artifact =
-        artifactRestUtil.getExistingArtifact(application.getUuid(), environment.getUuid(), service.getUuid());
+        artifactRestUtil.waitAndFetchArtifactByArtifactStream(application.getUuid(), artifactStream.getUuid());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
