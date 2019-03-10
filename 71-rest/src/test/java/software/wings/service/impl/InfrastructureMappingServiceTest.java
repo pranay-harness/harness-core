@@ -82,7 +82,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -97,6 +96,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SyncTaskContext;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -851,8 +851,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
     when(wingsPersistence.getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(directKubernetesInfrastructureMapping);
-    when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
-        .thenReturn(containerService);
+    when(delegateProxyFactory.get(eq(ContainerService.class), any(SyncTaskContext.class))).thenReturn(containerService);
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
     Map<String, Integer> activeCounts = new LinkedHashMap<>();
     activeCounts.put("app-name.service-name.env-name-1", 2);
@@ -886,8 +885,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
     when(wingsPersistence.getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(gcpKubernetesInfrastructureMapping);
-    when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
-        .thenReturn(containerService);
+    when(delegateProxyFactory.get(eq(ContainerService.class), any(SyncTaskContext.class))).thenReturn(containerService);
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
     Map<String, Integer> activeCounts = new LinkedHashMap<>();
     activeCounts.put("app-name.service-name.env-name-1", 2);
@@ -920,8 +918,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
     when(wingsPersistence.getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(ecsInfrastructureMapping);
-    when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
-        .thenReturn(containerService);
+    when(delegateProxyFactory.get(eq(ContainerService.class), any(SyncTaskContext.class))).thenReturn(containerService);
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.ECS);
     Map<String, Integer> activeCounts = new LinkedHashMap<>();
     activeCounts.put("APP_NAME__SERVICE_NAME__ENV_NAME__1", 2);

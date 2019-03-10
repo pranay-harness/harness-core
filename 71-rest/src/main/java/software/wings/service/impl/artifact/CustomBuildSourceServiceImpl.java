@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.SyncTaskContext;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.CustomArtifactStream;

@@ -10,7 +10,6 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
@@ -72,18 +71,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
-
-  @Value
-  @Builder
-  public static class SyncTaskContext {
-    private String accountId;
-    private String appId;
-    private String envId;
-    private String infrastructureMappingId;
-    private long timeout;
-    private List<String> tags;
-    private String correlationId;
-  }
 
   public static class ParametersConverter extends KryoConverter {
     public ParametersConverter() {

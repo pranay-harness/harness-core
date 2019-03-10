@@ -81,6 +81,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SyncTaskContext;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandType;
@@ -232,8 +233,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
 
-    when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
-        .thenReturn(containerService);
+    when(delegateProxyFactory.get(eq(ContainerService.class), any(SyncTaskContext.class))).thenReturn(containerService);
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(portalConfig.getUrl()).thenReturn("http://www.url.com");
     when(artifactService.get(any(), any())).thenReturn(anArtifact().build());
