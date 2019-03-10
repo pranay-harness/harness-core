@@ -75,6 +75,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
   private Service service;
   private Environment environment;
   private InfrastructureMapping infrastructureMapping;
+  private ArtifactStream artifactStream;
 
   final Seed seed = new Seed(0);
   Owners owners;
@@ -97,8 +98,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
     service = serviceGenerator.ensurePredefined(seed, owners, Services.FUNCTIONAL_TEST);
     assertThat(service).isNotNull();
 
-    ArtifactStream artifactStream =
-        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
+    artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
     assertThat(artifactStream).isNotNull();
 
     resetCache();
@@ -116,7 +116,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
     assertThat(updatedPhase2).isNotNull();
 
     Artifact artifact =
-        artifactRestUtil.getExistingArtifact(application.getUuid(), environment.getUuid(), service.getUuid());
+        artifactRestUtil.waitAndFetchArtifactByArtifactStream(application.getUuid(), artifactStream.getUuid());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());

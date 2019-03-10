@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.common.Constants.BUILD_NO;
@@ -154,7 +155,7 @@ public class BuildSourceCallback implements NotifyCallback {
     } else if (ARTIFACTORY.name().equals(artifactStreamType)) {
       collectArtifactoryArtifacts(appId, artifactStream, newArtifacts);
     } else if (AMAZON_S3.name().equals(artifactStreamType) || GCS.name().equals(artifactStreamType)) {
-      collectGenericArtifacts(appId, artifactStream, newArtifacts);
+      collectGenericArtifacts(artifactStream, newArtifacts);
     } else {
       // Jenkins or Bamboo case
       collectLatestArtifact(appId, artifactStream, newArtifacts);
@@ -166,7 +167,7 @@ public class BuildSourceCallback implements NotifyCallback {
     if (getService(appId, artifactStream).getArtifactType().equals(ArtifactType.DOCKER)) {
       collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
     } else {
-      collectGenericArtifacts(appId, artifactStream, newArtifacts);
+      collectGenericArtifacts(artifactStream, newArtifacts);
     }
   }
 
@@ -190,7 +191,15 @@ public class BuildSourceCallback implements NotifyCallback {
     if (!isEmpty(builds)) {
       Set<String> newBuildNumbers = getNewBuildNumbers(artifactStream, builds);
       builds.forEach((BuildDetails buildDetails1) -> {
-        if (newBuildNumbers.contains(buildDetails1.getNumber())) {
+        boolean artifactToBeCreated = false;
+        if (AMI.name().equals(artifactStream.getArtifactStreamType())) {
+          if (newBuildNumbers.contains(buildDetails1.getRevision())) {
+            artifactToBeCreated = true;
+          }
+        } else if (newBuildNumbers.contains(buildDetails1.getNumber())) {
+          artifactToBeCreated = true;
+        }
+        if (artifactToBeCreated) {
           logger.info("New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. "
                   + "Add entry in Artifact collection",
               buildDetails1.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
@@ -201,7 +210,7 @@ public class BuildSourceCallback implements NotifyCallback {
     }
   }
 
-  private void collectGenericArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
+  private void collectGenericArtifacts(ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     if (!isEmpty(builds)) {
       Set<String> newArtifactPaths = getNewArtifactPaths(artifactStream, builds);
       builds.forEach(buildDetails -> {
@@ -216,12 +225,24 @@ public class BuildSourceCallback implements NotifyCallback {
    * Gets all  existing artifacts for the given artifact stream, and compares with artifact source data
    */
   private Set<String> getNewBuildNumbers(ArtifactStream artifactStream, List<BuildDetails> builds) {
-    Map<String, BuildDetails> buildNoDetails =
-        builds.parallelStream().collect(Collectors.toMap(BuildDetails::getNumber, Function.identity()));
-    try (HIterator<Artifact> iterator =
-             new HIterator(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
-      while (iterator.hasNext()) {
-        buildNoDetails.remove(iterator.next().getBuildNo());
+    Map<String, BuildDetails> buildNoDetails;
+    if (AMI.name().equals(artifactStream.getArtifactStreamType())) {
+      // AMI: AMI Name is not unique. So, treating AMI Id as unique which is stored in revision
+      buildNoDetails =
+          builds.parallelStream().collect(Collectors.toMap(BuildDetails::getRevision, Function.identity()));
+      try (HIterator<Artifact> iterator =
+               new HIterator(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
+        while (iterator.hasNext()) {
+          buildNoDetails.remove(iterator.next().getRevision());
+        }
+      }
+    } else {
+      buildNoDetails = builds.parallelStream().collect(Collectors.toMap(BuildDetails::getNumber, Function.identity()));
+      try (HIterator<Artifact> iterator =
+               new HIterator(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
+        while (iterator.hasNext()) {
+          buildNoDetails.remove(iterator.next().getBuildNo());
+        }
       }
     }
     return buildNoDetails.keySet();

@@ -52,6 +52,8 @@ public class Artifact extends Base {
   public static final String SERVICE_ID_KEY = "serviceIds";
   public static final String ARTIFACT_SOURCE_NAME_KEY = "artifactSourceName";
   public static final String ARTIFACT_FILES_KEY = "artifactFiles";
+  public static final String METADATA_KEY = "metadata";
+  public static final String REVISION_KEY = "revision";
 
   private String artifactStreamId;
   private String artifactSourceName;

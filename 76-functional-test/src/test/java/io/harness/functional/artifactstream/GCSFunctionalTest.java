@@ -1,13 +1,11 @@
 package io.harness.functional.artifactstream;
 
-import static io.harness.threading.Morpheus.sleep;
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.beans.PageResponse;
+import io.harness.RestUtils.ArtifactRestUtil;
 import io.harness.category.element.FunctionalTests;
 import io.harness.framework.Setup;
 import io.harness.functional.AbstractFunctionalTest;
@@ -35,10 +33,8 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.GcsArtifactStream;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import javax.ws.rs.core.GenericType;
 
 public class GCSFunctionalTest extends AbstractFunctionalTest {
@@ -46,6 +42,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
+  @Inject private ArtifactRestUtil artifactRestUtil;
 
   private static final String GCS_PROJECT = "exploration-161417";
   private static final String GCS_ARTIFACT = "todolist-v1.0.zip";
@@ -75,35 +72,16 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
 
     // Create an artifact stream with retrieved bucket and artifact
     ArtifactStream savedArtifactSteam = saveAndGetGcsArtifactStream(service, gcpCloudProvider, GCS_ARTIFACT);
-    sleep(Duration.ofSeconds(60));
+    assertThat(savedArtifactSteam).isNotNull();
 
-    //  Check if GCS artifact collection success.
-    GenericType<RestResponse<PageResponse<Artifact>>> artifactType =
-        new GenericType<RestResponse<PageResponse<Artifact>>>() {};
+    final Artifact collectedArtifact =
+        artifactRestUtil.waitAndFetchArtifactByArtifactStream(application.getUuid(), savedArtifactSteam.getUuid());
+    assertThat(collectedArtifact).isNotNull();
 
-    RestResponse<PageResponse<Artifact>> artifactResponse = Setup.portal()
-                                                                .auth()
-                                                                .oauth2(bearerToken)
-                                                                .queryParam("appId", application.getUuid())
-                                                                .queryParam("serviceId", service.getUuid())
-                                                                .get("/artifacts")
-                                                                .as(artifactType.getType());
-    assertThat(artifactResponse).isNotNull();
-    assertThat(artifactResponse.getResource()).isNotEmpty();
-
-    // Get artifact
-    List<Artifact> gcsArtifactList =
-        artifactResponse.getResource()
-            .stream()
-            .filter(artifact -> artifact.getArtifactStreamId().equals(savedArtifactSteam.getUuid()))
-            .collect(toList());
-    assertThat(gcsArtifactList).isNotEmpty().hasSize(1);
-    gcsArtifactList.forEach(artifact -> {
-      assertThat(artifact.getArtifactStreamId().equals(savedArtifactSteam.getUuid()));
-      assertThat(artifact.getStatus().equals(Status.APPROVED));
-      assertThat(artifact.getMetadata().get("bucketName").equals(GCS_BUCKET));
-      assertThat(artifact.getMetadata().get("artifactFileName").equals(GCS_ARTIFACT));
-    });
+    assertThat(collectedArtifact.getArtifactStreamId().equals(savedArtifactSteam.getUuid()));
+    assertThat(collectedArtifact.getStatus().equals(Status.APPROVED));
+    assertThat(collectedArtifact.getMetadata().get("bucketName").equals(GCS_BUCKET));
+    assertThat(collectedArtifact.getMetadata().get("artifactFileName").equals(GCS_ARTIFACT));
 
     // Clean up all resources
     Setup.portal()
@@ -130,35 +108,15 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
     // Create an artifact stream with retrieved bucket and artifact
     String artifactPath = "todolist-v*.zip";
     ArtifactStream savedArtifactSteam = saveAndGetGcsArtifactStream(service, gcpCloudProvider, artifactPath);
-    sleep(Duration.ofSeconds(60));
+    assertThat(savedArtifactSteam).isNotNull();
 
-    //  Check if GCS artifact collection success.
-    GenericType<RestResponse<PageResponse<Artifact>>> artifactType =
-        new GenericType<RestResponse<PageResponse<Artifact>>>() {};
+    final Artifact collectedArtifact =
+        artifactRestUtil.waitAndFetchArtifactByArtifactStream(application.getUuid(), savedArtifactSteam.getUuid());
 
-    RestResponse<PageResponse<Artifact>> artifactResponse = Setup.portal()
-                                                                .auth()
-                                                                .oauth2(bearerToken)
-                                                                .queryParam("appId", application.getUuid())
-                                                                .queryParam("serviceId", service.getUuid())
-                                                                .get("/artifacts")
-                                                                .as(artifactType.getType());
-    assertThat(artifactResponse).isNotNull();
-    assertThat(artifactResponse.getResource()).isNotEmpty();
-
-    // Get artifact
-    List<Artifact> gcsArtifactList =
-        artifactResponse.getResource()
-            .stream()
-            .filter(artifact -> artifact.getArtifactStreamId().equals(savedArtifactSteam.getUuid()))
-            .collect(toList());
-    assertThat(gcsArtifactList).isNotEmpty();
-    gcsArtifactList.forEach(artifact -> {
-      assertThat(artifact.getArtifactStreamId().equals(savedArtifactSteam.getUuid()));
-      assertThat(artifact.getStatus().equals(Status.APPROVED));
-      assertThat(artifact.getMetadata().get("bucketName").equals(GCS_BUCKET));
-      assertThat(artifact.getMetadata().get("artifactFileName").matches(artifactPath));
-    });
+    assertThat(collectedArtifact.getArtifactStreamId().equals(savedArtifactSteam.getUuid()));
+    assertThat(collectedArtifact.getStatus().equals(Status.APPROVED));
+    assertThat(collectedArtifact.getMetadata().get("bucketName").equals(GCS_BUCKET));
+    assertThat(collectedArtifact.getMetadata().get("artifactFileName").equals(GCS_ARTIFACT));
 
     // Clean up all resources
     Setup.portal()
