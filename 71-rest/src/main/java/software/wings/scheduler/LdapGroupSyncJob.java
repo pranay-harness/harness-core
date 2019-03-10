@@ -25,7 +25,7 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
-import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;

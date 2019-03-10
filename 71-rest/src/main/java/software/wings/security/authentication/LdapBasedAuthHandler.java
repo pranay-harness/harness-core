@@ -13,7 +13,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
-import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
