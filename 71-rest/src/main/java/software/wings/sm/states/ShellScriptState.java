@@ -371,12 +371,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .envId(envId)
             .infrastructureMappingId(infrastructureMappingId)
             .serviceTemplateId(serviceTemplateId)
-            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+            .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
             .build();
-
-    if (getTimeoutMillis() != null) {
-      delegateTask.setTimeout(getTimeoutMillis());
-    }
 
     String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask, scriptStateExecutionData);
     return anExecutionResponse()

@@ -69,7 +69,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
     return super.getVariables();
   }
 
-  protected DelegateTask getDelegateTask(ExecutionContextImpl executionContext,
+  protected DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
     throw new WingsException("Method should not be called");
   }
@@ -159,11 +159,8 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
                         .parameters(
                             new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
                         .build())
-              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
               .build();
-    }
-    if (getTimeoutMillis() != null) {
-      delegateTask.setTimeout(getTimeoutMillis());
     }
     String delegateTaskId = delegateService.queueTask(delegateTask);
     return anExecutionResponse()

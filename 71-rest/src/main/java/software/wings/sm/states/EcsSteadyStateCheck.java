@@ -107,7 +107,7 @@ public class EcsSteadyStateCheck extends State {
               .appId(app.getUuid())
               .region(ecsInfrastructureMapping.getRegion())
               .accountId(app.getAccountId())
-              .timeoutInMs(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
+              .timeoutInMs(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
               .activityId(activity.getUuid())
               .commandName(ECS_STEADY_STATE_CHECK_COMMAND_NAME)
               .clusterName(ecsInfrastructureMapping.getClusterName())
@@ -125,7 +125,7 @@ public class EcsSteadyStateCheck extends State {
               .tags(isNotEmpty(params.getAwsConfig().getTag()) ? singletonList(params.getAwsConfig().getTag()) : null)
               .data(TaskData.builder().parameters(new Object[] {params}).build())
               .envId(env.getUuid())
-              .timeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
+              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return anExecutionResponse()

@@ -390,13 +390,9 @@ public class CommandState extends State {
               .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
               .data(TaskData.builder().parameters(new Object[] {command, commandExecutionContext}).build())
               .envId(envId)
-              .timeout(TimeUnit.MINUTES.toMillis(30))
+              .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(30)))
               .infrastructureMappingId(infrastructureMappingId)
               .build();
-
-      if (getTimeoutMillis() != null) {
-        delegateTask.setTimeout(getTimeoutMillis());
-      }
       delegateTaskId = delegateService.queueTask(delegateTask);
       logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
     } catch (Exception e) {

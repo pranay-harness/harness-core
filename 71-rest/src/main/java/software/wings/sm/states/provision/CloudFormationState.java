@@ -95,7 +95,7 @@ public abstract class CloudFormationState extends State {
     super(name, stateType);
   }
   protected abstract String commandUnit();
-  protected abstract DelegateTask getDelegateTask(ExecutionContextImpl executionContext,
+  protected abstract DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId);
   protected abstract List<CloudFormationElement> handleResponse(
       CloudFormationCommandResponse commandResponse, ExecutionContext context);
@@ -181,10 +181,7 @@ public abstract class CloudFormationState extends State {
     }
 
     DelegateTask delegateTask =
-        getDelegateTask(executionContext, cloudFormationInfrastructureProvisioner, awsConfig, activityId);
-    if (getTimeoutMillis() != null) {
-      delegateTask.setTimeout(getTimeoutMillis());
-    }
+        buildDelegateTask(executionContext, cloudFormationInfrastructureProvisioner, awsConfig, activityId);
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
     return anExecutionResponse()
