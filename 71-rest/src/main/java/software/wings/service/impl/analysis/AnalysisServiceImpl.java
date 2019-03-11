@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeCount;
 import static software.wings.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.common.VerificationConstants.DEMO_APPLICAITON_ID;
 import static software.wings.common.VerificationConstants.DEMO_FAILURE_LOG_STATE_EXECUTION_ID;
@@ -297,7 +298,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     // TODO should we limit the number of executions to search in ??
     List<String> successfulExecutions = new ArrayList<>();
     List<ContinuousVerificationExecutionMetaData> cvList =
-        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
+        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeCount)
             .filter("appId", appId)
             .filter("stateType", stateType)
             .filter("workflowId", workflowId)
@@ -356,10 +357,11 @@ public class AnalysisServiceImpl implements AnalysisService {
     userFeedbackMap.put(CLUSTER_TYPE.TEST, new HashMap<>());
     userFeedbackMap.put(CLUSTER_TYPE.UNKNOWN, new HashMap<>());
 
-    List<LogMLFeedbackRecord> logMLFeedbackRecords = wingsPersistence.createQuery(LogMLFeedbackRecord.class)
-                                                         .filter("stateExecutionId", stateExecutionId)
-                                                         .filter("appId", appId)
-                                                         .asList();
+    List<LogMLFeedbackRecord> logMLFeedbackRecords =
+        wingsPersistence.createQuery(LogMLFeedbackRecord.class, excludeCount)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("appId", appId)
+            .asList();
 
     if (logMLFeedbackRecords == null) {
       return userFeedbackMap;
