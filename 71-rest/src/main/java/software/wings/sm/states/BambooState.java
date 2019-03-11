@@ -196,10 +196,10 @@ public class BambooState extends State {
                                                   secretManager.getEncryptionDetails(bambooConfig, context.getAppId(),
                                                       context.getWorkflowExecutionId()),
                                                   finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
+                                              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                                               .build())
                                     .envId(envId)
                                     .infrastructureMappingId(infrastructureMappingId)
-                                    .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                                     .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);

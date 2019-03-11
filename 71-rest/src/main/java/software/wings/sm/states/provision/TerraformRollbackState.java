@@ -155,8 +155,10 @@ public class TerraformRollbackState extends TerraformProvisionState {
                                     .accountId(executionContext.getApp().getAccountId())
                                     .waitId(activityId)
                                     .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .data(TaskData.builder().parameters(new Object[] {parameters}).build())
-                                    .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                    .data(TaskData.builder()
+                                              .parameters(new Object[] {parameters})
+                                              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                              .build())
                                     .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 

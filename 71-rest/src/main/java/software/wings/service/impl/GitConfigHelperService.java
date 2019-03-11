@@ -70,9 +70,9 @@ public class GitConfigHelperService {
               .accountId(gitConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
-              .timeout(TimeUnit.SECONDS.toMillis(60))
               .data(TaskData.builder()
                         .parameters(new Object[] {GitCommandType.VALIDATE, gitConfig, encryptionDetails})
+                        .timeout(TimeUnit.SECONDS.toMillis(60))
                         .build())
               .build());
 

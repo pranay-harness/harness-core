@@ -226,17 +226,20 @@ public class BugsnagState extends AbstractLogAnalysisState {
     String waitId = generateUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .taskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
-                                    .accountId(accountId)
-                                    .appId(context.getAppId())
-                                    .waitId(waitId)
-                                    .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
-                                    .envId(envId)
-                                    .infrastructureMappingId(infrastructureMappingId)
-                                    .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .async(true)
+            .taskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
+            .accountId(accountId)
+            .appId(context.getAppId())
+            .waitId(waitId)
+            .data(TaskData.builder()
+                      .parameters(new Object[] {dataCollectionInfo})
+                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
+                      .build())
+            .envId(envId)
+            .infrastructureMappingId(infrastructureMappingId)
+            .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);
   }

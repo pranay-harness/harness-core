@@ -54,7 +54,6 @@ public class PcfHelperService {
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
-              .timeout(TimeUnit.MINUTES.toMillis(2))
               .data(TaskData.builder()
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
@@ -62,6 +61,7 @@ public class PcfHelperService {
                                                       .timeoutIntervalInMin(2)
                                                       .build(),
                             null})
+                        .timeout(TimeUnit.MINUTES.toMillis(2))
                         .build())
               .build());
 
@@ -91,7 +91,6 @@ public class PcfHelperService {
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
-              .timeout(TimeUnit.MINUTES.toMillis(5))
               .data(TaskData.builder()
                         .parameters(new Object[] {PcfInstanceSyncRequest.builder()
                                                       .pcfConfig(pcfConfig)
@@ -102,6 +101,7 @@ public class PcfHelperService {
                                                       .timeoutIntervalInMin(5)
                                                       .build(),
                             encryptionDetails})
+                        .timeout(TimeUnit.MINUTES.toMillis(5))
                         .build())
               .build());
 
@@ -158,7 +158,6 @@ public class PcfHelperService {
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
-              .timeout(TimeUnit.MINUTES.toMillis(2))
               .data(TaskData.builder()
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
@@ -167,6 +166,7 @@ public class PcfHelperService {
                                                       .timeoutIntervalInMin(2)
                                                       .build(),
                             encryptionDetails})
+                        .timeout(TimeUnit.MINUTES.toMillis(2))
                         .build())
               .build());
     } catch (InterruptedException e) {
@@ -195,7 +195,6 @@ public class PcfHelperService {
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
-              .timeout(TimeUnit.MINUTES.toMillis(2))
               .data(TaskData.builder()
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
@@ -211,6 +210,7 @@ public class PcfHelperService {
                                                       .timeoutIntervalInMin(2)
                                                       .build(),
                             encryptionDetails})
+                        .timeout(TimeUnit.MINUTES.toMillis(2))
                         .build())
               .build());
     } catch (InterruptedException e) {
@@ -238,7 +238,6 @@ public class PcfHelperService {
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
-              .timeout(TimeUnit.MINUTES.toMillis(2))
               .data(TaskData.builder()
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
@@ -248,6 +247,7 @@ public class PcfHelperService {
                                                       .timeoutIntervalInMin(2)
                                                       .build(),
                             encryptionDetails})
+                        .timeout(TimeUnit.MINUTES.toMillis(2))
                         .build())
               .build());
     } catch (InterruptedException e) {
@@ -275,7 +275,6 @@ public class PcfHelperService {
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
-              .timeout(TimeUnit.MINUTES.toMillis(2))
               .data(TaskData.builder()
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
@@ -286,6 +285,7 @@ public class PcfHelperService {
                                                       .timeoutIntervalInMin(2)
                                                       .build(),
                             encryptionDetails})
+                        .timeout(TimeUnit.MINUTES.toMillis(2))
                         .build())
               .build());
     } catch (InterruptedException e) {
@@ -313,7 +313,6 @@ public class PcfHelperService {
               .accountId(pcfConfig.getAccountId())
               .appId(GLOBAL_APP_ID)
               .async(false)
-              .timeout(TimeUnit.MINUTES.toMillis(2))
               .data(TaskData.builder()
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
@@ -325,6 +324,7 @@ public class PcfHelperService {
                                                       .timeoutIntervalInMin(2)
                                                       .build(),
                             encryptionDetails})
+                        .timeout(TimeUnit.MINUTES.toMillis(2))
                         .build())
               .build());
     } catch (InterruptedException e) {

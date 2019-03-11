@@ -2,7 +2,6 @@ package software.wings.sm.states.collaboration;
 
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.TaskType.JIRA;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -120,17 +119,15 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                                         .appId(context.getAppId())
                                         .build();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .taskType(JIRA.name())
-                                    .accountId(executionContext.getApp().getAccountId())
-                                    .waitId(activityId)
-                                    .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .data(TaskData.builder().parameters(new Object[] {parameters}).build())
-                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                    .build();
-
-    delegateTask.setTimeout(JIRA_TASK_TIMEOUT_MILLIS);
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .async(true)
+            .taskType(JIRA.name())
+            .accountId(executionContext.getApp().getAccountId())
+            .waitId(activityId)
+            .appId(((ExecutionContextImpl) context).getApp().getAppId())
+            .data(TaskData.builder().parameters(new Object[] {parameters}).timeout(JIRA_TASK_TIMEOUT_MILLIS).build())
+            .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return anExecutionResponse()

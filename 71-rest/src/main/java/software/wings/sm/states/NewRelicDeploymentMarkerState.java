@@ -136,10 +136,12 @@ public class NewRelicDeploymentMarkerState extends State {
                                       .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
                                       .waitId(correlationId)
                                       .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                      .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
+                                      .data(TaskData.builder()
+                                                .parameters(new Object[] {dataCollectionInfo})
+                                                .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                                .build())
                                       .envId(envId)
                                       .infrastructureMappingId(infrastructureMappingId)
-                                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                       .build());
 
     // waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);

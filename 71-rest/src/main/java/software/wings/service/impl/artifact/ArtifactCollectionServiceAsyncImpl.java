@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -129,13 +130,12 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     BuildSourceRequest buildSourceRequest;
 
     String waitId = generateUuid();
+    final TaskDataBuilder dataBuilder = TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
                                                   .async(true)
                                                   .taskType(TaskType.BUILD_SOURCE_TASK.name())
                                                   .appId(GLOBAL_APP_ID)
-                                                  .waitId(waitId)
-                                                  .data(TaskData.builder().build())
-                                                  .timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
+                                                  .waitId(waitId);
 
     if (CUSTOM.name().equals(artifactStreamType)) {
       // Defaulting to the 60 secs
@@ -167,8 +167,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
       delegateTaskBuilder.accountId(accountId);
       delegateTaskBuilder.tags(tags);
-      delegateTaskBuilder.timeout(timeout);
-      delegateTaskBuilder.data(TaskData.builder().parameters(new Object[] {buildSourceRequest}).build());
+      dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(timeout);
 
     } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
@@ -204,10 +203,11 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
                                .build();
 
       delegateTaskBuilder.accountId(accountId);
-      delegateTaskBuilder.data(TaskData.builder().parameters(new Object[] {buildSourceRequest}).build());
-      delegateTaskBuilder.timeout(TimeUnit.MINUTES.toMillis(1));
+      dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
     }
+
+    delegateTaskBuilder.data(dataBuilder.build());
 
     waitNotifyEngine.waitForAll(new BuildSourceCallback(accountId, appId, artifactStream.getUuid(), permitId), waitId);
     logger.info("Queuing delegate task for artifactStreamId {} with waitId {}", artifactStream.getUuid(), waitId);

@@ -283,9 +283,11 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
                           .accountId(appService.get(context.getAppId()).getAccountId())
                           .appId(context.getAppId())
                           .waitId(waitId)
-                          .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
+                          .data(TaskData.builder()
+                                    .parameters(new Object[] {dataCollectionInfo})
+                                    .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
+                                    .build())
                           .envId(envId)
-                          .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                           .build());
     return waitId;
   }

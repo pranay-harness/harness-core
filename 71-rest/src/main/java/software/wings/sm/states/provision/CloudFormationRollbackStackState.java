@@ -129,8 +129,8 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .data(TaskData.builder()
                         .parameters(
                             new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+                        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                         .build())
-              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
               .build();
     } else {
       CloudFormationCreateStackRequestBuilder builder = CloudFormationCreateStackRequest.builder();
@@ -158,8 +158,8 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .data(TaskData.builder()
                         .parameters(
                             new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+                        .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                         .build())
-              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
               .build();
     }
     String delegateTaskId = delegateService.queueTask(delegateTask);

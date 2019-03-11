@@ -18,7 +18,7 @@ import java.util.Map;
 
 public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
   TerraformFetchTargetsTask terraformFetchTargetsTask = new TerraformFetchTargetsTask(WingsTestConstants.DELEGATE_ID,
-      DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).data(TaskData.builder().build()).build(),
+      DelegateTask.builder().async(true).data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
       delegateTaskResponse -> {}, () -> true);
   Map<String, Object> parsedContentWithModulesAndResources, getParsedContentWithoutModulesAndResources;
 

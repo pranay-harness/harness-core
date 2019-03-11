@@ -380,19 +380,20 @@ public class CommandState extends State {
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId).withDeploymentType(deploymentType.name()).build();
 
-      DelegateTask delegateTask =
-          DelegateTask.builder()
-              .async(true)
-              .accountId(accountId)
-              .appId(appId)
-              .taskType(TaskType.COMMAND.name())
-              .waitId(activityId)
-              .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-              .data(TaskData.builder().parameters(new Object[] {command, commandExecutionContext}).build())
-              .envId(envId)
-              .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(30)))
-              .infrastructureMappingId(infrastructureMappingId)
-              .build();
+      DelegateTask delegateTask = DelegateTask.builder()
+                                      .async(true)
+                                      .accountId(accountId)
+                                      .appId(appId)
+                                      .taskType(TaskType.COMMAND.name())
+                                      .waitId(activityId)
+                                      .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+                                      .data(TaskData.builder()
+                                                .parameters(new Object[] {command, commandExecutionContext})
+                                                .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(30)))
+                                                .build())
+                                      .envId(envId)
+                                      .infrastructureMappingId(infrastructureMappingId)
+                                      .build();
       delegateTaskId = delegateService.queueTask(delegateTask);
       logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
     } catch (Exception e) {

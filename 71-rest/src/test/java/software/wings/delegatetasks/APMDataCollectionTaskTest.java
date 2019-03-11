@@ -57,10 +57,12 @@ public class APMDataCollectionTaskTest {
                             .accountId(accountId)
                             .appId(appId)
                             .waitId(waitId)
-                            .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
+                            .data(TaskData.builder()
+                                      .parameters(new Object[] {dataCollectionInfo})
+                                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                                      .build())
                             .envId(envId)
                             .infrastructureMappingId(infrastructureMappingId)
-                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                             .build();
     dataCollectionTask = new APMDataCollectionTask(delegateId, task, null, null);
   }

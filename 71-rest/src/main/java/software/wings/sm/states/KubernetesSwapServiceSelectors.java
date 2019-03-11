@@ -238,18 +238,19 @@ public class KubernetesSwapServiceSelectors extends State {
             .service1(renderedService1)
             .service2(renderedService2)
             .build();
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .accountId(app.getAccountId())
-            .appId(app.getUuid())
-            .taskType(TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.name())
-            .waitId(activity.getUuid())
-            .data(TaskData.builder().parameters(new Object[] {kubernetesSwapServiceSelectorsParams}).build())
-            .envId(env.getUuid())
-            .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-            .infrastructureMappingId(containerInfraMapping.getUuid())
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(app.getAccountId())
+                                    .appId(app.getUuid())
+                                    .taskType(TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.name())
+                                    .waitId(activity.getUuid())
+                                    .data(TaskData.builder()
+                                              .parameters(new Object[] {kubernetesSwapServiceSelectorsParams})
+                                              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                              .build())
+                                    .envId(env.getUuid())
+                                    .infrastructureMappingId(containerInfraMapping.getUuid())
+                                    .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.Builder.anExecutionResponse()

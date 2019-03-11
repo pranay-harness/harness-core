@@ -208,19 +208,21 @@ public abstract class ContainerServiceSetup extends State {
               .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
               .build();
 
-      String delegateTaskId = delegateService.queueTask(
-          DelegateTask.builder()
-              .async(true)
-              .accountId(app.getAccountId())
-              .appId(app.getUuid())
-              .taskType(TaskType.COMMAND.name())
-              .waitId(activity.getUuid())
-              .data(TaskData.builder().parameters(new Object[] {command, commandExecutionContext}).build())
-              .envId(env.getUuid())
-              .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-              .infrastructureMappingId(infrastructureMapping.getUuid())
-              .timeout(TimeUnit.HOURS.toMillis(1))
-              .build());
+      String delegateTaskId =
+          delegateService.queueTask(DelegateTask.builder()
+                                        .async(true)
+                                        .accountId(app.getAccountId())
+                                        .appId(app.getUuid())
+                                        .taskType(TaskType.COMMAND.name())
+                                        .waitId(activity.getUuid())
+                                        .data(TaskData.builder()
+                                                  .parameters(new Object[] {command, commandExecutionContext})
+                                                  .timeout(TimeUnit.HOURS.toMillis(1))
+                                                  .build())
+                                        .envId(env.getUuid())
+                                        .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+                                        .infrastructureMappingId(infrastructureMapping.getUuid())
+                                        .build());
 
       return anExecutionResponse()
           .withAsync(true)

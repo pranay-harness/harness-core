@@ -65,9 +65,8 @@ public class PcfStateHelper {
         .appId(appId)
         .taskType(taskType.name())
         .waitId(waitId)
-        .data(TaskData.builder().parameters(parameters).build())
+        .data(TaskData.builder().parameters(parameters).timeout(TimeUnit.MINUTES.toMillis(timeout)).build())
         .envId(envId)
-        .timeout(TimeUnit.MINUTES.toMillis(timeout))
         .infrastructureMappingId(infrastructureMappingId)
         .build();
   }

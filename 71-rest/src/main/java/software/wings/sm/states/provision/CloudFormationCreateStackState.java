@@ -91,8 +91,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .data(
             TaskData.builder()
                 .parameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+                .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                 .build())
-        .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
         .build();
   }
 

@@ -1335,7 +1335,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     try {
       syncTaskWaitMap.put(delegateTask.getUuid(), new Object());
       synchronized (syncTaskWaitMap.get(delegateTask.getUuid())) {
-        syncTaskWaitMap.get(delegateTask.getUuid()).wait(task.getTimeout());
+        syncTaskWaitMap.get(delegateTask.getUuid()).wait(task.getData().getTimeout());
       }
       completedTask = wingsPersistence.get(DelegateTask.class, task.getUuid());
     } catch (Exception e) {

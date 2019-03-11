@@ -179,10 +179,12 @@ public class DatadogState extends AbstractMetricAnalysisState {
                                     .accountId(accountId)
                                     .appId(context.getAppId())
                                     .waitId(waitId)
-                                    .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
+                                    .data(TaskData.builder()
+                                              .parameters(new Object[] {dataCollectionInfo})
+                                              .timeout(TimeUnit.MINUTES.toMillis(timeDurationInInteger + 120))
+                                              .build())
                                     .envId(envId)
                                     .infrastructureMappingId(infrastructureMappingId)
-                                    .timeout(TimeUnit.MINUTES.toMillis(timeDurationInInteger + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
 

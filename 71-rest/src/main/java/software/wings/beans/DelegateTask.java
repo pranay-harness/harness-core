@@ -54,7 +54,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private String waitId;
   private Status status;
   private String delegateId;
-  private long timeout;
   private boolean async;
   private String envId;
   private String infrastructureMappingId;

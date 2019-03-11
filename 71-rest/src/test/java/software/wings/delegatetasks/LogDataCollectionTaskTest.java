@@ -61,10 +61,12 @@ public class LogDataCollectionTaskTest {
                             .accountId(accountId)
                             .appId(appId)
                             .waitId(waitId)
-                            .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
+                            .data(TaskData.builder()
+                                      .parameters(new Object[] {dataCollectionInfo})
+                                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                                      .build())
                             .envId(envId)
                             .infrastructureMappingId(infrastructureMappingId)
-                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                             .build();
     dataCollectionTask = new LogDataCollectionTask(delegateId, task, null, null);
     MockitoAnnotations.initMocks(this);

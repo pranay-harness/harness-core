@@ -293,10 +293,12 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
         .waitId(activityId)
         .appId(((ExecutionContextImpl) context).getApp().getAppId())
-        .data(TaskData.builder().parameters(new Object[] {jenkinsTaskParams}).build())
+        .data(TaskData.builder()
+                  .parameters(new Object[] {jenkinsTaskParams})
+                  .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                  .build())
         .envId(envId)
         .infrastructureMappingId(infrastructureMappingId)
-        .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
         .build();
   }
 

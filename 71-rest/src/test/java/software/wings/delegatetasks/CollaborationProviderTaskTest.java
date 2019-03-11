@@ -44,8 +44,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
       (CollaborationProviderTask) TaskType.COLLABORATION_PROVIDER_TASK.getDelegateRunnableTask("delid1",
           DelegateTask.builder()
               .async(true)
-              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-              .data(TaskData.builder().build())
+              .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
               .build(),
           notifyResponseData -> {}, () -> true);
 
