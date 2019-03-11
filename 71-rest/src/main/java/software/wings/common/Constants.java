@@ -20,10 +20,6 @@ public interface Constants {
    * The constant DEFAULT_WORKFLOW_NAME.
    */
   String DEFAULT_WORKFLOW_NAME = "MAIN";
-  /**
-   * The constant WILD_CHAR.
-   */
-  char WILD_CHAR = '*';
 
   /**
    * The constant AWS_CODE_DEPLOY_REQUEST_PARAM.

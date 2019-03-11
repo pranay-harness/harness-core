@@ -158,7 +158,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
 
     List<Pattern> patterns = new ArrayList<>();
     for (String name : names) {
-      patterns.add(Pattern.compile(name.replaceAll("\\" + Constants.WILD_CHAR, "." + Constants.WILD_CHAR)));
+      patterns.add(Pattern.compile(name.replaceAll("\\" + WILD_CHAR, "." + WILD_CHAR)));
     }
 
     List<ServiceElement> matchingServices = new ArrayList<>();

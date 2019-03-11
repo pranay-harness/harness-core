@@ -18,6 +18,10 @@ import java.util.List;
  */
 public interface ExpressionProcessor {
   /**
+   * The constant WILD_CHAR.
+   */
+  char WILD_CHAR = '*';
+  /**
    * The constant EXPRESSION_LIST_SUFFIX.
    */
   String EXPRESSION_LIST_SUFFIX = ".list()";
