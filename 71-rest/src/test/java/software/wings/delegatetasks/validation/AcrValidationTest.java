@@ -47,8 +47,8 @@ public class AcrValidationTest extends WingsBaseTest {
                                                   .withRepositoryName(repositoryName)
                                                   .build(),
                         asList(EncryptedDataDetail.builder().build()), AzureConfig.builder().build()})
+                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                     .build())
-          .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
           .build();
 
   @Before

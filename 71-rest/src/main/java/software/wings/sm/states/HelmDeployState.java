@@ -245,9 +245,11 @@ public class HelmDeployState extends State {
                                   .appId(app.getUuid())
                                   .taskType(TaskType.HELM_COMMAND_TASK.name())
                                   .waitId(activity.getUuid())
-                                  .data(TaskData.builder().parameters(new Object[] {commandRequest}).build())
+                                  .data(TaskData.builder()
+                                            .parameters(new Object[] {commandRequest})
+                                            .timeout(TimeUnit.HOURS.toMillis(1))
+                                            .build())
                                   .envId(env.getUuid())
-                                  .timeout(TimeUnit.HOURS.toMillis(1))
                                   .infrastructureMappingId(containerInfraMapping.getUuid())
                                   .build());
     return ExecutionResponse.Builder.anExecutionResponse()
@@ -365,11 +367,13 @@ public class HelmDeployState extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .taskType(TaskType.HELM_COMMAND_TASK.name())
-            .data(TaskData.builder().parameters(new Object[] {helmReleaseHistoryCommandRequest}).build())
+            .data(TaskData.builder()
+                      .parameters(new Object[] {helmReleaseHistoryCommandRequest})
+                      .timeout(Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS) * 2 * 1000)
+                      .build())
             .accountId(accountId)
             .appId(appId)
             .async(false)
-            .timeout(Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS) * 2 * 1000)
             .build();
 
     HelmCommandExecutionResponse helmCommandExecutionResponse;

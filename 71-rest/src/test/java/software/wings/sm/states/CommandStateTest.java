@@ -341,7 +341,6 @@ public class CommandStateTest extends WingsBaseTest {
                 .accountId(ACCOUNT_ID)
                 .taskType(TaskType.COMMAND.name())
                 .waitId(ACTIVITY_ID)
-                .timeout(TimeUnit.MINUTES.toMillis(30))
                 .data(
                     TaskData.builder()
                         .parameters(new Object[] {COMMAND,
@@ -371,6 +370,7 @@ public class CommandStateTest extends WingsBaseTest {
                                 .withDeploymentType("ECS")
                                 .withAccountId(ACCOUNT_ID)
                                 .build()})
+                        .timeout(TimeUnit.MINUTES.toMillis(30))
                         .build())
                 .envId(ENV_ID)
                 .infrastructureMappingId(INFRA_MAPPING_ID)
@@ -540,14 +540,15 @@ public class CommandStateTest extends WingsBaseTest {
             .withArtifactStreamAttributes(artifactStreamAttributes)
             .withArtifactServerEncryptedDataDetails(new ArrayList<>())
             .build();
-    DelegateTaskBuilder builder =
-        DelegateTask.builder()
-            .appId(APP_ID)
-            .accountId(ACCOUNT_ID)
-            .taskType(TaskType.COMMAND.name())
-            .waitId(ACTIVITY_ID)
-            .timeout(TimeUnit.MINUTES.toMillis(30))
-            .data(TaskData.builder().parameters(new Object[] {command, commandExecutionContext}).build());
+    DelegateTaskBuilder builder = DelegateTask.builder()
+                                      .appId(APP_ID)
+                                      .accountId(ACCOUNT_ID)
+                                      .taskType(TaskType.COMMAND.name())
+                                      .waitId(ACTIVITY_ID)
+                                      .data(TaskData.builder()
+                                                .parameters(new Object[] {command, commandExecutionContext})
+                                                .timeout(TimeUnit.MINUTES.toMillis(30))
+                                                .build());
 
     if (artifact != null) {
       commandExecutionContext.setArtifactFiles(artifact.getArtifactFiles());

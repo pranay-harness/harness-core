@@ -94,9 +94,11 @@ public class LogzAnalysisState extends ElkAnalysisState {
                             .accountId(appService.get(context.getAppId()).getAccountId())
                             .appId(context.getAppId())
                             .waitId(waitId)
-                            .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
+                            .data(TaskData.builder()
+                                      .parameters(new Object[] {dataCollectionInfo})
+                                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
+                                      .build())
                             .envId(envId)
-                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                             .build());
       waitIds[i++] = waitId;
     }

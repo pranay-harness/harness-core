@@ -1569,9 +1569,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .accountId(accountId)
         .appId(appId)
         .waitId(waitId)
-        .data(TaskData.builder().parameters(dataCollectionInfo).build())
+        .data(TaskData.builder().parameters(dataCollectionInfo).timeout(TimeUnit.MINUTES.toMillis(30)).build())
         .envId(envId)
-        .timeout(TimeUnit.MINUTES.toMillis(30))
         .build();
   }
 

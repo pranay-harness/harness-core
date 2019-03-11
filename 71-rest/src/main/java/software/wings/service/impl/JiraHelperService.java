@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.delegatetasks.jira.JiraAction.CREATE_WEBHOOK;
 import static software.wings.delegatetasks.jira.JiraAction.DELETE_WEBHOOK;
 
@@ -82,10 +81,11 @@ public class JiraHelperService {
                                     .taskType(TaskType.JIRA.name())
                                     .accountId(accountId)
                                     .appId(APP_ID_KEY)
-                                    .data(TaskData.builder().parameters(new Object[] {jiraTaskParameters}).build())
-                                    .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
+                                    .data(TaskData.builder()
+                                              .parameters(new Object[] {jiraTaskParameters})
+                                              .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
+                                              .build())
                                     .async(false)
-                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                     .build();
 
     JiraExecutionData jiraExecutionData;
@@ -216,8 +216,10 @@ public class JiraHelperService {
                                     .taskType(TaskType.JIRA.name())
                                     .accountId(accountId)
                                     .appId(appId)
-                                    .data(TaskData.builder().parameters(new Object[] {jiraTaskParameters}).build())
-                                    .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
+                                    .data(TaskData.builder()
+                                              .parameters(new Object[] {jiraTaskParameters})
+                                              .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
+                                              .build())
                                     .async(false)
                                     .build();
 

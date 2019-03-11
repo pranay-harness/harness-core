@@ -172,10 +172,12 @@ public abstract class ContainerServiceDeploy extends State {
               .taskType(TaskType.COMMAND.name())
               .waitId(waitId)
               .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-              .data(TaskData.builder().parameters(new Object[] {contextData.command, commandExecutionContext}).build())
+              .data(TaskData.builder()
+                        .parameters(new Object[] {contextData.command, commandExecutionContext})
+                        .timeout(TimeUnit.HOURS.toMillis(1))
+                        .build())
               .envId(contextData.env.getUuid())
               .infrastructureMappingId(contextData.infrastructureMappingId)
-              .timeout(TimeUnit.HOURS.toMillis(1))
               .build());
 
       return anExecutionResponse()

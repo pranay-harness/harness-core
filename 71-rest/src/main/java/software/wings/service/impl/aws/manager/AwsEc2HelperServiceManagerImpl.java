@@ -151,8 +151,10 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
             .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .async(false)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-            .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
-            .data(TaskData.builder().parameters(new Object[] {request}).build())
+            .data(TaskData.builder()
+                      .parameters(new Object[] {request})
+                      .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
+                      .build())
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);

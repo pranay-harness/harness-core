@@ -540,8 +540,8 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                       .yamlChangeSetIds(yamlChangeSetIds)
                                                       .yamlGitConfig(yamlGitConfig)
                                                       .build()})
+                                              .timeout(TimeUnit.MINUTES.toMillis(20))
                                               .build())
-                                    .timeout(TimeUnit.MINUTES.toMillis(20))
                                     .build();
 
     waitNotifyEngine.waitForAll(
@@ -689,8 +689,8 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                         .lastProcessedCommitId(processedCommit)
                                                         .yamlGitConfig(yamlGitConfig)
                                                         .build()})
+                                                .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                                 .build())
-                                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                       .build();
 
       waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, GitCommandType.DIFF), waitId);

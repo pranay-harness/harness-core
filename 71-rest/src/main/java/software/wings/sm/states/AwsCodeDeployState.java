@@ -197,19 +197,21 @@ public class AwsCodeDeployState extends State {
                                                           .withCodeDeployParams(codeDeployParams)
                                                           .build();
 
-    String delegateTaskId = delegateService.queueTask(
-        DelegateTask.builder()
-            .async(true)
-            .accountId(app.getAccountId())
-            .appId(app.getAppId())
-            .taskType(TaskType.COMMAND.name())
-            .waitId(activity.getUuid())
-            .timeout(getTaskTimeout())
-            .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-            .data(TaskData.builder().parameters(new Object[] {command, commandExecutionContext}).build())
-            .envId(envId)
-            .infrastructureMappingId(infrastructureMapping.getUuid())
-            .build());
+    String delegateTaskId =
+        delegateService.queueTask(DelegateTask.builder()
+                                      .async(true)
+                                      .accountId(app.getAccountId())
+                                      .appId(app.getAppId())
+                                      .taskType(TaskType.COMMAND.name())
+                                      .waitId(activity.getUuid())
+                                      .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+                                      .data(TaskData.builder()
+                                                .parameters(new Object[] {command, commandExecutionContext})
+                                                .timeout(getTaskTimeout())
+                                                .build())
+                                      .envId(envId)
+                                      .infrastructureMappingId(infrastructureMapping.getUuid())
+                                      .build());
 
     return anExecutionResponse()
         .withAsync(true)

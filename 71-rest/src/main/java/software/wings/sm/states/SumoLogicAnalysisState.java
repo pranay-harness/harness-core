@@ -159,10 +159,12 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
                             .accountId(appService.get(context.getAppId()).getAccountId())
                             .appId(context.getAppId())
                             .waitId(waitId)
-                            .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
+                            .data(TaskData.builder()
+                                      .parameters(new Object[] {dataCollectionInfo})
+                                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 60))
+                                      .build())
                             .envId(envId)
                             .infrastructureMappingId(infrastructureMappingId)
-                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 60))
                             .build());
       waitIds[i++] = waitId;
     }

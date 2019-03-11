@@ -100,8 +100,8 @@ public class NewRelicTaskScopeValidationTest {
                               .encryptedDataDetails(Lists.newArrayList(
                                   EncryptedDataDetail.builder().encryptionConfig(vaultConfig).build()))
                               .build()})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                       .build())
-            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build(),
         null);
     List<DelegateConnectionResult> validate = newRelicValidation.validate();

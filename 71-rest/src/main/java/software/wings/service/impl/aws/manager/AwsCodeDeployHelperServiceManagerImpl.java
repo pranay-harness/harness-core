@@ -3,7 +3,6 @@ package software.wings.service.impl.aws.manager;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -120,9 +119,10 @@ public class AwsCodeDeployHelperServiceManagerImpl implements AwsCodeDeployHelpe
             .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .async(false)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-            .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
-            .data(TaskData.builder().parameters(new Object[] {request}).build())
-            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+            .data(TaskData.builder()
+                      .parameters(new Object[] {request})
+                      .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
+                      .build())
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);

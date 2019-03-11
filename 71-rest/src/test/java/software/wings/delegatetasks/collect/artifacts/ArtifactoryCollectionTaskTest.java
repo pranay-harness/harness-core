@@ -48,8 +48,8 @@ public class ArtifactoryCollectionTaskTest {
                     .parameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
                         artifactoryConfig.getPassword(), "harness-maven", "io.harness.todolist", asList("todolist"), "",
                         ImmutableMap.of("buildNo", "1.1")})
+                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                     .build())
-          .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
           .build();
 
   @InjectMocks

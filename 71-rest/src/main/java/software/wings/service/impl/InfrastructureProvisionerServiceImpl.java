@@ -445,8 +445,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                               .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
                               .sourceRepoBranch(sourceRepoBranch)
                               .build()})
+                      .timeout(TimeUnit.SECONDS.toMillis(30))
                       .build())
-            .timeout(TimeUnit.SECONDS.toMillis(30))
             .async(false)
             .build();
 
@@ -511,8 +511,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                               .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))
                               .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
                               .build()})
+                      .timeout(TimeUnit.SECONDS.toMillis(30))
                       .build())
-            .timeout(TimeUnit.SECONDS.toMillis(30))
             .async(false)
             .build();
     ResponseData responseData;

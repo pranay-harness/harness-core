@@ -335,9 +335,8 @@ public class EcsStateHelper {
         .taskType(taskType.name())
         .envId(envId)
         .waitId(waitId)
-        .data(TaskData.builder().parameters(parameters).build())
+        .data(TaskData.builder().parameters(parameters).timeout(TimeUnit.MINUTES.toMillis(timeout)).build())
         .infrastructureMappingId(infrastructureMappingId)
-        .timeout(TimeUnit.MINUTES.toMillis(timeout))
         .build();
   }
 
@@ -528,10 +527,12 @@ public class EcsStateHelper {
             .taskType(ECS_COMMAND_TASK.name())
             .envId(dataBag.getEnvironment().getUuid())
             .waitId(activity.getUuid())
-            .data(TaskData.builder().parameters(new Object[] {request, dataBag.getEncryptedDataDetails()}).build())
+            .data(TaskData.builder()
+                      .parameters(new Object[] {request, dataBag.getEncryptedDataDetails()})
+                      .timeout(MINUTES.toMillis(dataBag.getServiceSteadyStateTimeout()))
+                      .build())
             .tags(isNotEmpty(dataBag.getAwsConfig().getTag()) ? singletonList(dataBag.getAwsConfig().getTag()) : null)
             .infrastructureMappingId(dataBag.getEcsInfrastructureMapping().getUuid())
-            .timeout(MINUTES.toMillis(dataBag.getServiceSteadyStateTimeout()))
             .build();
     return delegateService.queueTask(task);
   }
@@ -598,11 +599,12 @@ public class EcsStateHelper {
             .tags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
                     ? singletonList(deployDataBag.getAwsConfig().getTag())
                     : null)
-            .data(
-                TaskData.builder().parameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()}).build())
+            .data(TaskData.builder()
+                      .parameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()})
+                      .timeout(MINUTES.toMillis(deployDataBag.getContainerElement().getServiceSteadyStateTimeout()))
+                      .build())
             .envId(deployDataBag.getEnv().getUuid())
             .infrastructureMappingId(deployDataBag.getEcsInfrastructureMapping().getUuid())
-            .timeout(MINUTES.toMillis(deployDataBag.getContainerElement().getServiceSteadyStateTimeout()))
             .build();
     return delegateService.queueTask(task);
   }

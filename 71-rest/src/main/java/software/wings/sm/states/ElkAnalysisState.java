@@ -307,9 +307,11 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
                             .accountId(accountId)
                             .appId(context.getAppId())
                             .waitId(waitId)
-                            .data(TaskData.builder().parameters(new Object[] {dataCollectionInfo}).build())
+                            .data(TaskData.builder()
+                                      .parameters(new Object[] {dataCollectionInfo})
+                                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
+                                      .build())
                             .envId(envId)
-                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                             .build());
       waitIds[i++] = waitId;
     }

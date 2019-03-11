@@ -120,16 +120,17 @@ public class ScriptApprovalJob implements Job {
             .script(scriptString)
             .build();
 
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .taskType(TaskType.SHELL_SCRIPT_APPROVAL.name())
-            .accountId(accountId)
-            .appId(appId)
-            .waitId(activityId)
-            .data(TaskData.builder().parameters(new Object[] {shellScriptApprovalTaskParameters}).build())
-            .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
-            .async(false)
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .taskType(TaskType.SHELL_SCRIPT_APPROVAL.name())
+                                    .accountId(accountId)
+                                    .appId(appId)
+                                    .waitId(activityId)
+                                    .data(TaskData.builder()
+                                              .parameters(new Object[] {shellScriptApprovalTaskParameters})
+                                              .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
+                                              .build())
+                                    .async(false)
+                                    .build();
 
     boolean isTerminal = false;
 

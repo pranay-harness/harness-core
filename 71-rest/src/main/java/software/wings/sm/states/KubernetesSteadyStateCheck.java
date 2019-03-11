@@ -111,18 +111,19 @@ public class KubernetesSteadyStateCheck extends State {
               .labels(labelMap)
               .timeoutMillis(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
               .build();
-      DelegateTask delegateTask =
-          DelegateTask.builder()
-              .async(true)
-              .accountId(app.getAccountId())
-              .appId(app.getUuid())
-              .taskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK.name())
-              .waitId(activity.getUuid())
-              .data(TaskData.builder().parameters(new Object[] {kubernetesSteadyStateCheckParams}).build())
-              .envId(env.getUuid())
-              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-              .infrastructureMappingId(containerInfraMapping.getUuid())
-              .build();
+      DelegateTask delegateTask = DelegateTask.builder()
+                                      .async(true)
+                                      .accountId(app.getAccountId())
+                                      .appId(app.getUuid())
+                                      .taskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK.name())
+                                      .waitId(activity.getUuid())
+                                      .data(TaskData.builder()
+                                                .parameters(new Object[] {kubernetesSteadyStateCheckParams})
+                                                .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                                .build())
+                                      .envId(env.getUuid())
+                                      .infrastructureMappingId(containerInfraMapping.getUuid())
+                                      .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return ExecutionResponse.Builder.anExecutionResponse()
           .withAsync(true)

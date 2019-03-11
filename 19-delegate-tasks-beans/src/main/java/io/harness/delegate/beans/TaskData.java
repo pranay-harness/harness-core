@@ -7,4 +7,5 @@ import lombok.Data;
 @Builder
 public class TaskData {
   private Object[] parameters;
+  private long timeout;
 }

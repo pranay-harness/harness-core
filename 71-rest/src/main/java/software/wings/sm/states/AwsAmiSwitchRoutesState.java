@@ -4,7 +4,6 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -153,15 +152,16 @@ public class AwsAmiSwitchRoutesState extends State {
             .accountId(infrastructureMapping.getAccountId())
             .appId(infrastructureMapping.getAppId())
             .waitId(activity.getUuid())
-            .timeout(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()))
-            .data(TaskData.builder().parameters(new Object[] {routesRequest}).build())
+            .data(TaskData.builder()
+                      .parameters(new Object[] {routesRequest})
+                      .timeout(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()))
+                      .build())
             .tags(isNotEmpty(routesRequest.getAwsConfig().getTag())
                     ? singletonList(routesRequest.getAwsConfig().getTag())
                     : null)
             .taskType(AWS_AMI_ASYNC_TASK.name())
             .async(true)
             .envId(infrastructureMapping.getEnvId())
-            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
     delegateService.queueTask(delegateTask);
 

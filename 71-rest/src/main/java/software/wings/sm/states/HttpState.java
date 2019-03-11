@@ -345,18 +345,19 @@ public class HttpState extends State implements SweepingOutputStateMixin {
         .httpMethod(httpTaskParameters.getMethod())
         .header(httpTaskParameters.getHeader());
 
-    final DelegateTask delegateTask =
-        DelegateTask.builder()
-            .async(true)
-            .taskType(getTaskType().name())
-            .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
-            .waitId(activityId)
-            .appId(((ExecutionContextImpl) context).getApp().getAppId())
-            .data(TaskData.builder().parameters(new Object[] {httpTaskParameters}).build())
-            .envId(envId)
-            .infrastructureMappingId(infrastructureMappingId)
-            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-            .build();
+    final DelegateTask delegateTask = DelegateTask.builder()
+                                          .async(true)
+                                          .taskType(getTaskType().name())
+                                          .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                          .waitId(activityId)
+                                          .appId(((ExecutionContextImpl) context).getApp().getAppId())
+                                          .data(TaskData.builder()
+                                                    .parameters(new Object[] {httpTaskParameters})
+                                                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                                    .build())
+                                          .envId(envId)
+                                          .infrastructureMappingId(infrastructureMappingId)
+                                          .build();
 
     String delegateTaskId = scheduleDelegateTask(delegateTask);
 

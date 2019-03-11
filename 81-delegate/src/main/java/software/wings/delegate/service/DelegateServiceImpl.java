@@ -1399,7 +1399,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void enforceDelegateTaskTimeout(DelegateTask delegateTask) {
     long startTime = clock.millis();
     boolean stillRunning = true;
-    long timeout = delegateTask.getTimeout() + TimeUnit.SECONDS.toMillis(30L);
+    long timeout = delegateTask.getData().getTimeout() + TimeUnit.SECONDS.toMillis(30L);
     Future taskFuture = null;
     while (stillRunning && clock.millis() - startTime < timeout) {
       logger.info("Task time remaining for {}: {} ms", delegateTask.getUuid(), startTime + timeout - clock.millis());

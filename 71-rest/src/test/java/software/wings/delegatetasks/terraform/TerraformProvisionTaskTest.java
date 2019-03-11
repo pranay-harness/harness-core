@@ -17,7 +17,7 @@ import java.util.List;
 
 public class TerraformProvisionTaskTest extends WingsBaseTest {
   TerraformProvisionTask terraformProvisionTask = new TerraformProvisionTask(WingsTestConstants.DELEGATE_ID,
-      DelegateTask.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).data(TaskData.builder().build()).build(),
+      DelegateTask.builder().async(true).data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
       delegateTaskResponse -> {}, () -> true);
 
   @Test

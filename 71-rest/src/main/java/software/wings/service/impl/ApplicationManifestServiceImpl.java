@@ -429,8 +429,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
                                     .appId(app.getUuid())
                                     .async(false)
                                     .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
-                                    .data(TaskData.builder().parameters(new Object[] {fetchFilesTaskParams}).build())
-                                    .timeout(TimeUnit.MINUTES.toMillis(60))
+                                    .data(TaskData.builder()
+                                              .parameters(new Object[] {fetchFilesTaskParams})
+                                              .timeout(TimeUnit.MINUTES.toMillis(60))
+                                              .build())
                                     .build();
 
     ResponseData notifyResponseData;
