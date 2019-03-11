@@ -119,7 +119,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Owner(emails = "swamy@harness.io")
+  @Owner(emails = "swamy@harness.io", resent = false)
   public void variablesTest() throws Exception {
     logger.info("Starting the test");
     ServiceVariable normalServiceVariable = new ServiceVariable();
