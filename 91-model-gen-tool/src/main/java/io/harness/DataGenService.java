@@ -80,6 +80,8 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceSecretKey;
+import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
@@ -216,6 +218,10 @@ public class DataGenService {
     }
 
     featureFlagService.initializeFeatureFlags();
+    wingsPersistence.save(ServiceSecretKey.builder()
+                              .serviceType(ServiceType.LEARNING_ENGINE)
+                              .serviceSecret("67d9b94d9856665afc21acd3aa745401")
+                              .build());
     learningEngineService.initializeServiceSecretKeys();
   }
 
