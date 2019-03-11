@@ -224,7 +224,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
 
     public static SumoHostNameField getHostNameFieldFromValue(String hostNameField) {
       for (SumoHostNameField sumoHost : SumoHostNameField.values()) {
-        if (sumoHost.getHostNameField().equals(hostNameField)) {
+        if (sumoHost.getHostNameField().equalsIgnoreCase(hostNameField.trim())) {
           return sumoHost;
         }
       }
