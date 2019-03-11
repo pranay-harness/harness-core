@@ -18,6 +18,7 @@ import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
 import net.rcarz.jiraclient.Resource;
 import net.rcarz.jiraclient.RestException;
+import net.rcarz.jiraclient.Transition;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -266,7 +267,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       }
 
       if (EmptyPredicate.isNotEmpty(parameters.getStatus())) {
-        issue.transition().execute(parameters.getStatus());
+        updateStatus(issue, parameters.getStatus());
       }
 
       logger.info("Script execution finished with status: " + ExecutionStatus.SUCCESS);
@@ -286,6 +287,30 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .errorMessage(errorMessage)
           .jiraServerResponse(extractResponseMessage(e))
           .build();
+    }
+  }
+
+  public void updateStatus(Issue issue, String status) throws JiraException {
+    List<Transition> allTransitions = null;
+    try {
+      allTransitions = issue.getTransitions(); // gives all transitions available for that issue
+    } catch (JiraException e) {
+      logger.error("Failed to get all transitions from the Jira");
+      throw e;
+    }
+
+    Transition transition =
+        allTransitions.stream().filter(t -> t.getToStatus().getName().equalsIgnoreCase(status)).findAny().orElse(null);
+    if (transition != null) {
+      try {
+        issue.transition().execute(transition);
+      } catch (JiraException e) {
+        logger.error("Exception while trying to update status to {}", status);
+        throw e;
+      }
+    } else {
+      logger.error("No transition found from {} to {}", issue.getStatus(), status);
+      throw new JiraException("No transition found from [" + issue.getStatus() + "] to [" + status + "]");
     }
   }
 
