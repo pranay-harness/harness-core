@@ -14,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.common.Constants;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.security.NoSuchAlgorithmException;
@@ -84,24 +83,6 @@ public class Misc {
       // Ignore
       return defaultValue;
     }
-  }
-
-  /**
-   * Checks if is wild char present.
-   *
-   * @param names the names
-   * @return true, if is wild char present
-   */
-  public static boolean isWildCharPresent(String... names) {
-    if (isEmpty(names)) {
-      return false;
-    }
-    for (String name : names) {
-      if (name.indexOf(Constants.WILD_CHAR) >= 0) {
-        return true;
-      }
-    }
-    return false;
   }
 
   public static void logAllMessages(Exception ex, ExecutionLogCallback executionLogCallback) {

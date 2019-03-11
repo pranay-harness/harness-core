@@ -42,7 +42,6 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessor;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -301,6 +300,24 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     // TODO
   }
 
+  /**
+   * Checks if is wild char present.
+   *
+   * @param names the names
+   * @return true, if is wild char present
+   */
+  public static boolean isWildCharPresent(String... names) {
+    if (isEmpty(names)) {
+      return false;
+    }
+    for (String name : names) {
+      if (name.indexOf(WILD_CHAR) >= 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private void applyServiceTemplatesFilter(String appId, String envId, PageRequestBuilder pageRequest) {
     List<Service> services = null;
     List<ServiceTemplate> serviceTemplates = null;
@@ -308,7 +325,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       services = getServices(appId);
       serviceTemplates = getServiceTemplates(appId, envId, services, serviceTemplateNames);
     } else {
-      if (Misc.isWildCharPresent(serviceTemplateNames)) {
+      if (isWildCharPresent(serviceTemplateNames)) {
         serviceTemplates = getServiceTemplates(appId, envId, services);
         serviceTemplates = matchingServiceTemplates(serviceTemplates, serviceTemplateNames);
       } else {
@@ -336,7 +353,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
     List<Pattern> patterns = new ArrayList<>();
     for (String name : names) {
-      patterns.add(Pattern.compile(name.replaceAll("\\" + Constants.WILD_CHAR, "." + Constants.WILD_CHAR)));
+      patterns.add(Pattern.compile(name.replaceAll("\\" + WILD_CHAR, "." + WILD_CHAR)));
     }
 
     List<ServiceTemplate> matchingServiceTemplates = new ArrayList<>();
