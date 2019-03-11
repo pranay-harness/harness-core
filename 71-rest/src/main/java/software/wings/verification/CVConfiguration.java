@@ -3,7 +3,6 @@ package software.wings.verification;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
-import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -51,7 +50,7 @@ public class CVConfiguration extends Base {
   @Transient @SchemaIgnore private String envName;
   @Transient @SchemaIgnore private String appName;
 
-  @Default @SchemaIgnore @JsonIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
+  @SchemaIgnore @JsonIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
 
   public AnalysisComparisonStrategy getComparisonStrategy() {
     return comparisonStrategy == null ? AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS : comparisonStrategy;

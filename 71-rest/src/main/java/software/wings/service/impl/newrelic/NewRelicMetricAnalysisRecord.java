@@ -11,7 +11,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SortOrder;
 import io.harness.exception.WingsException;
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -66,7 +65,7 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
 
   private String baseLineExecutionId;
 
-  @Default private String groupName = DEFAULT_GROUP_NAME;
+  private String groupName = DEFAULT_GROUP_NAME;
 
   private String dependencyPath;
 
