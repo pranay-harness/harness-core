@@ -179,7 +179,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       try (OutputStream outputStream = channel.getOutputStream(); InputStream inputStream = channel.getInputStream()) {
         ((ChannelExec) channel).setCommand(command);
         saveExecutionLog(format("Connecting to %s ....", config.getHost()));
-        channel.connect();
+        channel.connect(config.getSocketConnectTimeout());
         saveExecutionLog(format("Connection to %s established", config.getHost()));
         if (displayCommand) {
           saveExecutionLog(format("Executing command %s ...", command));
@@ -263,7 +263,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       try (OutputStream outputStream = channel.getOutputStream(); InputStream inputStream = channel.getInputStream()) {
         ((ChannelExec) channel).setCommand(command);
         saveExecutionLog(format("Connecting to %s ....", config.getHost()));
-        channel.connect();
+        channel.connect(config.getSocketConnectTimeout());
         saveExecutionLog(format("Connection to %s established", config.getHost()));
         saveExecutionLog("Executing command...");
 
@@ -299,7 +299,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
               BufferedReader br = null;
               try {
                 channel = getCachedSession(this.config).openChannel("sftp");
-                channel.connect();
+                channel.connect(config.getSocketConnectTimeout());
                 ((ChannelSftp) channel).cd(directoryPath);
                 BoundedInputStream stream =
                     new BoundedInputStream(((ChannelSftp) channel).get(envVariablesFilename), CHUNK_SIZE);
@@ -639,7 +639,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     try {
       ChannelExec testChannel = (ChannelExec) cachedSession.openChannel("exec");
       testChannel.setCommand("true");
-      testChannel.connect();
+      testChannel.connect(this.config.getSocketConnectTimeout());
       testChannel.disconnect();
       logger.info("Session connection test successful");
     } catch (Exception exception) {
@@ -662,7 +662,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       // get I/O streams for remote scp
       try (OutputStream out = channel.getOutputStream(); InputStream in = channel.getInputStream()) {
         saveExecutionLog(format("Connecting to %s ....", config.getHost()));
-        channel.connect();
+        channel.connect(config.getSocketConnectTimeout());
 
         if (checkAck(in) != 0) {
           saveExecutionLogError("SCP connection initiation failed");

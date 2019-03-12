@@ -25,10 +25,10 @@ import io.harness.generator.TemplateGalleryGenerator;
 import io.harness.generator.TemplateGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
 import io.restassured.http.ContentType;
 import org.awaitility.Awaitility;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
@@ -78,7 +78,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Owner(emails = "aaditi.joag@harness.io", intermittent = true)
+  @Ignore
   public void shouldExecuteShellScriptTemplateWorkflow() {
     GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
         new GenericType<RestResponse<WorkflowExecution>>() {
