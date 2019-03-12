@@ -112,11 +112,24 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       logger.info("Error while getting data ", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
-    List<LogElement> logElements = parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(),
-        elkSetupTestNodeData.getTimeStampField(), elkSetupTestNodeData.getTimeStampFieldFormat(),
-        elkSetupTestNodeData.getHostNameField(), elkSetupTestNodeData.getInstanceElement().getHostName(),
-        elkSetupTestNodeData.getMessageField(), 0, false, -1, -1);
-    if (logElements.isEmpty() || elkSetupTestNodeData.isServiceLevel()) {
+    List<LogElement> logElements =
+        parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(), elkSetupTestNodeData.getTimeStampField(),
+            elkSetupTestNodeData.getTimeStampFieldFormat(), elkSetupTestNodeData.getHostNameField(),
+            elkSetupTestNodeData.isServiceLevel() ? null : elkSetupTestNodeData.getInstanceElement().getHostName(),
+            elkSetupTestNodeData.getMessageField(), 0, elkSetupTestNodeData.isServiceLevel(),
+            elkSetupTestNodeData.getFromTime(), elkSetupTestNodeData.getToTime());
+
+    if (elkSetupTestNodeData.isServiceLevel()) {
+      return VerificationNodeDataSetupResponse.builder()
+          .providerReachable(true)
+          .loadResponse(VerificationLoadResponse.builder()
+                            .isLoadPresent(!logElements.isEmpty())
+                            .loadResponse(responseWithoutHost)
+                            .build())
+          .build();
+    }
+
+    if (logElements.isEmpty()) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())
