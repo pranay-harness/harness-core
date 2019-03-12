@@ -40,6 +40,7 @@ import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -136,6 +137,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     CVConfiguration config = wingsPersistence.saveAndGet(CVConfiguration.class, cvConfiguration);
     return config.getUuid();
   }
+
   @Override
   public <T extends CVConfiguration> List<T> listConfigurations(
       String accountId, String appId, String envId, StateType stateType) {
@@ -151,8 +153,16 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     }
 
     List<T> cvConfigurations = configurationQuery.asList();
-    cvConfigurations.forEach(cvConfiguration -> fillInServiceAndConnectorNames(cvConfiguration));
-    return cvConfigurations;
+
+    List<T> cvConfigurations24x7 = new ArrayList<>();
+    // filter out cv configurations that were created for workflow
+    cvConfigurations.forEach(cvConfiguration -> {
+      if (!cvConfiguration.isWorkflowConfig()) {
+        fillInServiceAndConnectorNames(cvConfiguration);
+        cvConfigurations24x7.add(cvConfiguration);
+      }
+    });
+    return cvConfigurations24x7;
   }
 
   public String updateConfiguration(
