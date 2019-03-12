@@ -73,6 +73,7 @@ public class AzureHelperService {
   private static final Logger logger = LoggerFactory.getLogger(AzureHelperService.class);
 
   private static final int CONNECT_TIMEOUT = 5; // TODO:: read from config
+  private static final int READ_TIMEOUT = 10;
   @Inject private EncryptionService encryptionService;
 
   private AzureConfig validateAndGetAzureConfig(SettingAttribute computeProviderSetting) {
@@ -529,7 +530,9 @@ public class AzureHelperService {
     String url = getUrl(registryHostName);
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
+                                    .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
                                     .proxy(Http.checkAndGetNonProxyIfApplicable(url))
+                                    .retryOnConnectionFailure(true)
                                     .build();
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
@@ -543,7 +546,9 @@ public class AzureHelperService {
     String url = getUrl("management.azure.com");
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
+                                    .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
                                     .proxy(Http.checkAndGetNonProxyIfApplicable(url))
+                                    .retryOnConnectionFailure(true)
                                     .build();
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
