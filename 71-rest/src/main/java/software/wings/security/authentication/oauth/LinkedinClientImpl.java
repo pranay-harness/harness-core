@@ -45,7 +45,6 @@ public class LinkedinClientImpl extends BaseOauthClient implements OauthClient {
                   .callback(linkedinConfig.getCallbackUrl())
                   .scope("r_basicprofile r_emailaddress")
                   .build(LinkedInApi20.instance());
-    logger.info("Linkedin account credentials are: {}", linkedinConfig);
   }
 
   @Override

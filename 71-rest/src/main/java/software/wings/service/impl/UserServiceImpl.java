@@ -1056,7 +1056,6 @@ public class UserServiceImpl implements UserService {
     List<UserGroup> accountAdminGroups = getAccountAdminGroup(account.getUuid());
 
     user.setAppId(GLOBAL_APP_ID);
-    user.setEmailVerified(false);
     user.getAccounts().add(account);
     user.setUserGroups(accountAdminGroups);
     save(user, account.getUuid());

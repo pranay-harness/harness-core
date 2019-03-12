@@ -56,7 +56,6 @@ public class AzureClientImpl extends BaseOauthClient implements OauthClient {
                   .scope("User.Read") // replace with desired scope
                   .callback(azureConfig.getCallbackUrl())
                   .build(new MicrosoftAzureActiveDirectory20ApiV2());
-    logger.info("Azure client settings are: {}", azureConfig.toString());
   }
 
   @Override
