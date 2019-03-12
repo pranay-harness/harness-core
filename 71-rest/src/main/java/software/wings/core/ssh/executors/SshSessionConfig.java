@@ -24,7 +24,7 @@ public class SshSessionConfig implements EncryptableSetting {
   @NotEmpty private ExecutorType executorType;
   @NotEmpty private String executionId;
   @NotEmpty private String commandUnitName;
-  private Integer socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(30);
+  private Integer socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(60);
   private Integer sshConnectionTimeout = (int) TimeUnit.MINUTES.toMillis(2);
   private Integer sshSessionTimeout = (int) TimeUnit.MINUTES.toMillis(10);
   private Integer retryInterval;
@@ -77,7 +77,7 @@ public class SshSessionConfig implements EncryptableSetting {
     private ExecutorType executorType;
     private String executionId;
     private String commandUnitName;
-    private Integer socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(30);
+    private Integer socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(60);
     private Integer sshConnectionTimeout = (int) TimeUnit.MINUTES.toMillis(2);
     private Integer sshSessionTimeout = (int) TimeUnit.MINUTES.toMillis(10);
     private Integer retryInterval;
