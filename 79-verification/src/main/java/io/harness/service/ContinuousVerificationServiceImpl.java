@@ -609,6 +609,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             }
             long analysisEndMin = analysisStartMin + CRON_POLL_INTERVAL_IN_MINUTES - 1;
 
+            if (logsCVConfiguration.isWorkflowConfig()) {
+              AnalysisContext context = wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
+              if (lastCVAnalysisMinute >= logsCVConfiguration.getBaselineEndMinute()) {
+                analysisEndMin = lastCVAnalysisMinute + 1;
+              }
+
+              if (analysisEndMin > logsCVConfiguration.getBaselineEndMinute() + context.getTimeDuration()) {
+                logger.info(
+                    "Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
+                sendStateNotification(context, false, "", (int) analysisEndMin);
+                logger.info("Disabled 24x7 for CV Configuration with id {}", logsCVConfiguration.getUuid());
+                wingsPersistence.updateField(
+                    LogsCVConfiguration.class, logsCVConfiguration.getUuid(), "enabled24x7", false);
+              }
+            }
+
             for (long l2Min = analysisStartMin, i = 0; l2Min <= analysisEndMin; l2Min++, i++) {
               Set<String> hosts = logAnalysisService.getHostsForMinute(
                   cvConfiguration.getAppId(), cvConfiguration.getUuid(), l2Min, ClusterLevel.L1);
