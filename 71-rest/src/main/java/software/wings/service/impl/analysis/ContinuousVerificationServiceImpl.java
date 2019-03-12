@@ -1423,8 +1423,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .encryptedDataDetails(secretManager.getEncryptionDetails(awsConfig, config.getAppId(), null))
             .analysisComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE)
             .loadBalancerMetrics(config.getLoadBalancerMetrics())
-            .lambdaFunctionNames(cloudWatchService.createLambdaFunctionNames(config.getLambdaFunctions()))
-            .metricsByECSClusterName(cloudWatchService.createECSMetrics(config.getClusterName()))
+            .lambdaFunctionNames(config.getLambdaFunctionsMetrics())
+            .metricsByECSClusterName(config.getEcsMetrics())
             .region(config.getRegion())
             .dataCollectionMinute(0)
             .build();

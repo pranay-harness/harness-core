@@ -145,6 +145,9 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   @Override
   public Map<String, String> getGroupNameByHost(List<String> ec2InstanceNames) {
     Map<String, String> groupNameByHost = new HashMap<>();
+    if (isEmpty(ec2InstanceNames)) {
+      return groupNameByHost;
+    }
     ec2InstanceNames.forEach(ec2InstanceName -> { groupNameByHost.put(ec2InstanceName, DEFAULT_GROUP_NAME); });
     return groupNameByHost;
   }
@@ -159,15 +162,6 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     return instances.stream()
         .filter(instance -> !instance.getPublicDnsName().equals(""))
         .collect(Collectors.toMap(Instance::getPrivateDnsName, Instance::getInstanceId));
-  }
-
-  public Map<String, List<CloudWatchMetric>> createECSMetrics(String ecsClusterName) {
-    if (isEmpty(ecsClusterName)) {
-      return null;
-    }
-    Map<String, List<CloudWatchMetric>> metricsByECSClusterName = new HashMap<>();
-    metricsByECSClusterName.put(ecsClusterName, cloudWatchMetrics.get(AwsNameSpace.ECS));
-    return metricsByECSClusterName;
   }
 
   @Override
@@ -232,13 +226,13 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     if (isNotEmpty(cloudwatchConfig.getLoadBalancerMetrics())) {
       metricsTemplate.put(AwsNameSpace.ELB, cloudWatchMetrics.get(AwsNameSpace.ELB));
     }
-    if (isNotEmpty(cloudwatchConfig.getClusterName())) {
+    if (isNotEmpty(cloudwatchConfig.getEcsMetrics())) {
       metricsTemplate.put(AwsNameSpace.ECS, cloudWatchMetrics.get(AwsNameSpace.ECS));
     }
     if (isNotEmpty(cloudwatchConfig.getEc2Metrics())) {
       metricsTemplate.put(AwsNameSpace.EC2, cloudWatchMetrics.get(AwsNameSpace.EC2));
     }
-    if (isNotEmpty(cloudwatchConfig.getLambdaFunctions())) {
+    if (isNotEmpty(cloudwatchConfig.getLambdaFunctionsMetrics())) {
       metricsTemplate.put(AwsNameSpace.LAMBDA, cloudWatchMetrics.get(AwsNameSpace.LAMBDA));
     }
 

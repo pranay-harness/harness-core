@@ -62,7 +62,5 @@ public interface CloudWatchService {
 
   Map<String, String> getEC2Instances(String settingId, String region);
 
-  Map<String, List<CloudWatchMetric>> createECSMetrics(String ecsClusterName);
-
   List<String> getECSClusterNames(String settingId, String region);
 }

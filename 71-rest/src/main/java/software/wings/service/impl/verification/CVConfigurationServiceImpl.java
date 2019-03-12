@@ -1,5 +1,6 @@
 package software.wings.service.impl.verification;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
@@ -268,31 +269,51 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("metrics", ((DatadogCVServiceConfiguration) cvConfiguration).getMetrics());
         break;
       case CLOUD_WATCH:
-        updateOperations
-            .set("loadBalancerMetrics", ((CloudWatchCVServiceConfiguration) cvConfiguration).getLoadBalancerMetrics())
-            .set("region", ((CloudWatchCVServiceConfiguration) cvConfiguration).getRegion())
-            .set("lambdaFunctions", ((CloudWatchCVServiceConfiguration) cvConfiguration).getLambdaFunctions())
-            .set("clusterName", ((CloudWatchCVServiceConfiguration) cvConfiguration).getClusterName())
-            .set("ec2InstanceName", ((CloudWatchCVServiceConfiguration) cvConfiguration).getEc2InstanceNames())
-            .set("ec2Metrics", ((CloudWatchCVServiceConfiguration) cvConfiguration).getEc2Metrics());
+        CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration =
+            (CloudWatchCVServiceConfiguration) cvConfiguration;
+        if (isEmpty(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())
+            && isEmpty(cloudWatchCVServiceConfiguration.getEc2InstanceNames())
+            && isEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())
+            && isEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
+          throw new WingsException("No metric provided in Configuration for configId "
+              + cloudWatchCVServiceConfiguration.getUuid() + " and serviceId "
+              + cloudWatchCVServiceConfiguration.getServiceId());
+        }
+        updateOperations.set("region", cloudWatchCVServiceConfiguration.getRegion());
+
+        if (isNotEmpty(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())) {
+          updateOperations.set("loadBalancerMetrics", cloudWatchCVServiceConfiguration.getLoadBalancerMetrics());
+        }
+        if (isNotEmpty(cloudWatchCVServiceConfiguration.getEc2InstanceNames())) {
+          updateOperations.set("ec2InstanceName", cloudWatchCVServiceConfiguration.getEc2InstanceNames())
+              .set("ec2Metrics", cloudWatchCVServiceConfiguration.getEc2Metrics());
+        }
+        if (isNotEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())) {
+          updateOperations.set("lambdaFunctionsMetrics", cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics());
+        }
+        if (isNotEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
+          updateOperations.set("ecsMetrics", cloudWatchCVServiceConfiguration.getEcsMetrics());
+        }
         break;
       case SUMO:
-        updateOperations.set("query", ((LogsCVConfiguration) cvConfiguration).getQuery())
-            .set("formattedQuery", ((LogsCVConfiguration) cvConfiguration).isFormattedQuery())
-            .set("baselineStartMinute", ((LogsCVConfiguration) cvConfiguration).getBaselineStartMinute())
-            .set("baselineEndMinute", ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute());
+        LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
+        updateOperations.set("query", logsCVConfiguration.getQuery())
+            .set("formattedQuery", logsCVConfiguration.isFormattedQuery())
+            .set("baselineStartMinute", logsCVConfiguration.getBaselineStartMinute())
+            .set("baselineEndMinute", logsCVConfiguration.getBaselineEndMinute());
         break;
       case ELK:
-        updateOperations.set("query", ((ElkCVConfiguration) cvConfiguration).getQuery())
-            .set("formattedQuery", ((ElkCVConfiguration) cvConfiguration).isFormattedQuery())
-            .set("baselineStartMinute", ((LogsCVConfiguration) cvConfiguration).getBaselineStartMinute())
-            .set("baselineEndMinute", ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute())
-            .set("queryType", ((ElkCVConfiguration) cvConfiguration).getQueryType())
-            .set("index", ((ElkCVConfiguration) cvConfiguration).getIndex())
-            .set("hostnameField", ((ElkCVConfiguration) cvConfiguration).getHostnameField())
-            .set("messageField", ((ElkCVConfiguration) cvConfiguration).getMessageField())
-            .set("timestampField", ((ElkCVConfiguration) cvConfiguration).getTimestampField())
-            .set("timestampFormat", ((ElkCVConfiguration) cvConfiguration).getTimestampFormat());
+        ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) cvConfiguration;
+        updateOperations.set("query", elkCVConfiguration.getQuery())
+            .set("formattedQuery", elkCVConfiguration.isFormattedQuery())
+            .set("baselineStartMinute", elkCVConfiguration.getBaselineStartMinute())
+            .set("baselineEndMinute", elkCVConfiguration.getBaselineEndMinute())
+            .set("queryType", elkCVConfiguration.getQueryType())
+            .set("index", elkCVConfiguration.getIndex())
+            .set("hostnameField", elkCVConfiguration.getHostnameField())
+            .set("messageField", elkCVConfiguration.getMessageField())
+            .set("timestampField", elkCVConfiguration.getTimestampField())
+            .set("timestampFormat", elkCVConfiguration.getTimestampFormat());
         break;
       default:
         throw new IllegalStateException("Invalid state type: " + stateType);

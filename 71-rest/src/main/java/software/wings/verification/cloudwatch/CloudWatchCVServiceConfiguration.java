@@ -24,13 +24,13 @@ import java.util.Map;
 public class CloudWatchCVServiceConfiguration extends CVConfiguration {
   @Attributes(title = "ELB Metrics") private Map<String, List<CloudWatchMetric>> loadBalancerMetrics;
 
-  @Attributes(title = "Lambda Functions") private List<String> lambdaFunctions;
+  @Attributes(title = "ECS Metrics") private Map<String, List<CloudWatchMetric>> ecsMetrics;
+
+  @Attributes(title = "Lambda Functions Metrics") private Map<String, List<CloudWatchMetric>> lambdaFunctionsMetrics;
 
   @Attributes(title = "EC2 Instance Names") private List<String> ec2InstanceNames;
 
   @Attributes(title = "EC2 Metrics") private List<CloudWatchMetric> ec2Metrics;
-
-  @Attributes(title = "ECS Cluster Name") private String clusterName;
 
   @Attributes(title = "Region") private String region;
 }
