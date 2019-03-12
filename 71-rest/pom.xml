@@ -109,6 +109,10 @@
             <artifactId>slack-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.dirkraft.dropwizard-file-assets</groupId>
             <artifactId>dropwizard-file-assets</artifactId>
         </dependency>
