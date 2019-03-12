@@ -96,8 +96,10 @@ public class CloudWatchServiceTest extends WingsBaseTest {
 
   @Test
   public void testFetchSpecificMetrics() {
-    CloudWatchCVServiceConfiguration cvServiceConfiguration =
-        CloudWatchCVServiceConfiguration.builder().clusterName("testCluster").build();
+    CloudWatchCVServiceConfiguration cvServiceConfiguration = CloudWatchCVServiceConfiguration.builder().build();
+    Map<String, List<CloudWatchMetric>> ecsList = new HashMap<>();
+    ecsList.put("testCluster", Arrays.asList(CloudWatchMetric.builder().metricName("CPUUtilization").build()));
+    cvServiceConfiguration.setEcsMetrics(ecsList);
     Map<String, List<CloudWatchMetric>> elbList = new HashMap<>();
     elbList.put("testLB", Arrays.asList(CloudWatchMetric.builder().metricName("HTTP200x").build()));
     cvServiceConfiguration.setLoadBalancerMetrics(elbList);

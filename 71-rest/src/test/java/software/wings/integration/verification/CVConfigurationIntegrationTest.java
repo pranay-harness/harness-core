@@ -69,15 +69,11 @@ import javax.ws.rs.core.GenericType;
  * 05/Oct/2018
  */
 public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
+  @Rule public ExpectedException thrown = ExpectedException.none();
   private String appId, envId, serviceId, appDynamicsApplicationId;
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject @InjectMocks private AppService appService;
-
   @Mock private LimitCheckerFactory limitCheckerFactory;
-
-  @Rule public ExpectedException thrown = ExpectedException.none();
-
   private NewRelicCVServiceConfiguration newRelicCVServiceConfiguration;
   private AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
   private DynaTraceCVServiceConfiguration dynaTraceCVServiceConfiguration;
@@ -367,20 +363,18 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         + "&serviceConfigurationId=" + savedObjectUuid;
 
     target = client.target(url);
-    RestResponse<T> getRequestResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
-    T fetchedObject = getRequestResponse.getResource();
-    if (fetchedObject instanceof AppDynamicsCVServiceConfiguration) {
-      AppDynamicsCVServiceConfiguration obj = (AppDynamicsCVServiceConfiguration) fetchedObject;
-      assertEquals(savedObjectUuid, obj.getUuid());
-      assertEquals(accountId, obj.getAccountId());
-      assertEquals(appId, obj.getAppId());
-      assertEquals(envId, obj.getEnvId());
-      assertEquals(serviceId, obj.getServiceId());
-      assertEquals(APP_DYNAMICS, obj.getStateType());
-      assertEquals(appDynamicsApplicationId, obj.getAppDynamicsApplicationId());
-      assertEquals(AnalysisTolerance.HIGH, obj.getAnalysisTolerance());
-    }
+
+    RestResponse<AppDynamicsCVServiceConfiguration> getRequestResponse = getRequestBuilderWithAuthHeader(target).get(
+        new GenericType<RestResponse<AppDynamicsCVServiceConfiguration>>() {});
+    AppDynamicsCVServiceConfiguration fetchedObject = getRequestResponse.getResource();
+    assertEquals(savedObjectUuid, fetchedObject.getUuid());
+    assertEquals(accountId, fetchedObject.getAccountId());
+    assertEquals(appId, fetchedObject.getAppId());
+    assertEquals(envId, fetchedObject.getEnvId());
+    assertEquals(serviceId, fetchedObject.getServiceId());
+    assertEquals(APP_DYNAMICS, fetchedObject.getStateType());
+    assertEquals(appDynamicsApplicationId, fetchedObject.getAppDynamicsApplicationId());
+    assertEquals(AnalysisTolerance.HIGH, fetchedObject.getAnalysisTolerance());
   }
 
   @Test
@@ -395,20 +389,17 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
         + "&serviceConfigurationId=" + savedObjectUuid;
     target = client.target(url);
-    RestResponse<T> getRequestResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
-    T fetchedObject = getRequestResponse.getResource();
-    if (fetchedObject instanceof DatadogCVServiceConfiguration) {
-      DatadogCVServiceConfiguration obj = (DatadogCVServiceConfiguration) fetchedObject;
-      assertEquals(savedObjectUuid, obj.getUuid());
-      assertEquals(accountId, obj.getAccountId());
-      assertEquals(appId, obj.getAppId());
-      assertEquals(envId, obj.getEnvId());
-      assertEquals(serviceId, obj.getServiceId());
-      assertEquals(DATA_DOG, obj.getStateType());
-      assertEquals(AnalysisTolerance.HIGH, obj.getAnalysisTolerance());
-      assertEquals("trace.servlet.request.errors, system.mem.used, system.cpu.iowait", obj.getMetrics());
-    }
+    RestResponse<DatadogCVServiceConfiguration> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<DatadogCVServiceConfiguration>>() {});
+    DatadogCVServiceConfiguration fetchedObject = getRequestResponse.getResource();
+    assertEquals(savedObjectUuid, fetchedObject.getUuid());
+    assertEquals(accountId, fetchedObject.getAccountId());
+    assertEquals(appId, fetchedObject.getAppId());
+    assertEquals(envId, fetchedObject.getEnvId());
+    assertEquals(serviceId, fetchedObject.getServiceId());
+    assertEquals(DATA_DOG, fetchedObject.getStateType());
+    assertEquals(AnalysisTolerance.HIGH, fetchedObject.getAnalysisTolerance());
+    assertEquals("trace.servlet.request.errors, system.mem.used, system.cpu.iowait", fetchedObject.getMetrics());
 
     // Test PUT API for Datadog
     datadogCVServiceConfiguration.setName("Datadog Config");
@@ -419,6 +410,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     // Call PUT
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
         + "&stateType=" + DATA_DOG + "&serviceConfigurationId=" + savedObjectUuid;
+    logger.info("PUT " + url);
     target = client.target(url);
     getRequestBuilderWithAuthHeader(target).put(
         entity(datadogCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -427,17 +419,15 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
         + "&serviceConfigurationId=" + savedObjectUuid;
     target = client.target(url);
-    getRequestResponse = getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
+    getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<DatadogCVServiceConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
 
     // Assert
-    if (fetchedObject instanceof DatadogCVServiceConfiguration) {
-      DatadogCVServiceConfiguration obj = (DatadogCVServiceConfiguration) fetchedObject;
-      assertEquals("Datadog Confid", obj.getName());
-      assertFalse(obj.isEnabled24x7());
-      assertEquals("system.mem.used, system.cpu.iowait", obj.getMetrics());
-      assertEquals(AnalysisTolerance.MEDIUM, obj.getAnalysisTolerance());
-    }
+    assertEquals("Datadog Config", fetchedObject.getName());
+    assertFalse(fetchedObject.isEnabled24x7());
+    assertEquals("system.mem.used, system.cpu.iowait", fetchedObject.getMetrics());
+    assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
   }
 
   @Test
@@ -453,19 +443,16 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         + "&serviceConfigurationId=" + savedObjectUuid;
 
     target = client.target(url);
-    RestResponse<T> getRequestResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
-    T fetchedObject = getRequestResponse.getResource();
-    if (fetchedObject instanceof PrometheusCVServiceConfiguration) {
-      PrometheusCVServiceConfiguration obj = (PrometheusCVServiceConfiguration) fetchedObject;
-      assertEquals(savedObjectUuid, obj.getUuid());
-      assertEquals(accountId, obj.getAccountId());
-      assertEquals(appId, obj.getAppId());
-      assertEquals(envId, obj.getEnvId());
-      assertEquals(serviceId, obj.getServiceId());
-      assertEquals(PROMETHEUS, obj.getStateType());
-      assertEquals(prometheusCVServiceConfiguration.getTimeSeriesToAnalyze(), obj.getTimeSeriesToAnalyze());
-    }
+    RestResponse<PrometheusCVServiceConfiguration> getRequestResponse = getRequestBuilderWithAuthHeader(target).get(
+        new GenericType<RestResponse<PrometheusCVServiceConfiguration>>() {});
+    PrometheusCVServiceConfiguration fetchedObject = getRequestResponse.getResource();
+    assertEquals(savedObjectUuid, fetchedObject.getUuid());
+    assertEquals(accountId, fetchedObject.getAccountId());
+    assertEquals(appId, fetchedObject.getAppId());
+    assertEquals(envId, fetchedObject.getEnvId());
+    assertEquals(serviceId, fetchedObject.getServiceId());
+    assertEquals(PROMETHEUS, fetchedObject.getStateType());
+    assertEquals(prometheusCVServiceConfiguration.getTimeSeriesToAnalyze(), fetchedObject.getTimeSeriesToAnalyze());
   }
 
   @Test
@@ -483,20 +470,17 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         + "&serviceConfigurationId=" + savedObjectUuid;
 
     target = client.target(url);
-    RestResponse<T> getRequestResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
-    T fetchedObject = getRequestResponse.getResource();
-    if (fetchedObject instanceof DynaTraceCVServiceConfiguration) {
-      DynaTraceCVServiceConfiguration obj = (DynaTraceCVServiceConfiguration) fetchedObject;
-      assertEquals(savedObjectUuid, obj.getUuid());
-      assertEquals(accountId, obj.getAccountId());
-      assertEquals(appId, obj.getAppId());
-      assertEquals(envId, obj.getEnvId());
-      assertEquals(serviceId, obj.getServiceId());
-      assertEquals(DYNA_TRACE, obj.getStateType());
-      assertEquals(dynaTraceCVServiceConfiguration.getServiceMethods(), obj.getServiceMethods());
-      assertEquals(AnalysisTolerance.HIGH, obj.getAnalysisTolerance());
-    }
+    RestResponse<DynaTraceCVServiceConfiguration> getRequestResponse = getRequestBuilderWithAuthHeader(target).get(
+        new GenericType<RestResponse<DynaTraceCVServiceConfiguration>>() {});
+    DynaTraceCVServiceConfiguration fetchedObject = getRequestResponse.getResource();
+    assertEquals(savedObjectUuid, fetchedObject.getUuid());
+    assertEquals(accountId, fetchedObject.getAccountId());
+    assertEquals(appId, fetchedObject.getAppId());
+    assertEquals(envId, fetchedObject.getEnvId());
+    assertEquals(serviceId, fetchedObject.getServiceId());
+    assertEquals(DYNA_TRACE, fetchedObject.getStateType());
+    assertEquals(dynaTraceCVServiceConfiguration.getServiceMethods(), fetchedObject.getServiceMethods());
+    assertEquals(AnalysisTolerance.HIGH, fetchedObject.getAnalysisTolerance());
   }
 
   @Test
@@ -515,19 +499,52 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         + "&serviceConfigurationId=" + savedObjectUuid;
 
     target = client.target(url);
-    RestResponse<T> getRequestResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
-    T fetchedObject = getRequestResponse.getResource();
-    if (fetchedObject instanceof CloudWatchCVServiceConfiguration) {
-      CloudWatchCVServiceConfiguration obj = (CloudWatchCVServiceConfiguration) fetchedObject;
-      assertEquals(savedObjectUuid, obj.getUuid());
-      assertEquals(accountId, obj.getAccountId());
-      assertEquals(appId, obj.getAppId());
-      assertEquals(envId, obj.getEnvId());
-      assertEquals(serviceId, obj.getServiceId());
-      assertEquals(CLOUD_WATCH, obj.getStateType());
-      assertEquals(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics(), obj.getLoadBalancerMetrics());
-    }
+    RestResponse<CloudWatchCVServiceConfiguration> getRequestResponse = getRequestBuilderWithAuthHeader(target).get(
+        new GenericType<RestResponse<CloudWatchCVServiceConfiguration>>() {});
+    CloudWatchCVServiceConfiguration fetchedObject = getRequestResponse.getResource();
+    assertEquals(savedObjectUuid, fetchedObject.getUuid());
+    assertEquals(accountId, fetchedObject.getAccountId());
+    assertEquals(appId, fetchedObject.getAppId());
+    assertEquals(envId, fetchedObject.getEnvId());
+    assertEquals(serviceId, fetchedObject.getServiceId());
+    assertEquals(CLOUD_WATCH, fetchedObject.getStateType());
+    assertEquals(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics(), fetchedObject.getLoadBalancerMetrics());
+  }
+
+  @Test
+  public <T extends CVConfiguration> void testCloudWatchConfigurationWithoutAnyMetric() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url =
+        API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + CLOUD_WATCH;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(cloudWatchCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+    RestResponse<CloudWatchCVServiceConfiguration> getRequestResponse = getRequestBuilderWithAuthHeader(target).get(
+        new GenericType<RestResponse<CloudWatchCVServiceConfiguration>>() {});
+    CloudWatchCVServiceConfiguration fetchedObject = getRequestResponse.getResource();
+
+    fetchedObject.setEcsMetrics(null);
+    fetchedObject.setEc2InstanceNames(null);
+    fetchedObject.setLoadBalancerMetrics(null);
+    fetchedObject.setLambdaFunctionsMetrics(null);
+
+    // Call PUT
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
+        + "&stateType=" + CLOUD_WATCH + "&serviceConfigurationId=" + savedObjectUuid;
+    logger.info("PUT " + url);
+    target = client.target(url);
+    thrown.expect(Exception.class);
+    getRequestBuilderWithAuthHeader(target).put(
+        entity(fetchedObject, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    restResponse.getResource();
   }
 
   @Test
