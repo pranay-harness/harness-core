@@ -828,15 +828,35 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
     appDynamicsCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
 
+    // Adding a workflow cvConfiguration. And verify this configuration is not returned from the REST API
+    AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfigurationFromWorkflow =
+        new AppDynamicsCVServiceConfiguration();
+    appDynamicsCVServiceConfigurationFromWorkflow.setAppId(appId);
+    appDynamicsCVServiceConfigurationFromWorkflow.setEnvId(envId);
+    appDynamicsCVServiceConfigurationFromWorkflow.setServiceId(serviceId);
+    appDynamicsCVServiceConfigurationFromWorkflow.setEnabled24x7(true);
+    appDynamicsCVServiceConfigurationFromWorkflow.setWorkflowConfig(true);
+    appDynamicsCVServiceConfigurationFromWorkflow.setAppDynamicsApplicationId(appDynamicsApplicationId);
+    appDynamicsCVServiceConfigurationFromWorkflow.setTierId(generateUuid());
+    appDynamicsCVServiceConfigurationFromWorkflow.setConnectorId(generateUuid());
+    appDynamicsCVServiceConfigurationFromWorkflow.setStateType(APP_DYNAMICS);
+    appDynamicsCVServiceConfigurationFromWorkflow.setAnalysisTolerance(AnalysisTolerance.HIGH);
+
     // Save 2 cvConfigs with the same appId but different envIds
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + NEW_RELIC;
     WebTarget target = client.target(url);
-    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+    getRequestBuilderWithAuthHeader(target).post(
         entity(newRelicCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
     url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + APP_DYNAMICS;
     target = client.target(url);
-    restResponse = getRequestBuilderWithAuthHeader(target).post(
+    getRequestBuilderWithAuthHeader(target).post(
         entity(appDynamicsCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+
+    url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + APP_DYNAMICS;
+    target = client.target(url);
+    getRequestBuilderWithAuthHeader(target).post(
+        entity(appDynamicsCVServiceConfigurationFromWorkflow, APPLICATION_JSON),
+        new GenericType<RestResponse<String>>() {});
 
     url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId;
     target = client.target(url);
