@@ -116,7 +116,7 @@ public class GithubClientImpl extends BaseOauthClient implements OauthClient {
       name = jsonObject.getString(NAME_FIELD_NAME);
       email = jsonObject.getString(EMAIL_FIELD_NAME);
     } catch (JSONException je) {
-      logger.error("Unable to parse json in github oauth", je);
+      logger.info("Unable to parse json in github oauth", je);
     }
     return OauthUserInfo.builder().email(email).name(name).login(loginId).build();
   }

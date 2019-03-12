@@ -2,7 +2,6 @@ package software.wings.sm;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.ExecutionStatus;
-import software.wings.beans.StatusInstanceBreakdown;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +12,6 @@ import java.util.List;
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class ElementNotifyResponseData extends ExecutionStatusData {
   private List<ContextElement> contextElements;
-  private StatusInstanceBreakdown statusInstanceBreakdown;
   private Long startTs;
   private Long endTs;
 
@@ -33,24 +31,6 @@ public class ElementNotifyResponseData extends ExecutionStatusData {
    */
   public void setContextElements(List<ContextElement> contextElements) {
     this.contextElements = contextElements;
-  }
-
-  /**
-   * Gets status instance breakdown.
-   *
-   * @return the status instance breakdown
-   */
-  public StatusInstanceBreakdown getStatusInstanceBreakdown() {
-    return statusInstanceBreakdown;
-  }
-
-  /**
-   * Sets status instance breakdown.
-   *
-   * @param statusInstanceBreakdown the status instance breakdown
-   */
-  public void setStatusInstanceBreakdown(StatusInstanceBreakdown statusInstanceBreakdown) {
-    this.statusInstanceBreakdown = statusInstanceBreakdown;
   }
 
   /**
@@ -95,7 +75,6 @@ public class ElementNotifyResponseData extends ExecutionStatusData {
   public static final class Builder {
     private ExecutionStatus executionStatus;
     private List<ContextElement> contextElements;
-    private StatusInstanceBreakdown statusInstanceBreakdown;
     private Long startTs;
     private Long endTs;
 
@@ -146,19 +125,6 @@ public class ElementNotifyResponseData extends ExecutionStatusData {
         this.contextElements = new ArrayList<>();
       }
       this.contextElements.addAll(contextElements);
-      return this;
-    }
-
-    /**
-     * With status instance breakdown element notify response data . builder.
-     *
-     * @param statusInstanceBreakdown the status instance breakdown
-     * @return the element notify response data . builder
-     */
-    @SuppressFBWarnings("URF_UNREAD_FIELD")
-    public ElementNotifyResponseData.Builder withStatusInstanceBreakdown(
-        StatusInstanceBreakdown statusInstanceBreakdown) {
-      this.statusInstanceBreakdown = statusInstanceBreakdown;
       return this;
     }
 

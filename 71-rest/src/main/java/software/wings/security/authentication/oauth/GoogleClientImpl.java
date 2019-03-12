@@ -45,7 +45,6 @@ public class GoogleClientImpl extends BaseOauthClient implements OauthClient {
             .callback(googleConfig.getCallbackUrl())
             .scope("https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile")
             .build(GoogleApi20.instance());
-    logger.info("Google account credentials are: {}", googleConfig);
   }
 
   @Override

@@ -33,7 +33,7 @@ public class BaseOauthClient {
       logger.info("The status received is: [{}]", state);
       secretManager.verifyJWTToken(state, JWT_CATEGORY.OAUTH_REDIRECT);
     } catch (Exception ex) {
-      logger.error("State verification failed in oauth.", ex);
+      logger.warn("State verification failed in oauth.", ex);
       throw new WingsException("Oauth failed because of state mismatch");
     }
   }
