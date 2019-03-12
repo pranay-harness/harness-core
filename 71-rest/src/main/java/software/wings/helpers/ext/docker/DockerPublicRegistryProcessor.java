@@ -88,7 +88,7 @@ public class DockerPublicRegistryProcessor {
       List<BuildDetails> pageDetails = processPage(page, dockerConfig, imageName);
       details.addAll(pageDetails);
 
-      if (details.size() > limit) {
+      if (details.size() > limit || page.getNext() == null) {
         break;
       }
 
