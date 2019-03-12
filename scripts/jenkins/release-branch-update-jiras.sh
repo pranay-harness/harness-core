@@ -1,4 +1,4 @@
-KEYS=`git log --pretty=oneline --abbrev-commit | awk "/${PREVIOUS_CUT_COMMIT_MESSAGE}/ {exit} {print}" | grep -o -e "HAR-[0-9]\+" | sort | uniq`
+KEYS=`git log --pretty=oneline --abbrev-commit | awk "/${PREVIOUS_CUT_COMMIT_MESSAGE}/ {exit} {print}" | grep -o -iqE '(HAR|CD|PL|LE)-[0-9]\+' | sort | uniq`
 
 if [ "${PURPOSE}" = "saas" ]
 then
