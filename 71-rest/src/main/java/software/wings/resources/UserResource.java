@@ -55,7 +55,10 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -463,7 +466,7 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<LoginTypeResponse> getLoginType(@QueryParam("userName") String userName) {
-    return new RestResponse(authenticationManager.getLoginTypeResponse(userName));
+    return new RestResponse(authenticationManager.getLoginTypeResponse(urlDecode(userName)));
   }
 
   @GET
@@ -923,6 +926,16 @@ public class UserResource {
     }
     List<UserGroup> userGroupSummaryList = userGroupService.getUserGroupSummary(userGroups);
     user.setUserGroups(userGroupSummaryList);
+  }
+
+  private String urlDecode(String encoded) {
+    String decoded = encoded;
+    try {
+      decoded = URLDecoder.decode(encoded, StandardCharsets.UTF_8.name());
+    } catch (UnsupportedEncodingException e) {
+      // Should not happen and ignore.
+    }
+    return decoded;
   }
 
   /**
