@@ -34,4 +34,8 @@ public class TestUtils {
     }
     return new StringBuilder(emailId).reverse().toString();
   }
+
+  public static String generateRandomUUID() {
+    return UUID.randomUUID().toString();
+  }
 }

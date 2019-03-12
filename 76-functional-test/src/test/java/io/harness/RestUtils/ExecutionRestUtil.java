@@ -39,6 +39,24 @@ public class ExecutionRestUtil extends AbstractFunctionalTest {
     return savedWorkflowExecutionResponse.getResource();
   }
 
+  public Map<String, Object> runPipeline(String appId, String envId, String pipelineId, ExecutionArgs executionArgs) {
+    GenericType<RestResponse<Map<String, Object>>> pipelineExecutionType =
+        new GenericType<RestResponse<Map<String, Object>>>() {};
+
+    RestResponse<Map<String, Object>> savedWorkflowExecutionResponse = Setup.portal()
+                                                                           .auth()
+                                                                           .oauth2(bearerToken)
+                                                                           .queryParam("appId", appId)
+                                                                           .queryParam("envId", envId)
+                                                                           .queryParam("pipelineId", pipelineId)
+                                                                           .contentType(ContentType.JSON)
+                                                                           .body(executionArgs, ObjectMapperType.GSON)
+                                                                           .post("/executions")
+                                                                           .as(pipelineExecutionType.getType());
+
+    return savedWorkflowExecutionResponse.getResource();
+  }
+
   /**
    *
    * @param appId

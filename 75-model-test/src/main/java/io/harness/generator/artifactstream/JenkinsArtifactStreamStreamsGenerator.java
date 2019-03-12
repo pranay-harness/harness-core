@@ -35,6 +35,7 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
         JenkinsArtifactStream.builder()
             .appId(application.getUuid())
             .serviceId(service.getUuid())
+            .autoPopulate(false)
             .name("harness-samples")
             .sourceName(settingAttribute.getName())
             .jobname("harness-samples")

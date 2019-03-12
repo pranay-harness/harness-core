@@ -142,7 +142,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECR);
     assertThat(artifactStream).isNotNull();
 
-    artifact = artifactRestUtil.waitAndFetchArtifactByArtifactStream(application.getUuid(), artifactStream.getUuid());
+    artifact = artifactRestUtil.waitAndFetchArtifactByArtfactStream(application.getUuid(), artifactStream.getUuid());
 
     resetCache();
   }
