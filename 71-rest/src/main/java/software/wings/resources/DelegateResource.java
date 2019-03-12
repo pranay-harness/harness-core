@@ -21,6 +21,7 @@ import io.harness.beans.PageResponse;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -464,7 +465,18 @@ public class DelegateResource {
   @ExceptionMetered
   public DelegatePackage acquireDelegateTask(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
-    return delegateService.acquireDelegateTask(accountId, delegateId, taskId);
+    final DelegatePackage delegatePackage = delegateService.acquireDelegateTask(accountId, delegateId, taskId);
+
+    if (delegatePackage != null && delegatePackage.getDelegateTask() != null
+        && delegatePackage.getDelegateTask().getData() != null) {
+      final Object[] parameters = delegatePackage.getDelegateTask().getData().getParameters();
+
+      if (parameters != null && (parameters.length != 1 || !(parameters[0] instanceof TaskParameters))) {
+        logger.warn("Task {} need task parameters refactoring", delegatePackage.getDelegateTask().getTaskType());
+      }
+    }
+
+    return delegatePackage;
   }
 
   @DelegateAuth
