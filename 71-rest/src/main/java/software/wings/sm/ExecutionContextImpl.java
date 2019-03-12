@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceArtifactElement;
+import software.wings.api.ShellElement;
 import software.wings.beans.Application;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
@@ -47,6 +48,7 @@ import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
+import software.wings.expression.ShellScriptFunctor;
 import software.wings.expression.SubstitutionFunctor;
 import software.wings.expression.SweepingOutputFunctor;
 import software.wings.service.intfc.AppService;
@@ -99,6 +101,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private transient VariableProcessor variableProcessor;
   @Inject private transient FeatureFlagService featureFlagService;
+
+  final String PHASE_PARAM = "PHASE_PARAM";
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
@@ -638,7 +642,14 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       }
     }
 
-    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PHASE_PARAM);
+
+    ShellElement shellElement = getContextElement(ContextElementType.SHELL);
+    if (shellElement != null) {
+      ShellScriptFunctor shellScriptFunctor =
+          ShellScriptFunctor.builder().scriptType(shellElement.getScriptType()).build();
+      evaluator.addFunctor("shell", shellScriptFunctor);
+    }
 
     final ServiceVariablesBuilder serviceVariablesBuilder =
         ServiceVariables.builder()

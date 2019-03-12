@@ -2,6 +2,7 @@ package software.wings.expression;
 
 import com.google.inject.Singleton;
 
+import io.harness.delegate.task.shell.ScriptType;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.JsonFunctor;
 import io.harness.expression.RegexFunctor;
@@ -21,5 +22,6 @@ public class ManagerExpressionEvaluator extends ExpressionEvaluator {
     addFunctor("json", new JsonFunctor());
     addFunctor("xml", new XmlFunctor());
     addFunctor("aws", new AwsFunctor());
+    addFunctor("shell", new ShellScriptFunctor(ScriptType.BASH));
   }
 }

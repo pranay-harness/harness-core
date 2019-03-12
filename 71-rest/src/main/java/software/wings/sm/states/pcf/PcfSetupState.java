@@ -53,6 +53,7 @@ import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.ServiceHelper;
+import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -92,6 +93,7 @@ public class PcfSetupState extends State {
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private ServiceHelper serviceHelper;
+  @Inject private transient ActivityHelperService activityHelperService;
 
   @Inject @Transient protected transient LogService logService;
   @DefaultValue("${app.name}__${service.name}__${env.name}")
