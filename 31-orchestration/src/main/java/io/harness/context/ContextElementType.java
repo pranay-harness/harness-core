@@ -21,6 +21,11 @@ public enum ContextElementType {
   TAG,
 
   /**
+   * Shell Script element type
+   */
+  SHELL,
+
+  /**
    * Host context element type.
    */
   HOST,

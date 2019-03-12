@@ -45,6 +45,10 @@ public interface Constants {
    */
   String PHASE_PARAM = "PHASE_PARAM";
   /**
+   * The constant SHELL.
+   */
+  String SHELL_PARAM = "SHELL_PARAM";
+  /**
    * The constant SIMPLE_ORCHESTRATION_NAME.
    */
   String SIMPLE_ORCHESTRATION_NAME = "Default Adhoc Workflow";

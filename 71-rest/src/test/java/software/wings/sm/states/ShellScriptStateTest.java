@@ -40,6 +40,7 @@ import software.wings.beans.SweepingOutput;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
+import software.wings.expression.ShellScriptFunctor;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
@@ -59,6 +60,7 @@ public class ShellScriptStateTest {
   @Mock private ActivityHelperService activityHelperService;
   @Mock private ExecutionContextImpl executionContext;
   @Mock private SweepingOutputService sweepingOutputService;
+  @InjectMocks private ShellScriptFunctor shellScriptFunctor;
 
   @InjectMocks private ShellScriptState shellScriptState = new ShellScriptState("ShellScript");
 
@@ -138,5 +140,17 @@ public class ShellScriptStateTest {
         ImmutableMap.of(ACTIVITY_ID, ErrorNotifyResponseData.builder().errorMessage("Failed").build()));
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  public void testEscapifyBash() {
+    assertThat(shellScriptFunctor.escapeString("a'b\"c`d$e~f!g@h#i%j^k&l*m(n)o-p_r{s}t[]|;:u,v.w/x?y")
+                   .equals("a\\'b\\\"c\\`d\\$e~f!g@h#i%j^k\\&l*m\\(n\\)o-p_r{s}t[]\\|\\;:u,v.w/x?y"));
+  }
+
+  @Test
+  public void testEscapifyPowershell() {
+    assertThat(shellScriptFunctor.escapeString("a'b\"c`d$e~f!g@h#i%j^k&l*m(n)o-p_r{s}t[]|;:u,v.w/x?y")
+                   .equals("a\\'b\\\"c\\`d\\$e~f!g@h#i%j^k\\&l*m\\(n\\)o-p_r{s}t[]\\|\\;:u,v.w/x?y"));
   }
 }
