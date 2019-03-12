@@ -777,7 +777,7 @@ public class UserServiceImpl implements UserService {
 
   private Map<String, String> getTrialSignupCompletedTemplatedModel(UserInvite userInvite) throws URISyntaxException {
     Map<String, String> model = new HashMap<>();
-    String loginUrl = buildAbsoluteUrl(format("/login"));
+    String loginUrl = buildAbsoluteUrl("/login");
     model.put("name", userInvite.getEmail());
     model.put("url", loginUrl);
     return model;
