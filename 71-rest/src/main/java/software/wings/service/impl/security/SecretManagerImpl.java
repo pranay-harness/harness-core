@@ -1183,7 +1183,7 @@ public class SecretManagerImpl implements SecretManager {
         errorMessage.append(configFile.getFileName()).append(", ");
       }
 
-      throw new KmsOperationException(errorMessage.toString());
+      throw new KmsOperationException(errorMessage.toString(), USER);
     }
 
     switch (encryptedData.getEncryptionType()) {
