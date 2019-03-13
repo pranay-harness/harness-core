@@ -238,9 +238,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private String getMetricTemplateUrl(
       String accountId, String appId, StateType stateType, String serviceId, String cvConfigId) {
+    final String stateExecutionIdForLETask = CV_24x7_STATE_EXECUTION + "-" + cvConfigId;
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
         + "/get-metric-template?accountId=" + accountId + "&appId=" + appId + "&stateType=" + stateType
-        + "&serviceId=" + serviceId + "&cvConfigId=" + cvConfigId;
+        + "&serviceId=" + serviceId + "&cvConfigId=" + cvConfigId + "&stateExecutionId=" + stateExecutionIdForLETask;
   }
 
   private String getMetricAnalysisSaveUrl(CVConfiguration cvConfiguration, long endMinute, String taskId) {
