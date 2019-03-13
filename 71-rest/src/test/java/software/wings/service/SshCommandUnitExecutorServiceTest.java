@@ -266,7 +266,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                      .build();
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
-    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().withMetadataOnly(false).build();
+    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().metadataOnly(false).build();
     sshCommandUnitExecutorService.execute(host, commandUnit,
         commandExecutionContextBuider.but()
             .withHostConnectionAttributes(HOST_CONN_ATTR_PWD)

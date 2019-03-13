@@ -48,8 +48,8 @@ public class SmbArtifactStream extends ArtifactStream {
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
-        .withArtifactStreamType(getArtifactStreamType())
-        .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))
+        .artifactStreamType(getArtifactStreamType())
+        .artifactName(artifactPaths == null ? "" : artifactPaths.get(0))
         .build();
   }
 

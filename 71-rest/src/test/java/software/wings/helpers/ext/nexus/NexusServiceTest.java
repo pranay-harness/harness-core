@@ -580,11 +580,11 @@ public class NexusServiceTest extends WingsBaseTest {
   public void shouldDockerTags() {
     assertThat(nexusService.getBuilds(nexusThreeConfig, null,
                    anArtifactStreamAttributes()
-                       .withArtifactStreamType(ArtifactStreamType.NEXUS.name())
-                       .withMetadataOnly(true)
-                       .withJobName("docker-group")
-                       .withImageName("wingsplugins/todolist")
-                       .withNexusDockerPort("5000")
+                       .artifactStreamType(ArtifactStreamType.NEXUS.name())
+                       .metadataOnly(true)
+                       .jobName("docker-group")
+                       .imageName("wingsplugins/todolist")
+                       .nexusDockerPort("5000")
                        .build(),
                    10))
         .hasSize(3)

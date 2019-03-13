@@ -51,9 +51,9 @@ public class GcrArtifactStream extends ArtifactStream {
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
-        .withArtifactStreamType(getArtifactStreamType())
-        .withImageName(dockerImageName)
-        .withRegistryHostName(registryHostName)
+        .artifactStreamType(getArtifactStreamType())
+        .imageName(dockerImageName)
+        .registryHostName(registryHostName)
         .build();
   }
 

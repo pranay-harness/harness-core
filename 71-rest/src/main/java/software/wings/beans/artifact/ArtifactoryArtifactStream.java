@@ -85,15 +85,15 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
-        .withArtifactStreamType(getArtifactStreamType())
-        .withJobName(jobname)
-        .withImageName(imageName)
-        .withGroupId(getGroupId())
-        .withArtifactPattern(artifactPattern)
-        .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))
-        .withRepositoryType(repositoryType)
-        .withMetadataOnly(isMetadataOnly())
-        .withArtifactoryDockerRepositoryServer(dockerRepositoryServer)
+        .artifactStreamType(getArtifactStreamType())
+        .jobName(jobname)
+        .imageName(imageName)
+        .groupId(getGroupId())
+        .artifactPattern(artifactPattern)
+        .artifactName(artifactPaths == null ? "" : artifactPaths.get(0))
+        .repositoryType(repositoryType)
+        .metadataOnly(isMetadataOnly())
+        .artifactoryDockerRepositoryServer(dockerRepositoryServer)
         .build();
   }
 

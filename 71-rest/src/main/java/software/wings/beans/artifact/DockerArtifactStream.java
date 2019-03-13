@@ -45,10 +45,7 @@ public class DockerArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return anArtifactStreamAttributes()
-        .withArtifactStreamType(getArtifactStreamType())
-        .withImageName(imageName)
-        .build();
+    return anArtifactStreamAttributes().artifactStreamType(getArtifactStreamType()).imageName(imageName).build();
   }
 
   @Override

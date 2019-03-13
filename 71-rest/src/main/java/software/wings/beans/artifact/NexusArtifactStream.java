@@ -83,12 +83,12 @@ public class NexusArtifactStream extends ArtifactStream {
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
-        .withArtifactStreamType(getArtifactStreamType())
-        .withJobName(jobname)
-        .withGroupId(groupId)
-        .withImageName(imageName)
-        .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))
-        .withNexusDockerPort(dockerPort)
+        .artifactStreamType(getArtifactStreamType())
+        .jobName(jobname)
+        .groupId(groupId)
+        .imageName(imageName)
+        .artifactName(artifactPaths == null ? "" : artifactPaths.get(0))
+        .nexusDockerPort(dockerPort)
         .build();
   }
 

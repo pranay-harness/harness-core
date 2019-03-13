@@ -43,8 +43,8 @@ public class AcrValidationTest extends WingsBaseTest {
           .waitId("")
           .data(TaskData.builder()
                     .parameters(new Object[] {ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
-                                                  .withRegistryName(registryName)
-                                                  .withRepositoryName(repositoryName)
+                                                  .registryName(registryName)
+                                                  .repositoryName(repositoryName)
                                                   .build(),
                         asList(EncryptedDataDetail.builder().build()), AzureConfig.builder().build()})
                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)

@@ -373,7 +373,7 @@ public class ArtifactStreamAttributes {
      * @param jobName the job name
      * @return the builder
      */
-    public Builder withJobName(String jobName) {
+    public Builder jobName(String jobName) {
       this.jobName = jobName;
       return this;
     }
@@ -384,22 +384,22 @@ public class ArtifactStreamAttributes {
      * @param imageName the image name
      * @return the builder
      */
-    public Builder withImageName(String imageName) {
+    public Builder imageName(String imageName) {
       this.imageName = imageName;
       return this;
     }
 
-    public Builder withSubscriptionId(String subscriptionId) {
+    public Builder subscriptionId(String subscriptionId) {
       this.subscriptionId = subscriptionId;
       return this;
     }
 
-    public Builder withRegistryName(String registryName) {
+    public Builder registryName(String registryName) {
       this.registryName = registryName;
       return this;
     }
 
-    public Builder withRepositoryName(String repositoryName) {
+    public Builder repositoryName(String repositoryName) {
       this.repositoryName = repositoryName;
       return this;
     }
@@ -410,7 +410,7 @@ public class ArtifactStreamAttributes {
      * @param registryHostName registry host name
      * @return the builder
      */
-    public Builder withRegistryHostName(String registryHostName) {
+    public Builder registryHostName(String registryHostName) {
       this.registryHostName = registryHostName;
       return this;
     }
@@ -421,7 +421,7 @@ public class ArtifactStreamAttributes {
      * @param artifactStreamType the artifact stream type
      * @return the builder
      */
-    public Builder withArtifactStreamType(String artifactStreamType) {
+    public Builder artifactStreamType(String artifactStreamType) {
       this.artifactStreamType = artifactStreamType;
       return this;
     }
@@ -432,7 +432,7 @@ public class ArtifactStreamAttributes {
      * @param serverSetting the server setting
      * @return the builder
      */
-    public Builder withServerSetting(SettingAttribute serverSetting) {
+    public Builder serverSetting(SettingAttribute serverSetting) {
       this.serverSetting = serverSetting;
       return this;
     }
@@ -442,12 +442,12 @@ public class ArtifactStreamAttributes {
      * @param groupId
      * @return
      */
-    public Builder withGroupId(String groupId) {
+    public Builder groupId(String groupId) {
       this.groupId = groupId;
       return this;
     }
 
-    public Builder withArtifactStreamId(String artifactStreamId) {
+    public Builder artifactStreamId(String artifactStreamId) {
       this.artifactStreamId = artifactStreamId;
       return this;
     }
@@ -457,7 +457,7 @@ public class ArtifactStreamAttributes {
      * @param artifactName
      * @return
      */
-    public Builder withArtifactName(String artifactName) {
+    public Builder artifactName(String artifactName) {
       this.artifactName = artifactName;
       return this;
     }
@@ -467,103 +467,102 @@ public class ArtifactStreamAttributes {
      * @param artifactType
      * @return
      */
-    public Builder withArtifactType(ArtifactType artifactType) {
+    public Builder artifactType(ArtifactType artifactType) {
       this.artifactType = artifactType;
       return this;
     }
 
-    public Builder withArtifactPattern(String artifactPattern) {
+    public Builder artifactPattern(String artifactPattern) {
       this.artifactPattern = artifactPattern;
       return this;
     }
 
-    public Builder withRegion(String region) {
+    public Builder region(String region) {
       this.region = region;
       return this;
     }
 
-    public Builder withRepositoryType(String repositoryType) {
+    public Builder repositoryType(String repositoryType) {
       this.repositoryType = repositoryType;
       return this;
     }
 
-    public Builder withMetadataOnly(boolean metadataOnly) {
+    public Builder metadataOnly(boolean metadataOnly) {
       this.metadataOnly = metadataOnly;
       return this;
     }
 
-    public Builder withTags(Map<String, List<String>> tags) {
+    public Builder tags(Map<String, List<String>> tags) {
       this.tags = tags;
       return this;
     }
 
-    public Builder withPlatform(String platform) {
+    public Builder platform(String platform) {
       this.platform = platform;
       return this;
     }
 
-    public Builder withFilters(Map<String, String> filters) {
+    public Builder filters(Map<String, String> filters) {
       this.filters = filters;
       return this;
     }
 
-    public Builder withArtifactServerEncryptedDataDetails(
-        List<EncryptedDataDetail> artifactServerEncryptedDataDetails) {
+    public Builder artifactServerEncryptedDataDetails(List<EncryptedDataDetail> artifactServerEncryptedDataDetails) {
       this.artifactServerEncryptedDataDetails = artifactServerEncryptedDataDetails;
       return this;
     }
 
-    public Builder withMetadata(Map<String, String> metadata) {
+    public Builder metadata(Map<String, String> metadata) {
       this.metadata = metadata;
       return this;
     }
 
-    public Builder withCopyArtifactEnabledForArtifactory(boolean copyArtifactEnabledForArtifactory) {
+    public Builder copyArtifactEnabledForArtifactory(boolean copyArtifactEnabledForArtifactory) {
       this.copyArtifactEnabledForArtifactory = copyArtifactEnabledForArtifactory;
       return this;
     }
 
-    public Builder withArtifactoryDockerRepositoryServer(String artifactoryDockerRepositoryServer) {
+    public Builder artifactoryDockerRepositoryServer(String artifactoryDockerRepositoryServer) {
       this.artifactoryDockerRepositoryServer = artifactoryDockerRepositoryServer;
       return this;
     }
 
-    public Builder withNexusDockerPort(String nexusDockerPort) {
+    public Builder nexusDockerPort(String nexusDockerPort) {
       this.nexusDockerPort = nexusDockerPort;
       return this;
     }
 
-    public Builder withCustomScriptTimeout(String customScriptTimeout) {
+    public Builder customScriptTimeout(String customScriptTimeout) {
       this.customScriptTimeout = customScriptTimeout;
       return this;
     }
 
-    public Builder withCustomArtifactStreamScript(String customArtifactStreamScript) {
+    public Builder customArtifactStreamScript(String customArtifactStreamScript) {
       this.customArtifactStreamScript = customArtifactStreamScript;
       return this;
     }
 
-    public Builder withAccountId(String accountId) {
+    public Builder accountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
 
-    public Builder withArtifactRoot(String artifactRoot) {
+    public Builder artifactRoot(String artifactRoot) {
       this.artifactRoot = artifactRoot;
       return this;
     }
 
-    public Builder withBuildNoPath(String buildNoPath) {
+    public Builder buildNoPath(String buildNoPath) {
       this.buildNoPath = buildNoPath;
       return this;
     }
 
-    public Builder withArtifactAttributes(Map<String, String> artifactAttributes) {
+    public Builder artifactAttributes(Map<String, String> artifactAttributes) {
       this.artifactAttributes = artifactAttributes;
       return this;
     }
 
-    public Builder withCustomAttributeMappingNeeded(boolean customAttributeMappingNeeded) {
+    public Builder customAttributeMappingNeeded(boolean customAttributeMappingNeeded) {
       this.customAttributeMappingNeeded = customAttributeMappingNeeded;
       return this;
     }

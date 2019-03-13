@@ -55,43 +55,43 @@ public class ScpCommandUnitTest extends WingsBaseTest {
                                                     .build();
   private ArtifactStreamAttributes artifactStreamAttributesForS3 =
       anArtifactStreamAttributes()
-          .withArtifactStreamType(ArtifactStreamType.AMAZON_S3.name())
-          .withMetadataOnly(true)
-          .withMetadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
-          .withServerSetting(awsSetting)
-          .withArtifactServerEncryptedDataDetails(Collections.emptyList())
+          .artifactStreamType(ArtifactStreamType.AMAZON_S3.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
+          .serverSetting(awsSetting)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
   private ArtifactStreamAttributes artifactStreamAttributesForArtifactory =
       anArtifactStreamAttributes()
-          .withArtifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
-          .withMetadataOnly(true)
-          .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
-          .withServerSetting(artifactorySetting)
-          .withArtifactServerEncryptedDataDetails(Collections.emptyList())
-          .withCopyArtifactEnabledForArtifactory(true)
-          .withArtifactType(ArtifactType.WAR)
+          .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+          .serverSetting(artifactorySetting)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .copyArtifactEnabledForArtifactory(true)
+          .artifactType(ArtifactType.WAR)
           .build();
 
   private ArtifactStreamAttributes artifactStreamAttributesForArtifactoryRpmType =
       anArtifactStreamAttributes()
-          .withArtifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
-          .withMetadataOnly(true)
-          .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
-          .withServerSetting(artifactorySetting)
-          .withArtifactServerEncryptedDataDetails(Collections.emptyList())
-          .withCopyArtifactEnabledForArtifactory(true)
-          .withArtifactType(ArtifactType.RPM)
+          .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+          .serverSetting(artifactorySetting)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .copyArtifactEnabledForArtifactory(true)
+          .artifactType(ArtifactType.RPM)
           .build();
 
   private ArtifactStreamAttributes artifactStreamAttributesForArtifactoryFeatureFlagDisabled =
       anArtifactStreamAttributes()
-          .withArtifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
-          .withMetadataOnly(true)
-          .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
-          .withServerSetting(artifactorySetting)
-          .withArtifactServerEncryptedDataDetails(Collections.emptyList())
-          .withCopyArtifactEnabledForArtifactory(false)
-          .withArtifactType(ArtifactType.TAR)
+          .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+          .serverSetting(artifactorySetting)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .copyArtifactEnabledForArtifactory(false)
+          .artifactType(ArtifactType.TAR)
           .build();
 
   @InjectMocks

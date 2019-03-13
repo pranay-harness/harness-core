@@ -65,7 +65,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
         ShellExecutionResponse.builder().exitValue(0).shellExecutionData(map).build();
     when(shellExecutionService.execute(any(ShellExecutionRequest.class))).thenReturn(shellExecutionResponse);
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
-                                                            .withCustomArtifactStreamScript("echo \"hello\"")
+                                                            .customArtifactStreamScript("echo \"hello\"")
                                                             .build();
     List<BuildDetails> buildDetails = customRepositoryService.getBuilds(artifactStreamAttributes);
     assertThat(buildDetails).isNotNull();
@@ -96,10 +96,10 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
     attributeMapping.put("assets[0].repository", null);
     attributeMapping.put("assets[0].checksum", "checksum");
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
-                                                            .withCustomArtifactStreamScript("echo \"hello\"")
-                                                            .withArtifactRoot("$.items")
-                                                            .withBuildNoPath("version")
-                                                            .withArtifactAttributes(attributeMapping)
+                                                            .customArtifactStreamScript("echo \"hello\"")
+                                                            .artifactRoot("$.items")
+                                                            .buildNoPath("version")
+                                                            .artifactAttributes(attributeMapping)
                                                             .build();
     List<BuildDetails> buildDetails = customRepositoryService.getBuilds(artifactStreamAttributes);
     assertThat(buildDetails).isNotNull();
@@ -119,10 +119,10 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
     attributeMapping.put("assets[0].downloadUrl", "metadata.downloadUrl");
 
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
-                                                            .withCustomArtifactStreamScript("echo \"hello\"")
-                                                            .withArtifactAttributes(attributeMapping)
-                                                            .withBuildNoPath("version")
-                                                            .withCustomAttributeMappingNeeded(true)
+                                                            .customArtifactStreamScript("echo \"hello\"")
+                                                            .artifactAttributes(attributeMapping)
+                                                            .buildNoPath("version")
+                                                            .customAttributeMappingNeeded(true)
                                                             .build();
     customRepositoryService.getBuilds(artifactStreamAttributes);
   }
@@ -132,10 +132,10 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
     Map<String, String> attributeMapping = new HashMap<>();
     attributeMapping.put("assets[0].downloadUrl", "metadata.downloadUrl");
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.Builder.anArtifactStreamAttributes()
-                                                            .withCustomArtifactStreamScript("echo \"hello\"")
-                                                            .withArtifactRoot("$.items[*]")
-                                                            .withArtifactAttributes(attributeMapping)
-                                                            .withCustomAttributeMappingNeeded(true)
+                                                            .customArtifactStreamScript("echo \"hello\"")
+                                                            .artifactRoot("$.items[*]")
+                                                            .artifactAttributes(attributeMapping)
+                                                            .customAttributeMappingNeeded(true)
                                                             .build();
     customRepositoryService.getBuilds(artifactStreamAttributes);
   }
