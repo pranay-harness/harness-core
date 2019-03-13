@@ -10,6 +10,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
@@ -347,7 +348,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                                                             .stateExecutionId(context.getStateExecutionInstanceId())
                                                             .workflowExecutionId(context.getWorkflowExecutionId())
                                                             .build();
-    wingsPersistence.save(metricAnalysisRecord);
+    wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(metricAnalysisRecord));
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), status);
 
     return anExecutionResponse()

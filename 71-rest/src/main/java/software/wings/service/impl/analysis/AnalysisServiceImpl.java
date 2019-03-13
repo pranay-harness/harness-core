@@ -18,6 +18,7 @@ import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -908,7 +909,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                    .control_events(Collections.emptyMap())
                                                    .test_events(Collections.emptyMap())
                                                    .build();
-    wingsPersistence.save(analysisRecord);
+    wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(analysisRecord));
   }
 
   @Override
