@@ -33,8 +33,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   private static final Logger logger = LoggerFactory.getLogger(RestLogAppender.class);
 
   private static final int MAX_BATCH_SIZE = 1000;
-  private static final String LOGDNA_INGEST_URL = "https://logs.logdna.com/logs/ingest?hostname=%s&now=:now";
-  public static final String LOGDNA_HOST = "https://logs.logdna.com";
+  public static final String LOGDNA_HOST = "https://app.harness.io/storage/applogs/";
 
   private static final Retrofit retrofit = new Retrofit.Builder()
                                                .baseUrl(LOGDNA_HOST)
