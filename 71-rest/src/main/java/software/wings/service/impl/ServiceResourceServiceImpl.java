@@ -285,6 +285,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       savedService = createDefaultHelmValueYaml(savedService, createdFromYaml);
       serviceTemplateService.createDefaultTemplatesByService(savedService);
       createDefaultK8sManifests(savedService, service.isSyncFromGit());
+      createDefaultPCFManifestsIfApplicable(savedService);
 
       sendNotificationAsync(savedService, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
 
@@ -1931,6 +1932,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         ManifestFile.builder().fileName("values.yaml").fileContent(default_k8s_values_yaml).build();
     defaultValues.setAppId(service.getAppId());
     applicationManifestService.createManifestFileByServiceId(defaultValues, service.getUuid());
+  }
+
+  private void createDefaultPCFManifestsIfApplicable(Service service) {
+    if (!DeploymentType.PCF.equals(service.getDeploymentType())) {
+      return;
+    }
+
+    PcfServiceSpecification pcfServiceSpecification =
+        PcfServiceSpecification.builder().serviceId(service.getUuid()).build();
+    pcfServiceSpecification.setAppId(service.getAppId());
+    pcfServiceSpecification.resetToDefaultManifestSpecification();
+
+    createPcfServiceSpecification(pcfServiceSpecification);
   }
 
   private void cloneAppManifests(String appId, String clonedServiceId, String originalServiceId) {
