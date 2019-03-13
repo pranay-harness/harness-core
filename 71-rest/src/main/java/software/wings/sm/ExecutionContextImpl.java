@@ -163,7 +163,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public String renderExpression(String expression) {
-    Map<String, Object> context = prepareContext(false);
+    Map<String, Object> context = prepareContext(false, 0);
     return renderExpression(expression, context);
   }
 
@@ -173,25 +173,25 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (addition instanceof List) {
       List<ContextElement> contextElements = (List<ContextElement>) addition;
       context = new HashMap<>();
-      context.putAll(prepareContext(false));
+      context.putAll(prepareContext(false, 0));
       for (ContextElement contextElement : contextElements) {
         context.putAll(contextElement.paramMap(this));
       }
     } else if (addition instanceof StateExecutionData) {
-      context = prepareContext(addition, false);
+      context = prepareContext(addition, false, 0);
     } else if (addition instanceof Artifact) {
-      context = prepareContext(false);
+      context = prepareContext(false, 0);
       Artifact artifact = (Artifact) addition;
       addArtifactToContext(artifactStreamService, getApp().getAccountId(), context, artifact);
     } else {
-      context = prepareContext(false);
+      context = prepareContext(false, 0);
     }
     return renderExpression(expression, context);
   }
 
   @Override
   public String renderExpression(String expression, Object stateExecutionData, Object addition) {
-    Map<String, Object> context = prepareContext(stateExecutionData, false);
+    Map<String, Object> context = prepareContext(stateExecutionData, false, 0);
     if (addition instanceof Artifact) {
       Artifact artifact = (Artifact) addition;
       addArtifactToContext(artifactStreamService, getApp().getAccountId(), context, artifact);
@@ -200,9 +200,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
-  public String renderExpression(
-      String expression, Object stateExecutionData, Object addition, boolean adoptDelegateDecryption) {
-    Map<String, Object> context = prepareContext(stateExecutionData, adoptDelegateDecryption);
+  public String renderExpression(String expression, Object stateExecutionData, Object addition,
+      boolean adoptDelegateDecryption, int expressionFunctorToken) {
+    Map<String, Object> context = prepareContext(stateExecutionData, adoptDelegateDecryption, expressionFunctorToken);
     if (addition instanceof Artifact) {
       Artifact artifact = (Artifact) addition;
       addArtifactToContext(artifactStreamService, getApp().getAccountId(), context, artifact);
@@ -230,13 +230,13 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public Object evaluateExpression(String expression) {
-    Map<String, Object> context = prepareContext(false);
+    Map<String, Object> context = prepareContext(false, 0);
     return evaluateExpression(expression, context);
   }
 
   @Override
   public Object evaluateExpression(String expression, Object stateExecutionData) {
-    Map<String, Object> context = prepareContext(stateExecutionData, false);
+    Map<String, Object> context = prepareContext(stateExecutionData, false, 0);
     return evaluateExpression(expression, context);
   }
 
@@ -479,8 +479,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return evaluator.evaluate(expr, evaluatedValueMap);
   }
 
-  public Map<String, Object> prepareContext(Object executionData, boolean adoptDelegateDecryption) {
-    Map<String, Object> context = prepareContext(adoptDelegateDecryption);
+  public Map<String, Object> prepareContext(
+      Object executionData, boolean adoptDelegateDecryption, int expressionFunctorToken) {
+    Map<String, Object> context = prepareContext(adoptDelegateDecryption, expressionFunctorToken);
     if (executionData != null) {
       context.put(normalizeStateName(getStateExecutionInstance().getDisplayName()), executionData);
     }
@@ -496,14 +497,14 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Override
   public Map<String, Object> asMap() {
     Map<String, Object> context = new LateBindingMap();
-    context.putAll(prepareContext(false));
+    context.putAll(prepareContext(false, 0));
     return context;
   }
 
-  private Map<String, Object> prepareContext(boolean adoptDelegateDecryption) {
+  private Map<String, Object> prepareContext(boolean adoptDelegateDecryption, int expressionFunctorToken) {
     Map<String, Object> context = new LateBindingMap();
     if (contextMap == null) {
-      contextMap = prepareContext(context, adoptDelegateDecryption);
+      contextMap = prepareContext(context, adoptDelegateDecryption, expressionFunctorToken);
     }
     return contextMap;
   }
@@ -519,12 +520,14 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     private ExecutionContextImpl executionContext;
     private boolean adoptDelegateDecryption;
     private FeatureFlagService featureFlagService;
+    private int expressionFunctorToken;
 
     @Override
     public Object bind() {
       if (adoptDelegateDecryption
           && featureFlagService.isEnabled(FeatureName.THREE_PHASE_SECRET_DECRYPTION, executionContext.getAccountId())) {
-        return "${secretManager.obtain(\"" + serviceVariable.getSecretTextName() + "\")}";
+        return "${secretManager.obtain(\"" + serviceVariable.getSecretTextName() + "\", " + expressionFunctorToken
+            + ")}";
       }
       executionContext.managerDecryptionService.decrypt(serviceVariable,
           executionContext.secretManager.getEncryptionDetails(
@@ -536,7 +539,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   private void prepareVariables(EncryptedFieldMode encryptedFieldMode, ServiceVariable serviceVariable,
-      Map<String, Object> variables, boolean adoptDelegateDecryption) {
+      Map<String, Object> variables, boolean adoptDelegateDecryption, int expressionFunctorToken) {
     final String variableName = renderExpression(serviceVariable.getName());
 
     if (!variables.containsKey(variableName)) {
@@ -550,6 +553,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
             ServiceEncryptedVariable.builder()
                 .serviceVariable(serviceVariable)
                 .adoptDelegateDecryption(adoptDelegateDecryption)
+                .expressionFunctorToken(expressionFunctorToken)
                 .executionContext(this)
                 .featureFlagService(featureFlagService)
                 .build());
@@ -566,6 +570,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     private ManagerDecryptionService managerDecryptionService;
     private SecretManager secretManager;
     private boolean adoptDelegateDecryption;
+    private int expressionFunctorToken;
 
     @Override
     public Object bind() {
@@ -581,7 +586,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
       if (isNotEmpty(serviceVariables)) {
         serviceVariables.forEach(serviceVariable -> {
-          executionContext.prepareVariables(encryptedFieldMode, serviceVariable, variables, adoptDelegateDecryption);
+          executionContext.prepareVariables(
+              encryptedFieldMode, serviceVariable, variables, adoptDelegateDecryption, expressionFunctorToken);
         });
       }
       executionContext.contextMap.put(key, variables);
@@ -596,6 +602,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     private ManagerDecryptionService managerDecryptionService;
     private SecretManager secretManager;
     private boolean adoptDelegateDecryption;
+    private int expressionFunctorToken;
 
     @Override
     public Object bind() {
@@ -617,8 +624,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
       if (isNotEmpty(serviceVariables)) {
         serviceVariables.forEach(serviceVariable -> {
-          executionContext.prepareVariables(
-              EncryptedFieldMode.OBTAIN_VALUE, serviceVariable, variables, adoptDelegateDecryption);
+          executionContext.prepareVariables(EncryptedFieldMode.OBTAIN_VALUE, serviceVariable, variables,
+              adoptDelegateDecryption, expressionFunctorToken);
         });
       }
       executionContext.contextMap.put(ENVIRONMENT_VARIABLE, variables);
@@ -627,7 +634,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @SuppressWarnings("unchecked")
-  private Map<String, Object> prepareContext(Map<String, Object> context, boolean adoptDelegateDecryption) {
+  private Map<String, Object> prepareContext(
+      Map<String, Object> context, boolean adoptDelegateDecryption, int expressionFunctorToken) {
     // add state execution data
     stateExecutionInstance.getStateExecutionMap().forEach((key, value) -> context.put(normalizeStateName(key), value));
 
@@ -657,7 +665,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
             .executionContext(this)
             .managerDecryptionService(managerDecryptionService)
             .secretManager(secretManager)
-            .adoptDelegateDecryption(adoptDelegateDecryption);
+            .adoptDelegateDecryption(adoptDelegateDecryption)
+            .expressionFunctorToken(expressionFunctorToken);
 
     context.put(SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(OBTAIN_VALUE).build());
     context.put(SAFE_DISPLAY_SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(MASKED).build());
@@ -668,6 +677,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                                                           .managerDecryptionService(managerDecryptionService)
                                                           .secretManager(secretManager)
                                                           .adoptDelegateDecryption(adoptDelegateDecryption)
+                                                          .expressionFunctorToken(expressionFunctorToken)
                                                           .build();
 
     context.put(ENVIRONMENT_VARIABLE, environmentVariables);

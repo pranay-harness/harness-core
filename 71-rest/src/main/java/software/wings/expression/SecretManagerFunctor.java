@@ -33,13 +33,17 @@ public class SecretManagerFunctor implements ExpressionFunctor {
   private String accountId;
   private String appId;
   private String workflowExecutionId;
+  private int expressionFunctorToken;
 
   @Default private Map<String, String> evaluatedSecrets = new HashMap<>();
   @Default private Map<String, String> evaluatedDelegateSecrets = new HashMap<>();
   @Default private Map<String, EncryptionConfig> encryptionConfigs = new HashMap<>();
   @Default private Map<String, SecretDetail> secretDetails = new HashMap<>();
 
-  public Object obtain(String secretName) {
+  public Object obtain(String secretName, int token) {
+    if (token != expressionFunctorToken) {
+      throw new FunctorException("Inappropriate usage of internal functor");
+    }
     try {
       return obtainInternal(secretName);
     } catch (Exception ex) {

@@ -16,6 +16,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -339,7 +340,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     HttpStateExecutionDataBuilder executionDataBuilder =
         HttpStateExecutionData.builder().templateVariables(convertToVariableMap(getTemplateVariables()));
 
-    renderTaskParameters(context, executionDataBuilder.build(), httpTaskParameters);
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
+    renderTaskParameters(context, executionDataBuilder.build(), httpTaskParameters, expressionFunctorToken);
 
     executionDataBuilder.httpUrl(httpTaskParameters.getUrl())
         .httpMethod(httpTaskParameters.getMethod())
@@ -354,6 +356,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                           .data(TaskData.builder()
                                                     .parameters(new Object[] {httpTaskParameters})
                                                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                                    .expressionFunctorToken(expressionFunctorToken)
                                                     .build())
                                           .envId(envId)
                                           .infrastructureMappingId(infrastructureMappingId)

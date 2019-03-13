@@ -35,8 +35,8 @@ public interface ExecutionContext {
 
   String renderExpression(String expression, Object stateExecutionData, Object addition);
 
-  String renderExpression(
-      String expression, Object stateExecutionData, Object addition, boolean adoptDelegateDecryption);
+  String renderExpression(String expression, Object stateExecutionData, Object addition,
+      boolean adoptDelegateDecryption, int expressionFunctorToken);
 
   List<String> renderExpressionList(List<String> expressions);
 

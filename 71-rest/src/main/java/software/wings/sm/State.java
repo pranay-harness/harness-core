@@ -310,10 +310,10 @@ public abstract class State {
     this.templateVariables = templateVariables;
   }
 
-  protected void renderTaskParameters(
-      ExecutionContext context, StateExecutionData stateExecutionData, TaskParameters parameters) {
+  protected void renderTaskParameters(ExecutionContext context, StateExecutionData stateExecutionData,
+      TaskParameters parameters, int expressionFunctorToken) {
     ExpressionReflectionUtils.applyExpression(
-        parameters, value -> context.renderExpression(value, stateExecutionData, null, true));
+        parameters, value -> context.renderExpression(value, stateExecutionData, null, true, expressionFunctorToken));
   }
 
   protected String scheduleDelegateTask(DelegateTask task) {
@@ -324,8 +324,8 @@ public abstract class State {
       ExecutionContext context, DelegateTask task, StateExecutionData stateExecutionData) {
     if (task.getData().getParameters().length == 1 && task.getData().getParameters()[0] instanceof TaskParameters) {
       task.setWorkflowExecutionId(context.getWorkflowExecutionId());
-      ExpressionReflectionUtils.applyExpression(
-          task.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionData, null, false));
+      ExpressionReflectionUtils.applyExpression(task.getData().getParameters()[0],
+          value -> context.renderExpression(value, stateExecutionData, null, false, 0));
     }
     return delegateService.queueTask(task);
   }

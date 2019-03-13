@@ -8,7 +8,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.FunctorException;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -36,7 +38,9 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   public void shouldDecryptLocalEncryptedServiceVariables() {
     final String secretName = "MySecretName";
 
-    SecretManagerFunctor secretManagerFunctor = buildFunctor();
+    final int token = HashGenerator.generateIntegerHash();
+
+    SecretManagerFunctor secretManagerFunctor = buildFunctor(token);
     assertFunctor(secretManagerFunctor);
 
     final EncryptedData encryptedData = EncryptedData.builder().accountId(ACCOUNT_ID).build();
@@ -62,12 +66,12 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
         .when(managerDecryptionService)
         .decrypt(serviceVariable, localEncryptedDetails);
 
-    Object decryptedValue = secretManagerFunctor.obtain(secretName);
+    Object decryptedValue = secretManagerFunctor.obtain(secretName, token);
     assertDecryptedValue(secretName, secretManagerFunctor, decryptedValue);
     verify(secretManager).getSecretByName(ACCOUNT_ID, secretName, false);
 
     // Call Second time, it should get it from cache
-    decryptedValue = secretManagerFunctor.obtain(secretName);
+    decryptedValue = secretManagerFunctor.obtain(secretName, token);
     assertDecryptedValue(secretName, secretManagerFunctor, decryptedValue);
     verify(secretManager, times(1)).getSecretByName(ACCOUNT_ID, secretName, false);
     verify(managerDecryptionService, times(1)).decrypt(any(ServiceVariable.class), anyList());
@@ -89,21 +93,22 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
         .build();
   }
 
-  private SecretManagerFunctor buildFunctor() {
+  private SecretManagerFunctor buildFunctor(int token) {
     return SecretManagerFunctor.builder()
         .secretManager(secretManager)
         .managerDecryptionService(managerDecryptionService)
         .accountId(ACCOUNT_ID)
         .appId(APP_ID)
         .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+        .expressionFunctorToken(token)
         .build();
   }
 
   @Test
   public void shouldDecryptKMSEncryptedServiceVariables() {
     final String secretName = "MySecretName";
-
-    SecretManagerFunctor secretManagerFunctor = buildFunctor();
+    final int token = HashGenerator.generateIntegerHash();
+    SecretManagerFunctor secretManagerFunctor = buildFunctor(token);
 
     assertFunctor(secretManagerFunctor);
 
@@ -124,15 +129,26 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
     when(secretManager.getEncryptionDetails(serviceVariable, APP_ID, WORKFLOW_EXECUTION_ID))
         .thenReturn(nonLocalEncryptedVariables);
 
-    String decryptedValue = (String) secretManagerFunctor.obtain(secretName);
+    String decryptedValue = (String) secretManagerFunctor.obtain(secretName, token);
 
     assertDelegateDecryptedValue(secretName, secretManagerFunctor, decryptedValue);
 
     verify(secretManager).getSecretByName(ACCOUNT_ID, secretName, false);
 
-    decryptedValue = (String) secretManagerFunctor.obtain(secretName);
+    decryptedValue = (String) secretManagerFunctor.obtain(secretName, token);
     assertDelegateDecryptedValue(secretName, secretManagerFunctor, decryptedValue);
     verify(secretManager, times(1)).getSecretByName(ACCOUNT_ID, secretName, false);
+  }
+
+  @Test(expected = FunctorException.class)
+  public void shouldRejectInternalFunctor() {
+    final String secretName = "MySecretName";
+    final int token = HashGenerator.generateIntegerHash();
+
+    SecretManagerFunctor secretManagerFunctor = buildFunctor(token);
+    assertFunctor(secretManagerFunctor);
+
+    secretManagerFunctor.obtain(secretName, HashGenerator.generateIntegerHash());
   }
 
   private void assertDelegateDecryptedValue(
