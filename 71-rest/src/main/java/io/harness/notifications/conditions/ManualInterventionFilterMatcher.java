@@ -26,8 +26,8 @@ public class ManualInterventionFilterMatcher implements FilterMatcher {
   public boolean matchesCondition() {
     Conditions filterConditions = alertFilter.getConditions();
     Operator op = filterConditions.getOperator();
-    ManualInterventionAlertFilters manualInterventionAlertFilters = filterConditions.getManualInterventionFilters();
 
+    ManualInterventionAlertFilters manualInterventionAlertFilters = filterConditions.getManualInterventionFilters();
     if (null == manualInterventionAlertFilters) {
       log.error("No manualInterventionFilters specified. Alert will be considered to not match filter.");
       return false;
