@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.buildsource;
 
-import lombok.AllArgsConstructor;
+import io.harness.delegate.task.TaskParameters;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -11,13 +11,11 @@ import software.wings.settings.SettingValue;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-/**
- * Created by anubhaw on 7/20/18.
- */
-@Data
+@Value
 @Builder
-@AllArgsConstructor
-public class BuildSourceRequest {
+public class BuildSourceParameters implements TaskParameters {
+  public enum BuildSourceRequestType { GET_BUILDS, GET_LAST_SUCCESSFUL_BUILD }
+
   @NotNull private BuildSourceRequestType buildSourceRequestType;
   @NotEmpty private String accountId;
   @NotEmpty private String appId;
@@ -26,10 +24,4 @@ public class BuildSourceRequest {
   @NotNull private List<EncryptedDataDetail> encryptedDataDetails;
   @NotEmpty private String artifactStreamType;
   private int limit;
-
-  public enum BuildSourceRequestType { GET_BUILDS, GET_LAST_SUCCESSFUL_BUILD }
-
-  public BuildSourceRequest(BuildSourceRequestType buildSourceRequestType) {
-    this.buildSourceRequestType = buildSourceRequestType;
-  }
 }

@@ -644,10 +644,10 @@ software.wings.api.ecs.EcsListenerUpdateStateExecutionData, 5614
 software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult, 5615
 software.wings.beans.GitFetchFilesConfig, 5616
 software.wings.sm.states.ApprovalState$ApprovalStateType, 5617
-software.wings.delegatetasks.buildsource.BuildSourceRequest, 5618
+software.wings.delegatetasks.buildsource.BuildSourceParameters, 5618
 software.wings.delegatetasks.buildsource.BuildSourceResponse, 5619
 software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse, 5620
-software.wings.delegatetasks.buildsource.BuildSourceRequest$BuildSourceRequestType, 5621
+software.wings.delegatetasks.buildsource.BuildSourceParameters$BuildSourceRequestType, 5621
 #used: 5622
 #used: 5623
 #used: 5624

@@ -30,9 +30,6 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/**
- * Created by peeyushaggarwal on 12/7/16.
- */
 public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(AbstractDelegateRunnableTask.class);
 

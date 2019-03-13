@@ -45,8 +45,8 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.delegatetasks.buildsource.BuildSourceCallback;
-import software.wings.delegatetasks.buildsource.BuildSourceRequest;
-import software.wings.delegatetasks.buildsource.BuildSourceRequest.BuildSourceRequestType;
+import software.wings.delegatetasks.buildsource.BuildSourceParameters;
+import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -127,7 +127,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
     String accountId;
-    BuildSourceRequest buildSourceRequest;
+    BuildSourceParameters buildSourceRequest;
 
     String waitId = generateUuid();
     final TaskDataBuilder dataBuilder = TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
@@ -149,7 +149,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       accountId = artifactStreamAttributes.getAccountId();
       BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
 
-      buildSourceRequest = BuildSourceRequest.builder()
+      buildSourceRequest = BuildSourceParameters.builder()
                                .accountId(artifactStreamAttributes.getAccountId())
                                .appId(appId)
                                .artifactStreamAttributes(artifactStreamAttributes)
@@ -191,7 +191,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
       BuildSourceRequestType requestType = getRequestType(artifactStream, service.getArtifactType());
 
-      buildSourceRequest = BuildSourceRequest.builder()
+      buildSourceRequest = BuildSourceParameters.builder()
                                .accountId(settingAttribute.getAccountId())
                                .appId(service.getAppId())
                                .artifactStreamAttributes(artifactStreamAttributes)
