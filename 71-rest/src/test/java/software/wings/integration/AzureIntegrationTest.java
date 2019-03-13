@@ -107,6 +107,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "rathnakara.malatesha@harness.io", intermittent = true)
   public void getAvailableTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
